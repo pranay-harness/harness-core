@@ -3,9 +3,9 @@ package io.harness.executionplan.plancreator.beans;
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
-import io.harness.pms.steps.StepType;
 import io.harness.yaml.core.intfc.WithIdentifier;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

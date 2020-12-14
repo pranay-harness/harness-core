@@ -1,7 +1,7 @@
 package io.harness.pms.sdk.core.plan.creation.beans;
 
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.pms.plan.PlanCreationContextValue;
+import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.yaml.YamlField;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

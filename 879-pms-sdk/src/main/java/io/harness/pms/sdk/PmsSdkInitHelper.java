@@ -1,7 +1,7 @@
 package io.harness.pms.sdk;
 
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.pms.plan.Types;
+import io.harness.pms.contracts.plan.Types;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 

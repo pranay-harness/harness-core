@@ -3,8 +3,8 @@ package io.harness.pms.sdk.core.adviser.retry;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.commons.RepairActionCode;
-import io.harness.pms.execution.failure.FailureType;
+import io.harness.pms.contracts.commons.RepairActionCode;
+import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.sdk.core.adviser.WithFailureTypes;
 
 import java.util.List;

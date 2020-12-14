@@ -1,7 +1,7 @@
 package io.harness.dto.converter;
 
 import io.harness.dto.AmbianceDTO;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 
 import java.util.function.Function;
 import java.util.stream.Collectors;

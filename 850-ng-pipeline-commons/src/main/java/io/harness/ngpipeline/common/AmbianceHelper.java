@@ -2,7 +2,7 @@ package io.harness.ngpipeline.common;
 
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 
 import lombok.experimental.UtilityClass;
 

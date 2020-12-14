@@ -58,7 +58,7 @@ import io.harness.exception.WingsException;
 import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.resolver.RefObjectUtil;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.product.ci.engine.proto.Execution;

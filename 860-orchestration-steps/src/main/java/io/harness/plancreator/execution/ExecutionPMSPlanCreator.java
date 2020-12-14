@@ -1,7 +1,7 @@
 package io.harness.plancreator.execution;
 
 import io.harness.plancreator.beans.PlanCreationConstants;
-import io.harness.pms.facilitators.FacilitatorObtainment;
+import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;

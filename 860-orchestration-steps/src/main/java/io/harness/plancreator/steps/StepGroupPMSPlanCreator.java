@@ -1,8 +1,8 @@
 package io.harness.plancreator.steps;
 
-import io.harness.pms.advisers.AdviserObtainment;
-import io.harness.pms.advisers.AdviserType;
-import io.harness.pms.facilitators.FacilitatorObtainment;
+import io.harness.pms.contracts.advisers.AdviserObtainment;
+import io.harness.pms.contracts.advisers.AdviserType;
+import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;

@@ -10,7 +10,7 @@ import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.repositories.PlanExecutionRepository;
 

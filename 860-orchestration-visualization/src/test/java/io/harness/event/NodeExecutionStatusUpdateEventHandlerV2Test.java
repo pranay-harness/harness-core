@@ -1,8 +1,8 @@
 package io.harness.event;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.pms.contracts.execution.Status.SUCCEEDED;
 import static io.harness.pms.contracts.execution.events.OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE;
-import static io.harness.pms.execution.Status.SUCCEEDED;
 import static io.harness.rule.OwnerRule.ALEXEI;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,16 +21,16 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.ambiance.Level;
-import io.harness.pms.execution.ExecutionMode;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.execution.ExecutionMode;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.LevelUtils;
-import io.harness.pms.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 import io.harness.pms.serializer.persistence.DocumentOrchestrationUtils;
-import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
 import io.harness.testlib.RealMongo;

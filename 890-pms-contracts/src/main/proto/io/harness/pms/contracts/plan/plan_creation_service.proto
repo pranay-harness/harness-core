@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.plan;
+
+option java_multiple_files = true;
+
+import "io/harness/pms/contracts/plan/plan_node_proto.proto";
+import "io/harness/pms/contracts/plan/graph_layout.proto";
+
+service PlanCreationService {
+  rpc createPlan(PlanCreationBlobRequest) returns (PlanCreationBlobResponse);
+  rpc createFilter(FilterCreationBlobRequest) returns (FilterCreationBlobResponse);
+}
+
+message PlanCreationBlobRequest {
+  map<string, YamlFieldBlob> dependencies = 1;
+  map<string, PlanCreationContextValue> context = 4;
+}
+
+message PlanCreationBlobResponse {
+  map<string, PlanNodeProto> nodes = 1;
+  map<string, YamlFieldBlob> dependencies = 2;
+  string startingNodeId = 3;
+  map<string, PlanCreationContextValue> context = 4;
+}
+
+message PlanCreationContextValue {
+  oneof value {
+    Sample sample = 1;
+  }
+}
+
+message Sample {
+  string value = 1;
+}
+message YamlFieldBlob {
+  string name = 1;
+  bytes blob = 2;
+}
+
+message FilterCreationBlobRequest {
+  map<string, YamlFieldBlob> dependencies = 1;
+}
+
+message FilterCreationBlobResponse {
+  string filter = 1;
+  uint32 stageCount = 2;
+  map<string, YamlFieldBlob> dependencies = 3;
+  map<string, YamlFieldBlob> resolvedDependencies = 4;
+  map<string, GraphLayoutNode> layoutNodes = 5;
+  string startingNodeId = 6;
+}

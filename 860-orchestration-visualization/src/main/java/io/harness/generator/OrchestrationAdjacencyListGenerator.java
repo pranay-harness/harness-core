@@ -20,7 +20,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
-import io.harness.pms.execution.ExecutionMode;
+import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.sdk.core.data.Outcome;
 
 import com.google.inject.Inject;

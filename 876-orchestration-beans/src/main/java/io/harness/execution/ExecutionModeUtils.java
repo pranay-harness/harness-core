@@ -1,8 +1,8 @@
 package io.harness.execution;
 
-import static io.harness.pms.execution.ExecutionMode.*;
+import static io.harness.pms.contracts.execution.ExecutionMode.*;
 
-import io.harness.pms.execution.ExecutionMode;
+import io.harness.pms.contracts.execution.ExecutionMode;
 
 import java.util.EnumSet;
 import java.util.Set;

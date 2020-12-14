@@ -1,6 +1,6 @@
 package io.harness.repositories.sdk;
 
-import io.harness.pms.steps.StepInfo;
+import io.harness.pms.contracts.steps.StepInfo;
 
 import java.util.List;
 import java.util.Map;

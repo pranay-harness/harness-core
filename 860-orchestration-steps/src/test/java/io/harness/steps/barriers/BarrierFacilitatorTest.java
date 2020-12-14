@@ -1,8 +1,8 @@
 package io.harness.steps.barriers;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.pms.execution.ExecutionMode.ASYNC;
-import static io.harness.pms.execution.ExecutionMode.SYNC;
+import static io.harness.pms.contracts.execution.ExecutionMode.ASYNC;
+import static io.harness.pms.contracts.execution.ExecutionMode.SYNC;
 import static io.harness.rule.OwnerRule.ALEXEI;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,7 +11,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationStepsTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.facilitator.DefaultFacilitatorParams;
 import io.harness.pms.sdk.core.facilitator.FacilitatorResponse;
 import io.harness.rule.Owner;

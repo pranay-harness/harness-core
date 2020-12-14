@@ -1,7 +1,7 @@
 package io.harness.cdng.creator.plan.rollback;
 
 import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
-import io.harness.pms.facilitators.FacilitatorObtainment;
+import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;

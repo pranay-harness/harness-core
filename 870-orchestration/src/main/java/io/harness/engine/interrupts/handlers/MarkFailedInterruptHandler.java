@@ -1,7 +1,7 @@
 package io.harness.engine.interrupts.handlers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.pms.execution.Status.FAILED;
+import static io.harness.pms.contracts.execution.Status.FAILED;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.interrupts.Interrupt;

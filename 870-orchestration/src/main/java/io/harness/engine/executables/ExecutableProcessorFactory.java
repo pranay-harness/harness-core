@@ -12,8 +12,8 @@ import io.harness.engine.executables.invokers.SyncStrategy;
 import io.harness.engine.executables.invokers.TaskChainStrategy;
 import io.harness.engine.executables.invokers.TaskStrategy;
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.execution.ExecutionMode;
-import io.harness.pms.execution.TaskMode;
+import io.harness.pms.contracts.execution.ExecutionMode;
+import io.harness.pms.contracts.execution.TaskMode;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;

@@ -11,7 +11,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.expressions.AmbianceExpressionEvaluator;
 import io.harness.expression.EngineExpressionEvaluator;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.registries.OrchestrationFieldRegistry;
 import io.harness.pms.serializer.jackson.NGHarnessJacksonModule;
 import io.harness.pms.yaml.ParameterField;

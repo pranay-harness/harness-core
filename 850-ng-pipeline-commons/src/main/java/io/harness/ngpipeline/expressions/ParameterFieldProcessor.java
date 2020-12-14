@@ -5,7 +5,7 @@ import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.ngpipeline.inputset.validators.InputSetValidatorFactory;
 import io.harness.ngpipeline.inputset.validators.RuntimeValidator;
 import io.harness.ngpipeline.inputset.validators.RuntimeValidatorResponse;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.expression.OrchestrationFieldProcessor;
 import io.harness.pms.expression.ProcessorResult;
 import io.harness.pms.yaml.ParameterField;

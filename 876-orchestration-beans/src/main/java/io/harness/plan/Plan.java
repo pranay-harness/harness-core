@@ -7,7 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.PersistentEntity;
-import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.mappers.PlanNodeProtoMapper;
 

@@ -9,7 +9,7 @@ import io.harness.beans.converter.GraphVertexConverter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.execution.NodeExecution;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;

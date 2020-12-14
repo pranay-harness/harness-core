@@ -9,9 +9,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.harness.OrchestrationBeansTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.plan.PlanNode;
-import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
 
 import org.junit.Test;

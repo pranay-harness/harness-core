@@ -3,12 +3,13 @@ package io.harness.pms.sdk.registries;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.advisers.AdviserType;
+import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.contracts.refobjects.RefType;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.expression.OrchestrationFieldProcessor;
 import io.harness.pms.expression.OrchestrationFieldType;
-import io.harness.pms.facilitators.FacilitatorType;
-import io.harness.pms.refobjects.RefType;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.facilitator.Facilitator;
@@ -22,7 +23,6 @@ import io.harness.pms.sdk.registries.registrar.ResolverRegistrar;
 import io.harness.pms.sdk.registries.registrar.StepRegistrar;
 import io.harness.pms.sdk.registries.registrar.local.PmsSdkAdviserRegistrar;
 import io.harness.pms.sdk.registries.registrar.local.PmsSdkFacilitatorRegistrar;
-import io.harness.pms.steps.StepType;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;

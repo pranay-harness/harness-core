@@ -1,6 +1,6 @@
 package io.harness.pms.filter.creation;
 
-import io.harness.pms.plan.GraphLayoutNode;
+import io.harness.pms.contracts.plan.GraphLayoutNode;
 
 import java.util.Map;
 import lombok.Builder;

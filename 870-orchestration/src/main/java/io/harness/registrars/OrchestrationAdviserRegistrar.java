@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.advisers.retry.RetryAdviser;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.advisers.AdviserType;
+import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.registries.registrar.AdviserRegistrar;
 

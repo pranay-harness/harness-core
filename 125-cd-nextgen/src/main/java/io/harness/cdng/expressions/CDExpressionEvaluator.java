@@ -9,7 +9,7 @@ import io.harness.ng.core.services.ProjectService;
 import io.harness.ngpipeline.expressions.functors.OrgFunctor;
 import io.harness.ngpipeline.expressions.functors.ProjectFunctor;
 import io.harness.ngtriggers.functor.EventPayloadFunctor;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 
 import com.google.inject.Inject;
 import java.util.Set;

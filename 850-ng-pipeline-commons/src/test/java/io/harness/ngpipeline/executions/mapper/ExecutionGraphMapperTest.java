@@ -11,7 +11,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.dto.GraphVertexDTO;
 import io.harness.dto.OrchestrationAdjacencyListDTO;
 import io.harness.dto.OrchestrationGraphDTO;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.execution.beans.ExecutionGraph;
 import io.harness.pms.execution.beans.ExecutionNode;
 import io.harness.pms.execution.beans.ExecutionNodeAdjacencyList;

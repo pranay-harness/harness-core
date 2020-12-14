@@ -1,6 +1,6 @@
 package io.harness.serializer.json;
 
-import io.harness.pms.execution.failure.FailureInfo;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;

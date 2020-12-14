@@ -5,7 +5,7 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.execution.Status;
 
 import com.google.inject.Inject;
 import java.util.concurrent.TimeUnit;

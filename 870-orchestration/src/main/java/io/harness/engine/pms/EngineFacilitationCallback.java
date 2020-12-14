@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
-import io.harness.pms.facilitators.FacilitatorResponseProto;
+import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.sdk.core.facilitator.FacilitatorResponseMapper;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.ResponseData;

@@ -6,7 +6,7 @@ import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.expression.ExpressionEvaluator;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.yaml.core.StepGroupElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 

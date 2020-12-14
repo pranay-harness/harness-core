@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.ambiance.Level;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
 
 import java.util.ArrayList;
 import java.util.Collections;

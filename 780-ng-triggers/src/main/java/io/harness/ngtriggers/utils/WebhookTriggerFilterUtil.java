@@ -12,7 +12,7 @@ import io.harness.ngtriggers.beans.source.webhook.WebhookPayloadCondition;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
 import io.harness.ngtriggers.conditionchecker.ConditionEvaluator;
 import io.harness.ngtriggers.functor.EventPayloadFunctor;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.util.HashMap;

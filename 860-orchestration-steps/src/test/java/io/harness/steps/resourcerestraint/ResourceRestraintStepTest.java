@@ -1,7 +1,7 @@
 package io.harness.steps.resourcerestraint;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.pms.execution.Status.SUCCEEDED;
+import static io.harness.pms.contracts.execution.Status.SUCCEEDED;
 import static io.harness.rule.OwnerRule.ALEXEI;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,9 +20,9 @@ import io.harness.distribution.constraint.ConstraintId;
 import io.harness.distribution.constraint.Consumer;
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.ambiance.Level;
-import io.harness.pms.execution.AsyncExecutableResponse;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.execution.AsyncExecutableResponse;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.rule.Owner;

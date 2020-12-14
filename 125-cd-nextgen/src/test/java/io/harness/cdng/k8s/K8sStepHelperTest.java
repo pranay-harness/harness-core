@@ -12,7 +12,7 @@ import io.harness.cdng.common.beans.SetupAbstractionKeys;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.rule.Owner;
 
 import java.util.HashMap;

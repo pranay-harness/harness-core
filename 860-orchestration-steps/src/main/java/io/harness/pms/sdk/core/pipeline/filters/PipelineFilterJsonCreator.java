@@ -1,9 +1,9 @@
 package io.harness.pms.sdk.core.pipeline.filters;
 
 import io.harness.plancreator.pipeline.PipelineInfoConfig;
+import io.harness.pms.contracts.plan.EdgeLayoutList;
+import io.harness.pms.contracts.plan.GraphLayoutNode;
 import io.harness.pms.pipeline.filter.PipelineFilter;
-import io.harness.pms.plan.EdgeLayoutList;
-import io.harness.pms.plan.GraphLayoutNode;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
 import io.harness.pms.yaml.YamlField;

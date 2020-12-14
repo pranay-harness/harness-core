@@ -6,8 +6,8 @@ import io.harness.cdng.pipeline.beans.RollbackOptionalChildrenParameters.Rollbac
 import io.harness.cdng.pipeline.steps.RollbackOptionalChildrenStep;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
-import io.harness.pms.facilitators.FacilitatorObtainment;
-import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;

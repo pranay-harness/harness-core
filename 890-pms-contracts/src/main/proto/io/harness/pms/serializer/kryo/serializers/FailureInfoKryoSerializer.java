@@ -1,6 +1,6 @@
 package io.harness.pms.serializer.kryo.serializers;
 
-import io.harness.pms.execution.failure.FailureInfo;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.serializer.kryo.ProtobufKryoSerializer;
 
 public class FailureInfoKryoSerializer extends ProtobufKryoSerializer<FailureInfo> {

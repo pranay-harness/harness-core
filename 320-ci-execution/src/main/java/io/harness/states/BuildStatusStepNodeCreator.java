@@ -3,8 +3,8 @@ package io.harness.states;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
-import io.harness.pms.facilitators.FacilitatorObtainment;
-import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 

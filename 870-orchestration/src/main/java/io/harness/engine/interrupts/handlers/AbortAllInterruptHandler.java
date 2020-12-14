@@ -10,8 +10,8 @@ import static io.harness.interrupts.Interrupt.State.DISCARDED;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_UNSUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSING;
-import static io.harness.pms.execution.Status.ABORTED;
-import static io.harness.pms.execution.Status.DISCONTINUING;
+import static io.harness.pms.contracts.execution.Status.ABORTED;
+import static io.harness.pms.contracts.execution.Status.DISCONTINUING;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;

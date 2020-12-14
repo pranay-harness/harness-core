@@ -7,8 +7,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.OrchestrationBeansTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.sdk.core.facilitator.Facilitator;
 import io.harness.pms.sdk.core.facilitator.FacilitatorResponse;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;

@@ -1,8 +1,8 @@
 package io.harness.pms.execution.utils;
 
-import static io.harness.pms.advisers.AdviseType.INTERVENTION_WAIT;
+import static io.harness.pms.contracts.advisers.AdviseType.INTERVENTION_WAIT;
 
-import io.harness.pms.advisers.AdviseType;
+import io.harness.pms.contracts.advisers.AdviseType;
 
 import java.util.EnumSet;
 

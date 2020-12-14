@@ -2,7 +2,7 @@ package io.harness.engine.interrupts.statusupdate;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.pms.execution.Status.PAUSED;
+import static io.harness.pms.contracts.execution.Status.PAUSED;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;

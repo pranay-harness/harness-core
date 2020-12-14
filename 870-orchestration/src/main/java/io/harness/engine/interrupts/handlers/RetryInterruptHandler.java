@@ -2,7 +2,7 @@ package io.harness.engine.interrupts.handlers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.pms.execution.Status.RUNNING;
+import static io.harness.pms.contracts.execution.Status.RUNNING;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;

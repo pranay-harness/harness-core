@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.service;
+
+option java_multiple_files = true;
+
+import "io/harness/pms/contracts/ambiance/ambiance.proto";
+import "io/harness/pms/contracts/refobjects/ref_objects.proto";
+
+service SweepingOutputService {
+  rpc resolve(SweepingOutputResolveBlobRequest) returns (SweepingOutputResolveBlobResponse);
+  rpc consume(SweepingOutputConsumeBlobRequest) returns (SweepingOutputConsumeBlobResponse);
+}
+
+message SweepingOutputResolveBlobRequest {
+  io.harness.pms.contracts.ambiance.Ambiance ambiance = 1;
+  io.harness.pms.contracts.refobjects.RefObject refObject = 2;
+}
+
+message SweepingOutputResolveBlobResponse {
+  string stepTransput = 1;
+}
+
+message SweepingOutputConsumeBlobRequest {
+  io.harness.pms.contracts.ambiance.Ambiance ambiance = 1;
+  string name = 2;
+  string groupName = 3;
+  string value = 4;
+}
+
+message SweepingOutputConsumeBlobResponse {
+  string response = 1;
+}

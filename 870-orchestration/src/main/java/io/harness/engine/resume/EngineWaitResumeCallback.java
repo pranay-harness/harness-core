@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.facilitator.FacilitatorResponse;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.tasks.ResponseData;

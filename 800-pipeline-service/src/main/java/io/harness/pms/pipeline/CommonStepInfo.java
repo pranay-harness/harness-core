@@ -1,7 +1,7 @@
 package io.harness.pms.pipeline;
 
-import io.harness.pms.steps.StepInfo;
-import io.harness.pms.steps.StepMetaData;
+import io.harness.pms.contracts.steps.StepInfo;
+import io.harness.pms.contracts.steps.StepMetaData;
 
 import java.util.ArrayList;
 import java.util.List;

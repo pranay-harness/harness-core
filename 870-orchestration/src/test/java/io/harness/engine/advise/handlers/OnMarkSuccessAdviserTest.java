@@ -7,15 +7,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.pms.advisers.AdviserResponse;
-import io.harness.pms.advisers.MarkSuccessAdvise;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.ambiance.Level;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.advisers.AdviserResponse;
+import io.harness.pms.contracts.advisers.MarkSuccessAdvise;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent;
 import io.harness.pms.sdk.core.adviser.marksuccess.OnMarkSuccessAdviser;
 import io.harness.pms.sdk.core.adviser.marksuccess.OnMarkSuccessAdviserParameters;
-import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 

@@ -1,7 +1,7 @@
 package io.harness.functional.redesign.engine;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.pms.execution.Status.SUCCEEDED;
+import static io.harness.pms.contracts.execution.Status.SUCCEEDED;
 import static io.harness.rule.OwnerRule.ALEXEI;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,11 +17,11 @@ import io.harness.generator.Randomizer;
 import io.harness.generator.ResourceConstraintGenerator;
 import io.harness.generator.ResourceConstraintGenerator.ResourceConstraints;
 import io.harness.plan.Plan;
-import io.harness.pms.advisers.AdviserObtainment;
-import io.harness.pms.advisers.AdviserType;
+import io.harness.pms.contracts.advisers.AdviserObtainment;
+import io.harness.pms.contracts.advisers.AdviserType;
+import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.execution.utils.StatusUtils;
-import io.harness.pms.facilitators.FacilitatorObtainment;
-import io.harness.pms.facilitators.FacilitatorType;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;

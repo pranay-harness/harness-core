@@ -3,7 +3,7 @@ package io.harness.ngtriggers.functor;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.LateBindingValue;
 import io.harness.ngpipeline.common.AmbianceHelper;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.yaml.utils.JsonPipelineUtils;
 
 import java.io.IOException;

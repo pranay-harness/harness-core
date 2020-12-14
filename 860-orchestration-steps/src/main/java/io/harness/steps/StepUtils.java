@@ -2,9 +2,9 @@ package io.harness.steps;
 
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.SimpleHDelegateTask;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.ambiance.Level;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.state.io.StepResponseNotifyData;

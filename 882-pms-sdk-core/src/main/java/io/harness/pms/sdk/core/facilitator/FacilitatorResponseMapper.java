@@ -3,7 +3,7 @@ package io.harness.pms.sdk.core.facilitator;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.facilitators.FacilitatorResponseProto;
+import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.serializer.persistence.DocumentOrchestrationUtils;
 import io.harness.serializer.ProtoUtils;
 

@@ -10,7 +10,7 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.outcomes.OutcomeService;
 import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.execution.PlanExecution;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.serializer.persistence.DocumentOrchestrationUtils;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;

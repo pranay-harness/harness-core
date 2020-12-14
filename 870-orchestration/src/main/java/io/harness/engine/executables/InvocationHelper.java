@@ -4,7 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
-import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.state.io.StepResponseNotifyData;
 import io.harness.tasks.ResponseData;

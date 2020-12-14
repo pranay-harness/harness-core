@@ -1,8 +1,8 @@
 package io.harness.repositories.sdk;
 
+import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.sdk.PmsSdkInstance;
 import io.harness.pms.sdk.PmsSdkInstance.PmsSdkInstanceKeys;
-import io.harness.pms.steps.StepInfo;
 
 import com.google.inject.Inject;
 import java.time.Duration;

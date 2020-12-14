@@ -7,8 +7,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.rule.Owner;

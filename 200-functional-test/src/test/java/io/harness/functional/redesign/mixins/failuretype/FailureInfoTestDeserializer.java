@@ -1,6 +1,6 @@
 package io.harness.functional.redesign.mixins.failuretype;
 
-import io.harness.pms.execution.failure.FailureInfo;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;

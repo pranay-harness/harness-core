@@ -3,10 +3,10 @@ package io.harness.pms.sdk.core.execution;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.execution.ExecutableResponse;
-import io.harness.pms.execution.NodeExecutionProto;
-import io.harness.pms.execution.Status;
-import io.harness.pms.execution.TaskMode;
+import io.harness.pms.contracts.execution.ExecutableResponse;
+import io.harness.pms.contracts.execution.NodeExecutionProto;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.TaskMode;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.tasks.Task;

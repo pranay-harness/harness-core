@@ -1,7 +1,7 @@
 package io.harness.yaml.core.failurestrategy;
 
 import io.harness.advisers.retry.RetryAdviser;
-import io.harness.pms.advisers.AdviserType;
+import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.sdk.core.adviser.fail.OnFailAdviser;
 import io.harness.pms.sdk.core.adviser.ignore.IgnoreAdviser;
 import io.harness.pms.sdk.core.adviser.manualintervention.ManualInterventionAdviser;

@@ -40,12 +40,12 @@ import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary.
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummaryFilter;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
 import io.harness.plan.Plan;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.execution.Status;
 import io.harness.pms.execution.beans.ExecutionGraph;
 import io.harness.pms.pipeline.ExecutionTriggerInfo;
 import io.harness.pms.pipeline.TriggerType;
-import io.harness.pms.plan.PlanNodeProto;
 import io.harness.repositories.pipeline.PipelineExecutionRepository;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;

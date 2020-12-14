@@ -20,12 +20,12 @@ import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.instructors.OutcomeRefStepDependencyInstructor;
-import io.harness.pms.facilitators.FacilitatorObtainment;
-import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.PlanNode.PlanNodeBuilder;
-import io.harness.pms.steps.SkipType;
 import io.harness.steps.section.chain.SectionChainStepParameters;
 
 import com.google.inject.Inject;

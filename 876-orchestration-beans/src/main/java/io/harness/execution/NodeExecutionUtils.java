@@ -4,9 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.execution.ExecutableResponse;
-import io.harness.pms.execution.ExecutionMode;
-import io.harness.pms.execution.NodeExecutionProto;
+import io.harness.pms.contracts.execution.ExecutableResponse;
+import io.harness.pms.contracts.execution.ExecutionMode;
+import io.harness.pms.contracts.execution.NodeExecutionProto;
 
 import java.util.List;
 import lombok.experimental.UtilityClass;

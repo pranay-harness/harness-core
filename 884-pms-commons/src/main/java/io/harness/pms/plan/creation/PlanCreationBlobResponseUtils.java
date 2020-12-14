@@ -2,12 +2,11 @@ package io.harness.pms.plan.creation;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.plan.PlanCreationBlobResponse;
-import io.harness.pms.plan.PlanCreationContextValue;
-import io.harness.pms.plan.PlanNodeProto;
-import io.harness.pms.plan.YamlFieldBlob;
+import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
+import io.harness.pms.contracts.plan.PlanCreationContextValue;
+import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.plan.YamlFieldBlob;
 
-import java.util.HashMap;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
 

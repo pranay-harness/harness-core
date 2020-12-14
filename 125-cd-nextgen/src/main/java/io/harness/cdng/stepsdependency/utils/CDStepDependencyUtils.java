@@ -12,7 +12,7 @@ import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.executionplan.stepsdependency.resolvers.StepDependencyResolverContextImpl;
 import io.harness.executionplan.utils.ParentPathInfoUtils;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.steps.io.ResolvedRefInput;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;

@@ -1,5 +1,7 @@
 package io.harness.pms.execution;
 
+import io.harness.pms.contracts.execution.Status;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;

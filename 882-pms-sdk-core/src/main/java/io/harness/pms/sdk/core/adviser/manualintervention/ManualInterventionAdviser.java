@@ -1,13 +1,13 @@
 package io.harness.pms.sdk.core.adviser.manualintervention;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.pms.execution.Status.INTERVENTION_WAITING;
+import static io.harness.pms.contracts.execution.Status.INTERVENTION_WAITING;
 
-import io.harness.pms.advisers.AdviseType;
-import io.harness.pms.advisers.AdviserResponse;
-import io.harness.pms.advisers.AdviserType;
-import io.harness.pms.advisers.InterventionWaitAdvise;
-import io.harness.pms.execution.failure.FailureInfo;
+import io.harness.pms.contracts.advisers.AdviseType;
+import io.harness.pms.contracts.advisers.AdviserResponse;
+import io.harness.pms.contracts.advisers.AdviserType;
+import io.harness.pms.contracts.advisers.InterventionWaitAdvise;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent;

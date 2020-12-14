@@ -7,10 +7,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.OrchestrationBeansTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.refobjects.RefObject;
+import io.harness.pms.contracts.refobjects.RefType;
 import io.harness.pms.data.OrchestrationRefType;
-import io.harness.pms.refobjects.RefObject;
-import io.harness.pms.refobjects.RefType;
 import io.harness.pms.sdk.core.resolver.Resolver;
 import io.harness.pms.sdk.registries.RegistryType;
 import io.harness.pms.sdk.registries.ResolverRegistry;

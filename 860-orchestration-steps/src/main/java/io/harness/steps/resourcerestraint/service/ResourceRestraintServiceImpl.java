@@ -6,7 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
 import static io.harness.distribution.constraint.Consumer.State.FINISHED;
-import static io.harness.pms.execution.Status.DISCONTINUING;
+import static io.harness.pms.contracts.execution.Status.DISCONTINUING;
 
 import static java.util.stream.Collectors.toList;
 import static org.springframework.data.mongodb.core.query.Criteria.where;

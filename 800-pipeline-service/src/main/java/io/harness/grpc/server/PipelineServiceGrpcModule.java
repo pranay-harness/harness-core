@@ -3,8 +3,8 @@ package io.harness.grpc.server;
 import io.harness.PipelineServiceConfiguration;
 import io.harness.engine.executions.node.PmsNodeExecutionGrpcSevice;
 import io.harness.grpc.client.GrpcClientConfig;
-import io.harness.pms.plan.PlanCreationServiceGrpc;
-import io.harness.pms.plan.PlanCreationServiceGrpc.PlanCreationServiceBlockingStub;
+import io.harness.pms.contracts.plan.PlanCreationServiceGrpc;
+import io.harness.pms.contracts.plan.PlanCreationServiceGrpc.PlanCreationServiceBlockingStub;
 import io.harness.pms.plan.execution.data.service.outputs.SweepingOutputServiceImpl;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 

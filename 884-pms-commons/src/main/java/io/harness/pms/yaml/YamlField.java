@@ -1,7 +1,7 @@
 package io.harness.pms.yaml;
 
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.pms.plan.YamlFieldBlob;
+import io.harness.pms.contracts.plan.YamlFieldBlob;
 
 import com.google.protobuf.ByteString;
 import java.io.IOException;

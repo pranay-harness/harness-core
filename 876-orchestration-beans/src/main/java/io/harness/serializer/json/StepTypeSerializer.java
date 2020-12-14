@@ -1,6 +1,6 @@
 package io.harness.serializer.json;
 
-import io.harness.pms.steps.StepType;
+import io.harness.pms.contracts.steps.StepType;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;

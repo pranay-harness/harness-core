@@ -2,11 +2,11 @@ package io.harness.pms.sdk;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.plan.InitializeSdkRequest;
-import io.harness.pms.plan.InitializeSdkResponse;
-import io.harness.pms.plan.PmsServiceGrpc.PmsServiceImplBase;
-import io.harness.pms.plan.Types;
-import io.harness.pms.steps.StepInfo;
+import io.harness.pms.contracts.plan.InitializeSdkRequest;
+import io.harness.pms.contracts.plan.InitializeSdkResponse;
+import io.harness.pms.contracts.plan.PmsServiceGrpc.PmsServiceImplBase;
+import io.harness.pms.contracts.plan.Types;
+import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.repositories.sdk.PmsSdkInstanceRepository;
 
 import com.google.inject.Inject;

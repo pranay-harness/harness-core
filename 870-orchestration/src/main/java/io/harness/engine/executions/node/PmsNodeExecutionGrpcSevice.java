@@ -1,14 +1,14 @@
 package io.harness.engine.executions.node;
 
-import io.harness.pms.plan.AddExecutableResponseRequest;
-import io.harness.pms.plan.AddExecutableResponseResponse;
-import io.harness.pms.plan.HandleStepResponseRequest;
-import io.harness.pms.plan.HandleStepResponseResponse;
-import io.harness.pms.plan.NodeExecutionProtoServiceGrpc.NodeExecutionProtoServiceImplBase;
-import io.harness.pms.plan.QueueNodeExecutionRequest;
-import io.harness.pms.plan.QueueNodeExecutionResponse;
-import io.harness.pms.plan.QueueTaskRequest;
-import io.harness.pms.plan.QueueTaskResponse;
+import io.harness.pms.contracts.plan.AddExecutableResponseRequest;
+import io.harness.pms.contracts.plan.AddExecutableResponseResponse;
+import io.harness.pms.contracts.plan.HandleStepResponseRequest;
+import io.harness.pms.contracts.plan.HandleStepResponseResponse;
+import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc.NodeExecutionProtoServiceImplBase;
+import io.harness.pms.contracts.plan.QueueNodeExecutionRequest;
+import io.harness.pms.contracts.plan.QueueNodeExecutionResponse;
+import io.harness.pms.contracts.plan.QueueTaskRequest;
+import io.harness.pms.contracts.plan.QueueTaskResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Task;

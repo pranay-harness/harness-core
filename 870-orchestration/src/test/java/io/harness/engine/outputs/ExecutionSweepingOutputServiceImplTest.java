@@ -8,15 +8,15 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.ambiance.Level;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.pms.sdk.core.resolver.GroupNotFoundException;
 import io.harness.pms.sdk.core.resolver.RefObjectUtil;
 import io.harness.pms.sdk.core.resolver.ResolverUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
-import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 import io.harness.utils.AmbianceTestUtils;

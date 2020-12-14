@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.plan;
+
+option java_multiple_files = true;
+
+import "io/harness/pms/contracts/execution/executable_response.proto";
+import "io/harness/pms/contracts/execution/node_execution_proto.proto";
+import "io/harness/pms/contracts/execution/status.proto";
+import "io/harness/pms/contracts/steps/io/step_response_proto.proto";
+
+service NodeExecutionProtoService {
+  rpc queueNodeExecution(QueueNodeExecutionRequest) returns (QueueNodeExecutionResponse);
+  rpc queueTask(QueueTaskRequest) returns (QueueTaskResponse);
+  rpc addExecutableResponse(AddExecutableResponseRequest) returns (AddExecutableResponseResponse);
+  rpc handleStepResponse(HandleStepResponseRequest) returns (HandleStepResponseResponse);
+}
+
+message QueueNodeExecutionRequest {
+  execution.NodeExecutionProto nodeExecution = 1;
+}
+
+message QueueNodeExecutionResponse {}
+
+message QueueTaskRequest {
+  string nodeExecutionId = 1;
+  execution.TaskMode taskMode = 2;
+  map<string, string> setupAbstractions = 3;
+  bytes task = 4;
+}
+
+message QueueTaskResponse {
+  string taskId = 1;
+}
+
+message AddExecutableResponseRequest {
+  string nodeExecutionId = 1;
+  execution.Status status = 2;
+  execution.ExecutableResponse executableResponse = 3;
+  repeated string callbackIds = 4;
+}
+
+message AddExecutableResponseResponse {}
+
+message HandleStepResponseRequest {
+  string nodeExecutionId = 1;
+  steps.io.StepResponseProto stepResponse = 2;
+}
+
+message HandleStepResponseResponse {}

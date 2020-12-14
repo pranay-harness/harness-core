@@ -1,8 +1,8 @@
 package io.harness.pms.plan.execution;
 
 import io.harness.plan.Plan;
-import io.harness.pms.plan.PlanCreationBlobResponse;
-import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
+import io.harness.pms.contracts.plan.PlanNodeProto;
 
 import java.util.Collection;
 

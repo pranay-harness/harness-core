@@ -1,23 +1,23 @@
 package io.harness.pms.execution.utils;
 
-import static io.harness.pms.execution.Status.ABORTED;
-import static io.harness.pms.execution.Status.ASYNC_WAITING;
-import static io.harness.pms.execution.Status.DISCONTINUING;
-import static io.harness.pms.execution.Status.ERRORED;
-import static io.harness.pms.execution.Status.EXPIRED;
-import static io.harness.pms.execution.Status.FAILED;
-import static io.harness.pms.execution.Status.INTERVENTION_WAITING;
-import static io.harness.pms.execution.Status.PAUSED;
-import static io.harness.pms.execution.Status.PAUSING;
-import static io.harness.pms.execution.Status.QUEUED;
-import static io.harness.pms.execution.Status.RUNNING;
-import static io.harness.pms.execution.Status.SKIPPED;
-import static io.harness.pms.execution.Status.SUCCEEDED;
-import static io.harness.pms.execution.Status.SUSPENDED;
-import static io.harness.pms.execution.Status.TASK_WAITING;
-import static io.harness.pms.execution.Status.TIMED_WAITING;
+import static io.harness.pms.contracts.execution.Status.ABORTED;
+import static io.harness.pms.contracts.execution.Status.ASYNC_WAITING;
+import static io.harness.pms.contracts.execution.Status.DISCONTINUING;
+import static io.harness.pms.contracts.execution.Status.ERRORED;
+import static io.harness.pms.contracts.execution.Status.EXPIRED;
+import static io.harness.pms.contracts.execution.Status.FAILED;
+import static io.harness.pms.contracts.execution.Status.INTERVENTION_WAITING;
+import static io.harness.pms.contracts.execution.Status.PAUSED;
+import static io.harness.pms.contracts.execution.Status.PAUSING;
+import static io.harness.pms.contracts.execution.Status.QUEUED;
+import static io.harness.pms.contracts.execution.Status.RUNNING;
+import static io.harness.pms.contracts.execution.Status.SKIPPED;
+import static io.harness.pms.contracts.execution.Status.SUCCEEDED;
+import static io.harness.pms.contracts.execution.Status.SUSPENDED;
+import static io.harness.pms.contracts.execution.Status.TASK_WAITING;
+import static io.harness.pms.contracts.execution.Status.TIMED_WAITING;
 
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.execution.Status;
 
 import java.util.EnumSet;
 import lombok.experimental.UtilityClass;

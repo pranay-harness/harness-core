@@ -3,13 +3,13 @@ package io.harness.steps.dummy;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.execution.ChildExecutableResponse;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.ChildExecutableResponse;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
-import io.harness.pms.steps.StepType;
 import io.harness.state.io.StepResponseNotifyData;
 import io.harness.steps.OrchestrationStepTypes;
 import io.harness.tasks.ResponseData;

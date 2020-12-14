@@ -2,7 +2,7 @@ package io.harness.ngpipeline.inputset.validators;
 
 import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.yaml.validation.InputSetValidator;
 
 import com.google.inject.Inject;
