@@ -518,7 +518,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     int notStarted = 0;
     int errors = 0;
     for (int i = 0; i < verificationJobInstances.size(); i++) {
-      VerificationJobInstance verificationJobInstance = verificationJobInstances.get(0);
+      VerificationJobInstance verificationJobInstance = verificationJobInstances.get(i);
       switch (verificationJobInstance.getExecutionStatus()) {
         case QUEUED:
           notStarted++;
