@@ -345,6 +345,7 @@ public class AwsAmiServiceSetup extends State {
                         .timeout(MINUTES.toMillis(getTimeOut()))
                         .build())
               .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
+              .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
               .build();
       delegateService.queueTask(delegateTask);
     } catch (Exception exception) {

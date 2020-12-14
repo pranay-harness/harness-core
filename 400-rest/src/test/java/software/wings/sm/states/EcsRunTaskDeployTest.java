@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.rule.OwnerRule.RAGHVENDRA;
 
+import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
 import static software.wings.sm.states.EcsRunTaskDeploy.ECS_RUN_TASK_COMMAND;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
@@ -40,6 +41,7 @@ import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
@@ -155,6 +157,9 @@ public class EcsRunTaskDeployTest extends WingsBaseTest {
     doReturn(APP_ID).when(mockContext).getAppId();
     doReturn(application).when(mockAppService).get(APP_ID);
     doReturn("SUCCESS").when(mockDelegateService).queueTask(any());
+    doReturn(anEnvironment().environmentType(EnvironmentType.PROD).build())
+        .when(mockContext)
+        .fetchRequiredEnvironment();
     ExecutionResponse response = state.execute(mockContext);
 
     ArgumentCaptor<EcsRunTaskDeployRequest> captor = ArgumentCaptor.forClass(EcsRunTaskDeployRequest.class);
@@ -238,7 +243,7 @@ public class EcsRunTaskDeployTest extends WingsBaseTest {
     doReturn(application).when(mockEcsStateHelper).getApplicationFromExecutionContext(mockContext);
     doReturn(application).when(mockContext).getApp();
 
-    Environment environment = Environment.Builder.anEnvironment().build();
+    Environment environment = anEnvironment().build();
     doReturn(environment).when(mockContext).getEnv();
     ManagerExecutionLogCallback executionLogCallback = new ManagerExecutionLogCallback();
     doReturn(executionLogCallback)

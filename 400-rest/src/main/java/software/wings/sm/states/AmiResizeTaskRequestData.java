@@ -4,6 +4,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.service.impl.aws.model.AwsAmiResizeData;
 import software.wings.sm.ExecutionContext;
 
@@ -18,6 +19,7 @@ public class AmiResizeTaskRequestData {
   private String appId;
   private String accountId;
   private String envId;
+  private EnvironmentType environmentType;
   private String activityId;
   private String region;
   private String commandName;

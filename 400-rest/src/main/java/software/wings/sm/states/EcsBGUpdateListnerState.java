@@ -113,8 +113,8 @@ public class EcsBGUpdateListnerState extends State {
     EcsListenerUpdateRequestConfigData requestConfigData = getEcsListenerUpdateRequestConfigData(containerElement);
 
     return ecsStateHelper.queueDelegateTaskForEcsListenerUpdate(application, awsConfig, delegateService,
-        infrastructureMapping, activity.getUuid(), environment.getUuid(), ECS_UPDATE_LISTENER_COMMAND,
-        requestConfigData, encryptedDetails, containerElement.getServiceSteadyStateTimeout());
+        infrastructureMapping, activity.getUuid(), environment, ECS_UPDATE_LISTENER_COMMAND, requestConfigData,
+        encryptedDetails, containerElement.getServiceSteadyStateTimeout());
   }
 
   protected EcsListenerUpdateRequestConfigData getEcsListenerUpdateRequestConfigData(

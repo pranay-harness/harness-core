@@ -107,7 +107,8 @@ public class SpotInstServiceSetup extends State {
     DelegateTask delegateTask = spotinstStateHelper.getDelegateTask(spotInstTaskParameters.getAccountId(),
         spotInstTaskParameters.getAppId(), TaskType.SPOTINST_COMMAND_TASK, spotInstTaskParameters.getActivityId(),
         spotinstSetupStateExecutionData.getEnvId(), spotinstSetupStateExecutionData.getInfraMappingId(),
-        spotinstSetupStateExecutionData.getSpotinstCommandRequest());
+        spotinstSetupStateExecutionData.getSpotinstCommandRequest(),
+        spotinstSetupStateExecutionData.getEnvironmentType(), spotinstSetupStateExecutionData.getServiceId());
 
     delegateService.queueTask(delegateTask);
 

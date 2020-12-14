@@ -111,6 +111,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
+import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.GitConfig;
@@ -956,6 +957,8 @@ public class HelmDeployStateTest extends WingsBaseTest {
         HelmChartSpecification.builder().chartName(CHART_NAME).chartUrl(CHART_URL).chartVersion(CHART_VERSION).build())
         .when(serviceResourceService)
         .getHelmChartSpecification(APP_ID, SERVICE_ID);
+    when(k8sStateHelper.getContainerInfrastructureMapping(context))
+        .thenReturn(DirectKubernetesInfrastructureMapping.builder().build());
 
     testHandleAsyncResponseForHelmFetchTaskWithValuesInGit();
     testHandleAsyncResponseForHelmFetchTaskWithNoValuesInGit();
@@ -1180,6 +1183,8 @@ public class HelmDeployStateTest extends WingsBaseTest {
     when(applicationManifestUtils.createGitFetchFilesTaskParams(context, app, appManifestMap))
         .thenReturn(GitFetchFilesTaskParams.builder().isBindTaskFeatureSet(true).build());
     when(k8sStateHelper.fetchTagsFromK8sCloudProvider(any())).thenReturn(Arrays.asList("delegateName"));
+    when(k8sStateHelper.getContainerInfrastructureMapping(context))
+        .thenReturn(DirectKubernetesInfrastructureMapping.builder().build());
 
     ExecutionResponse executionResponse = helmDeployState.execute(context);
 
@@ -1203,6 +1208,8 @@ public class HelmDeployStateTest extends WingsBaseTest {
     when(applicationManifestUtils.isValuesInGit(appManifestMap)).thenReturn(true);
     when(applicationManifestUtils.createGitFetchFilesTaskParams(context, app, appManifestMap))
         .thenReturn(GitFetchFilesTaskParams.builder().isBindTaskFeatureSet(true).build());
+    when(k8sStateHelper.getContainerInfrastructureMapping(context))
+        .thenReturn(DirectKubernetesInfrastructureMapping.builder().build());
 
     ExecutionResponse executionResponse = helmDeployState.execute(context);
     verify(applicationManifestUtils, times(1)).populateRemoteGitConfigFilePathList(context, appManifestMap);

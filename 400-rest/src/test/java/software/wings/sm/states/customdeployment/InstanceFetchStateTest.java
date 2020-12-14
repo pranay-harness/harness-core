@@ -7,6 +7,8 @@ import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.sm.states.customdeployment.InstanceFetchState.OUTPUT_PATH_KEY;
@@ -23,7 +25,9 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
@@ -68,6 +72,7 @@ import software.wings.beans.template.deploymenttype.CustomDeploymentTypeTemplate
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
@@ -105,6 +110,7 @@ public class InstanceFetchStateTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
   @Mock private ExpressionEvaluator expressionEvaluator;
   @Mock private SweepingOutputService sweepingOutputService;
+  @Mock private EnvironmentService environmentService;
   @Mock private ServiceTemplateService mockServiceTemplateService;
   @Mock private ServiceTemplateHelper serviceTemplateHelper;
 
@@ -120,8 +126,11 @@ public class InstanceFetchStateTest extends WingsBaseTest {
     final CustomInfrastructureMapping infraMapping = CustomInfrastructureMapping.builder().build();
     infraMapping.setCustomDeploymentTemplateId(TEMPLATE_ID);
     infraMapping.setDeploymentTypeTemplateVersion("1");
+    infraMapping.setServiceId(SERVICE_ID);
 
     when(serviceTemplateHelper.fetchServiceTemplateId(any())).thenReturn(SERVICE_TEMPLATE_ID);
+    when(environmentService.get(anyString(), anyString(), anyBoolean()))
+        .thenReturn(anEnvironment().environmentType(PROD).build());
 
     Key<ServiceTemplate> serviceTemplateKey = new Key<>(ServiceTemplate.class, "collection", "id");
     doReturn(singletonList(serviceTemplateKey))
@@ -132,6 +141,7 @@ public class InstanceFetchStateTest extends WingsBaseTest {
     doReturn(phaseElement).when(context).getContextElement(any(), any());
     WorkflowStandardParams workflowStandardParams =
         aWorkflowStandardParams().withAppId(APP_ID).withEnvId(ENV_ID).build();
+    on(workflowStandardParams).set("environmentService", environmentService);
     doReturn(workflowStandardParams).when(context).getContextElement(ContextElementType.STANDARD);
 
     doReturn(ACCOUNT_ID).when(context).getAccountId();
@@ -193,7 +203,9 @@ public class InstanceFetchStateTest extends WingsBaseTest {
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
             .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, SERVICE_TEMPLATE_ID)
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+            .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, PROD.name())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
+            .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, SERVICE_ID)
             .tags(Arrays.asList("tag1", "tag2"))
             .data(TaskData.builder()
                       .async(true)

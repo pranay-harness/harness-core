@@ -74,7 +74,8 @@ public class SpotInstServiceSetupTest extends WingsBaseTest {
     DelegateTask task = DelegateTask.builder().build();
     doReturn(task)
         .when(mockSpotinstStateHelper)
-        .getDelegateTask(anyString(), anyString(), any(), anyString(), anyString(), anyString(), any());
+        .getDelegateTask(
+            anyString(), anyString(), any(), anyString(), anyString(), anyString(), any(), any(), anyString());
     state.execute(mockContext);
     verify(mockDelegateService).queueTask(any());
   }

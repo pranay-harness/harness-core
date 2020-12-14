@@ -922,6 +922,7 @@ public class HelmDeployState extends State {
             .tags(tags)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
+            .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, containerInfraMapping.getUuid())
             .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, containerInfraMapping.getServiceId())
             .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD,
@@ -1023,27 +1024,30 @@ public class HelmDeployState extends State {
     StateExecutionContext stateExecutionContext =
         buildStateExecutionContext(helmDeployStateExecutionDataBuilder, expressionFunctorToken);
 
+    ContainerInfrastructureMapping containerInfraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
+
     String waitId = generateUuid();
     Environment env = k8sStateHelper.getEnvFromExecutionContext(context);
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(app.getAccountId())
-                                    .description("Fetch Files")
-                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
-                                    .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
-                                    .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
-                                    .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD,
-                                        k8sStateHelper.getContainerInfrastructureMappingId(context))
-                                    .waitId(waitId)
-                                    .tags(tags)
-                                    .data(TaskData.builder()
-                                              .async(true)
-                                              .taskType(TaskType.GIT_FETCH_FILES_TASK.name())
-                                              .parameters(new Object[] {fetchFilesTaskParams})
-                                              .timeout(TimeUnit.MINUTES.toMillis(GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT))
-                                              .expressionFunctorToken(expressionFunctorToken)
-                                              .build())
-                                    .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .accountId(app.getAccountId())
+            .description("Fetch Files")
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
+            .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, containerInfraMapping.getUuid())
+            .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, containerInfraMapping.getServiceId())
+            .waitId(waitId)
+            .tags(tags)
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(TaskType.GIT_FETCH_FILES_TASK.name())
+                      .parameters(new Object[] {fetchFilesTaskParams})
+                      .timeout(TimeUnit.MINUTES.toMillis(GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT))
+                      .expressionFunctorToken(expressionFunctorToken)
+                      .build())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .build();
 
     renderDelegateTask(context, delegateTask, stateExecutionContext);
 

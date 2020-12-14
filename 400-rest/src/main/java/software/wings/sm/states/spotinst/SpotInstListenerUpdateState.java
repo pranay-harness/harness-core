@@ -123,9 +123,9 @@ public class SpotInstListenerUpdateState extends State {
     stateExecutionData.setSpotinstCommandRequest(spotInstCommandRequest);
     setElastigroupFieldsInStateExecutionData(spotInstSetupContextElement, stateExecutionData);
 
-    DelegateTask task =
-        spotInstStateHelper.getDelegateTask(app.getAccountId(), app.getUuid(), TaskType.SPOTINST_COMMAND_TASK,
-            activity.getUuid(), env.getUuid(), awsAmiInfrastructureMapping.getUuid(), spotInstCommandRequest);
+    DelegateTask task = spotInstStateHelper.getDelegateTask(app.getAccountId(), app.getUuid(),
+        TaskType.SPOTINST_COMMAND_TASK, activity.getUuid(), env.getUuid(), awsAmiInfrastructureMapping.getUuid(),
+        spotInstCommandRequest, env.getEnvironmentType(), awsAmiInfrastructureMapping.getServiceId());
 
     delegateService.queueTask(task);
     return ExecutionResponse.builder()

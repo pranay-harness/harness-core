@@ -207,7 +207,8 @@ public class AwsAmiServiceTrafficShiftAlbDeployState extends State {
     try {
       AwsAmiServiceTrafficShiftAlbDeployRequest request =
           createAwsAmiTrafficShiftDeployRequest(serviceSetupElement, awsAmiTrafficShiftAlbData, activity);
-      createAndEnqueueDelegateTask(request, awsAmiTrafficShiftAlbData.getInfrastructureMapping().getEnvId());
+      createAndEnqueueDelegateTask(request, awsAmiTrafficShiftAlbData.getInfrastructureMapping().getEnvId(),
+          awsAmiTrafficShiftAlbData.getEnv().getEnvironmentType().name());
     } catch (Exception exception) {
       return taskCreationFailureResponse(exception, activity.getUuid(), executionLogCallback);
     }
@@ -260,7 +261,8 @@ public class AwsAmiServiceTrafficShiftAlbDeployState extends State {
     return activityService.save(activityBuilder.build());
   }
 
-  protected void createAndEnqueueDelegateTask(AwsAmiServiceTrafficShiftAlbDeployRequest request, String envId) {
+  protected void createAndEnqueueDelegateTask(
+      AwsAmiServiceTrafficShiftAlbDeployRequest request, String envId, String envType) {
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(request.getAccountId())
@@ -274,6 +276,7 @@ public class AwsAmiServiceTrafficShiftAlbDeployState extends State {
                       .build())
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+            .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, envType)
             .build();
     delegateService.queueTask(delegateTask);
   }

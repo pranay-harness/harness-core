@@ -182,7 +182,9 @@ public class AzureVMSSDeployState extends AbstractAzureState {
                       .timeout(MINUTES.toMillis(azureVMSSSetupContextElement.getAutoScalingSteadyStateVMSSTimeout()))
                       .build())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+            .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, azureVMSSInfrastructureMapping.getUuid())
+            .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, azureVMSSInfrastructureMapping.getServiceId())
             .build();
 
     delegateService.queueTask(delegateTask);

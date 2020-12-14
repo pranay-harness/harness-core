@@ -144,7 +144,7 @@ public class EcsBGUpdateListnerStateTest extends WingsBaseTest {
         ArgumentCaptor.forClass(EcsListenerUpdateRequestConfigData.class);
     verify(mockEcsStateHelper)
         .queueDelegateTaskForEcsListenerUpdate(
-            any(), any(), any(), any(), anyString(), anyString(), anyString(), captor.capture(), anyList(), anyInt());
+            any(), any(), any(), any(), anyString(), any(), anyString(), captor.capture(), anyList(), anyInt());
     EcsListenerUpdateRequestConfigData config = captor.getValue();
     assertThat(config).isNotNull();
     assertThat(config.getProdListenerArn()).isEqualTo("ProdLArn");

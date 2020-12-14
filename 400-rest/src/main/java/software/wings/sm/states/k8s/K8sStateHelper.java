@@ -311,6 +311,8 @@ public class K8sStateHelper {
       tags.addAll(fetchTagsFromK8sCloudProvider(fetchFilesTaskParams.getContainerServiceParams()));
     }
 
+    ContainerInfrastructureMapping infraMapping = getContainerInfrastructureMapping(context);
+
     String waitId = generateUuid();
     Environment env = getEnvFromExecutionContext(context);
     DelegateTask delegateTask = DelegateTask.builder()
@@ -320,6 +322,8 @@ public class K8sStateHelper {
                                     .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
                                     .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD,
                                         getContainerInfrastructureMappingId(context))
+                                    .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD,
+                                        infraMapping != null ? infraMapping.getServiceId() : null)
                                     .waitId(waitId)
                                     .tags(tags)
                                     .data(TaskData.builder()
@@ -612,7 +616,9 @@ public class K8sStateHelper {
                       .expressionFunctorToken(expressionFunctorToken)
                       .build())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
+            .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infraMapping.getUuid())
+            .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infraMapping.getServiceId())
             .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, serviceTemplateId)
             .setupAbstraction(Cd1SetupFields.ARTIFACT_STREAM_ID_FIELD, artifactStreamId)
             .build();

@@ -119,7 +119,8 @@ public class SpotInstListenerUpdateStateTest extends WingsBaseTest {
     DelegateTask task = DelegateTask.builder().build();
     doReturn(task)
         .when(mockSpotinstStateHelper)
-        .getDelegateTask(anyString(), anyString(), any(), anyString(), anyString(), anyString(), any());
+        .getDelegateTask(
+            anyString(), anyString(), any(), anyString(), anyString(), anyString(), any(), any(), anyString());
     ExecutionResponse response = state.execute(mockContext);
     assertThat(response).isNotNull();
     assertThat(response.getExecutionStatus()).isEqualTo(SUCCESS);
