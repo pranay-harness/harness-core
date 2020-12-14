@@ -599,6 +599,7 @@ public class PcfSetupState extends State {
             .infraMappingId(stateExecutionData.getInfraMappingId())
             .pcfCommandRequest(stateExecutionData.getPcfCommandRequest())
             .isStandardBlueGreenWorkflow(stateExecutionData.isStandardBlueGreen())
+            .mostRecentInactiveAppVersionDetails(pcfSetupCommandResponse.getMostRecentInactiveAppVersion())
             .useAppAutoscalar(stateExecutionData.isUseAppAutoscalar())
             .enforceSslValidation(stateExecutionData.isEnforceSslValidation())
             .pcfManifestsPackage(stateExecutionData.getPcfManifestsPackage())

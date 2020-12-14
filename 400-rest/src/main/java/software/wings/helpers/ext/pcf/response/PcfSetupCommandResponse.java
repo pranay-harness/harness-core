@@ -18,15 +18,18 @@ public class PcfSetupCommandResponse extends PcfCommandResponse {
   private Integer totalPreviousInstanceCount;
   private List<PcfAppSetupTimeDetails> downsizeDetails;
   private Integer instanceCountForMostRecentVersion;
+  private PcfAppSetupTimeDetails mostRecentInactiveAppVersion;
 
   @Builder
   public PcfSetupCommandResponse(CommandExecutionStatus commandExecutionStatus, String output,
       PcfAppSetupTimeDetails newApplicationDetails, Integer totalPreviousInstanceCount,
-      List<PcfAppSetupTimeDetails> downsizeDetails, Integer instanceCountForMostRecentVersion) {
+      List<PcfAppSetupTimeDetails> downsizeDetails, Integer instanceCountForMostRecentVersion,
+      PcfAppSetupTimeDetails mostRecentInactiveAppVersion) {
     super(commandExecutionStatus, output);
     this.newApplicationDetails = newApplicationDetails;
     this.totalPreviousInstanceCount = totalPreviousInstanceCount;
     this.downsizeDetails = downsizeDetails;
     this.instanceCountForMostRecentVersion = instanceCountForMostRecentVersion;
+    this.mostRecentInactiveAppVersion = mostRecentInactiveAppVersion;
   }
 }

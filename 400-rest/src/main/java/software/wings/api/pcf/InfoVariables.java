@@ -24,6 +24,10 @@ public class InfoVariables implements SweepingOutput {
   private List<String> finalRoutes;
   private List<String> tempRoutes;
 
+  private String mostRecentInactiveAppVersionName;
+  private String mostRecentInactiveAppVersionGuid;
+  private Integer mostRecentInactiveAppVersionRunningInstances;
+
   @Override
   public String getType() {
     return "infoVariables";
