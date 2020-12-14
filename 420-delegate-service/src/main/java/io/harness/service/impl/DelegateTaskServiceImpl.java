@@ -5,6 +5,7 @@ import static java.lang.System.currentTimeMillis;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.service.intfc.DelegateTaskService;
@@ -49,5 +50,11 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
                 .set(DelegateTaskKeys.expiry, now + delegateTask.getData().getTimeout()));
       }
     }
+  }
+
+  @Override
+  public void processDelegateResponse(
+      String accountId, String delegateId, String taskId, DelegateTaskResponse response) {
+    // TODO: Add implementation
   }
 }
