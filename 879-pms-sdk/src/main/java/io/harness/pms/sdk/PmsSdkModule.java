@@ -40,7 +40,7 @@ public class PmsSdkModule {
 
   private void initialize() throws StatusRuntimeException, Exception {
     PipelineServiceInfoProvider pipelineServiceInfoProvider = config.getPipelineServiceInfoProvider();
-    String serviceName = pipelineServiceInfoProvider.getServiceName();
+    String serviceName = config.getServiceName();
     Injector injector = Guice.createInjector(getModules(serviceName));
     ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
     serviceManager.awaitHealthy();

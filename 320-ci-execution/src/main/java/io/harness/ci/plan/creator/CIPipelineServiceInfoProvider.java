@@ -11,11 +11,6 @@ import java.util.List;
 
 public class CIPipelineServiceInfoProvider implements PipelineServiceInfoProvider {
   @Override
-  public String getServiceName() {
-    return "CI";
-  }
-
-  @Override
   public List<PartialPlanCreator<?>> getPlanCreators() {
     return new LinkedList<>();
   }

@@ -57,6 +57,7 @@ public class CvServiceApplication extends Application<CvServiceConfiguration> {
     registerJerseyProviders(environment, injector);
 
     PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
+                                        .serviceName("cv")
                                         .mongoConfig(config.getMongoConfig())
                                         .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
                                         .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())

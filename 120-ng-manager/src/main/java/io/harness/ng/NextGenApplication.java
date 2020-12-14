@@ -191,6 +191,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   public void registerPipelineSDK(Injector injector, NextGenConfiguration appConfig) {
     if (appConfig.getShouldConfigureWithPMS() != null && appConfig.getShouldConfigureWithPMS()) {
       PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
+                                          .serviceName("cd")
                                           .mongoConfig(appConfig.getPmsMongoConfig())
                                           .grpcServerConfig(appConfig.getPmsSdkGrpcServerConfig())
                                           .pmsGrpcClientConfig(appConfig.getPmsGrpcClientConfig())

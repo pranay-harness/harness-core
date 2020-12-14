@@ -274,8 +274,10 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
       }
     }
   }
+
   private void registerPMSSDK(CIManagerConfiguration config) {
     PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
+                                        .serviceName("ci")
                                         .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
                                         .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
                                         .pipelineServiceInfoProvider(new CIPipelineServiceInfoProvider())

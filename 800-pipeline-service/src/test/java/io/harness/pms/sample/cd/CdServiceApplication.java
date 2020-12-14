@@ -57,6 +57,7 @@ public class CdServiceApplication extends Application<CdServiceConfiguration> {
     registerJerseyProviders(environment, injector);
 
     PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
+                                        .serviceName("cd")
                                         .mongoConfig(config.getMongoConfig())
                                         .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
                                         .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
