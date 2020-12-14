@@ -3,6 +3,7 @@ package io.harness.serializer;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.sdk.core.adviser.abort.OnAbortAdviserParameters;
 import io.harness.pms.sdk.core.adviser.fail.OnFailAdviserParameters;
 import io.harness.pms.sdk.core.adviser.ignore.IgnoreAdviserParameters;
 import io.harness.pms.sdk.core.adviser.manualintervention.ManualInterventionAdviserParameters;
@@ -32,6 +33,7 @@ public class PmsSdkCoreKryoRegistrar implements KryoRegistrar {
     kryo.register(IgnoreAdviserParameters.class, 3106);
     kryo.register(ManualInterventionAdviserParameters.class, 3107);
     kryo.register(OnMarkSuccessAdviserParameters.class, 3108);
+    kryo.register(OnAbortAdviserParameters.class, 3109);
 
     // New classes here
     kryo.register(PlanNode.class, 88201);
