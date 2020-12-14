@@ -14,6 +14,7 @@ import lombok.Value;
 @Value
 @Builder
 public class PmsSdkConfiguration {
+  String serviceName;
   MongoConfig mongoConfig;
   GrpcServerConfig grpcServerConfig;
   GrpcClientConfig pmsGrpcClientConfig;

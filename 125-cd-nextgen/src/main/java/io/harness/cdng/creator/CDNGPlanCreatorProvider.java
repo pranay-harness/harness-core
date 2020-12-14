@@ -23,11 +23,6 @@ import java.util.List;
 
 public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
   @Override
-  public String getServiceName() {
-    return "cd";
-  }
-
-  @Override
   public List<PartialPlanCreator<?>> getPlanCreators() {
     List<PartialPlanCreator<?>> planCreators = new LinkedList<>();
     planCreators.add(new NGPipelinePlanCreator());

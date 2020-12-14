@@ -15,11 +15,6 @@ import java.util.List;
 
 public class CvPipelineServiceInfoProvider implements PipelineServiceInfoProvider {
   @Override
-  public String getServiceName() {
-    return "cv";
-  }
-
-  @Override
   public List<PartialPlanCreator<?>> getPlanCreators() {
     List<PartialPlanCreator<?>> planCreators = new ArrayList<>();
     planCreators.add(new NGPipelinePlanCreator());
