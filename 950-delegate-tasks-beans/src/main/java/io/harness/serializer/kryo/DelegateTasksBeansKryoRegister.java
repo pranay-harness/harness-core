@@ -116,6 +116,7 @@ import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ChartMuseumCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.GitConnectionNGCapability;
+import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
@@ -303,6 +304,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(GitSSHAuthenticationDTO.class, 19065);
     kryo.register(GitStoreDelegateConfig.class, 19104);
     kryo.register(GitSyncConfig.class, 19069);
+    kryo.register(HelmInstallationCapability.class, 19120);
     kryo.register(HttpConnectionExecutionCapability.class, 19003);
     kryo.register(HttpTaskParameters.class, 20002);
     kryo.register(K8sDeployRequest.class, 19101);
