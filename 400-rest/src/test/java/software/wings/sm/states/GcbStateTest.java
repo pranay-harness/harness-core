@@ -52,6 +52,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
+import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.command.GcbTaskParams;
@@ -62,6 +63,7 @@ import software.wings.helpers.ext.gcb.models.GcbBuildStatus;
 import software.wings.service.impl.StateExecutionServiceImpl;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -106,6 +108,7 @@ public class GcbStateTest extends CategoryTest {
   @Mock private TemplateUtils templateUtils;
   @Mock private TemplateExpressionProcessor templateExpressionProcessor;
   @Mock private SettingsService settingService;
+  @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private StateExecutionServiceImpl stateExecutionService;
 
   @InjectMocks private GcbState state = spy(new GcbState("gcb"));
@@ -251,6 +254,8 @@ public class GcbStateTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldQueuePollDelegateTask() {
     GcbTaskParams gcbTaskParams = GcbTaskParams.builder().build();
+    when(infrastructureMappingService.get(anyString(), anyString()))
+        .thenReturn(PcfInfrastructureMapping.builder().serviceId("serviceId").build());
     GcbDelegateResponse delegateResponse =
         gcbDelegateResponseOf(gcbTaskParams, GcbBuildDetails.builder().status(GcbBuildStatus.WORKING).build());
     GcbExecutionData gcbExecutionData = new GcbExecutionData();
@@ -273,6 +278,7 @@ public class GcbStateTest extends CategoryTest {
     assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.APP_ID_FIELD)).isEqualTo(APP_ID);
     assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD))
         .isEqualTo("infrastructureId");
+    assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.SERVICE_ID_FIELD)).isEqualTo("serviceId");
     assertThat(delegateTask.getData())
         .isEqualTo(TaskData.builder()
                        .async(true)

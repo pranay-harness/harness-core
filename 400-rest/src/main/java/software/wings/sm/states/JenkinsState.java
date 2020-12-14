@@ -39,6 +39,7 @@ import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JenkinsSubTaskType;
 import software.wings.beans.SettingAttribute;
@@ -50,6 +51,7 @@ import software.wings.beans.template.TemplateUtils;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -115,6 +117,7 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
   @Transient @Inject private TemplateUtils templateUtils;
   @Transient @Inject private SettingsService settingsService;
   @Transient @Inject private KryoSerializer kryoSerializer;
+  @Transient @Inject private InfrastructureMappingService infrastructureMappingService;
 
   public JenkinsState(String name) {
     super(name, StateType.JENKINS.name());
@@ -339,6 +342,10 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
 
   private DelegateTask buildDelegateTask(ExecutionContext context, String activityId,
       JenkinsTaskParams jenkinsTaskParams, String envId, String infrastructureMappingId) {
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingService.get(context.getAppId(), infrastructureMappingId);
+    String serviceId = infrastructureMapping == null ? null : infrastructureMapping.getServiceId();
+    String envType = context.getEnvType();
     return DelegateTask.builder()
         .accountId(((ExecutionContextImpl) context).fetchRequiredApp().getAccountId())
         .waitId(activityId)
@@ -350,7 +357,11 @@ public class JenkinsState extends State implements SweepingOutputStateMixin {
                   .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
                   .build())
         .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+        .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, envType)
+
         .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
+        .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, serviceId)
+
         .build();
   }
 

@@ -34,6 +34,7 @@ import software.wings.beans.BambooConfig;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -65,6 +66,7 @@ public class BambooStateTest extends CategoryTest {
   @Mock private DelegateService delegateService;
   @Mock private SecretManager secretManager;
   @Mock private SettingServiceHelper settingServiceHelper;
+  @Mock private InfrastructureMappingService infrastructureMappingService;
 
   @InjectMocks private BambooState bambooState = new BambooState("bamboo");
 

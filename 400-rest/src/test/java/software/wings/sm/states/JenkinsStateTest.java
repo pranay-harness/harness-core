@@ -39,6 +39,7 @@ import software.wings.beans.command.JenkinsTaskParams;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
@@ -80,6 +81,7 @@ public class JenkinsStateTest extends CategoryTest {
   @Mock private SecretManager secretManager;
   @Mock private TemplateExpressionProcessor templateExpressionProcessor;
   @Mock private SettingsService settingsService;
+  @Mock private InfrastructureMappingService infrastructureMappingService;
 
   @InjectMocks private JenkinsState jenkinsState = new JenkinsState("jenkins");
 

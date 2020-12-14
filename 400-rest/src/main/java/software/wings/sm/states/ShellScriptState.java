@@ -279,6 +279,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infrastructureMappingId);
     String serviceTemplateId =
         infrastructureMapping == null ? null : serviceTemplateHelper.fetchServiceTemplateId(infrastructureMapping);
+    String serviceId = infrastructureMapping == null ? null : infrastructureMapping.getServiceId();
     String username = null;
     String keyPath = null;
     boolean keyless = false;
@@ -451,7 +452,10 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
                       .expressionFunctorToken(expressionFunctorToken)
                       .build())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+            .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, context.getEnvType())
+
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMappingId)
+            .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, serviceId)
             .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, serviceTemplateId)
             .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
             .build();

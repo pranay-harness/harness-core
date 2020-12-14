@@ -70,6 +70,7 @@ import software.wings.delegatetasks.HttpTask;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -145,6 +146,7 @@ public class HttpStateTest extends WingsBaseTest {
   @Mock private StateExecutionService stateExecutionService;
   @Inject private HttpServiceImpl httpService;
   @Mock private AccountServiceImpl accountService;
+  @Mock private InfrastructureMappingService infrastructureMappingService;
 
   private ExecutionResponse asyncExecutionResponse;
 
@@ -757,6 +759,7 @@ public class HttpStateTest extends WingsBaseTest {
     on(httpState).set("delegateService", delegateService);
     on(httpState).set("templateUtils", templateUtils);
     on(httpState).set("accountService", accountService);
+    on(httpState).set("infrastructureMappingService", infrastructureMappingService);
 
     doAnswer(invocation -> {
       DelegateTask task = invocation.getArgumentAt(0, DelegateTask.class);
