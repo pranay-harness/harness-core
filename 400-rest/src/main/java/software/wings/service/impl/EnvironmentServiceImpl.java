@@ -103,6 +103,7 @@ import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.stencils.DataProvider;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -825,56 +826,47 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       String serviceTemplateId, String targetAppId, String targetServiceId) {
     if (serviceVariables != null) {
       for (ServiceVariable serviceVariable : serviceVariables) {
-        ServiceVariable clonedServiceVariable = serviceVariable.cloneInternal();
-        if (ENCRYPTED_TEXT == clonedServiceVariable.getType()) {
-          clonedServiceVariable.setValue(clonedServiceVariable.getEncryptedValue().toCharArray());
-        }
-        if (targetAppId != null) {
-          clonedServiceVariable.setAppId(targetAppId);
-        }
-        if (!clonedServiceVariable.getEnvId().equals(GLOBAL_ENV_ID)) {
-          clonedServiceVariable.setEnvId(clonedEnvironment.getUuid());
-        }
-        if (!clonedServiceVariable.getTemplateId().equals(DEFAULT_TEMPLATE_ID) && serviceTemplateId != null) {
-          clonedServiceVariable.setTemplateId(serviceTemplateId);
-        }
-        if (clonedServiceVariable.getEntityType() == SERVICE_TEMPLATE && serviceTemplateId != null) {
-          clonedServiceVariable.setEntityId(serviceTemplateId);
-        }
-        if (clonedServiceVariable.getEntityType() == SERVICE && targetServiceId != null) {
-          clonedServiceVariable.setEntityId(targetServiceId);
-        }
-        if (clonedServiceVariable.getEntityType() == ENVIRONMENT) {
-          clonedServiceVariable.setEntityId(clonedEnvironment.getUuid());
-        }
+        ServiceVariable clonedServiceVariable = getClonedServiceVariable(
+            clonedEnvironment, serviceTemplateId, targetAppId, targetServiceId, serviceVariable);
         serviceVariableService.save(clonedServiceVariable);
       }
     }
+  }
+
+  @VisibleForTesting
+  public ServiceVariable getClonedServiceVariable(Environment clonedEnvironment, String serviceTemplateId,
+      String targetAppId, String targetServiceId, ServiceVariable serviceVariable) {
+    ServiceVariable clonedServiceVariable = serviceVariable.cloneInternal();
+    if (ENCRYPTED_TEXT == clonedServiceVariable.getType()) {
+      clonedServiceVariable.setValue(clonedServiceVariable.getEncryptedValue().toCharArray());
+    }
+    if (targetAppId != null) {
+      clonedServiceVariable.setAppId(targetAppId);
+    }
+    if (!clonedServiceVariable.getEnvId().equals(GLOBAL_ENV_ID)) {
+      clonedServiceVariable.setEnvId(clonedEnvironment.getUuid());
+    }
+    if (!clonedServiceVariable.getTemplateId().equals(DEFAULT_TEMPLATE_ID) && serviceTemplateId != null) {
+      clonedServiceVariable.setTemplateId(serviceTemplateId);
+    }
+    if (clonedServiceVariable.getEntityType() == SERVICE_TEMPLATE && serviceTemplateId != null) {
+      clonedServiceVariable.setEntityId(serviceTemplateId);
+    }
+    if (clonedServiceVariable.getEntityType() == SERVICE && targetServiceId != null) {
+      clonedServiceVariable.setEntityId(targetServiceId);
+    }
+    if (clonedServiceVariable.getEntityType() == ENVIRONMENT) {
+      clonedServiceVariable.setEntityId(clonedEnvironment.getUuid());
+    }
+    return clonedServiceVariable;
   }
 
   private void cloneConfigFiles(Environment clonedEnvironment, ServiceTemplate clonedServiceTemplate,
       List<ConfigFile> configFiles, String targetAppId, String targetServiceId) {
     if (configFiles != null) {
       for (ConfigFile configFile : configFiles) {
-        ConfigFile clonedConfigFile = configFile.cloneInternal();
-        if (targetAppId != null) {
-          clonedConfigFile.setAppId(targetAppId);
-        }
-        if (!clonedConfigFile.getEnvId().equals(GLOBAL_ENV_ID)) {
-          clonedConfigFile.setEnvId(clonedEnvironment.getUuid());
-        }
-        if (!clonedConfigFile.getTemplateId().equals(DEFAULT_TEMPLATE_ID)) {
-          clonedConfigFile.setTemplateId(clonedServiceTemplate.getUuid());
-        }
-        if (clonedConfigFile.getEntityType() == SERVICE_TEMPLATE) {
-          clonedConfigFile.setEntityId(clonedServiceTemplate.getUuid());
-        }
-        if (clonedConfigFile.getEntityType() == SERVICE && targetServiceId != null) {
-          clonedConfigFile.setEntityId(targetServiceId);
-        }
-        if (clonedConfigFile.getEntityType() == ENVIRONMENT) {
-          clonedConfigFile.setEntityId(clonedEnvironment.getUuid());
-        }
+        ConfigFile clonedConfigFile =
+            getClonedConfigFile(clonedEnvironment, clonedServiceTemplate, targetAppId, targetServiceId, configFile);
         try {
           File file = configService.download(configFile.getAppId(), configFile.getUuid());
           configService.save(clonedConfigFile, new BoundedInputStream(new FileInputStream(file)));
@@ -884,6 +876,31 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         }
       }
     }
+  }
+
+  @VisibleForTesting
+  public ConfigFile getClonedConfigFile(Environment clonedEnvironment, ServiceTemplate clonedServiceTemplate,
+      String targetAppId, String targetServiceId, ConfigFile configFile) {
+    ConfigFile clonedConfigFile = configFile.cloneInternal();
+    if (targetAppId != null) {
+      clonedConfigFile.setAppId(targetAppId);
+    }
+    if (!clonedConfigFile.getEnvId().equals(GLOBAL_ENV_ID)) {
+      clonedConfigFile.setEnvId(clonedEnvironment.getUuid());
+    }
+    if (!clonedConfigFile.getTemplateId().equals(DEFAULT_TEMPLATE_ID)) {
+      clonedConfigFile.setTemplateId(clonedServiceTemplate.getUuid());
+    }
+    if (clonedConfigFile.getEntityType() == SERVICE_TEMPLATE) {
+      clonedConfigFile.setEntityId(clonedServiceTemplate.getUuid());
+    }
+    if (clonedConfigFile.getEntityType() == SERVICE && targetServiceId != null) {
+      clonedConfigFile.setEntityId(targetServiceId);
+    }
+    if (clonedConfigFile.getEntityType() == ENVIRONMENT) {
+      clonedConfigFile.setEntityId(clonedEnvironment.getUuid());
+    }
+    return clonedConfigFile;
   }
 
   private void cloneAppManifests(String appId, String clonedEnvId, String originalEnvId) {
