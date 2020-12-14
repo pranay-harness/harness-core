@@ -2,6 +2,7 @@ package io.harness.ngtriggers.helpers;
 
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.INVALID_PAYLOAD;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.INVALID_RUNTIME_INPUT_YAML;
+import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_ENABLED_TRIGGER_FOUND_FOR_REPO;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_REPO;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.SCM_SERVICE_CONNECTION_FAILED;
@@ -51,8 +52,9 @@ public class WebhookEventResponseHelper {
   }
 
   public boolean isFinalStatusAnEvent(WebhookEventResponse.FinalStatus status) {
-    Set<FinalStatus> set = EnumSet.of(INVALID_RUNTIME_INPUT_YAML, TARGET_DID_NOT_EXECUTE, TARGET_EXECUTION_REQUESTED,
-        NO_MATCHING_TRIGGER_FOR_REPO, NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS);
+    Set<FinalStatus> set = EnumSet.of(INVALID_PAYLOAD, INVALID_RUNTIME_INPUT_YAML, TARGET_DID_NOT_EXECUTE,
+        TARGET_EXECUTION_REQUESTED, NO_ENABLED_TRIGGER_FOUND_FOR_REPO, NO_MATCHING_TRIGGER_FOR_REPO,
+        NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS);
     return set.contains(status);
   }
 

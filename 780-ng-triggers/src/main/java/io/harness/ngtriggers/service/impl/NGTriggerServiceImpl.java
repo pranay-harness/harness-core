@@ -2,6 +2,8 @@ package io.harness.ngtriggers.service.impl;
 
 import static io.harness.exception.WingsException.USER;
 import static io.harness.ngtriggers.beans.target.TargetType.PIPELINE;
+import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSetIntoPipeline;
+import static io.harness.pms.merger.helpers.MergeHelper.sanitizeRuntimeInput;
 
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
@@ -16,11 +18,10 @@ import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventsKeys;
 import io.harness.ngtriggers.beans.target.TargetSpec;
 import io.harness.ngtriggers.beans.target.pipeline.PipelineTargetSpec;
-import io.harness.ngtriggers.helpers.TriggerTargetExecutionHelper;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.mapper.TriggerFilterHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
-import io.harness.pms.merger.helpers.MergeHelper;
+import io.harness.pms.yaml.YamlUtils;
 import io.harness.repositories.ng.core.spring.NGTriggerRepository;
 import io.harness.repositories.ng.core.spring.TriggerWebhookEventRepository;
 import io.harness.yaml.utils.YamlPipelineUtils;
@@ -182,12 +183,11 @@ public class NGTriggerServiceImpl implements NGTriggerService {
     TargetSpec targetSpec = triggerDetails.getNgTriggerConfig().getTarget().getSpec();
     if (PipelineTargetSpec.class.isAssignableFrom(targetSpec.getClass())) {
       PipelineTargetSpec pipelineTargetSpec = (PipelineTargetSpec) targetSpec;
-      String runtimeInput = TriggerTargetExecutionHelper.sanitizeInputSet(
-          ngPipelineEntity.getYamlPipeline(), pipelineTargetSpec.getRuntimeInputYaml());
+      String runtimeInput =
+          sanitizeRuntimeInput(ngPipelineEntity.getYamlPipeline(), pipelineTargetSpec.getRuntimeInputYaml());
       pipelineTargetSpec.setRuntimeInputYaml(runtimeInput);
     }
-
-    String yaml = YamlPipelineUtils.writeString(triggerDetails.getNgTriggerConfig());
+    String yaml = YamlUtils.write(triggerDetails.getNgTriggerConfig()).replace("---\n", "");
     ngTriggerEntity.setYaml(yaml);
   }
 
@@ -231,8 +231,7 @@ public class NGTriggerServiceImpl implements NGTriggerService {
       sanitizeRuntimeInputForTrigger(triggerDetails);
       TargetSpec targetSpec = triggerDetails.getNgTriggerConfig().getTarget().getSpec();
       PipelineTargetSpec pipelineTargetSpec = (PipelineTargetSpec) targetSpec;
-      return MergeHelper.mergeInputSetIntoPipeline(
-          ngPipelineEntity.getYamlPipeline(), pipelineTargetSpec.getRuntimeInputYaml());
+      return mergeInputSetIntoPipeline(ngPipelineEntity.getYamlPipeline(), pipelineTargetSpec.getRuntimeInputYaml());
     } catch (Exception e) {
       log.error("Failure while trying to generate final Pipeline yml for Execution: ", e);
       throw new TriggerException(

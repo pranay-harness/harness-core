@@ -156,10 +156,13 @@ public class NGTriggerResourceTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testUpdate() {
+  public void testUpdate() throws Exception {
     doReturn(ngTriggerEntity).when(ngTriggerService).update(any());
-    when(ngTriggerElementMapper.toTriggerEntity(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, IDENTIFIER, ngTriggerYaml))
-        .thenReturn(ngTriggerEntity);
+    TriggerDetails triggerDetails = TriggerDetails.builder().ngTriggerEntity(ngTriggerEntity).build();
+    doReturn(triggerDetails)
+        .when(ngTriggerElementMapper)
+        .toTriggerDetails(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, ngTriggerYaml);
+    doNothing().when(ngTriggerService).sanitizeRuntimeInputForTrigger(triggerDetails);
     when(ngTriggerElementMapper.toResponseDTO(ngTriggerEntity)).thenReturn(ngTriggerResponseDTO);
 
     NGTriggerResponseDTO responseDTO =

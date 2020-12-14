@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.ngtriggers.beans.config.HeaderConfig;
@@ -212,16 +213,16 @@ public class WebhookEventPayloadParser {
         .build();
   }
 
-  private GitProvider obtainWebhookSource(Set<String> headerKeys) {
+  public GitProvider obtainWebhookSource(Set<String> headerKeys) {
     if (isEmpty(headerKeys)) {
       throw new InvalidRequestException("Failed to resolve Webhook Source. Reason: HttpHeaders are empty.");
     }
 
-    if (headerKeys.stream().anyMatch(X_GIT_HUB_EVENT::equalsIgnoreCase)) {
+    if (containsHeaderKey(headerKeys, X_GIT_HUB_EVENT)) {
       return GitProvider.GITHUB;
-    } else if (headerKeys.stream().anyMatch(X_GIT_LAB_EVENT::equalsIgnoreCase)) {
+    } else if (containsHeaderKey(headerKeys, X_GIT_LAB_EVENT)) {
       return GitProvider.GITLAB;
-    } else if (headerKeys.stream().anyMatch(X_BIT_BUCKET_EVENT::equalsIgnoreCase)) {
+    } else if (containsHeaderKey(headerKeys, X_BIT_BUCKET_EVENT)) {
       return GitProvider.BITBUCKET;
     }
 
@@ -229,6 +230,15 @@ public class WebhookEventPayloadParser {
             + "One of " + X_GIT_HUB_EVENT + ", " + X_BIT_BUCKET_EVENT + ", " + X_GIT_LAB_EVENT
             + " must be present in Headers",
         USER);
+  }
+
+  private boolean containsHeaderKey(Set<String> headerKeys, String key) {
+    if (isEmpty(headerKeys) || isBlank(key)) {
+      return false;
+    }
+
+    return headerKeys.contains(key) || headerKeys.contains(key.toLowerCase())
+        || headerKeys.stream().anyMatch(key::equalsIgnoreCase);
   }
 
   public WebhookEventHeaderData obtainWebhookSourceKeyData(List<HeaderConfig> headerConfigs) {
