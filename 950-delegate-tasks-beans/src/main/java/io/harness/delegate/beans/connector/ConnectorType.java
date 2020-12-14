@@ -1,10 +1,12 @@
 package io.harness.delegate.beans.connector;
 
+import io.harness.EntitySubtype;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum ConnectorType {
+public enum ConnectorType implements EntitySubtype {
   @JsonProperty("K8sCluster") KUBERNETES_CLUSTER("K8sCluster"),
   @JsonProperty("Git") GIT("Git"),
   @JsonProperty("Splunk") SPLUNK("Splunk"),

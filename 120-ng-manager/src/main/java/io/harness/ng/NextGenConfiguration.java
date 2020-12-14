@@ -31,7 +31,7 @@ public class NextGenConfiguration extends Configuration {
   public static final String CDNG_RESOURCES_PACKAGE = "io.harness.cdng";
   public static final String OVERLAY_INPUT_SET_RESOURCE_PACKAGE = "io.harness.ngpipeline";
   public static final String NG_TRIGGER_RESOURCE_PACKAGE = "io.harness.ngtriggers";
-  public static final String YAML_SNIPPET_PACKAGE = "io.harness.yaml.snippets";
+  public static final String YAML_PACKAGE = "io.harness.yaml";
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("pmsMongo") private MongoConfig pmsMongoConfig;
@@ -69,7 +69,7 @@ public class NextGenConfiguration extends Configuration {
 
   public static Collection<Class<?>> getResourceClasses() {
     Reflections reflections = new Reflections(BASE_PACKAGE, CONNECTOR_PACKAGE, GIT_SYNC_PACKAGE, CDNG_RESOURCES_PACKAGE,
-        OVERLAY_INPUT_SET_RESOURCE_PACKAGE, NG_TRIGGER_RESOURCE_PACKAGE, YAML_SNIPPET_PACKAGE);
+        OVERLAY_INPUT_SET_RESOURCE_PACKAGE, NG_TRIGGER_RESOURCE_PACKAGE, YAML_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 
