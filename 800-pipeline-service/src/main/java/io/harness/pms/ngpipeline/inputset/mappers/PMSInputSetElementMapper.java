@@ -119,7 +119,7 @@ public class PMSInputSetElementMapper {
         .build();
   }
 
-  private String getStringField(String yaml, String fieldName, String topKey) {
+  public String getStringField(String yaml, String fieldName, String topKey) {
     try {
       JsonNode node = (new PipelineYamlConfig(yaml)).getYamlMap();
       JsonNode innerMap = node.get(topKey);
@@ -128,6 +128,17 @@ public class PMSInputSetElementMapper {
         return null;
       }
       return innerMap.get(fieldName).asText().equals("") ? null : innerMap.get(fieldName).asText();
+    } catch (IOException e) {
+      throw new InvalidRequestException("Could not convert yaml to JsonNode");
+    }
+  }
+
+  public boolean isPipelineAbsent(String yaml) {
+    try {
+      JsonNode node = (new PipelineYamlConfig(yaml)).getYamlMap();
+      JsonNode innerMap = node.get("inputSet");
+      JsonNode field = innerMap.get("pipeline");
+      return field == null;
     } catch (IOException e) {
       throw new InvalidRequestException("Could not convert yaml to JsonNode");
     }
