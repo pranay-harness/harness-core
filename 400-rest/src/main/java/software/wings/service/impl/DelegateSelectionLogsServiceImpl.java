@@ -2,31 +2,49 @@ package software.wings.service.impl;
 
 import static io.harness.beans.FeatureName.DISABLE_DELEGATE_SELECTION_LOG;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
+import io.harness.delegate.beans.DelegateSelectionLogResponse;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.selection.log.DelegateSelectionLog;
 import io.harness.selection.log.DelegateSelectionLog.DelegateSelectionLogBuilder;
 import io.harness.selection.log.DelegateSelectionLog.DelegateSelectionLogKeys;
+import io.harness.selection.log.DelegateSelectionLogTaskMetadata;
+import io.harness.tasks.Cd1SetupFields;
 
+import software.wings.beans.Application;
 import software.wings.beans.Delegate;
+import software.wings.beans.Environment;
+import software.wings.beans.Service;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 @Singleton
 @Slf4j
@@ -51,15 +69,47 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   private static final String TASK_ASSIGNED_GROUP_ID = "TASK_ASSIGNED_GROUP_ID";
   private static final String PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID = "PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID";
 
+  private LoadingCache<ImmutablePair<String, String>, String> setupAbstractionsCache =
+      CacheBuilder.newBuilder()
+          .maximumSize(1000)
+          .expireAfterWrite(10, TimeUnit.MINUTES)
+          .build(new CacheLoader<ImmutablePair<String, String>, String>() {
+            @Override
+            public String load(ImmutablePair<String, String> setupAbstractionKey) {
+              return fetchSetupAbstractionName(setupAbstractionKey);
+            }
+          });
+
+  private String fetchSetupAbstractionName(ImmutablePair<String, String> setupAbstractionKey) {
+    switch (setupAbstractionKey.getLeft()) {
+      case Cd1SetupFields.APP_ID_FIELD:
+        Application app = persistence.get(Application.class, setupAbstractionKey.getRight());
+        return app != null ? app.getName() : setupAbstractionKey.getRight();
+      case Cd1SetupFields.ENV_ID_FIELD:
+        Environment env = persistence.get(Environment.class, setupAbstractionKey.getRight());
+        return env != null ? env.getName() : setupAbstractionKey.getRight();
+      case Cd1SetupFields.SERVICE_ID_FIELD:
+        Service service = persistence.get(Service.class, setupAbstractionKey.getRight());
+        return service != null ? service.getName() : setupAbstractionKey.getRight();
+      default:
+        return setupAbstractionKey.getRight();
+    }
+  }
+
   @Override
   public void save(BatchDelegateSelectionLog batch) {
     if (batch == null || batch.getDelegateSelectionLogs().isEmpty()) {
       return;
     }
+
+    batch.getTaskMetadata().setSetupAbstractions(
+        processSetupAbstractions(batch.getTaskMetadata().getSetupAbstractions()));
+
     try {
       if (featureFlagService.isNotEnabled(
               DISABLE_DELEGATE_SELECTION_LOG, batch.getDelegateSelectionLogs().iterator().next().getAccountId())) {
         persistence.saveIgnoringDuplicateKeys(batch.getDelegateSelectionLogs());
+        persistence.insertIgnoringDuplicateKeys(batch.getTaskMetadata());
         log.info("Batch saved successfully");
       } else {
         batch.getDelegateSelectionLogs()
@@ -79,12 +129,45 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
     }
   }
 
+  @VisibleForTesting
+  protected Map<String, String> processSetupAbstractions(Map<String, String> setupAbstractions) {
+    if (setupAbstractions == null) {
+      return null;
+    }
+
+    Map<String, String> mappedSetupAbstractions = new HashMap<>();
+
+    for (Map.Entry<String, String> entry : setupAbstractions.entrySet()) {
+      String setupAbstractionName = entry.getValue();
+
+      if (isNotBlank(entry.getKey()) && isNotBlank(entry.getValue())) {
+        try {
+          setupAbstractionName = setupAbstractionsCache.get(ImmutablePair.of(entry.getKey(), entry.getValue()));
+        } catch (ExecutionException e) {
+          log.error("Unexpected exception occurred while processing setup abstractions.");
+        }
+      }
+
+      mappedSetupAbstractions.put(
+          Cd1SetupFields.mapSetupFieldKeyToHumanFriendlyName(entry.getKey()), setupAbstractionName);
+    }
+
+    return mappedSetupAbstractions;
+  }
+
   @Override
   public BatchDelegateSelectionLog createBatch(DelegateTask task) {
     if (task == null || task.getUuid() == null || !task.isSelectionLogsTrackingEnabled()) {
       return null;
     }
-    return BatchDelegateSelectionLog.builder().taskId(task.getUuid()).build();
+    return BatchDelegateSelectionLog.builder()
+        .taskId(task.getUuid())
+        .taskMetadata(DelegateSelectionLogTaskMetadata.builder()
+                          .taskId(task.getUuid())
+                          .accountId(task.getAccountId())
+                          .setupAbstractions(task.getSetupAbstractions())
+                          .build())
+        .build();
   }
 
   private DelegateSelectionLogBuilder retrieveDelegateSelectionLogBuilder(
@@ -167,7 +250,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
 
   @Override
   public void logProfileScopeRuleNotMatched(
-      BatchDelegateSelectionLog batch, String accountId, String delegateId, String scopingRuleDescription) {
+      BatchDelegateSelectionLog batch, String accountId, String delegateId, String scopingRulesDescription) {
     if (batch == null) {
       return;
     }
@@ -178,7 +261,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
         retrieveDelegateSelectionLogBuilder(accountId, batch.getTaskId(), delegateIds);
 
     batch.append(delegateSelectionLogBuilder.conclusion(REJECTED)
-                     .message("Delegate profile scoping rule not matched: " + scopingRuleDescription)
+                     .message("Delegate profile scoping rules not matched: " + scopingRulesDescription)
                      .eventTimestamp(System.currentTimeMillis())
                      .groupId(PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID)
                      .build());
@@ -236,6 +319,34 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
     }
 
     return delegateSelectionLogs;
+  }
+
+  @Override
+  public DelegateSelectionLogResponse fetchTaskSelectionLogsData(String accountId, String taskId) {
+    List<DelegateSelectionLogParams> delegateSelectionLogParams = fetchTaskSelectionLogs(accountId, taskId);
+
+    DelegateSelectionLogTaskMetadata taskMetadata = persistence.createQuery(DelegateSelectionLogTaskMetadata.class)
+                                                        .filter(DelegateSelectionLogKeys.accountId, accountId)
+                                                        .filter(DelegateSelectionLogKeys.taskId, taskId)
+                                                        .get();
+
+    Map<String, String> previewSetupAbstractions = new HashMap<>();
+    if (taskMetadata != null && taskMetadata.getSetupAbstractions() != null) {
+      previewSetupAbstractions =
+          taskMetadata.getSetupAbstractions()
+              .entrySet()
+              .stream()
+              .filter(map
+                  -> Cd1SetupFields.APPLICATION.equals(map.getKey()) || Cd1SetupFields.SERVICE.equals(map.getKey())
+                      || Cd1SetupFields.ENVIRONMENT.equals(map.getKey())
+                      || Cd1SetupFields.ENVIRONMENT_TYPE.equals(map.getKey()))
+              .collect(Collectors.toMap(map -> map.getKey(), map -> String.valueOf(map.getValue())));
+    }
+
+    return DelegateSelectionLogResponse.builder()
+        .delegateSelectionLogs(delegateSelectionLogParams)
+        .taskSetupAbstractions(previewSetupAbstractions)
+        .build();
   }
 
   private List<DelegateSelectionLogParams> buildDelegateSelectionLogParamsList(DelegateSelectionLog selectionLog) {

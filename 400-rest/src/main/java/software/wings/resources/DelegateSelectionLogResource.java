@@ -4,6 +4,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import io.harness.delegate.beans.DelegateSelectionLogParams;
+import io.harness.delegate.beans.DelegateSelectionLogResponse;
 import io.harness.rest.RestResponse;
 
 import software.wings.security.annotations.AuthRule;
@@ -39,5 +40,14 @@ public class DelegateSelectionLogResource {
   public RestResponse<List<DelegateSelectionLogParams>> getSelectionLogs(
       @QueryParam("accountId") String accountId, @QueryParam("taskId") String taskId) {
     return new RestResponse(delegateSelectionLogsService.fetchTaskSelectionLogs(accountId, taskId));
+  }
+
+  @GET
+  @Path("/v2")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<DelegateSelectionLogResponse> getSelectionLogsV2(
+      @QueryParam("accountId") String accountId, @QueryParam("taskId") String taskId) {
+    return new RestResponse(delegateSelectionLogsService.fetchTaskSelectionLogsData(accountId, taskId));
   }
 }
