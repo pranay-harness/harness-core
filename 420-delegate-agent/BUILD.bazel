@@ -55,10 +55,10 @@ java_library(
     srcs = glob(["src/main/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = shared_dependencies + [
+        ":1-io_harness_managerclient",
+        ":2-io_harness_delegate",
         ":3-io_harness_logstreaming",
         ":3-io_harness_perpetualtask",
-        ":2-io_harness_delegate",
-        ":1-io_harness_managerclient",
     ],
 )
 
