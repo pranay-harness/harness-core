@@ -100,7 +100,8 @@ def join_list_items(item_list, separator):
 
 def get_list_from_string(item_list, delimiter):
     try:
-        item_list = item_list[1:-1]
+        if item_list[0] == '[':
+            item_list = item_list[1:-1]
         return item_list.split(delimiter)
     except Exception:
         return []

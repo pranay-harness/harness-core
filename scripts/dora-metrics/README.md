@@ -16,7 +16,7 @@
    ```
 3. Trigger the script using following command with proper input params :
     ```commandline
-    ./workflow_driver <APP_DOMAIN> <API_KEY> <ACCOUNT_ID> <FILE_OPERATION_ID> <OUTPUT_FILE_DIRECTORY_PATH> <OUTPUT_FILE_NAME> <META_FILE_DIRECTORY_PATH> <ENTITY_TYPE> <ENTITY_ID> <SEARCH_INTERVAL_START_TIME> <SEARCH_INTERVAL_END_TIME> <TAG_ENTITY_TYPE> <TAG_NAMES_LIST> <TAG_VALUES_LIST>
+    ./workflow_driver <APP_DOMAIN> <API_KEY> <ACCOUNT_ID> <FILE_OPERATION_ID> <OUTPUT_FILE_DIRECTORY_PATH> <OUTPUT_FILE_NAME> <META_FILE_DIRECTORY_PATH> <ENTITY_TYPE> <ENTITY_ID> <SEARCH_INTERVAL_START_TIME> <SEARCH_INTERVAL_END_TIME> <TAG_ENTITY_TYPE> <TAG_PAIR_LIST>
    ```
    |Name|Description|Sample Value|
    |----|-----------|------------|
@@ -32,9 +32,6 @@
    |SEARCH_INTERVAL_START_TIME|Start time of the search interval in format MM/DD/YYYY HH:MM:SS (24-Hr format) in local timezone|09/21/2020 00:00:00|
    |SEARCH_INTERVAL_END_TIME|End time of the search interval in format MM/DD/YYYY HH:MM:SS (24-Hr format) in local timezone|09/21/2020 00:00:00|
    |TAG_ENTITY_TYPE|Identifier to denote type of tags to search|APPLICATION / DEPLOYMENT / ENVIRONMENT / SERVICE|
-   |TAG_NAMES_LIST|List of comma separated names of each tag to be searched|[commitId,env]|
-   |TAG_VALUES_LIST|List of comma seaparated values of each tag to be searched|[122,prod]|
+   |TAG_PAIR_LIST|List of tag name and value in defined format|[tag_name=tag_value,commitId=122,env=Prod]|
    
-   NOTES :
-    * A single tag's name and value must be present at same index in the names and values list i.e. the order should be maintained
    

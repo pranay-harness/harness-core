@@ -6,7 +6,7 @@ import log_manager
 # Sample command to run
 # python3 workflow_driver.py "https://qa.harness.io/gateway" "cHg3eGRfQkZSQ2ktcGZXUFlYVmp2dzo6ZEs3bkRPRVNGcG1XcWhuaEVRR2R3NjN6ZnVqYlFMZ1ZZT2pmNGEyb3dBMVdJQlBuNTVXclVVdEZjYWdCQkdJd0xwMFdPa3RxUml4VTRwRWw=" "px7xd_BFRCi-pfWPYXVjvw" "NEW" "/Users/mohitgarg" "sample" "" "" "" "12/02/2020 00:00:00" "12/05/2020 00:00:00"
 
-TOTAL_ARGS = 14 # including default arg0
+TOTAL_ARGS = 13
 
 if __name__ == "__main__":
     args = sys.argv[1:]
@@ -27,8 +27,7 @@ if __name__ == "__main__":
         start_time_date = args[9].strip()
         end_time_date = args[10].strip()
         tags_entity_type = args[11].strip()
-        tags_names = args[12].strip()
-        tags_values = args[13].strip()
+        tags = args[12].strip()
 
         # put validation
         if file_operation_id != "APPEND" and file_operation_id != "NEW":
@@ -73,8 +72,12 @@ if __name__ == "__main__":
         else:
             raise Exception("Invalid end date")
 
-        tags_names_list = helper.get_list_from_string(tags_names, ",")
-        tags_values_list = helper.get_list_from_string(tags_values, ",")
+        tags_list = helper.get_list_from_string(tags, ",")
+        tags_names_list = []
+        tags_values_list = []
+        for tag in tags_list:
+            tags_names_list.append(helper.get_list_from_string(tag, "=")[0])
+            tags_values_list.append(helper.get_list_from_string(tag, "=")[1])
 
         input_arguments = {
             script.ARGS_KEY_APP_DOMAIN_KEY: domain_name,
