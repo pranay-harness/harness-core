@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static org.mockito.Mockito.atLeastOnce;
@@ -9,6 +10,7 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
+import io.harness.delegate.beans.DelegateSelectionLogResponse;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 
@@ -55,5 +57,20 @@ public class DelegateSelectionLogResourceTest {
             .get(new GenericType<RestResponse<List<DelegateSelectionLogParams>>>() {});
 
     verify(delegateSelectionLogsService, atLeastOnce()).fetchTaskSelectionLogs(accountId, taskId);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void getSelectionLogsV2() {
+    String accountId = generateUuid();
+    String taskId = generateUuid();
+    RestResponse<DelegateSelectionLogResponse> restResponse =
+        RESOURCES.client()
+            .target("/selection-logs/v2?accountId=" + accountId + "&taskId=" + taskId)
+            .request()
+            .get(new GenericType<RestResponse<DelegateSelectionLogResponse>>() {});
+
+    verify(delegateSelectionLogsService, atLeastOnce()).fetchTaskSelectionLogsData(accountId, taskId);
   }
 }

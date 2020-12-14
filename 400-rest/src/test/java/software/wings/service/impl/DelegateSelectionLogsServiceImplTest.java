@@ -5,6 +5,8 @@ import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
 
+import static software.wings.beans.Environment.EnvironmentType.PROD;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Matchers.anyString;
@@ -18,23 +20,30 @@ import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
+import io.harness.delegate.beans.DelegateSelectionLogResponse;
 import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.selection.log.DelegateSelectionLog;
 import io.harness.selection.log.DelegateSelectionLog.DelegateSelectionLogBuilder;
 import io.harness.selection.log.DelegateSelectionLog.DelegateSelectionLogKeys;
+import io.harness.selection.log.DelegateSelectionLogTaskMetadata;
+import io.harness.tasks.Cd1SetupFields;
 import io.harness.threading.Concurrent;
 
 import software.wings.WingsBaseTest;
+import software.wings.beans.Application;
 import software.wings.beans.Delegate;
+import software.wings.beans.Environment;
+import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.DelegateSelectionLogsService;
 
 import com.google.inject.Inject;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.Test;
@@ -62,7 +71,35 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
 
   @Mock private FeatureFlagService featureFlagService;
   @Inject protected WingsPersistence wingsPersistence;
-  @InjectMocks @Inject DelegateSelectionLogsService delegateSelectionLogsService;
+  @InjectMocks @Inject DelegateSelectionLogsServiceImpl delegateSelectionLogsService;
+
+  private Map<String, String> obtainTaskSetupAbstractions() {
+    String envId = generateUuid();
+    Environment env = new Environment();
+    env.setUuid(envId);
+    env.setName("env-" + envId);
+    env.setEnvironmentType(PROD);
+    wingsPersistence.save(env);
+
+    String serviceId = generateUuid();
+    Service service = new Service();
+    service.setUuid(serviceId);
+    service.setName("srv-" + serviceId);
+    wingsPersistence.save(service);
+
+    String appId = generateUuid();
+    Application app = new Application();
+    app.setUuid(appId);
+    app.setName("app-" + appId);
+    wingsPersistence.save(app);
+
+    Map<String, String> setupAbstractions = new HashMap<>();
+    setupAbstractions.put(Cd1SetupFields.APP_ID_FIELD, appId);
+    setupAbstractions.put(Cd1SetupFields.SERVICE_ID_FIELD, serviceId);
+    setupAbstractions.put(Cd1SetupFields.ENV_ID_FIELD, envId);
+
+    return setupAbstractions;
+  }
 
   @Test
   @Owner(developers = MARKO)
@@ -79,8 +116,12 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldNotSaveWhenFFDisabled() {
     DelegateSelectionLog selectionLog = createDelegateSelectionLogBuilder().uuid(generateUuid()).build();
-    BatchDelegateSelectionLog batch =
-        BatchDelegateSelectionLog.builder().delegateSelectionLogs(Arrays.asList(selectionLog)).build();
+    DelegateSelectionLogTaskMetadata taskMetadata = DelegateSelectionLogTaskMetadata.builder().build();
+
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder()
+                                          .delegateSelectionLogs(Arrays.asList(selectionLog))
+                                          .taskMetadata(taskMetadata)
+                                          .build();
     when(featureFlagService.isEnabled(FeatureName.DISABLE_DELEGATE_SELECTION_LOG, selectionLog.getAccountId()))
         .thenReturn(true);
 
@@ -95,14 +136,36 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   public void shouldSaveWhenFFEnabled() {
     DelegateSelectionLog selectionLog =
         createDelegateSelectionLogBuilder().uuid(generateUuid()).message("ffenabled").groupId(generateUuid()).build();
-    BatchDelegateSelectionLog batch =
-        BatchDelegateSelectionLog.builder().delegateSelectionLogs(Arrays.asList(selectionLog)).build();
+
+    DelegateSelectionLogTaskMetadata taskMetadata = DelegateSelectionLogTaskMetadata.builder()
+                                                        .uuid(generateUuid())
+                                                        .taskId(generateUuid())
+                                                        .accountId(generateUuid())
+                                                        .setupAbstractions(obtainTaskSetupAbstractions())
+                                                        .build();
+
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder()
+                                          .delegateSelectionLogs(Arrays.asList(selectionLog))
+                                          .taskMetadata(taskMetadata)
+                                          .build();
     when(featureFlagService.isNotEnabled(FeatureName.DISABLE_DELEGATE_SELECTION_LOG, selectionLog.getAccountId()))
         .thenReturn(true);
 
     delegateSelectionLogsService.save(batch);
 
     assertThat(wingsPersistence.get(DelegateSelectionLog.class, selectionLog.getUuid())).isNotNull();
+
+    DelegateSelectionLogTaskMetadata savedTaskMetadata =
+        wingsPersistence.get(DelegateSelectionLogTaskMetadata.class, taskMetadata.getUuid());
+
+    assertThat(savedTaskMetadata).isNotNull();
+    assertThat(savedTaskMetadata.getSetupAbstractions()).isNotNull();
+    assertThat(savedTaskMetadata.getSetupAbstractions().get(Cd1SetupFields.APPLICATION))
+        .isEqualTo(taskMetadata.getSetupAbstractions().get(Cd1SetupFields.APPLICATION));
+    assertThat(savedTaskMetadata.getSetupAbstractions().get(Cd1SetupFields.SERVICE))
+        .isEqualTo(taskMetadata.getSetupAbstractions().get(Cd1SetupFields.SERVICE));
+    assertThat(savedTaskMetadata.getSetupAbstractions().get(Cd1SetupFields.ENVIRONMENT))
+        .isEqualTo(taskMetadata.getSetupAbstractions().get(Cd1SetupFields.ENVIRONMENT));
   }
 
   @Test
@@ -111,8 +174,11 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   public void shouldNotSave_OnlyLogWhenFFEnabled() {
     DelegateSelectionLog selectionLog =
         createDelegateSelectionLogBuilder().uuid(generateUuid()).message("testMessage").groupId(generateUuid()).build();
-    BatchDelegateSelectionLog batch =
-        BatchDelegateSelectionLog.builder().delegateSelectionLogs(Arrays.asList(selectionLog)).build();
+    DelegateSelectionLogTaskMetadata taskMetadata = DelegateSelectionLogTaskMetadata.builder().build();
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder()
+                                          .delegateSelectionLogs(Arrays.asList(selectionLog))
+                                          .taskMetadata(taskMetadata)
+                                          .build();
     when(featureFlagService.isEnabled(FeatureName.DISABLE_DELEGATE_SELECTION_LOG, selectionLog.getAccountId()))
         .thenReturn(true);
 
@@ -129,16 +195,30 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     String accountId = generateUuid();
 
     wingsPersistence.ensureIndexForTesting(DelegateSelectionLog.class);
+    wingsPersistence.ensureIndexForTesting(DelegateSelectionLogTaskMetadata.class);
     when(featureFlagService.isNotEnabled(FeatureName.DISABLE_DELEGATE_SELECTION_LOG, accountId)).thenReturn(true);
+
+    DelegateSelectionLogTaskMetadata taskMetadata = DelegateSelectionLogTaskMetadata.builder()
+                                                        .taskId(taskId)
+                                                        .accountId(accountId)
+                                                        .setupAbstractions(obtainTaskSetupAbstractions())
+                                                        .build();
 
     Concurrent.test(10, n -> {
       BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder()
                                             .delegateSelectionLogs(createDelegateSelectionLogs(taskId, accountId))
+                                            .taskMetadata(taskMetadata)
                                             .build();
       delegateSelectionLogsService.save(batch);
     });
 
     assertThat(wingsPersistence.createQuery(DelegateSelectionLog.class)
+                   .filter(DelegateSelectionLogKeys.taskId, taskId)
+                   .filter(DelegateSelectionLogKeys.accountId, accountId)
+                   .count())
+        .isEqualTo(1L);
+
+    assertThat(wingsPersistence.createQuery(DelegateSelectionLogTaskMetadata.class)
                    .filter(DelegateSelectionLogKeys.taskId, taskId)
                    .filter(DelegateSelectionLogKeys.accountId, accountId)
                    .count())
@@ -345,7 +425,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
     assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
-        .isEqualTo("Delegate profile scoping rule not matched: rule description");
+        .isEqualTo("Delegate profile scoping rules not matched: rule description");
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
     assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID);
 
@@ -357,7 +437,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
     assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
-        .isEqualTo("Delegate profile scoping rule not matched: rule description");
+        .isEqualTo("Delegate profile scoping rules not matched: rule description");
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
     assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID);
   }
@@ -760,6 +840,94 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
         .isEqualTo("Delegate scaling group: " + groupName + " was disconnected");
     assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(DISCONNECTED_GROUP_ID);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testProcessSetupAbstractions() {
+    // Test empty setupAbstractions
+    assertThat(delegateSelectionLogsService.processSetupAbstractions(null)).isNull();
+
+    // Test filled setupAbstractions
+    Map<String, String> taskSetupAbstractions = obtainTaskSetupAbstractions();
+    String infraMappingId = generateUuid();
+    taskSetupAbstractions.put(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infraMappingId);
+
+    Map<String, String> processedSetupAbstractions =
+        delegateSelectionLogsService.processSetupAbstractions(taskSetupAbstractions);
+
+    assertThat(processedSetupAbstractions.get(Cd1SetupFields.APPLICATION))
+        .isEqualTo("app-" + taskSetupAbstractions.get(Cd1SetupFields.APP_ID_FIELD));
+    assertThat(processedSetupAbstractions.get(Cd1SetupFields.ENVIRONMENT))
+        .isEqualTo("env-" + taskSetupAbstractions.get(Cd1SetupFields.ENV_ID_FIELD));
+    assertThat(processedSetupAbstractions.get(Cd1SetupFields.SERVICE))
+        .isEqualTo("srv-" + taskSetupAbstractions.get(Cd1SetupFields.SERVICE_ID_FIELD));
+    assertThat(processedSetupAbstractions.get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD))
+        .isEqualTo(infraMappingId);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldFetchTaskSelectionLogsData() {
+    String taskId = generateUuid();
+    String accountId = generateUuid();
+
+    Set<String> delegateIds1 = new HashSet<>();
+    delegateIds1.add(generateUuid());
+
+    DelegateSelectionLog delegateSelectionLog1 = DelegateSelectionLog.builder()
+                                                     .taskId(taskId)
+                                                     .accountId(accountId)
+                                                     .message(generateUuid())
+                                                     .delegateIds(delegateIds1)
+                                                     .eventTimestamp(System.currentTimeMillis())
+                                                     .build();
+
+    wingsPersistence.save(delegateSelectionLog1);
+
+    Map<String, String> taskSetupAbstractions = new HashMap<>();
+    taskSetupAbstractions.put(Cd1SetupFields.APPLICATION, generateUuid());
+    taskSetupAbstractions.put(Cd1SetupFields.SERVICE, generateUuid());
+    taskSetupAbstractions.put(Cd1SetupFields.ENVIRONMENT, generateUuid());
+    taskSetupAbstractions.put(Cd1SetupFields.ENVIRONMENT_TYPE, generateUuid());
+    taskSetupAbstractions.put(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, generateUuid());
+
+    DelegateSelectionLogTaskMetadata taskMetadata = DelegateSelectionLogTaskMetadata.builder()
+                                                        .taskId(taskId)
+                                                        .accountId(accountId)
+                                                        .setupAbstractions(taskSetupAbstractions)
+                                                        .build();
+
+    wingsPersistence.save(taskMetadata);
+
+    DelegateSelectionLogResponse delegateSelectionLogResponse =
+        delegateSelectionLogsService.fetchTaskSelectionLogsData(accountId, taskId);
+
+    assertThat(delegateSelectionLogResponse).isNotNull();
+    assertThat(delegateSelectionLogResponse.getDelegateSelectionLogs()).isNotNull();
+    assertThat(delegateSelectionLogResponse.getDelegateSelectionLogs().size()).isEqualTo(1);
+    assertThat(delegateSelectionLogResponse.getTaskSetupAbstractions()).isNotNull();
+    assertThat(delegateSelectionLogResponse.getTaskSetupAbstractions().containsKey(Cd1SetupFields.APPLICATION))
+        .isTrue();
+    assertThat(delegateSelectionLogResponse.getTaskSetupAbstractions().containsKey(Cd1SetupFields.SERVICE)).isTrue();
+    assertThat(delegateSelectionLogResponse.getTaskSetupAbstractions().containsKey(Cd1SetupFields.ENVIRONMENT))
+        .isTrue();
+    assertThat(delegateSelectionLogResponse.getTaskSetupAbstractions().containsKey(Cd1SetupFields.ENVIRONMENT_TYPE))
+        .isTrue();
+    assertThat(delegateSelectionLogResponse.getTaskSetupAbstractions().containsKey(
+                   Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD))
+        .isFalse();
+
+    // Test backward compatibility for selection logs without setup abstractions
+    wingsPersistence.delete(taskMetadata);
+    delegateSelectionLogResponse = delegateSelectionLogsService.fetchTaskSelectionLogsData(accountId, taskId);
+
+    assertThat(delegateSelectionLogResponse).isNotNull();
+    assertThat(delegateSelectionLogResponse.getDelegateSelectionLogs()).isNotNull();
+    assertThat(delegateSelectionLogResponse.getDelegateSelectionLogs().size()).isEqualTo(1);
+    assertThat(delegateSelectionLogResponse.getTaskSetupAbstractions()).isNullOrEmpty();
   }
 
   private DelegateSelectionLogBuilder createDelegateSelectionLogBuilder() {

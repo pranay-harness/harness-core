@@ -10,6 +10,7 @@ import lombok.Data;
 @Builder
 public class BatchDelegateSelectionLog {
   private String taskId;
+  private DelegateSelectionLogTaskMetadata taskMetadata;
 
   @Builder.Default private List<DelegateSelectionLog> delegateSelectionLogs = new ArrayList<>();
 

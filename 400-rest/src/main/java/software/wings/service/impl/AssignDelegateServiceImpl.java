@@ -197,8 +197,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
     List<DelegateProfileScopingRule> delegateProfileScopingRules = delegateProfile.getScopingRules();
 
-    String failedRuleDescription = null;
-
     if (isEmpty(delegateProfileScopingRules)) {
       return true;
     } else if (isEmpty(taskSetupAbstractions)) {
@@ -217,6 +215,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     log.info(logSequence + " - Starting profile scoping rules match with task abstractions {}.",
         taskSetupAbstractionsPrintable.toString());
 
+    StringBuilder failedRulesDescription = new StringBuilder();
     for (DelegateProfileScopingRule scopingRule : delegateProfileScopingRules) {
       boolean scopingRuleMatched = true;
 
@@ -233,7 +232,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
             log.info(
                 logSequence + " - Scoping rule with description: {}, did not match with task abstractions for key {}.",
                 scopingRule.getDescription(), entity.getKey());
-            failedRuleDescription = scopingRule.getDescription();
+            failedRulesDescription.append("Scoping Rule: " + scopingRule.getDescription() + "; ");
             scopingRuleMatched = false;
             break;
           }
@@ -246,7 +245,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     }
 
     delegateSelectionLogsService.logProfileScopeRuleNotMatched(
-        batch, delegate.getAccountId(), delegate.getUuid(), failedRuleDescription);
+        batch, delegate.getAccountId(), delegate.getUuid(), failedRulesDescription.toString());
 
     return false;
   }
