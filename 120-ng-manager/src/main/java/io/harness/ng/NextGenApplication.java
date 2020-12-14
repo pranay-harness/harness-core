@@ -190,14 +190,15 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   public void registerPipelineSDK(Injector injector, NextGenConfiguration appConfig) {
     if (appConfig.getShouldConfigureWithPMS() != null && appConfig.getShouldConfigureWithPMS()) {
-      PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
-                                          .serviceName("cd")
-                                          .mongoConfig(appConfig.getPmsMongoConfig())
-                                          .grpcServerConfig(appConfig.getPmsSdkGrpcServerConfig())
-                                          .pmsGrpcClientConfig(appConfig.getPmsGrpcClientConfig())
-                                          .pipelineServiceInfoProvider(new CDNGPlanCreatorProvider())
-                                          .filterCreationResponseMerger(new CDNGFilterCreationResponseMerger())
-                                          .build();
+      PmsSdkConfiguration sdkConfig =
+          PmsSdkConfiguration.builder()
+              .serviceName("cd")
+              .mongoConfig(appConfig.getPmsMongoConfig())
+              .grpcServerConfig(appConfig.getPmsSdkGrpcServerConfig())
+              .pmsGrpcClientConfig(appConfig.getPmsGrpcClientConfig())
+              .pipelineServiceInfoProvider(injector.getInstance(CDNGPlanCreatorProvider.class))
+              .filterCreationResponseMerger(new CDNGFilterCreationResponseMerger())
+              .build();
       try {
         PmsSdkModule.initializeDefaultInstance(sdkConfig);
       } catch (Exception e) {

@@ -56,14 +56,15 @@ public class CdServiceApplication extends Application<CdServiceConfiguration> {
     injector.getInstance(HPersistence.class);
     registerJerseyProviders(environment, injector);
 
-    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
-                                        .serviceName("cd")
-                                        .mongoConfig(config.getMongoConfig())
-                                        .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
-                                        .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
-                                        .pipelineServiceInfoProvider(new CdPipelineServiceInfoProvider())
-                                        .filterCreationResponseMerger(new CDFilterCreationResponseMerger())
-                                        .build();
+    PmsSdkConfiguration sdkConfig =
+        PmsSdkConfiguration.builder()
+            .serviceName("cd")
+            .mongoConfig(config.getMongoConfig())
+            .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
+            .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
+            .pipelineServiceInfoProvider(injector.getInstance(CdPipelineServiceInfoProvider.class))
+            .filterCreationResponseMerger(new CDFilterCreationResponseMerger())
+            .build();
     try {
       PmsSdkModule.initializeDefaultInstance(sdkConfig);
     } catch (Exception e) {

@@ -56,14 +56,15 @@ public class CvServiceApplication extends Application<CvServiceConfiguration> {
     injector.getInstance(HPersistence.class);
     registerJerseyProviders(environment, injector);
 
-    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
-                                        .serviceName("cv")
-                                        .mongoConfig(config.getMongoConfig())
-                                        .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
-                                        .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
-                                        .pipelineServiceInfoProvider(new CvPipelineServiceInfoProvider())
-                                        .filterCreationResponseMerger(new CVFilterCreationResponseMerger())
-                                        .build();
+    PmsSdkConfiguration sdkConfig =
+        PmsSdkConfiguration.builder()
+            .serviceName("cv")
+            .mongoConfig(config.getMongoConfig())
+            .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
+            .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
+            .pipelineServiceInfoProvider(injector.getInstance(CvPipelineServiceInfoProvider.class))
+            .filterCreationResponseMerger(new CVFilterCreationResponseMerger())
+            .build();
     try {
       PmsSdkModule.initializeDefaultInstance(sdkConfig);
     } catch (Exception e) {
