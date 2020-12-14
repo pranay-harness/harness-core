@@ -25,6 +25,7 @@ import com.mongodb.DuplicateKeyException;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
+import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -44,7 +45,7 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
         expressionEvaluatorProvider.get(null, ambiance, EnumSet.of(NodeExecutionEntityType.SWEEPING_OUTPUT), true);
     injector.injectMembers(evaluator);
     Object value = evaluator.evaluateExpression(EngineExpressionEvaluator.createExpression(refObject.getName()));
-    return (String) value;
+    return value == null ? null : ((Document) value).toJson();
   }
 
   private String resolveUsingRuntimeId(Ambiance ambiance, RefObject refObject) {
