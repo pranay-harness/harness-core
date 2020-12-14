@@ -58,6 +58,7 @@ public class CIExecutionServiceModule extends AbstractModule {
   @Singleton
   public OrchestrationModuleConfig orchestrationModuleConfig() {
     return OrchestrationModuleConfig.builder()
+        .serviceName("CI")
         .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
         .publisherName(OrchestrationNotifyEventListener.ORCHESTRATION)
         .maxPoolSize(10)

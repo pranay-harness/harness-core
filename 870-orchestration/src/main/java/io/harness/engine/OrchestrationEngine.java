@@ -14,6 +14,7 @@ import static io.harness.springdata.SpringDataMongoUtils.setUnset;
 
 import static java.lang.String.format;
 
+import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationPublisherName;
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
@@ -65,7 +66,6 @@ import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.sdk.registries.AdviserRegistry;
-import io.harness.pms.sdk.registries.FacilitatorRegistry;
 import io.harness.pms.sdk.registries.ResolverRegistry;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 import io.harness.queue.QueuePublisher;
@@ -111,7 +111,6 @@ public class OrchestrationEngine {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
   @Inject private AdviserRegistry adviserRegistry;
-  @Inject private FacilitatorRegistry facilitatorRegistry;
   @Inject private ResolverRegistry resolverRegistry;
   @Inject private TimeoutRegistry timeoutRegistry;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
@@ -125,6 +124,7 @@ public class OrchestrationEngine {
   @Inject private TimeoutEngine timeoutEngine;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
   @Inject private OrchestrationEventEmitter eventEmitter;
+  @Inject private OrchestrationModuleConfig config;
   @Inject private QueuePublisher<NodeExecutionEvent> nodeExecutionEventQueuePublisher;
 
   public void startNodeExecution(String nodeExecutionId) {
@@ -196,7 +196,7 @@ public class OrchestrationEngine {
                                      .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(updatedNodeExecution))
                                      .eventType(NodeExecutionEventType.FACILITATE)
                                      .build();
-      nodeExecutionEventQueuePublisher.send(event);
+      nodeExecutionEventQueuePublisher.send(Collections.singletonList(config.getServiceName()), event);
       waitNotifyEngine.waitForAllOn(publisherName,
           EngineFacilitationCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build(), event.getNotifyId());
     } catch (Exception exception) {
@@ -242,7 +242,7 @@ public class OrchestrationEngine {
                                         .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
                                         .eventData(startNodeExecutionEventData)
                                         .build();
-    nodeExecutionEventQueuePublisher.send(startEvent);
+    nodeExecutionEventQueuePublisher.send(Collections.singletonList(config.getServiceName()), startEvent);
   }
 
   private List<String> registerTimeouts(NodeExecution nodeExecution) {

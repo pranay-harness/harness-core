@@ -91,6 +91,7 @@ public class OrchestrationVisualizationRule implements MethodRule, InjectorRuleM
       @Singleton
       public OrchestrationModuleConfig orchestrationModuleConfig() {
         return OrchestrationModuleConfig.builder()
+            .serviceName("ORCHESTRATION_VISUALIZATION_TEST")
             .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
             .build();
       }

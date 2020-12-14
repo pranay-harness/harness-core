@@ -116,6 +116,7 @@ public class PipelineServiceModule extends AbstractModule {
   @Singleton
   public OrchestrationModuleConfig orchestrationModuleConfig() {
     return OrchestrationModuleConfig.builder()
+        .serviceName("PIPELINE")
         .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
         .build();
   }

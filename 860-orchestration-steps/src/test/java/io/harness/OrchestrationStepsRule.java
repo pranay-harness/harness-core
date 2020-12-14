@@ -91,6 +91,7 @@ public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, Mo
       @Singleton
       public OrchestrationModuleConfig orchestrationModuleConfig() {
         return OrchestrationModuleConfig.builder()
+            .serviceName("ORCHESTRATION_STEPS_TEST")
             .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
             .build();
       }

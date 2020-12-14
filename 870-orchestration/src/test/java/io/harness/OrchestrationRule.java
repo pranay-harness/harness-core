@@ -94,6 +94,7 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
       @Singleton
       public OrchestrationModuleConfig orchestrationModuleConfig() {
         return OrchestrationModuleConfig.builder()
+            .serviceName("ORCHESTRATION_TEST")
             .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
             .build();
       }

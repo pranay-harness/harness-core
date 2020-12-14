@@ -1467,6 +1467,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
   @Singleton
   public OrchestrationModuleConfig orchestrationModuleConfig() {
     return OrchestrationModuleConfig.builder()
+        .serviceName("CD")
         .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
         .build();
   }
