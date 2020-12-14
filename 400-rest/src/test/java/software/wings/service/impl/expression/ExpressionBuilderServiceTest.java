@@ -163,6 +163,10 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
           .addFilter("appId", EQ, APP_ID)
           .addFilter("serviceId", IN, asList(SERVICE_ID).toArray())
           .build();
+
+  PageRequest<ServiceTemplate> serviceTemplatePageRequestAll =
+      aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, APP_ID).build();
+
   PageResponse<ServiceTemplate> serviceTemplates = aPageResponse()
                                                        .withResponse(asList(aServiceTemplate()
                                                                                 .withUuid(TEMPLATE_ID)
@@ -262,7 +266,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
                         .withResponse(asList(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build()))
                         .build());
     when(serviceVariableService.list(serviceVariablePageRequest, MASKED)).thenReturn(serviceVariables);
-    when(serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE))
+    when(serviceTemplateService.list(serviceTemplatePageRequestAll, false, OBTAIN_VALUE))
         .thenReturn(aPageResponse().build());
 
     Set<String> expressions = builderService.listExpressions(APP_ID, "All", SERVICE);
@@ -479,13 +483,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetWorkflowStateExpressionsAllService() {
-    when(serviceResourceService.list(
-             aPageRequest().withLimit(UNLIMITED).addFilter("appId", EQ, APP_ID).addFieldsIncluded("uuid").build(),
-             false, false, false, null))
-        .thenReturn(aPageResponse()
-                        .withResponse(asList(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build()))
-                        .build());
-    when(serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE))
+    when(serviceTemplateService.list(serviceTemplatePageRequestAll, false, OBTAIN_VALUE))
         .thenReturn(aPageResponse().build());
 
     List<Variable> userVariables = newArrayList(aVariable().name("name1").value("value1").build());
