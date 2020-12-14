@@ -5,11 +5,12 @@ package io.harness.capability;
 option java_multiple_files = true;
 option go_package = "240_capability";
 
-// Next ID: 10
+// Next ID: 11
 message CapabilityParameters {
   oneof capability {
     AwsRegionParameters aws_region_parameters = 4;
     ChartMuseumParameters chart_museum_parameters = 5;
+    HelmInstallationParameters helm_installation_parameters = 10;
     HttpConnectionParameters http_connection_parameters = 6;
     ProcessExecutorParameters process_executor_parameters = 7;
     SftpCapabilityParameters sftp_capability_parameters = 3;
@@ -47,6 +48,17 @@ message SftpCapabilityParameters {
 // Next ID: 2
 message SmbConnectionParameters {
   string smb_url = 1;
+}
+
+// Whether the specified version of helm is installed or not
+message HelmInstallationParameters {
+  // Next ID: 3
+  enum HelmVersion {
+    UNKNOWN_VERSION = 0;
+    V2 = 1;
+    V3 = 2;
+  }
+  HelmVersion helm_version = 1;
 }
 
 // Testing whether a connection can be established to a given URL

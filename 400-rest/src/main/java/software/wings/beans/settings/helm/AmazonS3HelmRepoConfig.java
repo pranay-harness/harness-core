@@ -5,12 +5,12 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ChartMuseumCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.HelmVersion;
 
 import software.wings.audit.ResourceType;
-import software.wings.delegatetasks.validation.capabilities.HelmInstallationCapability;
 import software.wings.security.UsageRestrictions;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
