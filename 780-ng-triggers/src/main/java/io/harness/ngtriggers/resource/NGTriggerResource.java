@@ -111,13 +111,18 @@ public class NGTriggerResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @PathParam("triggerIdentifier") String triggerIdentifier,
       @NotNull @ApiParam(hidden = true, type = "") String yaml) {
-    NGTriggerEntity ngTriggerEntity = ngTriggerElementMapper.toTriggerEntity(
-        accountIdentifier, orgIdentifier, projectIdentifier, triggerIdentifier, yaml);
-    ngTriggerEntity.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
+    try {
+      TriggerDetails triggerDetails =
+          ngTriggerElementMapper.toTriggerDetails(accountIdentifier, orgIdentifier, projectIdentifier, yaml);
+      ngTriggerService.sanitizeRuntimeInputForTrigger(triggerDetails);
+      triggerDetails.getNgTriggerEntity().setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
 
-    NGTriggerEntity updatedEntity = ngTriggerService.update(ngTriggerEntity);
-    return ResponseDTO.newResponse(
-        updatedEntity.getVersion().toString(), ngTriggerElementMapper.toResponseDTO(updatedEntity));
+      NGTriggerEntity updatedEntity = ngTriggerService.update(triggerDetails.getNgTriggerEntity());
+      return ResponseDTO.newResponse(
+          updatedEntity.getVersion().toString(), ngTriggerElementMapper.toResponseDTO(updatedEntity));
+    } catch (Exception e) {
+      throw new InvalidRequestException("Failed while updating Trigger: " + e.getMessage());
+    }
   }
 
   @PUT
