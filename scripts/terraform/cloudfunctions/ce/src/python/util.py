@@ -42,7 +42,7 @@ def createTable(client, tableName):
              nested_field = [bigquery.SchemaField(nested_field["name"], nested_field["type"], mode=nested_field.get("mode", "")) for nested_field in field["fields"]]
              schema.append(bigquery.SchemaField(field["name"], field["type"], mode=field["mode"], fields=nested_field))
         else:
-             schema.append(bigquery.SchemaField(field["name"], field["type"], mode=field["mode"]))
+             schema.append(bigquery.SchemaField(field["name"], field["type"], mode=field.get("mode", "")))
     table = bigquery.Table(tableName, schema=schema)
 
     if tableName.endswith("clusterData"):
