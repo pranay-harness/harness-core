@@ -12,7 +12,6 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.PageRequest;
 import io.harness.category.element.CDFunctionalTests;
-import io.harness.ff.FeatureFlagService;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.utils.HelmHelper;
 import io.harness.functional.utils.K8SUtils;
@@ -68,7 +67,6 @@ public class HelmChartAsArtifactFunctionalTest extends AbstractFunctionalTest {
   @Inject private InfrastructureDefinitionGenerator infrastructureDefinitionGenerator;
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private HelmHelper helmHelper;
-  @Inject private FeatureFlagService featureFlagService;
   @Inject private HelmChartService helmChartService;
   @Inject private ServiceGenerator serviceGenerator;
 
@@ -83,9 +81,8 @@ public class HelmChartAsArtifactFunctionalTest extends AbstractFunctionalTest {
     application = owners.obtainApplication(
         () -> applicationGenerator.ensurePredefined(seed, owners, ApplicationGenerator.Applications.GENERIC_TEST));
 
-    if (!featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, application.getAccountId())) {
-      featureFlagService.enableAccount(FeatureName.HELM_CHART_AS_ARTIFACT, application.getAccountId());
-    }
+    enableFeatureFlag(FeatureName.HELM_CHART_AS_ARTIFACT, application.getAccountId());
+    enableFeatureFlag(FeatureName.HELM_STEADY_STATE_CHECK_1_16, application.getAccountId());
 
     resetCache(owners.obtainAccount().getUuid());
   }

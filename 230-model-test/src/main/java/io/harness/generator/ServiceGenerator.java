@@ -10,6 +10,7 @@ import static io.harness.govern.Switch.unhandled;
 import static software.wings.beans.Service.ServiceBuilder;
 import static software.wings.beans.Service.builder;
 
+import io.harness.exception.InvalidRequestException;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
@@ -43,8 +44,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
+@Slf4j
 public class ServiceGenerator {
   private static final String HELM_S3_SERVICE_NAME = "Helm S3 Functional Test";
   private static final String CHARTMUSEUM_CHART_NAME = "chartmuseum";
@@ -308,7 +311,11 @@ public class ServiceGenerator {
     }
 
     applicationManifest.setAppId(service.getAppId());
-    upsertApplicationManifest(applicationManifest);
+    try {
+      upsertApplicationManifest(applicationManifest);
+    } catch (InvalidRequestException ex) {
+      log.warn("Unable to save application manifest. Continuing", ex);
+    }
     return service;
   }
 

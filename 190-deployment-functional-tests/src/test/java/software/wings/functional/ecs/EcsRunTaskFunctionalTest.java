@@ -17,6 +17,7 @@ import static software.wings.sm.StateType.ECS_RUN_TASK;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.CDFunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -34,19 +35,24 @@ import io.harness.generator.SettingGenerator;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+import io.harness.testframework.restutils.ArtifactStreamRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.ExecutionArgs;
+import software.wings.beans.ExecutionCredential;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
+import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
@@ -62,6 +68,7 @@ import com.amazonaws.services.ecs.model.StopTaskRequest;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -167,7 +174,36 @@ public class EcsRunTaskFunctionalTest extends AbstractFunctionalTest {
     return savedWorkflow;
   }
 
-  public ServiceVariable createServiceVariable(String name, String value) {
+  protected void assertExecutionEcsRunTask(Workflow savedWorkflow, String appId, String envId) {
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setWorkflowType(savedWorkflow.getWorkflowType());
+
+    String artifactId = ArtifactStreamRestUtils.getArtifactStreamId(
+        bearerToken, appId, savedWorkflow.getEnvId(), savedWorkflow.getServiceId());
+    Artifact artifact = new Artifact();
+    artifact.setUuid(artifactId);
+
+    executionArgs.setArtifacts(Arrays.asList(artifact));
+    executionArgs.setOrchestrationId(savedWorkflow.getUuid());
+    executionArgs.setExecutionCredential(SSHExecutionCredential.Builder.aSSHExecutionCredential()
+                                             .withExecutionType(ExecutionCredential.ExecutionType.SSH)
+                                             .build());
+
+    log.info("Invoking workflow execution");
+
+    WorkflowExecution workflowExecution = runWorkflow(bearerToken, appId, envId, executionArgs);
+    logStateExecutionInstanceErrors(workflowExecution);
+    assertThat(workflowExecution).isNotNull();
+
+    if (workflowExecution.getStatus() != ExecutionStatus.SUCCESS) {
+      return;
+    }
+
+    log.info("ECs Execution status: " + workflowExecution.getStatus());
+    assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+  }
+
+  private ServiceVariable createServiceVariable(String name, String value) {
     ServiceVariable variable = ServiceVariable.builder().build();
     variable.setAccountId(getAccount().getUuid());
     variable.setAppId(service.getAppId());
