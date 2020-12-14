@@ -76,8 +76,11 @@ if __name__ == "__main__":
         tags_names_list = []
         tags_values_list = []
         for tag in tags_list:
-            tags_names_list.append(helper.get_list_from_string(tag, "=")[0])
-            tags_values_list.append(helper.get_list_from_string(tag, "=")[1])
+            try:
+                tags_names_list.append(helper.get_list_from_string(tag, "=")[0])
+                tags_values_list.append(helper.get_list_from_string(tag, "=")[1])
+            except Exception:
+                raise Exception("Invalid tag format : " + tag)
 
         input_arguments = {
             script.ARGS_KEY_APP_DOMAIN_KEY: domain_name,

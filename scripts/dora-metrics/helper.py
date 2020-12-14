@@ -102,6 +102,8 @@ def get_list_from_string(item_list, delimiter):
     try:
         if item_list[0] == '[':
             item_list = item_list[1:-1]
+        if item_list == "":
+            return []
         return item_list.split(delimiter)
     except Exception:
         return []
