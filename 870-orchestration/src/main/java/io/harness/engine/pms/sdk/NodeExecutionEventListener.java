@@ -11,7 +11,6 @@ import io.harness.engine.executables.ExecutableProcessor;
 import io.harness.engine.executables.ExecutableProcessorFactory;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.executables.ResumePackage;
-import io.harness.engine.executions.node.NodeExecutionProtoService;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.execution.NodeExecutionEventType;
@@ -23,6 +22,7 @@ import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.facilitators.FacilitatorObtainment;
 import io.harness.pms.facilitators.FacilitatorResponseProto;
 import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
 import io.harness.pms.sdk.core.facilitator.Facilitator;
 import io.harness.pms.sdk.core.facilitator.FacilitatorResponse;
 import io.harness.pms.sdk.core.facilitator.FacilitatorResponseMapper;
@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent> {
   @Inject private FacilitatorRegistry facilitatorRegistry;
-  @Inject private NodeExecutionProtoService nodeExecutionProtoService;
+  @Inject private PmsNodeExecutionService pmsNodeExecutionService;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private ExecutableProcessorFactory executableProcessorFactory;
 
@@ -81,7 +81,7 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
       for (FacilitatorObtainment obtainment : node.getFacilitatorObtainmentsList()) {
         Facilitator facilitator = facilitatorRegistry.obtain(obtainment.getType());
         FacilitatorResponse currFacilitatorResponse =
-            facilitator.facilitate(ambiance, nodeExecutionProtoService.extractResolvedStepParameters(nodeExecution),
+            facilitator.facilitate(ambiance, pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution),
                 obtainment.getParameters().toByteArray(), inputPackage);
         if (currFacilitatorResponse != null) {
           facilitatorResponse = FacilitatorResponseMapper.toFacilitatorResponseProto(currFacilitatorResponse);

@@ -9,24 +9,22 @@ import static io.harness.pms.execution.Status.SUSPENDED;
 import io.harness.OrchestrationPublisherName;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.EngineObtainmentHelper;
-import io.harness.engine.ExecutionEngineDispatcher;
-import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executables.ExecuteStrategy;
 import io.harness.engine.executables.InvocationHelper;
 import io.harness.engine.executables.InvokerPackage;
 import io.harness.engine.executables.ResumePackage;
-import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.resume.EngineResumeCallback;
-import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.NodeExecutionUtils;
 import io.harness.pms.ambiance.Ambiance;
 import io.harness.pms.execution.ChildChainExecutableResponse;
 import io.harness.pms.execution.ExecutableResponse;
 import io.harness.pms.execution.NodeExecutionProto;
+import io.harness.pms.execution.Status;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
 import io.harness.pms.sdk.core.steps.executables.ChildChainExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -41,21 +39,19 @@ import io.harness.waiter.WaitNotifyEngine;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 @OwnedBy(CDC)
 public class ChildChainStrategy implements ExecuteStrategy {
-  @Inject private OrchestrationEngine engine;
   @Inject private WaitNotifyEngine waitNotifyEngine;
-  @Inject private NodeExecutionService nodeExecutionService;
+  @Inject private PmsNodeExecutionService pmsNodeExecutionService;
   @Inject private InvocationHelper invocationHelper;
   @Inject private StepRegistry stepRegistry;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
-  @Inject @Named("EngineExecutorService") private ExecutorService executorService;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
   @Inject private KryoSerializer kryoSerializer;
 
@@ -65,7 +61,7 @@ public class ChildChainStrategy implements ExecuteStrategy {
     ChildChainExecutable childChainExecutable = extractExecutable(nodeExecution);
     ChildChainExecutableResponse childChainResponse;
     childChainResponse = childChainExecutable.executeFirstChild(nodeExecution.getAmbiance(),
-        nodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
+        pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
     handleResponse(nodeExecution, invokerPackage.getNodes(), childChainResponse);
   }
 
@@ -87,13 +83,13 @@ public class ChildChainStrategy implements ExecuteStrategy {
     if (lastChildChainExecutableResponse.getLastLink() || lastChildChainExecutableResponse.getSuspend()
         || isBroken(accumulatedResponse) || isAborted(accumulatedResponse)) {
       StepResponse stepResponse = childChainExecutable.finalizeExecution(ambiance,
-          nodeExecutionService.extractResolvedStepParameters(nodeExecution), passThroughData, accumulatedResponse);
-      engine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
+          pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution), passThroughData, accumulatedResponse);
+      pmsNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), stepResponse);
     } else {
       StepInputPackage inputPackage =
           engineObtainmentHelper.obtainInputPackage(ambiance, nodeExecution.getNode().getRebObjectsList());
       ChildChainExecutableResponse chainResponse = childChainExecutable.executeNextChild(ambiance,
-          nodeExecutionService.extractResolvedStepParameters(nodeExecution), inputPackage, passThroughData,
+          pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution), inputPackage, passThroughData,
           accumulatedResponse);
       handleResponse(nodeExecution, resumePackage.getNodes(), chainResponse);
     }
@@ -128,23 +124,18 @@ public class ChildChainStrategy implements ExecuteStrategy {
                                                 .setNotifyId(childInstanceId)
                                                 .setParentId(nodeExecution.getUuid())
                                                 .build();
-    nodeExecutionService.save(childNodeExecution);
-    executorService.submit(
-        ExecutionEngineDispatcher.builder().ambiance(clonedAmbiance).orchestrationEngine(engine).build());
-    NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
-    waitNotifyEngine.waitForAllOn(publisherName, callback, childInstanceId);
-    nodeExecutionService.update(nodeExecution.getUuid(),
-        ops
-        -> ops.addToSet(NodeExecutionKeys.executableResponses,
-            ExecutableResponse.newBuilder().setChildChain(childChainResponse).build()));
+    pmsNodeExecutionService.queueNodeExecution(childNodeExecution);
+
+    pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.UNRECOGNIZED,
+        ExecutableResponse.newBuilder().setChildChain(childChainResponse).build(),
+        Collections.singletonList(childInstanceId));
   }
 
   private void suspendChain(ChildChainExecutableResponse childChainResponse, NodeExecutionProto nodeExecution) {
     String ignoreNotifyId = "ignore-" + nodeExecution.getUuid();
-    nodeExecutionService.update(nodeExecution.getUuid(),
-        ops
-        -> ops.addToSet(NodeExecutionKeys.executableResponses,
-            ExecutableResponse.newBuilder().setChildChain(childChainResponse).build()));
+    pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.UNRECOGNIZED,
+        ExecutableResponse.newBuilder().setChildChain(childChainResponse).build(), Collections.emptyList());
+
     NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
     waitNotifyEngine.waitForAllOn(publisherName, callback, ignoreNotifyId);
     PlanNodeProto planNode = nodeExecution.getNode();

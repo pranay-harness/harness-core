@@ -10,10 +10,12 @@ import io.harness.pms.steps.StepInfo;
 import io.harness.repositories.sdk.PmsSdkInstanceRepository;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.grpc.stub.StreamObserver;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Singleton
 public class PmsSdkInstanceService extends PmsServiceImplBase {
   private final PmsSdkInstanceRepository pmsSdkInstanceRepository;
 
@@ -26,6 +28,7 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
   public void initializeSdk(InitializeSdkRequest request, StreamObserver<InitializeSdkResponse> responseObserver) {
     saveSdkInstance(request);
     responseObserver.onNext(InitializeSdkResponse.newBuilder().build());
+    responseObserver.onCompleted();
   }
 
   private void saveSdkInstance(InitializeSdkRequest request) {
