@@ -185,8 +185,9 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = GARVIT, intermittent = true)
+  @Owner(developers = GARVIT)
   @Category(FunctionalTests.class)
+  @Ignore("Fix after orchestration fields are supported")
   public void shouldExecuteSimpleShellScriptPlan() {
     PlanExecution shellScriptResponse = testSetupHelper.executePlan(
         bearerToken, application.getAccountId(), application.getAppId(), "simple-shell-script");
