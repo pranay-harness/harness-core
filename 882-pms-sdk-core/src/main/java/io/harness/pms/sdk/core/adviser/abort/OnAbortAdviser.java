@@ -1,19 +1,28 @@
 package io.harness.pms.sdk.core.adviser.abort;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.pms.contracts.execution.Status.ABORTED;
 
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.advisers.EndPlanAdvise;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
+import io.harness.serializer.KryoSerializer;
+
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import java.util.Collections;
 
 public class OnAbortAdviser implements Adviser {
   public static final AdviserType ADVISER_TYPE =
       AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ABORT.name()).build();
+
+  @Inject private KryoSerializer kryoSerializer;
 
   @Override
   public AdviserResponse onAdviseEvent(AdvisingEvent advisingEvent) {
@@ -25,6 +34,19 @@ public class OnAbortAdviser implements Adviser {
 
   @Override
   public boolean canAdvise(AdvisingEvent advisingEvent) {
-    return StatusUtils.brokeStatuses().contains(advisingEvent.getToStatus()) || ABORTED == advisingEvent.getToStatus();
+    OnAbortAdviserParameters adviserParameters = extractParameters(advisingEvent);
+    boolean canAdvise =
+        StatusUtils.brokeStatuses().contains(advisingEvent.getToStatus()) || ABORTED == advisingEvent.getToStatus();
+    FailureInfo failureInfo = advisingEvent.getFailureInfo();
+    if (failureInfo != null && !isEmpty(failureInfo.getFailureTypesValueList())) {
+      return canAdvise
+          && !Collections.disjoint(adviserParameters.getApplicableFailureTypes(), failureInfo.getFailureTypesList());
+    }
+    return canAdvise;
+  }
+
+  private OnAbortAdviserParameters extractParameters(AdvisingEvent advisingEvent) {
+    return (OnAbortAdviserParameters) Preconditions.checkNotNull(
+        kryoSerializer.asObject(advisingEvent.getAdviserParameters()));
   }
 }

@@ -11,13 +11,17 @@ import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.AmbianceTestUtils;
 import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent;
 import io.harness.rule.Owner;
+import io.harness.serializer.KryoSerializer;
 
 import com.google.inject.Inject;
+import java.util.EnumSet;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -29,6 +33,7 @@ public class OnAbortAdviserTest extends PmsSdkCoreTestBase {
   public static final StepType DUMMY_STEP_TYPE = StepType.newBuilder().setType(NODE_IDENTIFIER).build();
 
   @Inject OnAbortAdviser onAbortAdviser;
+  @Inject KryoSerializer kryoSerializer;
 
   private Ambiance ambiance;
 
@@ -58,8 +63,29 @@ public class OnAbortAdviserTest extends PmsSdkCoreTestBase {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestCanAdvise() {
-    AdvisingEvent advisingEvent = AdvisingEvent.builder().ambiance(ambiance).toStatus(Status.ABORTED).build();
+    byte[] paramBytes = kryoSerializer.asBytes(OnAbortAdviserParameters.builder().build());
+    AdvisingEvent advisingEvent =
+        AdvisingEvent.builder().ambiance(ambiance).toStatus(Status.ABORTED).adviserParameters(paramBytes).build();
     boolean canAdvise = onAbortAdviser.canAdvise(advisingEvent);
     assertThat(canAdvise).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestCanAdviseWithFailureTypes() {
+    byte[] paramBytes = kryoSerializer.asBytes(
+        OnAbortAdviserParameters.builder()
+            .applicableFailureTypes(EnumSet.of(FailureType.CONNECTIVITY_FAILURE, FailureType.AUTHENTICATION_FAILURE))
+            .build());
+    AdvisingEvent advisingEvent =
+        AdvisingEvent.builder()
+            .ambiance(ambiance)
+            .toStatus(Status.ABORTED)
+            .adviserParameters(paramBytes)
+            .failureInfo(FailureInfo.newBuilder().addFailureTypes(FailureType.TIMEOUT_FAILURE).build())
+            .build();
+    boolean canAdvise = onAbortAdviser.canAdvise(advisingEvent);
+    assertThat(canAdvise).isFalse();
   }
 }

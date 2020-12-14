@@ -1,9 +1,12 @@
 package io.harness.pms.sdk.core.adviser.marksuccess;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.advisers.MarkSuccessAdvise;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
@@ -11,6 +14,7 @@ import io.harness.serializer.KryoSerializer;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import java.util.Collections;
 import javax.validation.constraints.NotNull;
 
 public class OnMarkSuccessAdviser implements Adviser {
@@ -30,6 +34,11 @@ public class OnMarkSuccessAdviser implements Adviser {
 
   @Override
   public boolean canAdvise(AdvisingEvent advisingEvent) {
+    OnMarkSuccessAdviserParameters adviserParameters = extractParameters(advisingEvent);
+    FailureInfo failureInfo = advisingEvent.getFailureInfo();
+    if (failureInfo != null && !isEmpty(failureInfo.getFailureTypesValueList())) {
+      return !Collections.disjoint(adviserParameters.getApplicableFailureTypes(), failureInfo.getFailureTypesList());
+    }
     return true;
   }
 
