@@ -48,7 +48,14 @@ public class ServiceTemplate extends Base {
                  .field(ServiceTemplateKeys.appId)
                  .field(ServiceTemplateKeys.envId)
                  .descSortField(ServiceTemplateKeys.createdAt)
-                 .build())
+                 .build(),
+            SortCompoundMongoIndex.builder()
+                .name("appId_serviceId_createdAt")
+                .field(ServiceTemplateKeys.appId)
+                .field(ServiceTemplateKeys.serviceId)
+                .descSortField(ServiceTemplateKeys.createdAt)
+                .build())
+
         .build();
   }
 

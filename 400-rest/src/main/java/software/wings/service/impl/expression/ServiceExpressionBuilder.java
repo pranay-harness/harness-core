@@ -23,6 +23,7 @@ import software.wings.api.PcfInstanceElement.PcfInstanceElementKeys;
 import software.wings.beans.EntityType;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
+import software.wings.beans.ServiceTemplate.ServiceTemplateKeys;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.StateType;
@@ -41,6 +42,7 @@ import java.util.TreeSet;
 @OwnedBy(CDC)
 @Singleton
 public class ServiceExpressionBuilder extends ExpressionBuilder {
+  public static final String ALL = "All";
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private AppService appService;
   @Inject private FeatureFlagService featureFlagService;
@@ -83,16 +85,26 @@ public class ServiceExpressionBuilder extends ExpressionBuilder {
   }
 
   public Set<String> getServiceTemplateVariableExpressions(String appId, String serviceId, EntityType entityType) {
+    if (considerAllServices(serviceId)) {
+      PageRequest<ServiceTemplate> serviceTemplatePageRequest =
+          aPageRequest().withLimit(UNLIMITED).addFilter(ServiceTemplateKeys.appId, EQ, appId).build();
+      return getServiceVariablesOfTemplates(appId, serviceTemplatePageRequest, entityType);
+    }
     List<String> serviceIds = getServiceIds(appId, serviceId);
     if (!serviceIds.isEmpty()) {
-      PageRequest<ServiceTemplate> serviceTemplatePageRequest = aPageRequest()
-                                                                    .withLimit(UNLIMITED)
-                                                                    .addFilter("appId", EQ, appId)
-                                                                    .addFilter("serviceId", IN, serviceIds.toArray())
-                                                                    .build();
+      PageRequest<ServiceTemplate> serviceTemplatePageRequest =
+          aPageRequest()
+              .withLimit(UNLIMITED)
+              .addFilter(ServiceTemplateKeys.appId, EQ, appId)
+              .addFilter(ServiceTemplateKeys.serviceId, IN, serviceIds.toArray())
+              .build();
       return getServiceVariablesOfTemplates(appId, serviceTemplatePageRequest, entityType);
     }
     return new TreeSet<>();
+  }
+
+  private boolean considerAllServices(String serviceId) {
+    return ALL.equalsIgnoreCase(serviceId);
   }
 
   public List<String> getContinuousVerificationVariables(String appId, String serviceId) {

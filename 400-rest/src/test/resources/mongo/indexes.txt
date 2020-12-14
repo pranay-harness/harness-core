@@ -598,6 +598,7 @@ serviceInstance {"name": "publicDns_1", "background": true} {"publicDns": 1}
 serviceSecrets {"name": "serviceType_1", "unique": true} {"serviceType": 1}
 serviceTemplates {"name": "accountId_1", "background": true} {"accountId": 1}
 serviceTemplates {"name": "appId_1", "background": true} {"appId": 1}
+serviceTemplates {"name": "appId_serviceId_createdAt", "background": true} {"appId": 1, "serviceId": 1, "createdAt": -1}
 serviceTemplates {"name": "app_env_createdAt", "background": true} {"appId": 1, "envId": 1, "createdAt": -1}
 serviceTemplates {"name": "createdAt_1", "background": true} {"createdAt": 1}
 serviceTemplates {"name": "yaml", "unique": true} {"appId": 1, "envId": 1, "name": 1}
