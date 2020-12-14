@@ -29,6 +29,7 @@ public class TimeScaleDBServiceImpl implements TimeScaleDBService {
   }
 
   private void initializeDB() {
+    log.info("Initializing TimeScaleDB");
     if (!isValid(timeScaleDBConfig)) {
       validDB = false;
       return;
