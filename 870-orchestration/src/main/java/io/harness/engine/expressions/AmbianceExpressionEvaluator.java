@@ -13,6 +13,7 @@ import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.engine.expressions.functors.NodeExecutionQualifiedFunctor;
 import io.harness.engine.expressions.functors.OutcomeFunctor;
 import io.harness.engine.outcomes.OutcomeService;
+import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.exception.CriticalExpressionEvaluationException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
@@ -58,7 +59,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Redesign
 public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
   @Inject private OutcomeService outcomeService;
-  @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
+  @Inject private PmsSweepingOutputService pmsSweepingOutputService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
   @Inject private OrchestrationFieldRegistry orchestrationFieldRegistry;
@@ -102,7 +103,7 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
     if (entityTypes.contains(NodeExecutionEntityType.SWEEPING_OUTPUT)) {
       addToContext("output",
           ExecutionSweepingOutputFunctor.builder()
-              .executionSweepingOutputService(executionSweepingOutputService)
+              .pmsSweepingOutputService(pmsSweepingOutputService)
               .ambiance(ambiance)
               .build());
     }
@@ -118,7 +119,7 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
         NodeExecutionChildFunctor.builder()
             .nodeExecutionsCache(nodeExecutionsCache)
             .outcomeService(outcomeService)
-            .executionSweepingOutputService(executionSweepingOutputService)
+            .pmsSweepingOutputService(pmsSweepingOutputService)
             .ambiance(ambiance)
             .entityTypes(entityTypes)
             .build());
@@ -127,7 +128,7 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
         NodeExecutionAncestorFunctor.builder()
             .nodeExecutionsCache(nodeExecutionsCache)
             .outcomeService(outcomeService)
-            .executionSweepingOutputService(executionSweepingOutputService)
+            .pmsSweepingOutputService(pmsSweepingOutputService)
             .ambiance(ambiance)
             .entityTypes(entityTypes)
             .groupAliases(groupAliases)
@@ -137,7 +138,7 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
         NodeExecutionQualifiedFunctor.builder()
             .nodeExecutionsCache(nodeExecutionsCache)
             .outcomeService(outcomeService)
-            .executionSweepingOutputService(executionSweepingOutputService)
+            .pmsSweepingOutputService(pmsSweepingOutputService)
             .ambiance(ambiance)
             .entityTypes(entityTypes)
             .build());

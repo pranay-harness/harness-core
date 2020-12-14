@@ -8,6 +8,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.NodeExecutionsCache;
 import io.harness.engine.outcomes.OutcomeService;
+import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.execution.NodeExecution;
 import io.harness.expression.LateBindingValue;
 import io.harness.pms.ambiance.Ambiance;
@@ -31,7 +32,7 @@ import lombok.Value;
 public class NodeExecutionValue implements LateBindingValue {
   NodeExecutionsCache nodeExecutionsCache;
   OutcomeService outcomeService;
-  ExecutionSweepingOutputService executionSweepingOutputService;
+  PmsSweepingOutputService pmsSweepingOutputService;
   Ambiance ambiance;
   NodeExecution startNodeExecution;
   Set<NodeExecutionEntityType> entityTypes;
@@ -43,7 +44,7 @@ public class NodeExecutionValue implements LateBindingValue {
     return NodeExecutionMap.builder()
         .nodeExecutionsCache(nodeExecutionsCache)
         .outcomeService(outcomeService)
-        .executionSweepingOutputService(executionSweepingOutputService)
+        .pmsSweepingOutputService(pmsSweepingOutputService)
         .ambiance(ambiance)
         .nodeExecution(startNodeExecution)
         .entityTypes(entityTypes)
@@ -73,7 +74,7 @@ public class NodeExecutionValue implements LateBindingValue {
     NodeExecutionValue childValue = NodeExecutionValue.builder()
                                         .nodeExecutionsCache(nodeExecutionsCache)
                                         .outcomeService(outcomeService)
-                                        .executionSweepingOutputService(executionSweepingOutputService)
+                                        .pmsSweepingOutputService(pmsSweepingOutputService)
                                         .ambiance(ambiance)
                                         .startNodeExecution(nodeExecution)
                                         .entityTypes(entityTypes)

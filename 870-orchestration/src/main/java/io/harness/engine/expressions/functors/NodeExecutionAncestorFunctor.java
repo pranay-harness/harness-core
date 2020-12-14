@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.expressions.NodeExecutionsCache;
 import io.harness.engine.outcomes.OutcomeService;
+import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.execution.NodeExecution;
 import io.harness.expression.LateBindingMap;
 import io.harness.pms.ambiance.Ambiance;
@@ -24,7 +25,7 @@ import lombok.Value;
 public class NodeExecutionAncestorFunctor extends LateBindingMap {
   transient NodeExecutionsCache nodeExecutionsCache;
   transient OutcomeService outcomeService;
-  transient ExecutionSweepingOutputService executionSweepingOutputService;
+  transient PmsSweepingOutputService pmsSweepingOutputService;
   transient Ambiance ambiance;
   transient Set<NodeExecutionEntityType> entityTypes;
   transient Map<String, String> groupAliases;
@@ -40,7 +41,7 @@ public class NodeExecutionAncestorFunctor extends LateBindingMap {
                                       : NodeExecutionValue.builder()
                                             .nodeExecutionsCache(nodeExecutionsCache)
                                             .outcomeService(outcomeService)
-                                            .executionSweepingOutputService(executionSweepingOutputService)
+                                            .pmsSweepingOutputService(pmsSweepingOutputService)
                                             .ambiance(ambiance)
                                             .startNodeExecution(startNodeExecution)
                                             .entityTypes(entityTypes)
