@@ -25,6 +25,7 @@ import io.harness.govern.ServersModule;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingGrpcOutputService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
+import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.pms.sdk.execution.PmsNodeExecutionServiceGrpcImpl;
 import io.harness.pms.sdk.registries.registrar.AdviserRegistrar;
 import io.harness.pms.sdk.registries.registrar.OrchestrationEventHandlerRegistrar;
@@ -38,6 +39,8 @@ import io.harness.state.inspection.StateInspectionServiceImpl;
 import io.harness.tasks.TaskExecutor;
 import io.harness.tasks.TaskMode;
 import io.harness.threading.ThreadPool;
+import io.harness.waiter.AsyncWaitEngineImpl;
+import io.harness.waiter.WaitNotifyEngine;
 import io.harness.waiter.WaiterModule;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -139,6 +142,13 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     } else {
       return injector.getInstance(PmsNodeExecutionServiceImpl.class);
     }
+  }
+
+  @Provides
+  @Singleton
+  public AsyncWaitEngine asyncWaitEngine(
+      WaitNotifyEngine waitNotifyEngine, @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName) {
+    return new AsyncWaitEngineImpl(waitNotifyEngine, publisherName);
   }
 
   @Override

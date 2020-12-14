@@ -28,6 +28,7 @@ import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
@@ -233,7 +234,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
 
     Injector injector = Guice.createInjector(modules);
     if (configuration.getShouldConfigureWithPMS() != null && configuration.getShouldConfigureWithPMS()) {
-      registerPMSSDK(configuration);
+      registerPMSSDK(injector, configuration);
     }
     registerResources(environment, injector);
     registerWaitEnginePublishers(injector);
@@ -275,12 +276,13 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     }
   }
 
-  private void registerPMSSDK(CIManagerConfiguration config) {
+  private void registerPMSSDK(Injector injector, CIManagerConfiguration config) {
     PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
                                         .serviceName("ci")
                                         .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
                                         .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
                                         .pipelineServiceInfoProvider(new CIPipelineServiceInfoProvider())
+                                        .asyncWaitEngine(injector.getInstance(AsyncWaitEngine.class))
                                         .build();
     try {
       PmsSdkModule.initializeDefaultInstance(sdkConfig);

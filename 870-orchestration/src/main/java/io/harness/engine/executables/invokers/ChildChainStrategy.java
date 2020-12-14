@@ -6,7 +6,6 @@ import static io.harness.pms.contracts.execution.Status.ABORTED;
 import static io.harness.pms.contracts.execution.Status.QUEUED;
 import static io.harness.pms.contracts.execution.Status.SUSPENDED;
 
-import io.harness.OrchestrationPublisherName;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.EngineObtainmentHelper;
 import io.harness.engine.executables.ExecuteStrategy;
@@ -35,11 +34,9 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.state.io.StepResponseNotifyData;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
-import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -48,12 +45,10 @@ import java.util.Objects;
 @SuppressWarnings({"rawtypes", "unchecked"})
 @OwnedBy(CDC)
 public class ChildChainStrategy implements ExecuteStrategy {
-  @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private PmsNodeExecutionService pmsNodeExecutionService;
   @Inject private InvocationHelper invocationHelper;
   @Inject private StepRegistry stepRegistry;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
-  @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
   @Inject private KryoSerializer kryoSerializer;
 
   @Override
@@ -138,17 +133,16 @@ public class ChildChainStrategy implements ExecuteStrategy {
     pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.UNRECOGNIZED,
         ExecutableResponse.newBuilder().setChildChain(childChainResponse).build(), Collections.emptyList());
 
-    NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
-    waitNotifyEngine.waitForAllOn(publisherName, callback, ignoreNotifyId);
     PlanNodeProto planNode = nodeExecution.getNode();
-    waitNotifyEngine.doneWith(ignoreNotifyId,
+    NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build();
+    callback.notify(Collections.singletonMap(ignoreNotifyId,
         StepResponseNotifyData.builder()
             .nodeUuid(planNode.getUuid())
             .identifier(planNode.getIdentifier())
             .group(planNode.getGroup())
             .status(SUSPENDED)
             .description("Ignoring Execution as next child found to be null")
-            .build());
+            .build()));
   }
 
   private boolean isBroken(Map<String, ResponseData> accumulatedResponse) {

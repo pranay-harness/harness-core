@@ -3,6 +3,7 @@ package io.harness.pms.sdk;
 import io.harness.mongo.MongoConfig;
 import io.harness.pms.sdk.core.pipeline.filters.FilterCreationResponseMerger;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
+import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
@@ -51,5 +52,11 @@ class PmsSdkProviderModule extends AbstractModule {
   @Named("pmsSdkMongoConfig")
   public MongoConfig mongoConfig() {
     return config.getMongoConfig();
+  }
+
+  @Provides
+  @Singleton
+  public AsyncWaitEngine asyncWaitEngine() {
+    return config.getAsyncWaitEngine();
   }
 }

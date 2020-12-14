@@ -35,6 +35,7 @@ import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.pms.sdk.registries.StepRegistry;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
@@ -198,6 +199,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
               .pmsGrpcClientConfig(appConfig.getPmsGrpcClientConfig())
               .pipelineServiceInfoProvider(injector.getInstance(CDNGPlanCreatorProvider.class))
               .filterCreationResponseMerger(new CDNGFilterCreationResponseMerger())
+              .asyncWaitEngine(injector.getInstance(AsyncWaitEngine.class))
               .build();
       try {
         PmsSdkModule.initializeDefaultInstance(sdkConfig);

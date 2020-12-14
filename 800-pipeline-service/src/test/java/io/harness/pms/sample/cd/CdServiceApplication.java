@@ -8,6 +8,7 @@ import io.harness.pms.sample.cd.creator.CdPipelineServiceInfoProvider;
 import io.harness.pms.sample.cd.creator.filters.CDFilterCreationResponseMerger;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -64,6 +65,7 @@ public class CdServiceApplication extends Application<CdServiceConfiguration> {
             .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
             .pipelineServiceInfoProvider(injector.getInstance(CdPipelineServiceInfoProvider.class))
             .filterCreationResponseMerger(new CDFilterCreationResponseMerger())
+            .asyncWaitEngine(injector.getInstance(AsyncWaitEngine.class))
             .build();
     try {
       PmsSdkModule.initializeDefaultInstance(sdkConfig);
