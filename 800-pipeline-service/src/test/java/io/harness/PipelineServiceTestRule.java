@@ -71,6 +71,7 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
       @Singleton
       public OrchestrationModuleConfig orchestrationModuleConfig() {
         return OrchestrationModuleConfig.builder()
+            .serviceName("PIPELINE_TEST")
             .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
             .build();
       }

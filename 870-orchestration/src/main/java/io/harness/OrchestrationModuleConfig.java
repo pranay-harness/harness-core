@@ -11,6 +11,7 @@ import lombok.Value;
 @Value
 @Builder
 public class OrchestrationModuleConfig {
+  @NonNull String serviceName;
   @NonNull ExpressionEvaluatorProvider expressionEvaluatorProvider;
   @Builder.Default int corePoolSize = 1;
   @Builder.Default int maxPoolSize = 5;

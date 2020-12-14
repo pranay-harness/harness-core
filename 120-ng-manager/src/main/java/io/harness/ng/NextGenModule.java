@@ -267,6 +267,7 @@ public class NextGenModule extends AbstractModule {
   @Singleton
   public OrchestrationModuleConfig orchestrationModuleConfig() {
     return OrchestrationModuleConfig.builder()
+        .serviceName("CD_NG")
         .expressionEvaluatorProvider(new CDExpressionEvaluatorProvider())
         .publisherName(NgOrchestrationNotifyEventListener.NG_ORCHESTRATION)
         .build();

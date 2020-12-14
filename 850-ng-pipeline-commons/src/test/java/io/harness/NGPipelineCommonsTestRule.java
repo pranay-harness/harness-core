@@ -79,6 +79,7 @@ public class NGPipelineCommonsTestRule implements MethodRule, InjectorRuleMixin,
       @Singleton
       public OrchestrationModuleConfig orchestrationModuleConfig() {
         return OrchestrationModuleConfig.builder()
+            .serviceName("NG_PIPELINE_COMMONS_TEST")
             .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
             .build();
       }

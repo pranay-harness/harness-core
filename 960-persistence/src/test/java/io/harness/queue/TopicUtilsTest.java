@@ -38,5 +38,8 @@ public class TopicUtilsTest {
     assertThat(TopicUtils.resolveExpressionIntoListOfTopics(
                    asList(asList("prefix"), asList("element1", "element2"), asList("suffix"))))
         .containsExactly("prefix;element1;suffix", "prefix;element2;suffix");
+
+    assertThat(TopicUtils.resolveExpressionIntoListOfTopics(asList(asList("prefix"), asList("suffix"))))
+        .containsExactly("prefix;suffix");
   }
 }
