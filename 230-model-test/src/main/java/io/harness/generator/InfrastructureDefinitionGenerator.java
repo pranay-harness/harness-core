@@ -33,6 +33,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.data.structure.HarnessStringUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.EnvironmentGenerator.Environments;
 import io.harness.generator.InfrastructureProvisionerGenerator.InfrastructureProvisioners;
@@ -733,7 +734,15 @@ public class InfrastructureDefinitionGenerator {
       return existing;
     }
 
-    return infrastructureDefinitionService.save(infrastructureDefinition, false, true);
+    try {
+      return infrastructureDefinitionService.save(infrastructureDefinition, false, true);
+    } catch (InvalidRequestException ex) {
+      existing = exists(infrastructureDefinition);
+      if (existing != null) {
+        return existing;
+      }
+      throw ex;
+    }
   }
 
   private InfrastructureDefinition ensurePcf(Seed seed, Owners owners, String bearerToken) {

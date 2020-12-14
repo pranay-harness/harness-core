@@ -146,35 +146,6 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
     log.info("All tests exit");
   }
 
-  protected void assertExecutionEcsRunTask(Workflow savedWorkflow, String appId, String envId) {
-    ExecutionArgs executionArgs = new ExecutionArgs();
-    executionArgs.setWorkflowType(savedWorkflow.getWorkflowType());
-
-    String artifactId = ArtifactStreamRestUtils.getArtifactStreamId(
-        bearerToken, appId, savedWorkflow.getEnvId(), savedWorkflow.getServiceId());
-    Artifact artifact = new Artifact();
-    artifact.setUuid(artifactId);
-
-    executionArgs.setArtifacts(Arrays.asList(artifact));
-    executionArgs.setOrchestrationId(savedWorkflow.getUuid());
-    executionArgs.setExecutionCredential(SSHExecutionCredential.Builder.aSSHExecutionCredential()
-                                             .withExecutionType(ExecutionCredential.ExecutionType.SSH)
-                                             .build());
-
-    log.info("Invoking workflow execution");
-
-    WorkflowExecution workflowExecution = runWorkflow(bearerToken, appId, envId, executionArgs);
-    logStateExecutionInstanceErrors(workflowExecution);
-    assertThat(workflowExecution).isNotNull();
-
-    if (workflowExecution.getStatus() != ExecutionStatus.SUCCESS) {
-      return;
-    }
-
-    log.info("ECs Execution status: " + workflowExecution.getStatus());
-    assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
-  }
-
   public void resetCache(String accountId) {
     RestResponse<Void> restResponse =
         Setup.portal()
@@ -434,6 +405,12 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
       PageResponse<Log> logPageResponse = logService.list(workflowExecution.getAppId(), request);
       log.info("for activityId : {}", activity.getUuid());
       logPageResponse.forEach(response -> log.info(response.getLogLine()));
+    }
+  }
+
+  protected void enableFeatureFlag(FeatureName featureName, String accountId) {
+    if (!featureFlagService.isEnabled(featureName, accountId)) {
+      featureFlagService.enableAccount(featureName, accountId);
     }
   }
 }
