@@ -2,9 +2,9 @@ package io.harness.pms.sdk.core.resolver;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.pms.contracts.refobjects.RefObject;
+import io.harness.pms.contracts.refobjects.RefType;
 import io.harness.pms.data.OrchestrationRefType;
-import io.harness.pms.refobjects.RefObject;
-import io.harness.pms.refobjects.RefType;
 
 import lombok.experimental.UtilityClass;
 

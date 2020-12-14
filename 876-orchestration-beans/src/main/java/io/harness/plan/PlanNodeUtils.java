@@ -1,6 +1,6 @@
 package io.harness.plan;
 
-import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 
 public class PlanNodeUtils {

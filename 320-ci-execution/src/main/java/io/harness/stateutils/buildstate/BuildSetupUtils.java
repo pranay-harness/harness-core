@@ -5,7 +5,7 @@ import static io.harness.govern.Switch.unhandled;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

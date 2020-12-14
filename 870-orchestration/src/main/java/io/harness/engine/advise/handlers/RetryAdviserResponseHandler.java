@@ -8,9 +8,9 @@ import io.harness.delay.DelayEventHelper;
 import io.harness.engine.advise.AdviserResponseHandler;
 import io.harness.engine.interrupts.helpers.RetryHelper;
 import io.harness.engine.resume.EngineWaitRetryCallback;
-import io.harness.pms.advisers.AdviserResponse;
-import io.harness.pms.advisers.RetryAdvise;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.advisers.AdviserResponse;
+import io.harness.pms.contracts.advisers.RetryAdvise;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;

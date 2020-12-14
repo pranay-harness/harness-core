@@ -9,7 +9,7 @@ import io.harness.engine.advise.handlers.MarkSuccessAdviseHandler;
 import io.harness.engine.advise.handlers.NextStepHandler;
 import io.harness.engine.advise.handlers.RetryAdviserResponseHandler;
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.advisers.AdviseType;
+import io.harness.pms.contracts.advisers.AdviseType;
 
 import com.google.inject.Inject;
 

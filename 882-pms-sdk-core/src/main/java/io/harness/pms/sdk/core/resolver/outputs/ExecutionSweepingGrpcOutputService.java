@@ -3,15 +3,15 @@ package io.harness.pms.sdk.core.resolver.outputs;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.refobjects.RefObject;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.refobjects.RefObject;
+import io.harness.pms.contracts.service.SweepingOutputConsumeBlobRequest;
+import io.harness.pms.contracts.service.SweepingOutputConsumeBlobResponse;
+import io.harness.pms.contracts.service.SweepingOutputResolveBlobRequest;
+import io.harness.pms.contracts.service.SweepingOutputResolveBlobResponse;
+import io.harness.pms.contracts.service.SweepingOutputServiceGrpc.SweepingOutputServiceBlockingStub;
 import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.pms.serializer.persistence.DocumentOrchestrationUtils;
-import io.harness.pms.service.SweepingOutputConsumeBlobRequest;
-import io.harness.pms.service.SweepingOutputConsumeBlobResponse;
-import io.harness.pms.service.SweepingOutputResolveBlobRequest;
-import io.harness.pms.service.SweepingOutputResolveBlobResponse;
-import io.harness.pms.service.SweepingOutputServiceGrpc.SweepingOutputServiceBlockingStub;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

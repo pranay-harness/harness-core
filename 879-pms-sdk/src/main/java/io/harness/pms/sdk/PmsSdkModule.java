@@ -1,8 +1,8 @@
 package io.harness.pms.sdk;
 
 import io.harness.PmsSdkCoreModule;
-import io.harness.pms.plan.InitializeSdkRequest;
-import io.harness.pms.plan.PmsServiceGrpc.PmsServiceBlockingStub;
+import io.harness.pms.contracts.plan.InitializeSdkRequest;
+import io.harness.pms.contracts.plan.PmsServiceGrpc.PmsServiceBlockingStub;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
 

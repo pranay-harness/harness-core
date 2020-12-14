@@ -1,8 +1,8 @@
 package io.harness.yaml.core.failurestrategy;
 
-import static io.harness.pms.execution.failure.FailureType.*;
+import static io.harness.pms.contracts.execution.failure.FailureType.*;
 
-import io.harness.pms.execution.failure.FailureType;
+import io.harness.pms.contracts.execution.failure.FailureType;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

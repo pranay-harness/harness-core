@@ -3,7 +3,7 @@ package io.harness.engine.interrupts;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.execution.PlanExecution;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 
 import java.util.HashMap;
 

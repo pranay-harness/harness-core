@@ -14,7 +14,7 @@ import io.harness.functional.redesign.OrchestrationEngineTestSetupHelper;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;

@@ -1,6 +1,6 @@
 package io.harness.redesign.services;
 
-import static io.harness.pms.execution.Status.RUNNING;
+import static io.harness.pms.contracts.execution.Status.RUNNING;
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static io.harness.rule.OwnerRule.GARVIT;
 
@@ -16,7 +16,7 @@ import io.harness.config.MockServerConfig;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
 import io.harness.plan.Plan;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
 

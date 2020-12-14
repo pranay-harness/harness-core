@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.plan;
+
+option java_multiple_files = true;
+
+import "io/harness/pms/contracts/advisers/advisers.proto";
+import "io/harness/pms/contracts/facilitators/facilitators.proto";
+import "io/harness/pms/contracts/steps/step_type.proto";
+import "io/harness/pms/contracts/steps/skip_type.proto";
+import "io/harness/pms/contracts/refobjects/ref_objects.proto";
+
+message PlanNodeProto {
+  string uuid = 1;
+  string name = 2;
+  io.harness.pms.contracts.steps.StepType stepType = 3;
+  string identifier = 4;
+  string group = 5;
+  string stepParameters = 6;
+  repeated io.harness.pms.contracts.refobjects.RefObject rebObjects = 7;
+  repeated io.harness.pms.contracts.advisers.AdviserObtainment adviserObtainments = 8;
+  repeated io.harness.pms.contracts.facilitators.FacilitatorObtainment facilitatorObtainments = 9;
+  bool skipExpressionChain = 10;
+  io.harness.pms.contracts.steps.SkipType skipType = 11;
+}

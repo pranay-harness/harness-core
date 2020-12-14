@@ -2,7 +2,7 @@ package io.harness.executionplan.stepsdependency;
 
 import io.harness.executionplan.stepsdependency.resolvers.StepDependencyResolverContextImpl;
 import io.harness.executionplan.stepsdependency.resolvers.StepDependencyResolverContextImpl.StepDependencyResolverContextImplBuilder;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.steps.io.ResolvedRefInput;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;

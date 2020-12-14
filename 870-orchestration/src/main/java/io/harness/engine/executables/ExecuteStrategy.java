@@ -1,7 +1,7 @@
 package io.harness.engine.executables;
 
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.contracts.plan.PlanNodeProto;
 
 import java.util.Collections;
 import java.util.Comparator;

@@ -1,9 +1,9 @@
 package io.harness.pms.sdk.core.pipeline.filters;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.pms.contracts.plan.GraphLayoutNode;
 import io.harness.pms.filter.creation.FilterCreationResponse;
 import io.harness.pms.pipeline.filter.PipelineFilter;
-import io.harness.pms.plan.GraphLayoutNode;
 import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
 import io.harness.pms.yaml.YamlField;
 

@@ -1,6 +1,6 @@
 package io.harness.pms.plan.creation;
 
-import io.harness.pms.plan.PlanCreationBlobResponse;
+import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.plan.creation.PlanCreatorMergeService;
 
 import com.google.inject.Inject;

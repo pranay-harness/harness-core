@@ -9,7 +9,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.executionplan.core.ExecutionPlanCreationContext;
 import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
-import io.harness.pms.refobjects.RefObject;
+import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.PlanNode.PlanNodeBuilder;
 import io.harness.rule.Owner;

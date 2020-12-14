@@ -1,8 +1,8 @@
 package io.harness.pms.execution.utils;
 
-import io.harness.pms.ambiance.Level;
-import io.harness.pms.plan.PlanNodeProto;
-import io.harness.pms.steps.StepType;
+import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.StepType;
 
 public class LevelUtils {
   public static Level buildLevelFromPlanNode(String runtimeId, PlanNodeProto node) {

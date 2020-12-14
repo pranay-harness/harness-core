@@ -1,6 +1,6 @@
 package io.harness.pms.serializer.kryo.serializers;
 
-import io.harness.pms.execution.ExecutableResponse;
+import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.serializer.kryo.ProtobufKryoSerializer;
 
 public class ExecutableResponseSerializer extends ProtobufKryoSerializer<ExecutableResponse> {

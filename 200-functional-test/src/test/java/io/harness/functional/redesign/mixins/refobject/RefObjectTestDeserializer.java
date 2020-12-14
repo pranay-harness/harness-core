@@ -1,6 +1,6 @@
 package io.harness.functional.redesign.mixins.refobject;
 
-import io.harness.pms.refobjects.RefObject;
+import io.harness.pms.contracts.refobjects.RefObject;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;

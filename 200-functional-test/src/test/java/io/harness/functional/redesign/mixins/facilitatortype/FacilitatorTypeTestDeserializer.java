@@ -1,6 +1,6 @@
 package io.harness.functional.redesign.mixins.facilitatortype;
 
-import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;

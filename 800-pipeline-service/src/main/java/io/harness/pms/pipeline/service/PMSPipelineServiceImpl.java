@@ -8,6 +8,7 @@ import static java.lang.String.format;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.filter.creation.FilterCreatorMergeService;
 import io.harness.pms.filter.creation.FilterCreatorMergeServiceResponse;
 import io.harness.pms.pipeline.CommonStepInfo;
@@ -16,7 +17,6 @@ import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.StepCategory;
 import io.harness.pms.pipeline.StepData;
 import io.harness.pms.sdk.PmsSdkInstanceService;
-import io.harness.pms.steps.StepInfo;
 import io.harness.repositories.pipeline.PMSPipelineRepository;
 
 import com.google.common.annotations.VisibleForTesting;

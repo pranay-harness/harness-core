@@ -2,9 +2,9 @@ package io.harness.pms.sdk.core;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.ambiance.Level;
-import io.harness.pms.steps.StepType;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.steps.StepType;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;

@@ -1,7 +1,7 @@
 package io.harness.pms.execution.beans;
 
+import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.tasks.ProgressData;
 
 import java.util.List;

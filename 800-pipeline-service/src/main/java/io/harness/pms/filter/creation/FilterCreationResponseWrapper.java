@@ -1,6 +1,6 @@
 package io.harness.pms.filter.creation;
 
-import io.harness.pms.plan.FilterCreationBlobResponse;
+import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
 
 import lombok.Builder;
 import lombok.Data;

@@ -3,7 +3,7 @@ package io.harness.pms.plan.execution;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
 import io.harness.plan.Plan;
-import io.harness.pms.plan.PlanCreationBlobResponse;
+import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.plan.creation.PlanCreatorMergeService;
 
 import com.google.inject.Inject;

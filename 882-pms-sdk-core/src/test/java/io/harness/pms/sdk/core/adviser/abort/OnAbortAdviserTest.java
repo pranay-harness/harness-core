@@ -6,15 +6,15 @@ import static io.harness.rule.OwnerRule.ALEXEI;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
-import io.harness.pms.advisers.AdviseType;
-import io.harness.pms.advisers.AdviserResponse;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.ambiance.Level;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.advisers.AdviseType;
+import io.harness.pms.contracts.advisers.AdviserResponse;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.AmbianceTestUtils;
 import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent;
-import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;

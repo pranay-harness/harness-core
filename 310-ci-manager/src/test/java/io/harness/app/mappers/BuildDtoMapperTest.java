@@ -21,7 +21,7 @@ import io.harness.app.beans.dto.CIBuildResponseDTO;
 import io.harness.app.impl.CIManagerTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ci.beans.entities.CIBuild;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
 

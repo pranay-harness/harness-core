@@ -8,13 +8,13 @@ import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.ci.beans.entities.BuildNumberDetails;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.execution.ChildExecutableResponse;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.ChildExecutableResponse;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
-import io.harness.pms.steps.StepType;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;

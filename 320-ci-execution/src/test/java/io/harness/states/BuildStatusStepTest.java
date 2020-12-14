@@ -16,7 +16,7 @@ import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO
 import io.harness.encryption.SecretRefData;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.rule.Owner;
 import io.harness.stateutils.buildstate.ConnectorUtils;
 

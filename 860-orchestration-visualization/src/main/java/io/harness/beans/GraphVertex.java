@@ -4,12 +4,12 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.interrupts.InterruptEffect;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.execution.ExecutionMode;
-import io.harness.pms.execution.Status;
-import io.harness.pms.execution.failure.FailureInfo;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.ExecutionMode;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.sdk.core.data.Outcome;
-import io.harness.pms.steps.SkipType;
 import io.harness.tasks.ProgressData;
 
 import com.fasterxml.jackson.annotation.JsonInclude;

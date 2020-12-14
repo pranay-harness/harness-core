@@ -7,11 +7,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.OrchestrationBeansTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.io.EmptyStepParameters;
 import io.harness.pms.sdk.registries.RegistryType;
 import io.harness.pms.sdk.registries.StepRegistry;
-import io.harness.pms.steps.StepType;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 import io.harness.rule.Owner;

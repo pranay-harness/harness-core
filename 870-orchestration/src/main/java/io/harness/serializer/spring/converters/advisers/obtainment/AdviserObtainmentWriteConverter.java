@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.orchestration.persistence.ProtoWriteConverter;
-import io.harness.pms.advisers.AdviserObtainment;
+import io.harness.pms.contracts.advisers.AdviserObtainment;
 
 import com.google.inject.Singleton;
 import org.springframework.data.convert.WritingConverter;

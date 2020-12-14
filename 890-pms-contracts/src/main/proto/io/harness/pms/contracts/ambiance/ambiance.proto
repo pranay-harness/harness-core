@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.ambiance;
+
+option java_multiple_files = true;
+
+import "io/harness/pms/contracts/ambiance/level.proto";
+
+message Ambiance {
+  map<string, string> setupAbstractions = 1;
+  repeated io.harness.pms.contracts.ambiance.Level levels = 2;
+  string planExecutionId = 3;
+}

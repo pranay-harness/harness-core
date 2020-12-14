@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.plan;
+
+option java_multiple_files = true;
+
+import "io/harness/pms/contracts/plan/plan_node_proto.proto";
+import "io/harness/pms/contracts/steps/step_type.proto";
+
+service PmsService {
+  rpc initializeSdk(InitializeSdkRequest) returns (InitializeSdkResponse);
+}
+
+message InitializeSdkRequest {
+  string name = 1;
+  map<string, Types> supportedTypes = 2;
+  repeated io.harness.pms.contracts.steps.StepInfo supportedSteps = 3;
+}
+
+message InitializeSdkResponse {}
+
+message Types {
+  repeated string types = 1;
+}

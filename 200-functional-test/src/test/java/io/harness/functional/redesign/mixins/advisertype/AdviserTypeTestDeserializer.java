@@ -1,6 +1,6 @@
 package io.harness.functional.redesign.mixins.advisertype;
 
-import io.harness.pms.advisers.AdviserType;
+import io.harness.pms.contracts.advisers.AdviserType;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;

@@ -3,9 +3,9 @@ package io.harness.pms.sdk.core.steps.io;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.contracts.steps.io.StepOutcomeProto;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.serializer.persistence.DocumentOrchestrationUtils;
-import io.harness.pms.steps.io.StepOutcomeProto;
 
 import lombok.experimental.UtilityClass;
 

@@ -2,9 +2,9 @@ package io.harness.steps.barriers;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.execution.ExecutionMode;
-import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.ExecutionMode;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.sdk.core.facilitator.Facilitator;
 import io.harness.pms.sdk.core.facilitator.FacilitatorResponse;
 import io.harness.pms.sdk.core.facilitator.FacilitatorResponse.FacilitatorResponseBuilder;

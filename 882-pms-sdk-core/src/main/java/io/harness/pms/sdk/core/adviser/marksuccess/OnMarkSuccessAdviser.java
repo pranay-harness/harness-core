@@ -1,9 +1,9 @@
 package io.harness.pms.sdk.core.adviser.marksuccess;
 
-import io.harness.pms.advisers.AdviseType;
-import io.harness.pms.advisers.AdviserResponse;
-import io.harness.pms.advisers.AdviserType;
-import io.harness.pms.advisers.MarkSuccessAdvise;
+import io.harness.pms.contracts.advisers.AdviseType;
+import io.harness.pms.contracts.advisers.AdviserResponse;
+import io.harness.pms.contracts.advisers.AdviserType;
+import io.harness.pms.contracts.advisers.MarkSuccessAdvise;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;

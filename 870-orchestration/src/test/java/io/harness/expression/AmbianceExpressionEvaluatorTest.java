@@ -13,7 +13,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.expressions.AmbianceExpressionEvaluator;
 import io.harness.expression.field.dummy.DummyOrchestrationField;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableList;

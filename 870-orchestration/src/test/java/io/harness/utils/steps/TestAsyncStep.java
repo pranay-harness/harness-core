@@ -2,13 +2,13 @@ package io.harness.utils.steps;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.execution.AsyncExecutableResponse;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.AsyncExecutableResponse;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.AsyncExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
-import io.harness.pms.steps.StepType;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.StringNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;

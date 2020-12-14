@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.plan;
+
+option java_multiple_files = true;
+
+import "io/harness/pms/contracts/plan/plan_node_proto.proto";
+
+message Plan {
+  string startingNodeId = 1;
+  repeated PlanNodeProto nodes = 2;
+}

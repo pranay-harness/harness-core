@@ -1,11 +1,11 @@
 package io.harness.pms.plan.execution.data.service.outputs;
 
 import io.harness.engine.pms.data.PmsSweepingOutputService;
-import io.harness.pms.service.SweepingOutputConsumeBlobRequest;
-import io.harness.pms.service.SweepingOutputConsumeBlobResponse;
-import io.harness.pms.service.SweepingOutputResolveBlobRequest;
-import io.harness.pms.service.SweepingOutputResolveBlobResponse;
-import io.harness.pms.service.SweepingOutputServiceGrpc.SweepingOutputServiceImplBase;
+import io.harness.pms.contracts.service.SweepingOutputConsumeBlobRequest;
+import io.harness.pms.contracts.service.SweepingOutputConsumeBlobResponse;
+import io.harness.pms.contracts.service.SweepingOutputResolveBlobRequest;
+import io.harness.pms.contracts.service.SweepingOutputResolveBlobResponse;
+import io.harness.pms.contracts.service.SweepingOutputServiceGrpc.SweepingOutputServiceImplBase;
 
 import com.google.inject.Inject;
 import io.grpc.stub.StreamObserver;

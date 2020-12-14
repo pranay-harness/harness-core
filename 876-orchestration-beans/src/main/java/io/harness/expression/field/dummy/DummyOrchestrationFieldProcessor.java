@@ -1,7 +1,7 @@
 package io.harness.expression.field.dummy;
 
 import io.harness.expression.EngineExpressionEvaluator;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.expression.OrchestrationFieldProcessor;
 import io.harness.pms.expression.ProcessorResult;
 

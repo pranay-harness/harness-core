@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.pms.data.PmsSweepingOutputService;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.refobjects.RefObject;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.serializer.persistence.DocumentOrchestrationUtils;

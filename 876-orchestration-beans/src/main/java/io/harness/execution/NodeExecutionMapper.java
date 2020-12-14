@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.CollectionUtils;
-import io.harness.pms.execution.NodeExecutionProto;
+import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.serializer.ProtoUtils;
 
 import java.util.Collections;

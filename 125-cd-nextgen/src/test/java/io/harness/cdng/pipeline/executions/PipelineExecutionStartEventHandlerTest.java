@@ -17,11 +17,11 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.plan.Plan;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.ambiance.Level;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.plan.PlanNode;
-import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.steps.StepOutcomeGroup;
 

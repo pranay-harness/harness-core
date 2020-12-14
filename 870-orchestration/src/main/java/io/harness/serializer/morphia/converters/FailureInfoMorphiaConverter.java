@@ -1,8 +1,8 @@
 package io.harness.serializer.morphia.converters;
 
 import io.harness.persistence.converters.ProtoMessageConverter;
-import io.harness.pms.execution.failure.FailureInfo;
-import io.harness.pms.steps.StepType;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.steps.StepType;
 
 import com.google.inject.Singleton;
 

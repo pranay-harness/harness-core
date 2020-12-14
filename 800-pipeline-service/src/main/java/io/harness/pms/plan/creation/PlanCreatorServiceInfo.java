@@ -1,6 +1,6 @@
 package io.harness.pms.plan.creation;
 
-import io.harness.pms.plan.PlanCreationServiceGrpc.PlanCreationServiceBlockingStub;
+import io.harness.pms.contracts.plan.PlanCreationServiceGrpc.PlanCreationServiceBlockingStub;
 
 import java.util.Map;
 import java.util.Set;

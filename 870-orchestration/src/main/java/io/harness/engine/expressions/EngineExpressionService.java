@@ -3,7 +3,7 @@ package io.harness.engine.expressions;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 
 @OwnedBy(CDC)
 public interface EngineExpressionService {

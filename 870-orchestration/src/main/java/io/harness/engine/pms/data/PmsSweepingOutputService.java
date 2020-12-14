@@ -1,9 +1,9 @@
 package io.harness.engine.pms.data;
 
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.ambiance.Level;
-import io.harness.pms.refobjects.RefObject;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.sdk.core.resolver.GroupNotFoundException;
 import io.harness.pms.sdk.core.resolver.ResolverUtils;
 

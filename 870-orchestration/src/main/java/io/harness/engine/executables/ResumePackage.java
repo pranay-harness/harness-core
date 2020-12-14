@@ -1,7 +1,7 @@
 package io.harness.engine.executables;
 
-import io.harness.pms.execution.NodeExecutionProto;
-import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.contracts.execution.NodeExecutionProto;
+import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.tasks.ResponseData;
 
 import java.util.List;

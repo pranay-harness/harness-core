@@ -3,7 +3,7 @@ package io.harness.pms.sdk.core.plan.creation.mappers;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.data.structure.CollectionUtils;
-import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.plan.PlanNode;
 
 import lombok.experimental.UtilityClass;

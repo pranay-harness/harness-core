@@ -4,9 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.ambiance.Level;
-import io.harness.pms.refobjects.RefObject;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.sdk.core.data.StepTransput;
 import io.harness.pms.serializer.persistence.DocumentOrchestrationUtils;
 

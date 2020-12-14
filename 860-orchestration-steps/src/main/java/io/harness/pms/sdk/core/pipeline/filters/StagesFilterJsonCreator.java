@@ -1,7 +1,7 @@
 package io.harness.pms.sdk.core.pipeline.filters;
 
-import io.harness.pms.plan.EdgeLayoutList;
-import io.harness.pms.plan.GraphLayoutNode;
+import io.harness.pms.contracts.plan.EdgeLayoutList;
+import io.harness.pms.contracts.plan.GraphLayoutNode;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 

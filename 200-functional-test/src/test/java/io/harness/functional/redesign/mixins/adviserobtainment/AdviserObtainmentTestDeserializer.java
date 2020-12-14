@@ -1,6 +1,6 @@
 package io.harness.functional.redesign.mixins.adviserobtainment;
 
-import io.harness.pms.advisers.AdviserObtainment;
+import io.harness.pms.contracts.advisers.AdviserObtainment;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;

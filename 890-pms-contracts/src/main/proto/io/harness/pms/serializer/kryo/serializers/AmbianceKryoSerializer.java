@@ -1,6 +1,6 @@
 package io.harness.pms.serializer.kryo.serializers;
 
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.serializer.kryo.ProtobufKryoSerializer;
 
 public class AmbianceKryoSerializer extends ProtobufKryoSerializer<Ambiance> {

@@ -2,9 +2,9 @@ package io.harness.pms.sdk.core.plan.creation.beans;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.plan.PlanCreationBlobResponse;
-import io.harness.pms.plan.PlanCreationContextValue;
-import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
+import io.harness.pms.contracts.plan.PlanCreationContextValue;
+import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.mappers.PlanNodeProtoMapper;
 import io.harness.pms.yaml.YamlField;

@@ -4,11 +4,11 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.advisers.AdviseType;
-import io.harness.pms.advisers.AdviserResponse;
-import io.harness.pms.advisers.AdviserType;
-import io.harness.pms.advisers.NextStepAdvise;
-import io.harness.pms.execution.failure.FailureInfo;
+import io.harness.pms.contracts.advisers.AdviseType;
+import io.harness.pms.contracts.advisers.AdviserResponse;
+import io.harness.pms.contracts.advisers.AdviserType;
+import io.harness.pms.contracts.advisers.NextStepAdvise;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent;

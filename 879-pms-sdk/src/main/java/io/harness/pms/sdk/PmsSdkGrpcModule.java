@@ -2,13 +2,13 @@ package io.harness.pms.sdk;
 
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServer;
-import io.harness.pms.plan.NodeExecutionProtoServiceGrpc;
-import io.harness.pms.plan.NodeExecutionProtoServiceGrpc.NodeExecutionProtoServiceBlockingStub;
-import io.harness.pms.plan.PmsServiceGrpc;
-import io.harness.pms.plan.PmsServiceGrpc.PmsServiceBlockingStub;
+import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc;
+import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc.NodeExecutionProtoServiceBlockingStub;
+import io.harness.pms.contracts.plan.PmsServiceGrpc;
+import io.harness.pms.contracts.plan.PmsServiceGrpc.PmsServiceBlockingStub;
+import io.harness.pms.contracts.service.SweepingOutputServiceGrpc;
+import io.harness.pms.contracts.service.SweepingOutputServiceGrpc.SweepingOutputServiceBlockingStub;
 import io.harness.pms.sdk.core.plan.creation.creators.PlanCreatorService;
-import io.harness.pms.service.SweepingOutputServiceGrpc;
-import io.harness.pms.service.SweepingOutputServiceGrpc.SweepingOutputServiceBlockingStub;
 
 import com.google.common.util.concurrent.Service;
 import com.google.inject.AbstractModule;
