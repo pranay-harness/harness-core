@@ -2,6 +2,8 @@ package io.harness.pms.sdk;
 
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServer;
+import io.harness.pms.plan.NodeExecutionProtoServiceGrpc;
+import io.harness.pms.plan.NodeExecutionProtoServiceGrpc.NodeExecutionProtoServiceBlockingStub;
 import io.harness.pms.plan.PmsServiceGrpc;
 import io.harness.pms.plan.PmsServiceGrpc.PmsServiceBlockingStub;
 import io.harness.pms.sdk.core.plan.creation.creators.PlanCreatorService;
@@ -58,8 +60,7 @@ public class PmsSdkGrpcModule extends AbstractModule {
 
   @Provides
   @Singleton
-  public PmsServiceBlockingStub pmsGrpcClient(
-      HealthStatusManager healthStatusManager, PlanCreatorService planCreatorService) {
+  public PmsServiceBlockingStub pmsGrpcClient() {
     GrpcClientConfig clientConfig = config.getPmsGrpcClientConfig();
     Channel channel = NettyChannelBuilder.forTarget(clientConfig.getTarget())
                           .overrideAuthority(clientConfig.getAuthority())
@@ -70,12 +71,23 @@ public class PmsSdkGrpcModule extends AbstractModule {
 
   @Provides
   @Singleton
-  public SweepingOutputServiceBlockingStub sweepingOutputGrpcClient(HealthStatusManager healthStatusManager) {
+  public SweepingOutputServiceBlockingStub sweepingOutputGrpcClient() {
     GrpcClientConfig clientConfig = config.getPmsGrpcClientConfig();
     Channel channel = NettyChannelBuilder.forTarget(clientConfig.getTarget())
                           .overrideAuthority(clientConfig.getAuthority())
                           .usePlaintext()
                           .build();
     return SweepingOutputServiceGrpc.newBlockingStub(channel);
+  }
+
+  @Provides
+  @Singleton
+  public NodeExecutionProtoServiceBlockingStub nodeExecutionProtoGrpcClient() {
+    GrpcClientConfig clientConfig = config.getPmsGrpcClientConfig();
+    Channel channel = NettyChannelBuilder.forTarget(clientConfig.getTarget())
+                          .overrideAuthority(clientConfig.getAuthority())
+                          .usePlaintext()
+                          .build();
+    return NodeExecutionProtoServiceGrpc.newBlockingStub(channel);
   }
 }
