@@ -107,7 +107,7 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
     QLPipelineExecutionBuilder builder = QLPipelineExecution.builder();
     pipelineExecutionController.populatePipelineExecution(workflowExecution, builder);
     JsonNode actual = JsonUtils.toJsonNode(builder.build());
-    JsonNode expected = JsonUtils.readResourceFile("./execution/qlPipeline_execution_expected.json", JsonNode.class);
+    JsonNode expected = JsonUtils.readResourceFile("execution/qlPipeline_execution_expected.json", JsonNode.class);
     assertEquals("QLPipeline execution should be equal", expected, actual);
   }
 
