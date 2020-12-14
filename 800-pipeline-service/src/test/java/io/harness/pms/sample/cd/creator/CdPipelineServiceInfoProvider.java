@@ -13,12 +13,17 @@ import io.harness.pms.sdk.core.pipeline.filters.ParallelFilterJsonCreator;
 import io.harness.pms.sdk.core.pipeline.filters.PipelineFilterJsonCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
+import io.harness.pms.utils.InjectorUtils;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@Singleton
 public class CdPipelineServiceInfoProvider implements PipelineServiceInfoProvider {
+  @Inject InjectorUtils injectorUtils;
   @Override
   public List<PartialPlanCreator<?>> getPlanCreators() {
     List<PartialPlanCreator<?>> planCreators = new ArrayList<>();
@@ -29,6 +34,7 @@ public class CdPipelineServiceInfoProvider implements PipelineServiceInfoProvide
     planCreators.add(new ParallelPlanCreator());
     planCreators.add(new StepGroupPMSPlanCreator());
     planCreators.add(new ExecutionPMSPlanCreator());
+    injectorUtils.injectMembers(planCreators);
     return planCreators;
   }
 
@@ -38,7 +44,7 @@ public class CdPipelineServiceInfoProvider implements PipelineServiceInfoProvide
     filterJsonCreators.add(new PipelineFilterJsonCreator());
     filterJsonCreators.add(new ParallelFilterJsonCreator());
     filterJsonCreators.add(new DeploymentStageFilterCreator());
-
+    injectorUtils.injectMembers((filterJsonCreators));
     return filterJsonCreators;
   }
 
