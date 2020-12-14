@@ -5,9 +5,6 @@
     "type"
   ],
   "properties": {
-    "spec": {
-      "$ref": "#/definitions/NexusAuthCredentials"
-    },
     "type": {
       "type": "string",
       "enum": [

@@ -5,9 +5,6 @@
     "type"
   ],
   "properties": {
-    "spec": {
-      "$ref": "#/definitions/KubernetesAuthCredentialDTO"
-    },
     "type": {
       "type": "string",
       "enum": [

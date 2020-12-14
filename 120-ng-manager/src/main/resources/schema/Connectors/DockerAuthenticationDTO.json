@@ -5,9 +5,6 @@
     "type"
   ],
   "properties": {
-    "spec": {
-      "$ref": "#/definitions/DockerAuthCredentialsDTO"
-    },
     "type": {
       "type": "string",
       "enum": [
