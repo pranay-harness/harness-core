@@ -38,6 +38,7 @@ public class SetupSweepingOutputPcf implements SweepingOutput {
   private List<String> routeMaps;
   private Integer timeoutIntervalInMinutes;
   private List<PcfAppSetupTimeDetails> appDetailsToBeDownsized;
+  private PcfAppSetupTimeDetails mostRecentInactiveAppVersionDetails;
   private boolean isStandardBlueGreenWorkflow;
   private boolean isDownsizeOldApps;
   private boolean isUseCfCli;
@@ -60,6 +61,13 @@ public class SetupSweepingOutputPcf implements SweepingOutput {
       infoVariablesBuilder.oldAppName(oldAppDetails.getApplicationName());
       infoVariablesBuilder.oldAppGuid(oldAppDetails.getApplicationGuid());
       infoVariablesBuilder.oldAppRoutes(oldAppDetails.getUrls());
+    }
+
+    if (mostRecentInactiveAppVersionDetails != null) {
+      infoVariablesBuilder.mostRecentInactiveAppVersionGuid(mostRecentInactiveAppVersionDetails.getApplicationGuid());
+      infoVariablesBuilder.mostRecentInactiveAppVersionName(mostRecentInactiveAppVersionDetails.getApplicationName());
+      infoVariablesBuilder.mostRecentInactiveAppVersionRunningInstances(
+          mostRecentInactiveAppVersionDetails.getInitialInstanceCount());
     }
 
     infoVariablesBuilder.finalRoutes(routeMaps);

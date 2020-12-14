@@ -37,6 +37,11 @@ public class SetupSweepingOutputPcfTest extends CategoryTest {
                 PcfAppSetupTimeDetails.builder().applicationGuid(guid).applicationName(name).urls(finalRoutes).build()))
             .routeMaps(finalRoutes)
             .tempRouteMap(tempRoutes)
+            .mostRecentInactiveAppVersionDetails(PcfAppSetupTimeDetails.builder()
+                                                     .applicationName("app1")
+                                                     .applicationGuid("g1")
+                                                     .initialInstanceCount(1)
+                                                     .build())
             .build();
 
     InfoVariables appPcfVariables = setupSweepingOutputPcf.fetchPcfVariableInfo();
@@ -51,5 +56,9 @@ public class SetupSweepingOutputPcfTest extends CategoryTest {
 
     assertThat(appPcfVariables.getTempRoutes()).isEqualTo(tempRoutes);
     assertThat(appPcfVariables.getFinalRoutes()).isEqualTo(finalRoutes);
+
+    assertThat(appPcfVariables.getMostRecentInactiveAppVersionName()).isEqualTo("app1");
+    assertThat(appPcfVariables.getMostRecentInactiveAppVersionGuid()).isEqualTo("g1");
+    assertThat(appPcfVariables.getMostRecentInactiveAppVersionRunningInstances()).isEqualTo(1);
   }
 }
