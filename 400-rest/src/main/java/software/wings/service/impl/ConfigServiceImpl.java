@@ -449,28 +449,32 @@ public class ConfigServiceImpl implements ConfigService {
     }
     boolean deleted = wingsPersistence.delete(query);
     if (deleted) {
-      yamlPushService.pushYamlChangeSet(
-          configFile.getAccountId(), configFile, null, Type.DELETE, configFile.isSyncFromGit(), false);
-      if (configFile.isEncrypted()) {
-        EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId());
-        if (encryptedData != null) {
-          EncryptedDataParent encryptedDataParent = new EncryptedDataParent(
-              configFile.getUuid(), configFile.getSettingType(), configFile.getSettingType().toString());
-          encryptedData.removeParent(encryptedDataParent);
-          wingsPersistence.save(encryptedData);
-        }
-      }
+      configFileDeletionFollowUp(appId, configId, configFile);
+    }
+  }
 
-      List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)
-                                         .filter(ConfigFile.APP_ID_KEY2, appId)
-                                         .filter(ConfigFileKeys.parentConfigFileId, configId)
-                                         .asList();
-      if (!configFiles.isEmpty()) {
-        configFiles.forEach(childConfigFile -> delete(appId, childConfigFile.getUuid()));
+  private void configFileDeletionFollowUp(String appId, String configId, ConfigFile configFile) {
+    yamlPushService.pushYamlChangeSet(
+        configFile.getAccountId(), configFile, null, Type.DELETE, configFile.isSyncFromGit(), false);
+    if (configFile.isEncrypted()) {
+      EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId());
+      if (encryptedData != null) {
+        EncryptedDataParent encryptedDataParent = new EncryptedDataParent(
+            configFile.getUuid(), configFile.getSettingType(), configFile.getSettingType().toString());
+        encryptedData.removeParent(encryptedDataParent);
+        wingsPersistence.save(encryptedData);
       }
-      if (!configFile.isEncrypted()) {
-        executorService.submit(() -> fileService.deleteAllFilesForEntity(configId, CONFIGS));
-      }
+    }
+
+    List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)
+                                       .filter(ConfigFile.APP_ID_KEY2, appId)
+                                       .filter(ConfigFileKeys.parentConfigFileId, configId)
+                                       .asList();
+    if (!configFiles.isEmpty()) {
+      configFiles.forEach(childConfigFile -> delete(appId, childConfigFile.getUuid()));
+    }
+    if (!configFile.isEncrypted()) {
+      executorService.submit(() -> fileService.deleteAllFilesForEntity(configId, CONFIGS));
     }
   }
 
@@ -485,15 +489,7 @@ public class ConfigServiceImpl implements ConfigService {
 
     boolean deleted = wingsPersistence.delete(ConfigFile.class, configFile.getUuid());
     if (deleted) {
-      yamlPushService.pushYamlChangeSet(
-          configFile.getAccountId(), configFile, null, Type.DELETE, configFile.isSyncFromGit(), false);
-      List<ConfigFile> childConfigFiles = wingsPersistence.createQuery(ConfigFile.class)
-                                              .filter("appId", appId)
-                                              .filter(ConfigFileKeys.parentConfigFileId, configFile.getUuid())
-                                              .asList();
-      childConfigFiles.forEach(childConfigFile -> delete(appId, childConfigFile.getUuid()));
-
-      executorService.submit(() -> fileService.deleteAllFilesForEntity(configFile.getUuid(), CONFIGS));
+      configFileDeletionFollowUp(configFile.getAppId(), configFile.getUuid(), configFile);
     }
   }
 

@@ -12,6 +12,7 @@ import static io.harness.rule.OwnerRule.RAGHU;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENTITY_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -20,8 +21,10 @@ import static software.wings.utils.WingsTestConstants.FILE_NAME;
 import static software.wings.utils.WingsTestConstants.PARENT;
 import static software.wings.utils.WingsTestConstants.PATH;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.UUID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,6 +36,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -41,7 +45,9 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.beans.SecretUsageLog;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
@@ -51,13 +57,16 @@ import io.harness.rule.Owner;
 import io.harness.stream.BoundedInputStream;
 
 import software.wings.WingsBaseTest;
+import software.wings.beans.Activity;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.ConfigFile.ConfigFileKeys;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.Event;
 import software.wings.beans.ServiceTemplate;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.security.auth.ConfigFileAuthHandler;
+import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
@@ -65,6 +74,7 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlPushService;
 
 import com.google.inject.Inject;
@@ -80,8 +90,12 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+import org.mongodb.morphia.query.CriteriaContainer;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 /**
  * Created by anubhaw on 8/9/16.
@@ -103,6 +117,8 @@ public class ConfigServiceTest extends WingsBaseTest {
   @Mock private ConfigFileAuthHandler configFileAuthHandler;
   @Mock private AppService appService;
   @Mock private YamlPushService yamlPushService;
+  @Mock private SecretManager secretManager;
+  @Mock private ActivityService activityService;
 
   @Inject @InjectMocks private EntityVersionService entityVersionService;
   @Inject @InjectMocks private ConfigService configService;
@@ -529,5 +545,264 @@ public class ConfigServiceTest extends WingsBaseTest {
     when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
     when(wingsPersistence.get(EncryptedData.class, encryptedConfigFile.getEncryptedFileId()))
         .thenReturn(EncryptedData.builder().encryptedValue("csd".toCharArray()).build());
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testDeleteFromYaml() {
+    ConfigFile configFile = createConfigFile(PATH, UUID);
+    configFile.setEncrypted(false);
+    when(wingsPersistence.createQuery(ConfigFile.class)).thenReturn(query);
+    when(query.filter(ConfigFile.APP_ID_KEY2, APP_ID)).thenReturn(query);
+    when(query.filter(ConfigFileKeys.entityType, EntityType.SERVICE)).thenReturn(query);
+    when(query.filter(ConfigFileKeys.entityId, ENTITY_ID)).thenReturn(query);
+    when(query.filter(ConfigFileKeys.relativeFilePath, PATH)).thenReturn(query);
+    when(query.get()).thenReturn(configFile);
+    when(wingsPersistence.delete(ConfigFile.class, UUID)).thenReturn(true);
+
+    configService.delete(APP_ID, ENTITY_ID, EntityType.SERVICE, PATH);
+    verify(wingsPersistence).delete(ConfigFile.class, UUID);
+    verify(yamlPushService)
+        .pushYamlChangeSet(
+            eq(ACCOUNT_ID), any(ConfigFile.class), isNull(), eq(Event.Type.DELETE), eq(false), eq(false));
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldSaveEncryptedConfigFile() {
+    ConfigFile configFile = createConfigFile(PATH, UUID);
+    BoundedInputStream inputStream = new BoundedInputStream(this.inputStream);
+    when(wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId()))
+        .thenReturn(EncryptedData.builder().encryptedValue("csd".toCharArray()).fileSize(12).build());
+    when(wingsPersistence.save(configFile)).thenReturn(UUID);
+    when(serviceResourceService.exist(eq(APP_ID), anyString())).thenReturn(true);
+    when(wingsPersistence.getWithAppId(ConfigFile.class, APP_ID, UUID)).thenReturn(configFile);
+
+    configService.save(configFile, inputStream);
+    verify(wingsPersistence, times(2)).get(EncryptedData.class, configFile.getEncryptedFileId());
+    verify(wingsPersistence).save(configFile);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testEncryptedFileDownload() {
+    ConfigFile configFile = createConfigFile(PATH, UUID);
+    when(wingsPersistence.getWithAppId(ConfigFile.class, APP_ID, UUID)).thenReturn(configFile);
+    when(wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId()))
+        .thenReturn(
+            EncryptedData.builder().accountId(ACCOUNT_ID).encryptedValue("csd".toCharArray()).fileSize(12).build());
+    when(secretManager.getFile(eq(ACCOUNT_ID), anyString(), any(File.class))).thenAnswer(i -> i.getArguments()[2]);
+
+    File file = configService.download(APP_ID, UUID);
+    verify(wingsPersistence).getWithAppId(ConfigFile.class, APP_ID, UUID);
+    verify(secretManager).getFile(eq(ACCOUNT_ID), anyString(), any(File.class));
+    assertThat(file.getName()).isEqualTo(PATH);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testEncryptedFileDownloadWithVersion() {
+    ConfigFile configFile = createConfigFile(PATH, UUID);
+    when(wingsPersistence.getWithAppId(ConfigFile.class, APP_ID, UUID)).thenReturn(configFile);
+    when(wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId()))
+        .thenReturn(
+            EncryptedData.builder().accountId(ACCOUNT_ID).encryptedValue("csd".toCharArray()).fileSize(12).build());
+    when(secretManager.getFile(eq(ACCOUNT_ID), anyString(), any(File.class))).thenAnswer(i -> i.getArguments()[2]);
+
+    File file = configService.download(APP_ID, UUID, 1);
+    verify(wingsPersistence).getWithAppId(ConfigFile.class, APP_ID, UUID);
+    verify(secretManager).getFile(eq(ACCOUNT_ID), anyString(), any(File.class));
+    assertThat(file.getName()).isEqualTo(PATH);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testFileDownloadWithVersion() {
+    ConfigFile configFile = createConfigFile(PATH, UUID);
+    configFile.setEncrypted(false);
+    when(wingsPersistence.getWithAppId(ConfigFile.class, APP_ID, UUID)).thenReturn(configFile);
+
+    File file = configService.download(APP_ID, UUID, 1);
+    verify(wingsPersistence).getWithAppId(ConfigFile.class, APP_ID, UUID);
+    verify(fileService).download(eq("GFS_FILE_ID"), any(File.class), eq(FileBucket.CONFIGS));
+    assertThat(file.getName()).isEqualTo(PATH);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testEncryptedFileDownloadForActivity() {
+    ConfigFile configFile = createConfigFile(PATH, UUID);
+    when(wingsPersistence.getWithAppId(ConfigFile.class, APP_ID, UUID)).thenReturn(configFile);
+    when(wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId()))
+        .thenReturn(
+            EncryptedData.builder().accountId(ACCOUNT_ID).encryptedValue("csd".toCharArray()).fileSize(12).build());
+    when(secretManager.getFile(eq(ACCOUNT_ID), anyString(), any(File.class))).thenAnswer(i -> i.getArguments()[2]);
+    when(activityService.get(ACTIVITY_ID, APP_ID))
+        .thenReturn(Activity.builder().environmentId(ENV_ID).workflowExecutionId(WORKFLOW_EXECUTION_ID).build());
+
+    File file = configService.downloadForActivity(APP_ID, UUID, ACTIVITY_ID);
+    verify(wingsPersistence).getWithAppId(ConfigFile.class, APP_ID, UUID);
+    verify(secretManager).getFile(eq(ACCOUNT_ID), anyString(), any(File.class));
+    assertThat(file.getName()).isEqualTo(PATH);
+    verify(wingsPersistence).save(any(SecretUsageLog.class));
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testFileDownloadForActivity() {
+    ConfigFile configFile = createConfigFile(PATH, UUID);
+    configFile.setEncrypted(false);
+    when(wingsPersistence.getWithAppId(ConfigFile.class, APP_ID, UUID)).thenReturn(configFile);
+
+    File file = configService.downloadForActivity(APP_ID, UUID, ACTIVITY_ID);
+    verify(wingsPersistence).getWithAppId(ConfigFile.class, APP_ID, UUID);
+    verify(fileService).download(eq("GFS_FILE_ID"), any(File.class), eq(FileBucket.CONFIGS));
+    assertThat(file.getName()).isEqualTo(PATH);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldUpdateNonEncryptedFiles() {
+    ConfigFile configFile = createConfigFile(PATH, UUID);
+    configFile.setEncrypted(false);
+    configFile.setDescription("This is a test");
+    when(wingsPersistence.getWithAppId(ConfigFile.class, APP_ID, UUID)).thenReturn(configFile);
+    BoundedInputStream boundedInputStream = new BoundedInputStream(this.inputStream);
+    when(query.get()).thenReturn(configFile);
+    when(fileService.saveFile(configFile, boundedInputStream, FileBucket.CONFIGS)).thenReturn(FILE_ID);
+
+    configService.update(configFile, boundedInputStream);
+    ArgumentCaptor<Map> argumentCaptor = ArgumentCaptor.forClass(Map.class);
+    verify(wingsPersistence).updateFields(eq(ConfigFile.class), eq(UUID), argumentCaptor.capture());
+    Map<String, Object> updateMap = argumentCaptor.getValue();
+    assertThat(updateMap.size()).isEqualTo(9);
+    assertThat(updateMap.get("encrypted")).isEqualTo(false);
+    assertThat(updateMap.get("encryptedFileId")).isEqualTo("");
+    assertThat(updateMap.get("size")).isNotNull();
+    assertThat(updateMap.get("fileUuid")).isEqualTo("GFS_FILE_ID");
+    assertThat(updateMap.get("checksum")).isEqualTo("CHECKSUM");
+    assertThat(updateMap.get("description")).isEqualTo("This is a test");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldAllowRelativePathUpdateForService() {
+    ConfigFile savedConfigFile = createConfigFile(PATH, UUID);
+    ConfigFile configFile = createConfigFile(PATH + "/test", UUID);
+    configFile.setEncrypted(false);
+    configFile.setDescription("This is a test");
+    when(wingsPersistence.getWithAppId(ConfigFile.class, APP_ID, UUID)).thenAnswer(new Answer() {
+      private int count = 0;
+
+      @Override
+      public Object answer(InvocationOnMock invocationOnMock) {
+        if (count == 0) {
+          count++;
+          return savedConfigFile;
+        }
+        return configFile;
+      }
+    });
+
+    when(wingsPersistence.createQuery(ConfigFile.class)).thenReturn(query);
+    when(query.filter("appId", APP_ID)).thenReturn(query);
+    when(query.filter(ConfigFileKeys.relativeFilePath, savedConfigFile.getRelativeFilePath())).thenReturn(query);
+
+    FieldEnd fieldEnd = mock(FieldEnd.class);
+    CriteriaContainer container = mock(CriteriaContainer.class);
+    when(query.criteria(anyString())).thenReturn(fieldEnd);
+    when(fieldEnd.equal(anyString())).thenReturn(container);
+    when(fieldEnd.in(any(Iterable.class))).thenReturn(container);
+    when(query.or(any(), any())).thenReturn(container);
+    UpdateOperations updateOperations = mock(UpdateOperations.class);
+    when(wingsPersistence.createUpdateOperations(ConfigFile.class)).thenReturn(updateOperations);
+    when(updateOperations.set(eq("relativeFilePath"), anyString())).thenReturn(updateOperations);
+
+    BoundedInputStream boundedInputStream = new BoundedInputStream(this.inputStream);
+    when(query.get()).thenReturn(configFile);
+    when(fileService.saveFile(configFile, boundedInputStream, FileBucket.CONFIGS)).thenReturn(FILE_ID);
+
+    configService.update(configFile, boundedInputStream);
+    verify(wingsPersistence).update(query, updateOperations);
+    ArgumentCaptor<Map> argumentCaptor = ArgumentCaptor.forClass(Map.class);
+    verify(wingsPersistence).updateFields(eq(ConfigFile.class), eq(UUID), argumentCaptor.capture());
+    Map<String, Object> updateMap = argumentCaptor.getValue();
+    assertThat(updateMap.size()).isEqualTo(9);
+    assertThat(updateMap.get("encrypted")).isEqualTo(false);
+    assertThat(updateMap.get("encryptedFileId")).isEqualTo("");
+    assertThat(updateMap.get("size")).isNotNull();
+    assertThat(updateMap.get("fileUuid")).isEqualTo("GFS_FILE_ID");
+    assertThat(updateMap.get("checksum")).isEqualTo("CHECKSUM");
+    assertThat(updateMap.get("description")).isEqualTo("This is a test");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGetFileContents() {
+    ConfigFile configfile = createConfigFile(PATH, UUID);
+    configfile.setEncrypted(false);
+    when(fileService.openDownloadStream(configfile.getFileUuid(), FileBucket.CONFIGS)).thenReturn(inputStream);
+
+    byte[] contents = configService.getFileContent(APP_ID, configfile);
+    verify(fileService).openDownloadStream(configfile.getFileUuid(), FileBucket.CONFIGS);
+    assertThat(contents).isNotEmpty();
+
+    configfile.setEncrypted(true);
+    when(secretManager.getFileContents(ACCOUNT_ID, configfile.getEncryptedFileId())).thenReturn(contents);
+
+    byte[] contents2 = configService.getFileContent(APP_ID, configfile);
+    verify(secretManager).getFileContents(ACCOUNT_ID, configfile.getEncryptedFileId());
+    assertThat(contents2).isEqualTo(contents);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGetConfigFileOverridesForEnv() {
+    ConfigFile configFile = createConfigFile(PATH, UUID);
+    configFile.setEncrypted(false);
+    configFile.setEntityId(ENV_ID);
+    configFile.setEntityType(EntityType.ENVIRONMENT);
+    PageRequest pageRequest1 = aPageRequest()
+                                   .addFilter("appId", EQ, APP_ID)
+                                   .addFilter("entityType", EQ, EntityType.ENVIRONMENT)
+                                   .addFilter("entityId", EQ, ENV_ID)
+                                   .addFilter(SearchFilter.builder().build())
+                                   .build();
+    PageResponse<ConfigFile> pageResponse1 = new PageResponse<>();
+    pageResponse1.setResponse(asList(configFile));
+    pageResponse1.setTotal(1l);
+
+    ConfigFile configFile2 = createConfigFile(PATH, UUID);
+    configFile2.setEntityId(SERVICE_TEMPLATE_ID);
+    configFile2.setEntityType(EntityType.SERVICE_TEMPLATE);
+    PageRequest pageRequest2 = aPageRequest()
+                                   .addFilter("appId", EQ, APP_ID)
+                                   .addFilter("entityType", EQ, EntityType.SERVICE_TEMPLATE)
+                                   .addFilter("envId", EQ, ENV_ID)
+                                   .addFilter(SearchFilter.builder().build())
+                                   .build();
+    PageResponse<ConfigFile> pageResponse2 = new PageResponse<>();
+    pageResponse2.setResponse(asList(configFile2));
+    pageResponse2.setTotal(1l);
+    when(wingsPersistence.get(EncryptedData.class, configFile2.getEncryptedFileId()))
+        .thenReturn(EncryptedData.builder().name("test").build());
+
+    when(wingsPersistence.query(ConfigFile.class, pageRequest1)).thenReturn(pageResponse1);
+    when(wingsPersistence.query(ConfigFile.class, pageRequest2)).thenReturn(pageResponse2);
+
+    List<ConfigFile> configFiles = configService.getConfigFileOverridesForEnv(APP_ID, ENV_ID);
+    assertThat(configFiles).isNotNull().hasSize(2);
+    assertThat(configFiles).isEqualTo(asList(configFile, configFile2));
   }
 }

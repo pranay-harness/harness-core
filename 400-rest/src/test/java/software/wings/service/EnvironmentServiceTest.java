@@ -8,6 +8,7 @@ import static io.harness.pcf.model.PcfConstants.VARS_YML;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -18,6 +19,7 @@ import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
+import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.beans.ServiceVariable.Type.TEXT;
 import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
 import static software.wings.beans.appmanifest.StoreType.Local;
@@ -33,6 +35,7 @@ import static software.wings.utils.WingsTestConstants.ENV_DESCRIPTION;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;
+import static software.wings.utils.WingsTestConstants.PATH;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_TEMPLATE_ID;
@@ -963,5 +966,234 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     } catch (InvalidRequestException e) {
       assertThat(e.getMessage()).isEqualTo("Environment doesn't exist");
     }
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGetClonedConfigFile_ForAllServiceOverride_SameApp() {
+    ConfigFile configFile = ConfigFile.builder()
+                                .envId(GLOBAL_ENV_ID)
+                                .entityType(EntityType.ENVIRONMENT)
+                                .entityId(ENV_ID)
+                                .templateId(DEFAULT_TEMPLATE_ID)
+                                .relativeFilePath(PATH)
+                                .encrypted(true)
+                                .build();
+    configFile.setAppId(APP_ID);
+
+    ServiceTemplate serviceTemplate = ServiceTemplate.Builder.aServiceTemplate().withUuid(SERVICE_TEMPLATE_ID).build();
+    Environment environment = Environment.Builder.anEnvironment().uuid(ENV_ID + "2").build();
+
+    ConfigFile clonedConfigFile =
+        spyEnvService.getClonedConfigFile(environment, serviceTemplate, null, null, configFile);
+    assertThat(clonedConfigFile.getAppId()).isEqualTo(APP_ID);
+    assertThat(clonedConfigFile.getEnvId()).isEqualTo(GLOBAL_ENV_ID);
+    assertThat(clonedConfigFile.getTemplateId()).isEqualTo(DEFAULT_TEMPLATE_ID);
+    assertThat(clonedConfigFile.getEntityId()).isEqualTo(ENV_ID + "2");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGetClonedConfigFile_ForAllServiceOverride_DiffApp() {
+    ConfigFile configFile = ConfigFile.builder()
+                                .envId(GLOBAL_ENV_ID)
+                                .entityType(EntityType.ENVIRONMENT)
+                                .entityId(ENV_ID)
+                                .templateId(DEFAULT_TEMPLATE_ID)
+                                .relativeFilePath(PATH)
+                                .encrypted(true)
+                                .build();
+    configFile.setAppId(APP_ID);
+
+    ServiceTemplate serviceTemplate = ServiceTemplate.Builder.aServiceTemplate().withUuid(SERVICE_TEMPLATE_ID).build();
+    Environment environment = Environment.Builder.anEnvironment().uuid(ENV_ID + "2").build();
+
+    ConfigFile clonedConfigFile =
+        spyEnvService.getClonedConfigFile(environment, serviceTemplate, APP_ID + "2", null, configFile);
+    assertThat(clonedConfigFile.getAppId()).isEqualTo(APP_ID + "2");
+    assertThat(clonedConfigFile.getEnvId()).isEqualTo(GLOBAL_ENV_ID);
+    assertThat(clonedConfigFile.getTemplateId()).isEqualTo(DEFAULT_TEMPLATE_ID);
+    assertThat(clonedConfigFile.getEntityId()).isEqualTo(ENV_ID + "2");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGetClonedConfigFile_ForAServiceOverride_SameApp() {
+    ConfigFile configFile = ConfigFile.builder()
+                                .envId(ENV_ID)
+                                .entityType(EntityType.SERVICE_TEMPLATE)
+                                .entityId(SERVICE_TEMPLATE_ID)
+                                .templateId(SERVICE_TEMPLATE_ID)
+                                .relativeFilePath(PATH)
+                                .encrypted(true)
+                                .build();
+    configFile.setAppId(APP_ID);
+
+    ServiceTemplate serviceTemplate =
+        ServiceTemplate.Builder.aServiceTemplate().withUuid(SERVICE_TEMPLATE_ID + "2").build();
+    Environment environment = Environment.Builder.anEnvironment().uuid(ENV_ID + "2").build();
+
+    ConfigFile clonedConfigFile =
+        spyEnvService.getClonedConfigFile(environment, serviceTemplate, null, null, configFile);
+    assertThat(clonedConfigFile.getAppId()).isEqualTo(APP_ID);
+    assertThat(clonedConfigFile.getEnvId()).isEqualTo(ENV_ID + "2");
+    assertThat(clonedConfigFile.getTemplateId()).isEqualTo(SERVICE_TEMPLATE_ID + "2");
+    assertThat(clonedConfigFile.getEntityId()).isEqualTo(SERVICE_TEMPLATE_ID + "2");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGetClonedConfigFile_ForAServiceOverride_DiffApp() {
+    ConfigFile configFile = ConfigFile.builder()
+                                .envId(ENV_ID)
+                                .entityType(EntityType.SERVICE_TEMPLATE)
+                                .entityId(SERVICE_TEMPLATE_ID)
+                                .templateId(SERVICE_TEMPLATE_ID)
+                                .relativeFilePath(PATH)
+                                .encrypted(true)
+                                .build();
+    configFile.setAppId(APP_ID);
+
+    ServiceTemplate serviceTemplate =
+        ServiceTemplate.Builder.aServiceTemplate().withUuid(SERVICE_TEMPLATE_ID + "2").build();
+    Environment environment = Environment.Builder.anEnvironment().uuid(ENV_ID + "2").build();
+
+    ConfigFile clonedConfigFile =
+        spyEnvService.getClonedConfigFile(environment, serviceTemplate, APP_ID + "2", null, configFile);
+    assertThat(clonedConfigFile.getAppId()).isEqualTo(APP_ID + "2");
+    assertThat(clonedConfigFile.getEnvId()).isEqualTo(ENV_ID + "2");
+    assertThat(clonedConfigFile.getTemplateId()).isEqualTo(SERVICE_TEMPLATE_ID + "2");
+    assertThat(clonedConfigFile.getEntityId()).isEqualTo(SERVICE_TEMPLATE_ID + "2");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGetClonedServiceVariable_ForAllServiceOverride_SameApp() {
+    ServiceVariable serviceVariable = ServiceVariable.builder()
+                                          .envId(GLOBAL_ENV_ID)
+                                          .entityType(EntityType.ENVIRONMENT)
+                                          .entityId(ENV_ID)
+                                          .templateId(DEFAULT_TEMPLATE_ID)
+                                          .name("name")
+                                          .value("value".toCharArray())
+                                          .type(TEXT)
+                                          .build();
+    serviceVariable.setAppId(APP_ID);
+
+    Environment environment = Environment.Builder.anEnvironment().uuid(ENV_ID + "2").build();
+
+    ServiceVariable clonedServiceVariable =
+        spyEnvService.getClonedServiceVariable(environment, SERVICE_TEMPLATE_ID, null, null, serviceVariable);
+    assertThat(clonedServiceVariable.getAppId()).isEqualTo(APP_ID);
+    assertThat(clonedServiceVariable.getEnvId()).isEqualTo(GLOBAL_ENV_ID);
+    assertThat(clonedServiceVariable.getTemplateId()).isEqualTo(DEFAULT_TEMPLATE_ID);
+    assertThat(clonedServiceVariable.getEntityId()).isEqualTo(ENV_ID + "2");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGetClonedServiceVariable_ForAllServiceOverride_DiffApp() {
+    ServiceVariable serviceVariable = ServiceVariable.builder()
+                                          .envId(GLOBAL_ENV_ID)
+                                          .entityType(EntityType.ENVIRONMENT)
+                                          .entityId(ENV_ID)
+                                          .templateId(DEFAULT_TEMPLATE_ID)
+                                          .name("name")
+                                          .value("value".toCharArray())
+                                          .type(TEXT)
+                                          .build();
+    serviceVariable.setAppId(APP_ID);
+
+    Environment environment = Environment.Builder.anEnvironment().uuid(ENV_ID + "2").build();
+
+    ServiceVariable clonedServiceVariable =
+        spyEnvService.getClonedServiceVariable(environment, SERVICE_TEMPLATE_ID, APP_ID + "2", null, serviceVariable);
+    assertThat(clonedServiceVariable.getAppId()).isEqualTo(APP_ID + "2");
+    assertThat(clonedServiceVariable.getEnvId()).isEqualTo(GLOBAL_ENV_ID);
+    assertThat(clonedServiceVariable.getTemplateId()).isEqualTo(DEFAULT_TEMPLATE_ID);
+    assertThat(clonedServiceVariable.getEntityId()).isEqualTo(ENV_ID + "2");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGetClonedServiceVariable_ForAServiceOverride_SameApp() {
+    ServiceVariable serviceVariable = ServiceVariable.builder()
+                                          .envId(ENV_ID)
+                                          .entityType(EntityType.SERVICE_TEMPLATE)
+                                          .entityId(SERVICE_TEMPLATE_ID)
+                                          .templateId(SERVICE_TEMPLATE_ID)
+                                          .name("name")
+                                          .value("value".toCharArray())
+                                          .type(TEXT)
+                                          .build();
+    serviceVariable.setAppId(APP_ID);
+
+    Environment environment = Environment.Builder.anEnvironment().uuid(ENV_ID + "2").build();
+
+    ServiceVariable clonedServiceVariable =
+        spyEnvService.getClonedServiceVariable(environment, SERVICE_TEMPLATE_ID + "2", null, null, serviceVariable);
+    assertThat(clonedServiceVariable.getAppId()).isEqualTo(APP_ID);
+    assertThat(clonedServiceVariable.getEnvId()).isEqualTo(ENV_ID + "2");
+    assertThat(clonedServiceVariable.getTemplateId()).isEqualTo(SERVICE_TEMPLATE_ID + "2");
+    assertThat(clonedServiceVariable.getEntityId()).isEqualTo(SERVICE_TEMPLATE_ID + "2");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGetClonedServiceVariable_ForAServiceOverride_DiffApp() {
+    ServiceVariable serviceVariable = ServiceVariable.builder()
+                                          .envId(ENV_ID)
+                                          .entityType(EntityType.SERVICE_TEMPLATE)
+                                          .entityId(SERVICE_TEMPLATE_ID)
+                                          .templateId(DEFAULT_TEMPLATE_ID)
+                                          .name("name")
+                                          .value("value".toCharArray())
+                                          .type(TEXT)
+                                          .build();
+    serviceVariable.setAppId(APP_ID);
+
+    Environment environment = Environment.Builder.anEnvironment().uuid(ENV_ID + "2").build();
+
+    ServiceVariable clonedServiceVariable = spyEnvService.getClonedServiceVariable(
+        environment, SERVICE_TEMPLATE_ID + "2", APP_ID + "2", null, serviceVariable);
+    assertThat(clonedServiceVariable.getAppId()).isEqualTo(APP_ID + "2");
+    assertThat(clonedServiceVariable.getEnvId()).isEqualTo(ENV_ID + "2");
+    assertThat(clonedServiceVariable.getEntityId()).isEqualTo(SERVICE_TEMPLATE_ID + "2");
+    assertThat(clonedServiceVariable.getTemplateId()).isEqualTo(DEFAULT_TEMPLATE_ID);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testGetClonedServiceVariable_EncryptedVariable() {
+    ServiceVariable serviceVariable = ServiceVariable.builder()
+                                          .envId(ENV_ID)
+                                          .entityType(EntityType.SERVICE_TEMPLATE)
+                                          .entityId(SERVICE_TEMPLATE_ID)
+                                          .templateId(DEFAULT_TEMPLATE_ID)
+                                          .name("name")
+                                          .value("value".toCharArray())
+                                          .type(ENCRYPTED_TEXT)
+                                          .encryptedValue("encryptedValue")
+                                          .build();
+    serviceVariable.setAppId(APP_ID);
+
+    Environment environment = Environment.Builder.anEnvironment().uuid(ENV_ID + "2").build();
+
+    ServiceVariable clonedServiceVariable = spyEnvService.getClonedServiceVariable(
+        environment, SERVICE_TEMPLATE_ID + "2", APP_ID + "2", null, serviceVariable);
+    assertThat(clonedServiceVariable.getAppId()).isEqualTo(APP_ID + "2");
+    assertThat(clonedServiceVariable.getEnvId()).isEqualTo(ENV_ID + "2");
+    assertThat(clonedServiceVariable.getEntityId()).isEqualTo(SERVICE_TEMPLATE_ID + "2");
+    assertThat(clonedServiceVariable.getTemplateId()).isEqualTo(DEFAULT_TEMPLATE_ID);
+    assertThat(clonedServiceVariable.getValue()).isEqualTo("encryptedValue".toCharArray());
   }
 }
