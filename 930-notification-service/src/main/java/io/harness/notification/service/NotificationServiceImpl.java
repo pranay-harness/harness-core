@@ -4,7 +4,6 @@ import io.harness.NotificationRequest;
 import io.harness.Team;
 import io.harness.ng.beans.PageRequest;
 import io.harness.notification.entities.Notification;
-import io.harness.notification.entities.NotificationTemplate;
 import io.harness.notification.exception.NotificationException;
 import io.harness.notification.remote.mappers.NotificationMapper;
 import io.harness.notification.repositories.NotificationRepository;
@@ -18,7 +17,6 @@ import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))

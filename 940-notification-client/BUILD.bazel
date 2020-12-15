@@ -312,7 +312,7 @@ java_binary(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
     data = ["//:resource"],
-    main_class = "io.harness.NotificationClientApplication",
+    main_class = "io.harness.notification.NotificationClientApplication",
     resources = [],
     visibility = ["//visibility:public"],
     runtime_deps = [

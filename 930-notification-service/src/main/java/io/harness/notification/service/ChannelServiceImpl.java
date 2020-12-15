@@ -1,6 +1,6 @@
 package io.harness.notification.service;
 
-import static io.harness.NotificationServiceConstants.*;
+import static io.harness.notification.constant.NotificationServiceConstants.*;
 
 import io.harness.NotificationRequest;
 import io.harness.notification.NotificationChannelType;

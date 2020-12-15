@@ -65,5 +65,6 @@ public enum TaskGroup {
   K8S_NG,
   CAPABILITY_VALIDATION,
   JIRA_NG,
-  CVNG
+  CVNG,
+  NOTIFICATION
 }

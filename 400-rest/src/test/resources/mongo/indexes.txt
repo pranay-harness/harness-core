@@ -494,9 +494,15 @@ notificationBatch {"name": "createdAt_1", "background": true} {"createdAt": 1}
 notificationGroups {"name": "appId_1", "background": true} {"appId": 1}
 notificationGroups {"name": "createdAt_1", "background": true} {"createdAt": 1}
 notificationGroups {"name": "yaml", "unique": true} {"accountId": 1, "name": 1}
+notificationSettings {"name": "unique_notificationsetting_idx", "unique": true} {"accountId": 1}
+notificationTemplates {"name": "team_idx", "background": true} {"team": 1}
+notificationTemplates {"name": "unique_identifier_team_idx", "unique": true} {"identifier": 1, "team": 1}
 notifications {"name": "accountId_1", "background": true} {"accountId": 1}
 notifications {"name": "appId_1", "background": true} {"appId": 1}
 notifications {"name": "createdAt_1", "background": true} {"createdAt": 1}
+notifications-ng {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
+notifications-ng {"name": "notification_retries_sent", "background": true} {"sent": 1, "retries": 1}
+notifications-ng {"name": "unique_notification_idx", "unique": true} {"id": 1}
 notifyQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 notifyQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 notifyQueue {"name": "waitInstanceId_1", "unique": true} {"waitInstanceId": 1}

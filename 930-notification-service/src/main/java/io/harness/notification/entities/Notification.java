@@ -13,7 +13,6 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.*;
@@ -22,9 +21,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "NotificationKeys")
-@Entity(value = "notifications", noClassnameStored = true)
-@Document("notifications")
-@TypeAlias("notifications")
+@Entity(value = "notifications-ng", noClassnameStored = true)
+@Document("notifications-ng")
+@TypeAlias("notifications-ng")
 public class Notification implements PersistentRegularIterable, PersistentEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

@@ -4,7 +4,7 @@ import io.harness.notification.SeedDataConfiguration;
 import io.harness.notification.entities.NotificationTemplate;
 import io.harness.notification.service.api.NotificationTemplateService;
 import io.harness.notification.service.api.SeedDataPopulaterService;
-import io.harness.templates.PredefinedTemplate;
+import io.harness.notification.templates.PredefinedTemplate;
 
 import com.google.common.io.Resources;
 import com.google.inject.Inject;

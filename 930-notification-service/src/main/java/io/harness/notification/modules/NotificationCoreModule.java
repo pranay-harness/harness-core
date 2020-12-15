@@ -1,17 +1,15 @@
 package io.harness.notification.modules;
 
-import static io.harness.NotificationServiceConstants.*;
+import static io.harness.notification.constant.NotificationServiceConstants.*;
 
 import static java.time.Duration.ofSeconds;
 
 import io.harness.mongo.queue.NGMongoQueueConsumer;
-import io.harness.ng.MongoNotificationRequest;
 import io.harness.ng.core.UserClientModule;
-import io.harness.notification.KafkaBackendConfiguration;
 import io.harness.notification.NotificationClientBackendConfiguration;
 import io.harness.notification.NotificationConfiguration;
 import io.harness.notification.SmtpConfig;
-import io.harness.notification.eventbackbone.KafkaMessageConsumer;
+import io.harness.notification.entities.MongoNotificationRequest;
 import io.harness.notification.eventbackbone.MessageConsumer;
 import io.harness.notification.eventbackbone.MongoMessageConsumer;
 import io.harness.notification.service.*;
@@ -39,10 +37,10 @@ public class NotificationCoreModule extends AbstractModule {
   public void configure() {
     install(new UserGroupClientModule(
         appConfig.getRbacServiceConfig(), appConfig.getNotificationSecrets().getManagerServiceSecret()));
+    //    @TODO fix clientId
     install(new UserClientModule(appConfig.getServiceHttpClientConfig(),
         appConfig.getNotificationSecrets().getManagerServiceSecret(), "NextGenManager"));
     bind(ChannelService.class).to(ChannelServiceImpl.class);
-    bind(NotificationTemplateService.class).to(NotificationTemplateServiceImpl.class);
     bind(NotificationSettingsService.class).to(NotificationSettingsServiceImpl.class);
     bind(SeedDataPopulaterService.class).to(SeedDataPopulaterServiceImpl.class);
     bind(ChannelService.class).annotatedWith(Names.named(MAILSERVICE)).to(MailServiceImpl.class);
@@ -50,6 +48,7 @@ public class NotificationCoreModule extends AbstractModule {
     bind(ChannelService.class).annotatedWith(Names.named(PAGERDUTYSERVICE)).to(PagerDutyServiceImpl.class);
     bind(ChannelService.class).annotatedWith(Names.named(MSTEAMSSERVICE)).to(MSTeamsServiceImpl.class);
     bind(NotificationService.class).to(NotificationServiceImpl.class);
+    bind(NotificationTemplateService.class).to(NotificationTemplateServiceImpl.class);
     bindMessageConsumer();
   }
 
@@ -75,11 +74,5 @@ public class NotificationCoreModule extends AbstractModule {
   QueueConsumer<MongoNotificationRequest> getQueueConsumer(
       Injector injector, @Named("notification-channel") MongoTemplate mongoTemplate) {
     return new NGMongoQueueConsumer<>(MongoNotificationRequest.class, ofSeconds(5), new ArrayList<>(), mongoTemplate);
-  }
-
-  @Provides
-  @Singleton
-  KafkaMessageConsumer getKafkaMessageConsumer(NotificationService listener) {
-    return new KafkaMessageConsumer((KafkaBackendConfiguration) getBackendConfig(), listener);
   }
 }
