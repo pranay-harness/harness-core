@@ -194,7 +194,7 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
                                  .variableValue(QLVariableValue.builder().type(QLVariableValueType.EXPRESSION).build())
                                  .build()),
                 true))
-        .isInstanceOf(UnsupportedOperationException.class);
+        .isInstanceOf(InvalidRequestException.class);
   }
 
   @Test

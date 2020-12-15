@@ -6,6 +6,7 @@ import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.artifact.AcrArtifactStream;
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
@@ -255,7 +256,7 @@ public class ArtifactSourceController {
             .build();
 
       default:
-        throw new UnsupportedOperationException("Artifact stream type not supported: " + artifactStreamType);
+        throw new InvalidRequestException("Artifact stream type not supported: " + artifactStreamType);
     }
   }
   private static QLArtifactoryProps generateArtifactoryProps(ArtifactoryArtifactStream artifactoryArtifactStream) {
@@ -310,7 +311,7 @@ public class ArtifactSourceController {
             .packageName(artifactStream.getPackageName())
             .build();
       default:
-        throw new UnsupportedOperationException(
+        throw new InvalidRequestException(
             "Nexus RepositoryType type not supported: " + artifactStream.getRepositoryType());
     }
   }
@@ -326,7 +327,7 @@ public class ArtifactSourceController {
             .parameters(parameters)
             .build();
       default:
-        throw new UnsupportedOperationException(
+        throw new InvalidRequestException(
             format("Artifact stream type [%s]does not support parameters: ", artifactStreamType));
     }
   }

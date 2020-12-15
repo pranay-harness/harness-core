@@ -355,7 +355,7 @@ public class ExecutionController {
           artifacts.add(artifact);
           break;
         default:
-          throw new UnsupportedOperationException("Unexpected artifact value type: " + type);
+          throw new InvalidRequestException("Unexpected artifact value type: " + type);
       }
       artifactVariables.add(ArtifactVariable.builder()
                                 .entityType(EntityType.SERVICE)

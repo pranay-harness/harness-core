@@ -69,7 +69,7 @@ public class StartExecutionDataFetcher extends BaseMutatorDataFetcher<QLStartExe
           response = workflowExecutionController.startWorkflowExecution(triggerExecutionInput, mutationContext);
           break;
         default:
-          throw new UnsupportedOperationException("Unsupported execution type: " + executionType);
+          throw new InvalidRequestException("Unsupported execution type: " + executionType);
       }
       return response;
     }
