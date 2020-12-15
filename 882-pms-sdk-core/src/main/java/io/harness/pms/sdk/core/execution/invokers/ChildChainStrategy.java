@@ -1,4 +1,4 @@
-package io.harness.engine.executables.invokers;
+package io.harness.pms.sdk.core.execution.invokers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -7,13 +7,6 @@ import static io.harness.pms.contracts.execution.Status.QUEUED;
 import static io.harness.pms.contracts.execution.Status.SUSPENDED;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.EngineObtainmentHelper;
-import io.harness.engine.executables.ExecuteStrategy;
-import io.harness.engine.executables.InvocationHelper;
-import io.harness.engine.executables.InvokerPackage;
-import io.harness.engine.executables.ResumePackage;
-import io.harness.engine.resume.EngineResumeCallback;
-import io.harness.execution.NodeExecutionUtils;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildChainExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse;
@@ -23,15 +16,21 @@ import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.pms.execution.utils.StatusUtils;
+import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
+import io.harness.pms.sdk.core.execution.EngineResumeCallback;
+import io.harness.pms.sdk.core.execution.ExecuteStrategy;
+import io.harness.pms.sdk.core.execution.InvokerPackage;
+import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
+import io.harness.pms.sdk.core.execution.ResumePackage;
+import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.executables.ChildChainExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
-import io.harness.pms.sdk.registries.StepRegistry;
+import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.serializer.KryoSerializer;
-import io.harness.state.io.StepResponseNotifyData;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
 
@@ -46,7 +45,6 @@ import java.util.Objects;
 @OwnedBy(CDC)
 public class ChildChainStrategy implements ExecuteStrategy {
   @Inject private PmsNodeExecutionService pmsNodeExecutionService;
-  @Inject private InvocationHelper invocationHelper;
   @Inject private StepRegistry stepRegistry;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private KryoSerializer kryoSerializer;
@@ -70,7 +68,7 @@ public class ChildChainStrategy implements ExecuteStrategy {
         Objects.requireNonNull(NodeExecutionUtils.obtainLatestExecutableResponse(nodeExecution)).getChildChain());
     Map<String, ResponseData> accumulatedResponse = resumePackage.getResponseDataMap();
     if (!lastChildChainExecutableResponse.getSuspend()) {
-      accumulatedResponse = invocationHelper.accumulateResponses(
+      accumulatedResponse = pmsNodeExecutionService.accumulateResponses(
           ambiance.getPlanExecutionId(), resumePackage.getResponseDataMap().keySet().iterator().next());
     }
     byte[] passThrowDataBytes = lastChildChainExecutableResponse.getPassThroughData().toByteArray();

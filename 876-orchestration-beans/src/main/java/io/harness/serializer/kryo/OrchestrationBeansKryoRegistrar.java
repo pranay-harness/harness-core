@@ -8,9 +8,8 @@ import io.harness.execution.NodeExecution;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.interrupts.RepairActionCode;
+import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.state.io.StatusNotifyResponseData;
-import io.harness.state.io.StepResponseNotifyData;
 import io.harness.tasks.TaskMode;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -26,11 +25,9 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
     // Add new Classes Here
-    kryo.register(StatusNotifyResponseData.class, 2502);
     kryo.register(NodeExecution.class, 2506);
     kryo.register(Duration.class, 2516);
     kryo.register(OutcomeInstance.class, 2517);
-    kryo.register(StepResponseNotifyData.class, 2519);
 
     kryo.register(RepairActionCode.class, 2528);
 

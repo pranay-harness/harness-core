@@ -4,30 +4,36 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.TaskMode;
+import io.harness.pms.contracts.plan.AccumulateResponsesRequest;
+import io.harness.pms.contracts.plan.AccumulateResponsesResponse;
 import io.harness.pms.contracts.plan.AddExecutableResponseRequest;
 import io.harness.pms.contracts.plan.HandleStepResponseRequest;
 import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc.NodeExecutionProtoServiceBlockingStub;
 import io.harness.pms.contracts.plan.QueueNodeExecutionRequest;
 import io.harness.pms.contracts.plan.QueueTaskRequest;
 import io.harness.pms.contracts.plan.QueueTaskResponse;
+import io.harness.pms.contracts.plan.ResumeNodeExecutionRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
+import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.pms.sdk.registries.StepRegistry;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 import io.harness.serializer.KryoSerializer;
+import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.NonNull;
@@ -76,6 +82,31 @@ public class PmsNodeExecutionServiceGrpcImpl implements PmsNodeExecutionService 
                                                                  .setNodeExecutionId(nodeExecutionId)
                                                                  .setStepResponse(stepResponse)
                                                                  .build());
+  }
+
+  @Override
+  public void resumeNodeExecution(String nodeExecutionId, Map<String, ResponseData> response, boolean asyncError) {
+    Map<String, ByteString> responseBytes = new HashMap<>();
+    if (EmptyPredicate.isNotEmpty(response)) {
+      response.forEach((k, v) -> responseBytes.put(k, ByteString.copyFrom(kryoSerializer.asBytes(v))));
+    }
+    nodeExecutionProtoServiceBlockingStub.resumeNodeExecution(ResumeNodeExecutionRequest.newBuilder()
+                                                                  .setNodeExecutionId(nodeExecutionId)
+                                                                  .putAllResponse(responseBytes)
+                                                                  .setAsyncError(asyncError)
+                                                                  .build());
+  }
+
+  @Override
+  public Map<String, ResponseData> accumulateResponses(String planExecutionId, String notifyId) {
+    AccumulateResponsesResponse response = nodeExecutionProtoServiceBlockingStub.accumulateResponses(
+        AccumulateResponsesRequest.newBuilder().setPlanExecutionId(planExecutionId).setNotifyId(notifyId).build());
+    Map<String, ResponseData> responseBytes = new HashMap<>();
+    if (EmptyPredicate.isNotEmpty(response.getResponseMap())) {
+      response.getResponseMap().forEach(
+          (k, v) -> responseBytes.put(k, (ResponseData) kryoSerializer.asInflatedObject(v.toByteArray())));
+    }
+    return null;
   }
 
   @Override

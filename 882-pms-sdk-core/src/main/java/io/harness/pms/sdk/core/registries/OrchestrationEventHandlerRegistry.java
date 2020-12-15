@@ -1,4 +1,4 @@
-package io.harness.pms.sdk.registries;
+package io.harness.pms.sdk.core.registries;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;

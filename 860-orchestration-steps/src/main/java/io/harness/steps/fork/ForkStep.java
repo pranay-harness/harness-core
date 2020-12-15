@@ -13,7 +13,7 @@ import io.harness.pms.sdk.core.steps.executables.ChildrenExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
-import io.harness.state.io.StepResponseNotifyData;
+import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.steps.OrchestrationStepTypes;
 import io.harness.tasks.ResponseData;
 

@@ -1,8 +1,7 @@
-package io.harness.engine.executables;
+package io.harness.pms.sdk.core.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.plan.PlanNodeProto;
@@ -18,7 +17,6 @@ import lombok.Value;
 @OwnedBy(CDC)
 @Value
 @Builder
-@Redesign
 public class InvokerPackage {
   @NonNull NodeExecutionProto nodeExecution;
   @Singular List<PlanNodeProto> nodes;

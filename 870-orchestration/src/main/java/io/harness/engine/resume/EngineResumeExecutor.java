@@ -8,11 +8,11 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.engine.EngineExceptionUtils;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executables.ExecutableProcessor;
-import io.harness.engine.executables.ResumePackage;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.sdk.core.execution.ResumePackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.tasks.ResponseData;
 

@@ -9,6 +9,7 @@ import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.data.StepTransput;
 import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
+import io.harness.pms.sdk.core.execution.EngineResumeCallback;
 import io.harness.pms.sdk.core.facilitator.DefaultFacilitatorParams;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 
@@ -28,5 +29,6 @@ public class PmsSdkCoreMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
     h.put("facilitator.DefaultFacilitatorParams", DefaultFacilitatorParams.class);
+    h.put("pms.sdk.core.execution.EngineResumeCallback", EngineResumeCallback.class);
   }
 }

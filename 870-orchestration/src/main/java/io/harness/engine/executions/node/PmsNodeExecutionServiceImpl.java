@@ -8,6 +8,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.ExecutionEngineDispatcher;
 import io.harness.engine.OrchestrationEngine;
+import io.harness.engine.executables.InvocationHelper;
 import io.harness.engine.pms.tasks.TaskExecutor;
 import io.harness.engine.progress.EngineProgressCallback;
 import io.harness.engine.resume.EngineResumeCallback;
@@ -20,12 +21,12 @@ import io.harness.pms.contracts.execution.TaskMode;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
+import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
-import io.harness.pms.sdk.registries.StepRegistry;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
+import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.ProgressCallback;
@@ -49,6 +50,7 @@ public class PmsNodeExecutionServiceImpl implements PmsNodeExecutionService {
   @Inject private OrchestrationEngine engine;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private StepRegistry stepRegistry;
+  @Inject private InvocationHelper invocationHelper;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
@@ -82,14 +84,24 @@ public class PmsNodeExecutionServiceImpl implements PmsNodeExecutionService {
       nodeExecutionService.update(
           nodeExecutionId, ops -> ops.addToSet(NodeExecutionKeys.executableResponses, executableResponse));
     } else {
-      nodeExecutionService.update(
-          nodeExecutionId, ops -> ops.addToSet(NodeExecutionKeys.executableResponses, executableResponse));
+      nodeExecutionService.updateStatusWithOps(
+          nodeExecutionId, status, ops -> ops.addToSet(NodeExecutionKeys.executableResponses, executableResponse));
     }
   }
 
   @Override
   public void handleStepResponse(@NonNull String nodeExecutionId, @NonNull StepResponseProto stepResponse) {
     engine.handleStepResponse(nodeExecutionId, StepResponseMapper.fromStepResponseProto(stepResponse));
+  }
+
+  @Override
+  public void resumeNodeExecution(String nodeExecutionId, Map<String, ResponseData> response, boolean asyncError) {
+    engine.resume(nodeExecutionId, response, asyncError);
+  }
+
+  @Override
+  public Map<String, ResponseData> accumulateResponses(String planExecutionId, String notifyId) {
+    return invocationHelper.accumulateResponses(planExecutionId, notifyId);
   }
 
   @Override
