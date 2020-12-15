@@ -9,12 +9,13 @@ import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
+import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
+import io.harness.delegate.task.executioncapability.HelmInstallationCapabilityCheck;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
-import software.wings.delegatetasks.validation.capabilities.HelmInstallationCapability;
 
 import com.google.inject.Inject;
 import org.junit.Test;

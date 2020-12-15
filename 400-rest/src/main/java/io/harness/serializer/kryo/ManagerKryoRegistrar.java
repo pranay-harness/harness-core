@@ -392,7 +392,6 @@ import software.wings.delegatetasks.validation.capabilities.BasicValidationInfo;
 import software.wings.delegatetasks.validation.capabilities.ClusterMasterUrlValidationCapability;
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
-import software.wings.delegatetasks.validation.capabilities.HelmInstallationCapability;
 import software.wings.delegatetasks.validation.capabilities.PcfAutoScalarCapability;
 import software.wings.delegatetasks.validation.capabilities.PcfConnectivityCapability;
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
@@ -1602,7 +1601,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ScalyrConfig.class, 7334);
 
     kryo.register(HelmCommandCapability.class, 7336);
-    kryo.register(HelmInstallationCapability.class, 7337);
     kryo.register(SpotinstTrafficShiftAlbSetupElement.class, 7338);
     kryo.register(SpotinstTrafficShiftAlbSetupExecutionData.class, 7339);
     kryo.register(SpotinstTrafficShiftAlbDeployExecutionData.class, 7340);
