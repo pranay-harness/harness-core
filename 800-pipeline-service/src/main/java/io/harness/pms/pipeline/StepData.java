@@ -7,4 +7,5 @@ import lombok.Data;
 @Builder
 public class StepData {
   String name;
+  String type;
 }

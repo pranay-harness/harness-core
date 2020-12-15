@@ -43,6 +43,7 @@ public class CvPipelineServiceInfoProvider implements PipelineServiceInfoProvide
     List<StepInfo> stepInfos = new ArrayList<>();
     stepInfos.add(StepInfo.newBuilder()
                       .setName("appdVerify")
+                      .setType("appdVerify")
                       .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Verification").build())
                       .build());
     return stepInfos;

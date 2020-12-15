@@ -53,6 +53,7 @@ public class CdPipelineServiceInfoProvider implements PipelineServiceInfoProvide
     StepInfo stepInfo =
         StepInfo.newBuilder()
             .setName("Kubernetes")
+            .setType("Kubernetes")
             .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").setFolderPath("Kubernetes").build())
             .build();
     return Collections.singletonList(stepInfo);

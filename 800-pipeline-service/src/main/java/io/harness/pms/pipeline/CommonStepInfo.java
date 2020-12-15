@@ -12,11 +12,13 @@ public class CommonStepInfo {
   StepInfo shellScriptStepInfo =
       StepInfo.newBuilder()
           .setName("Shell Script")
+          .setType("ShellScript")
           .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Utilities/Scripted").build())
           .build();
   StepInfo httpStepInfo =
       StepInfo.newBuilder()
           .setName("Http")
+          .setType("Http")
           .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Utilities/Non-Scripted").build())
           .build();
 
