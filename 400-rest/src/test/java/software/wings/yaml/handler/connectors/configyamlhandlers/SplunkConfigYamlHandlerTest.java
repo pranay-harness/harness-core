@@ -18,7 +18,6 @@ import software.wings.beans.SplunkConfig;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.SplunkConfigYamlHandler;
 
 import com.google.inject.Inject;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -37,8 +36,6 @@ public class SplunkConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTe
       + "type: SPLUNK";
 
   private Class yamlClass = SplunkConfig.Yaml.class;
-  @Before
-  public void setUp() throws Exception {}
 
   @Test
   @Owner(developers = ADWAIT)
@@ -68,17 +65,18 @@ public class SplunkConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTe
     // Generate Splunk verification connector
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
 
-    return settingsService.save(aSettingAttribute()
-                                    .withCategory(SettingCategory.CONNECTOR)
-                                    .withName(splunkProviderName)
-                                    .withAccountId(ACCOUNT_ID)
-                                    .withValue(SplunkConfig.builder()
-                                                   .accountId(ACCOUNT_ID)
-                                                   .splunkUrl(url)
-                                                   .username(userName)
-                                                   .password(password.toCharArray())
-                                                   .build())
-                                    .build());
+    return settingsService.save(
+        aSettingAttribute()
+            .withCategory(SettingCategory.CONNECTOR)
+            .withName(splunkProviderName)
+            .withAccountId(ACCOUNT_ID)
+            .withValue(SplunkConfig.builder()
+                           .accountId(ACCOUNT_ID)
+                           .splunkUrl(url)
+                           .username(userName)
+                           .password(createSecretText(ACCOUNT_ID, "password", password).toCharArray())
+                           .build())
+            .build());
   }
 
   private SettingValueYamlConfig generateSettingValueYamlConfig(String name, SettingAttribute settingAttributeSaved) {

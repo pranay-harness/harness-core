@@ -6,10 +6,12 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
 
+import io.harness.beans.SecretText;
 import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import io.harness.yaml.BaseYaml;
 
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
@@ -144,6 +146,10 @@ public abstract class SettingValueConfigYamlHandlerTestBase extends YamlHandlerT
     assertThat(settingAttribute.getName()).isEqualTo(settingAttributeSaved.getName());
     assertThat(settingAttributeSaved.getValue()).isNotNull();
     assertThat(settingAttribute.getValue()).isNotNull();
+    if (settingAttribute.getValue() instanceof EncryptableSetting) {
+      ((EncryptableSetting) settingAttribute.getValue())
+          .setDecrypted(((EncryptableSetting) settingAttributeSaved.getValue()).isDecrypted());
+    }
     assertThat(settingAttribute.getValue().toString()).isEqualTo(settingAttributeSaved.getValue().toString());
   }
 
@@ -162,5 +168,10 @@ public abstract class SettingValueConfigYamlHandlerTestBase extends YamlHandlerT
     } catch (Exception e) {
       // Do nothing
     }
+  }
+
+  protected String createSecretText(String accountId, String secretName, String secretValue) {
+    return secretManager.saveSecretText(
+        accountId, SecretText.builder().name(secretName).value(secretValue).build(), false);
   }
 }

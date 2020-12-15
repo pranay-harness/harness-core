@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.setting;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.RAMA;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -108,20 +109,21 @@ public class UsageRestrictionsYamlHandlerTest extends SettingValueConfigYamlHand
     // Generate Jenkins verification connector
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
 
-    return settingsService.save(aSettingAttribute()
-                                    .withCategory(SettingCategory.CONNECTOR)
-                                    .withName(jenkinsProviderName)
-                                    .withAccountId(ACCOUNT_ID)
-                                    .withValue(JenkinsConfig.builder()
-                                                   .jenkinsUrl(url)
-                                                   .username(userName)
-                                                   .accountId(ACCOUNT_ID)
-                                                   .password(password.toCharArray())
-                                                   .token(token.toCharArray())
-                                                   .authMechanism(JenkinsConfig.USERNAME_DEFAULT_TEXT)
-                                                   .build())
-                                    .withUsageRestrictions(usageRestrictions)
-                                    .build());
+    return settingsService.save(
+        aSettingAttribute()
+            .withCategory(SettingCategory.CONNECTOR)
+            .withName(jenkinsProviderName)
+            .withAccountId(ACCOUNT_ID)
+            .withValue(JenkinsConfig.builder()
+                           .jenkinsUrl(url)
+                           .username(userName)
+                           .accountId(ACCOUNT_ID)
+                           .password(createSecretText(ACCOUNT_ID, generateUuid(), password).toCharArray())
+                           .token(createSecretText(ACCOUNT_ID, generateUuid(), token).toCharArray())
+                           .authMechanism(JenkinsConfig.USERNAME_DEFAULT_TEXT)
+                           .build())
+            .withUsageRestrictions(usageRestrictions)
+            .build());
   }
 
   private UsageRestrictions createUsageRestrictions() {

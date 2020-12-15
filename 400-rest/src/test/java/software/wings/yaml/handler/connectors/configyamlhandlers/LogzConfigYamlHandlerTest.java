@@ -18,7 +18,6 @@ import software.wings.beans.config.LogzConfig;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.LogzConfigYamlHandler;
 
 import com.google.inject.Inject;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -34,8 +33,6 @@ public class LogzConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTest
       + "type: Logz";
 
   private Class yamlClass = LogzConfig.Yaml.class;
-  @Before
-  public void setUp() throws Exception {}
 
   @Test
   @Owner(developers = ADWAIT)
@@ -44,7 +41,7 @@ public class LogzConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTest
     String logzProviderName = "Logz" + System.currentTimeMillis();
 
     // 1. Create Logz verification record
-    SettingAttribute settingAttributeSaved = createJenkinsVerificationProvider(logzProviderName);
+    SettingAttribute settingAttributeSaved = createLogzVerificationProvider(logzProviderName);
     assertThat(settingAttributeSaved.getName()).isEqualTo(logzProviderName);
 
     testCRUD(generateSettingValueYamlConfig(logzProviderName, settingAttributeSaved));
@@ -57,18 +54,18 @@ public class LogzConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTest
     String logzProviderName = "Logz" + System.currentTimeMillis();
 
     // 1. Create Logz verification provider record
-    SettingAttribute settingAttributeSaved = createJenkinsVerificationProvider(logzProviderName);
+    SettingAttribute settingAttributeSaved = createLogzVerificationProvider(logzProviderName);
     testFailureScenario(generateSettingValueYamlConfig(logzProviderName, settingAttributeSaved));
   }
 
-  private SettingAttribute createJenkinsVerificationProvider(String logzProviderName) {
+  private SettingAttribute createLogzVerificationProvider(String logzProviderName) {
     // Generate Logz verification connector
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
 
     LogzConfig logzConfig = new LogzConfig();
     logzConfig.setAccountId(ACCOUNT_ID);
     logzConfig.setLogzUrl(url);
-    logzConfig.setToken(token.toCharArray());
+    logzConfig.setToken(createSecretText(ACCOUNT_ID, "token", token).toCharArray());
 
     return settingsService.save(aSettingAttribute()
                                     .withCategory(SettingCategory.CONNECTOR)

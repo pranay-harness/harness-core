@@ -1,12 +1,9 @@
 package software.wings.security.encryption.migration;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.security.encryption.EncryptionType.KMS;
 
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.service.impl.SettingServiceHelper.ATTRIBUTES_USING_REFERENCES;
 import static software.wings.settings.SettingVariableTypes.APP_DYNAMICS;
 import static software.wings.settings.SettingVariableTypes.SECRET_TEXT;
@@ -14,41 +11,31 @@ import static software.wings.settings.SettingVariableTypes.SECRET_TEXT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.beans.EncryptedData;
-import io.harness.beans.EncryptedDataParent;
 import io.harness.category.element.UnitTests;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator.MongoPersistenceIteratorBuilder;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.APMValidateCollectorConfig;
-import software.wings.beans.APMVerificationConfig;
-import software.wings.beans.APMVerificationConfig.KeyValues;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
-import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.UsageRestrictions;
 import software.wings.service.impl.SettingValidationService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.newrelic.NewRelicService;
-import software.wings.settings.SettingVariableTypes;
 
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.junit.Test;
@@ -193,142 +180,5 @@ public class SettingAttributesSecretsMigrationHandlerTest extends WingsBaseTest 
 
     EncryptedData updatedEncryptedData = wingsPersistence.get(EncryptedData.class, encryptedData.getUuid());
     assertThat(updatedEncryptedData.getParents()).isEmpty();
-  }
-
-  @Test
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
-  public void testHandle_ApmConnector() {
-    doNothing()
-        .when(newRelicService)
-        .validateAPMConfig(any(SettingAttribute.class), any(APMValidateCollectorConfig.class));
-    Account account = getAccount(AccountType.PAID);
-    String accountId = wingsPersistence.save(account);
-    String appId = generateUuid();
-    APMVerificationConfig apmVerificationConfig = new APMVerificationConfig();
-    apmVerificationConfig.setSettingType(SettingVariableTypes.APM_VERIFICATION);
-    apmVerificationConfig.setUrl("https://apm-example.com/");
-    apmVerificationConfig.setValidationUrl(generateUuid());
-    List<KeyValues> headers = new ArrayList<>();
-    headers.add(KeyValues.builder().key("key1").value(generateUuid()).encrypted(true).build());
-    headers.add(KeyValues.builder().key("key2").value(generateUuid()).encrypted(true).build());
-    headers.add(KeyValues.builder().key("api_key_plain").value("123").encrypted(false).build());
-
-    List<KeyValues> options = new ArrayList<>();
-    options.add(KeyValues.builder().key("key3").value(generateUuid()).encrypted(true).build());
-    options.add(KeyValues.builder().key("key4").value(generateUuid()).encrypted(true).build());
-    options.add(KeyValues.builder().key("option_key_plain").value("321").encrypted(false).build());
-
-    apmVerificationConfig.setHeadersList(headers);
-    apmVerificationConfig.setOptionsList(options);
-    apmVerificationConfig.setAccountId(accountId);
-
-    final SettingAttribute settingAttribute = aSettingAttribute()
-                                                  .withAccountId(accountId)
-                                                  .withName(generateUuid())
-                                                  .withCategory(SettingCategory.CONNECTOR)
-                                                  .withAppId(appId)
-                                                  .withValue(apmVerificationConfig)
-                                                  .build();
-
-    settingsService.saveWithPruning(settingAttribute, appId, accountId);
-    final String settingAttributeUuid = settingAttribute.getUuid();
-
-    List<EncryptedData> encryptedDataList =
-        wingsPersistence.createQuery(EncryptedData.class, excludeAuthority).asList();
-    assertThat(encryptedDataList.size()).isEqualTo(4);
-    encryptedDataList.forEach(encryptedData -> {
-      assertThat(encryptedData.getType()).isEqualTo(SECRET_TEXT);
-      assertThat(encryptedData.getParents()).isEmpty();
-    });
-
-    SettingAttribute savedSettingAttribute = wingsPersistence.get(SettingAttribute.class, settingAttributeUuid);
-    APMVerificationConfig savedApmVerificationConfig = (APMVerificationConfig) savedSettingAttribute.getValue();
-
-    List<KeyValues> headersList = savedApmVerificationConfig.getHeadersList();
-    KeyValues keyValues = headersList.get(0);
-    assertThat(keyValues.getKey()).isEqualTo("key1");
-    assertThat(keyValues.getValue()).isEqualTo(APMVerificationConfig.MASKED_STRING);
-    assertThat(keyValues.getEncryptedValue()).isNotEmpty();
-    assertThat(keyValues.isEncrypted()).isTrue();
-
-    keyValues = headersList.get(1);
-    assertThat(keyValues.getKey()).isEqualTo("key2");
-    assertThat(keyValues.getValue()).isEqualTo(APMVerificationConfig.MASKED_STRING);
-    assertThat(keyValues.getEncryptedValue()).isNotEmpty();
-    assertThat(keyValues.isEncrypted()).isTrue();
-
-    keyValues = headersList.get(2);
-    assertThat(keyValues.getKey()).isEqualTo("api_key_plain");
-    assertThat(keyValues.getValue()).isEqualTo("123");
-    assertThat(keyValues.getEncryptedValue()).isNull();
-    assertThat(keyValues.isEncrypted()).isFalse();
-
-    List<KeyValues> optionsList = savedApmVerificationConfig.getOptionsList();
-    keyValues = optionsList.get(0);
-    assertThat(keyValues.getKey()).isEqualTo("key3");
-    assertThat(keyValues.getValue()).isEqualTo(APMVerificationConfig.MASKED_STRING);
-    assertThat(keyValues.getEncryptedValue()).isNotEmpty();
-    assertThat(keyValues.isEncrypted()).isTrue();
-
-    keyValues = optionsList.get(1);
-    assertThat(keyValues.getKey()).isEqualTo("key4");
-    assertThat(keyValues.getValue()).isEqualTo(APMVerificationConfig.MASKED_STRING);
-    assertThat(keyValues.getEncryptedValue()).isNotEmpty();
-    assertThat(keyValues.isEncrypted()).isTrue();
-
-    keyValues = optionsList.get(2);
-    assertThat(keyValues.getKey()).isEqualTo("option_key_plain");
-    assertThat(keyValues.getValue()).isEqualTo("321");
-    assertThat(keyValues.getEncryptedValue()).isNull();
-    assertThat(keyValues.isEncrypted()).isFalse();
-
-    settingAttributesSecretsMigrationHandler.handle(savedSettingAttribute);
-
-    encryptedDataList = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority).asList();
-    assertThat(encryptedDataList.size()).isEqualTo(4);
-    for (int i = 0; i < encryptedDataList.size(); i++) {
-      assertThat(encryptedDataList.get(i).getType()).isEqualTo(SettingVariableTypes.SECRET_TEXT);
-      assertThat(encryptedDataList.get(i).getParents())
-          .isEqualTo(Sets.newHashSet(new EncryptedDataParent(settingAttributeUuid,
-              SettingVariableTypes.APM_VERIFICATION, (i < 2 ? "header." : "option.") + "key" + (i + 1))));
-    }
-
-    savedSettingAttribute = wingsPersistence.get(SettingAttribute.class, settingAttributeUuid);
-    savedApmVerificationConfig = (APMVerificationConfig) savedSettingAttribute.getValue();
-    headersList = savedApmVerificationConfig.getHeadersList();
-
-    keyValues = headersList.get(0);
-    assertThat(keyValues.getKey()).isEqualTo("key1");
-    assertThat(keyValues.getValue()).isEqualTo(encryptedDataList.get(0).getUuid());
-    assertThat(keyValues.isEncrypted()).isTrue();
-
-    keyValues = headersList.get(1);
-    assertThat(keyValues.getKey()).isEqualTo("key2");
-    assertThat(keyValues.getValue()).isEqualTo(encryptedDataList.get(1).getUuid());
-    assertThat(keyValues.isEncrypted()).isTrue();
-
-    keyValues = headersList.get(2);
-    assertThat(keyValues.getKey()).isEqualTo("api_key_plain");
-    assertThat(keyValues.getValue()).isEqualTo("123");
-    assertThat(keyValues.getEncryptedValue()).isNull();
-    assertThat(keyValues.isEncrypted()).isFalse();
-
-    optionsList = savedApmVerificationConfig.getOptionsList();
-    keyValues = optionsList.get(0);
-    assertThat(keyValues.getKey()).isEqualTo("key3");
-    assertThat(keyValues.getValue()).isEqualTo(encryptedDataList.get(2).getUuid());
-    assertThat(keyValues.isEncrypted()).isTrue();
-
-    keyValues = optionsList.get(1);
-    assertThat(keyValues.getKey()).isEqualTo("key4");
-    assertThat(keyValues.getValue()).isEqualTo(encryptedDataList.get(3).getUuid());
-    assertThat(keyValues.isEncrypted()).isTrue();
-
-    keyValues = optionsList.get(2);
-    assertThat(keyValues.getKey()).isEqualTo("option_key_plain");
-    assertThat(keyValues.getValue()).isEqualTo("321");
-    assertThat(keyValues.getEncryptedValue()).isNull();
-    assertThat(keyValues.isEncrypted()).isFalse();
   }
 }

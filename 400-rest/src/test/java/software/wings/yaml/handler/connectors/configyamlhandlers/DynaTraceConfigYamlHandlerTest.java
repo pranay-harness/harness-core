@@ -18,7 +18,6 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.DynaTraceConfigYamlHandler;
 
 import com.google.inject.Inject;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -36,9 +35,6 @@ public class DynaTraceConfigYamlHandlerTest extends SettingValueConfigYamlHandle
       + "type: DYNA_TRACE";
 
   private Class yamlClass = DynaTraceConfig.DynaTraceYaml.class;
-
-  @Before
-  public void setUp() throws Exception {}
 
   @Test
   @Owner(developers = RAGHU)
@@ -68,16 +64,17 @@ public class DynaTraceConfigYamlHandlerTest extends SettingValueConfigYamlHandle
     // Generate dynatrace verification connector
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
 
-    return settingsService.save(aSettingAttribute()
-                                    .withCategory(SettingCategory.CONNECTOR)
-                                    .withName(dynaTraceProviderName)
-                                    .withAccountId(ACCOUNT_ID)
-                                    .withValue(DynaTraceConfig.builder()
-                                                   .accountId(ACCOUNT_ID)
-                                                   .dynaTraceUrl(url)
-                                                   .apiToken(apiKey.toCharArray())
-                                                   .build())
-                                    .build());
+    return settingsService.save(
+        aSettingAttribute()
+            .withCategory(SettingCategory.CONNECTOR)
+            .withName(dynaTraceProviderName)
+            .withAccountId(ACCOUNT_ID)
+            .withValue(DynaTraceConfig.builder()
+                           .accountId(ACCOUNT_ID)
+                           .dynaTraceUrl(url)
+                           .apiToken(createSecretText(ACCOUNT_ID, "apiKey", apiKey).toCharArray())
+                           .build())
+            .build());
   }
 
   private SettingValueYamlConfig generateSettingValueYamlConfig(String name, SettingAttribute settingAttributeSaved) {

@@ -18,7 +18,6 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.DockerRegistryConfigYamlHandler;
 
 import com.google.inject.Inject;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -35,9 +34,6 @@ public class DockerRegistryConfigYamlHandlerTest extends SettingValueConfigYamlH
       + "type: DOCKER";
 
   private Class yamlClass = DockerConfig.Yaml.class;
-
-  @Before
-  public void setUp() throws Exception {}
 
   @Test
   @Owner(developers = ADWAIT)
@@ -67,17 +63,18 @@ public class DockerRegistryConfigYamlHandlerTest extends SettingValueConfigYamlH
     // Generate appdynamics verification connector
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
 
-    return settingsService.save(aSettingAttribute()
-                                    .withCategory(SettingCategory.CONNECTOR)
-                                    .withName(docketRegistryName)
-                                    .withAccountId(ACCOUNT_ID)
-                                    .withValue(DockerConfig.builder()
-                                                   .accountId(ACCOUNT_ID)
-                                                   .dockerRegistryUrl(url)
-                                                   .username(userName)
-                                                   .password(password.toCharArray())
-                                                   .build())
-                                    .build());
+    return settingsService.save(
+        aSettingAttribute()
+            .withCategory(SettingCategory.CONNECTOR)
+            .withName(docketRegistryName)
+            .withAccountId(ACCOUNT_ID)
+            .withValue(DockerConfig.builder()
+                           .accountId(ACCOUNT_ID)
+                           .dockerRegistryUrl(url)
+                           .username(userName)
+                           .password(createSecretText(ACCOUNT_ID, "password", password).toCharArray())
+                           .build())
+            .build());
   }
 
   private SettingValueYamlConfig generateSettingValueYamlConfig(String name, SettingAttribute settingAttributeSaved) {

@@ -171,7 +171,6 @@ import software.wings.security.AuthRuleFilter;
 import software.wings.security.AuthenticationFilter;
 import software.wings.security.LoginRateLimitFilter;
 import software.wings.security.ThreadLocalUserProvider;
-import software.wings.security.encryption.migration.SettingAttributesSecretReferenceFeatureFlagJob;
 import software.wings.security.encryption.migration.SettingAttributesSecretsMigrationHandler;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.ApplicationManifestServiceImpl;
@@ -749,7 +748,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(GcpMarketplaceSubscriberService.class));
     environment.lifecycle().manage((Managed) injector.getInstance(ExecutorService.class));
-    environment.lifecycle().manage(injector.getInstance(SettingAttributesSecretReferenceFeatureFlagJob.class));
     environment.lifecycle().manage(injector.getInstance(ArtifactStreamPTaskMigrationJob.class));
     environment.lifecycle().manage(injector.getInstance(InstanceSyncPerpetualTaskMigrationJob.class));
     if (configuration.isSearchEnabled()) {

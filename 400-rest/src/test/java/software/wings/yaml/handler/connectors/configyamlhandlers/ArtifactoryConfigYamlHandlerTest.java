@@ -18,7 +18,6 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.ArtifactoryConfigYamlHandler;
 
 import com.google.inject.Inject;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -35,9 +34,6 @@ public class ArtifactoryConfigYamlHandlerTest extends SettingValueConfigYamlHand
       + "type: ARTIFACTORY";
 
   private Class yamlClass = ArtifactoryConfig.Yaml.class;
-
-  @Before
-  public void setUp() throws Exception {}
 
   @Test
   @Owner(developers = ADWAIT)
@@ -67,17 +63,18 @@ public class ArtifactoryConfigYamlHandlerTest extends SettingValueConfigYamlHand
     // Generate Artifactory verification connector
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
 
-    return settingsService.save(aSettingAttribute()
-                                    .withCategory(SettingCategory.CONNECTOR)
-                                    .withName(ArtifactoryProviderName)
-                                    .withAccountId(ACCOUNT_ID)
-                                    .withValue(ArtifactoryConfig.builder()
-                                                   .accountId(ACCOUNT_ID)
-                                                   .artifactoryUrl(url)
-                                                   .username(userName)
-                                                   .password(password.toCharArray())
-                                                   .build())
-                                    .build());
+    return settingsService.save(
+        aSettingAttribute()
+            .withCategory(SettingCategory.CONNECTOR)
+            .withName(ArtifactoryProviderName)
+            .withAccountId(ACCOUNT_ID)
+            .withValue(ArtifactoryConfig.builder()
+                           .accountId(ACCOUNT_ID)
+                           .artifactoryUrl(url)
+                           .username(userName)
+                           .password(createSecretText(ACCOUNT_ID, "password", password).toCharArray())
+                           .build())
+            .build());
   }
 
   private SettingValueYamlConfig generateSettingValueYamlConfig(String name, SettingAttribute settingAttributeSaved) {

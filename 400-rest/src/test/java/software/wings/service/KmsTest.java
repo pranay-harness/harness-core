@@ -2772,43 +2772,6 @@ public class KmsTest extends WingsBaseTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
-  public void reuseYamlPasswordNewEntityKmsEncryption() throws IllegalAccessException {
-    KmsConfig fromConfig = getKmsConfig();
-    kmsResource.saveKmsConfig(accountId, fromConfig);
-
-    String password = "password";
-    AppDynamicsConfig appDynamicsConfig = getAppDynamicsConfig(accountId, password);
-    SettingAttribute settingAttribute = getSettingAttribute(appDynamicsConfig);
-
-    wingsPersistence.save(settingAttribute);
-    List<EncryptedData> encryptedDataList = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
-                                                .filter("type", SettingVariableTypes.SECRET_TEXT)
-                                                .asList();
-    assertThat(encryptedDataList).hasSize(1);
-
-    String yamlRef =
-        secretManager.getEncryptedYamlRef(appDynamicsConfig.getAccountId(), appDynamicsConfig.getEncryptedPassword());
-
-    String randomPassword = UUID.randomUUID().toString();
-    appDynamicsConfig = getAppDynamicsConfig(accountId, randomPassword, yamlRef);
-    settingAttribute = getSettingAttribute(appDynamicsConfig);
-
-    SettingAttribute attributeCopy = settingsService.save(settingAttribute);
-    encryptedDataList = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
-                            .filter("type", SettingVariableTypes.SECRET_TEXT)
-                            .asList();
-    assertThat(encryptedDataList).hasSize(1);
-
-    SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, attributeCopy.getUuid());
-    AppDynamicsConfig savedConfig = (AppDynamicsConfig) savedAttribute.getValue();
-    encryptionService.decrypt(
-        savedConfig, secretManager.getEncryptionDetails(savedConfig, workflowExecutionId, appId), false);
-    assertThat(String.valueOf(savedConfig.getPassword())).isEqualTo(password);
-  }
-
-  @Test
-  @Owner(developers = UTKARSH)
-  @Category(UnitTests.class)
   public void getUsageLogs() throws IllegalAccessException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);

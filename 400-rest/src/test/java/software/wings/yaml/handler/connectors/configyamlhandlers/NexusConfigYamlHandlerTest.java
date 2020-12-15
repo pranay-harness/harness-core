@@ -18,7 +18,6 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.NexusConfigYamlHandler;
 
 import com.google.inject.Inject;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -36,9 +35,6 @@ public class NexusConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTes
       + "type: NEXUS";
 
   private Class yamlClass = NexusConfig.Yaml.class;
-
-  @Before
-  public void setUp() throws Exception {}
 
   @Test
   @Owner(developers = ADWAIT)
@@ -68,18 +64,19 @@ public class NexusConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTes
     // Generate Nexus verification connector
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
 
-    return settingsService.save(aSettingAttribute()
-                                    .withCategory(SettingCategory.CONNECTOR)
-                                    .withName(nexusProviderName)
-                                    .withAccountId(ACCOUNT_ID)
-                                    .withValue(NexusConfig.builder()
-                                                   .accountId(ACCOUNT_ID)
-                                                   .nexusUrl(url)
-                                                   .username(userName)
-                                                   .password(password.toCharArray())
-                                                   .version("3.x")
-                                                   .build())
-                                    .build());
+    return settingsService.save(
+        aSettingAttribute()
+            .withCategory(SettingCategory.CONNECTOR)
+            .withName(nexusProviderName)
+            .withAccountId(ACCOUNT_ID)
+            .withValue(NexusConfig.builder()
+                           .accountId(ACCOUNT_ID)
+                           .nexusUrl(url)
+                           .username(userName)
+                           .password(createSecretText(ACCOUNT_ID, "password", password).toCharArray())
+                           .version("3.x")
+                           .build())
+            .build());
   }
 
   private SettingValueYamlConfig generateSettingValueYamlConfig(String name, SettingAttribute settingAttributeSaved) {

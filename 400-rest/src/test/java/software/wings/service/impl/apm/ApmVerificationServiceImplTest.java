@@ -12,7 +12,6 @@ import static org.mockito.Mockito.doNothing;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedDataParent;
-import io.harness.beans.FeatureName;
 import io.harness.beans.SecretText;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -65,7 +64,6 @@ public class ApmVerificationServiceImplTest extends WingsBaseTest {
                             .getResource();
       secretTextIds.add(secretId);
     }
-    featureFlagService.enableAccount(FeatureName.CONNECTORS_REF_SECRETS, accountId);
 
     doNothing()
         .when(newRelicService)

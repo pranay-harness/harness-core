@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.HttpCapabilityDetailsLevel.QUERY;
 
-import io.harness.beans.SecretText;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
@@ -34,7 +33,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -123,12 +121,12 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
   }
 
   public APMValidateCollectorConfig createAPMValidateCollectorConfig(
-      SecretManager secretManager, EncryptionService encryptionService, boolean enabledConnectorsRefSecrets) {
+      SecretManager secretManager, EncryptionService encryptionService) {
     try {
       Map<String, String> headers = new HashMap<>();
       if (!isEmpty(headersList)) {
         for (KeyValues keyValue : headersList) {
-          if (enabledConnectorsRefSecrets && keyValue.encrypted) {
+          if (keyValue.encrypted) {
             final Optional<EncryptedDataDetail> encryptedDataDetail =
                 secretManager.encryptedDataDetails(accountId, keyValue.key, keyValue.value, null);
             if (!encryptedDataDetail.isPresent()) {
@@ -136,11 +134,6 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
             }
             headers.put(
                 keyValue.getKey(), new String(encryptionService.getDecryptedValue(encryptedDataDetail.get(), false)));
-          } else if (keyValue.encrypted && MASKED_STRING.equals(keyValue.value)) {
-            headers.put(keyValue.getKey(),
-                new String(encryptionService.getDecryptedValue(
-                    secretManager.encryptedDataDetails(accountId, keyValue.key, keyValue.encryptedValue, null).get(),
-                    false)));
           } else {
             headers.put(keyValue.getKey(), keyValue.getValue());
           }
@@ -150,7 +143,7 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
       Map<String, String> options = new HashMap<>();
       if (!isEmpty(optionsList)) {
         for (KeyValues keyValue : optionsList) {
-          if (enabledConnectorsRefSecrets && keyValue.encrypted) {
+          if (keyValue.encrypted) {
             final Optional<EncryptedDataDetail> encryptedDataDetail =
                 secretManager.encryptedDataDetails(accountId, keyValue.key, keyValue.value, null);
             if (!encryptedDataDetail.isPresent()) {
@@ -158,11 +151,6 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
             }
             options.put(
                 keyValue.getKey(), new String(encryptionService.getDecryptedValue(encryptedDataDetail.get(), false)));
-          } else if (keyValue.encrypted && MASKED_STRING.equals(keyValue.value)) {
-            options.put(keyValue.getKey(),
-                new String(encryptionService.getDecryptedValue(
-                    secretManager.encryptedDataDetails(accountId, keyValue.key, keyValue.encryptedValue, null).get(),
-                    false)));
           } else {
             options.put(keyValue.getKey(), keyValue.getValue());
           }
@@ -275,22 +263,14 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
     return encryptedDataDetails.size() > 0 ? encryptedDataDetails : null;
   }
 
-  public void encryptFields(SecretManager secretManager, boolean enabledConnectorsRefSecrets) {
+  public void encryptFields() {
     secretIdsToFieldNameMap.clear();
     if (headersList != null) {
       headersList.stream()
           .filter(header -> header.encrypted)
           .filter(header -> !header.value.equals(MASKED_STRING))
           .forEach(header -> {
-            SecretText secretText = SecretText.builder()
-                                        .value(header.value)
-                                        .hideFromListing(true)
-                                        .name(UUID.randomUUID().toString())
-                                        .scopedToAccount(true)
-                                        .build();
-            header.encryptedValue =
-                enabledConnectorsRefSecrets ? header.value : secretManager.saveSecretText(accountId, secretText, false);
-            header.value = enabledConnectorsRefSecrets ? header.value : MASKED_STRING;
+            header.encryptedValue = header.value;
             secretIdsToFieldNameMap.put(header.value, "header." + header.key);
           });
     }
@@ -300,15 +280,7 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
           .filter(option -> option.encrypted)
           .filter(option -> !option.value.equals(MASKED_STRING))
           .forEach(option -> {
-            SecretText secretText = SecretText.builder()
-                                        .value(option.value)
-                                        .hideFromListing(true)
-                                        .name(UUID.randomUUID().toString())
-                                        .scopedToAccount(true)
-                                        .build();
-            option.encryptedValue =
-                enabledConnectorsRefSecrets ? option.value : secretManager.saveSecretText(accountId, secretText, false);
-            option.value = enabledConnectorsRefSecrets ? option.value : MASKED_STRING;
+            option.encryptedValue = option.value;
             secretIdsToFieldNameMap.put(option.value, "option." + option.key);
           });
     }

@@ -18,7 +18,6 @@ import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.SmtpConfigYamlHandler;
 
 import com.google.inject.Inject;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -38,9 +37,6 @@ public class SmtpConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTest
       + "type: SMTP";
 
   private Class yamlClass = SmtpConfig.Yaml.class;
-
-  @Before
-  public void setUp() throws Exception {}
 
   @Test
   @Owner(developers = ADWAIT)
@@ -70,20 +66,21 @@ public class SmtpConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTest
     // Generate SMTP connector
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
 
-    return settingsService.save(aSettingAttribute()
-                                    .withCategory(SettingCategory.CONNECTOR)
-                                    .withName(name)
-                                    .withAccountId(ACCOUNT_ID)
-                                    .withValue(SmtpConfig.builder()
-                                                   .accountId(ACCOUNT_ID)
-                                                   .host(url)
-                                                   .port(4403)
-                                                   .username(userName)
-                                                   .password(password.toCharArray())
-                                                   .useSSL(true)
-                                                   .fromAddress("support@harness.io")
-                                                   .build())
-                                    .build());
+    return settingsService.save(
+        aSettingAttribute()
+            .withCategory(SettingCategory.CONNECTOR)
+            .withName(name)
+            .withAccountId(ACCOUNT_ID)
+            .withValue(SmtpConfig.builder()
+                           .accountId(ACCOUNT_ID)
+                           .host(url)
+                           .port(4403)
+                           .username(userName)
+                           .password(createSecretText(ACCOUNT_ID, "password", password).toCharArray())
+                           .useSSL(true)
+                           .fromAddress("support@harness.io")
+                           .build())
+            .build());
   }
 
   private SettingValueYamlConfig generateSettingValueYamlConfig(String name, SettingAttribute settingAttributeSaved) {

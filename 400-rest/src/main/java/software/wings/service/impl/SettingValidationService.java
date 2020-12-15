@@ -14,7 +14,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.DelegateTask;
-import io.harness.beans.FeatureName;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -256,12 +255,10 @@ public class SettingValidationService {
       newRelicService.validateAPMConfig(
           settingAttribute, ((BugsnagConfig) settingAttribute.getValue()).createAPMValidateCollectorConfig());
     } else if (settingValue instanceof APMVerificationConfig) {
-      final boolean enabledConnectorsRefSecrets =
-          featureFlagService.isEnabled(FeatureName.CONNECTORS_REF_SECRETS, settingAttribute.getAccountId());
       newRelicService.validateAPMConfig(settingAttribute,
           ((APMVerificationConfig) settingAttribute.getValue())
-              .createAPMValidateCollectorConfig(secretManager, encryptionService, enabledConnectorsRefSecrets));
-      ((APMVerificationConfig) settingAttribute.getValue()).encryptFields(secretManager, enabledConnectorsRefSecrets);
+              .createAPMValidateCollectorConfig(secretManager, encryptionService));
+      ((APMVerificationConfig) settingAttribute.getValue()).encryptFields();
     } else if (settingValue instanceof SplunkConfig) {
       analysisService.validateConfig(settingAttribute, StateType.SPLUNKV2, encryptedDataDetails);
     } else if (settingValue instanceof InstanaConfig) {

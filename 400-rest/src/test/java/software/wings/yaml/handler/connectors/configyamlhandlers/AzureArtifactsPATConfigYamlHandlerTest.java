@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.harness.scm.SecretName;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
@@ -23,6 +24,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
 public class AzureArtifactsPATConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
+  @Inject YamlHandlersSecretGeneratorHelper yamlHandlersSecretGeneratorHelper;
   @InjectMocks @Inject private AzureArtifactsPATConfigYamlHandler yamlHandler;
 
   private Class yamlClass = AzureArtifactsPATConfig.Yaml.class;
@@ -51,6 +53,9 @@ public class AzureArtifactsPATConfigYamlHandlerTest extends SettingValueConfigYa
   private SettingAttribute createAzureArtifactsConnector(String settingName) {
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
 
+    SecretName secretName = SecretName.builder().value("pcf_password").build();
+    String patKey = yamlHandlersSecretGeneratorHelper.generateSecret(ACCOUNT_ID, secretName);
+
     return settingsService.save(aSettingAttribute()
                                     .withCategory(SettingCategory.AZURE_ARTIFACTS)
                                     .withName(settingName)
@@ -58,7 +63,7 @@ public class AzureArtifactsPATConfigYamlHandlerTest extends SettingValueConfigYa
                                     .withValue(AzureArtifactsPATConfig.builder()
                                                    .accountId(ACCOUNT_ID)
                                                    .azureDevopsUrl(azureDevopsUrl)
-                                                   .pat(token.toCharArray())
+                                                   .pat(patKey.toCharArray())
                                                    .build())
                                     .build());
   }
