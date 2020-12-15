@@ -13,7 +13,6 @@ import io.harness.functional.redesign.mixins.ambiance.AmbianceTestMixin;
 import io.harness.functional.redesign.mixins.facilitatorobtainment.FacilitatorObtainmentTestMixin;
 import io.harness.functional.redesign.mixins.facilitatortype.FacilitatorTypeTestMixin;
 import io.harness.functional.redesign.mixins.failuretype.FailureInfoTestMixin;
-import io.harness.functional.redesign.mixins.outcome.OutcomeTestMixin;
 import io.harness.functional.redesign.mixins.plannode.PlanNodeProtoTestMixin;
 import io.harness.functional.redesign.mixins.refobject.RefObjectTestMixin;
 import io.harness.functional.redesign.mixins.reftype.RefTypeTestMixin;
@@ -33,10 +32,11 @@ import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.contracts.refobjects.RefType;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.rest.RestResponse;
 import io.harness.testframework.framework.Setup;
+
+import software.wings.api.HttpStateExecutionData;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -67,7 +67,7 @@ public class OrchestrationEngineTestSetupHelper {
                       ObjectMapper mapper = new ObjectMapper();
                       mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                       mapper.registerModule(new JavaTimeModule());
-                      mapper.addMixIn(Outcome.class, OutcomeTestMixin.class);
+                      mapper.registerSubtypes(HttpStateExecutionData.class);
                       mapper.addMixIn(StepParameters.class, StepParametersTestMixin.class);
                       mapper.addMixIn(Ambiance.class, AmbianceTestMixin.class);
                       mapper.addMixIn(AdviserType.class, AdviserTypeTestMixin.class);
