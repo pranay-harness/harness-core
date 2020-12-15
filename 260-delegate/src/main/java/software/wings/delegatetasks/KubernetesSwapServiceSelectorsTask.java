@@ -1,17 +1,15 @@
 package software.wings.delegatetasks;
 
-import static io.harness.k8s.KubernetesHelperService.toDisplayYaml;
-
 import static software.wings.sm.states.KubernetesSwapServiceSelectors.KUBERNETES_SWAP_SERVICE_SELECTORS_COMMAND_NAME;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
+import io.harness.delegate.k8s.K8sSwapServiceSelectorsBaseHandler;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.WingsException;
-import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
@@ -23,8 +21,6 @@ import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.sm.states.KubernetesSwapServiceSelectorsResponse;
 
 import com.google.inject.Inject;
-import io.fabric8.kubernetes.api.model.Service;
-import java.util.Map;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +29,7 @@ import org.apache.commons.lang3.NotImplementedException;
 public class KubernetesSwapServiceSelectorsTask extends AbstractDelegateRunnableTask {
   @Inject private DelegateLogService delegateLogService;
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
-  @Inject private KubernetesContainerService kubernetesContainerService;
+  @Inject private K8sSwapServiceSelectorsBaseHandler k8sSwapServiceSelectorsBaseHandler;
 
   public KubernetesSwapServiceSelectorsTask(DelegateTaskPackage delegateTaskPackage,
       ILogStreamingTaskClient logStreamingTaskClient, Consumer<DelegateTaskResponse> consumer,
@@ -62,60 +58,13 @@ public class KubernetesSwapServiceSelectorsTask extends AbstractDelegateRunnable
       KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(
           kubernetesSwapServiceSelectorsParams.getContainerServiceParams());
 
-      Service service1 = null;
-      Service service2 = null;
-      service1 = kubernetesContainerService.getServiceFabric8(
-          kubernetesConfig, kubernetesSwapServiceSelectorsParams.getService1());
-      service2 = kubernetesContainerService.getServiceFabric8(
-          kubernetesConfig, kubernetesSwapServiceSelectorsParams.getService2());
+      boolean success = k8sSwapServiceSelectorsBaseHandler.swapServiceSelectors(kubernetesConfig,
+          kubernetesSwapServiceSelectorsParams.getService1(), kubernetesSwapServiceSelectorsParams.getService2(),
+          executionLogCallback);
 
-      if (service1 == null) {
-        executionLogCallback.saveExecutionLog(
-            String.format("Service %s not found.", kubernetesSwapServiceSelectorsParams.getService1()), LogLevel.ERROR,
-            CommandExecutionStatus.FAILURE);
+      if (!success) {
         return KubernetesSwapServiceSelectorsResponse.builder().executionStatus(ExecutionStatus.FAILED).build();
       }
-
-      if (service2 == null) {
-        executionLogCallback.saveExecutionLog(
-            String.format("Service %s not found.", kubernetesSwapServiceSelectorsParams.getService2()), LogLevel.ERROR,
-            CommandExecutionStatus.FAILURE);
-        return KubernetesSwapServiceSelectorsResponse.builder().executionStatus(ExecutionStatus.FAILED).build();
-      }
-
-      Map<String, String> serviceOneSelectors = service1.getSpec().getSelector();
-      Map<String, String> serviceTwoSelectors = service2.getSpec().getSelector();
-
-      executionLogCallback.saveExecutionLog(
-          String.format("%nSelectors for Service One : [name:%s]%n%s", service1.getMetadata().getName(),
-              toDisplayYaml(service1.getSpec().getSelector())),
-          LogLevel.INFO);
-
-      executionLogCallback.saveExecutionLog(
-          String.format("%nSelectors for Service Two : [name:%s]%n%s", service2.getMetadata().getName(),
-              toDisplayYaml(service2.getSpec().getSelector())),
-          LogLevel.INFO);
-
-      executionLogCallback.saveExecutionLog(String.format("%nSwapping Service Selectors..%n"), LogLevel.INFO);
-
-      service1.getSpec().setSelector(serviceTwoSelectors);
-      service2.getSpec().setSelector(serviceOneSelectors);
-
-      Service serviceOneUpdated = kubernetesContainerService.createOrReplaceService(kubernetesConfig, service1);
-
-      Service serviceTwoUpdated = kubernetesContainerService.createOrReplaceService(kubernetesConfig, service2);
-
-      executionLogCallback.saveExecutionLog(
-          String.format("%nUpdated Selectors for Service One : [name:%s]%n%s",
-              serviceOneUpdated.getMetadata().getName(), toDisplayYaml(serviceOneUpdated.getSpec().getSelector())),
-          LogLevel.INFO);
-
-      executionLogCallback.saveExecutionLog(
-          String.format("%nUpdated Selectors for Service Two : [name:%s]%n%s",
-              serviceTwoUpdated.getMetadata().getName(), toDisplayYaml(serviceTwoUpdated.getSpec().getSelector())),
-          LogLevel.INFO);
-
-      executionLogCallback.saveExecutionLog("Done", LogLevel.INFO, CommandExecutionStatus.SUCCESS);
 
       return KubernetesSwapServiceSelectorsResponse.builder().executionStatus(ExecutionStatus.SUCCESS).build();
     } catch (WingsException e) {
