@@ -1,7 +1,7 @@
 package io.harness.engine;
 
 import io.harness.delegate.task.HDelegateTask;
-import io.harness.tasks.TaskExecutor;
+import io.harness.engine.pms.tasks.TaskExecutor;
 
 import java.util.Map;
 

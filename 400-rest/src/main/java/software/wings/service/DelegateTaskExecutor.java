@@ -3,7 +3,7 @@ package software.wings.service;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.beans.DelegateTask;
-import io.harness.tasks.TaskExecutor;
+import io.harness.engine.pms.tasks.TaskExecutor;
 
 import software.wings.service.intfc.DelegateService;
 

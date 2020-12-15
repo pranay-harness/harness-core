@@ -4,6 +4,7 @@ import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.core.ci.services.CIBuildService;
 import io.harness.core.ci.services.CIBuildServiceImpl;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
+import io.harness.engine.pms.tasks.TaskExecutor;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.impl.CIPipelineExecutionService;
 import io.harness.impl.CIPipelineExecutionServiceImpl;
@@ -11,7 +12,6 @@ import io.harness.pms.sdk.registries.registrar.OrchestrationEventHandlerRegistra
 import io.harness.pms.sdk.registries.registrar.StepRegistrar;
 import io.harness.registrars.ExecutionRegistrar;
 import io.harness.states.CIDelegateTaskExecutor;
-import io.harness.tasks.TaskExecutor;
 import io.harness.tasks.TaskMode;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 

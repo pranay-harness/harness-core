@@ -6,9 +6,9 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.HDelegateTask;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.engine.pms.tasks.TaskExecutor;
 import io.harness.exception.InvalidRequestException;
 import io.harness.grpc.DelegateServiceGrpcClient;
-import io.harness.tasks.TaskExecutor;
 
 import com.google.inject.Inject;
 import java.time.Duration;

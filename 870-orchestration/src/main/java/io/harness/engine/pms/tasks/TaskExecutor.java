@@ -1,4 +1,6 @@
-package io.harness.tasks;
+package io.harness.engine.pms.tasks;
+
+import io.harness.tasks.Task;
 
 import java.util.Map;
 
