@@ -63,7 +63,7 @@ public class ExecutionInputsDataFetcher
           serviceIds = workflowExecutionController.getArtifactNeededServices(parameters);
           break;
         default:
-          throw new UnsupportedOperationException("Unsupported execution type: " + executionType);
+          throw new InvalidRequestException("Unsupported execution type: " + executionType);
       }
 
       if (isEmpty(serviceIds)) {

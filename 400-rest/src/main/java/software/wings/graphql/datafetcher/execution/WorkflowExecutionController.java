@@ -278,11 +278,11 @@ public class WorkflowExecutionController {
             if (isTriggerFlow) {
               workflowVariableValues.put(variableInput.getName(), variableValue.getValue());
             } else {
-              throw new UnsupportedOperationException("Expression Type not supported");
+              throw new InvalidRequestException("Expression Type not supported");
             }
             break;
           default:
-            throw new UnsupportedOperationException("Value Type " + type + " Not supported");
+            throw new InvalidRequestException("Value Type " + type + " Not supported");
         }
       } else {
         extraVariablesInAPI.add(variableInput.getName());
@@ -377,7 +377,7 @@ public class WorkflowExecutionController {
                   environmentFromName, USER);
               return environmentFromName.getUuid();
             default:
-              throw new UnsupportedOperationException("Value Type " + envVarValue.getType() + " Not supported");
+              throw new InvalidRequestException("Value Type " + envVarValue.getType() + " Not supported");
           }
         }
       }
