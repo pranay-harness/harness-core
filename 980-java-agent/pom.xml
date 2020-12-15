@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>990-java-agent</artifactId>
+    <artifactId>980-java-agent</artifactId>
     <properties>
         <harness.runtime.package.name>harness.agent.rt</harness.runtime.package.name>
     </properties>
