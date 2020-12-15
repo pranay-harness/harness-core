@@ -635,8 +635,10 @@ def compile_data(input_args):
         sys.exit(400)
     except Exception as e:
         log_manager.log_exception(e)
-        log_manager.log_console_error("Exception occured, please check error logs at : {}".format(error_log_file_path))
+        log_manager.log_console_error("Exception occured, please check error logs")
         log_manager.log_console_error("Operation ** FAILED ** !!!")
 
     file_manager.append_to_file(debug_log_file_path, log_manager.get_debug_log())
     file_manager.append_to_file(error_log_file_path, log_manager.get_error_log())
+    log_manager.log_console_message("Please find Error logs at : {}".format(error_log_file_path))
+    log_manager.log_console_message("Please find Debug logs at : {}".format(debug_log_file_path))
