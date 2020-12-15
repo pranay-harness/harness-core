@@ -7,6 +7,8 @@ proto_library(
     strip_import_prefix = "",
     visibility = ["//visibility:public"],
     deps = [
+        "//920-delegate-service-beans/src/main/proto/io/harness/delegate:920_delegate_service_beans_proto",
+        "//940-delegate-beans/src/main/proto/io/harness/delegate:940_delegate_beans_proto",
         "@com_google_protobuf//:any_proto",
         "@com_google_protobuf//:duration_proto",
         "@com_google_protobuf//:timestamp_proto",

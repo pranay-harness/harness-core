@@ -12,6 +12,7 @@ import io.harness.connector.apis.client.ConnectorResourceClientModule;
 import io.harness.core.ci.services.BuildNumberService;
 import io.harness.core.ci.services.BuildNumberServiceImpl;
 import io.harness.delegate.task.HDelegateTask;
+import io.harness.engine.pms.tasks.TaskExecutor;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
@@ -26,7 +27,6 @@ import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.states.CIDelegateTaskExecutor;
-import io.harness.tasks.TaskExecutor;
 import io.harness.tasks.TaskMode;
 import io.harness.threading.ThreadPool;
 
