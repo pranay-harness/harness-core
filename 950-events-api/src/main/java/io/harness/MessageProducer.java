@@ -3,6 +3,7 @@ package io.harness;
 import io.harness.eventsframework.*;
 import io.harness.eventsframework.impl.RedisProducer;
 import io.harness.eventsframework.producer.Message;
+import io.harness.eventsframework.project.ProjectEntityChangeDTO;
 import io.harness.redis.RedisConfig;
 
 import com.google.common.collect.ImmutableMap;
@@ -34,7 +35,7 @@ public class MessageProducer implements Runnable {
       Message projectEvent =
           Message.newBuilder()
               .putAllMetadata(ImmutableMap.of("accountId", "account1", "desc", "desc1", "test", "test2"))
-              .setData(ProjectUpdate.newBuilder().setProjectIdentifier(String.valueOf(count)).build().toByteString())
+              .setData(ProjectEntityChangeDTO.newBuilder().setIdentifier(String.valueOf(count)).build().toByteString())
               .build();
 
       String messageId = client.send(projectEvent);

@@ -75,9 +75,16 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
     organizationAggregateDTOBuilder.projectsCount(projectDTOs.size());
 
     // admins and collaborators
-    Pair<List<UserSearchDTO>, List<UserSearchDTO>> orgUsers = getAdminsAndCollaborators(accountIdentifier, identifier);
-    organizationAggregateDTOBuilder.admins(orgUsers.getLeft());
-    organizationAggregateDTOBuilder.collaborators(orgUsers.getRight());
+    try {
+      Pair<List<UserSearchDTO>, List<UserSearchDTO>> orgUsers =
+          getAdminsAndCollaborators(accountIdentifier, identifier);
+      organizationAggregateDTOBuilder.admins(orgUsers.getLeft());
+      organizationAggregateDTOBuilder.collaborators(orgUsers.getRight());
+    } catch (Exception exception) {
+      log.error(
+          String.format("Could not fetch Admins and Collaborators for organization with identifier [%s]", identifier),
+          exception);
+    }
 
     return organizationAggregateDTOBuilder.build();
   }
@@ -139,7 +146,11 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
                 .size()));
 
     // admins and collaborators
-    addAdminsAndCollaborators(organizationAggregateDTOs, accountIdentifier, organizations);
+    try {
+      addAdminsAndCollaborators(organizationAggregateDTOs, accountIdentifier, organizations);
+    } catch (Exception exception) {
+      log.error("Could not fetch Org Members for Organizations in the account", exception);
+    }
   }
 
   private Map<String, List<ProjectDTO>> getProjects(

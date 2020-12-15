@@ -1,21 +1,31 @@
 package io.harness.ng.core.impl;
 
+import static io.harness.EntityCRUDEventsConstants.ACTION_METADATA;
+import static io.harness.EntityCRUDEventsConstants.CREATE_ACTION;
+import static io.harness.EntityCRUDEventsConstants.DELETE_ACTION;
+import static io.harness.EntityCRUDEventsConstants.ENTITY_TYPE_METADATA;
+import static io.harness.EntityCRUDEventsConstants.ORGANIZATION_ENTITY;
+import static io.harness.EntityCRUDEventsConstants.UPDATE_ACTION;
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
-import static io.harness.ng.NextGenModule.SECRET_MANAGER_CONNECTOR_SERVICE;
+import static io.harness.ng.NextGenModule.CONNECTOR_DECORATOR_SERVICE;
 import static io.harness.ng.core.remote.OrganizationMapper.toOrganization;
 import static io.harness.ng.core.utils.NGUtils.getConnectorRequestDTO;
 import static io.harness.ng.core.utils.NGUtils.getDefaultHarnessSecretManagerName;
 import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
+import static io.harness.ng.eventsframework.EventsFrameworkModule.ENTITY_CRUD;
 
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.services.ConnectorService;
+import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.organization.OrganizationEntityChangeDTO;
+import io.harness.eventsframework.producer.Message;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
@@ -34,10 +44,12 @@ import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.PrincipalType;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.google.protobuf.ByteString;
 import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -53,17 +65,19 @@ public class OrganizationServiceImpl implements OrganizationService {
   private final OrganizationRepository organizationRepository;
   private final NGSecretManagerService ngSecretManagerService;
   private final ConnectorService secretManagerConnectorService;
+  private final AbstractProducer eventProducer;
   private final NgUserService ngUserService;
   private static final String ORGANIZATION_ADMIN_ROLE_NAME = "Organization Admin";
 
   @Inject
   public OrganizationServiceImpl(OrganizationRepository organizationRepository,
       NGSecretManagerService ngSecretManagerService,
-      @Named(SECRET_MANAGER_CONNECTOR_SERVICE) ConnectorService secretManagerConnectorService,
-      NgUserService ngUserService) {
+      @Named(CONNECTOR_DECORATOR_SERVICE) ConnectorService secretManagerConnectorService,
+      @Named(ENTITY_CRUD) AbstractProducer eventProducer, NgUserService ngUserService) {
     this.organizationRepository = organizationRepository;
     this.ngSecretManagerService = ngSecretManagerService;
     this.secretManagerConnectorService = secretManagerConnectorService;
+    this.eventProducer = eventProducer;
     this.ngUserService = ngUserService;
   }
 
@@ -85,8 +99,25 @@ public class OrganizationServiceImpl implements OrganizationService {
   }
 
   private void performActionsPostOrganizationCreation(Organization organization) {
+    publishEvent(organization, CREATE_ACTION);
     createHarnessSecretManager(organization);
     createUserProjectMap(organization);
+  }
+
+  private void publishEvent(Organization organization, String action) {
+    eventProducer.send(Message.newBuilder()
+                           .putAllMetadata(ImmutableMap.of("accountId", organization.getAccountIdentifier(),
+                               ENTITY_TYPE_METADATA, ORGANIZATION_ENTITY, ACTION_METADATA, action))
+                           .setData(getOrganizationPayload(organization))
+                           .build());
+  }
+
+  private ByteString getOrganizationPayload(Organization organization) {
+    return OrganizationEntityChangeDTO.newBuilder()
+        .setIdentifier(organization.getIdentifier())
+        .setAccountIdentifier(organization.getAccountIdentifier())
+        .build()
+        .toByteString();
   }
 
   private void createUserProjectMap(Organization organization) {
@@ -153,7 +184,9 @@ public class OrganizationServiceImpl implements OrganizationService {
       }
 
       validate(organization);
-      return organizationRepository.save(organization);
+      Organization updatedOrganization = organizationRepository.save(organization);
+      publishEvent(existingOrganization, UPDATE_ACTION);
+      return updatedOrganization;
     }
     throw new InvalidRequestException(String.format("Organisation with identifier [%s] not found", identifier), USER);
   }
@@ -195,7 +228,15 @@ public class OrganizationServiceImpl implements OrganizationService {
 
   @Override
   public boolean delete(String accountIdentifier, String organizationIdentifier, Long version) {
-    return organizationRepository.delete(accountIdentifier, organizationIdentifier, version);
+    boolean delete = organizationRepository.delete(accountIdentifier, organizationIdentifier, version);
+    if (delete) {
+      publishEvent(
+          Organization.builder().accountIdentifier(accountIdentifier).identifier(organizationIdentifier).build(),
+          DELETE_ACTION);
+      secretManagerConnectorService.delete(
+          accountIdentifier, organizationIdentifier, null, HARNESS_SECRET_MANAGER_IDENTIFIER);
+    }
+    return delete;
   }
 
   private void validateCreateOrganizationRequest(String accountIdentifier, OrganizationDTO organization) {

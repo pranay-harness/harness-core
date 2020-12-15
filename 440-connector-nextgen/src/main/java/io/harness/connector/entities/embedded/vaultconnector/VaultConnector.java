@@ -20,7 +20,9 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("io.harness.connector.entities.embedded.vaultconnector.VaultConnector")
 public class VaultConnector extends Connector {
   String vaultUrl;
+  String basePath;
   String secretEngineName;
+  String appRoleId;
   boolean isDefault;
   boolean isReadOnly;
   int renewalIntervalHours;

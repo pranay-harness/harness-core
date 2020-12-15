@@ -1,13 +1,16 @@
 package io.harness.ng;
 
+import static io.harness.EntityCRUDEventsConstants.ACTION_METADATA;
+import static io.harness.EntityCRUDEventsConstants.CONNECTOR_ENTITY;
+import static io.harness.EntityCRUDEventsConstants.ENTITY_TYPE_METADATA;
+import static io.harness.EntityCRUDEventsConstants.UPDATE_ACTION;
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
-import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.delegate.beans.connector.ConnectorCategory.SECRET_MANAGER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.ng.NextGenModule.SECRET_MANAGER_CONNECTOR_SERVICE;
-import static io.harness.ng.eventsframework.EventsFrameworkModule.CONNECTOR_UPDATE_PRODUCER;
+import static io.harness.ng.eventsframework.EventsFrameworkModule.ENTITY_CRUD;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -26,7 +29,7 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.encryption.Scope;
 import io.harness.eventsframework.api.AbstractProducer;
-import io.harness.eventsframework.connector.ConnectorUpdateEventDTO;
+import io.harness.eventsframework.connector.ConnectorEntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.activityhistory.NGActivityType;
@@ -34,10 +37,10 @@ import io.harness.repositories.ConnectorRepository;
 import io.harness.serializer.KryoSerializer;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.google.protobuf.ByteString;
 import com.google.protobuf.StringValue;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
@@ -59,7 +62,7 @@ public class ConnectorServiceImpl implements ConnectorService {
   public ConnectorServiceImpl(@Named(DEFAULT_CONNECTOR_SERVICE) ConnectorService defaultConnectorService,
       @Named(SECRET_MANAGER_CONNECTOR_SERVICE) ConnectorService secretManagerConnectorService,
       ConnectorActivityService connectorActivityService, ConnectorHeartbeatService connectorHeartbeatService,
-      ConnectorRepository connectorRepository, @Named(CONNECTOR_UPDATE_PRODUCER) AbstractProducer eventProducer,
+      ConnectorRepository connectorRepository, @Named(ENTITY_CRUD) AbstractProducer eventProducer,
       KryoSerializer kryoSerializer) {
     this.defaultConnectorService = defaultConnectorService;
     this.secretManagerConnectorService = secretManagerConnectorService;
@@ -92,10 +95,6 @@ public class ConnectorServiceImpl implements ConnectorService {
   @Override
   public ConnectorResponseDTO create(@NotNull ConnectorDTO connector, String accountIdentifier) {
     ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
-    if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connectorInfo.getIdentifier())) {
-      throw new InvalidRequestException(
-          String.format("%s cannot be used as connector identifier", HARNESS_SECRET_MANAGER_IDENTIFIER), USER);
-    }
     ConnectorResponseDTO connectorResponse =
         getConnectorService(connectorInfo.getConnectorType()).create(connector, accountIdentifier);
     ConnectorInfoDTO savedConnector = connectorResponse.getConnector();
@@ -125,10 +124,10 @@ public class ConnectorServiceImpl implements ConnectorService {
 
   private void publishEventForConnectorUpdate(String accountIdentifier, ConnectorInfoDTO savedConnector) {
     try {
-      ByteString connectorConfigBytes = ByteString.copyFrom(kryoSerializer.asBytes(savedConnector));
       eventProducer.send(Message.newBuilder()
-                             .putMetadata("accountId", accountIdentifier)
-                             .setData(ConnectorUpdateEventDTO.newBuilder()
+                             .putAllMetadata(ImmutableMap.of("accountId", accountIdentifier, ENTITY_TYPE_METADATA,
+                                 CONNECTOR_ENTITY, ACTION_METADATA, UPDATE_ACTION))
+                             .setData(ConnectorEntityChangeDTO.newBuilder()
                                           .setAccountIdentifier(StringValue.of(accountIdentifier))
                                           .setOrgIdentifier(StringValue.of(savedConnector.getOrgIdentifier()))
                                           .setProjectIdentifier(StringValue.of(savedConnector.getProjectIdentifier()))
