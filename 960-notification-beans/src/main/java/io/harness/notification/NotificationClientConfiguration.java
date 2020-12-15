@@ -1,6 +1,6 @@
 package io.harness.notification;
 
-import io.harness.NotificationClientSecrets;
+import io.harness.notification.constant.NotificationClientSecrets;
 import io.harness.remote.client.ServiceHttpClientConfig;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

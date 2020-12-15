@@ -8,6 +8,7 @@ import static java.util.stream.Collectors.toSet;
 
 import io.harness.AuthorizationServiceHeader;
 import io.harness.maintenance.MaintenanceController;
+import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
@@ -23,11 +24,14 @@ import io.harness.queue.QueueListenerController;
 import io.harness.remote.CharsetResponseFilter;
 import io.harness.remote.NGObjectMapperHelper;
 import io.harness.security.JWTAuthenticationFilter;
+import io.harness.service.impl.DelegateSyncServiceImpl;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -36,6 +40,7 @@ import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
@@ -124,6 +129,8 @@ public class NotificationApplication extends Application<NotificationConfigurati
 
   private void registerManagedBeans(Environment environment, Injector injector) {
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
+    environment.lifecycle().manage(
+        injector.getInstance(Key.get(ManagedScheduledExecutorService.class, Names.named("delegate-response"))));
   }
 
   private void registerCorsFilter(NotificationConfiguration appConfig, Environment environment) {
@@ -183,10 +190,8 @@ public class NotificationApplication extends Application<NotificationConfigurati
 
   private void registerScheduleJobs(Injector injector) {
     log.info("Initializing scheduled jobs...");
-    //    Example usecase: TODO @Ankush exponentialbackoff retries
-    //    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
-    //            .scheduleWithFixedDelay(injector.getInstance(DelegateAsyncServiceImpl.class), 0L, 5L,
-    //            TimeUnit.SECONDS);
+    injector.getInstance(Key.get(ManagedScheduledExecutorService.class, Names.named("delegate-response")))
+        .scheduleWithFixedDelay(injector.getInstance(DelegateSyncServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
   }
 
   private void registerAuthFilters(

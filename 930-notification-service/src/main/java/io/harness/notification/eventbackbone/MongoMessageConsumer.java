@@ -1,7 +1,7 @@
 package io.harness.notification.eventbackbone;
 
 import io.harness.NotificationRequest;
-import io.harness.ng.MongoNotificationRequest;
+import io.harness.notification.entities.MongoNotificationRequest;
 import io.harness.notification.service.api.NotificationService;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;

@@ -1,6 +1,6 @@
 package io.harness.notification.mappers;
 
-import io.harness.dtos.NotificationDTO;
+import io.harness.notification.dtos.NotificationDTO;
 import io.harness.notification.entities.Notification;
 
 import java.util.Optional;

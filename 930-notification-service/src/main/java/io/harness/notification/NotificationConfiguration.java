@@ -1,5 +1,6 @@
 package io.harness.notification;
 
+import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 
@@ -36,6 +37,7 @@ public class NotificationConfiguration extends Configuration {
   @JsonProperty(value = "environment", defaultValue = "dev") private String environment;
   @JsonProperty("notificationClient") private NotificationClientConfiguration notificationClientConfiguration;
   @JsonProperty("seedDataConfiguration") private SeedDataConfiguration seedDataConfiguration;
+  @JsonProperty("grpcClient") private GrpcClientConfig grpcClientConfig;
 
   public static Collection<Class<?>> getResourceClasses() {
     Reflections reflections = new Reflections(RESOURCE_PACKAGE);

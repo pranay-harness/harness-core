@@ -2,7 +2,7 @@ package io.harness.serializer.morphia;
 
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
-import io.harness.ng.MongoNotificationRequest;
+import io.harness.notification.entities.MongoNotificationRequest;
 
 import java.util.Set;
 
