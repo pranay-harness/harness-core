@@ -421,22 +421,12 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
         psScriptFile = config.getWorkingDirectory() == null
             ? WINDOWS_TEMPFILE_LOCATION
             : config.getWorkingDirectory() + "harness-" + this.config.getExecutionId() + ".ps1";
-        command = "$fileName = \"" + configFileMetaData.getFilename() + "\"\n"
-            + "$commandString = {" + new String(fileBytes) + "}"
-            + "\n[IO.File]::WriteAllText($fileName, $commandString,   [Text.Encoding]::UTF8)\n"
-            + "Write-Host \"Copied config file to the host.\"\n";
+        command = getCopyConfigCommandBehindFF(configFileMetaData, fileBytes);
         exitCode = session.executeCommandsList(
             constructPSScriptWithCommands(command, psScriptFile), outputWriter, errorWriter, false);
       } else {
         String encodedFile = EncodingUtils.encodeBase64(fileBytes);
-        command = "#### Convert Base64 string back to config file ####\n"
-            + "\n"
-            + "$DecodedString = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(\""
-            + encodedFile + "\"))\n"
-            + "Write-Host \"Decoding config file on the host.\"\n"
-            + "$decodedFile = \'" + configFileMetaData.getFilename() + "\'\n"
-            + "[IO.File]::WriteAllText($decodedFile, $DecodedString) \n"
-            + "Write-Host \"Copied config file to the host.\"\n";
+        command = getCopyConfigCommand(configFileMetaData, encodedFile);
 
         exitCode =
             session.executeCommandString(psWrappedCommandWithEncoding(command), outputWriter, errorWriter, false);
@@ -453,6 +443,28 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
           format("Command execution failed. Error: %s", details.getMessage()), ERROR, commandExecutionStatus);
     }
     return commandExecutionStatus;
+  }
+
+  @VisibleForTesting
+  String getCopyConfigCommandBehindFF(ConfigFileMetaData configFileMetaData, byte[] fileBytes) {
+    return "$fileName = \"" + configFileMetaData.getDestinationDirectoryPath() + "\\" + configFileMetaData.getFilename()
+        + "\"\n"
+        + "$commandString = {" + new String(fileBytes) + "}"
+        + "\n[IO.File]::WriteAllText($fileName, $commandString,   [Text.Encoding]::UTF8)\n"
+        + "Write-Host \"Copied config file to the host.\"\n";
+  }
+
+  @VisibleForTesting
+  String getCopyConfigCommand(ConfigFileMetaData configFileMetaData, String encodedFile) {
+    return "#### Convert Base64 string back to config file ####\n"
+        + "\n"
+        + "$DecodedString = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(\"" + encodedFile
+        + "\"))\n"
+        + "Write-Host \"Decoding config file on the host.\"\n"
+        + "$decodedFile = \'" + configFileMetaData.getDestinationDirectoryPath() + "\\"
+        + configFileMetaData.getFilename() + "\'\n"
+        + "[IO.File]::WriteAllText($decodedFile, $DecodedString) \n"
+        + "Write-Host \"Copied config file to the host.\"\n";
   }
 
   @Override

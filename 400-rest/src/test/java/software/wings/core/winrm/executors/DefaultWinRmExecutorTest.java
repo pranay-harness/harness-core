@@ -1,6 +1,7 @@
 package software.wings.core.winrm.executors;
 
 import static io.harness.rule.OwnerRule.DINESH;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SAHIL;
 
@@ -141,5 +142,35 @@ public class DefaultWinRmExecutorTest extends CategoryTest {
     assertThatThrownBy(() -> spyDefaultWinRmExecutor.copyFiles("", new ArrayList<>()))
         .isInstanceOf(NotImplementedException.class)
         .hasMessageContaining(DefaultWinRmExecutor.NOT_IMPLEMENTED);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testCopyConfigCommand() {
+    String command = spyDefaultWinRmExecutor.getCopyConfigCommand(configFileMetaData, "This is a test");
+    assertThat(command).isEqualTo("#### Convert Base64 string back to config file ####\n"
+        + "\n"
+        + "$DecodedString = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(\""
+        + "This is a test"
+        + "\"))\n"
+        + "Write-Host \"Decoding config file on the host.\"\n"
+        + "$decodedFile = \'" + configFileMetaData.getDestinationDirectoryPath() + "\\"
+        + configFileMetaData.getFilename() + "\'\n"
+        + "[IO.File]::WriteAllText($decodedFile, $DecodedString) \n"
+        + "Write-Host \"Copied config file to the host.\"\n");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testCopyConfigCommandBehindFF() {
+    String command =
+        spyDefaultWinRmExecutor.getCopyConfigCommandBehindFF(configFileMetaData, "This is a test".getBytes());
+    assertThat(command).isEqualTo("$fileName = \"" + configFileMetaData.getDestinationDirectoryPath() + "\\"
+        + configFileMetaData.getFilename() + "\"\n"
+        + "$commandString = {" + new String("This is a test".getBytes()) + "}"
+        + "\n[IO.File]::WriteAllText($fileName, $commandString,   [Text.Encoding]::UTF8)\n"
+        + "Write-Host \"Copied config file to the host.\"\n");
   }
 }
