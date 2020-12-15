@@ -15,6 +15,7 @@ import io.harness.beans.DelegateTaskRequest;
 import io.harness.delegate.beans.NotificationTaskResponse;
 import io.harness.delegate.beans.PagerDutyTaskParams;
 import io.harness.notification.NotificationChannelType;
+import io.harness.notification.beans.NotificationProcessingResponse;
 import io.harness.notification.exception.NotificationException;
 import io.harness.notification.remote.dto.NotificationSettingDTO;
 import io.harness.notification.remote.dto.PagerDutySettingDTO;
@@ -32,7 +33,12 @@ import com.google.inject.Inject;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -52,9 +58,9 @@ public class PagerDutyServiceImpl implements ChannelService {
   private final DelegateGrpcClientWrapper delegateGrpcClientWrapper;
 
   @Override
-  public boolean send(NotificationRequest notificationRequest) {
+  public NotificationProcessingResponse send(NotificationRequest notificationRequest) {
     if (Objects.isNull(notificationRequest) || !notificationRequest.hasPagerDuty()) {
-      return false;
+      return NotificationProcessingResponse.trivialResponseWithNoRetries;
     }
 
     String notificationId = notificationRequest.getId();
@@ -64,13 +70,13 @@ public class PagerDutyServiceImpl implements ChannelService {
 
     if (Objects.isNull(stripToNull(templateId))) {
       log.info("template Id is null for notification request {}", notificationId);
-      return false;
+      return NotificationProcessingResponse.trivialResponseWithNoRetries;
     }
 
     List<String> pagerDutyKeys = getRecipients(notificationRequest);
     if (isEmpty(pagerDutyKeys)) {
       log.info("No pagerduty integration key found in notification request {}", notificationId);
-      return false;
+      return NotificationProcessingResponse.trivialResponseWithNoRetries;
     }
 
     return send(pagerDutyKeys, templateId, templateData, notificationRequest.getId(), notificationRequest.getTeam(),
@@ -82,22 +88,26 @@ public class PagerDutyServiceImpl implements ChannelService {
     PagerDutySettingDTO pagerDutySettingDTO = (PagerDutySettingDTO) notificationSettingDTO;
     String pagerdutyKey = pagerDutySettingDTO.getRecipient();
     if (Objects.isNull(stripToNull(pagerdutyKey))) {
-      throw new NotificationException("Malformed pagerduty key " + pagerdutyKey, DEFAULT_ERROR_CODE, USER);
+      throw new NotificationException("Malformed pagerduty key encountered while processing Test Connection request "
+              + notificationSettingDTO.getNotificationId(),
+          DEFAULT_ERROR_CODE, USER);
     }
-    boolean sent = send(Collections.singletonList(pagerdutyKey), TEST_PD_TEMPLATE, Collections.emptyMap(),
-        pagerDutySettingDTO.getNotificationId(), null, notificationSettingDTO.getAccountId());
-    if (!sent) {
-      throw new NotificationException("Invalid pagerduty key " + pagerdutyKey, DEFAULT_ERROR_CODE, USER);
+    NotificationProcessingResponse processingResponse = send(Collections.singletonList(pagerdutyKey), TEST_PD_TEMPLATE,
+        Collections.emptyMap(), pagerDutySettingDTO.getNotificationId(), null, notificationSettingDTO.getAccountId());
+    if (NotificationProcessingResponse.isNotificationResquestFailed(processingResponse)) {
+      throw new NotificationException("Invalid pagerduty key encountered while processing Test Connection request "
+              + notificationSettingDTO.getNotificationId(),
+          DEFAULT_ERROR_CODE, USER);
     }
     return true;
   }
 
-  private boolean send(List<String> pagerDutyKeys, String templateId, Map<String, String> templateData,
-      String notificationId, Team team, String accountId) {
+  private NotificationProcessingResponse send(List<String> pagerDutyKeys, String templateId,
+      Map<String, String> templateData, String notificationId, Team team, String accountId) {
     Optional<PagerDutyTemplate> templateOpt = getTemplate(templateId, team);
     if (!templateOpt.isPresent()) {
       log.info("Can't find template with templateId {} for notification request {}", templateId, notificationId);
-      return false;
+      return NotificationProcessingResponse.trivialResponseWithNoRetries;
     }
     PagerDutyTemplate template = templateOpt.get();
 
@@ -129,7 +139,7 @@ public class PagerDutyServiceImpl implements ChannelService {
       links.add(linkContext);
     }
 
-    boolean sent = false;
+    NotificationProcessingResponse processingResponse = null;
     if (notificationSettingsService.getSendNotificationViaDelegate(accountId)) {
       DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
                                                     .accountId(accountId)
@@ -144,12 +154,15 @@ public class PagerDutyServiceImpl implements ChannelService {
                                                     .build();
       NotificationTaskResponse notificationTaskResponse =
           (NotificationTaskResponse) delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
-      sent = notificationTaskResponse.isSent();
+      processingResponse = notificationTaskResponse.getProcessingResponse();
     } else {
-      sent = pagerDutySender.send(pagerDutyKeys, payload, links, notificationId);
+      processingResponse = pagerDutySender.send(pagerDutyKeys, payload, links, notificationId);
     }
-    log.info(sent ? "Notificaition request {} sent" : "Failed to send notification for request {}", notificationId);
-    return sent;
+    log.info(NotificationProcessingResponse.isNotificationResquestFailed(processingResponse)
+            ? "Notification request {} sent"
+            : "Failed to send notification for request {}",
+        notificationId);
+    return processingResponse;
   }
 
   private Optional<PagerDutyTemplate> getTemplate(String templateId, Team team) {

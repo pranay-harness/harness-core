@@ -2,10 +2,10 @@ package io.harness.delegate.task;
 
 import io.harness.delegate.beans.*;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
+import io.harness.notification.beans.NotificationProcessingResponse;
 import io.harness.notification.service.MailSenderImpl;
 
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +14,6 @@ import org.apache.commons.lang3.NotImplementedException;
 @Slf4j
 public class MailSenderDelegateTask extends AbstractDelegateRunnableTask {
   @Inject private MailSenderImpl mailSender;
-  @Inject private Injector injector;
 
   public MailSenderDelegateTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
       Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
@@ -30,11 +29,14 @@ public class MailSenderDelegateTask extends AbstractDelegateRunnableTask {
   public DelegateResponseData run(TaskParameters parameters) {
     MailTaskParams mailTaskParams = (MailTaskParams) parameters;
     try {
-      boolean sent = mailSender.send(mailTaskParams.getEmailIds(), mailTaskParams.getSubject(),
-          mailTaskParams.getBody(), mailTaskParams.getNotificationId(), mailTaskParams.getSmtpConfig());
-      return NotificationTaskResponse.builder().sent(sent).build();
+      NotificationProcessingResponse processingResponse = mailSender.send(mailTaskParams.getEmailIds(),
+          mailTaskParams.getSubject(), mailTaskParams.getBody(), mailTaskParams.getNotificationId());
+      return NotificationTaskResponse.builder().processingResponse(processingResponse).build();
     } catch (Exception e) {
-      return NotificationTaskResponse.builder().sent(false).errorMessage(e.getMessage()).build();
+      return NotificationTaskResponse.builder()
+          .processingResponse(NotificationProcessingResponse.trivialResponseWithNoRetries)
+          .errorMessage(e.getMessage())
+          .build();
     }
   }
 }

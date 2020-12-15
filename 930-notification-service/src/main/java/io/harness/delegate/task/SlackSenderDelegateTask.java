@@ -2,6 +2,7 @@ package io.harness.delegate.task;
 
 import io.harness.delegate.beans.*;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
+import io.harness.notification.beans.NotificationProcessingResponse;
 import io.harness.notification.service.SlackSenderImpl;
 
 import com.google.inject.Inject;
@@ -29,11 +30,14 @@ public class SlackSenderDelegateTask extends AbstractDelegateRunnableTask {
   public DelegateResponseData run(TaskParameters parameters) {
     SlackTaskParams slackTaskParams = (SlackTaskParams) parameters;
     try {
-      boolean sent = slackSender.send(
+      NotificationProcessingResponse processingResponse = slackSender.send(
           slackTaskParams.getSlackWebhookUrls(), slackTaskParams.getMessage(), slackTaskParams.getNotificationId());
-      return NotificationTaskResponse.builder().sent(sent).build();
+      return NotificationTaskResponse.builder().processingResponse(processingResponse).build();
     } catch (Exception e) {
-      return NotificationTaskResponse.builder().sent(false).errorMessage(e.getMessage()).build();
+      return NotificationTaskResponse.builder()
+          .processingResponse(NotificationProcessingResponse.trivialResponseWithNoRetries)
+          .errorMessage(e.getMessage())
+          .build();
     }
   }
 }

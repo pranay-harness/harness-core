@@ -33,8 +33,8 @@ public class NotificationRetryHandler implements MongoPersistenceIterator.Handle
 
   public void registerIterators() {
     MorphiaFilterExpander<Notification> filterExpander = query
-        -> query.field(NotificationKeys.sent)
-               .equal(Boolean.FALSE)
+        -> query.field(NotificationKeys.shouldRetry)
+               .equal(Boolean.TRUE)
                .field(NotificationKeys.retries)
                .in(ImmutableList.of(1, 2));
 

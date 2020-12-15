@@ -34,7 +34,7 @@ public class Notification implements PersistentRegularIterable, PersistentEntity
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("notification_retries_sent")
-                 .field(NotificationKeys.sent)
+                 .field(NotificationKeys.shouldRetry)
                  .field(NotificationKeys.retries)
                  .build())
         .build();
@@ -46,7 +46,8 @@ public class Notification implements PersistentRegularIterable, PersistentEntity
 
   Channel channel;
 
-  @Builder.Default Boolean sent = Boolean.FALSE;
+  List<Boolean> processingResponses;
+  @Builder.Default boolean shouldRetry = Boolean.TRUE;
   @Builder.Default Integer retries = 0;
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;

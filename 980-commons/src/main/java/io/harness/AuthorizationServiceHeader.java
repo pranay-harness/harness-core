@@ -8,6 +8,7 @@ public enum AuthorizationServiceHeader {
   CV_NEXT_GEN("CVNextGen"),
   IDENTITY_SERVICE("IdentityService"),
   ADMIN_PORTAL("AdminPortal"),
+  NOTIFICATION_SERVICE("NotificationService"),
   DEFAULT("Default");
 
   private final String serviceId;

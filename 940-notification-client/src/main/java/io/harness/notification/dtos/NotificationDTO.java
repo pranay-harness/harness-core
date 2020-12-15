@@ -3,6 +3,7 @@ package io.harness.notification.dtos;
 import io.harness.Team;
 import io.harness.notification.NotificationChannelType;
 
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -16,6 +17,6 @@ public class NotificationDTO {
   String accountIdentifier;
   Team team;
   NotificationChannelType channelType;
-  boolean sent;
+  List<Boolean> processingResponses;
   int retries;
 }

@@ -3,8 +3,10 @@ package io.harness.notification.remote.mappers;
 import static io.harness.NotificationRequest.*;
 
 import io.harness.NotificationRequest;
+import io.harness.notification.dtos.NotificationDTO;
 import io.harness.notification.entities.*;
 
+import java.util.Optional;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
@@ -70,5 +72,19 @@ public class NotificationMapper {
     } else if (channelDetails instanceof MSTeam) {
       builder.setMsTeam((MSTeam) channelDetails);
     }
+  }
+
+  public static Optional<NotificationDTO> toDTO(Notification notification) {
+    if (notification == null) {
+      return Optional.empty();
+    }
+    return Optional.of(NotificationDTO.builder()
+                           .accountIdentifier(notification.getAccountIdentifier())
+                           .channelType(notification.getChannel().getChannelType())
+                           .id(notification.getId())
+                           .processingResponses(notification.getProcessingResponses())
+                           .retries(notification.getRetries())
+                           .team(notification.getTeam())
+                           .build());
   }
 }
