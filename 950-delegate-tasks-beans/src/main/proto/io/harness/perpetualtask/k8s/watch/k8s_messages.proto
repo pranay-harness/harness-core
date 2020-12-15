@@ -79,6 +79,8 @@ message PVInfo {
   enum PVType {
     PV_TYPE_UNSPECIFIED = 0;
     PV_TYPE_GCE_PERSISTENT_DISK = 1;
+    PV_TYPE_AWS_EBS = 2;
+    PV_TYPE_AZURE_DISK = 3;
   }
   PVType pv_type = 2;
 
@@ -91,7 +93,7 @@ message PVInfo {
   string pv_uid = 7;
   string pv_name = 8;
   string reclaim_policy = 9;
-  string storage_class_type = 10;  // can be empty
+  string storage_class_type = 10 [deprecated = true];  // depricated for storage_class_params
   string status = 11;
   Quantity capacity = 12;
   map<string, string> labels = 13;
@@ -101,6 +103,8 @@ message PVInfo {
   string cluster_name = 15;
   string cloud_provider_id = 16;
   string kube_system_uid = 17;
+
+  map<string, string> storage_class_params = 18;
 }
 
 message PVEvent {
