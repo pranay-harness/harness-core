@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CategoryTest;
+import io.harness.EventsFrameworkConfiguration;
 import io.harness.category.element.UnitTests;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.govern.ProviderModule;
@@ -14,6 +15,8 @@ import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.api.NGSecretService;
 import io.harness.ng.core.api.impl.NGSecretManagerServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretServiceImpl;
+import io.harness.ng.eventsframework.EventsFrameworkModule;
+import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.repositories.ng.core.spring.SecretRepository;
 import io.harness.rule.Owner;
@@ -85,6 +88,9 @@ public class SecretManagementModuleTest extends CategoryTest {
         return mock(DelegateGrpcClientWrapper.class);
       }
     });
+    modules.add(new EventsFrameworkModule(EventsFrameworkConfiguration.builder()
+                                              .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
+                                              .build()));
     modules.add(secretManagementModule);
     modules.add(secretManagementClientModule);
     modules.add(entityReferenceClientModule);

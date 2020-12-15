@@ -60,6 +60,7 @@ import io.harness.pms.sdk.registries.registrar.StepRegistrar;
 import io.harness.queue.QueueController;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.redesign.services.CustomExecutionServiceImpl;
+import io.harness.redis.RedisConfig;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
@@ -163,6 +164,9 @@ public class NextGenModule extends AbstractModule {
        }
      });*/
     bind(CustomExecutionService.class).to(CustomExecutionServiceImpl.class);
+    bind(RedisConfig.class)
+        .annotatedWith(Names.named("lock"))
+        .toInstance(appConfig.getEventsFrameworkConfiguration().getRedisConfig());
     MapBinder<String, TaskExecutor> taskExecutorMap =
         MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
     taskExecutorMap.addBinding(TaskMode.DELEGATE_TASK_V3.name()).to(NgDelegate2TaskExecutor.class);
@@ -177,6 +181,7 @@ public class NextGenModule extends AbstractModule {
     install(new DefaultOrganizationModule());
     install(new NGAggregateModule());
     install(NGModule.getInstance());
+    install(new EventsFrameworkModule(this.appConfig.getEventsFrameworkConfiguration()));
     install(new SecretManagementModule());
     install(new SecretManagementClientModule(this.appConfig.getServiceHttpClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
@@ -238,7 +243,6 @@ public class NextGenModule extends AbstractModule {
     install(OrchestrationStepsModule.getInstance());
     install(OrchestrationVisualizationModule.getInstance());
     install(ExecutionPlanModule.getInstance());
-    install(new EventsFrameworkModule(appConfig.getEventsFrameworkConfiguration()));
 
     MapBinder<String, StepRegistrar> stepRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);

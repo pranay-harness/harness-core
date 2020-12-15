@@ -151,7 +151,7 @@ public class NGSecretServiceImplTest extends CategoryTest {
     EncryptedData savedData = ngSecretService.create(randomSecretText, false);
     assertThat(savedData).isNotNull();
     assertThat(savedData.getName()).isEqualTo(dto.getName());
-    verify(secretEntityReferenceHelper, times(1)).createEntityReferenceForSecret(any());
+    verify(secretEntityReferenceHelper, times(1)).createSetupUsageForSecretManager(any());
   }
 
   @Test
@@ -186,7 +186,7 @@ public class NGSecretServiceImplTest extends CategoryTest {
     } catch (Exception ex) {
       // not required
     }
-    verify(secretEntityReferenceHelper, times(0)).createEntityReferenceForSecret(any());
+    verify(secretEntityReferenceHelper, times(0)).createSetupUsageForSecretManager(any());
   }
 
   @Test
@@ -205,7 +205,7 @@ public class NGSecretServiceImplTest extends CategoryTest {
     } catch (UnexpectedException ex) {
       // not required
     }
-    verify(secretEntityReferenceHelper, times(0)).createEntityReferenceForSecret(any());
+    verify(secretEntityReferenceHelper, times(0)).createSetupUsageForSecretManager(any());
   }
 
   @Test
@@ -396,7 +396,7 @@ public class NGSecretServiceImplTest extends CategoryTest {
     EncryptedData savedData = ngSecretService.create(randomSecretText, true);
     assertThat(savedData).isNotNull();
     assertThat(savedData.getName()).isEqualTo(dto.getName());
-    verify(secretEntityReferenceHelper, times(1)).createEntityReferenceForSecret(any());
+    verify(secretEntityReferenceHelper, times(1)).createSetupUsageForSecretManager(any());
   }
 
   @Test

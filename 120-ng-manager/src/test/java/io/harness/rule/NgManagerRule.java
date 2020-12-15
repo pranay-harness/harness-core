@@ -2,6 +2,7 @@ package io.harness.rule;
 
 import static org.mockito.Mockito.mock;
 
+import io.harness.EventsFrameworkConfiguration;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
@@ -10,7 +11,9 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.SecretManagementModule;
+import io.harness.ng.eventsframework.EventsFrameworkModule;
 import io.harness.persistence.HPersistence;
+import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.serializer.KryoModule;
@@ -78,6 +81,9 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
     modules.add(KryoModule.getInstance());
+    modules.add(new EventsFrameworkModule(EventsFrameworkConfiguration.builder()
+                                              .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
+                                              .build()));
     modules.add(new SecretManagementModule());
     modules.add(new SecretManagementClientModule(
         ServiceHttpClientConfig.builder().baseUrl("http://localhost:8080/").build(), "test_secret", "NextGenManager"));

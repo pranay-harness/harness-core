@@ -1,0 +1,14 @@
+syntax = "proto3";
+package io.harness.eventsframework.schemas.entity;
+
+option java_multiple_files = true;
+import "io/harness/eventsframework/schemas/entity/scope.proto";
+import "google/protobuf/wrappers.proto";
+
+message IdentifierRefProtoDTO {
+  io.harness.eventsframework.schemas.entity.ScopeProtoEnum scope = 1;
+  google.protobuf.StringValue identifier = 2;
+  google.protobuf.StringValue accountIdentifier = 3;
+  google.protobuf.StringValue orgIdentifier = 4;
+  google.protobuf.StringValue projectIdentifier = 5;
+}
