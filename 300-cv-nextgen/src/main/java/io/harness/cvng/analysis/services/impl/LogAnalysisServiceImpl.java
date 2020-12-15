@@ -6,6 +6,7 @@ import static io.harness.cvng.analysis.CVAnalysisConstants.ANALYSIS_RISK_RESULTS
 import static io.harness.cvng.analysis.CVAnalysisConstants.DEPLOYMENT_LOG_ANALYSIS_SAVE_PATH;
 import static io.harness.cvng.analysis.CVAnalysisConstants.LOG_ANALYSIS_RESOURCE;
 import static io.harness.cvng.analysis.CVAnalysisConstants.LOG_ANALYSIS_SAVE_PATH;
+import static io.harness.cvng.analysis.CVAnalysisConstants.PREVIOUS_ANALYSIS_URL;
 import static io.harness.cvng.analysis.CVAnalysisConstants.PREVIOUS_LOG_ANALYSIS_PATH;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TEST_DATA_PATH;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -17,6 +18,7 @@ import io.harness.cvng.analysis.beans.LogClusterDTO;
 import io.harness.cvng.analysis.beans.LogClusterLevel;
 import io.harness.cvng.analysis.entities.CanaryLogAnalysisLearningEngineTask;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
+import io.harness.cvng.analysis.entities.DeploymentLogAnalysis.DeploymentLogAnalysisKeys;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType;
@@ -149,8 +151,10 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
             baselineVerificationJobInstance.getStartTime(), baselineVerificationJobInstance.getEndTime()));
       }
     }
-    task.setTestDataUrl(createDeploymentDataUrl(
-        input.getVerificationTaskId(), verificationJobInstance.getStartTime(), input.getEndTime()));
+    task.setPreviousAnalysisUrl(
+        getPreviousAnalysisUrl(input.getVerificationTaskId(), input.getStartTime(), input.getEndTime()));
+    task.setTestDataUrl(
+        createDeploymentDataUrl(input.getVerificationTaskId(), input.getStartTime(), input.getEndTime()));
     task.setAnalysisStartTime(input.getStartTime());
     task.setVerificationTaskId(input.getVerificationTaskId());
     task.setFailureUrl(learningEngineTaskService.createFailureUrl(taskId));
@@ -159,6 +163,15 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     task.setAnalysisSaveUrl(createDeploymentAnalysisSaveUrl(taskId));
     task.setUuid(taskId);
     return task;
+  }
+
+  private String getPreviousAnalysisUrl(String verificationTaskId, Instant startTime, Instant endTime) {
+    URIBuilder uriBuilder = new URIBuilder();
+    uriBuilder.setPath(SERVICE_BASE_URL + "/" + LOG_ANALYSIS_RESOURCE + "/" + PREVIOUS_ANALYSIS_URL);
+    uriBuilder.addParameter("verificationTaskId", verificationTaskId);
+    uriBuilder.addParameter(LogAnalysisRecordKeys.analysisStartTime, String.valueOf(startTime.toEpochMilli()));
+    uriBuilder.addParameter(LogAnalysisRecordKeys.analysisEndTime, String.valueOf(endTime.toEpochMilli()));
+    return getUriString(uriBuilder);
   }
 
   private Set<String> getControlHosts(String verificationTaskId, TimeRange preDeploymentTimeRange) {
@@ -192,6 +205,28 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
         .project(LogAnalysisClusterKeys.text, true)
         .project(LogAnalysisClusterKeys.frequencyTrend, true)
         .asList(new FindOptions().maxTime(MONGO_QUERY_TIMEOUT_SEC, TimeUnit.SECONDS));
+  }
+
+  @Override
+  public DeploymentLogAnalysisDTO getPreviousDeploymentAnalysis(
+      String verificationTaskId, Instant analysisStartTime, Instant analysisEndTime) {
+    DeploymentLogAnalysis logAnalysis = hPersistence.createQuery(DeploymentLogAnalysis.class, excludeAuthority)
+                                            .filter(DeploymentLogAnalysisKeys.verificationTaskId, verificationTaskId)
+                                            .field(DeploymentLogAnalysisKeys.startTime)
+                                            .lessThanOrEq(analysisStartTime)
+                                            .order(Sort.descending(DeploymentLogAnalysisKeys.startTime))
+                                            .get();
+
+    if (logAnalysis == null) {
+      return null;
+    }
+
+    return DeploymentLogAnalysisDTO.builder()
+        .clusterCoordinates(logAnalysis.getClusterCoordinates())
+        .hostSummaries(logAnalysis.getHostSummaries())
+        .resultSummary(logAnalysis.getResultSummary())
+        .clusters(logAnalysis.getClusters())
+        .build();
   }
 
   @Override

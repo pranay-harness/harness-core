@@ -1,8 +1,15 @@
 package io.harness.cvng.analysis.beans;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Value;
 @Value
@@ -54,15 +61,7 @@ public class DeploymentLogAnalysisDTO {
     int risk;
     double score;
     int count;
-    List<Double> controlFrequencyData;
     List<Double> testFrequencyData;
-
-    public List<Double> getControlFrequencyData() {
-      if (this.controlFrequencyData == null) {
-        return Collections.emptyList();
-      }
-      return controlFrequencyData;
-    }
 
     public List<Double> getTestFrequencyData() {
       if (this.testFrequencyData == null) {
@@ -74,17 +73,33 @@ public class DeploymentLogAnalysisDTO {
 
   @Value
   @Builder
+  public static class ControlClusterSummary {
+    int label;
+    List<Double> controlFrequencyData;
+  }
+
+  @Value
+  @Builder
   public static class ResultSummary {
     int risk;
     double score;
-    List<Integer> controlClusterLabels;
+    List<ControlClusterSummary> controlClusterSummaries;
     List<ClusterSummary> testClusterSummaries;
 
-    public List<Integer> getControlClusterLabels() {
-      if (controlClusterLabels == null) {
-        return Collections.emptyList();
+    @JsonIgnore @Builder.Default private static Map<Integer, List<Double>> labelToControlDataMap = new HashMap<>();
+
+    public void setLabelToControlDataMap() {
+      if (controlClusterSummaries != null) {
+        labelToControlDataMap.putAll(controlClusterSummaries.stream().collect(
+            Collectors.toMap(ControlClusterSummary::getLabel, ControlClusterSummary::getControlFrequencyData)));
       }
-      return controlClusterLabels;
+    }
+
+    public List<Double> getControlData(int label) {
+      if (isEmpty(labelToControlDataMap) || !labelToControlDataMap.containsKey(label)) {
+        return new ArrayList<>();
+      }
+      return labelToControlDataMap.get(label);
     }
 
     public List<ClusterSummary> getTestClusterSummaries() {

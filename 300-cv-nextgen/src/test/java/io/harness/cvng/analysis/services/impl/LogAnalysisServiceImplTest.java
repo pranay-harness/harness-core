@@ -327,7 +327,7 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
     assertThat(testLogAnalysisLearningEngineTask.getControlDataUrl()).isNull();
     assertThat(testLogAnalysisLearningEngineTask.getTestDataUrl())
         .isEqualTo(CVConstants.SERVICE_BASE_URL + "/log-analysis/test-data?verificationTaskId=" + verificationTaskId
-            + "&analysisStartTime=1595846771000&analysisEndTime=1595847011000");
+            + "&analysisStartTime=1595846951000&analysisEndTime=1595847011000");
   }
 
   @Test
@@ -362,7 +362,7 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
             + baselineVerificationTaskId + "&analysisStartTime=1595846771000&analysisEndTime=1595847671000");
     assertThat(testLogAnalysisLearningEngineTask.getTestDataUrl())
         .isEqualTo(CVConstants.SERVICE_BASE_URL + "/log-analysis/test-data?verificationTaskId=" + verificationTaskId
-            + "&analysisStartTime=1595846771000&analysisEndTime=1595847011000");
+            + "&analysisStartTime=1595846951000&analysisEndTime=1595847011000");
   }
   @Test
   @Owner(developers = KAMAL)
@@ -436,11 +436,8 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
   private DeploymentLogAnalysisDTO createDeploymentAnalysisDTO() {
     return DeploymentLogAnalysisDTO.builder()
         .clusters(Collections.singletonList(DeploymentLogAnalysisDTO.Cluster.builder().label(1).text("text").build()))
-        .resultSummary(DeploymentLogAnalysisDTO.ResultSummary.builder()
-                           .controlClusterLabels(Collections.singletonList(1))
-                           .risk(2)
-                           .score(.4)
-                           .build())
+        .resultSummary(
+            DeploymentLogAnalysisDTO.ResultSummary.builder().controlClusterSummaries(null).risk(2).score(.4).build())
         .build();
   }
   private List<AnalysisResult> getAnalysisResults(long... labels) {
