@@ -12,6 +12,8 @@ public interface FeatureFlagService {
   boolean isGlobalEnabled(FeatureName featureName);
   boolean isNotGlobalEnabled(FeatureName featureName);
   boolean isEnabled(FeatureName featureName, String accountId);
+  boolean isEnabledForAllAccounts(FeatureName featureName);
+
   boolean isNotEnabled(FeatureName featureName, String accountId);
 
   void initializeFeatureFlags(DeployMode deployMode, String featureNames);
