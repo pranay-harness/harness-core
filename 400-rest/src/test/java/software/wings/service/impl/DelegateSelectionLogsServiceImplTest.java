@@ -68,6 +68,8 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   private static final String PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID = "PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID";
   private static final String TASK_ASSIGNED_GROUP_ID = "TASK_ASSIGNED_GROUP_ID";
   private static final String MISSING_SELECTOR_MESSAGE = "missing selector";
+  private static final String TARGETED_DELEGATE_MATCHED_GROUP_ID = "TARGETED_DELEGATE_MATCHED_GROUP_ID";
+  private static final String TARGETED_DELEGATE_NOT_MATCHED_GROUP_ID = "TARGETED_DELEGATE_NOT_MATCHED_GROUP_ID";
 
   @Mock private FeatureFlagService featureFlagService;
   @Inject protected WingsPersistence wingsPersistence;
@@ -870,6 +872,14 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
+  public void shouldNotLogMustExecuteOnDelegateMatched() {
+    assertThatCode(() -> delegateSelectionLogsService.logMustExecuteOnDelegateMatched(null, null, null))
+        .doesNotThrowAnyException();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
   public void shouldFetchTaskSelectionLogsData() {
     String taskId = generateUuid();
     String accountId = generateUuid();
@@ -928,6 +938,60 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(delegateSelectionLogResponse.getDelegateSelectionLogs()).isNotNull();
     assertThat(delegateSelectionLogResponse.getDelegateSelectionLogs().size()).isEqualTo(1);
     assertThat(delegateSelectionLogResponse.getTaskSetupAbstractions()).isNullOrEmpty();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldLogMustExecuteOnDelegateMatched() {
+    String taskId = generateUuid();
+    String accountId = generateUuid();
+    String delegate1Id = generateUuid();
+
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(taskId).build();
+
+    delegateSelectionLogsService.logMustExecuteOnDelegateMatched(batch, accountId, delegate1Id);
+
+    assertThat(batch.getDelegateSelectionLogs()).isNotEmpty();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateIds().size()).isEqualTo(1);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getAccountId()).isEqualTo(accountId);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(ACCEPTED);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
+        .isEqualTo("Delegate was targeted for profile script execution");
+    assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(TARGETED_DELEGATE_MATCHED_GROUP_ID);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldNotLogMustExecuteOnDelegateNotMatched() {
+    assertThatCode(() -> delegateSelectionLogsService.logMustExecuteOnDelegateNotMatched(null, null, null))
+        .doesNotThrowAnyException();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldLogMustExecuteOnDelegateNotMatched() {
+    String taskId = generateUuid();
+    String accountId = generateUuid();
+    String delegate1Id = generateUuid();
+
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(taskId).build();
+
+    delegateSelectionLogsService.logMustExecuteOnDelegateNotMatched(batch, accountId, delegate1Id);
+
+    assertThat(batch.getDelegateSelectionLogs()).isNotEmpty();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateIds().size()).isEqualTo(1);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getAccountId()).isEqualTo(accountId);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
+        .isEqualTo("Delegate was not targeted for profile script execution");
+    assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(TARGETED_DELEGATE_NOT_MATCHED_GROUP_ID);
   }
 
   private DelegateSelectionLogBuilder createDelegateSelectionLogBuilder() {

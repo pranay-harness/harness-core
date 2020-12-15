@@ -136,6 +136,17 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
       return false;
     }
 
+    // Applicable only in case of targeting delegate for the purpose of delegate profile script execution
+    if (isNotBlank(task.getMustExecuteOnDelegateId())) {
+      if (delegateId.equals(task.getMustExecuteOnDelegateId())) {
+        delegateSelectionLogsService.logMustExecuteOnDelegateMatched(batch, task.getAccountId(), delegateId);
+        return true;
+      } else {
+        delegateSelectionLogsService.logMustExecuteOnDelegateNotMatched(batch, task.getAccountId(), delegateId);
+        return false;
+      }
+    }
+
     boolean canAssign = canAssignDelegateScopes(batch, delegate, task)
         && canAssignDelegateProfileScopes(batch, delegate, task.getSetupAbstractions())
         && canAssignSelectors(batch, delegate, task.getExecutionCapabilities());

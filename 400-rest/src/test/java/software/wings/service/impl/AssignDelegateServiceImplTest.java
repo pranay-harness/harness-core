@@ -1792,4 +1792,33 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
             Arrays.asList(Delegate.builder().uuid(delegateId).status(ENABLED).lastHeartBeat(clock.millis()).build()));
     assertThat(assignDelegateService.shouldValidate(task, delegateId)).isFalse();
   }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testCanAssignWithMustExecuteOnDelegate() {
+    String accountId = generateUuid();
+    String delegateId1 = generateUuid();
+    BatchDelegateSelectionLog batch = Mockito.mock(BatchDelegateSelectionLog.class);
+
+    // Test matching mustExecuteOnDelegateId
+    Delegate delegate = Mockito.mock(Delegate.class);
+    when(delegateService.get(accountId, delegateId1, false)).thenReturn(delegate);
+
+    assertThat(assignDelegateService.canAssign(batch, delegateId1,
+                   DelegateTask.builder().accountId(accountId).mustExecuteOnDelegateId(delegateId1).build()))
+        .isTrue();
+    verify(delegateSelectionLogsService).logMustExecuteOnDelegateMatched(batch, accountId, delegateId1);
+    verify(delegateSelectionLogsService, never()).logCanAssign(batch, accountId, delegateId1);
+
+    // Test not matching mustExecuteOnDelegateId
+    String delegateId2 = generateUuid();
+    when(delegateService.get(accountId, delegateId2, false)).thenReturn(delegate);
+
+    assertThat(assignDelegateService.canAssign(batch, delegateId2,
+                   DelegateTask.builder().accountId(accountId).mustExecuteOnDelegateId(delegateId1).build()))
+        .isFalse();
+    verify(delegateSelectionLogsService).logMustExecuteOnDelegateNotMatched(batch, accountId, delegateId2);
+    verify(delegateSelectionLogsService, never()).logCanAssign(batch, accountId, delegateId1);
+  }
 }

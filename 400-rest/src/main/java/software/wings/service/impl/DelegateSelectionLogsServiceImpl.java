@@ -68,6 +68,8 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   private static final String WAITING_ON_APPROVAL_GROUP_ID = "WAITING_ON_APPROVAL_GROUP_ID";
   private static final String TASK_ASSIGNED_GROUP_ID = "TASK_ASSIGNED_GROUP_ID";
   private static final String PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID = "PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID";
+  private static final String TARGETED_DELEGATE_MATCHED_GROUP_ID = "TARGETED_DELEGATE_MATCHED_GROUP_ID";
+  private static final String TARGETED_DELEGATE_NOT_MATCHED_GROUP_ID = "TARGETED_DELEGATE_NOT_MATCHED_GROUP_ID";
 
   private LoadingCache<ImmutablePair<String, String>, String> setupAbstractionsCache =
       CacheBuilder.newBuilder()
@@ -438,6 +440,42 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
                      .message("Delegate scaling group: " + groupName + " was disconnected")
                      .eventTimestamp(System.currentTimeMillis())
                      .groupId(DISCONNECTED_GROUP_ID)
+                     .build());
+  }
+
+  @Override
+  public void logMustExecuteOnDelegateMatched(BatchDelegateSelectionLog batch, String accountId, String delegateId) {
+    if (batch == null) {
+      return;
+    }
+
+    Set<String> delegateIds = new HashSet<>();
+    delegateIds.add(delegateId);
+    DelegateSelectionLogBuilder delegateSelectionLogBuilder =
+        retrieveDelegateSelectionLogBuilder(accountId, batch.getTaskId(), delegateIds);
+
+    batch.append(delegateSelectionLogBuilder.conclusion(ACCEPTED)
+                     .message("Delegate was targeted for profile script execution")
+                     .eventTimestamp(System.currentTimeMillis())
+                     .groupId(TARGETED_DELEGATE_MATCHED_GROUP_ID)
+                     .build());
+  }
+
+  @Override
+  public void logMustExecuteOnDelegateNotMatched(BatchDelegateSelectionLog batch, String accountId, String delegateId) {
+    if (batch == null) {
+      return;
+    }
+
+    Set<String> delegateIds = new HashSet<>();
+    delegateIds.add(delegateId);
+    DelegateSelectionLogBuilder delegateSelectionLogBuilder =
+        retrieveDelegateSelectionLogBuilder(accountId, batch.getTaskId(), delegateIds);
+
+    batch.append(delegateSelectionLogBuilder.conclusion(REJECTED)
+                     .message("Delegate was not targeted for profile script execution")
+                     .eventTimestamp(System.currentTimeMillis())
+                     .groupId(TARGETED_DELEGATE_NOT_MATCHED_GROUP_ID)
                      .build());
   }
 }
