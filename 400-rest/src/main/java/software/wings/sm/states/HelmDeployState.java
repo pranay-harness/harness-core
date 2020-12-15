@@ -316,7 +316,7 @@ public class HelmDeployState extends State {
       String accountId, String appId, String activityId, ImageDetails imageDetails, String repoName,
       GitConfig gitConfig, List<EncryptedDataDetail> encryptedDataDetails, String commandFlags,
       K8sDelegateManifestConfig manifestConfig, Map<K8sValuesLocation, ApplicationManifest> appManifestMap,
-      HelmVersion helmVersion) {
+      HelmVersion helmVersion, HelmCommandFlag helmCommandFlag) {
     List<String> helmValueOverridesYamlFilesEvaluated =
         getValuesYamlOverrides(context, containerServiceParams, imageDetails, appManifestMap);
 
@@ -339,11 +339,8 @@ public class HelmDeployState extends State {
             .encryptedDataDetails(encryptedDataDetails)
             .commandFlags(commandFlags)
             .sourceRepoConfig(manifestConfig)
-            .helmVersion(helmVersion);
-
-    if (null != manifestConfig) {
-      helmInstallCommandRequestBuilder.helmCommandFlag(manifestConfig.getHelmCommandFlag());
-    }
+            .helmVersion(helmVersion)
+            .helmCommandFlag(helmCommandFlag);
 
     if (gitFileConfig != null) {
       helmInstallCommandRequestBuilder.gitFileConfig(gitFileConfig);
@@ -898,7 +895,7 @@ public class HelmDeployState extends State {
         encryptedDataDetails, cmdFlags, helmVersion, expressionFunctorToken, helmCommandFlag);
     HelmCommandRequest commandRequest = getHelmCommandRequest(context, helmChartSpecification, containerServiceParams,
         releaseName, app.getAccountId(), app.getUuid(), activityId, imageDetails, repoName, gitConfig,
-        encryptedDataDetails, cmdFlags, manifestConfig, appManifestMap, helmVersion);
+        encryptedDataDetails, cmdFlags, manifestConfig, appManifestMap, helmVersion, helmCommandFlag);
 
     commandRequest.setK8SteadyStateCheckEnabled(
         featureFlagService.isEnabled(FeatureName.HELM_STEADY_STATE_CHECK_1_16, context.getAccountId()));

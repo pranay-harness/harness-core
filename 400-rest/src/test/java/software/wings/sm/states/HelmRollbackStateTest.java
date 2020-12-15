@@ -56,6 +56,6 @@ public class HelmRollbackStateTest extends WingsBaseTest {
         HelmChartSpecification.builder().build(), ContainerServiceParams.builder().build(), "release-name",
         WingsTestConstants.ACCOUNT_ID, WingsTestConstants.APP_ID, WingsTestConstants.ACTIVITY_ID,
         ImageDetails.builder().build(), "repo", GitConfig.builder().build(), Collections.emptyList(), null,
-        K8sDelegateManifestConfig.builder().build(), Collections.emptyMap(), HelmVersion.V3);
+        K8sDelegateManifestConfig.builder().build(), Collections.emptyMap(), HelmVersion.V3, null);
   }
 }
