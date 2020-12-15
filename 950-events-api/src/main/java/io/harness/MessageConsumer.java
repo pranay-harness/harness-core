@@ -1,8 +1,8 @@
 package io.harness;
 
-import io.harness.eventsframework.ProjectUpdate;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.impl.RedisConsumer;
+import io.harness.eventsframework.project.ProjectEntityChangeDTO;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.redis.RedisPersistentLocker;
 import io.harness.redis.RedisConfig;
@@ -81,12 +81,12 @@ public class MessageConsumer implements Runnable {
   private void processMessage(Optional<Message> message) throws InterruptedException, InvalidProtocolBufferException {
     if (message.isPresent()) {
       Message actualMessage = message.get();
-      ProjectUpdate p = ProjectUpdate.parseFrom(actualMessage.getMessage().getData());
+      ProjectEntityChangeDTO p = ProjectEntityChangeDTO.parseFrom(actualMessage.getMessage().getData());
       log.info("{}Reading messageId: {} for Consumer - {} - pid: {}{}", color, actualMessage.getId(),
-          this.client.getName(), p.getProjectIdentifier(), ColorConstants.TEXT_RESET);
+          this.client.getName(), p.getIdentifier(), ColorConstants.TEXT_RESET);
       Thread.sleep(processingTime);
-      log.info("{}Done processing for Consumer - {} - pid: {}{}", color, this.client.getName(),
-          p.getProjectIdentifier(), ColorConstants.TEXT_RESET);
+      log.info("{}Done processing for Consumer - {} - pid: {}{}", color, this.client.getName(), p.getIdentifier(),
+          ColorConstants.TEXT_RESET);
       client.acknowledge(actualMessage.getId());
     }
   }

@@ -242,6 +242,7 @@ public class SecretCrudServiceImplTest extends CategoryTest {
         .thenReturn(Response.success(new RestResponse<>(true)));
     when(ngSecretServiceV2.delete(any(), any(), any(), any())).thenReturn(true);
     doNothing().when(secretEntityReferenceHelper).deleteSecretEntityReferenceWhenSecretGetsDeleted(any());
+    when(ngSecretServiceV2.get(any(), any(), any(), any())).thenReturn(Optional.empty());
     boolean success = secretCrudService.delete("account", null, null, "identifier");
 
     assertThat(success).isTrue();

@@ -15,6 +15,8 @@ public class VaultEntityToDTO implements ConnectorEntityToDTOMapper<VaultConnect
         .secretEngineName(connector.getSecretEngineName())
         .secretEngineVersion(connector.getSecretEngineVersion())
         .renewIntervalHours(connector.getRenewalIntervalHours())
+        .basePath(connector.getBasePath())
+        .appRoleId(connector.getAppRoleId())
         .build();
   }
 }

@@ -203,10 +203,6 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
         getSecretManager(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     if (secretManagerConfigOptional.isPresent()) {
       SecretManagerConfig secretManagerConfig = secretManagerConfigOptional.get();
-      if (Boolean.TRUE.equals(secretManagerConfig.getNgMetadata().getHarnessManaged())) {
-        throw new UnsupportedOperationException(
-            String.format("Delete operation not supported for Harness Secret Manager (identifier: [%s])", identifier));
-      }
       switch (secretManagerConfig.getEncryptionType()) {
         case VAULT:
           VaultConfig vaultConfig = (VaultConfig) secretManagerConfig;
@@ -214,6 +210,10 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
         case GCP_KMS:
           GcpKmsConfig gcpKmsConfig = (GcpKmsConfig) secretManagerConfig;
           return gcpSecretsManagerService.deleteGcpKmsConfig(gcpKmsConfig.getAccountId(), gcpKmsConfig.getUuid());
+        case LOCAL:
+          LocalEncryptionConfig localEncryptionConfig = (LocalEncryptionConfig) secretManagerConfig;
+          return localSecretManagerService.deleteLocalEncryptionConfig(
+              localEncryptionConfig.getAccountId(), localEncryptionConfig.getUuid());
         default:
           throw new UnsupportedOperationException("Secret manager not supported");
       }

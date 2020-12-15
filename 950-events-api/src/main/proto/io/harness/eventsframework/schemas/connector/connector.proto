@@ -5,7 +5,7 @@ import "google/protobuf/wrappers.proto";
 
 option java_multiple_files = true;
 
-message ConnectorUpdateEventDTO {
+message ConnectorEntityChangeDTO {
   google.protobuf.StringValue identifier = 1;
   google.protobuf.StringValue accountIdentifier = 2;
   google.protobuf.StringValue orgIdentifier = 3;

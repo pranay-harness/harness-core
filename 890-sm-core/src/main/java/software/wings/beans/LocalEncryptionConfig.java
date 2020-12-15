@@ -37,7 +37,6 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = false)
 public class LocalEncryptionConfig extends SecretManagerConfig {
   public static final String HARNESS_DEFAULT_SECRET_MANAGER = "Harness Secrets Manager";
-  private String uuid;
   @Builder.Default private String name = HARNESS_DEFAULT_SECRET_MANAGER;
 
   @Override

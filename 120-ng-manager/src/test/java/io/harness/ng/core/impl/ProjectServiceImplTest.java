@@ -104,6 +104,9 @@ public class ProjectServiceImplTest extends CategoryTest {
 
     Project createdProject = projectService.create(accountIdentifier, orgIdentifier, projectDTO);
 
+    ArgumentCaptor<Message> producerMessage = ArgumentCaptor.forClass(Message.class);
+    verify(eventProducer, times(1)).send(producerMessage.capture());
+
     assertEquals(project, createdProject);
   }
 

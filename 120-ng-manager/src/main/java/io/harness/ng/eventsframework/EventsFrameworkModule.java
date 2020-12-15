@@ -17,8 +17,7 @@ import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public class EventsFrameworkModule extends AbstractModule {
-  public static final String PROJECT_UPDATE_PRODUCER = "project_update_producer";
-  public static final String CONNECTOR_UPDATE_PRODUCER = "connector_update_producer";
+  public static final String ENTITY_CRUD = "entity_crud";
   public static final String SETUP_USAGE_CREATE = "setup_usage_create";
   public static final String SETUP_USAGE_DELETE = "setup_usage_delete";
 
@@ -29,10 +28,7 @@ public class EventsFrameworkModule extends AbstractModule {
     RedisConfig redisConfig = this.eventsFrameworkConfiguration.getRedisConfig();
     if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
       bind(AbstractProducer.class)
-          .annotatedWith(Names.named(PROJECT_UPDATE_PRODUCER))
-          .toInstance(new NoOpProducer("dummy_topic_name"));
-      bind(AbstractProducer.class)
-          .annotatedWith(Names.named(CONNECTOR_UPDATE_PRODUCER))
+          .annotatedWith(Names.named(ENTITY_CRUD))
           .toInstance(new NoOpProducer("dummy_topic_name"));
       bind(AbstractProducer.class)
           .annotatedWith(Names.named(SETUP_USAGE_CREATE))
@@ -48,11 +44,8 @@ public class EventsFrameworkModule extends AbstractModule {
           .toInstance(new NoOpConsumer("dummy_topic_name", "dummy_group_name", "dummy_name"));
     } else {
       bind(AbstractProducer.class)
-          .annotatedWith(Names.named(PROJECT_UPDATE_PRODUCER))
-          .toInstance(new RedisProducer("project_update", redisConfig));
-      bind(AbstractProducer.class)
-          .annotatedWith(Names.named(CONNECTOR_UPDATE_PRODUCER))
-          .toInstance(new RedisProducer("connector_update", redisConfig));
+          .annotatedWith(Names.named(ENTITY_CRUD))
+          .toInstance(new RedisProducer(ENTITY_CRUD, redisConfig));
       bind(AbstractConsumer.class)
           .annotatedWith(Names.named(SETUP_USAGE_CREATE))
           .toInstance(new RedisConsumer(SETUP_USAGE_CREATE, NG_MANAGER.getServiceId(), redisConfig));

@@ -1,18 +1,24 @@
 package io.harness.ng.core.impl;
 
+import static io.harness.EntityCRUDEventsConstants.ACTION_METADATA;
+import static io.harness.EntityCRUDEventsConstants.CREATE_ACTION;
+import static io.harness.EntityCRUDEventsConstants.DELETE_ACTION;
+import static io.harness.EntityCRUDEventsConstants.ENTITY_TYPE_METADATA;
+import static io.harness.EntityCRUDEventsConstants.PROJECT_ENTITY;
+import static io.harness.EntityCRUDEventsConstants.UPDATE_ACTION;
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
-import static io.harness.ng.NextGenModule.SECRET_MANAGER_CONNECTOR_SERVICE;
+import static io.harness.ng.NextGenModule.CONNECTOR_DECORATOR_SERVICE;
 import static io.harness.ng.core.remote.ProjectMapper.toProject;
 import static io.harness.ng.core.utils.NGUtils.getConnectorRequestDTO;
 import static io.harness.ng.core.utils.NGUtils.getDefaultHarnessSecretManagerName;
 import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
-import static io.harness.ng.eventsframework.EventsFrameworkModule.PROJECT_UPDATE_PRODUCER;
+import static io.harness.ng.eventsframework.EventsFrameworkModule.ENTITY_CRUD;
 
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -21,9 +27,9 @@ import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.connector.services.ConnectorService;
-import io.harness.eventsframework.ProjectUpdate;
 import io.harness.eventsframework.api.AbstractProducer;
 import io.harness.eventsframework.producer.Message;
+import io.harness.eventsframework.project.ProjectEntityChangeDTO;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -47,6 +53,7 @@ import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.PrincipalType;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -79,8 +86,8 @@ public class ProjectServiceImpl implements ProjectService {
   @Inject
   public ProjectServiceImpl(ProjectRepository projectRepository, OrganizationService organizationService,
       NGSecretManagerService ngSecretManagerService,
-      @Named(SECRET_MANAGER_CONNECTOR_SERVICE) ConnectorService secretManagerConnectorService,
-      @Named(PROJECT_UPDATE_PRODUCER) AbstractProducer eventProducer, NgUserService ngUserService) {
+      @Named(CONNECTOR_DECORATOR_SERVICE) ConnectorService secretManagerConnectorService,
+      @Named(ENTITY_CRUD) AbstractProducer eventProducer, NgUserService ngUserService) {
     this.projectRepository = projectRepository;
     this.organizationService = organizationService;
     this.ngSecretManagerService = ngSecretManagerService;
@@ -109,6 +116,7 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   private void performActionsPostProjectCreation(Project project) {
+    publishEvent(project, CREATE_ACTION);
     createHarnessSecretManager(project);
     createUserProjectMap(project);
   }
@@ -180,25 +188,28 @@ public class ProjectServiceImpl implements ProjectService {
       List<ModuleType> moduleTypeList = verifyModulesNotRemoved(existingProject.getModules(), project.getModules());
       project.setModules(moduleTypeList);
       validate(project);
-      publishUpdates(project);
-      return projectRepository.save(project);
+      Project updatedProject = projectRepository.save(project);
+      publishEvent(existingProject, UPDATE_ACTION);
+      return updatedProject;
     }
     throw new InvalidRequestException(
         String.format("Project with identifier [%s] and orgIdentifier [%s] not found", identifier, orgIdentifier),
         USER);
   }
 
-  private void publishUpdates(Project project) {
+  private void publishEvent(Project project, String action) {
     eventProducer.send(Message.newBuilder()
-                           .putMetadata("accountId", project.getAccountIdentifier())
+                           .putAllMetadata(ImmutableMap.of("accountId", project.getAccountIdentifier(),
+                               ENTITY_TYPE_METADATA, PROJECT_ENTITY, ACTION_METADATA, action))
                            .setData(getProjectPayload(project))
                            .build());
   }
 
   private ByteString getProjectPayload(Project project) {
-    return ProjectUpdate.newBuilder()
-        .setProjectIdentifier(project.getIdentifier())
+    return ProjectEntityChangeDTO.newBuilder()
+        .setIdentifier(project.getIdentifier())
         .setOrgIdentifier(project.getOrgIdentifier())
+        .setAccountIdentifier(project.getAccountIdentifier())
         .build()
         .toByteString();
   }
@@ -258,7 +269,18 @@ public class ProjectServiceImpl implements ProjectService {
   @DefaultOrganization
   public boolean delete(String accountIdentifier, @OrgIdentifier String orgIdentifier,
       @ProjectIdentifier String projectIdentifier, Long version) {
-    return projectRepository.delete(accountIdentifier, orgIdentifier, projectIdentifier, version);
+    boolean delete = projectRepository.delete(accountIdentifier, orgIdentifier, projectIdentifier, version);
+    if (delete) {
+      publishEvent(Project.builder()
+                       .accountIdentifier(accountIdentifier)
+                       .orgIdentifier(orgIdentifier)
+                       .identifier(projectIdentifier)
+                       .build(),
+          DELETE_ACTION);
+      secretManagerConnectorService.delete(
+          accountIdentifier, orgIdentifier, projectIdentifier, HARNESS_SECRET_MANAGER_IDENTIFIER);
+    }
+    return delete;
   }
 
   private void validateCreateProjectRequest(String accountIdentifier, String orgIdentifier, ProjectDTO project) {

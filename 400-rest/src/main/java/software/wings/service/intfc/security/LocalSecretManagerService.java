@@ -16,4 +16,6 @@ public interface LocalSecretManagerService {
   String saveLocalEncryptionConfig(String accountId, LocalEncryptionConfig localEncryptionConfig);
 
   void validateLocalEncryptionConfig(String accountId, LocalEncryptionConfig localEncryptionConfig);
+
+  boolean deleteLocalEncryptionConfig(String accountId, String uuid);
 }

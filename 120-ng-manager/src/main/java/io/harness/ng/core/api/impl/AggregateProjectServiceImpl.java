@@ -73,15 +73,22 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
     organizationOptional.ifPresent(organization -> projectAggregateDTOBuilder.organization(writeDto(organization)));
 
     // admins and collaborators
-    Pair<List<UserSearchDTO>, List<UserSearchDTO> > projectUsers =
-        getAdminsAndCollaborators(accountIdentifier, orgIdentifier, identifier);
-    projectAggregateDTOBuilder.admins(projectUsers.getLeft());
-    projectAggregateDTOBuilder.collaborators(projectUsers.getRight());
+    try {
+      Pair<List<UserSearchDTO>, List<UserSearchDTO>> projectUsers =
+          getAdminsAndCollaborators(accountIdentifier, orgIdentifier, identifier);
+      projectAggregateDTOBuilder.admins(projectUsers.getLeft());
+      projectAggregateDTOBuilder.collaborators(projectUsers.getRight());
+    } catch (Exception exception) {
+      log.error(String.format(
+                    "Could not fetch Admins and Collaborators for project with identifier [%s] and orgIdentifier [%s]",
+                    identifier, orgIdentifier),
+          exception);
+    }
 
     return projectAggregateDTOBuilder.build();
   }
 
-  private Pair<List<UserSearchDTO>, List<UserSearchDTO> > getAdminsAndCollaborators(
+  private Pair<List<UserSearchDTO>, List<UserSearchDTO>> getAdminsAndCollaborators(
       String accountIdentifier, String orgIdentifier, String identifier) {
     Criteria userProjectMapCriteria = Criteria.where(UserProjectMapKeys.accountIdentifier)
                                           .is(accountIdentifier)
@@ -151,13 +158,17 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
             projectAggregateDTO.getProjectResponse().getProject().getOrgIdentifier(), null)));
 
     // admins and collaborators
-    addAdminsAndCollaborators(projectAggregateDTOs, accountIdentifier, projects);
+    try {
+      addAdminsAndCollaborators(projectAggregateDTOs, accountIdentifier, projects);
+    } catch (Exception exception) {
+      log.error("Could not fetch Admins and Collaborators for projects in the account", exception);
+    }
   }
 
   private void addAdminsAndCollaborators(
       Page<ProjectAggregateDTO> projectAggregateDTOs, String accountIdentifier, Page<ProjectResponse> projects) {
     List<UserProjectMap> userProjectMaps = getOrgProjectUserMaps(accountIdentifier, projects);
-    Map<String, List<UserProjectMap> > orgProjectUserMap = getOrgProjectUserMap(userProjectMaps);
+    Map<String, List<UserProjectMap>> orgProjectUserMap = getOrgProjectUserMap(userProjectMaps);
     List<String> userIds = userProjectMaps.stream().map(UserProjectMap::getUserId).collect(Collectors.toList());
     Map<String, UserSearchDTO> userMap = getUserMap(userIds);
 
@@ -200,8 +211,8 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
     return ngUserService.listUserProjectMap(userProjectMapCriteria);
   }
 
-  private Map<String, List<UserProjectMap> > getOrgProjectUserMap(List<UserProjectMap> userProjectMaps) {
-    Map<String, List<UserProjectMap> > orgProjectUserMap = new HashMap<>();
+  private Map<String, List<UserProjectMap>> getOrgProjectUserMap(List<UserProjectMap> userProjectMaps) {
+    Map<String, List<UserProjectMap>> orgProjectUserMap = new HashMap<>();
     userProjectMaps.forEach(userProjectMap -> {
       String orgProjectId =
           getUniqueOrgProjectId(userProjectMap.getOrgIdentifier(), userProjectMap.getProjectIdentifier());

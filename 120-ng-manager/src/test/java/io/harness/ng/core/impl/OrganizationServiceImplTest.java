@@ -23,6 +23,9 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
+import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.impl.NoOpProducer;
+import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.dto.OrganizationDTO;
@@ -51,6 +54,7 @@ public class OrganizationServiceImplTest extends CategoryTest {
   private NGSecretManagerService ngSecretManagerService;
   private ConnectorService secretManagerConnectorService;
   private OrganizationServiceImpl organizationService;
+  private AbstractProducer eventProducer;
   private NgUserService ngUserService;
 
   @Before
@@ -58,9 +62,10 @@ public class OrganizationServiceImplTest extends CategoryTest {
     organizationRepository = mock(OrganizationRepository.class);
     ngSecretManagerService = mock(NGSecretManagerService.class);
     secretManagerConnectorService = mock(ConnectorService.class);
+    eventProducer = mock(NoOpProducer.class);
     ngUserService = mock(NgUserService.class);
     organizationService = spy(new OrganizationServiceImpl(
-        organizationRepository, ngSecretManagerService, secretManagerConnectorService, ngUserService));
+        organizationRepository, ngSecretManagerService, secretManagerConnectorService, eventProducer, ngUserService));
   }
 
   private OrganizationDTO createOrganizationDTO(String accountIdentifier, String identifier) {
@@ -87,6 +92,9 @@ public class OrganizationServiceImplTest extends CategoryTest {
     when(ngUserService.createUserProjectMap(any())).thenReturn(UserProjectMap.builder().build());
 
     Organization createdOrganization = organizationService.create(accountIdentifier, organizationDTO);
+
+    ArgumentCaptor<Message> producerMessage = ArgumentCaptor.forClass(Message.class);
+    verify(eventProducer, times(1)).send(producerMessage.capture());
 
     assertEquals(organization, createdOrganization);
   }
@@ -119,6 +127,9 @@ public class OrganizationServiceImplTest extends CategoryTest {
     when(organizationService.get(accountIdentifier, identifier)).thenReturn(Optional.of(organization));
 
     Organization updatedOrganization = organizationService.update(accountIdentifier, identifier, organizationDTO);
+
+    ArgumentCaptor<Message> producerMessage = ArgumentCaptor.forClass(Message.class);
+    verify(eventProducer, times(1)).send(producerMessage.capture());
 
     assertEquals(organization, updatedOrganization);
   }
