@@ -220,7 +220,8 @@ public class ArtifactCollectionUtils {
     } else if (artifactStreamType.equals(AMAZON_S3.name()) || artifactStreamType.equals(GCS.name())) {
       Map<String, String> buildParameters = buildDetails.getBuildParameters();
       metadata.put(ArtifactMetadataKeys.artifactPath, buildParameters.get(ArtifactMetadataKeys.artifactPath));
-      metadata.put(ArtifactMetadataKeys.artifactFileName, buildParameters.get(ArtifactMetadataKeys.artifactPath));
+      metadata.put(ArtifactMetadataKeys.artifactFileName,
+          buildDetails.getNumber().substring(buildDetails.getNumber().lastIndexOf('/') + 1));
       metadata.put(ArtifactMetadataKeys.buildNo, buildParameters.get(ArtifactMetadataKeys.buildNo));
       metadata.put(ArtifactMetadataKeys.bucketName, buildParameters.get(ArtifactMetadataKeys.bucketName));
       metadata.put(ArtifactMetadataKeys.key, buildParameters.get(ArtifactMetadataKeys.key));
