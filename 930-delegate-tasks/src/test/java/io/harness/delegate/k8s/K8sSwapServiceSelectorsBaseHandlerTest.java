@@ -1,6 +1,5 @@
-package software.wings.delegatetasks;
+package io.harness.delegate.k8s;
 
-import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.PUNEET;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,47 +9,35 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.annotations.dev.Module;
-import io.harness.annotations.dev.TargetModule;
-import io.harness.beans.ExecutionStatus;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.DelegateTaskPackage;
-import io.harness.delegate.beans.TaskData;
 import io.harness.k8s.KubernetesContainerService;
+import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
-
-import software.wings.WingsBaseTest;
-import software.wings.beans.container.KubernetesSwapServiceSelectorsParams;
-import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
-import software.wings.service.impl.ContainerServiceParams;
-import software.wings.sm.states.KubernetesSwapServiceSelectorsResponse;
 
 import com.google.common.collect.ImmutableMap;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
 import java.util.Map;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
-public class KubernetesSwapServiceSelectorsTaskTest extends WingsBaseTest {
-  @Mock private DelegateLogService delegateLogService;
-  @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
+public class K8sSwapServiceSelectorsBaseHandlerTest extends CategoryTest {
   @Mock private KubernetesContainerService kubernetesContainerService;
+  @Mock private LogCallback logCallback;
 
-  @InjectMocks
-  private KubernetesSwapServiceSelectorsTask kubernetesSwapServiceSelectorsTask =
-      new KubernetesSwapServiceSelectorsTask(
-          DelegateTaskPackage.builder()
-              .delegateId("delid1")
-              .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+  @InjectMocks private K8sSwapServiceSelectorsBaseHandler k8sSwapServiceSelectorsBaseHandler;
 
-              .build(),
-          null, notifyResponseData -> {}, () -> true);
+  @Before
+  public void setUp() throws Exception {
+    MockitoAnnotations.initMocks(this);
+  }
 
   private Service createService(String serviceName, Map<String, String> labelSelectors) {
     ServiceSpecBuilder spec = new ServiceSpecBuilder().withSelector(labelSelectors);
@@ -65,7 +52,6 @@ public class KubernetesSwapServiceSelectorsTaskTest extends WingsBaseTest {
     Service service1 = createService("service1", ImmutableMap.of("label", "A"));
     Service service2 = createService("service2", ImmutableMap.of("label", "B"));
 
-    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(ContainerServiceParams.class))).thenReturn(null);
     when(kubernetesContainerService.getServiceFabric8(any(), eq(service1.getMetadata().getName())))
         .thenReturn(service1);
     when(kubernetesContainerService.getServiceFabric8(any(), eq(service2.getMetadata().getName())))
@@ -73,14 +59,9 @@ public class KubernetesSwapServiceSelectorsTaskTest extends WingsBaseTest {
     when(kubernetesContainerService.createOrReplaceService(any(), any()))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArguments()[1]);
 
-    KubernetesSwapServiceSelectorsParams params = KubernetesSwapServiceSelectorsParams.builder()
-                                                      .service1(service1.getMetadata().getName())
-                                                      .service2(service2.getMetadata().getName())
-                                                      .build();
-
-    KubernetesSwapServiceSelectorsResponse response = kubernetesSwapServiceSelectorsTask.run(new Object[] {params});
-
-    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    boolean success =
+        k8sSwapServiceSelectorsBaseHandler.swapServiceSelectors(null, "service1", "service2", logCallback);
+    assertThat(success).isTrue();
 
     ArgumentCaptor<Service> serviceArgumentCaptor = ArgumentCaptor.forClass(Service.class);
 

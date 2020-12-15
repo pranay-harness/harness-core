@@ -8,5 +8,4 @@ public interface K8sDeployRequest extends TaskParameters {
   K8sInfraDelegateConfig getK8sInfraDelegateConfig();
   ManifestDelegateConfig getManifestDelegateConfig();
   Integer getTimeoutIntervalInMin();
-  boolean isDeprecateFabric8Enabled();
 }
