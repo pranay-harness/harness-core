@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.service;
+
+option java_multiple_files = true;
+
+import "io/harness/pms/contracts/execution/execution_error_info.proto";
+import "io/harness/pms/contracts/execution/status.proto";
+
+service PmsExecutionService {
+  rpc updateExecutionSummary(ExecutionSummaryRequest) returns (ExecutionSummaryResponse);
+}
+
+message ExecutionSummaryRequest {
+  string pipelineExecutionSummaryEntityId = 1;
+  string moduleName = 2;
+  string stageIdentifier = 3;
+  string stageModuleInfoJson = 4;
+  string pipelineModuleInfoJson = 5;
+  io.harness.pms.contracts.execution.Status status = 6;
+  io.harness.pms.contracts.execution.ExecutionErrorInfo executionErrorInfo = 7;
+}
+
+message ExecutionSummaryResponse {}

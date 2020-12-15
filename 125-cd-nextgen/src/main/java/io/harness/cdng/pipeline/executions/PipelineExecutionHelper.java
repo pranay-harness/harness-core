@@ -19,8 +19,8 @@ import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary.
 import io.harness.ngpipeline.pipeline.executions.beans.ServiceExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.StageExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.registries.StageTypeToStageExecutionMapperHelperRegistry;
+import io.harness.pms.contracts.execution.ExecutionErrorInfo;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.execution.beans.ExecutionErrorInfo;
 import io.harness.yaml.core.ParallelStageElement;
 import io.harness.yaml.core.StageElement;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
@@ -94,7 +94,7 @@ public class PipelineExecutionHelper {
       cdStageExecutionSummary.setEndedAt(nodeExecution.getEndTs());
       if (nodeExecution.getFailureInfo() != null) {
         cdStageExecutionSummary.setErrorInfo(
-            ExecutionErrorInfo.builder().message(nodeExecution.getFailureInfo().getErrorMessage()).build());
+            ExecutionErrorInfo.newBuilder().setMessage(nodeExecution.getFailureInfo().getErrorMessage()).build());
       }
     }
     return cdStageExecutionSummary;
@@ -166,7 +166,7 @@ public class PipelineExecutionHelper {
       pipelineExecutionSummary.setEndedAt(nodeExecution.getEndTs());
       if (nodeExecution.getFailureInfo() != null) {
         pipelineExecutionSummary.setErrorInfo(
-            ExecutionErrorInfo.builder().message(nodeExecution.getFailureInfo().getErrorMessage()).build());
+            ExecutionErrorInfo.newBuilder().setMessage(nodeExecution.getFailureInfo().getErrorMessage()).build());
       }
     } else {
       pipelineExecutionSummary.setStartedAt(nodeExecution.getStartTs());
