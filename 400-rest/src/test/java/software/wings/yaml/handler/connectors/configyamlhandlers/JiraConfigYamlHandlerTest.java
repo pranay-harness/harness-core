@@ -18,7 +18,6 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.JiraConfigYamlHandler;
 
 import com.google.inject.Inject;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -33,9 +32,6 @@ public class JiraConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTest
       + "password: safeharness:DBAtpYCHSx2fPG8MIFQFmA\n"
       + "harnessApiVersion: '1.0'\n"
       + "type: JIRA";
-
-  @Before
-  public void setUp() throws Exception {}
 
   @Test
   @Owner(developers = GEORGE)
@@ -54,17 +50,18 @@ public class JiraConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTest
     // Generate JIRA connector
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
 
-    return settingsService.save(aSettingAttribute()
-                                    .withCategory(SettingCategory.CONNECTOR)
-                                    .withName(name)
-                                    .withAccountId(ACCOUNT_ID)
-                                    .withValue(JiraConfig.builder()
-                                                   .accountId(ACCOUNT_ID)
-                                                   .baseUrl(url)
-                                                   .username(userName)
-                                                   .password(password.toCharArray())
-                                                   .build())
-                                    .build());
+    return settingsService.save(
+        aSettingAttribute()
+            .withCategory(SettingCategory.CONNECTOR)
+            .withName(name)
+            .withAccountId(ACCOUNT_ID)
+            .withValue(JiraConfig.builder()
+                           .accountId(ACCOUNT_ID)
+                           .baseUrl(url)
+                           .username(userName)
+                           .password(createSecretText(ACCOUNT_ID, "password", password).toCharArray())
+                           .build())
+            .build());
   }
 
   private SettingValueYamlConfig generateSettingValueYamlConfig(String name, SettingAttribute settingAttributeSaved) {

@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -18,8 +19,6 @@ import software.wings.yaml.handler.connectors.configyamlhandlers.SettingValueCon
 import software.wings.yaml.handler.connectors.configyamlhandlers.SettingValueYamlConfig;
 
 import com.google.inject.Inject;
-import java.util.UUID;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -34,9 +33,6 @@ public class InstanaConfigYamlHandlerTest extends SettingValueConfigYamlHandlerT
       + "type: NEW_RELIC";
 
   private Class yamlClass = InstanaConfig.Yaml.class;
-
-  @Before
-  public void setUp() throws Exception {}
 
   @Test
   @Owner(developers = KAMAL)
@@ -62,16 +58,17 @@ public class InstanaConfigYamlHandlerTest extends SettingValueConfigYamlHandlerT
 
   private SettingAttribute createInstanaProviderNameVerificationProvider(String instanaProviderName) {
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
-    return settingsService.save(aSettingAttribute()
-                                    .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
-                                    .withName(instanaProviderName)
-                                    .withAccountId(ACCOUNT_ID)
-                                    .withValue(InstanaConfig.builder()
-                                                   .instanaUrl("https://instana-example.com/")
-                                                   .accountId(ACCOUNT_ID)
-                                                   .apiToken(UUID.randomUUID().toString().toCharArray())
-                                                   .build())
-                                    .build());
+    return settingsService.save(
+        aSettingAttribute()
+            .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
+            .withName(instanaProviderName)
+            .withAccountId(ACCOUNT_ID)
+            .withValue(InstanaConfig.builder()
+                           .instanaUrl("https://instana-example.com/")
+                           .accountId(ACCOUNT_ID)
+                           .apiToken(createSecretText(ACCOUNT_ID, "apiToken", generateUuid()).toCharArray())
+                           .build())
+            .build());
   }
 
   private SettingValueYamlConfig generateSettingValueYamlConfig(String name, SettingAttribute settingAttributeSaved) {

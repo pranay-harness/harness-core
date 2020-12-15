@@ -18,7 +18,6 @@ import software.wings.beans.SumoConfig;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.SumoConfigYamlHandler;
 
 import com.google.inject.Inject;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -35,9 +34,6 @@ public class SumoConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTest
       + "type: SUMO\n";
 
   private Class yamlClass = SumoConfig.Yaml.class;
-
-  @Before
-  public void setUp() throws Exception {}
 
   @Test
   @Owner(developers = ADWAIT)
@@ -67,8 +63,8 @@ public class SumoConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTest
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
 
     SumoConfig sumoConfig = new SumoConfig();
-    sumoConfig.setAccessId(acessId.toCharArray());
-    sumoConfig.setAccessKey(accesskey.toCharArray());
+    sumoConfig.setAccessId(createSecretText(ACCOUNT_ID, "accessId", acessId).toCharArray());
+    sumoConfig.setAccessKey(createSecretText(ACCOUNT_ID, "accesskey", accesskey).toCharArray());
     sumoConfig.setSumoUrl(url);
     sumoConfig.setAccountId(ACCOUNT_ID);
 

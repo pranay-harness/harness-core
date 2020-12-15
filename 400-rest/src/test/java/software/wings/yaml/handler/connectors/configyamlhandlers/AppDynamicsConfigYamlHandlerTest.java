@@ -18,7 +18,6 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.AppDynamicsConfigYamlHandler;
 
 import com.google.inject.Inject;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -35,9 +34,6 @@ public class AppDynamicsConfigYamlHandlerTest extends SettingValueConfigYamlHand
       + "type: APP_DYNAMICS";
 
   private Class yamlClass = AppDynamicsConfig.Yaml.class;
-
-  @Before
-  public void setUp() throws Exception {}
 
   @Test
   @Owner(developers = ADWAIT)
@@ -67,18 +63,19 @@ public class AppDynamicsConfigYamlHandlerTest extends SettingValueConfigYamlHand
     // Generate appdynamics verification connector
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
 
-    return settingsService.save(aSettingAttribute()
-                                    .withCategory(SettingCategory.CONNECTOR)
-                                    .withName(appdProviderName)
-                                    .withAccountId(ACCOUNT_ID)
-                                    .withValue(AppDynamicsConfig.builder()
-                                                   .accountId(ACCOUNT_ID)
-                                                   .controllerUrl(url)
-                                                   .username(userName)
-                                                   .password(password.toCharArray())
-                                                   .accountname(accountName)
-                                                   .build())
-                                    .build());
+    return settingsService.save(
+        aSettingAttribute()
+            .withCategory(SettingCategory.CONNECTOR)
+            .withName(appdProviderName)
+            .withAccountId(ACCOUNT_ID)
+            .withValue(AppDynamicsConfig.builder()
+                           .accountId(ACCOUNT_ID)
+                           .controllerUrl(url)
+                           .username(userName)
+                           .password(createSecretText(ACCOUNT_ID, "password", password).toCharArray())
+                           .accountname(accountName)
+                           .build())
+            .build());
   }
 
   private SettingValueYamlConfig generateSettingValueYamlConfig(String name, SettingAttribute settingAttributeSaved) {

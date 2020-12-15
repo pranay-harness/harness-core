@@ -18,10 +18,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.UnauthorizedUsageRestrictionsException;
-import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.rule.Owner;
 
@@ -56,7 +54,6 @@ import software.wings.yaml.YamlHelper;
 import com.google.inject.Inject;
 import java.lang.reflect.Field;
 import java.util.List;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -70,15 +67,9 @@ public class SettingsServiceHelperTest extends WingsBaseTest {
 
   @Mock private SecretManager secretManager;
   @Mock private ManagerDecryptionService managerDecryptionService;
-  @Mock private FeatureFlagService featureFlagService;
   @Mock private UsageRestrictionsService usageRestrictionsService;
 
   @InjectMocks @Inject private SettingServiceHelper settingServiceHelper;
-
-  @Before
-  public void setup() {
-    when(featureFlagService.isEnabled(FeatureName.CONNECTORS_REF_SECRETS, ACCOUNT_ID)).thenReturn(true);
-  }
 
   @Test
   @Owner(developers = GARVIT)
@@ -91,9 +82,6 @@ public class SettingsServiceHelperTest extends WingsBaseTest {
     assertThat(settingServiceHelper.hasReferencedSecrets(settingAttribute)).isFalse();
 
     settingAttribute.setAccountId(ACCOUNT_ID);
-    when(featureFlagService.isEnabled(FeatureName.CONNECTORS_REF_SECRETS, ACCOUNT_ID)).thenReturn(false);
-    assertThat(settingServiceHelper.hasReferencedSecrets(settingAttribute)).isFalse();
-    when(featureFlagService.isEnabled(FeatureName.CONNECTORS_REF_SECRETS, ACCOUNT_ID)).thenReturn(true);
     assertThat(settingServiceHelper.hasReferencedSecrets(settingAttribute)).isTrue();
 
     settingAttribute.setValue(HttpHelmRepoConfig.builder().build());

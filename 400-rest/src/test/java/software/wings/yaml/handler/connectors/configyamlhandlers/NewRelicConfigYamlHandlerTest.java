@@ -1,5 +1,6 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ADWAIT;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -18,7 +19,6 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.NewRelicConfigYamlHandler;
 
 import com.google.inject.Inject;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -33,9 +33,6 @@ public class NewRelicConfigYamlHandlerTest extends SettingValueConfigYamlHandler
       + "type: NEW_RELIC";
 
   private Class yamlClass = NewRelicConfig.Yaml.class;
-
-  @Before
-  public void setUp() throws Exception {}
 
   @Test
   @Owner(developers = ADWAIT)
@@ -70,8 +67,11 @@ public class NewRelicConfigYamlHandlerTest extends SettingValueConfigYamlHandler
             .withCategory(SettingCategory.CONNECTOR)
             .withName(newRelicProviderName)
             .withAccountId(ACCOUNT_ID)
-            .withValue(
-                NewRelicConfig.builder().accountId(ACCOUNT_ID).newRelicUrl(url).apiKey(apiKey.toCharArray()).build())
+            .withValue(NewRelicConfig.builder()
+                           .accountId(ACCOUNT_ID)
+                           .newRelicUrl(url)
+                           .apiKey(createSecretText(ACCOUNT_ID, generateUuid(), apiKey).toCharArray())
+                           .build())
             .build());
   }
 

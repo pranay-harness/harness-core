@@ -18,6 +18,7 @@ import io.harness.ccm.config.CCMConfigYamlHandler;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.k8s.model.OidcGrantType;
 import io.harness.rule.Owner;
+import io.harness.scm.SecretName;
 
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesClusterConfig.Yaml;
@@ -36,6 +37,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 public class KubernetesClusterConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
+  @Inject YamlHandlersSecretGeneratorHelper yamlHandlersSecretGeneratorHelper;
   @Mock private CCMSettingService ccmSettingService;
   @Mock private CCMConfigYamlHandler ccmConfigYamlHandler;
   @InjectMocks @Inject private KubernetesClusterConfigYamlHandler yamlHandler;
@@ -44,10 +46,13 @@ public class KubernetesClusterConfigYamlHandlerTest extends SettingValueConfigYa
   public static final String password = "dummyPassword";
   public static final String SAMPLE_STRING = "sample-string";
   private Class yamlClass = KubernetesClusterConfig.Yaml.class;
+  private static String secretKey;
 
   @Before
   public void setUp() {
     when(ccmSettingService.isCloudCostEnabled(anyString())).thenReturn(false);
+    SecretName secretName = SecretName.builder().value("pcf_password").build();
+    secretKey = yamlHandlersSecretGeneratorHelper.generateSecret(ACCOUNT_ID, secretName);
   }
 
   @Test
@@ -144,7 +149,7 @@ public class KubernetesClusterConfigYamlHandlerTest extends SettingValueConfigYa
                                     .withValue(KubernetesClusterConfig.builder()
                                                    .masterUrl(masterUrl)
                                                    .username(username.toCharArray())
-                                                   .password(password.toCharArray())
+                                                   .password(secretKey.toCharArray())
                                                    .accountId(ACCOUNT_ID)
                                                    .skipValidation(skipValidation)
                                                    .build())
@@ -162,11 +167,11 @@ public class KubernetesClusterConfigYamlHandlerTest extends SettingValueConfigYa
                                     .withValue(KubernetesClusterConfig.builder()
                                                    .masterUrl(masterUrl)
                                                    .oidcUsername(username)
-                                                   .oidcPassword(password.toCharArray())
+                                                   .oidcPassword(secretKey.toCharArray())
                                                    .accountId(ACCOUNT_ID)
                                                    .oidcIdentityProviderUrl("oidcUrl")
-                                                   .oidcClientId("clientId".toCharArray())
-                                                   .oidcSecret("secret".toCharArray())
+                                                   .oidcClientId(secretKey.toCharArray())
+                                                   .oidcSecret(secretKey.toCharArray())
                                                    .oidcScopes("email")
                                                    .oidcGrantType(OidcGrantType.password)
                                                    .skipValidation(skipValidation)

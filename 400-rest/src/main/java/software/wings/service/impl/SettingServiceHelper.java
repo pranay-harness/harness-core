@@ -50,13 +50,11 @@ import static software.wings.settings.SettingVariableTypes.SUMO;
 import static software.wings.settings.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES;
 
 import io.harness.beans.Encryptable;
-import io.harness.beans.FeatureName;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedUsageRestrictionsException;
 import io.harness.exception.WingsException;
-import io.harness.ff.FeatureFlagService;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -94,20 +92,13 @@ public class SettingServiceHelper {
 
   @Inject private SecretManager secretManager;
   @Inject private ManagerDecryptionService managerDecryptionService;
-  @Inject private FeatureFlagService featureFlagService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private AccountService accountService;
 
   public boolean hasReferencedSecrets(SettingAttribute settingAttribute) {
     if (settingAttribute == null || settingAttribute.getValue() == null || settingAttribute.getAccountId() == null
-        || settingAttribute.getValue().getSettingType() == null) {
-      return false;
-    }
-
-    boolean isSecretsReferenceAllowed =
-        featureFlagService.isEnabled(FeatureName.CONNECTORS_REF_SECRETS, settingAttribute.getAccountId())
-        && ATTRIBUTES_USING_REFERENCES.contains(settingAttribute.getValue().getSettingType());
-    if (!isSecretsReferenceAllowed) {
+        || settingAttribute.getValue().getSettingType() == null
+        || !ATTRIBUTES_USING_REFERENCES.contains(settingAttribute.getValue().getSettingType())) {
       return false;
     }
 

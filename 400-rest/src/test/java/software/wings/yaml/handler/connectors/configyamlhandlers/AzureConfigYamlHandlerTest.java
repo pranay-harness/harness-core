@@ -13,6 +13,7 @@ import io.harness.azure.AzureEnvironmentType;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.rule.Owner;
+import io.harness.scm.SecretName;
 
 import software.wings.beans.AzureConfig;
 import software.wings.beans.SettingAttribute;
@@ -29,10 +30,10 @@ import org.mockito.Mock;
 public class AzureConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @Mock AccountService accountService;
   @Mock CCMSettingService ccmSettingService;
+  @Inject YamlHandlersSecretGeneratorHelper yamlHandlersSecretGeneratorHelper;
   @InjectMocks @Inject private AzureConfigYamlHandler yamlHandler;
   public static final String clientId = "dummyClientId";
   public static final String tenantId = "dummyTenantId";
-  public static final String key = "dummyKey";
 
   private String invalidYamlContent = "invalidClientId: dummyClientId\n"
       + "key: amazonkms:zsj_HWfkSF-3li3W-9acHA\n"
@@ -66,6 +67,8 @@ public class AzureConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTes
 
   private SettingAttribute createAzureConfigProvider(String azureConfigName) {
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
+    SecretName secretName = SecretName.builder().value("pcf_password").build();
+    String secretKey = yamlHandlersSecretGeneratorHelper.generateSecret(ACCOUNT_ID, secretName);
 
     return settingsService.save(aSettingAttribute()
                                     .withCategory(SettingCategory.CLOUD_PROVIDER)
@@ -74,7 +77,7 @@ public class AzureConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTes
                                     .withValue(AzureConfig.builder()
                                                    .clientId(clientId)
                                                    .tenantId(tenantId)
-                                                   .key(key.toCharArray())
+                                                   .key(secretKey.toCharArray())
                                                    .accountId(ACCOUNT_ID)
                                                    .azureEnvironmentType(AzureEnvironmentType.AZURE)
                                                    .build())

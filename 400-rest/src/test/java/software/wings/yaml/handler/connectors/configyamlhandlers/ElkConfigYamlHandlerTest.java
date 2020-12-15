@@ -21,7 +21,6 @@ import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.ElkConfigYamlHandler;
 
 import com.google.inject.Inject;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -39,8 +38,6 @@ public class ElkConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
       + "type: ELK";
 
   private Class yamlClass = ElkConfig.Yaml.class;
-  @Before
-  public void setUp() throws Exception {}
 
   @Test
   @Owner(developers = ADWAIT)
@@ -94,7 +91,7 @@ public class ElkConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
     elkConfig.setElkUrl(url);
     elkConfig.setKibanaVersion("0");
     elkConfig.setUsername(userName);
-    elkConfig.setPassword(password.toCharArray());
+    elkConfig.setPassword(createSecretText(ACCOUNT_ID, "password", password).toCharArray());
 
     return settingsService.save(aSettingAttribute()
                                     .withCategory(SettingCategory.CONNECTOR)

@@ -5,7 +5,6 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.USER_NAME_DECRYPTED;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,6 +14,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.harness.scm.SecretName;
 
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfConfig.Yaml;
@@ -31,6 +31,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
 public class PcfConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
+  @Inject YamlHandlersSecretGeneratorHelper yamlHandlersSecretGeneratorHelper;
   @InjectMocks @Inject private PcfConfigYamlHandler yamlHandler;
   public static final String endpointUrl = "link.com";
 
@@ -86,6 +87,8 @@ public class PcfConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
 
   private SettingAttribute createPCFConfigProvider(String pcfConfigName) {
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
+    SecretName secretName = SecretName.builder().value("pcf_password").build();
+    String secretKey = yamlHandlersSecretGeneratorHelper.generateSecret(ACCOUNT_ID, secretName);
 
     return settingsService.save(aSettingAttribute()
                                     .withCategory(SettingCategory.CLOUD_PROVIDER)
@@ -94,7 +97,7 @@ public class PcfConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
                                     .withValue(PcfConfig.builder()
                                                    .username(USER_NAME_DECRYPTED)
                                                    .endpointUrl(endpointUrl)
-                                                   .password(PASSWORD)
+                                                   .password(secretKey.toCharArray())
                                                    .accountId(ACCOUNT_ID)
                                                    .skipValidation(true)
                                                    .build())
