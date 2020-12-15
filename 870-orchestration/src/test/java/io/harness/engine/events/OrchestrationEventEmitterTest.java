@@ -18,7 +18,7 @@ import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationSubject;
 import io.harness.pms.sdk.core.events.SyncOrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.SyncOrchestrationEventHandlerProxy;
-import io.harness.pms.sdk.registries.OrchestrationEventHandlerRegistry;
+import io.harness.pms.sdk.core.registries.OrchestrationEventHandlerRegistry;
 import io.harness.rule.Owner;
 import io.harness.utils.AmbianceTestUtils;
 

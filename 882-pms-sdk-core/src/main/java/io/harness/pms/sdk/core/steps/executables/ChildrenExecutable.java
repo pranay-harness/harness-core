@@ -9,6 +9,7 @@ import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.tasks.ResponseData;
 
 import java.util.Map;
@@ -22,7 +23,7 @@ import java.util.Map;
  * additional inputs per child.
  *
  * handleChildrenResponse: All the responses from children will be accumulated in the response data map. The keys will
- * be {@link io.harness.state.io.StepResponseNotifyData}
+ * be {@link StepResponseNotifyData}
  */
 
 @OwnedBy(CDC)

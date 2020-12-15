@@ -11,8 +11,8 @@ import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.SyncOrchestrationEventHandler;
-import io.harness.pms.sdk.registries.OrchestrationEventHandlerRegistry;
-import io.harness.pms.sdk.registries.RegistryType;
+import io.harness.pms.sdk.core.registries.OrchestrationEventHandlerRegistry;
+import io.harness.pms.sdk.core.registries.RegistryType;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;

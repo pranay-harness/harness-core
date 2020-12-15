@@ -2,24 +2,23 @@ package io.harness.engine.executables;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.executables.invokers.AsyncStrategy;
-import io.harness.engine.executables.invokers.ChildChainStrategy;
-import io.harness.engine.executables.invokers.ChildStrategy;
-import io.harness.engine.executables.invokers.ChildrenStrategy;
-import io.harness.engine.executables.invokers.SyncStrategy;
-import io.harness.engine.executables.invokers.TaskChainStrategy;
-import io.harness.engine.executables.invokers.TaskStrategy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.TaskMode;
+import io.harness.pms.sdk.core.execution.ExecuteStrategy;
+import io.harness.pms.sdk.core.execution.invokers.AsyncStrategy;
+import io.harness.pms.sdk.core.execution.invokers.ChildChainStrategy;
+import io.harness.pms.sdk.core.execution.invokers.ChildStrategy;
+import io.harness.pms.sdk.core.execution.invokers.ChildrenStrategy;
+import io.harness.pms.sdk.core.execution.invokers.SyncStrategy;
+import io.harness.pms.sdk.core.execution.invokers.TaskChainStrategy;
+import io.harness.pms.sdk.core.execution.invokers.TaskStrategy;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 @OwnedBy(CDC)
-@Redesign
 public class ExecutableProcessorFactory {
   @Inject Injector injector;
 

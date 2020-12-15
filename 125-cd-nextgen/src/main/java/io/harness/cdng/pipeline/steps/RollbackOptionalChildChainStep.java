@@ -11,8 +11,8 @@ import io.harness.pms.sdk.core.steps.executables.ChildChainExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.serializer.KryoSerializer;
-import io.harness.state.io.StepResponseNotifyData;
 import io.harness.steps.section.chain.SectionChainPassThroughData;
 import io.harness.tasks.ResponseData;
 

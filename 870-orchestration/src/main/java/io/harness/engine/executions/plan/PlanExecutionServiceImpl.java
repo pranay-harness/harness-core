@@ -10,7 +10,9 @@ import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
+import io.harness.plan.Plan;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.repositories.PlanExecutionRepository;
 
@@ -83,6 +85,16 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
   public PlanExecution get(String planExecutionId) {
     return planExecutionRepository.findById(planExecutionId)
         .orElseThrow(() -> new InvalidRequestException("Plan Execution is null for id: " + planExecutionId));
+  }
+
+  @Override
+  public PlanNodeProto fetchExecutionNode(String planExecutionId, String nodeId) {
+    PlanExecution instance = get(planExecutionId);
+    if (instance == null) {
+      throw new InvalidRequestException("Execution Instance is null for id : " + planExecutionId);
+    }
+    Plan plan = instance.getPlan();
+    return plan.fetchNode(nodeId);
   }
 
   @Override

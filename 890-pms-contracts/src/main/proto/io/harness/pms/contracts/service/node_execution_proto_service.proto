@@ -14,6 +14,8 @@ service NodeExecutionProtoService {
   rpc queueTask(QueueTaskRequest) returns (QueueTaskResponse);
   rpc addExecutableResponse(AddExecutableResponseRequest) returns (AddExecutableResponseResponse);
   rpc handleStepResponse(HandleStepResponseRequest) returns (HandleStepResponseResponse);
+  rpc resumeNodeExecution(ResumeNodeExecutionRequest) returns (ResumeNodeExecutionResponse);
+  rpc accumulateResponses(AccumulateResponsesRequest) returns (AccumulateResponsesResponse);
 }
 
 message QueueNodeExecutionRequest {
@@ -48,3 +50,20 @@ message HandleStepResponseRequest {
 }
 
 message HandleStepResponseResponse {}
+
+message ResumeNodeExecutionRequest {
+  string nodeExecutionId = 1;
+  map<string, bytes> response = 2;
+  bool asyncError = 3;
+}
+
+message ResumeNodeExecutionResponse {}
+
+message AccumulateResponsesRequest {
+  string planExecutionId = 1;
+  string notifyId = 2;
+}
+
+message AccumulateResponsesResponse {
+  map<string, bytes> response = 1;
+}

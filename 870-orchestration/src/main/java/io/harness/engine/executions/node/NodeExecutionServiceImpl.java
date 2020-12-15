@@ -23,9 +23,9 @@ import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
+import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.pms.sdk.registries.StepRegistry;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 
 import com.google.inject.Inject;
@@ -36,7 +36,6 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.Document;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoTemplate;

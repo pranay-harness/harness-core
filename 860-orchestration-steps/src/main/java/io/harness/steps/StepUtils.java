@@ -7,7 +7,7 @@ import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
-import io.harness.state.io.StepResponseNotifyData;
+import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
 

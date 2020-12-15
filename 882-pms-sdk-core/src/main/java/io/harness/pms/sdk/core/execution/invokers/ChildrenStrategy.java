@@ -1,13 +1,9 @@
-package io.harness.engine.executables.invokers;
+package io.harness.pms.sdk.core.execution.invokers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.executables.ExecuteStrategy;
-import io.harness.engine.executables.InvokerPackage;
-import io.harness.engine.executables.ResumePackage;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildrenExecutableResponse;
 import io.harness.pms.contracts.execution.ChildrenExecutableResponse.Child;
@@ -17,11 +13,14 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.LevelUtils;
+import io.harness.pms.sdk.core.execution.ExecuteStrategy;
+import io.harness.pms.sdk.core.execution.InvokerPackage;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
+import io.harness.pms.sdk.core.execution.ResumePackage;
+import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.executables.ChildrenExecutable;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
-import io.harness.pms.sdk.registries.StepRegistry;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -29,7 +28,6 @@ import java.util.List;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 @OwnedBy(CDC)
-@Redesign
 public class ChildrenStrategy implements ExecuteStrategy {
   @Inject private PmsNodeExecutionService pmsNodeExecutionService;
   @Inject private StepRegistry stepRegistry;

@@ -30,8 +30,7 @@ import io.harness.pms.expression.OrchestrationField;
 import io.harness.pms.expression.OrchestrationFieldProcessor;
 import io.harness.pms.expression.OrchestrationFieldType;
 import io.harness.pms.expression.ProcessorResult;
-import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
-import io.harness.pms.sdk.registries.OrchestrationFieldRegistry;
+import io.harness.pms.sdk.core.registries.OrchestrationFieldRegistry;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;

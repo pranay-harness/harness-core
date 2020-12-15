@@ -23,9 +23,9 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.TaskChainExecutableResponse;
 import io.harness.pms.contracts.execution.TaskExecutableResponse;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.executables.Abortable;
-import io.harness.pms.sdk.registries.StepRegistry;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
