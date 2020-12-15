@@ -42,4 +42,8 @@ public interface DelegateSelectionLogsService {
 
   void logDisconnectedScalingGroup(
       BatchDelegateSelectionLog batch, String accountId, Set<String> disconnectedScalingGroup, String groupName);
+
+  void logMustExecuteOnDelegateMatched(BatchDelegateSelectionLog batch, String accountId, String delegateId);
+
+  void logMustExecuteOnDelegateNotMatched(BatchDelegateSelectionLog batch, String accountId, String delegateId);
 }

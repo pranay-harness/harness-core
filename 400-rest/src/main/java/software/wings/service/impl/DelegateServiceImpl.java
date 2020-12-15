@@ -2181,11 +2181,15 @@ public class DelegateServiceImpl implements DelegateService {
       task.setExpiry(currentTimeMillis() + task.getData().getTimeout());
     }
 
-    // order of these three calls is important, first capabilities are created, then appended, then used in
-    // pickFirstAttemptDelegate
-    generateCapabilitiesForTaskIfFeatureEnabled(task);
-    convertToExecutionCapability(task);
-    task.setPreAssignedDelegateId(assignDelegateService.pickFirstAttemptDelegate(task));
+    if (isBlank(task.getMustExecuteOnDelegateId())) {
+      // order of these three calls is important, first capabilities are created, then appended, then used in
+      // pickFirstAttemptDelegate
+      generateCapabilitiesForTaskIfFeatureEnabled(task);
+      convertToExecutionCapability(task);
+      task.setPreAssignedDelegateId(assignDelegateService.pickFirstAttemptDelegate(task));
+    } else {
+      task.setPreAssignedDelegateId(task.getMustExecuteOnDelegateId());
+    }
 
     // Ensure that broadcast happens at least 5 seconds from current time for async tasks
     if (task.getData().isAsync()) {
@@ -3053,6 +3057,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private List<DelegateTaskEvent> getQueuedEvents(String accountId, boolean sync) {
+    // TODO - add assignment filter here (scopes. selectors, ...)
     Query<DelegateTask> delegateTaskQuery =
         wingsPersistence.createQuery(DelegateTask.class)
             .filter(DelegateTaskKeys.accountId, accountId)

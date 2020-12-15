@@ -190,6 +190,37 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldSaveDelegateTaskWithPreAssignedDelegateIdSetToMustExecuteOn() {
+    String delegateId = generateUuid();
+    String taskId = generateUuid();
+
+    DelegateTask delegateTask = getDelegateTask();
+    delegateTask.getData().setAsync(false);
+    delegateTask.setMustExecuteOnDelegateId(delegateId);
+    delegateTask.setUuid(taskId);
+
+    delegateService.saveDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
+    assertThat(wingsPersistence.get(DelegateTask.class, taskId).getPreAssignedDelegateId()).isEqualTo(delegateId);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldSaveDelegateTaskWithoutPreAssignedDelegateIdSetToMustExecuteOn() {
+    String delegateId = generateUuid();
+    String taskId = generateUuid();
+
+    DelegateTask delegateTask = getDelegateTask();
+    delegateTask.getData().setAsync(false);
+    delegateTask.setUuid(taskId);
+
+    delegateService.saveDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
+    assertThat(wingsPersistence.get(DelegateTask.class, taskId).getPreAssignedDelegateId()).isNotEqualTo(delegateId);
+  }
+
+  @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldObtainDelegateName() {
