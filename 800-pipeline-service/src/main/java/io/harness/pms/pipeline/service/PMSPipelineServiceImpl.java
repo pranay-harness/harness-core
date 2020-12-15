@@ -206,6 +206,6 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     for (String catogoryName : categoryArrayName) {
       currentStepCategory = currentStepCategory.getOrCreateChildStepCategory(catogoryName);
     }
-    currentStepCategory.addStepData(StepData.builder().name(stepInfo.getName()).build());
+    currentStepCategory.addStepData(StepData.builder().name(stepInfo.getName()).type(stepInfo.getType()).build());
   }
 }

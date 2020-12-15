@@ -4,6 +4,7 @@ import io.harness.cdng.creator.filters.DeploymentStageFilterJsonCreator;
 import io.harness.cdng.creator.plan.rollback.RollbackPlanCreator;
 import io.harness.cdng.creator.plan.stage.DeploymentStagePMSPlanCreator;
 import io.harness.cdng.creator.plan.steps.CDPMSStepPlanCreator;
+import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.plancreator.execution.ExecutionPMSPlanCreator;
 import io.harness.plancreator.pipeline.NGPipelinePlanCreator;
 import io.harness.plancreator.stages.StagesPlanCreator;
@@ -58,26 +59,31 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
     StepInfo apply =
         StepInfo.newBuilder()
             .setName("Apply")
+            .setType(StepSpecTypeConstants.PLACEHOLDER)
             .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").setFolderPath("Kubernetes").build())
             .build();
     StepInfo scale =
         StepInfo.newBuilder()
             .setName("Delete")
+            .setType(StepSpecTypeConstants.PLACEHOLDER)
             .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").setFolderPath("Kubernetes").build())
             .build();
     StepInfo stageDeployment =
         StepInfo.newBuilder()
             .setName("Stage Deployment")
+            .setType(StepSpecTypeConstants.PLACEHOLDER)
             .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").setFolderPath("Kubernetes").build())
             .build();
     StepInfo k8sRolling =
         StepInfo.newBuilder()
             .setName("K8s Rolling")
+            .setType(StepSpecTypeConstants.K8S_ROLLING_DEPLOY)
             .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").setFolderPath("Kubernetes").build())
             .build();
     StepInfo k8sRollingRollback =
         StepInfo.newBuilder()
             .setName("K8s Rolling Rollback")
+            .setType(StepSpecTypeConstants.K8S_ROLLING_DEPLOY)
             .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").setFolderPath("Kubernetes").build())
             .build();
     List<StepInfo> stepInfos = new ArrayList<>();

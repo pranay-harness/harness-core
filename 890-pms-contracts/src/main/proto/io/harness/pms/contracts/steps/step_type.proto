@@ -10,7 +10,8 @@ message StepType {
 
 message StepInfo {
   string name = 1;
-  StepMetaData stepMetaData = 2;
+  string type = 2;
+  StepMetaData stepMetaData = 3;
 }
 
 message StepMetaData {
