@@ -7,11 +7,13 @@ import log_manager
 # python3 workflow_driver.py "https://qa.harness.io/gateway" "cHg3eGRfQkZSQ2ktcGZXUFlYVmp2dzo6ZEs3bkRPRVNGcG1XcWhuaEVRR2R3NjN6ZnVqYlFMZ1ZZT2pmNGEyb3dBMVdJQlBuNTVXclVVdEZjYWdCQkdJd0xwMFdPa3RxUml4VTRwRWw=" "px7xd_BFRCi-pfWPYXVjvw" "NEW" "/Users/mohitgarg" "sample" "" "" "" "12/02/2020 00:00:00" "12/05/2020 00:00:00"
 
 TOTAL_ARGS = 13
+NULL_VALUE = "null"
 
 if __name__ == "__main__":
     args = sys.argv[1:]
 
     try:
+        print(args)
         if len(args) < TOTAL_ARGS:
             raise Exception("Incomplete args, please try again")
 
@@ -31,14 +33,14 @@ if __name__ == "__main__":
 
         # put validation
         if file_operation_id != "APPEND" and file_operation_id != "NEW":
-            raise Exception("Invalid file operation id")
+            raise Exception("Invalid file operation id : {}".format(file_operation_id))
         if file_operation_id == "APPEND":
             file_operation = script.FILE_OPERATION_APPEND
         else:
             file_operation = script.FILE_OPERATION_NEW
 
-        if entity_type == "WORKFLOW" or entity_type == "PIPELINE" or entity_type == "":
-            if entity_type == "":
+        if entity_type == "WORKFLOW" or entity_type == "PIPELINE" or entity_type == NULL_VALUE:
+            if entity_type == NULL_VALUE:
                 entity_type = script.ENTITY_ALL_EXECUTION
             else:
                 if entity_type == "WORKFLOW":
@@ -46,10 +48,10 @@ if __name__ == "__main__":
                 else:
                     entity_type = script.ENTITY_PIPELINE_EXECUTION
         else:
-            raise Exception("Invalid entity type (Workflow/Pipeline/All)")
+            raise Exception("Invalid entity type (Workflow/Pipeline/All) : {}".format(entity_type))
 
         if entity_type != script.ENTITY_ALL_EXECUTION:
-            if entity_id == "":
+            if entity_id == NULL_VALUE:
                 raise Exception("Empty entity id (Workflow id/Pipeline id)")
 
         start_time_obj = helper.get_date_obj_from_str(start_time_date, helper.DATE_FORMAT_MM_DD_YYYY_HH_MM_SS)
@@ -59,7 +61,7 @@ if __name__ == "__main__":
             # get epoch time corresponding to local timezone date
             start_time_epoch = helper.convert_date_to_timestamp(start_time_obj)
         else:
-            raise Exception("Invalid start date")
+            raise Exception("Invalid start date : {}".format(start_time_date))
 
         if end_time_date == "":
             end_time_epoch = helper.get_current_time_in_epoch_in_seconds()
@@ -70,17 +72,20 @@ if __name__ == "__main__":
             end_time_obj = helper.convert_date_to_local_timezone(end_time_obj)
             end_time_epoch = helper.convert_date_to_timestamp(end_time_obj)
         else:
-            raise Exception("Invalid end date")
+            raise Exception("Invalid end date : {}".format(end_time_date))
 
-        tags_list = helper.get_list_from_string(tags, ",")
         tags_names_list = []
         tags_values_list = []
-        for tag in tags_list:
-            try:
-                tags_names_list.append(helper.get_list_from_string(tag, "=")[0])
-                tags_values_list.append(helper.get_list_from_string(tag, "=")[1])
-            except Exception:
-                raise Exception("Invalid tag format : " + tag)
+        if tags_entity_type == NULL_VALUE:
+            tags_entity_type = ""
+        else:
+            tags_list = helper.get_list_from_string(tags, ",")
+            for tag in tags_list:
+                try:
+                    tags_names_list.append(helper.get_list_from_string(tag, "=")[0])
+                    tags_values_list.append(helper.get_list_from_string(tag, "=")[1])
+                except Exception:
+                    raise Exception("Invalid tag format : {}".format(tag))
 
         input_arguments = {
             script.ARGS_KEY_APP_DOMAIN_KEY: domain_name,
@@ -99,7 +104,6 @@ if __name__ == "__main__":
             script.ARGS_TAGS_VALUES_LIST_KEY: tags_values_list
         }
         script.compile_data(input_arguments)
-        sys.exit(200)
     except Exception as e:
         log_manager.log_console_error(e)
         sys.exit(400)

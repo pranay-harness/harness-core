@@ -628,6 +628,7 @@ def compile_data(input_args):
         file_manager.copy_csv_file(temp_file_path, output_file_path)
         log_manager.log_console_message("Output file created at : {}".format(output_file_path))
         log_manager.log_console_message("Operation SUCCESS !!!")
+        sys.exit(0)
     except exception.InputException as input_exception:
         log_manager.log_console_error(input_exception)
         # exit process in case of input validation exception
@@ -637,8 +638,9 @@ def compile_data(input_args):
         log_manager.log_exception(e)
         log_manager.log_console_error("Exception occured, please check error logs")
         log_manager.log_console_error("Operation ** FAILED ** !!!")
-
-    file_manager.append_to_file(debug_log_file_path, log_manager.get_debug_log())
-    file_manager.append_to_file(error_log_file_path, log_manager.get_error_log())
-    log_manager.log_console_message("Please find Error logs at : {}".format(error_log_file_path))
-    log_manager.log_console_message("Please find Debug logs at : {}".format(debug_log_file_path))
+        sys.exit(400)
+    finally:
+        file_manager.append_to_file(debug_log_file_path, log_manager.get_debug_log())
+        file_manager.append_to_file(error_log_file_path, log_manager.get_error_log())
+        log_manager.log_console_message("Please find Error logs at : {}".format(error_log_file_path))
+        log_manager.log_console_message("Please find Debug logs at : {}".format(debug_log_file_path))

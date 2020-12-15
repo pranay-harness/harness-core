@@ -27,11 +27,11 @@
    |OUTPUT_FILE_DIRECTORY_PATH|- Existing file directory path in case of APPEND mode<br>- New file directory path in case of NEW mode|/Users/John/metrics/|
    |OUTPUT_FILE_NAME|- Existing CSV file name in case of APPEND mode<br>- New CSV file name in case of NEW mode|<-any valid file name->|
    |META_FILE_DIRECTORY_PATH|- Directory path to store debug and error log output files<br>- Default is the current working directory of the executable|/Users/John/metrics/meta_dir|
-   |ENTITY_TYPE|Identifier to denote whether to search Workflow or Pipeline or all executions|WORKFLOW / PIPELINE / "" (empty string for All executions)|
-   |ENTITY_ID|- Workflow/Pipeline id in case of WORKFLOW/PIPELINE entity type<br>- empty string in case of all executions|<-valid id->|
+   |ENTITY_TYPE|Identifier to denote whether to search Workflow or Pipeline or all executions|WORKFLOW / PIPELINE / null (for All Executions)|
+   |ENTITY_ID|- Workflow/Pipeline id in case of WORKFLOW/PIPELINE entity type<br>- null in case of all executions|<-valid id->|
    |SEARCH_INTERVAL_START_TIME|Start time of the search interval in format MM/DD/YYYY HH:MM:SS (24-Hr format) in local timezone|09/21/2020 00:00:00|
    |SEARCH_INTERVAL_END_TIME|End time of the search interval in format MM/DD/YYYY HH:MM:SS (24-Hr format) in local timezone|09/21/2020 00:00:00|
-   |TAG_ENTITY_TYPE|Identifier to denote type of tags to search|APPLICATION / DEPLOYMENT / ENVIRONMENT / SERVICE|
-   |TAG_PAIR_LIST|List of tag name and value in defined format|[tag_name=tag_value,commitId=122,env=Prod]|
+   |TAG_ENTITY_TYPE|- Identifier to denote type of tags to search<br>- null to ignore tags|APPLICATION / DEPLOYMENT / ENVIRONMENT / SERVICE / null|
+   |TAG_PAIR_LIST|- List of tag name and value in defined format<br>- tags ignored if TAG_ENTITY_TYPE is null|[tag_name=tag_value,commitId=122,env=Prod]|
    
    
