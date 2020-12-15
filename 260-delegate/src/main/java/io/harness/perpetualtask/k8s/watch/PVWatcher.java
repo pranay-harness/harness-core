@@ -11,6 +11,8 @@ import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
@@ -26,8 +28,10 @@ import io.kubernetes.client.openapi.models.V1PersistentVolumeList;
 import io.kubernetes.client.openapi.models.V1PersistentVolumeSpec;
 import io.kubernetes.client.util.CallGeneratorParams;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
 
@@ -44,6 +48,8 @@ public class PVWatcher implements ResourceEventHandler<V1PersistentVolume> {
 
   private static final String EVENT_LOG_MSG = "V1PersistentVolume: {}, action: {}";
   private static final String ERROR_PUBLISH_LOG_MSG = "Error publishing V1PersistentVolume.{} event.";
+
+  private final LoadingCache<String, Map<String, String>> storageClassParamsCache;
 
   @Inject
   public PVWatcher(@Assisted ApiClient apiClient, @Assisted ClusterDetails params,
@@ -70,6 +76,12 @@ public class PVWatcher implements ResourceEventHandler<V1PersistentVolume> {
                                 .build();
 
     this.storageV1Api = new StorageV1Api(apiClient);
+    this.storageClassParamsCache =
+        Caffeine.newBuilder()
+            .maximumSize(20)
+            .expireAfterWrite(1, TimeUnit.DAYS)
+            .build(key -> this.storageV1Api.readStorageClass(key, null, null, null).getParameters());
+
     CoreV1Api coreV1Api = new CoreV1Api(apiClient);
     sharedInformerFactory
         .sharedIndexInformerFor((CallGeneratorParams callGeneratorParams)
@@ -148,7 +160,7 @@ public class PVWatcher implements ResourceEventHandler<V1PersistentVolume> {
             .putAllLabels(firstNonNull(persistentVolume.getMetadata().getAnnotations(), Collections.emptyMap()))
             .setClaimName(getClaimName(persistentVolume.getSpec()))
             .setClaimNamespace(getClaimNamespace(persistentVolume.getSpec()))
-            .setStorageClassType(getStorageType(persistentVolume)) // empty class means default
+            .putAllStorageClassParams(firstNonNull(getStorageClassParameters(persistentVolume), Collections.emptyMap()))
             .setCapacity(K8sResourceUtils.getStorageCapacity(persistentVolume.getSpec()))
             .build();
     eventPublisher.publishMessage(pvInfo, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
@@ -185,22 +197,22 @@ public class PVWatcher implements ResourceEventHandler<V1PersistentVolume> {
   public PVInfo.PVType getPvType(V1PersistentVolumeSpec spec) {
     if (spec.getGcePersistentDisk() != null) {
       return PVInfo.PVType.PV_TYPE_GCE_PERSISTENT_DISK;
-    } else {
-      return PVInfo.PVType.PV_TYPE_UNSPECIFIED;
+    } else if (spec.getAwsElasticBlockStore() != null) {
+      return PVInfo.PVType.PV_TYPE_AWS_EBS;
+    } else if (spec.getAzureDisk() != null) {
+      return PVInfo.PVType.PV_TYPE_AZURE_DISK;
     }
+    return PVInfo.PVType.PV_TYPE_UNSPECIFIED;
   }
 
-  public String getStorageType(V1PersistentVolume persistentVolume) {
-    String defaultValue = "default";
+  public Map<String, String> getStorageClassParameters(V1PersistentVolume persistentVolume) {
     if (persistentVolume.getSpec() != null && persistentVolume.getSpec().getStorageClassName() != null) {
       try {
-        return this.storageV1Api.readStorageClass(persistentVolume.getSpec().getStorageClassName(), null, null, null)
-            .getParameters()
-            .getOrDefault("type", defaultValue);
+        return this.storageClassParamsCache.get(persistentVolume.getSpec().getStorageClassName());
       } catch (Exception ex) {
         log.warn("Failed to get storageClassName {}", persistentVolume.getSpec().getStorageClassName(), ex);
       }
     }
-    return defaultValue;
+    return null;
   }
 }
