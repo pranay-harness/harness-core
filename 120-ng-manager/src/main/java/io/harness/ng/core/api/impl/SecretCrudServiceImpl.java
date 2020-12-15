@@ -96,7 +96,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
   public SecretResponseWrapper create(String accountIdentifier, SecretDTOV2 dto) {
     EncryptedDataDTO encryptedData = getService(dto.getType()).create(accountIdentifier, dto);
     if (Optional.ofNullable(encryptedData).isPresent()) {
-      secretEntityReferenceHelper.createEntityReferenceForSecret(encryptedData);
+      secretEntityReferenceHelper.createSetupUsageForSecretManager(encryptedData);
       Secret secret = ngSecretService.create(accountIdentifier, dto, false);
       return getResponseWrapper(secret);
     }
@@ -110,7 +110,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
     }
     EncryptedDataDTO encryptedData = getService(dto.getType()).create(accountIdentifier, dto);
     if (Optional.ofNullable(encryptedData).isPresent()) {
-      secretEntityReferenceHelper.createEntityReferenceForSecret(encryptedData);
+      secretEntityReferenceHelper.createSetupUsageForSecretManager(encryptedData);
       Secret secret = ngSecretService.create(accountIdentifier, dto, true);
       return getResponseWrapper(secret);
     }
@@ -231,7 +231,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
             getRequestBody(ByteStreams.toByteArray(
                 new BoundedInputStream(inputStream, fileUploadLimit.getEncryptedFileLimit())))));
     if (Optional.ofNullable(encryptedData).isPresent()) {
-      secretEntityReferenceHelper.createEntityReferenceForSecret(encryptedData);
+      secretEntityReferenceHelper.createSetupUsageForSecretManager(encryptedData);
       Secret secret = ngSecretService.create(accountIdentifier, dto, false);
       return getResponseWrapper(secret);
     }

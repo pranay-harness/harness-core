@@ -142,7 +142,7 @@ public class SecretCrudServiceImplTest extends CategoryTest {
     when(secretManagerClient.createSecretFile(any(), any()).execute())
         .thenReturn(Response.success(new RestResponse<>(encryptedDataDTO)));
     when(ngSecretServiceV2.create(any(), any(), eq(false))).thenReturn(secret);
-    doNothing().when(secretEntityReferenceHelper).createEntityReferenceForSecret(any());
+    doNothing().when(secretEntityReferenceHelper).createSetupUsageForSecretManager(any());
 
     SecretResponseWrapper created =
         secretCrudService.createFile("account", secretDTOV2, new StringInputStream("string"));
@@ -150,7 +150,7 @@ public class SecretCrudServiceImplTest extends CategoryTest {
 
     verify(secretManagerClient, atLeastOnce()).createSecretFile(any(), any());
     verify(ngSecretServiceV2).create(any(), any(), eq(false));
-    verify(secretEntityReferenceHelper).createEntityReferenceForSecret(any());
+    verify(secretEntityReferenceHelper).createSetupUsageForSecretManager(any());
   }
 
   @Test

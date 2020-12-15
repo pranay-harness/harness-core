@@ -1,9 +1,0 @@
-syntax = "proto3";
-
-package io.harness.eventsframework;
-
-option java_multiple_files = true;
-
-message ConnectorUpdateEventDTO {
-  bytes connector = 1;
-}

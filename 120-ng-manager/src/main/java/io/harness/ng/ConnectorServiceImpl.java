@@ -25,8 +25,8 @@ import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.encryption.Scope;
-import io.harness.eventsframework.ConnectorUpdateEventDTO;
 import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.connector.ConnectorUpdateEventDTO;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.activityhistory.NGActivityType;
@@ -38,6 +38,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.StringValue;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -125,11 +126,16 @@ public class ConnectorServiceImpl implements ConnectorService {
   private void publishEventForConnectorUpdate(String accountIdentifier, ConnectorInfoDTO savedConnector) {
     try {
       ByteString connectorConfigBytes = ByteString.copyFrom(kryoSerializer.asBytes(savedConnector));
-      eventProducer.send(
-          Message.newBuilder()
-              .putMetadata("accountId", accountIdentifier)
-              .setData(ConnectorUpdateEventDTO.newBuilder().setConnector(connectorConfigBytes).build().toByteString())
-              .build());
+      eventProducer.send(Message.newBuilder()
+                             .putMetadata("accountId", accountIdentifier)
+                             .setData(ConnectorUpdateEventDTO.newBuilder()
+                                          .setAccountIdentifier(StringValue.of(accountIdentifier))
+                                          .setOrgIdentifier(StringValue.of(savedConnector.getOrgIdentifier()))
+                                          .setProjectIdentifier(StringValue.of(savedConnector.getProjectIdentifier()))
+                                          .setIdentifier(StringValue.of(savedConnector.getIdentifier()))
+                                          .build()
+                                          .toByteString())
+                             .build());
     } catch (Exception ex) {
       log.info("Exception while publishing the event of connector update for {}",
           String.format(CONNECTOR_STRING, savedConnector.getIdentifier(), accountIdentifier,

@@ -1,5 +1,6 @@
 package io.harness.eventsframework.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eventsframework.impl.RedisStreamConstants.REDIS_STREAM_INTERNAL_KEY;
 
 import static com.google.protobuf.util.Timestamps.fromMillis;
@@ -54,7 +55,7 @@ public class RedisConsumer extends AbstractConsumer {
   }
 
   private Message getMessageObject(Map<StreamMessageId, Map<String, String>> result) {
-    if (result.isEmpty()) {
+    if (isEmpty(result)) {
       return null;
     } else {
       StreamMessageId messageId = result.keySet().iterator().next();

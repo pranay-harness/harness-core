@@ -1,0 +1,14 @@
+syntax = "proto3";
+package io.harness.eventsframework.schemas.entity;
+
+option java_multiple_files = true;
+
+enum EntityTypeProtoEnum {
+  PROJECTS = 0;
+  PIPELINES = 1;
+  CONNECTORS = 2;
+  SECRETS = 3;
+  SERVICE = 4;
+  ENVIRONMENT = 5;
+  INPUT_SETS = 6;
+}

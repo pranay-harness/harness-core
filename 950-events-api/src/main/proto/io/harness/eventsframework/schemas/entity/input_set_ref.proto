@@ -1,0 +1,13 @@
+syntax = "proto3";
+package io.harness.eventsframework.schemas.entity;
+import "google/protobuf/wrappers.proto";
+
+option java_multiple_files = true;
+
+message InputSetReferenceProtoDTO {
+  google.protobuf.StringValue accountIdentifier = 1;
+  google.protobuf.StringValue orgIdentifier = 2;
+  google.protobuf.StringValue projectIdentifier = 3;
+  google.protobuf.StringValue pipelineIdentifier = 4;
+  google.protobuf.StringValue identifier = 5;
+}
