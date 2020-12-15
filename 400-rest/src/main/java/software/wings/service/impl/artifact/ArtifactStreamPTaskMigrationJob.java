@@ -88,8 +88,8 @@ public class ArtifactStreamPTaskMigrationJob implements Managed {
   }
 
   private void runInternal() {
-    boolean mainFFOn = featureFlagService.isGlobalEnabled(ARTIFACT_PERPETUAL_TASK);
-    boolean migrationFFOn = featureFlagService.isGlobalEnabled(ARTIFACT_PERPETUAL_TASK_MIGRATION);
+    boolean mainFFOn = featureFlagService.isEnabledForAllAccounts(ARTIFACT_PERPETUAL_TASK);
+    boolean migrationFFOn = featureFlagService.isEnabledForAllAccounts(ARTIFACT_PERPETUAL_TASK_MIGRATION);
     if (mainFFOn && migrationFFOn) {
       createPerpetualTasks(null);
       return;

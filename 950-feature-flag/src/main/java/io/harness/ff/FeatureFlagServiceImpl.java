@@ -174,6 +174,19 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   }
 
   @Override
+  public boolean isEnabledForAllAccounts(FeatureName featureName) {
+    Optional<FeatureFlag> featureFlagOptional = getFeatureFlag(featureName);
+    if (featureFlagOptional.isPresent()) {
+      FeatureFlag featureFlag = featureFlagOptional.get();
+
+      if (featureFlag.isEnabled()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  @Override
   public boolean isNotEnabled(FeatureName featureName, String accountId) {
     return !isEnabled(featureName, accountId);
   }

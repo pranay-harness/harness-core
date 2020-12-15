@@ -69,8 +69,8 @@ public class ArtifactStreamPTaskMigrationJobTest extends CategoryTest {
     when(mockWingsPersistence.createQuery(ArtifactStream.class, excludeAuthority)).thenReturn(query);
     setupQuery(query);
 
-    when(featureFlagService.isGlobalEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK_MIGRATION)).thenReturn(true);
-    when(featureFlagService.isGlobalEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK)).thenReturn(true);
+    when(featureFlagService.isEnabledForAllAccounts(FeatureName.ARTIFACT_PERPETUAL_TASK_MIGRATION)).thenReturn(true);
+    when(featureFlagService.isEnabledForAllAccounts(FeatureName.ARTIFACT_PERPETUAL_TASK)).thenReturn(true);
 
     when(query.asList(any(FindOptions.class))).thenReturn(Collections.emptyList());
     job.run();
@@ -89,8 +89,8 @@ public class ArtifactStreamPTaskMigrationJobTest extends CategoryTest {
     when(mockWingsPersistence.createQuery(ArtifactStream.class)).thenReturn(query);
     setupQuery(query);
 
-    when(featureFlagService.isGlobalEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK_MIGRATION)).thenReturn(false);
-    when(featureFlagService.isGlobalEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK)).thenReturn(false);
+    when(featureFlagService.isEnabledForAllAccounts(FeatureName.ARTIFACT_PERPETUAL_TASK_MIGRATION)).thenReturn(false);
+    when(featureFlagService.isEnabledForAllAccounts(FeatureName.ARTIFACT_PERPETUAL_TASK)).thenReturn(false);
     when(featureFlagService.getAccountIds(FeatureName.ARTIFACT_PERPETUAL_TASK_MIGRATION))
         .thenReturn(Collections.singleton(ACCOUNT_ID));
     when(featureFlagService.getAccountIds(FeatureName.ARTIFACT_PERPETUAL_TASK)).thenReturn(null);
@@ -101,7 +101,7 @@ public class ArtifactStreamPTaskMigrationJobTest extends CategoryTest {
     verify(artifactStreamPTaskHelper, never()).createPerpetualTask(any());
 
     // ACCOUNT_ID has both feature flags on.
-    when(featureFlagService.isGlobalEnabled(FeatureName.ARTIFACT_PERPETUAL_TASK)).thenReturn(true);
+    when(featureFlagService.isEnabledForAllAccounts(FeatureName.ARTIFACT_PERPETUAL_TASK)).thenReturn(true);
 
     when(query.asList(any(FindOptions.class))).thenReturn(Collections.emptyList());
     job.run();
