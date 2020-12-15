@@ -43,6 +43,7 @@ import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
 import software.wings.beans.security.UserGroup;
@@ -121,7 +122,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   }
 
   @Inject private DelegateExecutor delegateExecutor;
-  @Inject private AccountSetupService accountSetupService;
+  @Inject private io.harness.functional.AccountSetupService accountSetupService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private UserService userService;
 
@@ -209,7 +210,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
 
   protected void logStateExecutionInstanceErrors(WorkflowExecution workflowExecution) {
     if (workflowExecution != null && workflowExecution.getStatus() != ExecutionStatus.FAILED) {
-      log.info("Workflow execution didn't failed, skipping this step");
+      log.info("Workflow execution didn't fail, skipping this step");
       return;
     }
 
@@ -390,7 +391,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
 
   public void getFailedWorkflowExecutionLogs(WorkflowExecution workflowExecution) {
     if (workflowExecution != null && workflowExecution.getStatus() != ExecutionStatus.FAILED) {
-      log.info("Workflow execution didn't failed, skipping fetching logs");
+      log.info("Workflow execution didn't fail, skipping fetching logs");
       return;
     }
     List<Activity> activities = wingsPersistence.createQuery(Activity.class)
@@ -399,12 +400,15 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
                                     .asList();
 
     for (Activity activity : activities) {
-      PageRequest<Log> request = new PageRequest<>();
-      request.addFilter("activityId", EQ, activity.getUuid());
-      request.addFilter("commandUnitName", EQ, activity.getCommandUnits().get(0).getName());
-      PageResponse<Log> logPageResponse = logService.list(workflowExecution.getAppId(), request);
-      log.info("for activityId : {}", activity.getUuid());
-      logPageResponse.forEach(response -> log.info(response.getLogLine()));
+      for (CommandUnit commandUnit : activity.getCommandUnits()) {
+        log.info("Logs For {}", commandUnit.getName());
+        PageRequest<Log> request = new PageRequest<>();
+        request.addFilter("activityId", EQ, activity.getUuid());
+        request.addFilter("commandUnitName", EQ, commandUnit.getName());
+        PageResponse<Log> logPageResponse = logService.list(workflowExecution.getAppId(), request);
+        log.info("for activityId : {}", activity.getUuid());
+        logPageResponse.forEach(response -> log.info(response.getLogLine()));
+      }
     }
   }
 
@@ -412,5 +416,6 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
     if (!featureFlagService.isEnabled(featureName, accountId)) {
       featureFlagService.enableAccount(featureName, accountId);
     }
+    assertThat(featureFlagService.isEnabled(featureName, accountId));
   }
 }

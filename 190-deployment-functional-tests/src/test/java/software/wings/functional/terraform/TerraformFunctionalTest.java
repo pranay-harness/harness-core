@@ -103,9 +103,7 @@ public class TerraformFunctionalTest extends AbstractFunctionalTest {
         () -> environmentGenerator.ensurePredefined(seed, owners, EnvironmentGenerator.Environments.GENERIC_TEST));
     assertThat(environment).isNotNull();
 
-    if (!featureFlagService.isEnabled(FeatureName.EXPORT_TF_PLAN, application.getAccountId())) {
-      featureFlagService.enableAccount(FeatureName.EXPORT_TF_PLAN, application.getAccountId());
-    }
+    enableFeatureFlag(FeatureName.EXPORT_TF_PLAN, application.getAccountId());
   }
 
   @Test
@@ -142,6 +140,7 @@ public class TerraformFunctionalTest extends AbstractFunctionalTest {
     WorkflowExecution workflowExecution =
         runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), getExecutionArgs(workflow));
     logStateExecutionInstanceErrors(workflowExecution);
+    getFailedWorkflowExecutionLogs(workflowExecution);
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
@@ -159,6 +158,7 @@ public class TerraformFunctionalTest extends AbstractFunctionalTest {
     WorkflowExecution workflowExecution =
         runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), getExecutionArgs(workflow));
     logStateExecutionInstanceErrors(workflowExecution);
+    getFailedWorkflowExecutionLogs(workflowExecution);
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
@@ -178,6 +178,7 @@ public class TerraformFunctionalTest extends AbstractFunctionalTest {
     WorkflowExecution workflowExecution =
         runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), getExecutionArgs(workflow));
     logStateExecutionInstanceErrors(workflowExecution);
+    getFailedWorkflowExecutionLogs(workflowExecution);
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
@@ -197,6 +198,7 @@ public class TerraformFunctionalTest extends AbstractFunctionalTest {
     WorkflowExecution workflowExecution =
         runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), getExecutionArgs(workflow));
     logStateExecutionInstanceErrors(workflowExecution);
+    getFailedWorkflowExecutionLogs(workflowExecution);
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 

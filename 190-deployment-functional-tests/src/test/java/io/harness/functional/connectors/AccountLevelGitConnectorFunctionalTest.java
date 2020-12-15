@@ -130,6 +130,7 @@ public class AccountLevelGitConnectorFunctionalTest extends AbstractFunctionalTe
     WorkflowExecution workflowExecution = runWorkflow(
         bearerToken, application.getUuid(), environment.getUuid(), getExecutionArgs(workflow, environment, service));
     logStateExecutionInstanceErrors(workflowExecution);
+    getFailedWorkflowExecutionLogs(workflowExecution);
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
@@ -152,6 +153,7 @@ public class AccountLevelGitConnectorFunctionalTest extends AbstractFunctionalTe
     WorkflowExecution workflowExecution = runWorkflow(
         bearerToken, application.getUuid(), environment.getUuid(), getExecutionArgs(workflow, environment, service));
     logStateExecutionInstanceErrors(workflowExecution);
+    getFailedWorkflowExecutionLogs(workflowExecution);
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
@@ -176,6 +178,7 @@ public class AccountLevelGitConnectorFunctionalTest extends AbstractFunctionalTe
     WorkflowExecution workflowExecution = runWorkflow(
         bearerToken, application.getUuid(), environment.getUuid(), getExecutionArgs(workflow, environment, service));
     logStateExecutionInstanceErrors(workflowExecution);
+    getFailedWorkflowExecutionLogs(workflowExecution);
 
     // Cleanup
     logStateExecutionInstanceErrors(runWorkflow(bearerToken, application.getUuid(), environment.getUuid(),

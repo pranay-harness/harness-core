@@ -135,6 +135,7 @@ public class HelmFunctionalTest extends AbstractFunctionalTest {
         bearerToken, service.getAppId(), infrastructureDefinition.getEnvId(), getExecutionArgs(cleanupWorkflow, "")));
 
     logStateExecutionInstanceErrors(workflowExecution);
+    getFailedWorkflowExecutionLogs(workflowExecution);
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
