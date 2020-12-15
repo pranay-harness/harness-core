@@ -4,6 +4,7 @@ import static io.harness.notification.constant.NotificationServiceConstants.*;
 
 import io.harness.NotificationRequest;
 import io.harness.notification.NotificationChannelType;
+import io.harness.notification.beans.NotificationProcessingResponse;
 import io.harness.notification.remote.dto.NotificationSettingDTO;
 import io.harness.notification.service.api.ChannelService;
 
@@ -33,7 +34,7 @@ public class ChannelServiceImpl implements ChannelService {
   }
 
   @Override
-  public boolean send(NotificationRequest notificationRequest) {
+  public NotificationProcessingResponse send(NotificationRequest notificationRequest) {
     return protoImplementationMapping.get(notificationRequest.getChannelCase()).send(notificationRequest);
   }
 

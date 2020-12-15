@@ -2,6 +2,7 @@ package io.harness.delegate.task;
 
 import io.harness.delegate.beans.*;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
+import io.harness.notification.beans.NotificationProcessingResponse;
 import io.harness.notification.service.PagerDutySenderImpl;
 
 import com.google.inject.Inject;
@@ -29,11 +30,14 @@ public class PagerDutySenderDelegateTask extends AbstractDelegateRunnableTask {
   public DelegateResponseData run(TaskParameters parameters) {
     PagerDutyTaskParams pagerDutyTaskParams = (PagerDutyTaskParams) parameters;
     try {
-      boolean sent = pagerDutySender.send(pagerDutyTaskParams.getPagerDutyKeys(), pagerDutyTaskParams.getPayload(),
-          pagerDutyTaskParams.getLinks(), pagerDutyTaskParams.getNotificationId());
-      return NotificationTaskResponse.builder().sent(sent).build();
+      NotificationProcessingResponse processingResponse = pagerDutySender.send(pagerDutyTaskParams.getPagerDutyKeys(),
+          pagerDutyTaskParams.getPayload(), pagerDutyTaskParams.getLinks(), pagerDutyTaskParams.getNotificationId());
+      return NotificationTaskResponse.builder().processingResponse(processingResponse).build();
     } catch (Exception e) {
-      return NotificationTaskResponse.builder().sent(false).errorMessage(e.getMessage()).build();
+      return NotificationTaskResponse.builder()
+          .processingResponse(NotificationProcessingResponse.trivialResponseWithNoRetries)
+          .errorMessage(e.getMessage())
+          .build();
     }
   }
 }

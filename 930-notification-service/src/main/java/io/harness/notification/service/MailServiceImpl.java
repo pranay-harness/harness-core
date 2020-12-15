@@ -15,6 +15,7 @@ import io.harness.delegate.beans.NotificationTaskResponse;
 import io.harness.exception.ExceptionUtils;
 import io.harness.notification.NotificationChannelType;
 import io.harness.notification.SmtpConfig;
+import io.harness.notification.beans.NotificationProcessingResponse;
 import io.harness.notification.exception.NotificationException;
 import io.harness.notification.remote.dto.EmailSettingDTO;
 import io.harness.notification.remote.dto.NotificationSettingDTO;
@@ -52,9 +53,9 @@ public class MailServiceImpl implements ChannelService {
   private final DelegateGrpcClientWrapper delegateGrpcClientWrapper;
 
   @Override
-  public boolean send(NotificationRequest notificationRequest) {
+  public NotificationProcessingResponse send(NotificationRequest notificationRequest) {
     if (Objects.isNull(notificationRequest) || !notificationRequest.hasEmail()) {
-      return false;
+      return NotificationProcessingResponse.trivialResponseWithNoRetries;
     }
 
     String notificationId = notificationRequest.getId();
@@ -64,13 +65,13 @@ public class MailServiceImpl implements ChannelService {
 
     if (Objects.isNull(stripToNull(templateId))) {
       log.info("template Id is null for notification request {}", notificationId);
-      return false;
+      return NotificationProcessingResponse.trivialResponseWithNoRetries;
     }
 
     List<String> emailIds = resolveRecipients(notificationRequest);
     if (isEmpty(emailIds)) {
       log.info("No recipients found in notification request {}", notificationId);
-      return false;
+      return NotificationProcessingResponse.trivialResponseWithNoRetries;
     }
 
     try {
@@ -81,7 +82,7 @@ public class MailServiceImpl implements ChannelService {
         log.error(
             "Failed to send email for notification request {} possibly due to no valid template with name {} found",
             notificationId, templateId);
-        return false;
+        return NotificationProcessingResponse.trivialResponseWithNoRetries;
       }
       EmailTemplate emailTemplate = emailTemplateOpt.get();
 
@@ -91,7 +92,7 @@ public class MailServiceImpl implements ChannelService {
     } catch (Exception e) {
       log.error("Failed to send email. Check template details for notificationId: {}\n{}", notificationId,
           ExceptionUtils.getMessage(e));
-      return false;
+      return NotificationProcessingResponse.trivialResponseWithRetries;
     }
   }
 
@@ -100,18 +101,21 @@ public class MailServiceImpl implements ChannelService {
     EmailSettingDTO emailSettingDTO = (EmailSettingDTO) notificationSettingDTO;
     String email = emailSettingDTO.getRecipient();
     if (Objects.isNull(stripToNull(email)) || !EmailValidator.getInstance().isValid(email)) {
-      throw new NotificationException("Malformed webhook Url " + email, DEFAULT_ERROR_CODE, USER);
+      throw new NotificationException("Invalid email encountered while processing Test Connection request "
+              + notificationSettingDTO.getNotificationId(),
+          DEFAULT_ERROR_CODE, USER);
     }
-    boolean sent = send(Collections.singletonList(email), emailSettingDTO.getSubject(), emailSettingDTO.getBody(),
-        email, notificationSettingDTO.getAccountId());
-    if (!sent) {
+    NotificationProcessingResponse response = send(Collections.singletonList(email), emailSettingDTO.getSubject(),
+        emailSettingDTO.getBody(), email, notificationSettingDTO.getAccountId());
+    if (response.getResult().isEmpty() || !response.getResult().get(0).booleanValue()) {
       throw new NotificationException("Failed to send email. Check SMTP configuration", DEFAULT_ERROR_CODE, USER);
     }
     return true;
   }
 
-  private boolean send(List<String> emailIds, String subject, String body, String notificationId, String accountId) {
-    boolean sent = false;
+  private NotificationProcessingResponse send(
+      List<String> emailIds, String subject, String body, String notificationId, String accountId) {
+    NotificationProcessingResponse notificationProcessingResponse = null;
     if (notificationSettingsService.getSendNotificationViaDelegate(accountId)) {
       DelegateTaskRequest delegateTaskRequest =
           DelegateTaskRequest.builder()
@@ -129,13 +133,15 @@ public class MailServiceImpl implements ChannelService {
               .build();
       NotificationTaskResponse notificationTaskResponse =
           (NotificationTaskResponse) delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
-      sent = notificationTaskResponse.isSent();
+      notificationProcessingResponse = notificationTaskResponse.getProcessingResponse();
     } else {
-      SmtpConfig smtpConfig = notificationSettingsService.getSmtpConfig(accountId).orElse(smtpConfigDefault);
-      sent = mailSender.send(emailIds, subject, body, notificationId, smtpConfig);
+      notificationProcessingResponse = mailSender.send(emailIds, subject, body, notificationId);
     }
-    log.info(sent ? "Notificaition request {} sent" : "Failed to send notification for request {}", notificationId);
-    return sent;
+    log.info(NotificationProcessingResponse.isNotificationResquestFailed(notificationProcessingResponse)
+            ? "Notification request {} sent"
+            : "Failed to send notification for request {}",
+        notificationId);
+    return notificationProcessingResponse;
   }
 
   private String processTemplate(String templateName, String templateStr, Map<String, String> templateData) {

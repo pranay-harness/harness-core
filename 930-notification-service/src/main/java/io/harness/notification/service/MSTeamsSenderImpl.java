@@ -4,12 +4,15 @@ import static org.apache.http.entity.mime.MIME.CONTENT_TYPE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
+import io.harness.notification.beans.NotificationProcessingResponse;
+
+import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 
 @Slf4j
-public class MicrosoftTeamsSenderImpl {
+public class MSTeamsSenderImpl {
   private final OkHttpClient okHttpClient = new OkHttpClient.Builder().retryOnConnectionFailure(true).build();
 
   private static final MediaType APPLICATION_JSON = MediaType.parse(APPLICATION_JSON_UTF8_VALUE);
@@ -32,13 +35,13 @@ public class MicrosoftTeamsSenderImpl {
     }
   }
 
-  public boolean send(List<String> microsoftTeamsWebhookUrls, String message, String notificationId) {
-    boolean sent = false;
+  public NotificationProcessingResponse send(
+      List<String> microsoftTeamsWebhookUrls, String message, String notificationId) {
+    List<Boolean> results = new ArrayList<>();
     for (String microsoftTeamsWebhookUrl : microsoftTeamsWebhookUrls) {
       int responseCode = sendMessage(message, microsoftTeamsWebhookUrl);
-      sent = sent || (responseCode >= 200 && responseCode < 300);
+      results.add(responseCode >= 200 && responseCode < 300);
     }
-    log.info(sent ? "Notificaition request {} sent" : "Failed to send notification for request {}", notificationId);
-    return sent;
+    return NotificationProcessingResponse.builder().result(results).build();
   }
 }

@@ -1,5 +1,8 @@
 package io.harness.notification.service;
 
+import io.harness.notification.beans.NotificationProcessingResponse;
+
+import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
@@ -9,14 +12,13 @@ public class SlackSenderImpl {
   public static final MediaType APPLICATION_JSON = MediaType.parse("application/json; charset=utf-8");
   private final OkHttpClient client = new OkHttpClient();
 
-  public boolean send(List<String> slackWebhookUrls, String message, String notificationId) {
-    boolean sent = false;
+  public NotificationProcessingResponse send(List<String> slackWebhookUrls, String message, String notificationId) {
+    List<Boolean> results = new ArrayList<>();
     for (String webhookUrl : slackWebhookUrls) {
       boolean ret = sendJSONMessage(message, webhookUrl);
-      sent = sent || ret;
+      results.add(ret);
     }
-    log.info(sent ? "Notificaition request {} sent" : "Failed to send notification for request {}", notificationId);
-    return sent;
+    return NotificationProcessingResponse.builder().result(results).build();
   }
 
   private boolean sendJSONMessage(String message, String slackWebhook) {

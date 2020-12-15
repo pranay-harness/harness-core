@@ -1,7 +1,7 @@
 package io.harness.notification.remote.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.notification.mappers.NotificationMapper.toDTO;
+import static io.harness.notification.remote.mappers.NotificationMapper.toDTO;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import io.harness.Team;
@@ -13,7 +13,6 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.notification.dtos.NotificationDTO;
 import io.harness.notification.entities.Notification;
-import io.harness.notification.mappers.NotificationMapper;
 import io.harness.notification.service.api.NotificationService;
 
 import com.google.common.collect.ImmutableList;
@@ -55,8 +54,7 @@ public class NotificationResource {
       SortOrder order = SortOrder.Builder.aSortOrder().withField("lastModifiedAt", SortOrder.OrderType.DESC).build();
       pageRequest.setSortOrders(ImmutableList.of(order));
     }
-    Page<NotificationDTO> results =
-        notificationService.list(team, pageRequest).map(x -> NotificationMapper.toDTO(x).orElse(null));
+    Page<NotificationDTO> results = notificationService.list(team, pageRequest).map(x -> toDTO(x).orElse(null));
     return ResponseDTO.newResponse(getNGPageResponse(results));
   }
 }

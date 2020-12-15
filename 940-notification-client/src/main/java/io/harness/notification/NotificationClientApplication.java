@@ -77,48 +77,43 @@ public class NotificationClientApplication extends Application<NotificationClien
     NotificationClientImpl notificationClient = injector.getInstance(NotificationClientImpl.class);
     notificationClient.sendNotificationAsync(EmailChannel.builder()
                                                  .accountId("kmpySmUISimoRrJL6NL73w")
-                                                 .recipients(Collections.singletonList("shawank17198@gmail.com"))
+                                                 .recipients(Collections.emptyList())
                                                  .team(Team.CD)
                                                  .templateId("email_test")
                                                  .templateData(Collections.emptyMap())
                                                  .userGroupIds(Collections.emptyList())
                                                  .build());
 
-    notificationClient.sendNotificationAsync(
-        SlackChannel.builder()
-            .accountId("kmpySmUISimoRrJL6NL73w")
-            .slackWebHookURLs(Collections.singletonList(
-                "https://hooks.slack.com/services/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"))
-            .team(Team.CD)
-            .templateId("slack_test")
-            .templateData(Collections.emptyMap())
-            .userGroupIds(Collections.emptyList())
-            .build());
+    notificationClient.sendNotificationAsync(SlackChannel.builder()
+                                                 .accountId("kmpySmUISimoRrJL6NL73w")
+                                                 .slackWebHookURLs(Collections.emptyList())
+                                                 .team(Team.CD)
+                                                 .templateId("slack_test")
+                                                 .templateData(Collections.emptyMap())
+                                                 .userGroupIds(Collections.emptyList())
+                                                 .build());
 
-    notificationClient.sendNotificationAsync(
-        PagerDutyChannel.builder()
-            .accountId("kmpySmUISimoRrJL6NL73w")
-            .pagerDutyIntegrationKeys(Collections.singletonList("b86fd4f114df45808c94b4bce41195da"))
-            .team(Team.CD)
-            .templateId("pd_test")
-            .templateData(Collections.emptyMap())
-            .userGroupIds(Collections.emptyList())
-            .build());
+    notificationClient.sendNotificationAsync(PagerDutyChannel.builder()
+                                                 .accountId("kmpySmUISimoRrJL6NL73w")
+                                                 .pagerDutyIntegrationKeys(Collections.emptyList())
+                                                 .team(Team.CD)
+                                                 .templateId("pd_test")
+                                                 .templateData(Collections.emptyMap())
+                                                 .userGroupIds(Collections.emptyList())
+                                                 .build());
 
-    notificationClient.sendNotificationAsync(
-        MSTeamChannel.builder()
-            .accountId("kmpySmUISimoRrJL6NL73w")
-            .msTeamKeys(Collections.singletonList(
-                "https://outlook.office.com/webhook/54207803-1d3d-44e4-8389-b419334395f2@b229b2bb-5f33-4d22-bce0-730f6474e906/IncomingWebhook/edc3516331d34b2ab54fa906004adbd0/61ab09e6-9850-44f1-b408-3639589f22bf"))
-            .team(Team.CD)
-            .templateId("msteams_test")
-            .templateData(Collections.emptyMap())
-            .userGroupIds(Collections.emptyList())
-            .build());
+    notificationClient.sendNotificationAsync(MSTeamChannel.builder()
+                                                 .accountId("kmpySmUISimoRrJL6NL73w")
+                                                 .msTeamKeys(Collections.emptyList())
+                                                 .team(Team.CD)
+                                                 .templateId("msteams_test")
+                                                 .templateData(Collections.emptyMap())
+                                                 .userGroupIds(Collections.emptyList())
+                                                 .build());
 
     //    notificationClient.testNotificationChannel(EmailSettingDTO.builder()
     //                                                   .accountId("kmpySmUISimoRrJL6NL73w")
-    //                                                   .recipient("shawank17198@gmail.com")
+    //                                                   .recipient("")
     //                                                   .subject("test-subject")
     //                                                   .body("test-body")
     //                                                   .build());
@@ -126,15 +121,15 @@ public class NotificationClientApplication extends Application<NotificationClien
     //    notificationClient.testNotificationChannel(
     //        SlackSettingDTO.builder()
     //            .accountId("kmpySmUISimoRrJL6NL73w")
-    //            .recipient("https://hooks.slack.com/services/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")
+    //            .recipient("")
     //            .build());
     //    notificationClient.testNotificationChannel(
-    //        PagerDutySettingDTO.builder().accountId("kmpySmUISimoRrJL6NL73w").recipient("b86fd4f114df45808c94b4bce41195da").build());
+    //        PagerDutySettingDTO.builder().accountId("kmpySmUISimoRrJL6NL73w").recipient("").build());
     //    notificationClient.testNotificationChannel(
     //        MSTeamSettingDTO.builder()
     //            .accountId("kmpySmUISimoRrJL6NL73w")
     //            .recipient(
-    //                "https://outlook.office.com/webhook/54207803-1d3d-44e4-8389-b419334395f2@b229b2bb-5f33-4d22-bce0-730f6474e906/IncomingWebhook/edc3516331d34b2ab54fa906004adbd0/61ab09e6-9850-44f1-b408-3639589f22bf")
+    //                "")
     //            .build());
   }
 

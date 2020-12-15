@@ -3,6 +3,7 @@ package io.harness.notification.service;
 import io.harness.NotificationRequest;
 import io.harness.Team;
 import io.harness.ng.beans.PageRequest;
+import io.harness.notification.beans.NotificationProcessingResponse;
 import io.harness.notification.entities.Notification;
 import io.harness.notification.exception.NotificationException;
 import io.harness.notification.remote.mappers.NotificationMapper;
@@ -34,7 +35,8 @@ public class NotificationServiceImpl implements NotificationService {
     Optional<Notification> previousNotification = notificationRepository.findDistinctById(notificationRequest.getId());
     if (previousNotification.isPresent()) {
       log.info("Duplicate notification request recieved {}", notificationRequest.getId());
-      return previousNotification.get().getSent();
+      return !NotificationProcessingResponse.isNotificationResquestFailed(
+          previousNotification.get().getProcessingResponses());
     }
 
     Notification notification = NotificationMapper.toNotification(notificationRequest);
@@ -47,16 +49,18 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     notificationRepository.save(notification);
-    boolean sent = false;
+    NotificationProcessingResponse processingResponse = null;
     try {
-      sent = channelService.send(notificationRequest);
+      processingResponse = channelService.send(notificationRequest);
     } catch (NotificationException e) {
       log.error("Could not send notification.", e);
     }
-    notification.setSent(sent);
+    notification.setProcessingResponses(processingResponse.getResult());
+    notification.setShouldRetry(!(NotificationProcessingResponse.isNotificationResquestFailed(processingResponse)
+        || processingResponse.equals(NotificationProcessingResponse.trivialResponseWithNoRetries)));
     notification.setRetries(1);
     notificationRepository.save(notification);
-    return sent;
+    return !NotificationProcessingResponse.isNotificationResquestFailed(processingResponse);
   }
 
   @Override
@@ -69,13 +73,15 @@ public class NotificationServiceImpl implements NotificationService {
       return;
     }
     log.info("Retrying sending notification {}", notificationRequest.getId());
-    boolean sent = false;
+    NotificationProcessingResponse processingResponse = null;
     try {
-      sent = channelService.send(notificationRequest);
+      processingResponse = channelService.send(notificationRequest);
     } catch (NotificationException e) {
       log.error("Could not send notification.", e);
     }
-    notification.setSent(sent);
+    notification.setProcessingResponses(processingResponse.getResult());
+    notification.setShouldRetry(!(NotificationProcessingResponse.isNotificationResquestFailed(processingResponse)
+        || processingResponse.equals(NotificationProcessingResponse.trivialResponseWithNoRetries)));
     notification.setRetries(notification.getRetries() + 1);
     notificationRepository.save(notification);
   }

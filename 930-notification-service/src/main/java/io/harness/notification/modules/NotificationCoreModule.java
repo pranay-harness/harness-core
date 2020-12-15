@@ -37,9 +37,8 @@ public class NotificationCoreModule extends AbstractModule {
   public void configure() {
     install(new UserGroupClientModule(
         appConfig.getRbacServiceConfig(), appConfig.getNotificationSecrets().getManagerServiceSecret()));
-    //    @TODO fix clientId
     install(new UserClientModule(appConfig.getServiceHttpClientConfig(),
-        appConfig.getNotificationSecrets().getManagerServiceSecret(), "NextGenManager"));
+        appConfig.getNotificationSecrets().getManagerServiceSecret(), "NotificationService"));
     bind(ChannelService.class).to(ChannelServiceImpl.class);
     bind(NotificationSettingsService.class).to(NotificationSettingsServiceImpl.class);
     bind(SeedDataPopulaterService.class).to(SeedDataPopulaterServiceImpl.class);

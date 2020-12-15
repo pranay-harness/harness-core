@@ -1,5 +1,9 @@
 package io.harness.ng.core.dto;
 
+import io.harness.ng.core.dto.EmailConfigDTO;
+import io.harness.ng.core.dto.MicrosoftTeamsConfigDTO;
+import io.harness.ng.core.dto.PagerDutyConfigDTO;
+import io.harness.ng.core.dto.SlackConfigDTO;
 import io.harness.notification.NotificationChannelType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

@@ -1,6 +1,7 @@
 package io.harness.serializer.kryo;
 
 import io.harness.delegate.beans.*;
+import io.harness.notification.beans.NotificationProcessingResponse;
 import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -18,6 +19,7 @@ public class NotificationKryoRegistrar implements KryoRegistrar {
     kryo.register(Payload.class, 55214);
     kryo.register(LinkContext.class, 55215);
     kryo.register(NotificationTaskResponse.class, 55216);
+    kryo.register(NotificationProcessingResponse.class, 55217);
     kryo.register(Severity.class, 55218);
   }
 }

@@ -7,8 +7,10 @@ import static org.apache.commons.lang3.StringUtils.stripToNull;
 
 import io.harness.exception.ExceptionUtils;
 import io.harness.notification.SmtpConfig;
+import io.harness.notification.beans.NotificationProcessingResponse;
 
 import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 import java.util.List;
 import java.util.Objects;
 import javax.mail.internet.AddressException;
@@ -21,12 +23,14 @@ import org.apache.commons.mail.HtmlEmail;
 
 @Slf4j
 public class MailSenderImpl {
-  public boolean send(
-      List<String> emailIds, String subject, String body, String notificationId, SmtpConfig smtpConfig) {
+  @Inject private SmtpConfig smtpConfig;
+
+  public NotificationProcessingResponse send(
+      List<String> emailIds, String subject, String body, String notificationId) {
     try {
       if (Objects.isNull(stripToNull(body))) {
         log.error("No email body available. Aborting notification request {}", notificationId);
-        return false;
+        return NotificationProcessingResponse.trivialResponseWithNoRetries;
       }
 
       Email email = new HtmlEmail();
@@ -59,8 +63,8 @@ public class MailSenderImpl {
     } catch (EmailException e) {
       log.error("Failed to send email. Check SMTP configuration. notificationId: {}\n{}", notificationId,
           ExceptionUtils.getMessage(e));
-      return false;
+      return NotificationProcessingResponse.nonSent(emailIds.size());
     }
-    return true;
+    return NotificationProcessingResponse.allSent(emailIds.size());
   }
 }

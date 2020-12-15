@@ -15,6 +15,7 @@ import io.harness.beans.DelegateTaskRequest;
 import io.harness.delegate.beans.NotificationTaskResponse;
 import io.harness.delegate.beans.SlackTaskParams;
 import io.harness.notification.NotificationChannelType;
+import io.harness.notification.beans.NotificationProcessingResponse;
 import io.harness.notification.exception.NotificationException;
 import io.harness.notification.remote.dto.NotificationSettingDTO;
 import io.harness.notification.remote.dto.SlackSettingDTO;
@@ -42,9 +43,9 @@ public class SlackServiceImpl implements ChannelService {
   private final DelegateGrpcClientWrapper delegateGrpcClientWrapper;
 
   @Override
-  public boolean send(NotificationRequest notificationRequest) {
+  public NotificationProcessingResponse send(NotificationRequest notificationRequest) {
     if (Objects.isNull(notificationRequest) || !notificationRequest.hasSlack()) {
-      return false;
+      return NotificationProcessingResponse.trivialResponseWithNoRetries;
     }
 
     String notificationId = notificationRequest.getId();
@@ -54,13 +55,13 @@ public class SlackServiceImpl implements ChannelService {
 
     if (Objects.isNull(trimToNull(templateId))) {
       log.info("template Id is null for notification request {}", notificationId);
-      return false;
+      return NotificationProcessingResponse.trivialResponseWithNoRetries;
     }
 
     List<String> slackWebhookUrls = getRecipients(notificationRequest);
     if (isEmpty(slackWebhookUrls)) {
       log.info("No slackWebhookUrls found in notification request {}", notificationId);
-      return false;
+      return NotificationProcessingResponse.trivialResponseWithNoRetries;
     }
 
     return send(slackWebhookUrls, templateId, templateData, notificationRequest.getId(), notificationRequest.getTeam(),
@@ -72,27 +73,31 @@ public class SlackServiceImpl implements ChannelService {
     SlackSettingDTO slackSettingDTO = (SlackSettingDTO) notificationSettingDTO;
     String webhookUrl = slackSettingDTO.getRecipient();
     if (Objects.isNull(stripToNull(webhookUrl))) {
-      throw new NotificationException("Malformed webhook Url " + webhookUrl, DEFAULT_ERROR_CODE, USER);
+      throw new NotificationException(
+          "Malformed webhook Url encountered while processing Test Connection request " + webhookUrl,
+          DEFAULT_ERROR_CODE, USER);
     }
-    boolean sent = send(Collections.singletonList(webhookUrl), TEST_SLACK_TEMPLATE, Collections.emptyMap(),
-        slackSettingDTO.getNotificationId(), null, notificationSettingDTO.getAccountId());
-    if (!sent) {
-      throw new NotificationException("Invalid webhook url " + webhookUrl, DEFAULT_ERROR_CODE, USER);
+    NotificationProcessingResponse processingResponse = send(Collections.singletonList(webhookUrl), TEST_SLACK_TEMPLATE,
+        Collections.emptyMap(), slackSettingDTO.getNotificationId(), null, notificationSettingDTO.getAccountId());
+    if (NotificationProcessingResponse.isNotificationResquestFailed(processingResponse)) {
+      throw new NotificationException(
+          "Invalid webhook Url encountered while processing Test Connection request " + webhookUrl, DEFAULT_ERROR_CODE,
+          USER);
     }
     return true;
   }
 
-  private boolean send(List<String> slackWebhookUrls, String templateId, Map<String, String> templateData,
-      String notificationId, Team team, String accountId) {
+  private NotificationProcessingResponse send(List<String> slackWebhookUrls, String templateId,
+      Map<String, String> templateData, String notificationId, Team team, String accountId) {
     Optional<String> templateOpt = notificationTemplateService.getTemplateAsString(templateId, team);
     if (!templateOpt.isPresent()) {
       log.info("Can't find template with templateId {} for notification request {}", templateId, notificationId);
-      return false;
+      return NotificationProcessingResponse.trivialResponseWithNoRetries;
     }
     String template = templateOpt.get();
     StrSubstitutor strSubstitutor = new StrSubstitutor(templateData);
     String message = strSubstitutor.replace(template);
-    boolean sent = false;
+    NotificationProcessingResponse processingResponse = null;
     if (notificationSettingsService.getSendNotificationViaDelegate(accountId)) {
       DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
                                                     .accountId(accountId)
@@ -106,12 +111,15 @@ public class SlackServiceImpl implements ChannelService {
                                                     .build();
       NotificationTaskResponse notificationTaskResponse =
           (NotificationTaskResponse) delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
-      sent = notificationTaskResponse.isSent();
+      processingResponse = notificationTaskResponse.getProcessingResponse();
     } else {
-      sent = slackSender.send(slackWebhookUrls, message, notificationId);
+      processingResponse = slackSender.send(slackWebhookUrls, message, notificationId);
     }
-    log.info(sent ? "Notificaition request {} sent" : "Failed to send notification for request {}", notificationId);
-    return sent;
+    log.info(NotificationProcessingResponse.isNotificationResquestFailed(processingResponse)
+            ? "Notification request {} sent"
+            : "Failed to send notification for request {}",
+        notificationId);
+    return processingResponse;
   }
 
   private List<String> getRecipients(NotificationRequest notificationRequest) {

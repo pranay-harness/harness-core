@@ -2,7 +2,8 @@ package io.harness.delegate.task;
 
 import io.harness.delegate.beans.*;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
-import io.harness.notification.service.MicrosoftTeamsSenderImpl;
+import io.harness.notification.beans.NotificationProcessingResponse;
+import io.harness.notification.service.MSTeamsSenderImpl;
 
 import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;
@@ -12,7 +13,7 @@ import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
 public class MicrosoftTeamsSenderDelegateTask extends AbstractDelegateRunnableTask {
-  @Inject private MicrosoftTeamsSenderImpl microsoftTeamsSender;
+  @Inject private MSTeamsSenderImpl microsoftTeamsSender;
 
   public MicrosoftTeamsSenderDelegateTask(DelegateTaskPackage delegateTaskPackage,
       ILogStreamingTaskClient logStreamingTaskClient, Consumer<DelegateTaskResponse> consumer,
@@ -29,11 +30,15 @@ public class MicrosoftTeamsSenderDelegateTask extends AbstractDelegateRunnableTa
   public DelegateResponseData run(TaskParameters parameters) {
     MicrosoftTeamsTaskParams microsoftTeamsTaskParams = (MicrosoftTeamsTaskParams) parameters;
     try {
-      boolean sent = microsoftTeamsSender.send(microsoftTeamsTaskParams.getMicrosoftTeamsWebhookUrls(),
-          microsoftTeamsTaskParams.getMessage(), microsoftTeamsTaskParams.getNotificationId());
-      return NotificationTaskResponse.builder().sent(sent).build();
+      NotificationProcessingResponse processingResponse =
+          microsoftTeamsSender.send(microsoftTeamsTaskParams.getMicrosoftTeamsWebhookUrls(),
+              microsoftTeamsTaskParams.getMessage(), microsoftTeamsTaskParams.getNotificationId());
+      return NotificationTaskResponse.builder().processingResponse(processingResponse).build();
     } catch (Exception e) {
-      return NotificationTaskResponse.builder().sent(false).errorMessage(e.getMessage()).build();
+      return NotificationTaskResponse.builder()
+          .processingResponse(NotificationProcessingResponse.trivialResponseWithNoRetries)
+          .errorMessage(e.getMessage())
+          .build();
     }
   }
 }
