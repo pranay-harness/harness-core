@@ -7,8 +7,8 @@ import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
+import io.harness.pms.contracts.execution.ExecutionErrorInfo;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.execution.beans.ExecutionErrorInfo;
 import io.harness.pms.pipeline.ExecutionTriggerInfo;
 import io.harness.pms.pipeline.resource.GraphLayoutNodeDTO;
 

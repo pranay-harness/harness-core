@@ -1,7 +1,7 @@
 package io.harness.pms.pipeline.resource;
 
+import io.harness.pms.contracts.execution.ExecutionErrorInfo;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.execution.beans.ExecutionErrorInfo;
 import io.harness.pms.pipeline.ExecutionTriggerInfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

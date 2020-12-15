@@ -7,8 +7,8 @@ import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
 import io.harness.persistence.PersistentEntity;
 import io.harness.pipeline.executions.NGStageType;
+import io.harness.pms.contracts.execution.ExecutionErrorInfo;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.execution.beans.ExecutionErrorInfo;
 import io.harness.pms.pipeline.ExecutionTriggerInfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

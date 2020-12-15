@@ -26,11 +26,11 @@ import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
 import io.harness.ngpipeline.pipeline.executions.beans.ServiceExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.StageExecutionSummary;
+import io.harness.pms.contracts.execution.ExecutionErrorInfo;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.execution.beans.ExecutionErrorInfo;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ParallelStageElement;
@@ -154,7 +154,7 @@ public class PipelineExecutionHelperTest extends CDNGBaseTest {
             .executionStatus(ExecutionStatus.FAILED)
             .startedAt(123L)
             .endedAt(124L)
-            .errorInfo(ExecutionErrorInfo.builder().message("invalid").build())
+            .errorInfo(ExecutionErrorInfo.newBuilder().setMessage("invalid").build())
             .build();
 
     CDStageExecutionSummary actualStageExecutionSummary =

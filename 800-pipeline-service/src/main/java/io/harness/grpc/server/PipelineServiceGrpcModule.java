@@ -7,6 +7,7 @@ import io.harness.pms.contracts.plan.PlanCreationServiceGrpc;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc.PlanCreationServiceBlockingStub;
 import io.harness.pms.plan.execution.data.service.outputs.SweepingOutputServiceImpl;
 import io.harness.pms.sdk.PmsSdkInstanceService;
+import io.harness.pms.sdk.service.execution.PmsExecutionGrpcService;
 
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
@@ -68,11 +69,12 @@ public class PipelineServiceGrpcModule extends AbstractModule {
   @Named("pms-grpc-service")
   public Service pmsGrpcService(PipelineServiceConfiguration configuration, HealthStatusManager healthStatusManager,
       PmsSdkInstanceService pmsSdkInstanceService, PmsNodeExecutionGrpcSevice pmsNodeExecutionGrpcSevice,
-      SweepingOutputServiceImpl sweepingOutputService) {
+      PmsExecutionGrpcService pmsExecutionGrpcService, SweepingOutputServiceImpl sweepingOutputService) {
     Set<BindableService> cdServices = new HashSet<>();
     cdServices.add(healthStatusManager.getHealthService());
     cdServices.add(pmsSdkInstanceService);
     cdServices.add(pmsNodeExecutionGrpcSevice);
+    cdServices.add(pmsExecutionGrpcService);
     cdServices.add(sweepingOutputService);
     return new GrpcServer(configuration.getGrpcServerConfig().getConnectors().get(0), cdServices,
         Collections.emptySet(), healthStatusManager);
