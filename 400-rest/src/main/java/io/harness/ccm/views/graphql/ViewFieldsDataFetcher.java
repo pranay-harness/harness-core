@@ -52,7 +52,14 @@ public class ViewFieldsDataFetcher extends AbstractFieldsDataFetcher<QLCEViewFie
     for (ViewField customField : customFields) {
       List<ViewField> customFieldViewFields = viewCustomFieldService.get(customField.getFieldId()).getViewFields();
       for (ViewField field : customFieldViewFields) {
-        viewFieldIdentifierSetFromCustomFields.add(field.getIdentifier());
+        if (field.getIdentifier() == ViewFieldIdentifier.LABEL) {
+          for (QLCEViewFieldIdentifierData viewFieldIdentifierData :
+              getFieldIdentifierDataFromCEMetadataRecord(accountId)) {
+            viewFieldIdentifierSetFromCustomFields.add(viewFieldIdentifierData.getIdentifier());
+          }
+        } else {
+          viewFieldIdentifierSetFromCustomFields.add(field.getIdentifier());
+        }
       }
     }
 

@@ -3,8 +3,13 @@ package software.wings.resources.views;
 import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unified;
 
 import io.harness.ccm.billing.bigquery.BigQueryService;
+import io.harness.ccm.views.dao.ViewCustomFieldDao;
 import io.harness.ccm.views.entities.ViewCustomField;
+import io.harness.ccm.views.entities.ViewCustomFunction;
+import io.harness.ccm.views.entities.ViewField;
+import io.harness.ccm.views.entities.ViewFieldIdentifier;
 import io.harness.ccm.views.graphql.CustomFieldExpressionHelper;
+import io.harness.ccm.views.graphql.ViewsMetaDataFields;
 import io.harness.ccm.views.service.ViewCustomFieldService;
 import io.harness.rest.RestResponse;
 
@@ -15,6 +20,12 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.validation.Valid;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -35,15 +46,17 @@ public class ViewCustomFieldResource {
   private CustomFieldExpressionHelper customFieldExpressionHelper;
   private BigQueryService bigQueryService;
   private CloudBillingHelper cloudBillingHelper;
+  private ViewCustomFieldDao customFieldDao;
 
   @Inject
   public ViewCustomFieldResource(ViewCustomFieldService viewCustomFieldService,
       CustomFieldExpressionHelper customFieldExpressionHelper, BigQueryService bigQueryService,
-      CloudBillingHelper cloudBillingHelper) {
+      CloudBillingHelper cloudBillingHelper, ViewCustomFieldDao customFieldDao) {
     this.viewCustomFieldService = viewCustomFieldService;
     this.customFieldExpressionHelper = customFieldExpressionHelper;
     this.bigQueryService = bigQueryService;
     this.cloudBillingHelper = cloudBillingHelper;
+    this.customFieldDao = customFieldDao;
   }
 
   @POST
@@ -51,11 +64,54 @@ public class ViewCustomFieldResource {
   @ExceptionMetered
   public RestResponse<ViewCustomField> saveCustomField(
       @QueryParam("accountId") String accountId, ViewCustomField viewCustomField) {
-    viewCustomField.setSqlFormula(customFieldExpressionHelper.getSQLFormula(
-        viewCustomField.getUserDefinedExpression(), viewCustomField.getViewFields()));
+    modifyCustomField(viewCustomField);
     BigQuery bigQuery = bigQueryService.get();
     String cloudProviderTableName = cloudBillingHelper.getCloudProviderTableName(accountId, unified);
     return new RestResponse<>(viewCustomFieldService.save(viewCustomField, bigQuery, cloudProviderTableName));
+  }
+
+  private void modifyCustomField(ViewCustomField viewCustomField) {
+    List<ViewField> viewFields = new ArrayList<>();
+    String customFieldDisplayFormula = viewCustomField.getDisplayFormula();
+
+    Pattern customFieldPattern = Pattern.compile("CUSTOM.([^ ,)]*)");
+    Matcher customFieldPatternMatcher = customFieldPattern.matcher(customFieldDisplayFormula);
+    while (customFieldPatternMatcher.find()) {
+      String customFieldName = customFieldPatternMatcher.group(1);
+      ViewCustomField customFieldDaoByName =
+          customFieldDao.findByName(viewCustomField.getAccountId(), viewCustomField.getViewId(), customFieldName);
+      customFieldDisplayFormula = customFieldDisplayFormula.replaceAll(
+          customFieldPatternMatcher.group(), customFieldDaoByName.getDisplayFormula());
+    }
+    String userDefinedExpression = customFieldDisplayFormula;
+
+    Pattern labelsPattern = Pattern.compile("LABEL.([^ ,)]*)");
+    Matcher labelsPatternMatcher = labelsPattern.matcher(userDefinedExpression);
+    while (labelsPatternMatcher.find()) {
+      String labelKey = labelsPatternMatcher.group(1);
+      viewFields.add(ViewField.builder()
+                         .fieldName(labelKey)
+                         .fieldId(ViewsMetaDataFields.LABEL_KEY.getFieldName())
+                         .identifier(ViewFieldIdentifier.LABEL)
+                         .build());
+      userDefinedExpression = userDefinedExpression.replaceAll(
+          labelsPatternMatcher.group(), ViewsMetaDataFields.LABEL_VALUE.getFieldName());
+    }
+
+    HashMap<String, ViewField> viewFieldsHashMap = customFieldExpressionHelper.getViewFieldsHashMap();
+    for (Map.Entry<String, ViewField> viewFieldEntry : viewFieldsHashMap.entrySet()) {
+      String key = viewFieldEntry.getKey();
+      if (customFieldDisplayFormula.contains(key)) {
+        ViewField viewField = viewFieldEntry.getValue();
+        viewFields.add(viewField);
+        userDefinedExpression = userDefinedExpression.replaceAll(key, viewField.getFieldId());
+      }
+    }
+
+    viewCustomField.setViewFields(viewFields);
+    viewCustomField.setUserDefinedExpression(userDefinedExpression);
+    viewCustomField.setSqlFormula(
+        userDefinedExpression.replaceAll(ViewCustomFunction.ONE_OF.getName(), ViewCustomFunction.ONE_OF.getFormula()));
   }
 
   @GET
@@ -71,8 +127,7 @@ public class ViewCustomFieldResource {
   @ExceptionMetered
   @Path("/validate")
   public Response validate(@QueryParam("accountId") String accountId, ViewCustomField viewCustomField) {
-    viewCustomField.setSqlFormula(customFieldExpressionHelper.getSQLFormula(
-        viewCustomField.getUserDefinedExpression(), viewCustomField.getViewFields()));
+    modifyCustomField(viewCustomField);
     BigQuery bigQuery = bigQueryService.get();
     String cloudProviderTableName = cloudBillingHelper.getCloudProviderTableName(accountId, unified);
     viewCustomFieldService.validate(viewCustomField, bigQuery, cloudProviderTableName);
@@ -85,9 +140,7 @@ public class ViewCustomFieldResource {
   @ExceptionMetered
   public RestResponse<ViewCustomField> update(
       @QueryParam("accountId") String accountId, @Valid @RequestBody ViewCustomField viewCustomField) {
-    viewCustomField.setAccountId(accountId);
-    viewCustomField.setSqlFormula(customFieldExpressionHelper.getSQLFormula(
-        viewCustomField.getUserDefinedExpression(), viewCustomField.getViewFields()));
+    modifyCustomField(viewCustomField);
     BigQuery bigQuery = bigQueryService.get();
     String cloudProviderTableName = cloudBillingHelper.getCloudProviderTableName(accountId, unified);
     return new RestResponse<>(viewCustomFieldService.update(viewCustomField, bigQuery, cloudProviderTableName));
