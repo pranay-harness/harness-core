@@ -16,6 +16,7 @@ import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
+import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.ServiceOverride;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
@@ -118,6 +119,8 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
+import software.wings.beans.HelmCommandFlag;
+import software.wings.beans.HelmCommandFlagConstants;
 import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.InfraMappingSweepingOutput;
 import software.wings.beans.InfrastructureMapping;
@@ -188,6 +191,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder;
+import software.wings.sm.StateExecutionContext;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
@@ -197,12 +201,15 @@ import software.wings.utils.WingsTestConstants;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -232,6 +239,13 @@ public class HelmDeployStateTest extends WingsBaseTest {
       "File path has to be YAML file if git connector is selected";
   private static final String COMMAND_FLAGS = "--tls";
   private static final String PHASE_NAME = "phaseName";
+  private static final HelmCommandFlag HELM_COMMAND_FLAG =
+      HelmCommandFlag.builder()
+          .valueMap(Stream
+                        .of(new AbstractMap.SimpleEntry<>(HelmCommandFlagConstants.HelmSubCommand.INSTALL, "--debug2"),
+                            new AbstractMap.SimpleEntry<>(HelmCommandFlagConstants.HelmSubCommand.UPGRADE, "--debug2"))
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)))
+          .build();
 
   @Mock private AppService appService;
   @Mock private ArtifactService artifactService;
@@ -451,10 +465,8 @@ public class HelmDeployStateTest extends WingsBaseTest {
     HelmChartConfig chartConfigWithConnectorId = HelmChartConfig.builder().connectorId("connectorId").build();
     HelmChartConfig chartConfigWithoutConnectorId =
         HelmChartConfig.builder().chartVersion("1.0.0").chartUrl(CHART_URL).chartName(CHART_NAME).build();
-    ApplicationManifest applicationManifest = ApplicationManifest.builder()
-                                                  .storeType(StoreType.HelmChartRepo)
-                                                  .helmChartConfig(chartConfigWithConnectorId)
-                                                  .build();
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().storeType(HelmChartRepo).helmChartConfig(chartConfigWithConnectorId).build();
 
     when(serviceResourceService.getHelmChartSpecification(APP_ID, SERVICE_ID))
         .thenReturn(HelmChartSpecification.builder()
@@ -1297,7 +1309,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
         HelmChartSpecification.builder().build(), ContainerServiceParams.builder().build(), "release-name",
         WingsTestConstants.ACCOUNT_ID, WingsTestConstants.APP_ID, WingsTestConstants.ACTIVITY_ID,
         ImageDetails.builder().build(), "repo", GitConfig.builder().build(), Collections.emptyList(), null,
-        K8sDelegateManifestConfig.builder().build(), Collections.emptyMap(), HelmVersion.V3);
+        K8sDelegateManifestConfig.builder().build(), Collections.emptyMap(), HelmVersion.V3, null);
   }
 
   @Test
@@ -1310,7 +1322,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
 
     ApplicationManifest serviceHelmChartManifest =
         ApplicationManifest.builder()
-            .storeType(StoreType.HelmChartRepo)
+            .storeType(HelmChartRepo)
             .helmChartConfig(HelmChartConfig.builder().chartName("helm-chart").build())
             .build();
 
@@ -1529,7 +1541,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
     HelmChartSpecification helmChartSpec = HelmChartSpecification.builder().chartName("name").build();
     ApplicationManifest appManifest = ApplicationManifest.builder()
                                           .pollForChanges(true)
-                                          .storeType(StoreType.HelmChartRepo)
+                                          .storeType(HelmChartRepo)
                                           .helmChartConfig(HelmChartConfig.builder().chartName("name").build())
                                           .build();
 
@@ -1700,5 +1712,42 @@ public class HelmDeployStateTest extends WingsBaseTest {
     verify(sweepingOutputService, times(2)).save(instanceCaptor.capture());
     assertThat(instanceCaptor.getValue().getName()).isEqualTo(HelmReleaseInfoElement.SWEEPING_OUTPUT_NAME);
     assertThat(((HelmReleaseInfoElement) instanceCaptor.getValue().getValue()).getReleaseName()).isEqualTo("test");
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testExecuteWithHelmCommandFlags() {
+    when(serviceResourceService.getHelmChartSpecification(APP_ID, SERVICE_ID))
+        .thenReturn(HelmChartSpecification.builder()
+                        .chartName(CHART_NAME)
+                        .chartUrl(CHART_URL)
+                        .chartVersion(CHART_VERSION)
+                        .build());
+    when(serviceTemplateHelper.fetchServiceTemplateId(any())).thenReturn(SERVICE_TEMPLATE_ID);
+    when(k8sStateHelper.fetchTagsFromK8sCloudProvider(any())).thenReturn(Arrays.asList("delegateName"));
+    when(applicationManifestService.getAppManifest(any(), any(), any(), any()))
+        .thenReturn(ApplicationManifest.builder()
+                        .helmCommandFlag(HELM_COMMAND_FLAG)
+                        .storeType(HelmChartRepo)
+                        .helmChartConfig(HelmChartConfig.builder()
+                                             .chartName(CHART_NAME)
+                                             .chartUrl(CHART_URL)
+                                             .chartVersion(CHART_VERSION)
+                                             .build())
+                        .build());
+
+    ExecutionContextImpl contextSpy = spy(context);
+    doAnswer(t -> t.getArguments()[0]).when(contextSpy).renderExpression(anyString(), any(StateExecutionContext.class));
+    ExecutionResponse executionResponse = helmDeployState.execute(contextSpy);
+
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+
+    assertThat(delegateTask.getTags()).isEqualTo(Arrays.asList("delegateName"));
+    HelmInstallCommandRequest helmInstallCommandRequest =
+        (HelmInstallCommandRequest) delegateTask.getData().getParameters()[0];
+    assertThat(helmInstallCommandRequest.getHelmCommandFlag()).isEqualTo(HELM_COMMAND_FLAG);
   }
 }

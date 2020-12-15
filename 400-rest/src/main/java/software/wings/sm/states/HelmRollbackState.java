@@ -53,7 +53,8 @@ public class HelmRollbackState extends HelmDeployState {
       HelmChartSpecification helmChartSpecification, ContainerServiceParams containerServiceParams, String releaseName,
       String accountId, String appId, String activityId, ImageDetails imageTag, String repoName, GitConfig gitConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String commandFlags, K8sDelegateManifestConfig manifestConfig,
-      Map<K8sValuesLocation, ApplicationManifest> appManifestMap, HelmVersion helmVersion) {
+      Map<K8sValuesLocation, ApplicationManifest> appManifestMap, HelmVersion helmVersion,
+      HelmCommandFlag helmCommandFlag) {
     Integer previousReleaseRevision = null;
 
     ContextElement contextElement = context.getContextElement(ContextElementType.HELM_DEPLOY);
