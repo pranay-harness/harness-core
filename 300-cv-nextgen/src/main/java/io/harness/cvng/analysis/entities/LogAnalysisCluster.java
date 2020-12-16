@@ -49,6 +49,7 @@ public class LogAnalysisCluster implements PersistentEntity, UuidAware, CreatedA
   private List<Frequency> frequencyTrend;
   private String text;
   private boolean isEvicted;
+  private long firstSeenTime;
 
   @JsonIgnore @SchemaIgnore @FdTtlIndex private Date validUntil;
 

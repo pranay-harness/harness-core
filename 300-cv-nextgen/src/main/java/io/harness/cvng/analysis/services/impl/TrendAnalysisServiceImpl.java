@@ -7,6 +7,7 @@ import static io.harness.cvng.analysis.CVAnalysisConstants.PREVIOUS_ANOMALIES_UR
 import static io.harness.cvng.analysis.CVAnalysisConstants.SERVICE_GUARD_SHORT_TERM_HISTORY_URL;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_ANALYSIS_RESOURCE;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SERVICE_GUARD_DATA_LENGTH;
+import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_ANALYSIS_BASELINE_WINDOW_FOR_NEW_CLUSTER;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_ANALYSIS_RESOURCE;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_ANALYSIS_SAVE_PATH;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TREND_ANALYSIS_TEST_DATA;
@@ -186,10 +187,14 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
             .asList();
     List<TimeSeriesRecordDTO> testData = new ArrayList<>();
     logAnalysisClusters.forEach(logAnalysisCluster -> {
-      String groupName = String.valueOf(logAnalysisCluster.getLabel());
-      List<TimeSeriesRecordDTO> testDataForCluster =
-          getTestDataForCluster(logAnalysisCluster, startTime, endTime, groupName);
-      testData.addAll(testDataForCluster);
+      if (Instant.ofEpochMilli(logAnalysisCluster.getFirstSeenTime())
+              .plus(TREND_ANALYSIS_BASELINE_WINDOW_FOR_NEW_CLUSTER, ChronoUnit.MINUTES)
+              .isBefore(endTime)) {
+        String groupName = String.valueOf(logAnalysisCluster.getLabel());
+        List<TimeSeriesRecordDTO> testDataForCluster =
+            getTestDataForCluster(logAnalysisCluster, startTime, endTime, groupName);
+        testData.addAll(testDataForCluster);
+      }
     });
     return testData;
   }
