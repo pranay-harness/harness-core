@@ -46,6 +46,7 @@ import software.wings.stencils.DataProvider;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.RepositoryType;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
@@ -55,6 +56,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -238,10 +240,19 @@ public class ScpCommandUnit extends SshCommandUnit {
             if (isEmpty(artifactStreamAttributes.getArtifactFileMetadata())) {
               // Try once more of to get download url
               try {
-                List<BuildDetails> buildDetailsList = nexusTwoService.getVersion(nexusConfig, encryptionDetails,
-                    artifactStreamAttributes.getRepositoryName(), artifactStreamAttributes.getGroupId(),
-                    artifactStreamAttributes.getArtifactName(), artifactStreamAttributes.getExtension(),
-                    artifactStreamAttributes.getClassifier(), artifactStreamAttributes.getMetadata().get("buildNo"));
+                List<BuildDetails> buildDetailsList;
+                if (artifactStreamAttributes.getRepositoryType() != null
+                    && artifactStreamAttributes.getRepositoryType().equals(RepositoryType.maven.name())) {
+                  buildDetailsList = nexusTwoService.getVersion(nexusConfig, encryptionDetails,
+                      artifactStreamAttributes.getRepositoryName(), artifactStreamAttributes.getGroupId(),
+                      artifactStreamAttributes.getArtifactName(), artifactStreamAttributes.getExtension(),
+                      artifactStreamAttributes.getClassifier(), artifactStreamAttributes.getMetadata().get("buildNo"));
+                } else {
+                  buildDetailsList = Collections.singletonList(nexusTwoService.getVersion(
+                      artifactStreamAttributes.getRepositoryFormat(), nexusConfig, encryptionDetails,
+                      artifactStreamAttributes.getRepositoryName(), artifactStreamAttributes.getNexusPackageName(),
+                      artifactStreamAttributes.getMetadata().get("buildNo")));
+                }
 
                 if (isEmpty(buildDetailsList) || isEmpty(buildDetailsList.get(0).getArtifactFileMetadataList())) {
                   saveExecutionLog(context, WARN, "There are no artifacts to copy");
