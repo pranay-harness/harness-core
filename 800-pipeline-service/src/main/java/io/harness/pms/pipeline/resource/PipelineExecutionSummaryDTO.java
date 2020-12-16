@@ -30,7 +30,7 @@ public class PipelineExecutionSummaryDTO {
   Map<String, String> tags;
 
   ExecutionTriggerInfo executionTriggerInfo;
-  ExecutionErrorInfo executionErrorInfo;
+  // ExecutionErrorInfo executionErrorInfo;
 
   Map<String, Document> moduleInfo;
   Map<String, GraphLayoutNodeDTO> layoutNodeMap;

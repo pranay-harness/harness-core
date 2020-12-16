@@ -107,8 +107,9 @@ public class FilterCreationResponse {
     }
 
     finalBlobResponseBuilder.setStageCount(stageCount);
-    finalBlobResponseBuilder.setStartingNodeId(startingNodeId);
-
+    if (isNotEmpty(startingNodeId)) {
+      finalBlobResponseBuilder.setStartingNodeId(startingNodeId);
+    }
     return finalBlobResponseBuilder.build();
   }
 }

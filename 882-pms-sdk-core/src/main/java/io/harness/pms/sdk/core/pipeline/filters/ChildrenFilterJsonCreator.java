@@ -19,8 +19,8 @@ public abstract class ChildrenFilterJsonCreator<T> implements FilterJsonCreator<
     response.addDependencies(getDependencies(filterCreationContext));
     response.setPipelineFilter(getFilterForGivenField());
     response.setLayoutNodes(createLayoutNodeMap(filterCreationContext, field));
-    if (EmptyPredicate.isNotEmpty(getStartingNodeId(field))) {
-      response.setStartingNodeId(getStartingNodeId(field));
+    if (EmptyPredicate.isNotEmpty(getStartingNodeId(filterCreationContext, field))) {
+      response.setStartingNodeId(getStartingNodeId(filterCreationContext, field));
     }
     return response;
   }
@@ -29,5 +29,5 @@ public abstract class ChildrenFilterJsonCreator<T> implements FilterJsonCreator<
     return new HashMap<>();
   }
 
-  abstract public String getStartingNodeId(T field);
+  abstract public String getStartingNodeId(FilterCreationContext filterCreationContext, T field);
 }

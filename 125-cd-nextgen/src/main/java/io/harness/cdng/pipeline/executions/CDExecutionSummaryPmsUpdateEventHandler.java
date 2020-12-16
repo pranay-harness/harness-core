@@ -22,6 +22,7 @@ import io.harness.pms.sdk.execution.beans.PipelineModuleInfo;
 import io.harness.pms.sdk.execution.beans.StageModuleInfo;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import java.util.Objects;
 import java.util.Optional;
@@ -29,7 +30,13 @@ import java.util.stream.Collectors;
 
 @Singleton
 public class CDExecutionSummaryPmsUpdateEventHandler extends ExecutionSummaryUpdateEventHandler {
-  @Inject private OutcomeService outcomeService;
+  private OutcomeService outcomeService;
+
+  @Inject
+  public CDExecutionSummaryPmsUpdateEventHandler(Injector injector, OutcomeService outcomeService) {
+    super(injector);
+    this.outcomeService = outcomeService;
+  }
 
   public ServiceExecutionSummary.ArtifactsSummary mapArtifactsOutcomeToSummary(ServiceOutcome serviceOutcome) {
     ServiceExecutionSummary.ArtifactsSummary.ArtifactsSummaryBuilder artifactsSummaryBuilder =
