@@ -1,5 +1,6 @@
 package io.harness.cdng.pipeline.executions;
 
+import static io.harness.pms.contracts.execution.events.OrchestrationEventType.ORCHESTRATION_START;
 import static io.harness.rule.OwnerRule.SAHIL;
 
 import static org.mockito.Matchers.any;
@@ -58,6 +59,7 @@ public class PipelineExecutionStartEventHandlerTest extends CategoryTest {
                           .addAllLevels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
                           .setPlanExecutionId("executionId")
                           .build())
+            .eventType(ORCHESTRATION_START)
             .build();
     PlanNode planNode =
         PlanNode.builder()
@@ -89,6 +91,7 @@ public class PipelineExecutionStartEventHandlerTest extends CategoryTest {
                           .addAllLevels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
                           .setPlanExecutionId("executionId")
                           .build())
+            .eventType(ORCHESTRATION_START)
             .build();
     PlanNode planNode =
         PlanNode.builder()
@@ -118,6 +121,7 @@ public class PipelineExecutionStartEventHandlerTest extends CategoryTest {
                           .addAllLevels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
                           .setPlanExecutionId("executionId")
                           .build())
+            .eventType(ORCHESTRATION_START)
             .build();
     PlanNode planNode =
         PlanNode.builder()

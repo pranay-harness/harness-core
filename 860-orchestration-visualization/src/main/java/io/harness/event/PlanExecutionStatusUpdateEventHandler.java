@@ -4,7 +4,6 @@ import io.harness.beans.OrchestrationGraph;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.service.GraphGenerationService;
@@ -29,8 +28,7 @@ public class PlanExecutionStatusUpdateEventHandler implements AsyncOrchestration
 
       graphGenerationService.cacheOrchestrationGraph(cachedGraph.withStatus(planExecution.getStatus()));
     } catch (Exception e) {
-      log.error("[{}] event failed for [{}] for plan [{}]", event.getEventType(),
-          AmbianceUtils.obtainCurrentRuntimeId(ambiance), ambiance.getPlanExecutionId(), e);
+      log.error("[{}] event failed for plan [{}]", event.getEventType(), ambiance.getPlanExecutionId(), e);
     }
   }
 }

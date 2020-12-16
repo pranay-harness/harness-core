@@ -13,6 +13,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.rule.Owner;
@@ -50,10 +51,16 @@ public class OrchestrationEndEventHandlerTest extends OrchestrationVisualization
                                       .build();
     planExecutionService.save(planExecution);
 
-    OrchestrationEvent event = OrchestrationEvent.builder()
-                                   .ambiance(Ambiance.newBuilder().setPlanExecutionId(planExecution.getUuid()).build())
-                                   .eventType(ORCHESTRATION_END)
-                                   .build();
+    OrchestrationEvent event =
+        OrchestrationEvent.builder()
+            .ambiance(Ambiance.newBuilder().setPlanExecutionId(planExecution.getUuid()).build())
+            .nodeExecutionProto(
+                NodeExecutionProto.newBuilder()
+                    .setUuid(generateUuid())
+                    .setAmbiance(Ambiance.newBuilder().setPlanExecutionId(planExecution.getUuid()).build())
+                    .build())
+            .eventType(ORCHESTRATION_END)
+            .build();
 
     OrchestrationGraph orchestrationGraph = OrchestrationGraph.builder()
                                                 .rootNodeIds(Lists.newArrayList(generateUuid()))

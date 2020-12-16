@@ -1,6 +1,7 @@
 package io.harness.cdng.pipeline.executions;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.pms.contracts.execution.events.OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE;
 import static io.harness.rule.OwnerRule.SAHIL;
 
 import static org.mockito.Matchers.any;
@@ -58,7 +59,8 @@ public class PipelineExecutionUpdateEventHandlerTest extends CategoryTest {
                             .addAllLevels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
                             .setPlanExecutionId(generateUuid())
                             .build();
-    OrchestrationEvent orchestrationEvent = OrchestrationEvent.builder().ambiance(ambiance).build();
+    OrchestrationEvent orchestrationEvent =
+        OrchestrationEvent.builder().ambiance(ambiance).eventType(NODE_EXECUTION_STATUS_UPDATE).build();
     NodeExecution nodeExecution = NodeExecution.builder()
                                       .ambiance(ambiance)
                                       .node(PlanNodeProto.newBuilder().setGroup(StepOutcomeGroup.STAGE.name()).build())
@@ -83,6 +85,7 @@ public class PipelineExecutionUpdateEventHandlerTest extends CategoryTest {
                               "projectIdentfier", "orgIdentifier", "orgIdentifier"))
                           .addAllLevels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
                           .build())
+            .eventType(NODE_EXECUTION_STATUS_UPDATE)
             .build();
     NodeExecution nodeExecution = NodeExecution.builder().node(PlanNodeProto.newBuilder().build()).build();
     when(nodeExecutionService.get("node1")).thenReturn(nodeExecution);
@@ -102,6 +105,7 @@ public class PipelineExecutionUpdateEventHandlerTest extends CategoryTest {
                               "projectIdentfier", "orgIdentifier", "orgIdentifier"))
                           .addAllLevels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
                           .build())
+            .eventType(NODE_EXECUTION_STATUS_UPDATE)
             .build();
     NodeExecution nodeExecution = NodeExecution.builder()
                                       .node(PlanNodeProto.newBuilder().setStepType(ServiceStep.STEP_TYPE).build())
@@ -129,6 +133,7 @@ public class PipelineExecutionUpdateEventHandlerTest extends CategoryTest {
                               "projectIdentfier", "orgIdentifier", "orgIdentifier"))
                           .addAllLevels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
                           .build())
+            .eventType(NODE_EXECUTION_STATUS_UPDATE)
             .build();
     NodeExecution nodeExecution =
         NodeExecution.builder()
