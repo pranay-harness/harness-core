@@ -108,7 +108,7 @@ public class ActivityResource {
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @QueryParam("environmentIdentifier") String environmentIdentifier,
       @NotNull @QueryParam("startTime") Long startTime, @NotNull @QueryParam("endTime") Long endTime) {
-    return new RestResponse(activityService.listActivitiesInTimeRange(orgIdentifier, projectIdentifier,
+    return new RestResponse(activityService.listActivitiesInTimeRange(accountId, orgIdentifier, projectIdentifier,
         environmentIdentifier, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)));
   }
 
@@ -121,7 +121,7 @@ public class ActivityResource {
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier, @QueryParam("size") int size) {
     return new RestResponse(
-        activityService.getRecentActivityVerificationResults(orgIdentifier, projectIdentifier, size));
+        activityService.getRecentActivityVerificationResults(accountId, orgIdentifier, projectIdentifier, size));
   }
 
   @GET

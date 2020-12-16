@@ -12,7 +12,7 @@ public interface VerificationTaskService {
   String getCVConfigId(String verificationTaskId);
   String getVerificationJobInstanceId(String verificationTaskId);
   VerificationTask get(String verificationTaskId);
-  String getVerificationTaskId(String cvConfigId, String verificationJobInstanceId);
+  String getVerificationTaskId(String accountId, String cvConfigId, String verificationJobInstanceId);
   Set<String> getVerificationTaskIds(String accountId, String verificationJobInstanceId);
   String getServiceGuardVerificationTaskId(String accountId, String cvConfigId);
   List<String> getServiceGuardVerificationTaskIds(String accountId, List<String> cvConfigIds);

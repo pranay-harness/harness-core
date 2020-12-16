@@ -12,7 +12,8 @@ import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobType;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
-import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -21,6 +22,7 @@ import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -47,6 +49,17 @@ import org.mongodb.morphia.annotations.Id;
 // Also the serialization of duration is in millis.
 public abstract class VerificationJob
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("query_idx")
+                 .field(VerificationJobKeys.projectIdentifier)
+                 .field(VerificationJobKeys.orgIdentifier)
+                 .field(VerificationJobKeys.accountId)
+                 .build())
+        .build();
+  }
+
   public VerificationJob() {
     this.type = getType();
   }
@@ -58,7 +71,7 @@ public abstract class VerificationJob
   private String projectIdentifier;
   private String orgIdentifier;
   private VerificationJobType type;
-  @NotNull @FdIndex private String accountId;
+  @NotNull private String accountId;
   @NotNull private RuntimeParameter serviceIdentifier;
   @NotNull private RuntimeParameter envIdentifier;
   private List<DataSourceType> dataSources;

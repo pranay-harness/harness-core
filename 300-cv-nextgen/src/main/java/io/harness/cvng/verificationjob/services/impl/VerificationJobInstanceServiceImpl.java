@@ -568,8 +568,9 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   }
 
   @Override
-  public List<VerificationJobInstance> getRunningOrQueuedJobInstances(String orgIdentifier, String projectIdentifier,
-      String envIdentifier, String serviceIdentifier, VerificationJobType jobType, Instant endTimeBefore) {
+  public List<VerificationJobInstance> getRunningOrQueuedJobInstances(String accountId, String orgIdentifier,
+      String projectIdentifier, String envIdentifier, String serviceIdentifier, VerificationJobType jobType,
+      Instant endTimeBefore) {
     Preconditions.checkNotNull(orgIdentifier);
     Preconditions.checkNotNull(projectIdentifier);
     Preconditions.checkNotNull(envIdentifier);
@@ -577,6 +578,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
 
     List<VerificationJobInstance> verificationJobInstances =
         hPersistence.createQuery(VerificationJobInstance.class, excludeAuthority)
+            .filter(VerificationJobInstanceKeys.accountId, accountId)
             .filter(VerificationJobInstanceKeys.resolvedJob + "." + VerificationJobKeys.orgIdentifier, orgIdentifier)
             .filter(VerificationJobInstanceKeys.resolvedJob + "." + VerificationJobKeys.projectIdentifier,
                 projectIdentifier)

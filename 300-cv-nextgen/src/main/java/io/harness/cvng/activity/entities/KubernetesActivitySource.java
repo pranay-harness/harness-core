@@ -6,14 +6,18 @@ import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO.KubernetesActi
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO.KubernetesActivitySourceConfig.KubernetesActivitySourceConfigKeys;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -36,6 +40,17 @@ import org.mongodb.morphia.annotations.Id;
 @HarnessEntity(exportable = true)
 public class KubernetesActivitySource
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, PersistentRegularIterable {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("query_idx")
+                 .field(KubernetesActivitySourceKeys.accountId)
+                 .field(KubernetesActivitySourceKeys.orgIdentifier)
+                 .field(KubernetesActivitySourceKeys.projectIdentifier)
+                 .build())
+        .build();
+  }
+
   public static final String SERVICE_IDENTIFIER_KEY =
       KubernetesActivitySourceKeys.activitySourceConfigs + "." + KubernetesActivitySourceConfigKeys.serviceIdentifier;
   @Id String uuid;

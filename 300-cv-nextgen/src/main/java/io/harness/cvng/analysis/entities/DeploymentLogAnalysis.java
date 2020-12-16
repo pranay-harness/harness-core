@@ -5,6 +5,8 @@ import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.Cluster;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterCoordinates;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.HostSummary;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ResultSummary;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -12,6 +14,7 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
@@ -33,6 +36,16 @@ import org.mongodb.morphia.annotations.Id;
 @HarnessEntity(exportable = false)
 public class DeploymentLogAnalysis
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("query_idx")
+                 .field(DeploymentLogAnalysisKeys.verificationTaskId)
+                 .field(DeploymentLogAnalysisKeys.startTime)
+                 .build())
+        .build();
+  }
+
   @Id private String uuid;
   private long createdAt;
   private long lastUpdatedAt;

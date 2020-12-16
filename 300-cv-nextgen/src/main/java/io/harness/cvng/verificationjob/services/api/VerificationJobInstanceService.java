@@ -41,6 +41,7 @@ public interface VerificationJobInstanceService {
   ActivityVerificationSummary getDeploymentSummary(List<VerificationJobInstance> verificationJobInstances);
   DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary getDeploymentVerificationJobInstanceSummary(
       List<String> verificationJobInstanceIds);
-  List<VerificationJobInstance> getRunningOrQueuedJobInstances(String orgIdentifier, String projectIdentifier,
-      String envIdentifier, String serviceIdentifier, VerificationJobType jobType, Instant endTimeBefore);
+  List<VerificationJobInstance> getRunningOrQueuedJobInstances(String accountI, String orgIdentifier,
+      String projectIdentifier, String envIdentifier, String serviceIdentifier, VerificationJobType jobType,
+      Instant endTimeBefore);
 }

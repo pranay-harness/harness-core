@@ -8,8 +8,10 @@ import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobType;
 import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -18,6 +20,7 @@ import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.time.Duration;
 import java.time.Instant;
@@ -48,6 +51,16 @@ import org.mongodb.morphia.annotations.Id;
 @HarnessEntity(exportable = true)
 public class VerificationJobInstance
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, PersistentRegularIterable {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("query_idx")
+                 .field(VerificationJobInstanceKeys.executionStatus)
+                 .field(VerificationJobInstanceKeys.accountId)
+                 .build())
+        .build();
+  }
+
   public static final String VERIFICATION_JOB_TYPE_KEY =
       String.format("%s.%s", VerificationJobInstanceKeys.resolvedJob, VerificationJobKeys.type);
   public static String PROJECT_IDENTIFIER_KEY =

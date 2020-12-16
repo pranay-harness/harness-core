@@ -584,7 +584,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
         .thenReturn(postActivityRisks);
 
     List<ActivityVerificationResultDTO> resultDTO =
-        activityService.getRecentActivityVerificationResults(orgIdentifier, projectIdentifier, 3);
+        activityService.getRecentActivityVerificationResults(accountId, orgIdentifier, projectIdentifier, 3);
     assertThat(resultDTO).isNotNull();
     assertThat(resultDTO.size()).isEqualTo(2);
 
@@ -624,7 +624,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     when(verificationJobInstanceService.getActivityVerificationSummary(anyList())).thenReturn(summary);
 
     List<ActivityDashboardDTO> dashboardDTOList =
-        activityService.listActivitiesInTimeRange(orgIdentifier, projectIdentifier, envIdentifier,
+        activityService.listActivitiesInTimeRange(accountId, orgIdentifier, projectIdentifier, envIdentifier,
             Instant.now().minus(15, ChronoUnit.MINUTES), Instant.now().plus(15, ChronoUnit.MINUTES));
 
     assertThat(dashboardDTOList.size()).isEqualTo(2);

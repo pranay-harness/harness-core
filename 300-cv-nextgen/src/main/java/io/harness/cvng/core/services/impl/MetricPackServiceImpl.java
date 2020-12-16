@@ -81,6 +81,7 @@ public class MetricPackServiceImpl implements MetricPackService {
   @Override
   public List<MetricPack> getMetricPacks(String accountId, String projectIdentifier, DataSourceType dataSourceType) {
     List<MetricPack> metricPacksFromDb = hPersistence.createQuery(MetricPack.class, excludeAuthority)
+                                             .filter(MetricPackKeys.accountId, accountId)
                                              .filter(MetricPackKeys.projectIdentifier, projectIdentifier)
                                              .filter(MetricPackKeys.dataSourceType, dataSourceType)
                                              .asList();

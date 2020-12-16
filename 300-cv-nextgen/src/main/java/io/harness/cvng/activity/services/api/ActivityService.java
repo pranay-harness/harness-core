@@ -32,11 +32,11 @@ public interface ActivityService {
 
   String createActivity(Activity activity);
 
-  List<ActivityDashboardDTO> listActivitiesInTimeRange(
-      String orgIdentifier, String projectIdentifier, String environmentIdentifier, Instant startTime, Instant endTime);
+  List<ActivityDashboardDTO> listActivitiesInTimeRange(String accountId, String orgIdentifier, String projectIdentifier,
+      String environmentIdentifier, Instant startTime, Instant endTime);
 
   List<ActivityVerificationResultDTO> getRecentActivityVerificationResults(
-      String orgIdentifier, String projectIdentifier, int size);
+      String accountId, String orgIdentifier, String projectIdentifier, int size);
   ActivityVerificationResultDTO getActivityVerificationResult(String accountId, String activityId);
 
   DeploymentVerificationJobInstanceSummary getDeploymentSummary(String activityId);
