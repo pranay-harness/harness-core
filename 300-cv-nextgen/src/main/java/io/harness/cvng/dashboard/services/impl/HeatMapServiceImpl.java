@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
+import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.analysis.services.api.AnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.client.NextGenService;
@@ -65,6 +66,7 @@ public class HeatMapServiceImpl implements HeatMapService {
   @Inject private Clock clock;
   @Inject private NextGenService nextGenService;
   @Inject private AnalysisService analysisService;
+  @Inject private AlertRuleService alertRuleService;
 
   @Override
   public void updateRiskScore(String accountId, String orgIdentifier, String projectIdentifier,
@@ -81,6 +83,9 @@ public class HeatMapServiceImpl implements HeatMapService {
       // update for project
       updateRiskScore(category, accountId, orgIdentifier, projectIdentifier, null, null, timeStamp, riskScore);
     }
+
+    alertRuleService.processRiskScore(
+        accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier, riskScore);
   }
 
   private void updateRiskScore(CVMonitoringCategory category, String accountId, String orgIdentifier,

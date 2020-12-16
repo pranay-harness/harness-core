@@ -48,6 +48,7 @@
             <groupId>software.wings</groupId>
             <artifactId>940-notification-client</artifactId>
             <version>${project.parent.version}</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
@@ -62,6 +63,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>960-notification-beans</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>960-notification-beans-proto</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

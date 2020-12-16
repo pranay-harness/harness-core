@@ -4,6 +4,7 @@ import static io.harness.cvng.CVConstants.SERVICE_BASE_URL;
 
 import io.harness.cvng.core.NGManagerServiceConfig;
 import io.harness.mongo.MongoConfig;
+import io.harness.notification.NotificationClientConfiguration;
 import io.harness.remote.ManagerAuthConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 
@@ -35,6 +36,7 @@ public class VerificationConfiguration extends Configuration {
   private ServiceHttpClientConfig managerClientConfig;
   private ManagerAuthConfig managerAuthConfig;
   @JsonProperty("nextGen") private NGManagerServiceConfig ngManagerServiceConfig;
+  @JsonProperty("notificationClient") private NotificationClientConfiguration notificationClientConfiguration;
 
   /**
    * Instantiates a new Main configuration.
