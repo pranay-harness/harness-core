@@ -207,6 +207,8 @@ import io.harness.delegate.task.jira.JiraTaskNGParameters;
 import io.harness.delegate.task.jira.response.JiraTaskNGResponse;
 import io.harness.delegate.task.jira.response.JiraTaskNGResponse.JiraIssueData;
 import io.harness.delegate.task.k8s.DirectK8sInfraDelegateConfig;
+import io.harness.delegate.task.k8s.K8sBGDeployRequest;
+import io.harness.delegate.task.k8s.K8sBGDeployResponse;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
@@ -508,5 +510,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AzureWebAppListWebAppInstancesResponse.class, 19432);
     kryo.register(CommandUnitStatusProgress.class, 19433);
     kryo.register(DockerRegistryProviderType.class, 19434);
+    kryo.register(K8sBGDeployRequest.class, 19435);
+    kryo.register(K8sBGDeployResponse.class, 19436);
   }
 }

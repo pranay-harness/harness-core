@@ -13,8 +13,11 @@ public interface YamlTypes {
   String INFRASTRUCTURE_DEF = "infrastructureDefinition";
   String INFRA_USE_FROM_STAGE = "useFromStage";
   String INFRA_USE_FROM_STAGE_OVERRIDES = "overrides";
+
   String K8S_ROLLING_ROLLBACK = StepSpecTypeConstants.K8S_ROLLING_ROLLBACK;
   String K8S_ROLLING_DEPLOY = StepSpecTypeConstants.K8S_ROLLING_DEPLOY;
+  String K8S_BLUE_GREEN_DEPLOY = StepSpecTypeConstants.K8S_BLUE_GREEN_DEPLOY;
+
   String MANIFEST_LIST_CONFIG = "manifests";
   String MANIFEST_CONFIG = "manifest";
   String MANIFEST_OVERRIDE_SETS = "manifestOverrideSets";

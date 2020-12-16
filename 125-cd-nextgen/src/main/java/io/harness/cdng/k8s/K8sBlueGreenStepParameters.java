@@ -17,8 +17,8 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@TypeAlias("k8sRollingStepParameters")
-public class K8sRollingStepParameters implements K8sStepParameters {
+@TypeAlias("K8sBlueGreenStepParameters")
+public class K8sBlueGreenStepParameters implements K8sStepParameters {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
   @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) ParameterField<Boolean> skipDryRun;
   @JsonIgnore Map<String, StepDependencySpec> stepDependencySpecs;
