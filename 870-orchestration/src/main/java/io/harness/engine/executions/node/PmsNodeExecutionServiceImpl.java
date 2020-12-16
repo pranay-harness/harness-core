@@ -19,6 +19,7 @@ import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
@@ -27,6 +28,7 @@ import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
+import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.ProgressCallback;
@@ -116,5 +118,12 @@ public class PmsNodeExecutionServiceImpl implements PmsNodeExecutionService {
       return null;
     }
     return JsonOrchestrationUtils.asObject(stepParameters, step.getStepParametersClass());
+  }
+
+  @Override
+  public void handleFacilitationResponse(
+      @NonNull String nodeExecutionId, String notifyId, FacilitatorResponseProto facilitatorResponseProto) {
+    waitNotifyEngine.doneWith(
+        notifyId, BinaryResponseData.builder().data(facilitatorResponseProto.toByteArray()).build());
   }
 }

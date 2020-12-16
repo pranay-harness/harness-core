@@ -5,6 +5,8 @@ import io.harness.pms.contracts.plan.AccumulateResponsesRequest;
 import io.harness.pms.contracts.plan.AccumulateResponsesResponse;
 import io.harness.pms.contracts.plan.AddExecutableResponseRequest;
 import io.harness.pms.contracts.plan.AddExecutableResponseResponse;
+import io.harness.pms.contracts.plan.FacilitatorResponseRequest;
+import io.harness.pms.contracts.plan.FacilitatorResponseResponse;
 import io.harness.pms.contracts.plan.HandleStepResponseRequest;
 import io.harness.pms.contracts.plan.HandleStepResponseResponse;
 import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc.NodeExecutionProtoServiceImplBase;
@@ -85,6 +87,16 @@ public class PmsNodeExecutionGrpcSevice extends NodeExecutionProtoServiceImplBas
       responseDataMap.forEach((k, v) -> response.put(k, ByteString.copyFrom(kryoSerializer.asBytes(v))));
     }
     responseObserver.onNext(AccumulateResponsesResponse.newBuilder().putAllResponse(response).build());
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void handleFacilitatorResponse(
+      FacilitatorResponseRequest request, StreamObserver<FacilitatorResponseResponse> responseObserver) {
+    pmsNodeExecutionService.handleFacilitationResponse(
+        request.getNodeExecutionId(), request.getNotifyId(), request.getFacilitatorResponse());
+
+    responseObserver.onNext(FacilitatorResponseResponse.newBuilder().build());
     responseObserver.onCompleted();
   }
 }

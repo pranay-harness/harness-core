@@ -30,6 +30,7 @@ public class FacilitatorResponseMapper {
       builder.setPassThroughData(
           DocumentOrchestrationUtils.convertToDocumentJson(facilitatorResponse.getPassThroughData()));
     }
+    builder.setIsSuccessful(true);
     return builder.build();
   }
 }
