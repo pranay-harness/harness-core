@@ -54,4 +54,6 @@ public interface AwsConstants {
 
   String CONTEXT_NEW_ASG_NAME_EXPR = "ami.newAsgName";
   String CONTEXT_OLD_ASG_NAME_EXPR = "ami.oldAsgName";
+
+  int DEFAULT_STATE_TIMEOUT_BUFFER_MIN = 5;
 }
