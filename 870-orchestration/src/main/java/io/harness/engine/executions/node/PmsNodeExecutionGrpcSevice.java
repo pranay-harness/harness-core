@@ -16,7 +16,6 @@ import io.harness.pms.contracts.plan.ResumeNodeExecutionRequest;
 import io.harness.pms.contracts.plan.ResumeNodeExecutionResponse;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
-import io.harness.tasks.Task;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -40,8 +39,8 @@ public class PmsNodeExecutionGrpcSevice extends NodeExecutionProtoServiceImplBas
 
   @Override
   public void queueTask(QueueTaskRequest request, StreamObserver<QueueTaskResponse> responseObserver) {
-    String taskId = pmsNodeExecutionService.queueTask(request.getNodeExecutionId(), request.getTaskMode(),
-        request.getSetupAbstractionsMap(), (Task) kryoSerializer.asInflatedObject(request.getTask().toByteArray()));
+    String taskId = pmsNodeExecutionService.queueTask(
+        request.getNodeExecutionId(), request.getSetupAbstractionsMap(), request.getTaskRequest());
     responseObserver.onNext(QueueTaskResponse.newBuilder().setTaskId(taskId).build());
     responseObserver.onCompleted();
   }

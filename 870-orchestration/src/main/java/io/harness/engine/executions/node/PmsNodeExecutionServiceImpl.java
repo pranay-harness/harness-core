@@ -17,7 +17,8 @@ import io.harness.execution.NodeExecutionMapper;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.contracts.execution.TaskMode;
+import io.harness.pms.contracts.execution.tasks.TaskCategory;
+import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
@@ -27,7 +28,6 @@ import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 import io.harness.tasks.ResponseData;
-import io.harness.tasks.Task;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.ProgressCallback;
 import io.harness.waiter.WaitNotifyEngine;
@@ -46,7 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class PmsNodeExecutionServiceImpl implements PmsNodeExecutionService {
-  @Inject private Map<String, TaskExecutor> taskExecutorMap;
+  @Inject private Map<TaskCategory, TaskExecutor> taskExecutorMap;
   @Inject private OrchestrationEngine engine;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private StepRegistry stepRegistry;
@@ -63,9 +63,9 @@ public class PmsNodeExecutionServiceImpl implements PmsNodeExecutionService {
   }
 
   @Override
-  public String queueTask(String nodeExecutionId, TaskMode mode, Map<String, String> setupAbstractions, Task task) {
-    TaskExecutor taskExecutor = taskExecutorMap.get(mode.name());
-    String taskId = Preconditions.checkNotNull(taskExecutor.queueTask(setupAbstractions, task));
+  public String queueTask(String nodeExecutionId, Map<String, String> setupAbstractions, TaskRequest taskRequest) {
+    TaskExecutor taskExecutor = taskExecutorMap.get(taskRequest.getTaskCategory());
+    String taskId = Preconditions.checkNotNull(taskExecutor.queueTask(setupAbstractions, taskRequest));
     NotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecutionId).build();
     ProgressCallback progressCallback = EngineProgressCallback.builder().nodeExecutionId(nodeExecutionId).build();
     waitNotifyEngine.waitForAllOn(publisherName, callback, progressCallback, taskId);

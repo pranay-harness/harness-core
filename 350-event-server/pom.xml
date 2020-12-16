@@ -24,12 +24,6 @@
             <groupId>software.wings</groupId>
             <artifactId>400-rest</artifactId>
             <version>${project.parent.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>software.wings</groupId>
-                    <artifactId>920-delegate-service-beans</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>

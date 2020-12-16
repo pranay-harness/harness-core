@@ -19,7 +19,6 @@ import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
-import io.harness.engine.pms.tasks.TaskExecutor;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.gitsync.GitSyncModule;
@@ -54,7 +53,6 @@ import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.eventsframework.EventsFrameworkModule;
 import io.harness.ng.gitsync.NgCoreGitChangeSetProcessorServiceImpl;
 import io.harness.ng.gitsync.handlers.ConnectorYamlHandler;
-import io.harness.ng.orchestration.NgDelegate2TaskExecutor;
 import io.harness.ngtriggers.service.TriggerWebhookService;
 import io.harness.ngtriggers.service.impl.TriggerWebhookServiceImpl;
 import io.harness.pms.sdk.registries.registrar.StepRegistrar;
@@ -68,7 +66,6 @@ import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.NextGenRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.springdata.SpringPersistenceModule;
-import io.harness.tasks.TaskMode;
 import io.harness.version.VersionModule;
 import io.harness.waiter.NgOrchestrationNotifyEventListener;
 
@@ -167,9 +164,6 @@ public class NextGenModule extends AbstractModule {
     bind(RedisConfig.class)
         .annotatedWith(Names.named("lock"))
         .toInstance(appConfig.getEventsFrameworkConfiguration().getRedisConfig());
-    MapBinder<String, TaskExecutor> taskExecutorMap =
-        MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
-    taskExecutorMap.addBinding(TaskMode.DELEGATE_TASK_V3.name()).to(NgDelegate2TaskExecutor.class);
     install(new ValidationModule(getValidatorFactory()));
     install(MongoModule.getInstance());
     install(new SpringPersistenceModule());

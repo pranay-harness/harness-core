@@ -8,43 +8,34 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.TaskExecutableResponse;
-import io.harness.pms.contracts.execution.TaskMode;
+import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.sdk.core.execution.ExecuteStrategy;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
 import io.harness.pms.sdk.core.execution.ResumePackage;
-import io.harness.pms.sdk.core.execution.TaskExecuteStrategy;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
-import io.harness.tasks.Task;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.util.Collections;
-import lombok.Builder;
 import lombok.NonNull;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 @OwnedBy(CDC)
-public class TaskStrategy implements TaskExecuteStrategy {
+public class TaskStrategy implements ExecuteStrategy {
   @Inject private PmsNodeExecutionService pmsNodeExecutionService;
   @Inject private StepRegistry stepRegistry;
-
-  private final TaskMode mode;
-
-  @Builder
-  public TaskStrategy(TaskMode mode) {
-    this.mode = mode;
-  }
 
   @Override
   public void start(InvokerPackage invokerPackage) {
     NodeExecutionProto nodeExecution = invokerPackage.getNodeExecution();
     TaskExecutable taskExecutable = extractTaskExecutable(nodeExecution);
     Ambiance ambiance = nodeExecution.getAmbiance();
-    Task task = taskExecutable.obtainTask(ambiance,
+    TaskRequest task = taskExecutable.obtainTask(ambiance,
         pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
     handleResponse(ambiance, nodeExecution, task);
   }
@@ -65,20 +56,18 @@ public class TaskStrategy implements TaskExecuteStrategy {
     return (TaskExecutable) stepRegistry.obtain(node.getStepType());
   }
 
-  private void handleResponse(@NonNull Ambiance ambiance, NodeExecutionProto nodeExecution, Task task) {
+  private void handleResponse(@NonNull Ambiance ambiance, NodeExecutionProto nodeExecution, TaskRequest taskRequest) {
     String taskId = Preconditions.checkNotNull(
-        pmsNodeExecutionService.queueTask(nodeExecution.getUuid(), mode, ambiance.getSetupAbstractionsMap(), task));
+        pmsNodeExecutionService.queueTask(nodeExecution.getUuid(), ambiance.getSetupAbstractionsMap(), taskRequest));
 
     // Update Execution Node Instance state to TASK_WAITING
     pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), TASK_WAITING,
         ExecutableResponse.newBuilder()
-            .setTask(TaskExecutableResponse.newBuilder().setTaskId(taskId).setTaskMode(mode).build())
+            .setTask(TaskExecutableResponse.newBuilder()
+                         .setTaskId(taskId)
+                         .setTaskCategory(taskRequest.getTaskCategory())
+                         .build())
             .build(),
         Collections.emptyList());
-  }
-
-  @Override
-  public TaskMode getMode() {
-    return mode;
   }
 }

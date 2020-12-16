@@ -2,7 +2,7 @@ package io.harness.cdng.k8s;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.steps.StepUtils.prepareDelegateTaskInput;
+import static io.harness.steps.StepUtils.prepareTaskRequest;
 
 import io.harness.cdng.executionplan.CDStepDependencyKey;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
@@ -46,6 +46,8 @@ import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.execution.tasks.TaskCategory;
+import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.TaskChainExecutable;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
@@ -53,9 +55,9 @@ import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
-import io.harness.tasks.Task;
 import io.harness.validation.Validator;
 
 import software.wings.beans.LogHelper;
@@ -80,6 +82,7 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
   @Inject private EngineExpressionService engineExpressionService;
   @Inject private K8sStepHelper k8sStepHelper;
   @Inject private StepDependencyService stepDependencyService;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Override
   public Class<K8sRollingStepParameters> getStepParametersClass() {
@@ -167,8 +170,8 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
                 K8sCommandUnitConstants.WaitForSteadyState, K8sCommandUnitConstants.WrapUp))
             .build();
 
-    final Task delegateTask =
-        prepareDelegateTaskInput(accountId, taskData, ambiance.getSetupAbstractionsMap(), logAbstractions);
+    final TaskRequest taskRequest =
+        prepareTaskRequest(ambiance, taskData, kryoSerializer, logAbstractions, TaskCategory.DELEGATE_TASK_V2);
 
     K8sRollingStepPassThroughData k8sRollingStepPassThroughData = K8sRollingStepPassThroughData.builder()
                                                                       .k8sManifest(k8sManifest)
@@ -177,7 +180,7 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
                                                                       .build();
     return TaskChainResponse.builder()
         .chainEnd(false)
-        .task(delegateTask)
+        .taskRequest(taskRequest)
         .passThroughData(k8sRollingStepPassThroughData)
         .metadata(loggingMetadata)
         .build();
@@ -220,10 +223,10 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
             .async(true)
             .build();
 
-    final Task delegateTask = prepareDelegateTaskInput(
-        accountId, taskData, ambiance.getSetupAbstractionsMap(), StepUtils.generateLogAbstractions(ambiance));
+    final TaskRequest taskRequest = prepareTaskRequest(
+        ambiance, taskData, kryoSerializer, StepUtils.generateLogAbstractions(ambiance), TaskCategory.DELEGATE_TASK_V2);
 
-    return TaskChainResponse.builder().task(delegateTask).chainEnd(true).passThroughData(infrastructure).build();
+    return TaskChainResponse.builder().taskRequest(taskRequest).chainEnd(true).passThroughData(infrastructure).build();
   }
 
   private List<String> renderValues(Ambiance ambiance, List<String> valuesFileContents) {

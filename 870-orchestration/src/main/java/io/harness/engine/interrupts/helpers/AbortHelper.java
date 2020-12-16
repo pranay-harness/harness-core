@@ -22,6 +22,7 @@ import io.harness.pms.contracts.execution.ExecutableResponse.ResponseCase;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.TaskChainExecutableResponse;
 import io.harness.pms.contracts.execution.TaskExecutableResponse;
+import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
@@ -40,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AbortHelper {
   @Inject private StepRegistry stepRegistry;
   @Inject private NodeExecutionService nodeExecutionService;
-  @Inject private Map<String, TaskExecutor> taskExecutorMap;
+  @Inject private Map<TaskCategory, TaskExecutor> taskExecutorMap;
   @Inject private OrchestrationEngine engine;
 
   public void discontinueMarkedInstance(NodeExecution nodeExecution, Status finalStatus) {
@@ -51,22 +52,22 @@ public class AbortHelper {
       ExecutableResponse executableResponse = nodeExecution.obtainLatestExecutableResponse();
       if (executableResponse != null && nodeExecution.isTaskSpawningMode()) {
         String taskId;
-        String taskMode;
+        TaskCategory taskCategory;
         switch (executableResponse.getResponseCase()) {
           case TASK:
             TaskExecutableResponse taskExecutableResponse = executableResponse.getTask();
             taskId = taskExecutableResponse.getTaskId();
-            taskMode = taskExecutableResponse.getTaskMode().name();
+            taskCategory = taskExecutableResponse.getTaskCategory();
             break;
           case TASKCHAIN:
             TaskChainExecutableResponse taskChainExecutableResponse = executableResponse.getTaskChain();
             taskId = taskChainExecutableResponse.getTaskId();
-            taskMode = taskChainExecutableResponse.getTaskMode().name();
+            taskCategory = taskChainExecutableResponse.getTaskCategory();
             break;
           default:
             throw new InvalidRequestException("Executable Response should contain either task or taskChain");
         }
-        TaskExecutor executor = taskExecutorMap.get(taskMode);
+        TaskExecutor executor = taskExecutorMap.get(taskCategory);
         boolean aborted = executor.abortTask(ambiance.getSetupAbstractionsMap(), taskId);
         if (!aborted) {
           log.error(

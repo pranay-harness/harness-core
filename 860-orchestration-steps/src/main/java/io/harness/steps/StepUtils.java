@@ -1,19 +1,45 @@
 package io.harness.steps;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import static java.util.stream.Collectors.toList;
+
+import io.harness.data.algorithm.HashGenerator;
+import io.harness.delegate.Capability;
+import io.harness.delegate.TaskDetails;
+import io.harness.delegate.TaskLogAbstractions;
+import io.harness.delegate.TaskMode;
+import io.harness.delegate.TaskSetupAbstractions;
+import io.harness.delegate.TaskType;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.SimpleHDelegateTask;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.tasks.DelegateTaskRequest;
+import io.harness.pms.contracts.execution.tasks.TaskCategory;
+import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
+import io.harness.serializer.KryoSerializer;
+import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
 
+import com.google.common.base.Preconditions;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.Duration;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
+import org.apache.commons.collections4.ListUtils;
+import org.apache.commons.collections4.MapUtils;
 
 public class StepUtils {
   private StepUtils() {}
@@ -61,5 +87,58 @@ public class StepUtils {
     logAbstractions.put("stepId", currentStepLevel.getRuntimeId());
 
     return logAbstractions;
+  }
+
+  public static TaskRequest prepareTaskRequest(Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer) {
+    return prepareTaskRequest(ambiance, taskData, kryoSerializer, new LinkedHashMap<>(), TaskCategory.DELEGATE_TASK_V2);
+  }
+
+  public static TaskRequest prepareTaskRequest(Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer,
+      LinkedHashMap<String, String> logAbstractions, TaskCategory taskCategory) {
+    String accountId = Preconditions.checkNotNull(ambiance.getSetupAbstractionsMap().get("accountId"));
+    TaskParameters taskParameters = (TaskParameters) taskData.getParameters()[0];
+    List<ExecutionCapability> capabilities = new ArrayList<>();
+    if (taskParameters instanceof ExecutionCapabilityDemander) {
+      capabilities = ListUtils.emptyIfNull(
+          ((ExecutionCapabilityDemander) taskParameters).fetchRequiredExecutionCapabilities(null));
+    }
+    DelegateTaskRequest.Builder requestBuilder =
+        DelegateTaskRequest.newBuilder()
+            .setAccountId(accountId)
+            .setDetails(TaskDetails.newBuilder()
+                            .setKryoParameters(ByteString.copyFrom(kryoSerializer.asBytes(taskParameters) == null
+                                    ? new byte[] {}
+                                    : kryoSerializer.asBytes(taskParameters)))
+                            .setExecutionTimeout(Duration.newBuilder().setSeconds(taskData.getTimeout() * 1000).build())
+                            // TODO : Change this spmehow and obtain from ambiance
+                            .setExpressionFunctorToken(HashGenerator.generateIntegerHash())
+                            .setMode(taskData.isAsync() ? TaskMode.ASYNC : TaskMode.SYNC)
+                            .setParked(taskData.isParked())
+                            .setType(TaskType.newBuilder().setType(taskData.getTaskType()).build())
+                            .build())
+            .setLogAbstractions(TaskLogAbstractions.newBuilder()
+                                    .putAllValues(logAbstractions)
+                                    .putValues(Cd1SetupFields.APP_ID_FIELD, accountId)
+                                    .build())
+            .setSetupAbstractions(TaskSetupAbstractions.newBuilder()
+                                      .putAllValues((MapUtils.emptyIfNull(ambiance.getSetupAbstractionsMap())))
+                                      .build());
+
+    if (isNotEmpty(capabilities)) {
+      requestBuilder.addAllCapabilities(
+          capabilities.stream()
+              .map(capability
+                  -> Capability.newBuilder()
+                         .setKryoCapability(ByteString.copyFrom(kryoSerializer.asBytes(capability) == null
+                                 ? new byte[] {}
+                                 : kryoSerializer.asBytes(capability)))
+                         .build())
+              .collect(toList()));
+    }
+
+    return TaskRequest.newBuilder()
+        .setDelegateTaskRequest(requestBuilder.build())
+        .setTaskCategory(taskCategory)
+        .build();
   }
 }

@@ -20,8 +20,10 @@ import io.harness.engine.outcomes.OutcomeServiceImpl;
 import io.harness.engine.outputs.ExecutionSweepingOutputServiceImpl;
 import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.engine.pms.data.PmsSweepingOutputServiceImpl;
+import io.harness.engine.pms.tasks.NgDelegate2TaskExecutor;
 import io.harness.engine.pms.tasks.TaskExecutor;
 import io.harness.govern.ServersModule;
+import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingGrpcOutputService;
@@ -35,9 +37,9 @@ import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.registrars.OrchestrationAdviserRegistrar;
 import io.harness.registrars.OrchestrationModuleEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationResolverRegistrar;
+import io.harness.service.DelegateServiceDriverModule;
 import io.harness.state.inspection.StateInspectionService;
 import io.harness.state.inspection.StateInspectionServiceImpl;
-import io.harness.tasks.TaskMode;
 import io.harness.threading.ThreadPool;
 import io.harness.waiter.AsyncWaitEngineImpl;
 import io.harness.waiter.WaitNotifyEngine;
@@ -70,6 +72,7 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
   @Override
   protected void configure() {
     install(WaiterModule.getInstance());
+    install(DelegateServiceDriverModule.getInstance());
     install(OrchestrationBeansModule.getInstance());
     install(OrchestrationQueueModule.getInstance());
 
@@ -95,9 +98,10 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     orchestrationEventHandlerRegistrarMapBinder.addBinding(OrchestrationModuleEventHandlerRegistrar.class.getName())
         .to(OrchestrationModuleEventHandlerRegistrar.class);
 
-    MapBinder<String, TaskExecutor> taskExecutorMap =
-        MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
-    taskExecutorMap.addBinding(TaskMode.NOOP.name()).to(NoopTaskExecutor.class);
+    MapBinder<TaskCategory, TaskExecutor> taskExecutorMap =
+        MapBinder.newMapBinder(binder(), TaskCategory.class, TaskExecutor.class);
+    taskExecutorMap.addBinding(TaskCategory.UNKNOWN_CATEGORY).to(NoopTaskExecutor.class);
+    taskExecutorMap.addBinding(TaskCategory.DELEGATE_TASK_V2).to(NgDelegate2TaskExecutor.class);
 
     // PMS Services
     bind(PmsSweepingOutputService.class).to(PmsSweepingOutputServiceImpl.class).in(Singleton.class);

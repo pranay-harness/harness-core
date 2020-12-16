@@ -4,9 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
+import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.sdk.core.data.Metadata;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
-import io.harness.tasks.Task;
 
 import lombok.Builder;
 import lombok.Value;
@@ -17,12 +17,12 @@ import lombok.Value;
 public class TaskChainResponse {
   boolean chainEnd;
   PassThroughData passThroughData;
-  Task task;
+  TaskRequest taskRequest;
   Metadata metadata;
 
   public static class TaskChainResponseBuilder {
     public TaskChainResponse build() {
-      if (task == null && !chainEnd) {
+      if (taskRequest == null && !chainEnd) {
         throw new InvalidRequestException("Task Cannot be null if not chain end");
       }
       return internalBuild();

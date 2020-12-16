@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.execution.ExecutionMode;
-import io.harness.pms.contracts.execution.TaskMode;
 import io.harness.pms.sdk.core.execution.ExecuteStrategy;
 import io.harness.pms.sdk.core.execution.invokers.AsyncStrategy;
 import io.harness.pms.sdk.core.execution.invokers.ChildChainStrategy;
@@ -38,22 +37,10 @@ public class ExecutableProcessorFactory {
         executeStrategy = new ChildStrategy();
         break;
       case TASK:
-        executeStrategy = new TaskStrategy(TaskMode.DELEGATE_TASK_V1);
-        break;
-      case TASK_V2:
-        executeStrategy = new TaskStrategy(TaskMode.DELEGATE_TASK_V2);
-        break;
-      case TASK_V3:
-        executeStrategy = new TaskStrategy(TaskMode.DELEGATE_TASK_V3);
+        executeStrategy = new TaskStrategy();
         break;
       case TASK_CHAIN:
-        executeStrategy = new TaskChainStrategy(TaskMode.DELEGATE_TASK_V1);
-        break;
-      case TASK_CHAIN_V2:
-        executeStrategy = new TaskChainStrategy(TaskMode.DELEGATE_TASK_V2);
-        break;
-      case TASK_CHAIN_V3:
-        executeStrategy = new TaskChainStrategy(TaskMode.DELEGATE_TASK_V3);
+        executeStrategy = new TaskChainStrategy();
         break;
       case CHILD_CHAIN:
         executeStrategy = new ChildChainStrategy();

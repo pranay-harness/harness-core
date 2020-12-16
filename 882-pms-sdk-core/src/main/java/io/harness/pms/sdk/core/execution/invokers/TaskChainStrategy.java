@@ -8,15 +8,14 @@ import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.TaskChainExecutableResponse;
-import io.harness.pms.contracts.execution.TaskMode;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.data.Metadata;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
+import io.harness.pms.sdk.core.execution.ExecuteStrategy;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
 import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
 import io.harness.pms.sdk.core.execution.ResumePackage;
-import io.harness.pms.sdk.core.execution.TaskExecuteStrategy;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.executables.TaskChainExecutable;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
@@ -35,17 +34,11 @@ import lombok.NonNull;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 @OwnedBy(CDC)
-public class TaskChainStrategy implements TaskExecuteStrategy {
+public class TaskChainStrategy implements ExecuteStrategy {
   @Inject private PmsNodeExecutionService pmsNodeExecutionService;
   @Inject private StepRegistry stepRegistry;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private KryoSerializer kryoSerializer;
-
-  private final TaskMode mode;
-
-  public TaskChainStrategy(TaskMode mode) {
-    this.mode = mode;
-  }
 
   @Override
   public void start(InvokerPackage invokerPackage) {
@@ -90,7 +83,7 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
 
   private void handleResponse(
       @NonNull Ambiance ambiance, NodeExecutionProto nodeExecution, @NonNull TaskChainResponse taskChainResponse) {
-    if (taskChainResponse.isChainEnd() && taskChainResponse.getTask() == null) {
+    if (taskChainResponse.isChainEnd() && taskChainResponse.getTaskRequest() == null) {
       TaskChainExecutable taskChainExecutable = extractTaskChainExecutable(nodeExecution);
       pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.UNRECOGNIZED,
           ExecutableResponse.newBuilder()
@@ -112,13 +105,13 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
     }
 
     String taskId = Preconditions.checkNotNull(pmsNodeExecutionService.queueTask(
-        nodeExecution.getUuid(), mode, ambiance.getSetupAbstractionsMap(), taskChainResponse.getTask()));
+        nodeExecution.getUuid(), ambiance.getSetupAbstractionsMap(), taskChainResponse.getTaskRequest()));
     // Update Execution Node Instance state to TASK_WAITING
     pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.TASK_WAITING,
         ExecutableResponse.newBuilder()
             .setTaskChain(TaskChainExecutableResponse.newBuilder()
                               .setTaskId(taskId)
-                              .setTaskMode(mode)
+                              .setTaskCategory(taskChainResponse.getTaskRequest().getTaskCategory())
                               .setChainEnd(taskChainResponse.isChainEnd())
                               .setPassThroughData(
                                   ByteString.copyFrom(kryoSerializer.asBytes(taskChainResponse.getPassThroughData())))
@@ -127,10 +120,5 @@ public class TaskChainStrategy implements TaskExecuteStrategy {
                                                                  : taskChainResponse.getMetadata().toJson())
             .build(),
         Collections.emptyList());
-  }
-
-  @Override
-  public TaskMode getMode() {
-    return mode;
   }
 }
