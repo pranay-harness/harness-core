@@ -57,6 +57,7 @@ public class AlertRule implements PersistentEntity, UuidAware, CreatedAtAware, U
   }
 
   public static AlertRule convertFromDTO(AlertRuleDTO alertRuleDTO) {
+    alertRuleDTO.validate();
     return AlertRule.builder()
         .uuid(alertRuleDTO.getUuid())
         .accountId(alertRuleDTO.getAccountId())
