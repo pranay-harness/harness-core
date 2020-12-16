@@ -46,6 +46,7 @@ import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.SftpHelperService;
 import software.wings.service.impl.SmbHelperService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.RepositoryType;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
@@ -55,6 +56,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -542,10 +544,21 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     if (isEmpty(artifactFileMetadata)) {
       // Try once more of to get download url
       try {
-        List<BuildDetails> buildDetailsList = nexusTwoService.getVersion(nexusConfig, encryptionDetails,
-            artifactStreamAttributes.getRepositoryName(), artifactStreamAttributes.getGroupId(),
-            artifactStreamAttributes.getArtifactName(), artifactStreamAttributes.getExtension(),
-            artifactStreamAttributes.getClassifier(), artifactStreamAttributes.getMetadata().get("buildNo"));
+        List<BuildDetails> buildDetailsList;
+        if (artifactStreamAttributes.getRepositoryType() != null
+            && artifactStreamAttributes.getRepositoryType().equals(RepositoryType.maven.name())) {
+          buildDetailsList = nexusTwoService.getVersion(nexusConfig, encryptionDetails,
+              artifactStreamAttributes.getRepositoryName(), artifactStreamAttributes.getGroupId(),
+              artifactStreamAttributes.getArtifactName(), artifactStreamAttributes.getExtension(),
+              artifactStreamAttributes.getClassifier(), artifactStreamAttributes.getMetadata().get("buildNo"));
+
+        } else {
+          buildDetailsList = Collections.singletonList(
+              nexusTwoService.getVersion(artifactStreamAttributes.getRepositoryFormat(), nexusConfig, encryptionDetails,
+                  artifactStreamAttributes.getRepositoryName(), artifactStreamAttributes.getNexusPackageName(),
+                  artifactStreamAttributes.getMetadata().get("buildNo")));
+        }
+
         if (isEmpty(buildDetailsList) || isEmpty(buildDetailsList.get(0).getArtifactFileMetadataList())) {
           saveExecutionLog(context, ERROR, NO_ARTIFACTS_ERROR_STRING);
           throw new InvalidRequestException(NO_ARTIFACTS_ERROR_STRING, USER);

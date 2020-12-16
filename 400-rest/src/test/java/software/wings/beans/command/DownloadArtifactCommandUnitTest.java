@@ -64,6 +64,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.nexus.NexusTwoServiceImpl;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.RepositoryType;
 import software.wings.utils.WingsTestConstants;
 
 import java.io.IOException;
@@ -239,6 +240,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
           .artifactName("todolist")
           .extension("war")
           .classifier("sources")
+          .repositoryType(RepositoryType.maven.name())
           .artifactServerEncryptedDataDetails(Collections.emptyList())
           .metadata(mockMetadata(ArtifactStreamType.NEXUS))
           .build();

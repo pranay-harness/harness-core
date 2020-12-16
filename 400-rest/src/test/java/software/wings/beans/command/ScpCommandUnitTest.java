@@ -69,6 +69,7 @@ import software.wings.helpers.ext.nexus.NexusTwoServiceImpl;
 import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.RepositoryType;
 import software.wings.utils.WingsTestConstants;
 
 import java.io.IOException;
@@ -286,6 +287,7 @@ public class ScpCommandUnitTest extends WingsBaseTest {
           .artifactName("todolist")
           .extension("war")
           .classifier("sources")
+          .repositoryType(RepositoryType.maven.name())
           .artifactServerEncryptedDataDetails(Collections.emptyList())
           .build();
 
