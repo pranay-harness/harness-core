@@ -1,3 +1,10 @@
 package io.harness.tasks;
 
-public interface ErrorResponseData extends ResponseData {}
+import io.harness.exception.FailureType;
+
+import java.util.EnumSet;
+
+public interface ErrorResponseData extends ResponseData {
+  String getErrorMessage();
+  EnumSet<FailureType> getFailureTypes();
+}

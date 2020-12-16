@@ -1,13 +1,8 @@
-package io.harness.engine.pms.sdk;
+package io.harness.pms.sdk.core.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.OrchestrationPublisherName;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.ErrorNotifyResponseData;
-import io.harness.engine.EngineExceptionUtils;
-import io.harness.engine.executables.ExecutableProcessor;
-import io.harness.engine.executables.ExecutableProcessorFactory;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
@@ -20,10 +15,7 @@ import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.execution.NodeExecutionEventType;
 import io.harness.pms.execution.ResumeNodeExecutionEventData;
 import io.harness.pms.execution.StartNodeExecutionEventData;
-import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
-import io.harness.pms.sdk.core.execution.InvokerPackage;
-import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
-import io.harness.pms.sdk.core.execution.ResumePackage;
+import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.sdk.core.facilitator.Facilitator;
 import io.harness.pms.sdk.core.facilitator.FacilitatorResponse;
 import io.harness.pms.sdk.core.facilitator.FacilitatorResponseMapper;
@@ -31,12 +23,9 @@ import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
-import io.harness.tasks.BinaryResponseData;
-import io.harness.tasks.FailureResponseData;
-import io.harness.waiter.WaitNotifyEngine;
+import io.harness.tasks.ErrorResponseData;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
@@ -46,10 +35,6 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
   @Inject private PmsNodeExecutionService pmsNodeExecutionService;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private ExecutableProcessorFactory executableProcessorFactory;
-
-  // TODO : Temporary for now Replace it with an interaction Service
-  @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
-  @Inject private WaitNotifyEngine waitNotifyEngine;
 
   @Inject
   public NodeExecutionEventListener(QueueConsumer<NodeExecutionEvent> queueConsumer) {
@@ -80,26 +65,26 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
       Ambiance ambiance = nodeExecution.getAmbiance();
       StepInputPackage inputPackage = obtainInputPackage(nodeExecution);
       PlanNodeProto node = nodeExecution.getNode();
-      FacilitatorResponseProto facilitatorResponse = null;
+      FacilitatorResponse currFacilitatorResponse = null;
       for (FacilitatorObtainment obtainment : node.getFacilitatorObtainmentsList()) {
         Facilitator facilitator = facilitatorRegistry.obtain(obtainment.getType());
-        FacilitatorResponse currFacilitatorResponse =
+        currFacilitatorResponse =
             facilitator.facilitate(ambiance, pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution),
                 obtainment.getParameters().toByteArray(), inputPackage);
         if (currFacilitatorResponse != null) {
-          facilitatorResponse = FacilitatorResponseMapper.toFacilitatorResponseProto(currFacilitatorResponse);
           break;
         }
       }
-      if (facilitatorResponse == null) {
-        waitNotifyEngine.doneWith(
-            event.getNotifyId(), FailureResponseData.builder().message("FacilitatorResponse is null").build());
+      if (currFacilitatorResponse == null) {
+        pmsNodeExecutionService.handleFacilitationResponse(nodeExecution.getUuid(), event.getNotifyId(),
+            FacilitatorResponseProto.newBuilder().setIsSuccessful(false).build());
         return;
       }
-      waitNotifyEngine.doneWith(
-          event.getNotifyId(), BinaryResponseData.builder().data(facilitatorResponse.toByteArray()).build());
+      pmsNodeExecutionService.handleFacilitationResponse(nodeExecution.getUuid(), event.getNotifyId(),
+          FacilitatorResponseMapper.toFacilitatorResponseProto(currFacilitatorResponse));
     } catch (Exception ex) {
-      waitNotifyEngine.doneWith(event.getNotifyId(), FailureResponseData.builder().message(ex.getMessage()).build());
+      pmsNodeExecutionService.handleFacilitationResponse(event.getNodeExecution().getUuid(), event.getNotifyId(),
+          FacilitatorResponseProto.newBuilder().setIsSuccessful(false).build());
     }
   }
 
@@ -130,15 +115,14 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
     ResumeNodeExecutionEventData eventData = (ResumeNodeExecutionEventData) event.getEventData();
     try {
       if (eventData.isAsyncError()) {
-        ErrorNotifyResponseData errorNotifyResponseData =
-            (ErrorNotifyResponseData) eventData.getResponse().values().iterator().next();
+        ErrorResponseData errorResponseData = (ErrorResponseData) eventData.getResponse().values().iterator().next();
         StepResponseProto stepResponse =
             StepResponseProto.newBuilder()
                 .setStatus(Status.ERRORED)
                 .setFailureInfo(FailureInfo.newBuilder()
-                                    .addAllFailureTypes(EngineExceptionUtils.transformFailureTypes(
-                                        errorNotifyResponseData.getFailureTypes()))
-                                    .setErrorMessage(errorNotifyResponseData.getErrorMessage())
+                                    .addAllFailureTypes(
+                                        EngineExceptionUtils.transformFailureTypes(errorResponseData.getFailureTypes()))
+                                    .setErrorMessage(errorResponseData.getErrorMessage())
                                     .build())
                 .build();
         pmsNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), stepResponse);

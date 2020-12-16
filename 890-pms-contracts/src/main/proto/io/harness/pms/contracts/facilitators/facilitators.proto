@@ -21,4 +21,5 @@ message FacilitatorResponseProto {
   google.protobuf.Duration initialWait = 1;
   execution.ExecutionMode executionMode = 2;
   string passThroughData = 3;
+  bool isSuccessful = 4;
 }

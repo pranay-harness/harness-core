@@ -9,6 +9,7 @@ import "io/harness/pms/contracts/execution/executable_response.proto";
 import "io/harness/pms/contracts/execution/node_execution_proto.proto";
 import "io/harness/pms/contracts/execution/status.proto";
 import "io/harness/pms/contracts/steps/io/step_response_proto.proto";
+import "io/harness/pms/contracts/facilitators/facilitators.proto";
 
 service NodeExecutionProtoService {
   rpc queueNodeExecution(QueueNodeExecutionRequest) returns (QueueNodeExecutionResponse);
@@ -17,6 +18,7 @@ service NodeExecutionProtoService {
   rpc handleStepResponse(HandleStepResponseRequest) returns (HandleStepResponseResponse);
   rpc resumeNodeExecution(ResumeNodeExecutionRequest) returns (ResumeNodeExecutionResponse);
   rpc accumulateResponses(AccumulateResponsesRequest) returns (AccumulateResponsesResponse);
+  rpc handleFacilitatorResponse(FacilitatorResponseRequest) returns (FacilitatorResponseResponse);
 }
 
 message QueueNodeExecutionRequest {
@@ -67,3 +69,11 @@ message AccumulateResponsesRequest {
 message AccumulateResponsesResponse {
   map<string, bytes> response = 1;
 }
+
+message FacilitatorResponseRequest {
+  string nodeExecutionId = 1;
+  string notifyId = 2;
+  io.harness.pms.contracts.facilitators.FacilitatorResponseProto facilitatorResponse = 3;
+}
+
+message FacilitatorResponseResponse {}

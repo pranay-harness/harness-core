@@ -7,9 +7,9 @@ import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.tasks.ResponseData;
 
 import java.util.List;
@@ -26,4 +26,6 @@ public interface PmsNodeExecutionService {
   void resumeNodeExecution(String nodeExecutionId, Map<String, ResponseData> response, boolean asyncError);
   Map<String, ResponseData> accumulateResponses(String planExecutionId, String notifyId);
   StepParameters extractResolvedStepParameters(NodeExecutionProto nodeExecution);
+  void handleFacilitationResponse(
+      @NonNull String nodeExecutionId, @NonNull String notifyId, FacilitatorResponseProto facilitatorResponseProto);
 }

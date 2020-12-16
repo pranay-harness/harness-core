@@ -9,9 +9,11 @@ import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.plan.AccumulateResponsesRequest;
 import io.harness.pms.contracts.plan.AccumulateResponsesResponse;
 import io.harness.pms.contracts.plan.AddExecutableResponseRequest;
+import io.harness.pms.contracts.plan.FacilitatorResponseRequest;
 import io.harness.pms.contracts.plan.HandleStepResponseRequest;
 import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc.NodeExecutionProtoServiceBlockingStub;
 import io.harness.pms.contracts.plan.QueueNodeExecutionRequest;
@@ -111,6 +113,17 @@ public class PmsNodeExecutionServiceGrpcImpl implements PmsNodeExecutionService 
   public StepParameters extractResolvedStepParameters(NodeExecutionProto nodeExecution) {
     return extractStepParametersInternal(
         nodeExecution.getNode().getStepType(), nodeExecution.getResolvedStepParameters());
+  }
+
+  @Override
+  public void handleFacilitationResponse(
+      @NonNull String nodeExecutionId, @NonNull String notifyId, FacilitatorResponseProto facilitatorResponseProto) {
+    nodeExecutionProtoServiceBlockingStub.handleFacilitatorResponse(
+        FacilitatorResponseRequest.newBuilder()
+            .setFacilitatorResponse(facilitatorResponseProto)
+            .setNodeExecutionId(nodeExecutionId)
+            .setNotifyId(notifyId)
+            .build());
   }
 
   private StepParameters extractStepParametersInternal(StepType stepType, String stepParameters) {
