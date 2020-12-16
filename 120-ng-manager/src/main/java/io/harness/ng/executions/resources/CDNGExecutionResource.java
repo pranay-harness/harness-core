@@ -3,6 +3,8 @@ package io.harness.ng.executions.resources;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
+import io.harness.cdng.pipeline.executions.beans.CDPipelineModuleInfo;
+import io.harness.cdng.pipeline.executions.beans.CDStageModuleInfo;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionServiceImpl;
 import io.harness.cdng.pipeline.mappers.ExecutionToDtoMapper;
@@ -11,6 +13,7 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionInterruptType;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummaryFilter;
@@ -25,6 +28,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -134,5 +138,37 @@ public class CDNGExecutionResource {
       @NotNull @QueryParam("interruptType") PipelineExecutionInterruptType executionInterruptType,
       @NotNull @PathParam("planExecutionId") String planExecutionId) {
     return ResponseDTO.newResponse(executionService.registerInterrupt(executionInterruptType, planExecutionId));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "dummy api", nickname = "getDummyCDStageModuleInfo")
+  @Path("/dummyCDStageModuleInfo")
+  public ResponseDTO<CDStageModuleInfo> getDummyCDStageModuleInfo() {
+    return ResponseDTO.newResponse(
+        CDStageModuleInfo.builder().infrastructureIdentifiers("infra1").nodeExecutionId("node1").build());
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "dummy api", nickname = "getDummyCDPipelineModuleInfo")
+  @Path("/dummyCDPipelineModuleInfo")
+  public ResponseDTO<CDPipelineModuleInfo> getDummyCDPipelineModuleInfo() {
+    List<String> serviceIdentifiers = new ArrayList<>();
+    serviceIdentifiers.add("dummyService1");
+    List<String> envIdentifiers = new ArrayList<>();
+    envIdentifiers.add("DymmyEnv1");
+    List<String> serviceDefinitionTypes = new ArrayList<>();
+    serviceDefinitionTypes.add("DummyTYpe1");
+    List<EnvironmentType> environmentTypes = new ArrayList<>();
+    environmentTypes.add(EnvironmentType.PreProduction);
+    return ResponseDTO.newResponse(CDPipelineModuleInfo.builder()
+                                       .serviceIdentifiers(serviceIdentifiers)
+                                       .envIdentifiers(envIdentifiers)
+                                       .serviceDefinitionTypes(serviceDefinitionTypes)
+                                       .environmentTypes(environmentTypes)
+                                       .build());
   }
 }
