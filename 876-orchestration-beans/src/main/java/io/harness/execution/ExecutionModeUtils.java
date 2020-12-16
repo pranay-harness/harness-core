@@ -10,7 +10,7 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ExecutionModeUtils {
-  private final Set<ExecutionMode> CHAIN_MODES = EnumSet.of(TASK_CHAIN, TASK_CHAIN_V2, TASK_CHAIN_V3, CHILD_CHAIN);
+  private final Set<ExecutionMode> CHAIN_MODES = EnumSet.of(TASK_CHAIN, CHILD_CHAIN);
 
   private final Set<ExecutionMode> PARENT_MODES = EnumSet.of(CHILD_CHAIN, CHILDREN, CHILD);
 

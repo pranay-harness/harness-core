@@ -8,7 +8,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.contracts.execution.TaskMode;
+import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.plan.AccumulateResponsesRequest;
 import io.harness.pms.contracts.plan.AccumulateResponsesResponse;
 import io.harness.pms.contracts.plan.AddExecutableResponseRequest;
@@ -27,7 +27,6 @@ import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
-import io.harness.tasks.Task;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -54,12 +53,11 @@ public class PmsNodeExecutionServiceGrpcImpl implements PmsNodeExecutionService 
   }
 
   @Override
-  public String queueTask(String nodeExecutionId, TaskMode mode, Map<String, String> setupAbstractions, Task task) {
+  public String queueTask(String nodeExecutionId, Map<String, String> setupAbstractions, TaskRequest taskRequest) {
     QueueTaskResponse response = nodeExecutionProtoServiceBlockingStub.queueTask(
         QueueTaskRequest.newBuilder()
-            .setTaskMode(mode)
             .putAllSetupAbstractions(setupAbstractions == null ? Collections.emptyMap() : setupAbstractions)
-            .setTask(ByteString.copyFrom(kryoSerializer.asBytes(task)))
+            .setTaskRequest(taskRequest)
             .setNodeExecutionId(nodeExecutionId)
             .build());
     return response.getTaskId();

@@ -17,7 +17,6 @@ import static java.util.Collections.singletonList;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -31,6 +30,8 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.execution.tasks.TaskCategory;
+import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.resolver.ResolverUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
@@ -40,9 +41,9 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.tasks.Cd1SetupFields;
+import io.harness.serializer.KryoSerializer;
+import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
-import io.harness.tasks.Task;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.ScriptStateExecutionData;
@@ -68,6 +69,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
 import com.google.inject.Inject;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -86,6 +88,7 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
   @Inject private ServiceTemplateHelper serviceTemplateHelper;
   @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Override
   public Class<ShellScriptStepParameters> getStepParametersClass() {
@@ -93,7 +96,8 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
   }
 
   @Override
-  public Task obtainTask(Ambiance ambiance, ShellScriptStepParameters stepParameters, StepInputPackage inputPackage) {
+  public TaskRequest obtainTask(
+      Ambiance ambiance, ShellScriptStepParameters stepParameters, StepInputPackage inputPackage) {
     String activityId = createActivity(ambiance);
     List<ResolvedRefInput> inputs = inputPackage.getInputs();
     ResolvedRefInput envRefInput =
@@ -221,28 +225,14 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
                 featureFlagService.isEnabled(LOCAL_DELEGATE_CONFIG_OVERRIDE, getAccountId(ambiance)))
             .keyName(keyName)
             .saveExecutionLogs(true);
-
-    return DelegateTask.builder()
-        .accountId(getAccountId(ambiance))
-        .waitId(activityId)
-        .tags(renderedTags)
-        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, getAppId(ambiance))
-        .data(TaskData.builder()
-                  .async(true)
-                  .taskType(TaskType.SCRIPT.name())
-                  .parameters(new Object[] {shellScriptParameters.build()})
-                  .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                  //                  .expressionFunctorToken(ambiance.getExpressionFunctorToken())
-                  .build())
-        .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, environment == null ? null : environment.getUuid())
-        .setupAbstraction(
-            Cd1SetupFields.ENV_TYPE_FIELD, environment == null ? null : environment.getEnvironmentType().name())
-        .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD,
-            infrastructureMapping == null ? null : infrastructureMapping.getUuid())
-        .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD,
-            infrastructureMapping == null ? null : infrastructureMapping.getServiceId())
-        .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, serviceTemplateId)
-        .build();
+    TaskData taskData = TaskData.builder()
+                            .async(true)
+                            .taskType(TaskType.SCRIPT.name())
+                            .parameters(new Object[] {shellScriptParameters.build()})
+                            .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                            .build();
+    return StepUtils.prepareTaskRequest(
+        ambiance, taskData, kryoSerializer, new LinkedHashMap<>(), TaskCategory.DELEGATE_TASK_V1);
   }
 
   @Override

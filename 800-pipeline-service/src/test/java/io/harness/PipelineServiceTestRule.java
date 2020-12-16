@@ -1,9 +1,13 @@
 package io.harness;
 
+import static org.mockito.Mockito.mock;
+
+import io.harness.callback.DelegateCallbackToken;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
+import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
@@ -19,6 +23,7 @@ import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
 
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -26,11 +31,13 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
@@ -97,6 +104,9 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
       @Override
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
+        bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {
+        }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
+        bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
       }
     });
 
@@ -104,6 +114,7 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
     modules.add(OrchestrationModule.getInstance());
+
     modules.add(mongoTypeModule(annotations));
 
     modules.add(new AbstractModule() {

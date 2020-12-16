@@ -6,14 +6,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
-import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.CDNGBaseTest;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.utils.ArtifactStepHelper;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
-import io.harness.delegate.task.SimpleHDelegateTask;
+import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.artifacts.ArtifactSourceDelegateRequest;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
@@ -23,17 +24,21 @@ import io.harness.delegate.task.artifacts.response.ArtifactTaskExecutionResponse
 import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.tasks.DelegateTaskRequest;
+import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
+import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
-import io.harness.tasks.Task;
 
 import software.wings.beans.TaskType;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
+import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -44,10 +49,11 @@ import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-public class ArtifactStepTest extends CategoryTest {
+public class ArtifactStepTest extends CDNGBaseTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Mock ArtifactStepHelper artifactStepHelper;
+  @Inject KryoSerializer kryoSerializer;
   @Spy @InjectMocks ArtifactStep artifactStep;
 
   Map<String, ResponseData> responseDataMap = new HashMap<>();
@@ -55,6 +61,7 @@ public class ArtifactStepTest extends CategoryTest {
   @Before
   public void beforeClass() {
     responseDataMap = new HashMap<>();
+    Reflect.on(artifactStep).set("kryoSerializer", kryoSerializer);
   }
 
   @Test
@@ -68,13 +75,17 @@ public class ArtifactStepTest extends CategoryTest {
         .thenReturn(getDelegateRequest());
     when(artifactStepHelper.getArtifactStepTaskType(artifactStep.applyArtifactsOverlay(stepParameters)))
         .thenReturn(TaskType.DOCKER_ARTIFACT_TASK_NG.name());
-    Task task = artifactStep.getTask(ambiance, stepParameters);
-    assertThat(task).isInstanceOf(SimpleHDelegateTask.class);
-    SimpleHDelegateTask delegateTask = (SimpleHDelegateTask) task;
-    assertThat(delegateTask.getAccountId()).isEqualTo("ACCOUNT_ID");
-    assertThat(delegateTask.getData().getTaskType()).isEqualTo(TaskType.DOCKER_ARTIFACT_TASK_NG.name());
-    assertThat(delegateTask.getData().getParameters()[0]).isInstanceOf(ArtifactTaskParameters.class);
-    ArtifactTaskParameters taskParams = (ArtifactTaskParameters) delegateTask.getData().getParameters()[0];
+    TaskRequest taskRequest = artifactStep.getTaskRequest(ambiance, stepParameters);
+    assertThat(taskRequest.getDelegateTaskRequest()).isNotNull();
+
+    DelegateTaskRequest delegateTaskRequest = taskRequest.getDelegateTaskRequest();
+    assertThat(delegateTaskRequest.getAccountId()).isEqualTo("ACCOUNT_ID");
+    assertThat(delegateTaskRequest.getDetails().getType().getType()).isEqualTo(TaskType.DOCKER_ARTIFACT_TASK_NG.name());
+
+    TaskParameters taskParameters =
+        (TaskParameters) kryoSerializer.asObject(delegateTaskRequest.getDetails().getKryoParameters().toByteArray());
+    assertThat(taskParameters).isInstanceOf(ArtifactTaskParameters.class);
+    ArtifactTaskParameters taskParams = (ArtifactTaskParameters) taskParameters;
 
     assertThat(taskParams.getAttributes()).isInstanceOf(DockerArtifactDelegateRequest.class);
     DockerArtifactDelegateRequest attributes = (DockerArtifactDelegateRequest) taskParams.getAttributes();
@@ -97,6 +108,8 @@ public class ArtifactStepTest extends CategoryTest {
         .imagePath("imagePath")
         .tag("tag")
         .sourceType(ArtifactSourceType.DOCKER_HUB)
+        .dockerConnectorDTO(
+            DockerConnectorDTO.builder().dockerRegistryUrl("https://registry.hub.docker.com/v2/").build())
         .build();
   }
 

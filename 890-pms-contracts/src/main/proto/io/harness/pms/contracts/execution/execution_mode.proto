@@ -5,20 +5,16 @@ package io.harness.pms.contracts.execution;
 option java_multiple_files = true;
 
 enum ExecutionMode {
-  SYNC = 0;
-  ASYNC = 1;
+  UNKNOWN = 0;
+  SYNC = 1;
+  ASYNC = 2;
 
-  TASK_CHAIN = 2;
-  TASK_CHAIN_V2 = 3;
-  TASK_CHAIN_V3 = 4;
+  TASK_CHAIN = 3;
+  TASK = 4;
 
-  TASK = 5;
-  TASK_V2 = 6;
-  TASK_V3 = 7;
+  CHILD_CHAIN = 5;
+  CHILDREN = 6;
+  CHILD = 7;
 
-  CHILD_CHAIN = 8;
-  CHILDREN = 9;
-  CHILD = 10;
-
-  SKIP = 11;
+  SKIP = 8;
 }

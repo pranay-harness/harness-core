@@ -14,13 +14,14 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
-import io.harness.tasks.Task;
 
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployRollbackTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
@@ -35,6 +36,7 @@ public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollback
 
   @Inject K8sStepHelper k8sStepHelper;
   @Inject private StepDependencyService stepDependencyService;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Override
   public Class<K8sRollingRollbackStepParameters> getStepParametersClass() {
@@ -42,7 +44,7 @@ public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollback
   }
 
   @Override
-  public Task obtainTask(
+  public TaskRequest obtainTask(
       Ambiance ambiance, K8sRollingRollbackStepParameters stepParameters, StepInputPackage inputPackage) {
     StepDependencySpec k8sRollingSpec =
         stepParameters.getStepDependencySpecs().get(CDStepDependencyKey.K8S_ROLL_OUT.name());
@@ -66,14 +68,14 @@ public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollback
             .accountId(AmbianceHelper.getAccountId(ambiance))
             .build();
 
-    return StepUtils.prepareDelegateTaskInput(AmbianceHelper.getAccountId(ambiance),
+    return StepUtils.prepareTaskRequest(ambiance,
         TaskData.builder()
             .async(true)
             .timeout(600000 /*stepParameters.getTimeout().getValue()*/)
             .taskType(NGTaskType.K8S_COMMAND_TASK.name())
             .parameters(new Object[] {taskParameters})
             .build(),
-        ambiance.getSetupAbstractionsMap());
+        kryoSerializer);
   }
 
   @Override

@@ -7,7 +7,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
@@ -18,27 +17,25 @@ import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.TaskType;
 import io.harness.delegate.beans.ci.CIK8BuildTaskParams;
 import io.harness.delegate.beans.ci.k8s.CIContainerStatus;
 import io.harness.delegate.beans.ci.k8s.CiK8sTaskResponse;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
 import io.harness.delegate.beans.ci.k8s.PodStatus;
-import io.harness.delegate.task.HDelegateTask;
-import io.harness.engine.pms.tasks.TaskExecutor;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.rule.Owner;
+import io.harness.serializer.KryoSerializer;
 import io.harness.stateutils.buildstate.BuildSetupUtils;
 import io.harness.tasks.ResponseData;
-import io.harness.tasks.Task;
-import io.harness.tasks.TaskMode;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StepElement;
@@ -54,8 +51,9 @@ import org.mockito.Mock;
 
 public class LiteEngineTaskStepTest extends CIExecutionTest {
   @Mock private BuildSetupUtils buildSetupUtils;
-  @Mock private Map<String, TaskExecutor<HDelegateTask>> taskExecutorMap;
+  @Mock private CIDelegateTaskExecutor ciDelegateTaskExecutor;
   @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
+  @Mock private KryoSerializer kryoSerializer;
   @InjectMocks private LiteEngineTaskStep liteEngineTaskStep;
 
   private Ambiance ambiance;
@@ -96,18 +94,17 @@ public class LiteEngineTaskStepTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldObtainTask() {
-    TaskExecutor<HDelegateTask> executor = mock(TaskExecutor.class);
-    when(taskExecutorMap.get(TaskMode.DELEGATE_TASK_V3.name())).thenReturn(executor);
-    when(executor.queueTask(eq(ambiance.getSetupAbstractionsMap()), any())).thenReturn("taskId");
+    when(ciDelegateTaskExecutor.queueTask(eq(ambiance.getSetupAbstractionsMap()), any())).thenReturn("taskId");
 
     when(buildSetupUtils.getBuildSetupTaskParams(eq(liteEngineTaskStepInfo), eq(ambiance)))
         .thenReturn(CIK8BuildTaskParams.builder().build());
 
-    Task task = liteEngineTaskStep.obtainTask(ambiance, liteEngineTaskStepInfo, StepInputPackage.builder().build());
+    TaskRequest taskRequest =
+        liteEngineTaskStep.obtainTask(ambiance, liteEngineTaskStepInfo, StepInputPackage.builder().build());
 
-    assertThat(task).isNotNull().isInstanceOf(HDelegateTask.class);
-    TaskData taskData = ((HDelegateTask) task).getData();
-    assertThat(taskData.getTaskType()).isEqualTo("CI_BUILD");
+    assertThat(taskRequest.getDelegateTaskRequest()).isNotNull();
+    TaskType taskType = taskRequest.getDelegateTaskRequest().getDetails().getType();
+    assertThat(taskType.getType()).isEqualTo("CI_BUILD");
   }
 
   @Test

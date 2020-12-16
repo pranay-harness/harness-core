@@ -8,6 +8,9 @@ import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationStepsModule;
 import io.harness.OrchestrationVisualizationModule;
 import io.harness.SecretManagementCoreModule;
+import io.harness.callback.DelegateCallback;
+import io.harness.callback.DelegateCallbackToken;
+import io.harness.callback.MongoDatabase;
 import io.harness.ccm.billing.GcpBillingService;
 import io.harness.ccm.billing.GcpBillingServiceImpl;
 import io.harness.ccm.billing.bigquery.BigQueryService;
@@ -88,6 +91,7 @@ import io.harness.governance.pipeline.service.evaluators.OnWorkflow;
 import io.harness.governance.pipeline.service.evaluators.PipelineStatusEvaluator;
 import io.harness.governance.pipeline.service.evaluators.WorkflowStatusEvaluator;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
+import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesContainerServiceImpl;
@@ -114,6 +118,7 @@ import io.harness.notifications.AlertVisibilityCheckerImpl;
 import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
 import io.harness.perpetualtask.PerpetualTaskServiceModule;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.sdk.registries.registrar.AdviserRegistrar;
 import io.harness.pms.sdk.registries.registrar.StepRegistrar;
 import io.harness.queue.QueueController;
@@ -146,7 +151,6 @@ import io.harness.seeddata.SampleDataProviderService;
 import io.harness.seeddata.SampleDataProviderServiceImpl;
 import io.harness.serializer.YamlUtils;
 import io.harness.service.DelegateServiceDriverModule;
-import io.harness.tasks.TaskMode;
 import io.harness.templatizedsm.RuntimeCredentialsInjector;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
@@ -679,6 +683,7 @@ import software.wings.utils.CdnStorageUrlGenerator;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.HostValidationServiceImpl;
 
+import com.google.common.base.Suppliers;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -702,6 +707,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -725,6 +731,27 @@ public class WingsModule extends AbstractModule implements ServersModule {
    */
   public WingsModule(MainConfiguration configuration) {
     this.configuration = configuration;
+  }
+
+  @Provides
+  @Singleton
+  Supplier<DelegateCallbackToken> getDelegateCallbackTokenSupplier(
+      DelegateServiceGrpcClient delegateServiceGrpcClient) {
+    return Suppliers.memoize(() -> getDelegateCallbackToken(delegateServiceGrpcClient, configuration));
+  }
+
+  private DelegateCallbackToken getDelegateCallbackToken(
+      DelegateServiceGrpcClient delegateServiceClient, MainConfiguration appConfig) {
+    log.info("Generating Delegate callback token");
+    final DelegateCallbackToken delegateCallbackToken = delegateServiceClient.registerCallback(
+        DelegateCallback.newBuilder()
+            .setMongoDatabase(MongoDatabase.newBuilder()
+                                  .setCollectionNamePrefix("ngManager")
+                                  .setConnection(appConfig.getMongoConnectionFactory().getUri())
+                                  .build())
+            .build());
+    log.info("delegate callback token generated =[{}]", delegateCallbackToken.getToken());
+    return delegateCallbackToken;
   }
 
   @Provides
@@ -1208,9 +1235,9 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(OrchestrationStepsModule.getInstance());
     install(OrchestrationVisualizationModule.getInstance());
     bind(CustomExecutionService.class).to(CustomExecutionServiceImpl.class);
-    MapBinder<String, TaskExecutor> taskExecutorMap =
-        MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
-    taskExecutorMap.addBinding(TaskMode.DELEGATE_TASK_V1.name()).to(DelegateTaskExecutor.class);
+    MapBinder<TaskCategory, TaskExecutor> taskExecutorMap =
+        MapBinder.newMapBinder(binder(), TaskCategory.class, TaskExecutor.class);
+    taskExecutorMap.addBinding(TaskCategory.DELEGATE_TASK_V1).to(DelegateTaskExecutor.class);
 
     MapBinder<String, StepRegistrar> stepRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);

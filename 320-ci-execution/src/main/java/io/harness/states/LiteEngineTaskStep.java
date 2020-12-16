@@ -22,23 +22,22 @@ import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
 import io.harness.delegate.beans.ci.k8s.PodStatus;
 import io.harness.delegate.task.HDelegateTask;
 import io.harness.delegate.task.stepstatus.StepStatusTaskParameters;
-import io.harness.engine.pms.tasks.TaskExecutor;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.plancreators.IntegrationStagePlanCreator;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.serializer.KryoSerializer;
 import io.harness.stateutils.buildstate.BuildSetupUtils;
 import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
-import io.harness.tasks.Task;
-import io.harness.tasks.TaskMode;
 import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
@@ -59,8 +58,9 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
   public static final String TASK_TYPE_CI_BUILD = "CI_BUILD";
   public static final String LE_STATUS_TASK_TYPE = "CI_LE_STATUS";
   @Inject private BuildSetupUtils buildSetupUtils;
-  @Inject private Map<String, TaskExecutor> taskExecutorMap;
   @Inject private ExecutionSweepingOutputService executionSweepingOutputResolver;
+  @Inject private KryoSerializer kryoSerializer;
+  @Inject private CIDelegateTaskExecutor ciDelegateTaskExecutor;
 
   private static final String DEPENDENCY_OUTCOME = "dependencies";
   public static final StepType STEP_TYPE = LiteEngineTaskStepInfo.typeInfo.getStepType();
@@ -71,7 +71,8 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
   }
 
   @Override
-  public Task obtainTask(Ambiance ambiance, LiteEngineTaskStepInfo stepParameters, StepInputPackage inputPackage) {
+  public TaskRequest obtainTask(
+      Ambiance ambiance, LiteEngineTaskStepInfo stepParameters, StepInputPackage inputPackage) {
     addCallBackIds(stepParameters, ambiance);
 
     CIBuildSetupTaskParams buildSetupTaskParams = buildSetupUtils.getBuildSetupTaskParams(stepParameters, ambiance);
@@ -84,8 +85,7 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
                                   .parameters(new Object[] {buildSetupTaskParams})
                                   .build();
 
-    return StepUtils.prepareDelegateTaskInput(
-        ambiance.getSetupAbstractions().get("accountId"), taskData, ambiance.getSetupAbstractions());
+    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer);
   }
 
   @Override
@@ -170,13 +170,12 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
   }
 
   private void addCallBackId(ExecutionWrapper executionWrapper, Ambiance ambiance, Map<String, String> taskIds) {
-    TaskExecutor<HDelegateTask> executor = taskExecutorMap.get(TaskMode.DELEGATE_TASK_V3.name());
     final String accountId = ambiance.getSetupAbstractionsMap().get("accountId");
 
     if (executionWrapper != null) {
       if (executionWrapper instanceof StepElement) {
         StepElement stepElement = (StepElement) executionWrapper;
-        setCallBackIdInStepInfo(ambiance, stepElement, accountId, executor, taskIds);
+        setCallBackIdInStepInfo(ambiance, stepElement, accountId, taskIds);
       } else if (executionWrapper instanceof ParallelStepElement) {
         ParallelStepElement parallel = (ParallelStepElement) executionWrapper;
         parallel.getSections().forEach(section -> addCallBackId(section, ambiance, taskIds));
@@ -185,62 +184,61 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
       }
     }
   }
-  private void setCallBackIdInStepInfo(Ambiance ambiance, StepElement stepElement, String accountId,
-      TaskExecutor<HDelegateTask> executor, Map<String, String> taskIds) {
+  private void setCallBackIdInStepInfo(
+      Ambiance ambiance, StepElement stepElement, String accountId, Map<String, String> taskIds) {
     // TODO replace identifier as key in case two steps can have same identifier
 
     if (stepElement.getType().equals("run")) {
       RunStepInfo runStepInfo = (RunStepInfo) stepElement.getStepSpecType();
-      String taskId = queueDelegateTask(ambiance, runStepInfo.getTimeout(), accountId, executor);
+      String taskId = queueDelegateTask(ambiance, runStepInfo.getTimeout(), accountId, ciDelegateTaskExecutor);
       runStepInfo.setCallbackId(taskId);
       taskIds.put(runStepInfo.getIdentifier(), taskId);
     }
 
     if (stepElement.getType().equals("plugin")) {
       PluginStepInfo pluginStepInfo = (PluginStepInfo) stepElement.getStepSpecType();
-      String taskId = queueDelegateTask(ambiance, pluginStepInfo.getTimeout(), accountId, executor);
+      String taskId = queueDelegateTask(ambiance, pluginStepInfo.getTimeout(), accountId, ciDelegateTaskExecutor);
       pluginStepInfo.setCallbackId(taskId);
       taskIds.put(pluginStepInfo.getIdentifier(), taskId);
     }
 
     if (stepElement.getType().equals("publishArtifacts")) {
       PublishStepInfo publishStepInfo = (PublishStepInfo) stepElement.getStepSpecType();
-      String taskId = queueDelegateTask(ambiance, publishStepInfo.getTimeout(), accountId, executor);
+      String taskId = queueDelegateTask(ambiance, publishStepInfo.getTimeout(), accountId, ciDelegateTaskExecutor);
       publishStepInfo.setCallbackId(taskId);
       taskIds.put(publishStepInfo.getIdentifier(), taskId);
     }
 
     if (stepElement.getType().equals("saveCache")) {
       SaveCacheStepInfo saveCacheStepInfo = (SaveCacheStepInfo) stepElement.getStepSpecType();
-      String taskId = queueDelegateTask(ambiance, saveCacheStepInfo.getTimeout(), accountId, executor);
+      String taskId = queueDelegateTask(ambiance, saveCacheStepInfo.getTimeout(), accountId, ciDelegateTaskExecutor);
       saveCacheStepInfo.setCallbackId(taskId);
       taskIds.put(saveCacheStepInfo.getIdentifier(), taskId);
     }
 
     if (stepElement.getType().equals("restoreCache")) {
       RestoreCacheStepInfo restoreCacheStepInfo = (RestoreCacheStepInfo) stepElement.getStepSpecType();
-      String taskId = queueDelegateTask(ambiance, restoreCacheStepInfo.getTimeout(), accountId, executor);
+      String taskId = queueDelegateTask(ambiance, restoreCacheStepInfo.getTimeout(), accountId, ciDelegateTaskExecutor);
       restoreCacheStepInfo.setCallbackId(taskId);
       taskIds.put(restoreCacheStepInfo.getIdentifier(), taskId);
     }
 
     if (stepElement.getType().equals("testIntelligence")) {
       TestIntelligenceStepInfo runStepInfo = (TestIntelligenceStepInfo) stepElement.getStepSpecType();
-      String taskId = queueDelegateTask(ambiance, runStepInfo.getTimeout(), accountId, executor);
+      String taskId = queueDelegateTask(ambiance, runStepInfo.getTimeout(), accountId, ciDelegateTaskExecutor);
       runStepInfo.setCallbackId(taskId);
       taskIds.put(runStepInfo.getIdentifier(), taskId);
     }
 
     if (stepElement.getStepSpecType() instanceof PluginCompatibleStep) {
       PluginCompatibleStep stepInfo = (PluginCompatibleStep) stepElement.getStepSpecType();
-      String taskId = queueDelegateTask(ambiance, stepInfo.getTimeout(), accountId, executor);
+      String taskId = queueDelegateTask(ambiance, stepInfo.getTimeout(), accountId, ciDelegateTaskExecutor);
       stepInfo.setCallbackId(taskId);
       taskIds.put(stepInfo.getIdentifier(), taskId);
     }
   }
 
-  private String queueDelegateTask(
-      Ambiance ambiance, long timeout, String accountId, TaskExecutor<HDelegateTask> executor) {
+  private String queueDelegateTask(Ambiance ambiance, long timeout, String accountId, CIDelegateTaskExecutor executor) {
     final TaskData taskData = TaskData.builder()
                                   .async(true)
                                   .parked(true)

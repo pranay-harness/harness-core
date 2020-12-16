@@ -23,14 +23,13 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepUtils;
-import io.harness.tasks.Cd1SetupFields;
-import io.harness.tasks.Task;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.HashMap;
@@ -46,10 +45,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ArtifactStep {
   @Inject private ArtifactStepHelper artifactStepHelper;
+  @Inject private KryoSerializer kryoSerializer;
   // Default timeout of 1 minute.
   private static final long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
 
-  public Task getTask(Ambiance ambiance, ArtifactStepParameters stepParameters) {
+  public TaskRequest getTaskRequest(Ambiance ambiance, ArtifactStepParameters stepParameters) {
     log.info("Executing deployment stage with params [{}]", stepParameters);
     ArtifactConfig finalArtifact = applyArtifactsOverlay(stepParameters);
     String accountId = AmbianceHelper.getAccountId(ambiance);
@@ -67,8 +67,7 @@ public class ArtifactStep {
                                   .timeout(DEFAULT_TIMEOUT)
                                   .build();
 
-    return StepUtils.prepareDelegateTaskInput(
-        accountId, taskData, ImmutableMap.of(Cd1SetupFields.APP_ID_FIELD, accountId));
+    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer);
   }
 
   public StepOutcome processDelegateResponse(

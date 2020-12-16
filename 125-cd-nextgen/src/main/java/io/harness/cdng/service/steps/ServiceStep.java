@@ -25,6 +25,7 @@ import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.steps.executables.TaskChainExecutable;
@@ -35,7 +36,6 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.tasks.ResponseData;
-import io.harness.tasks.Task;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -80,9 +80,9 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
       return TaskChainResponse.builder().chainEnd(true).passThroughData(passThroughData).build();
     }
 
-    Task task = artifactStep.getTask(ambiance, artifactsWithCorrespondingOverrides.get(0));
+    TaskRequest taskRequest = artifactStep.getTaskRequest(ambiance, artifactsWithCorrespondingOverrides.get(0));
     return TaskChainResponse.builder()
-        .task(task)
+        .taskRequest(taskRequest)
         .chainEnd(artifactsWithCorrespondingOverrides.size() == 1)
         .passThroughData(passThroughData)
         .build();
@@ -104,10 +104,10 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
     ((ServiceStepPassThroughData) passThroughData).setStepOutcomes(stepOutcomes);
 
     int nextIndex = currentIndex + 1;
-    Task task = artifactStep.getTask(ambiance, artifactsWithCorrespondingOverrides.get(nextIndex));
+    TaskRequest taskRequest = artifactStep.getTaskRequest(ambiance, artifactsWithCorrespondingOverrides.get(nextIndex));
     serviceStepPassThroughData.setCurrentIndex(nextIndex);
     return TaskChainResponse.builder()
-        .task(task)
+        .taskRequest(taskRequest)
         .chainEnd(artifactsWithCorrespondingOverrides.size() == nextIndex)
         .passThroughData(passThroughData)
         .build();

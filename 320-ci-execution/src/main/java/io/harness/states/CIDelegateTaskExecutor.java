@@ -6,7 +6,6 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.HDelegateTask;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.engine.pms.tasks.TaskExecutor;
 import io.harness.exception.InvalidRequestException;
 import io.harness.grpc.DelegateServiceGrpcClient;
 
@@ -15,7 +14,7 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.function.Supplier;
 
-public class CIDelegateTaskExecutor implements TaskExecutor<HDelegateTask> {
+public class CIDelegateTaskExecutor {
   private final DelegateServiceGrpcClient delegateServiceGrpcClient;
   private final Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
@@ -26,7 +25,6 @@ public class CIDelegateTaskExecutor implements TaskExecutor<HDelegateTask> {
     this.delegateCallbackTokenSupplier = delegateCallbackTokenSupplier;
   }
 
-  @Override
   public String queueTask(Map<String, String> setupAbstractions, HDelegateTask task) {
     String accountId = task.getAccountId();
     TaskData taskData = task.getData();
@@ -41,12 +39,10 @@ public class CIDelegateTaskExecutor implements TaskExecutor<HDelegateTask> {
     return delegateServiceGrpcClient.submitAsyncTask(delegateTaskRequest, delegateCallbackTokenSupplier.get());
   }
 
-  @Override
   public void expireTask(Map<String, String> setupAbstractions, String taskId) {
     // Needs to be implemented
   }
 
-  @Override
   public boolean abortTask(Map<String, String> setupAbstractions, String taskId) {
     // Needs to be implemented
     return false;

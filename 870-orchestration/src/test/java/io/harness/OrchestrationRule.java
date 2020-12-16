@@ -2,12 +2,16 @@ package io.harness;
 
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
+import static org.mockito.Mockito.mock;
+
+import io.harness.callback.DelegateCallbackToken;
 import io.harness.delay.DelayEventListener;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
+import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
@@ -32,6 +36,7 @@ import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -49,6 +54,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
@@ -122,6 +128,9 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
       @Override
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
+        bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {
+        }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
+        bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
       }
     });
 

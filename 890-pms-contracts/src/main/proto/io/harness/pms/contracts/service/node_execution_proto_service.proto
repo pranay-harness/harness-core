@@ -4,6 +4,7 @@ package io.harness.pms.contracts.plan;
 
 option java_multiple_files = true;
 
+import "io/harness/pms/contracts/execution/tasks/task_request.proto";
 import "io/harness/pms/contracts/execution/executable_response.proto";
 import "io/harness/pms/contracts/execution/node_execution_proto.proto";
 import "io/harness/pms/contracts/execution/status.proto";
@@ -26,9 +27,8 @@ message QueueNodeExecutionResponse {}
 
 message QueueTaskRequest {
   string nodeExecutionId = 1;
-  execution.TaskMode taskMode = 2;
   map<string, string> setupAbstractions = 3;
-  bytes task = 4;
+  io.harness.pms.contracts.execution.tasks.TaskRequest taskRequest = 4;
 }
 
 message QueueTaskResponse {

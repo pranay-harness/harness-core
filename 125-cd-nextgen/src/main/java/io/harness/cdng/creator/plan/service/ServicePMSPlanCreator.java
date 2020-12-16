@@ -15,7 +15,7 @@ import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
-import io.harness.pms.sdk.core.facilitator.chain.TaskChainV3Facilitator;
+import io.harness.pms.sdk.core.facilitator.chain.TaskChainFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.YamlField;
@@ -56,7 +56,7 @@ public class ServicePMSPlanCreator {
         .identifier(PlanCreatorConstants.SERVICE_NODE_IDENTIFIER)
         .stepParameters(stepParameters)
         .facilitatorObtainment(
-            FacilitatorObtainment.newBuilder().setType(TaskChainV3Facilitator.FACILITATOR_TYPE).build())
+            FacilitatorObtainment.newBuilder().setType(TaskChainFacilitator.FACILITATOR_TYPE).build())
         .adviserObtainments(getAdviserObtainmentFromMetaData(serviceNode, kryoSerializer))
         .skipExpressionChain(false)
         .build();

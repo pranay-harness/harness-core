@@ -4,6 +4,8 @@ package io.harness.pms.contracts.execution;
 
 option java_multiple_files = true;
 
+import "io/harness/pms/contracts/execution/tasks/task_request.proto";
+
 message ExecutableResponse {
   oneof response {
     AsyncExecutableResponse async = 1;
@@ -41,19 +43,12 @@ message ChildChainExecutableResponse {
 
 message TaskChainExecutableResponse {
   string taskId = 1;
-  TaskMode taskMode = 2;
+  io.harness.pms.contracts.execution.tasks.TaskCategory taskCategory = 2;
   bool chainEnd = 3;
   bytes passThroughData = 4;
 }
 
 message TaskExecutableResponse {
   string taskId = 1;
-  TaskMode taskMode = 2;
-}
-
-enum TaskMode {
-  NOOP = 0;
-  DELEGATE_TASK_V1 = 1;
-  DELEGATE_TASK_V2 = 2;
-  DELEGATE_TASK_V3 = 3;
+  io.harness.pms.contracts.execution.tasks.TaskCategory taskCategory = 2;
 }

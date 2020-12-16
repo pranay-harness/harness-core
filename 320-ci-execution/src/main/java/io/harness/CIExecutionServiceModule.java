@@ -4,15 +4,12 @@ import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.core.ci.services.CIBuildService;
 import io.harness.core.ci.services.CIBuildServiceImpl;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
-import io.harness.engine.pms.tasks.TaskExecutor;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.impl.CIPipelineExecutionService;
 import io.harness.impl.CIPipelineExecutionServiceImpl;
 import io.harness.pms.sdk.registries.registrar.OrchestrationEventHandlerRegistrar;
 import io.harness.pms.sdk.registries.registrar.StepRegistrar;
 import io.harness.registrars.ExecutionRegistrar;
-import io.harness.states.CIDelegateTaskExecutor;
-import io.harness.tasks.TaskMode;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 
 import ci.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
@@ -49,9 +46,6 @@ public class CIExecutionServiceModule extends AbstractModule {
     MapBinder<String, StepRegistrar> stepRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);
     stepRegistrarMapBinder.addBinding(ExecutionRegistrar.class.getName()).to(ExecutionRegistrar.class);
-    MapBinder<String, TaskExecutor> taskExecutorMap =
-        MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
-    taskExecutorMap.addBinding(TaskMode.DELEGATE_TASK_V3.name()).to(CIDelegateTaskExecutor.class);
   }
 
   @Provides

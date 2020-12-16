@@ -71,6 +71,7 @@ public class OrchestrationRegistrars {
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(DelegateTasksRegistrars.morphiaRegistrars)
           .addAll(WaitEngineRegistrars.morphiaRegistrars)
+          .addAll(DelegateServiceDriverRegistrars.morphiaRegistrars)
           .addAll(OrchestrationBeansRegistrars.morphiaRegistrars)
           .add(OrchestrationMorphiaRegistrar.class)
           .build();
