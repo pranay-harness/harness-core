@@ -1,0 +1,28 @@
+{
+  "type": "object",
+  "properties": {
+    "description": {
+      "type": "string"
+    },
+    "metadata": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "required": {
+      "type": "boolean"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "String",
+        "Number"
+      ]
+    },
+    "value": {
+      "$ref": "#/definitions/ParameterFieldObject"
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

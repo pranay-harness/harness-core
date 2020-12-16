@@ -1,0 +1,15 @@
+{
+  "type": "object",
+  "required": [
+    "sections"
+  ],
+  "properties": {
+    "sections": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/StageElementWrapperConfig"
+      }
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
