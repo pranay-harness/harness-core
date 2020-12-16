@@ -9,7 +9,6 @@ import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.steps.SkipType;
-import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.tasks.ProgressData;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -21,6 +20,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.bson.Document;
 
 @OwnedBy(CDC)
 @Data
@@ -46,7 +46,7 @@ public class GraphVertex implements Serializable {
 
   private List<Map<String, Object>> executableResponsesMetadata;
   private List<InterruptEffect> interruptHistories;
-  private List<Outcome> outcomes;
+  private List<Document> outcomeDocuments;
   private List<String> retryIds;
 
   private Map<String, List<ProgressData>> progressDataMap;

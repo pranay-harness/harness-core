@@ -5,6 +5,7 @@ import io.harness.engine.executions.node.PmsNodeExecutionGrpcSevice;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc.PlanCreationServiceBlockingStub;
+import io.harness.pms.plan.execution.data.service.outcome.OutcomeServiceGrpcServerImpl;
 import io.harness.pms.plan.execution.data.service.outputs.SweepingOutputServiceImpl;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.sdk.service.execution.PmsExecutionGrpcService;
@@ -69,13 +70,15 @@ public class PipelineServiceGrpcModule extends AbstractModule {
   @Named("pms-grpc-service")
   public Service pmsGrpcService(PipelineServiceConfiguration configuration, HealthStatusManager healthStatusManager,
       PmsSdkInstanceService pmsSdkInstanceService, PmsNodeExecutionGrpcSevice pmsNodeExecutionGrpcSevice,
-      PmsExecutionGrpcService pmsExecutionGrpcService, SweepingOutputServiceImpl sweepingOutputService) {
+      PmsExecutionGrpcService pmsExecutionGrpcService, SweepingOutputServiceImpl sweepingOutputService,
+      OutcomeServiceGrpcServerImpl outcomeServiceGrpcServer) {
     Set<BindableService> cdServices = new HashSet<>();
     cdServices.add(healthStatusManager.getHealthService());
     cdServices.add(pmsSdkInstanceService);
     cdServices.add(pmsNodeExecutionGrpcSevice);
     cdServices.add(pmsExecutionGrpcService);
     cdServices.add(sweepingOutputService);
+    cdServices.add(outcomeServiceGrpcServer);
     return new GrpcServer(configuration.getGrpcServerConfig().getConnectors().get(0), cdServices,
         Collections.emptySet(), healthStatusManager);
   }

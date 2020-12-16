@@ -15,9 +15,10 @@ import io.harness.engine.expressions.EngineExpressionServiceImpl;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.InterruptServiceImpl;
-import io.harness.engine.outcomes.OutcomeService;
 import io.harness.engine.outcomes.OutcomeServiceImpl;
 import io.harness.engine.outputs.ExecutionSweepingOutputServiceImpl;
+import io.harness.engine.pms.data.PmsOutcomeService;
+import io.harness.engine.pms.data.PmsOutcomeServiceImpl;
 import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.engine.pms.data.PmsSweepingOutputServiceImpl;
 import io.harness.engine.pms.tasks.NgDelegate2TaskExecutor;
@@ -26,6 +27,8 @@ import io.harness.govern.ServersModule;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
+import io.harness.pms.sdk.core.resolver.outcome.OutcomeGrpcServiceImpl;
+import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingGrpcOutputService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
@@ -81,7 +84,6 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     bind(PlanExecutionService.class).to(PlanExecutionServiceImpl.class);
     bind(InterruptService.class).to(InterruptServiceImpl.class);
     bind(EngineExpressionService.class).to(EngineExpressionServiceImpl.class);
-    bind(OutcomeService.class).to(OutcomeServiceImpl.class);
     bind(OrchestrationService.class).to(OrchestrationServiceImpl.class);
     bind(EngineObtainmentHelper.class).in(Singleton.class);
 
@@ -105,6 +107,7 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
 
     // PMS Services
     bind(PmsSweepingOutputService.class).to(PmsSweepingOutputServiceImpl.class).in(Singleton.class);
+    bind(PmsOutcomeService.class).to(PmsOutcomeServiceImpl.class).in(Singleton.class);
   }
 
   @Provides
@@ -135,6 +138,16 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
       return injector.getInstance(ExecutionSweepingGrpcOutputService.class);
     } else {
       return injector.getInstance(ExecutionSweepingOutputServiceImpl.class);
+    }
+  }
+
+  @Provides
+  @Singleton
+  public OutcomeService outcomeService(OrchestrationModuleConfig config, Injector injector) {
+    if (config.isWithPMS()) {
+      return injector.getInstance(OutcomeGrpcServiceImpl.class);
+    } else {
+      return injector.getInstance(OutcomeServiceImpl.class);
     }
   }
 

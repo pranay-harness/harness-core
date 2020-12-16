@@ -9,21 +9,16 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.NodeExecutionsCache;
 import io.harness.engine.outcomes.OutcomeException;
-import io.harness.engine.outcomes.OutcomeService;
 import io.harness.engine.outputs.SweepingOutputException;
+import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.execution.NodeExecution;
 import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.LateBindingMap;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.resolver.RefObjectUtil;
-import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -43,7 +38,7 @@ import lombok.Value;
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public class NodeExecutionMap extends LateBindingMap {
   transient NodeExecutionsCache nodeExecutionsCache;
-  transient OutcomeService outcomeService;
+  transient PmsOutcomeService pmsOutcomeService;
   transient PmsSweepingOutputService pmsSweepingOutputService;
   transient Ambiance ambiance;
   transient NodeExecution nodeExecution;
@@ -51,11 +46,11 @@ public class NodeExecutionMap extends LateBindingMap {
   transient Map<String, Object> children;
 
   @Builder
-  NodeExecutionMap(NodeExecutionsCache nodeExecutionsCache, OutcomeService outcomeService,
+  NodeExecutionMap(NodeExecutionsCache nodeExecutionsCache, PmsOutcomeService pmsOutcomeService,
       PmsSweepingOutputService pmsSweepingOutputService, Ambiance ambiance, NodeExecution nodeExecution,
       Set<NodeExecutionEntityType> entityTypes, Map<String, Object> children) {
     this.nodeExecutionsCache = nodeExecutionsCache;
-    this.outcomeService = outcomeService;
+    this.pmsOutcomeService = pmsOutcomeService;
     this.pmsSweepingOutputService = pmsSweepingOutputService;
     this.ambiance = ambiance;
     this.nodeExecution = nodeExecution;
@@ -145,7 +140,7 @@ public class NodeExecutionMap extends LateBindingMap {
     }
 
     try {
-      return Optional.ofNullable(outcomeService.resolve(newAmbiance, RefObjectUtil.getOutcomeRefObject(key)));
+      return Optional.ofNullable(pmsOutcomeService.resolve(newAmbiance, RefObjectUtil.getOutcomeRefObject(key)));
     } catch (OutcomeException ignored) {
       return Optional.empty();
     }

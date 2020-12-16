@@ -1,4 +1,4 @@
-package io.harness.engine.outcomes;
+package io.harness.pms.sdk.core.resolver.outcome;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 

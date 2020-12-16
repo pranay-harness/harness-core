@@ -6,25 +6,13 @@ import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
-import io.harness.engine.expressions.functors.ExecutionSweepingOutputFunctor;
-import io.harness.engine.expressions.functors.NodeExecutionAncestorFunctor;
-import io.harness.engine.expressions.functors.NodeExecutionChildFunctor;
-import io.harness.engine.expressions.functors.NodeExecutionEntityType;
-import io.harness.engine.expressions.functors.NodeExecutionQualifiedFunctor;
-import io.harness.engine.expressions.functors.OutcomeFunctor;
-import io.harness.engine.outcomes.OutcomeService;
+import io.harness.engine.expressions.functors.*;
+import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.exception.CriticalExpressionEvaluationException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
-import io.harness.expression.EngineExpressionEvaluator;
-import io.harness.expression.EngineJexlContext;
-import io.harness.expression.ExpressionEvaluatorUtils;
-import io.harness.expression.JsonFunctor;
-import io.harness.expression.RegexFunctor;
-import io.harness.expression.ResolveObjectResponse;
-import io.harness.expression.VariableResolverTracker;
-import io.harness.expression.XmlFunctor;
+import io.harness.expression.*;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.expression.OrchestrationField;
 import io.harness.pms.expression.OrchestrationFieldProcessor;
@@ -57,7 +45,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @OwnedBy(CDC)
 @Redesign
 public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
-  @Inject private OutcomeService outcomeService;
+  @Inject private PmsOutcomeService pmsOutcomeService;
   @Inject private PmsSweepingOutputService pmsSweepingOutputService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
@@ -96,7 +84,7 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
     }
 
     if (entityTypes.contains(NodeExecutionEntityType.OUTCOME)) {
-      addToContext("outcome", OutcomeFunctor.builder().ambiance(ambiance).outcomeService(outcomeService).build());
+      addToContext("outcome", OutcomeFunctor.builder().ambiance(ambiance).pmsOutcomeService(pmsOutcomeService).build());
     }
 
     if (entityTypes.contains(NodeExecutionEntityType.SWEEPING_OUTPUT)) {
@@ -117,7 +105,7 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
     addToContext("child",
         NodeExecutionChildFunctor.builder()
             .nodeExecutionsCache(nodeExecutionsCache)
-            .outcomeService(outcomeService)
+            .pmsOutcomeService(pmsOutcomeService)
             .pmsSweepingOutputService(pmsSweepingOutputService)
             .ambiance(ambiance)
             .entityTypes(entityTypes)
@@ -126,7 +114,7 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
     addToContext("ancestor",
         NodeExecutionAncestorFunctor.builder()
             .nodeExecutionsCache(nodeExecutionsCache)
-            .outcomeService(outcomeService)
+            .pmsOutcomeService(pmsOutcomeService)
             .pmsSweepingOutputService(pmsSweepingOutputService)
             .ambiance(ambiance)
             .entityTypes(entityTypes)
@@ -136,7 +124,7 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
     addToContext("qualified",
         NodeExecutionQualifiedFunctor.builder()
             .nodeExecutionsCache(nodeExecutionsCache)
-            .outcomeService(outcomeService)
+            .pmsOutcomeService(pmsOutcomeService)
             .pmsSweepingOutputService(pmsSweepingOutputService)
             .ambiance(ambiance)
             .entityTypes(entityTypes)

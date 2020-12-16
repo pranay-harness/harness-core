@@ -1,4 +1,4 @@
-package io.harness.engine.outcomes;
+package io.harness.engine.pms.data;
 
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static io.harness.rule.OwnerRule.PRASHANT;
@@ -11,7 +11,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.resolver.RefObjectUtil;
-import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
+import io.harness.pms.serializer.persistence.DocumentOrchestrationUtils;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 import io.harness.utils.AmbianceTestUtils;
@@ -21,32 +21,32 @@ import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class OutcomeServiceImplTest extends OrchestrationTestBase {
-  @Inject private OutcomeService outcomeService;
+public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
+  @Inject private PmsOutcomeService pmsOutcomeService;
 
   @Test
   @RealMongo
   @Owner(developers = PRASHANT)
-  @Ignore("Move to PmsServiceImpl Test")
   @Category(UnitTests.class)
   public void shouldTestSaveAndFind() {
     Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
     String outcomeName = "outcomeName";
     Outcome outcome = DummyOutcome.builder().test("test").build();
-    outcomeService.consume(ambiance, outcomeName, outcome, "PHASE");
+    pmsOutcomeService.consume(
+        ambiance, outcomeName, DocumentOrchestrationUtils.convertToDocumentJson(outcome), "PHASE");
 
     // Resolve with producer id
-    DummyOutcome savedOutcome = (DummyOutcome) outcomeService.resolve(
-        ambiance, RefObjectUtil.getOutcomeRefObject(outcomeName, AmbianceUtils.obtainCurrentSetupId(ambiance), null));
+    DummyOutcome savedOutcome = DocumentOrchestrationUtils.convertFromDocumentJson(pmsOutcomeService.resolve(
+        ambiance, RefObjectUtil.getOutcomeRefObject(outcomeName, AmbianceUtils.obtainCurrentSetupId(ambiance), null)));
     assertThat(savedOutcome).isNotNull();
     assertThat(savedOutcome.getTest()).isEqualTo("test");
 
     // Resolve with scope
-    savedOutcome = (DummyOutcome) outcomeService.resolve(ambiance, RefObjectUtil.getOutcomeRefObject(outcomeName));
+    savedOutcome = DocumentOrchestrationUtils.convertFromDocumentJson(
+        pmsOutcomeService.resolve(ambiance, RefObjectUtil.getOutcomeRefObject(outcomeName)));
     assertThat(savedOutcome).isNotNull();
     assertThat(savedOutcome.getTest()).isEqualTo("test");
   }
@@ -54,21 +54,20 @@ public class OutcomeServiceImplTest extends OrchestrationTestBase {
   @Test
   @RealMongo
   @Owner(developers = PRASHANT)
-  @Ignore("Move to PmsServiceImpl Test")
   @Category(UnitTests.class)
   public void shouldTestSaveAndFindForNull() {
     Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
     String outcomeName = "outcomeName";
-    outcomeService.consume(ambiance, outcomeName, null, null);
+    pmsOutcomeService.consume(ambiance, outcomeName, null, null);
 
-    Outcome outcome = outcomeService.resolve(ambiance, RefObjectUtil.getOutcomeRefObject(outcomeName));
+    Outcome outcome = DocumentOrchestrationUtils.convertFromDocumentJson(
+        pmsOutcomeService.resolve(ambiance, RefObjectUtil.getOutcomeRefObject(outcomeName)));
     assertThat(outcome).isNull();
   }
 
   @Test
   @RealMongo
   @Owner(developers = ALEXEI)
-  @Ignore("Move to PmsServiceImpl Test")
   @Category(UnitTests.class)
   public void shouldFetchAllOutcomesByRuntimeId() {
     Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
@@ -76,10 +75,12 @@ public class OutcomeServiceImplTest extends OrchestrationTestBase {
     Ambiance ambiance1 = AmbianceTestUtils.buildAmbiance();
     String outcomeName1 = "outcome1";
 
-    outcomeService.consume(ambiance, outcomeName, DummyOutcome.builder().test("test").build(), null);
-    outcomeService.consume(ambiance1, outcomeName1, DummyOutcome.builder().test("test1").build(), null);
+    pmsOutcomeService.consume(ambiance, outcomeName,
+        DocumentOrchestrationUtils.convertToDocumentJson(DummyOutcome.builder().test("test").build()), null);
+    pmsOutcomeService.consume(ambiance1, outcomeName1,
+        DocumentOrchestrationUtils.convertToDocumentJson(DummyOutcome.builder().test("test1").build()), null);
 
-    List<Outcome> outcomes = outcomeService.findAllByRuntimeId(
+    List<String> outcomes = pmsOutcomeService.findAllByRuntimeId(
         ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance));
     assertThat(outcomes.size()).isEqualTo(2);
   }
@@ -87,7 +88,6 @@ public class OutcomeServiceImplTest extends OrchestrationTestBase {
   @Test
   @RealMongo
   @Owner(developers = PRASHANT)
-  @Ignore("Move to PmsServiceImpl Test")
   @Category(UnitTests.class)
   public void shouldFetchOutcomes() {
     Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
@@ -95,30 +95,32 @@ public class OutcomeServiceImplTest extends OrchestrationTestBase {
     Ambiance ambiance1 = AmbianceTestUtils.buildAmbiance();
     String outcomeName1 = "outcome1";
 
-    String instanceId1 =
-        outcomeService.consume(ambiance, outcomeName, DummyOutcome.builder().test("test1").build(), null);
-    String instanceId2 =
-        outcomeService.consume(ambiance1, outcomeName1, DummyOutcome.builder().test("test2").build(), null);
+    String instanceId1 = pmsOutcomeService.consume(ambiance, outcomeName,
+        DocumentOrchestrationUtils.convertToDocumentJson(DummyOutcome.builder().test("test1").build()), null);
+    String instanceId2 = pmsOutcomeService.consume(ambiance1, outcomeName1,
+        DocumentOrchestrationUtils.convertToDocumentJson(DummyOutcome.builder().test("test2").build()), null);
 
-    List<Outcome> outcomes = outcomeService.fetchOutcomes(Arrays.asList(instanceId1, instanceId2));
+    List<String> outcomes = pmsOutcomeService.fetchOutcomes(Arrays.asList(instanceId1, instanceId2));
     assertThat(outcomes.size()).isEqualTo(2);
-    assertThat(outcomes.stream().map(oc -> ((DummyOutcome) oc).getTest()).collect(Collectors.toList()))
+    assertThat(outcomes.stream()
+                   .map(oc -> ((DummyOutcome) DocumentOrchestrationUtils.convertFromDocumentJson(oc)).getTest())
+                   .collect(Collectors.toList()))
         .containsExactlyInAnyOrder("test1", "test2");
   }
 
   @Test
   @RealMongo
   @Owner(developers = PRASHANT)
-  @Ignore("Move to PmsServiceImpl Test")
   @Category(UnitTests.class)
   public void shouldFetchOutcome() {
     Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
     String outcomeName = "outcome";
 
-    String instanceId =
-        outcomeService.consume(ambiance, outcomeName, DummyOutcome.builder().test("test").build(), null);
+    String instanceId = pmsOutcomeService.consume(ambiance, outcomeName,
+        DocumentOrchestrationUtils.convertToDocumentJson(DummyOutcome.builder().test("test").build()), null);
 
-    Outcome outcome = outcomeService.fetchOutcome(instanceId);
+    String outcomeJson = pmsOutcomeService.fetchOutcome(instanceId);
+    Outcome outcome = DocumentOrchestrationUtils.convertFromDocumentJson(outcomeJson);
     assertThat(outcome).isInstanceOf(DummyOutcome.class);
     assertThat(((DummyOutcome) outcome).getTest()).isEqualTo("test");
   }
