@@ -49,7 +49,7 @@ public class GcpHelperServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldReturnProxyConfiguredCredentials() throws IOException {
     System.setProperty("http.proxyHost", "proxyHost");
-    GcpConfig gcpConfig = GcpConfig.builder().serviceAccountKeyFileContent("content".toCharArray()).build();
+    GcpConfig gcpConfig = GcpConfig.builder().serviceAccountKeyFileContent(getServiceAccountKeyContent()).build();
     when(gcpCredentialsHelperService.getGoogleCredentialWithProxyConfiguredHttpTransport(gcpConfig))
         .thenReturn(new GoogleCredential());
     gcpHelperService.getGoogleCredential(gcpConfig, new ArrayList<>(), false);
@@ -61,10 +61,15 @@ public class GcpHelperServiceTest extends WingsBaseTest {
   @Owner(developers = OwnerRule.AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnDefaultConfiguredCredentials() throws IOException {
-    GcpConfig gcpConfig = GcpConfig.builder().serviceAccountKeyFileContent("content".toCharArray()).build();
+    GcpConfig gcpConfig = GcpConfig.builder().serviceAccountKeyFileContent(getServiceAccountKeyContent()).build();
     when(gcpCredentialsHelperService.getGoogleCredentialWithProxyConfiguredHttpTransport(gcpConfig))
         .thenReturn(new GoogleCredential());
     gcpHelperService.getGoogleCredential(gcpConfig, new ArrayList<>(), false);
     verify(gcpCredentialsHelperService, only()).getGoogleCredentialWithDefaultHttpTransport(gcpConfig);
+  }
+
+  private char[] getServiceAccountKeyContent() {
+    String json = "{\"tokenUri\": \"test\"}";
+    return json.toCharArray();
   }
 }
