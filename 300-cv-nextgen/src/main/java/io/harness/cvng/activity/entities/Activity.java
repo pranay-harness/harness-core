@@ -7,8 +7,10 @@ import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityDTO.VerificationJobRuntimeDetails;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -17,6 +19,7 @@ import io.harness.persistence.UuidAware;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -41,6 +44,31 @@ import org.mongodb.morphia.annotations.Id;
 @HarnessEntity(exportable = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
 public abstract class Activity implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("deployment_query_idx")
+                 .field(ActivityKeys.accountIdentifier)
+                 .field(ActivityKeys.orgIdentifier)
+                 .field(ActivityKeys.projectIdentifier)
+                 .field(ActivityKeys.type)
+                 .build(),
+            CompoundMongoIndex.builder()
+                .name("deployment_tag_idx")
+                .field(ActivityKeys.accountIdentifier)
+                .field(ActivityKeys.type)
+                .field(ActivityKeys.verificationJobInstanceIds)
+                .build(),
+            CompoundMongoIndex.builder()
+                .name("activities_query_index")
+                .field(ActivityKeys.accountIdentifier)
+                .field(ActivityKeys.orgIdentifier)
+                .field(ActivityKeys.projectIdentifier)
+                .field(ActivityKeys.activityStartTime)
+                .build())
+        .build();
+  }
+
   @Id private String uuid;
   private long createdAt;
   private long lastUpdatedAt;
@@ -56,7 +84,7 @@ public abstract class Activity implements PersistentEntity, UuidAware, CreatedAt
   private List<VerificationJobRuntimeDetails> verificationJobRuntimeDetails;
   @NotNull private Instant activityStartTime;
   private Instant activityEndTime;
-  private List<String> verificationJobInstanceIds;
+  @FdIndex private List<String> verificationJobInstanceIds;
   private List<String> tags;
   @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
 

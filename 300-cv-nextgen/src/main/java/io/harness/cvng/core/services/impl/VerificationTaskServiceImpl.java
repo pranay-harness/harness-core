@@ -76,9 +76,10 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
   }
 
   @Override
-  public String getVerificationTaskId(String cvConfigId, String verificationJobInstanceId) {
+  public String getVerificationTaskId(String accountId, String cvConfigId, String verificationJobInstanceId) {
     Preconditions.checkNotNull(verificationJobInstanceId, "verificationJobInstanceId should not be null");
     return hPersistence.createQuery(VerificationTask.class)
+        .filter(VerificationTaskKeys.accountId, accountId)
         .filter(VerificationTaskKeys.verificationJobInstanceId, verificationJobInstanceId)
         .filter(VerificationTaskKeys.cvConfigId, cvConfigId)
         .get()
@@ -150,6 +151,6 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
       return null;
     }
     String cvConfigId = getCVConfigId(currentVerificationTaskId);
-    return getVerificationTaskId(cvConfigId, baselineVerificationJobInstanceId);
+    return getVerificationTaskId(verificationJobInstance.getAccountId(), cvConfigId, baselineVerificationJobInstanceId);
   }
 }

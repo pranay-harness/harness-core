@@ -51,7 +51,14 @@ public abstract class CVConfig
                  .field(CVConfigKeys.projectIdentifier)
                  .field(CVConfigKeys.envIdentifier)
                  .field(CVConfigKeys.serviceIdentifier)
-                 .build())
+                 .build(),
+            CompoundMongoIndex.builder()
+                .name("insert_index")
+                .field(CVConfigKeys.accountId)
+                .field(CVConfigKeys.orgIdentifier)
+                .field(CVConfigKeys.projectIdentifier)
+                .field(CVConfigKeys.monitoringSourceIdentifier)
+                .build())
         .build();
   }
 

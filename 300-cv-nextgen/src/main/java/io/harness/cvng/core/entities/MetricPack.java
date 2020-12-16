@@ -9,8 +9,9 @@ import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.MetricPackDTO.MetricDefinitionDTO;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.data.validator.Trimmed;
-import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -20,6 +21,7 @@ import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -48,10 +50,20 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "MetricPackKeys")
 @HarnessEntity(exportable = true)
 public class MetricPack implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("insert_idx")
+                 .field(MetricPackKeys.accountId)
+                 .field(MetricPackKeys.projectIdentifier)
+                 .build())
+        .build();
+  }
+
   @Id private String uuid;
   private long createdAt;
   private long lastUpdatedAt;
-  @FdIndex private String accountId;
+  private String accountId;
   @NotEmpty private String projectIdentifier;
   @NotNull private DataSourceType dataSourceType;
   @Trimmed @NotEmpty private String identifier;

@@ -3,13 +3,15 @@ package io.harness.cvng.statemachine.entities;
 import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.statemachine.beans.AnalysisState;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
-import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -29,12 +31,22 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "analysisStateMachines", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 public class AnalysisStateMachine implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("execute_query_idx")
+                 .field(AnalysisStateMachineKeys.verificationTaskId)
+                 .field(AnalysisStateMachineKeys.status)
+                 .build())
+        .build();
+  }
+
   @Id private String uuid;
   private long createdAt;
   private long lastUpdatedAt;
   private Instant analysisStartTime;
   private Instant analysisEndTime;
-  @FdIndex private String verificationTaskId;
+  private String verificationTaskId;
   private AnalysisState currentState;
   private List<AnalysisState> completedStates;
   private AnalysisStatus status;

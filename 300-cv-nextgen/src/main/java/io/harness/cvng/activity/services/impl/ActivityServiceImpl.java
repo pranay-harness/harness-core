@@ -263,7 +263,6 @@ public class ActivityServiceImpl implements ActivityService {
             .filter(ActivityKeys.accountIdentifier, accountId)
             .filter(ActivityKeys.orgIdentifier, orgIdentifier)
             .filter(ActivityKeys.projectIdentifier, projectIdentifier)
-            .filter(ActivityKeys.orgIdentifier, orgIdentifier)
             .filter(ActivityKeys.serviceIdentifier, serviceIdentifier)
             .filter(ActivityKeys.type, ActivityType.DEPLOYMENT)
             .filter(DeploymentActivityKeys.deploymentTag, deploymentTag)
@@ -322,9 +321,10 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   @Override
-  public List<ActivityDashboardDTO> listActivitiesInTimeRange(String orgIdentifier, String projectIdentifier,
-      String environmentIdentifier, Instant startTime, Instant endTime) {
+  public List<ActivityDashboardDTO> listActivitiesInTimeRange(String accountId, String orgIdentifier,
+      String projectIdentifier, String environmentIdentifier, Instant startTime, Instant endTime) {
     Query<Activity> activityQuery = hPersistence.createQuery(Activity.class, excludeAuthority)
+                                        .filter(ActivityKeys.accountIdentifier, accountId)
                                         .filter(ActivityKeys.orgIdentifier, orgIdentifier)
                                         .filter(ActivityKeys.projectIdentifier, projectIdentifier)
                                         .field(ActivityKeys.activityStartTime)
@@ -410,12 +410,13 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public List<ActivityVerificationResultDTO> getRecentActivityVerificationResults(
-      String orgIdentifier, String projectIdentifier, int limitCounter) {
+      String accountId, String orgIdentifier, String projectIdentifier, int limitCounter) {
     if (limitCounter == 0) {
       limitCounter = RECENT_DEPLOYMENT_ACTIVITIES_RESULT_SIZE;
     }
 
     List<Activity> activities = hPersistence.createQuery(Activity.class, excludeAuthority)
+                                    .filter(ActivityKeys.accountIdentifier, accountId)
                                     .filter(ActivityKeys.orgIdentifier, orgIdentifier)
                                     .filter(ActivityKeys.projectIdentifier, projectIdentifier)
                                     .field(ActivityKeys.type)
@@ -468,8 +469,8 @@ public class ActivityServiceImpl implements ActivityService {
     if (isEmpty(activity.getVerificationJobRuntimeDetails())) {
       // check to see if any other jobs are currently running
       List<VerificationJobInstance> runningInstances = verificationJobInstanceService.getRunningOrQueuedJobInstances(
-          activity.getOrgIdentifier(), activity.getProjectIdentifier(), activity.getEnvironmentIdentifier(),
-          activity.getServiceIdentifier(), VerificationJobType.HEALTH,
+          activity.getAccountIdentifier(), activity.getOrgIdentifier(), activity.getProjectIdentifier(),
+          activity.getEnvironmentIdentifier(), activity.getServiceIdentifier(), VerificationJobType.HEALTH,
           activity.getActivityStartTime().plus(Duration.ofMinutes(HEALTH_VERIFICATION_RETRIGGER_BUFFER_MINS)));
       if (isNotEmpty(runningInstances)) {
         log.info(

@@ -2,9 +2,11 @@ package io.harness.cvng.analysis.entities;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -13,6 +15,7 @@ import io.harness.persistence.UuidAware;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Date;
@@ -37,10 +40,20 @@ import org.mongodb.morphia.annotations.PrePersist;
 @Entity(value = "logAnalysisClusters", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class LogAnalysisCluster implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("query_idx")
+                 .field(LogAnalysisClusterKeys.verificationTaskId)
+                 .field(LogAnalysisClusterKeys.isEvicted)
+                 .build())
+        .build();
+  }
+
   @Id private String uuid;
   private long createdAt;
   private long lastUpdatedAt;
-  @FdIndex private String verificationTaskId;
+  private String verificationTaskId;
   private Instant analysisStartTime;
   private Instant analysisEndTime;
   @FdIndex private String accountId;

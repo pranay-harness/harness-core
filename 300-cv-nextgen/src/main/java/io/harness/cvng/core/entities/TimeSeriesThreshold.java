@@ -6,7 +6,8 @@ import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.beans.TimeSeriesThresholdActionType;
 import io.harness.cvng.beans.TimeSeriesThresholdCriteria;
 import io.harness.cvng.beans.TimeSeriesThresholdDTO;
-import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -15,6 +16,8 @@ import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,13 +38,23 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "timeSeriesThresholds", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 public class TimeSeriesThreshold implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("query_idx")
+                 .field(TimeSeriesThresholdKeys.accountId)
+                 .field(TimeSeriesThresholdKeys.projectIdentifier)
+                 .build())
+        .build();
+  }
+
   @Id private String uuid;
   private long createdAt;
   private long lastUpdatedAt;
-  @NotNull @FdIndex private String accountId;
-  @NotNull @FdIndex private String projectIdentifier;
-  @NotNull @FdIndex private DataSourceType dataSourceType;
-  @NotNull @FdIndex private String metricPackIdentifier;
+  @NotNull private String accountId;
+  @NotNull private String projectIdentifier;
+  @NotNull private DataSourceType dataSourceType;
+  @NotNull private String metricPackIdentifier;
   @NotNull private String metricName;
   @NotNull private TimeSeriesMetricType metricType;
   @Default private String metricGroupName = "*";

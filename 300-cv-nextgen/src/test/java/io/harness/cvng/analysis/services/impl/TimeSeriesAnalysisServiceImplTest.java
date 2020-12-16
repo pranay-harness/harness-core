@@ -475,8 +475,8 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testScheduleTestVerificationTaskAnalysis() {
     VerificationJobInstance verificationJobInstance = createVerificationJobInstance(VerificationJobType.TEST);
-    String verificationTaskId =
-        verificationTaskService.getVerificationTaskId(cvConfigId, verificationJobInstance.getUuid());
+    String verificationTaskId = verificationTaskService.getVerificationTaskId(
+        verificationJobInstance.getAccountId(), cvConfigId, verificationJobInstance.getUuid());
     cvConfigService.save(newCVConfig());
     AnalysisInput input = AnalysisInput.builder()
                               .verificationTaskId(verificationTaskId)
@@ -513,8 +513,8 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     VerificationJobInstance verificationJobInstance = createVerificationJobInstance(VerificationJobType.TEST);
     ((TestVerificationJob) verificationJobInstance.getResolvedJob()).setBaselineVerificationJobInstanceId(null);
     verificationJobInstanceService.create(verificationJobInstance);
-    String verificationTaskId =
-        verificationTaskService.getVerificationTaskId(cvConfigId, verificationJobInstance.getUuid());
+    String verificationTaskId = verificationTaskService.getVerificationTaskId(
+        verificationJobInstance.getAccountId(), cvConfigId, verificationJobInstance.getUuid());
     cvConfigService.save(newCVConfig());
     AnalysisInput input = AnalysisInput.builder()
                               .verificationTaskId(verificationTaskId)

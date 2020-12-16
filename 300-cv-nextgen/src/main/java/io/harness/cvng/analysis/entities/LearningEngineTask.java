@@ -1,6 +1,7 @@
 package io.harness.cvng.analysis.entities;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -40,7 +41,7 @@ public abstract class LearningEngineTask implements PersistentEntity, UuidAware,
   private Instant analysisStartTime;
   private Instant analysisEndTime;
   private long analysisEndEpochMinute; // This is temporary. LE needs it for now.
-  private ExecutionStatus taskStatus;
+  @FdIndex private ExecutionStatus taskStatus;
   public abstract LearningEngineTaskType getType();
 
   public enum LearningEngineTaskType {

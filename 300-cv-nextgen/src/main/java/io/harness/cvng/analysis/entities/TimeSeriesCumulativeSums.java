@@ -5,13 +5,15 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -41,10 +43,21 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "timeseriesCumulativeSums", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class TimeSeriesCumulativeSums implements PersistentEntity, UuidAware {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("query_idx")
+                 .field(TimeSeriesCumulativeSumsKeys.verificationTaskId)
+                 .field(TimeSeriesCumulativeSumsKeys.analysisStartTime)
+                 .field(TimeSeriesCumulativeSumsKeys.analysisEndTime)
+                 .build())
+        .build();
+  }
+
   @Id private String uuid;
-  @NotEmpty @FdIndex private String verificationTaskId;
-  @NotEmpty @FdIndex private Instant analysisStartTime;
-  @NotEmpty @FdIndex private Instant analysisEndTime;
+  @NotEmpty private String verificationTaskId;
+  @NotEmpty private Instant analysisStartTime;
+  @NotEmpty private Instant analysisEndTime;
 
   private List<TransactionMetricSums> transactionMetricSums;
 
