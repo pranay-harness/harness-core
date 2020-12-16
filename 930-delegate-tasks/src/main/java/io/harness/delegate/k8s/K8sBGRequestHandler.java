@@ -168,6 +168,7 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
                                                   .primaryServiceName(primaryService.getResourceId().getName())
                                                   .stageServiceName(stageService.getResourceId().getName())
                                                   .stageColor(stageColor)
+                                                  .primaryColor(primaryColor)
                                                   .build();
     return K8sDeployResponse.builder()
         .commandExecutionStatus(CommandExecutionStatus.SUCCESS)

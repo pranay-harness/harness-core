@@ -12,8 +12,8 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
-@TypeAlias("k8sRollingStepPassThroughData")
-public class K8sRollingStepPassThroughData implements PassThroughData {
+@TypeAlias("k8sStepPassThroughData")
+public class K8sStepPassThroughData implements PassThroughData {
   K8sManifest k8sManifest;
   List<ValuesManifest> valuesManifests;
   InfrastructureOutcome infrastructure;

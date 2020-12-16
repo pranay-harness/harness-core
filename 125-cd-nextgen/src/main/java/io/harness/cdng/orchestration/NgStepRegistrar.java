@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.steps.InfrastructureSectionStep;
 import io.harness.cdng.infra.steps.InfrastructureStep;
+import io.harness.cdng.k8s.K8sBlueGreenStep;
 import io.harness.cdng.k8s.K8sRollingRollbackStep;
 import io.harness.cdng.k8s.K8sRollingStep;
 import io.harness.cdng.pipeline.steps.DeploymentStageStep;
@@ -43,6 +44,7 @@ public class NgStepRegistrar implements StepRegistrar {
     stateClasses.add(Pair.of(ServiceStep.STEP_TYPE, injector.getInstance(ServiceStep.class)));
     stateClasses.add(Pair.of(K8sRollingStep.STEP_TYPE, injector.getInstance(K8sRollingStep.class)));
     stateClasses.add(Pair.of(K8sRollingRollbackStep.STEP_TYPE, injector.getInstance(K8sRollingRollbackStep.class)));
+    stateClasses.add(Pair.of(K8sBlueGreenStep.STEP_TYPE, injector.getInstance(K8sBlueGreenStep.class)));
     stateClasses.add(Pair.of(HttpStep.STEP_TYPE, injector.getInstance(HttpStep.class)));
   }
 }

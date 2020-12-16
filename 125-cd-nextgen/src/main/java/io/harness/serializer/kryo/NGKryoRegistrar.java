@@ -16,12 +16,13 @@ import io.harness.cdng.infra.beans.InfraUseFromStage;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.infra.steps.InfraStepParameters;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
+import io.harness.cdng.k8s.K8sBlueGreenOutcome;
 import io.harness.cdng.k8s.K8sRollingOutcome;
 import io.harness.cdng.k8s.K8sRollingRollbackStepInfo;
 import io.harness.cdng.k8s.K8sRollingRollbackStepParameters;
 import io.harness.cdng.k8s.K8sRollingStepInfo;
 import io.harness.cdng.k8s.K8sRollingStepParameters;
-import io.harness.cdng.k8s.K8sRollingStepPassThroughData;
+import io.harness.cdng.k8s.K8sStepPassThroughData;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.ManifestConfig;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
@@ -96,7 +97,7 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(K8sRollingStepParameters.class, 8052);
     kryo.register(ManifestFetchParameters.class, 8053);
     kryo.register(ShellScriptStepInfo.class, 8055);
-    kryo.register(K8sRollingStepPassThroughData.class, 8056);
+    kryo.register(K8sStepPassThroughData.class, 8056);
     kryo.register(ServiceStepPassThroughData.class, 8057);
 
     // Starting using 8100 series
@@ -110,5 +111,8 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(EnvironmentOutcome.class, 8107);
     kryo.register(RollbackOptionalChildChainStepParameters.class, 8108);
     kryo.register(RollbackNode.class, 8109);
+
+    // Starting using 12500 series as 8100 series is also used in 400-rest
+    kryo.register(K8sBlueGreenOutcome.class, 12500);
   }
 }
