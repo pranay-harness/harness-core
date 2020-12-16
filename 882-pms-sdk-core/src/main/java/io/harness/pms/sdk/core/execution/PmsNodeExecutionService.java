@@ -3,6 +3,7 @@ package io.harness.pms.sdk.core.execution;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
@@ -28,4 +29,7 @@ public interface PmsNodeExecutionService {
   StepParameters extractResolvedStepParameters(NodeExecutionProto nodeExecution);
   void handleFacilitationResponse(
       @NonNull String nodeExecutionId, @NonNull String notifyId, FacilitatorResponseProto facilitatorResponseProto);
+
+  void handleAdviserResponse(
+      @NonNull String nodeExecutionId, @NonNull String notifyId, AdviserResponse adviserResponse);
 }

@@ -3,6 +3,9 @@ package io.harness.pms.sdk.core.execution;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.contracts.advisers.AdviseType;
+import io.harness.pms.contracts.advisers.AdviserObtainment;
+import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
@@ -11,14 +14,18 @@ import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
+import io.harness.pms.execution.AdviseNodeExecutionEventData;
 import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.execution.NodeExecutionEventType;
 import io.harness.pms.execution.ResumeNodeExecutionEventData;
 import io.harness.pms.execution.StartNodeExecutionEventData;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
+import io.harness.pms.sdk.core.adviser.Adviser;
+import io.harness.pms.sdk.core.adviser.AdvisingEvent;
 import io.harness.pms.sdk.core.facilitator.Facilitator;
 import io.harness.pms.sdk.core.facilitator.FacilitatorResponse;
 import io.harness.pms.sdk.core.facilitator.FacilitatorResponseMapper;
+import io.harness.pms.sdk.core.registries.AdviserRegistry;
 import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.queue.QueueConsumer;
@@ -32,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent> {
   @Inject private FacilitatorRegistry facilitatorRegistry;
+  @Inject private AdviserRegistry adviserRegistry;
   @Inject private PmsNodeExecutionService pmsNodeExecutionService;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private ExecutableProcessorFactory executableProcessorFactory;
@@ -53,6 +61,9 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
         break;
       case RESUME:
         resumeExecution(event);
+        break;
+      case ADVISE:
+        adviseExecution(event);
         break;
       default:
         throw new UnsupportedOperationException("NodeExecution Event Has no handler" + event.getEventType());
@@ -142,5 +153,36 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
   private StepInputPackage obtainInputPackage(NodeExecutionProto nodeExecution) {
     return engineObtainmentHelper.obtainInputPackage(
         nodeExecution.getAmbiance(), nodeExecution.getNode().getRebObjectsList());
+  }
+
+  private void adviseExecution(NodeExecutionEvent event) {
+    NodeExecutionProto nodeExecutionProto = event.getNodeExecution();
+    PlanNodeProto planNodeProto = nodeExecutionProto.getNode();
+    AdviseNodeExecutionEventData data = (AdviseNodeExecutionEventData) event.getEventData();
+    AdviserResponse adviserResponse = null;
+    for (AdviserObtainment obtainment : planNodeProto.getAdviserObtainmentsList()) {
+      Adviser adviser = adviserRegistry.obtain(obtainment.getType());
+      AdvisingEvent advisingEvent = AdvisingEvent.builder()
+                                        .ambiance(nodeExecutionProto.getAmbiance())
+                                        .stepOutcomeRef(nodeExecutionProto.getOutcomeRefsList())
+                                        .toStatus(data.getToStatus())
+                                        .fromStatus(data.getFromStatus())
+                                        .adviserParameters(obtainment.getParameters().toByteArray())
+                                        .failureInfo(nodeExecutionProto.getFailureInfo())
+                                        .build();
+      if (adviser.canAdvise(advisingEvent)) {
+        adviserResponse = adviser.onAdviseEvent(advisingEvent);
+        if (adviserResponse != null) {
+          break;
+        }
+      }
+    }
+
+    if (adviserResponse != null) {
+      pmsNodeExecutionService.handleAdviserResponse(nodeExecutionProto.getUuid(), event.getNotifyId(), adviserResponse);
+    } else {
+      pmsNodeExecutionService.handleAdviserResponse(nodeExecutionProto.getUuid(), event.getNotifyId(),
+          AdviserResponse.newBuilder().setType(AdviseType.UNKNOWN).build());
+    }
   }
 }
