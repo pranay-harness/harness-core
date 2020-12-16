@@ -27,7 +27,6 @@ import io.harness.logging.AutoLogContext;
 
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
-import com.google.common.collect.ImmutableSet;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Comparator;
@@ -208,15 +207,8 @@ public class EventJobScheduler {
   private void runJob(String accountId, Job job, boolean runningMode) {
     try {
       BatchJobType batchJobType = BatchJobType.fromJob(job);
-      if (BatchJobType.INSTANCE_BILLING_AGGREGATION == batchJobType
-          && !ImmutableSet
-                  .of("wFHXHD0RRQWoO8tIZT5YVw", "kmpySmUISimoRrJL6NL73w", "zEaak-FLS425IEO7OLzMUg",
-                      "hW63Ny6rQaaGsKkVjE0pJA", "0DdbKsBzRu-A9iYzPB7c0A")
-                  .contains(accountId)) {
-        return;
-      }
-
       BatchJobBucket batchJobBucket = batchJobType.getBatchJobBucket();
+
       try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR);
            AutoLogContext ignore1 = new BatchJobBucketLogContext(batchJobBucket.name(), OVERRIDE_ERROR);
            AutoLogContext ignore2 = new BatchJobTypeLogContext(batchJobType.name(), OVERRIDE_ERROR);
