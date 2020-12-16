@@ -1,0 +1,98 @@
+package io.harness.cvng.beans.stackdriver;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Data;
+import lombok.experimental.FieldDefaults;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+@Builder
+@Data
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class StackDriverMetricDefinition {
+  private static final String dataSetsKey = "dataSets";
+  private static final String timeSeriesFilterKey = "timeSeriesFilter";
+  private static final String timeSeriesQueryKey = "timeSeriesQuery";
+  private static final String aggregationKey = "aggregations";
+  private static final String perSeriesAlignerKey = "perSeriesAligner";
+  private static final String crossSeriesReducerKey = "crossSeriesReducer";
+  private static final String groupByKey = "groupByFields";
+
+  String filter;
+  Aggregation aggregation;
+
+  @Builder
+  @Data
+  public static class Aggregation {
+    @Builder.Default String alignmentPeriod = "60s";
+    String perSeriesAligner;
+    String crossSeriesReducer;
+    List<String> groupByFields;
+  }
+
+  public static StackDriverMetricDefinition extractFromJson(String jsonDefinition) {
+    JSONObject metric = new JSONObject(jsonDefinition);
+    Object datasetsObject = getIgnoreCase(metric, dataSetsKey);
+    if (datasetsObject == null) {
+      throw new StackdriverSetupException("Stackdriver JSON does not contain dataSets field");
+    }
+    JSONArray dataSets = (JSONArray) datasetsObject;
+    if (dataSets.length() > 1) {
+      throw new StackdriverSetupException("Stackdriver JSON contains more than one dataset");
+    }
+    JSONObject datasetItem = (JSONObject) dataSets.get(0);
+    JSONObject timeSeriesFilterObj = null;
+    if (datasetItem.keySet().contains(timeSeriesFilterKey)) {
+      timeSeriesFilterObj = datasetItem;
+    } else if (datasetItem.keySet().contains(timeSeriesQueryKey)) {
+      timeSeriesFilterObj = datasetItem.getJSONObject(timeSeriesQueryKey);
+    } else {
+      throw new StackdriverSetupException(
+          "Unknown JSON format. Both timeSeriesQuery and timeSeriesFilter are not present under datasets");
+    }
+    return getDefinitionFromTimeSeriesObject(timeSeriesFilterObj);
+  }
+
+  public static Object getIgnoreCase(JSONObject jobj, String key) {
+    Iterator<String> iter = jobj.keySet().iterator();
+    while (iter.hasNext()) {
+      String key1 = iter.next();
+      if (key1.equalsIgnoreCase(key)) {
+        return jobj.get(key1);
+      }
+    }
+    return null;
+  }
+
+  private static StackDriverMetricDefinition getDefinitionFromTimeSeriesObject(JSONObject timeSeriesFilterObj) {
+    JSONObject timesersFilter = (JSONObject) timeSeriesFilterObj.get(timeSeriesFilterKey);
+    String filter = timesersFilter.getString("filter");
+    JSONObject aggregationJson =
+        timesersFilter.keySet().contains("aggregation") ? timesersFilter.getJSONObject("aggregation") : null;
+    if (aggregationJson == null) {
+      JSONArray aggregationArray =
+          ((JSONObject) timeSeriesFilterObj.get(timeSeriesFilterKey)).getJSONArray(aggregationKey);
+      if (aggregationArray.length() < 1) {
+        throw new StackdriverSetupException("Stackdriver JSON contains empty aggregations");
+      }
+      aggregationJson = (JSONObject) aggregationArray.get(0);
+    }
+    Aggregation aggregationObj = Aggregation.builder().build();
+    aggregationObj.setPerSeriesAligner(aggregationJson.getString(perSeriesAlignerKey));
+    aggregationObj.setCrossSeriesReducer(
+        aggregationJson.has(crossSeriesReducerKey) ? aggregationJson.getString(crossSeriesReducerKey) : null);
+    aggregationObj.setGroupByFields(new ArrayList<>());
+    if (aggregationJson.has(groupByKey)) {
+      JSONArray groupArray = aggregationJson.getJSONArray(groupByKey);
+      int counter = 0;
+      while (counter < groupArray.length()) {
+        aggregationObj.getGroupByFields().add(groupArray.getString(counter++));
+      }
+    }
+    return StackDriverMetricDefinition.builder().filter(filter).aggregation(aggregationObj).build();
+  }
+}

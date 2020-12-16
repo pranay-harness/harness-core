@@ -15,10 +15,14 @@ import io.harness.cvng.beans.DataCollectionRequestType;
 import io.harness.cvng.core.beans.OnboardingRequestDTO;
 import io.harness.cvng.core.beans.OnboardingResponseDTO;
 import io.harness.cvng.core.beans.stackdriver.StackdriverDashboardDTO;
+import io.harness.cvng.core.beans.stackdriver.StackdriverDashboardDetail;
 import io.harness.cvng.core.services.impl.StackdriverServiceImpl;
 import io.harness.ng.beans.PageResponse;
 import io.harness.rule.Owner;
+import io.harness.serializer.JsonUtils;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Before;
@@ -70,6 +74,37 @@ public class StackdriverServiceImplTest {
     assertThat(request.getType().name()).isEqualTo(DataCollectionRequestType.STACKDRIVER_DASHBOARD_LIST.name());
     assertThat(dashboardList).isNotNull();
     assertThat(dashboardList.getContent().size()).isEqualTo(8);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetDashboardDetail() throws Exception {
+    String textLoad = Resources.toString(
+        StackdriverServiceImplTest.class.getResource("/stackdriver/dashboard-detail-response.json"), Charsets.UTF_8);
+
+    when(onboardingService.getOnboardingResponse(eq(accountId), any()))
+        .thenReturn(OnboardingResponseDTO.builder().result(JsonUtils.asObject(textLoad, Object.class)).build());
+    List<StackdriverDashboardDetail> dashboardDetailList =
+        stackdriverService.getDashboardDetails(accountId, connectorIdentifier, orgIdentifier, projectIdentifier,
+            "projects/674494598921/dashboards/dfd3572d-2aef-46d9-b4a2-f1d546f46110");
+
+    verify(onboardingService).getOnboardingResponse(eq(accountId), requestCaptor.capture());
+
+    OnboardingRequestDTO onboardingRequestDTO = requestCaptor.getValue();
+    assertThat(onboardingRequestDTO.getOrgIdentifier()).isEqualTo(orgIdentifier);
+    assertThat(onboardingRequestDTO.getConnectorIdentifier()).isEqualTo(connectorIdentifier);
+    assertThat(onboardingRequestDTO.getAccountId()).isEqualTo(accountId);
+    assertThat(onboardingRequestDTO.getProjectIdentifier()).isEqualTo(projectIdentifier);
+    assertThat(onboardingRequestDTO.getDataCollectionRequest()).isNotNull();
+
+    DataCollectionRequest request = onboardingRequestDTO.getDataCollectionRequest();
+    assertThat(request.getType().name()).isEqualTo(DataCollectionRequestType.STACKDRIVER_DASHBOARD_GET.name());
+    assertThat(dashboardDetailList).isNotNull();
+    dashboardDetailList.forEach(dashboardDetail -> {
+      assertThat(dashboardDetail.getWidgetName()).isNotEmpty();
+      assertThat(dashboardDetail.getDataSetList()).isNotEmpty();
+    });
   }
 
   private List<StackdriverDashboardDTO> getDashboardList(int count) {

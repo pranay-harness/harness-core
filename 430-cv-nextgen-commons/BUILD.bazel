@@ -25,6 +25,7 @@ java_library(
         "@maven//:javax_validation_validation_api",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
         "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_json_json",
         "@maven//:org_mongodb_mongo_java_driver",
         "@maven//:org_slf4j_slf4j_api",
     ],
@@ -46,7 +47,7 @@ java_library(
 java_library(
     name = "test_deps",
     resources = [
-        "//430-cv-nextgen-commons/src/main/resources:resource",
+        "//430-cv-nextgen-commons/src/test/resources:resource",
     ],
     exports = [
         "//960-persistence:supporter-test",
