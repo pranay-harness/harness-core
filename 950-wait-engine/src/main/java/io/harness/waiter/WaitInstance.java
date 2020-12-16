@@ -28,7 +28,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "waitInstances", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class WaitInstance implements PersistentEntity, UuidAccess {
-  public static final Duration TTL = ofDays(21);
+  public static final Duration TTL = ofDays(30);
 
   @Id private String uuid;
   @FdIndex private List<String> correlationIds;
