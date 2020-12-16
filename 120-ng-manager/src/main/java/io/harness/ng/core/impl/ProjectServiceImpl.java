@@ -277,8 +277,8 @@ public class ProjectServiceImpl implements ProjectService {
                        .identifier(projectIdentifier)
                        .build(),
           DELETE_ACTION);
-      secretManagerConnectorService.delete(
-          accountIdentifier, orgIdentifier, projectIdentifier, HARNESS_SECRET_MANAGER_IDENTIFIER);
+      //      secretManagerConnectorService.delete(
+      //          accountIdentifier, orgIdentifier, projectIdentifier, HARNESS_SECRET_MANAGER_IDENTIFIER);
     }
     return delete;
   }

@@ -233,8 +233,8 @@ public class OrganizationServiceImpl implements OrganizationService {
       publishEvent(
           Organization.builder().accountIdentifier(accountIdentifier).identifier(organizationIdentifier).build(),
           DELETE_ACTION);
-      secretManagerConnectorService.delete(
-          accountIdentifier, organizationIdentifier, null, HARNESS_SECRET_MANAGER_IDENTIFIER);
+      //      secretManagerConnectorService.delete(
+      //          accountIdentifier, organizationIdentifier, null, HARNESS_SECRET_MANAGER_IDENTIFIER);
     }
     return delete;
   }
