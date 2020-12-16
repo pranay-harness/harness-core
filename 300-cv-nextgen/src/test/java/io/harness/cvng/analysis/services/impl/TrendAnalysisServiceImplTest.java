@@ -189,7 +189,7 @@ public class TrendAnalysisServiceImplTest extends CvNextGenTest {
     TimeSeriesCumulativeSums cumulativeSums =
         hPersistence.createQuery(TimeSeriesCumulativeSums.class).filter("verificationTaskId", verificationTaskId).get();
     assertThat(cumulativeSums).isNotNull();
-    assertThat(cumulativeSums.convertToMap()).isEmpty();
+    assertThat(TimeSeriesCumulativeSums.convertToMap(Collections.singletonList(cumulativeSums))).isEmpty();
     TimeSeriesAnomalousPatterns anomalousPatterns = hPersistence.createQuery(TimeSeriesAnomalousPatterns.class)
                                                         .filter("verificationTaskId", verificationTaskId)
                                                         .get();
@@ -304,7 +304,7 @@ public class TrendAnalysisServiceImplTest extends CvNextGenTest {
       ServiceGuardTxnMetricAnalysisDataDTO txnMetricData =
           ServiceGuardTxnMetricAnalysisDataDTO.builder()
               .isKeyTransaction(false)
-              .cumulativeSums(TimeSeriesCumulativeSums.MetricSum.builder().risk(0.5).sum(0.9).build())
+              .cumulativeSums(TimeSeriesCumulativeSums.MetricSum.builder().risk(0.5).data(0.9).build())
               .shortTermHistory(Arrays.asList(0.1, 0.2, 0.3, 0.4))
               .anomalousPatterns(
                   Collections.singletonList(TimeSeriesAnomalies.builder()

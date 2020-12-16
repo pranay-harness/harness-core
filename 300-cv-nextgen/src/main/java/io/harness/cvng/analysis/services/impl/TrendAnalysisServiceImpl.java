@@ -134,10 +134,11 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
   }
 
   private String createCumulativeSumsUrl(AnalysisInput input) {
+    Instant startTime = input.getStartTime().minus(1, ChronoUnit.DAYS);
     URIBuilder uriBuilder = new URIBuilder();
     uriBuilder.setPath(SERVICE_BASE_URL + "/" + TIMESERIES_ANALYSIS_RESOURCE + "/" + CUMULATIVE_SUMS_URL);
     uriBuilder.addParameter("verificationTaskId", input.getVerificationTaskId());
-    uriBuilder.addParameter("analysisStartTime", input.getStartTime().toString());
+    uriBuilder.addParameter("analysisStartTime", startTime.toString());
     uriBuilder.addParameter("analysisEndTime", input.getEndTime().toString());
     return getUriString(uriBuilder);
   }
