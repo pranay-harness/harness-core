@@ -7,6 +7,7 @@ connector:
   type: DockerRegistry
   spec:
     dockerRegistryUrl: somedockerregistryurl
+    providerType: DockerHub
     auth:
       type: UsernamePassword
       spec:

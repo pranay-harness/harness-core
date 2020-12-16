@@ -39,7 +39,10 @@ import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.awsconnector.AwsInheritFromDelegateSpecDTO;
+import io.harness.delegate.beans.connector.docker.DockerAuthType;
+import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
+import io.harness.delegate.beans.connector.docker.DockerRegistryProviderType;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
@@ -85,7 +88,11 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
         .orgIdentifier(orgIdentifier)
         .description(description)
         .connectorType(connectorType)
-        .connectorConfig(DockerConnectorDTO.builder().build())
+        .connectorConfig(DockerConnectorDTO.builder()
+                             .providerType(DockerRegistryProviderType.DOCKER_HUB)
+                             .dockerRegistryUrl("abc")
+                             .auth(DockerAuthenticationDTO.builder().authType(DockerAuthType.ANONYMOUS).build())
+                             .build())
         .build();
   }
 

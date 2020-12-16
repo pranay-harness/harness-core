@@ -567,7 +567,8 @@
         "type": {
           "type": "string",
           "enum": [
-            "UsernamePassword"
+            "UsernamePassword",
+            "Anonymous"
           ]
         }
       },
@@ -599,7 +600,8 @@
         {
           "type": "object",
           "required": [
-            "dockerRegistryUrl"
+            "dockerRegistryUrl",
+            "providerType"
           ],
           "properties": {
             "auth": {
@@ -607,6 +609,15 @@
             },
             "dockerRegistryUrl": {
               "type": "string"
+            },
+            "providerType": {
+              "type": "string",
+              "enum": [
+                "DockerHub",
+                "Harbor",
+                "Quay",
+                "Other"
+              ]
             }
           }
         }
