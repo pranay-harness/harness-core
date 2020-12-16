@@ -5,6 +5,8 @@ import io.harness.pms.contracts.plan.AccumulateResponsesRequest;
 import io.harness.pms.contracts.plan.AccumulateResponsesResponse;
 import io.harness.pms.contracts.plan.AddExecutableResponseRequest;
 import io.harness.pms.contracts.plan.AddExecutableResponseResponse;
+import io.harness.pms.contracts.plan.AdviserResponseRequest;
+import io.harness.pms.contracts.plan.AdviserResponseResponse;
 import io.harness.pms.contracts.plan.FacilitatorResponseRequest;
 import io.harness.pms.contracts.plan.FacilitatorResponseResponse;
 import io.harness.pms.contracts.plan.HandleStepResponseRequest;
@@ -97,6 +99,16 @@ public class PmsNodeExecutionGrpcSevice extends NodeExecutionProtoServiceImplBas
         request.getNodeExecutionId(), request.getNotifyId(), request.getFacilitatorResponse());
 
     responseObserver.onNext(FacilitatorResponseResponse.newBuilder().build());
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void handleAdviserResponse(
+      AdviserResponseRequest request, StreamObserver<AdviserResponseResponse> responseObserver) {
+    pmsNodeExecutionService.handleAdviserResponse(
+        request.getNodeExecutionId(), request.getNotifyId(), request.getAdviserResponse());
+
+    responseObserver.onNext(AdviserResponseResponse.newBuilder().build());
     responseObserver.onCompleted();
   }
 }

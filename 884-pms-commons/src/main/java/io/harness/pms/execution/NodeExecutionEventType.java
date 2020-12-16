@@ -1,7 +1,3 @@
 package io.harness.pms.execution;
 
-public enum NodeExecutionEventType {
-  FACILITATE,
-  START,
-  RESUME,
-}
+public enum NodeExecutionEventType { FACILITATE, START, RESUME, ADVISE }

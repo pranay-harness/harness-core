@@ -14,6 +14,7 @@ import io.harness.engine.progress.EngineProgressCallback;
 import io.harness.engine.resume.EngineResumeCallback;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.NodeExecutionMapper;
+import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
@@ -118,6 +119,12 @@ public class PmsNodeExecutionServiceImpl implements PmsNodeExecutionService {
       return null;
     }
     return JsonOrchestrationUtils.asObject(stepParameters, step.getStepParametersClass());
+  }
+
+  @Override
+  public void handleAdviserResponse(
+      @NonNull String nodeExecutionId, @NonNull String notifyId, AdviserResponse adviserResponse) {
+    waitNotifyEngine.doneWith(notifyId, BinaryResponseData.builder().data(adviserResponse.toByteArray()).build());
   }
 
   @Override
