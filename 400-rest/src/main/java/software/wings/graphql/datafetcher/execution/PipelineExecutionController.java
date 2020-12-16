@@ -8,6 +8,9 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.graphql.datafetcher.DataFetcherUtils.GENERIC_EXCEPTION_MSG;
 import static software.wings.service.impl.workflow.WorkflowServiceTemplateHelper.getTemplatizedEnvVariableName;
+import static software.wings.sm.states.ApprovalState.APPROVAL_STATE_TYPE_VARIABLE;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CreatedByType;
@@ -46,6 +49,7 @@ import software.wings.graphql.schema.query.QLServiceInputsForExecutionParams;
 import software.wings.graphql.schema.query.QLTriggerQueryParameters.QLTriggerQueryParametersKeys;
 import software.wings.graphql.schema.type.QLApiKey;
 import software.wings.graphql.schema.type.QLApprovalStageExecution;
+import software.wings.graphql.schema.type.QLApprovalStageExecution.QLApprovalStageExecutionBuilder;
 import software.wings.graphql.schema.type.QLCause;
 import software.wings.graphql.schema.type.QLExecuteOptions;
 import software.wings.graphql.schema.type.QLExecutedByAPIKey;
@@ -170,13 +174,17 @@ public class PipelineExecutionController {
             .orElseThrow(() -> new UnexpectedException("Expected at least one pipeline stage element"));
 
     if (Lists.newArrayList(StateType.APPROVAL, StateType.APPROVAL_RESUME).stream().anyMatch(stateType::equals)) {
-      return QLApprovalStageExecution.builder()
-          .pipelineStageElementId(execution.getPipelineStageElementId())
-          .pipelineStageName(element.getProperties().get("stageName").toString())
-          .pipelineStepName(element.getName())
-          .status(ExecutionController.convertStatus(execution.getStatus()))
-          .approvalStepType(ApprovalStateType.valueOf(element.getProperties().get("approvalStateType").toString()))
-          .build();
+      QLApprovalStageExecutionBuilder builder =
+          QLApprovalStageExecution.builder()
+              .pipelineStageElementId(execution.getPipelineStageElementId())
+              .pipelineStageName(element.getProperties().get("stageName").toString())
+              .pipelineStepName(element.getName())
+              .status(ExecutionController.convertStatus(execution.getStatus()));
+      Object approvalStateType = element.getProperties().get(APPROVAL_STATE_TYPE_VARIABLE);
+      if (approvalStateType != null && isNotBlank(approvalStateType.toString())) {
+        builder.approvalStepType(ApprovalStateType.valueOf(approvalStateType.toString()));
+      }
+      return builder.build();
     } else {
       String workflowExecutionId = null;
       if (!execution.getWorkflowExecutions().isEmpty()) {

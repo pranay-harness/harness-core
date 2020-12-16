@@ -1,0 +1,733 @@
+{
+  "_id" : "5wT_EUyJQEKB66gmh6rrsg",
+  "appId" : "nCLN8c84SqWPr44sqg65JQ",
+  "createdBy" : {
+    "uuid" : "lv0euRhKRCyiXWzS7pOg6g",
+    "name" : "Admin",
+    "email" : "admin@harness.io"
+  },
+  "createdByType" : "USER",
+  "createdAt" : 1608036347222,
+  "accountId" : "kmpySmUISimoRrJL6NL73w",
+  "workflowId" : "rF1mCEaETZ2gEXljOTwhrQ",
+  "stateMachine" : {
+    "appId" : "nCLN8c84SqWPr44sqg65JQ",
+    "createdAt" : 0,
+    "accountId" : "kmpySmUISimoRrJL6NL73w",
+    "originId" : "rF1mCEaETZ2gEXljOTwhrQ",
+    "valid" : false,
+    "transitions" : [
+    ],
+    "initialStateName" : "build-wf"
+  },
+  "envIds" : [
+    "448B_IQpS9qQ4axX-yfPnQ",
+    "imRBOGz2ReyY89dr4K-vrQ"
+  ],
+  "workflowIds" : [
+    "6IKPR0uPQdOjvAg8TdeBIw",
+    "9zhGmY7FTlSnj2ALPvPTOQ"
+  ],
+  "serviceIds" : [
+    "NA2uRPKLTqm9VU3dPENb-g"
+  ],
+  "appName" : "Puthraya App",
+  "workflowType" : "PIPELINE",
+  "status" : "FAILED",
+  "pipelineExecution" : {
+    "createdAt" : 0,
+    "pipelineId" : "rF1mCEaETZ2gEXljOTwhrQ",
+    "pipeline" : {
+      "name" : "template-pipeline-multi",
+      "pipelineStages" : [
+        {
+          "name" : "STAGE 3",
+          "parallel" : false,
+          "pipelineStageElements" : [
+            {
+              "uuid" : "zAVQ8RBGT9qXFRI0cEdbvQ",
+              "name" : "build-wf",
+              "type" : "ENV_RESUME_STATE",
+              "parallelIndex" : 1,
+              "properties" : {
+                "workflowVariables" : {
+                  "var1" : "23456",
+                  "var2" : ""
+                },
+                "pipelineStageElementId" : "zAVQ8RBGT9qXFRI0cEdbvQ",
+                "stageName" : "STAGE 3",
+                "prevPipelineExecutionId" : "afnvfFiBRNCIAb3oqsslWQ",
+                "disable" : false,
+                "disableAssertion" : null,
+                "pipelineStageParallelIndex" : 1,
+                "prevStateExecutionId" : "8AmL86HXQlqXonmOU16ILQ",
+                "prevWorkflowExecutionIds" : [
+                  "Ws_tkfyIQU6KRI5-W4RQ6w"
+                ],
+                "pipelineId" : "rF1mCEaETZ2gEXljOTwhrQ"
+              },
+              "workflowVariables" : {
+                "var2" : "",
+                "var1" : "23456"
+              }
+            }
+          ]
+        },
+        {
+          "name" : "STAGE 4",
+          "parallel" : false,
+          "pipelineStageElements" : [
+            {
+              "uuid" : "Be16BYtzRCCrnVlD44i5pA",
+              "name" : "Approval 1",
+              "type" : "APPROVAL_RESUME",
+              "parallelIndex" : 2,
+              "properties" : {
+                "workflowVariables" : null,
+                "pipelineStageElementId" : "Be16BYtzRCCrnVlD44i5pA",
+                "stageName" : "STAGE 4",
+                "prevPipelineExecutionId" : "afnvfFiBRNCIAb3oqsslWQ",
+                "disable" : false,
+                "disableAssertion" : null,
+                "pipelineStageParallelIndex" : 2,
+                "prevStateExecutionId" : "hwpIXbqETYKP3msDoEMBcw",
+                "pipelineId" : "rF1mCEaETZ2gEXljOTwhrQ"
+              }
+            }
+          ]
+        },
+        {
+          "name" : "STAGE 2",
+          "parallel" : false,
+          "pipelineStageElements" : [
+            {
+              "uuid" : "KZPqXENuRbKqkuISe07JAQ",
+              "name" : "k8s-stage-1",
+              "type" : "ENV_LOOP_STATE",
+              "parallelIndex" : 3,
+              "properties" : {
+                "workflowVariables" : {
+                  "Environment" : "448B_IQpS9qQ4axX-yfPnQ",
+                  "ServiceId" : "NA2uRPKLTqm9VU3dPENb-g",
+                  "InfraDefinition_KUBERNETES" : "${infra}",
+                  "message" : "HELLO WORLD",
+                  "buildNumber" : "12345",
+                  "xxz" : ""
+                },
+                "pipelineStageElementId" : "KZPqXENuRbKqkuISe07JAQ",
+                "timeoutAction" : "END_EXECUTION",
+                "envId" : "448B_IQpS9qQ4axX-yfPnQ",
+                "pipelineStageParallelIndex" : 3,
+                "userGroupIds" : [
+                  "8u4n0jVISS2zv8LFRuj2uw"
+                ],
+                "timeout" : 86400000,
+                "pipelineId" : "rF1mCEaETZ2gEXljOTwhrQ",
+                "runtimeInputVariables" : [
+                  "InfraDefinition_KUBERNETES"
+                ],
+                "loopedValues" : [
+                  "${infra}"
+                ],
+                "stageName" : "STAGE 2",
+                "disable" : false,
+                "loopedVarName" : "InfraDefinition_KUBERNETES",
+                "disableAssertion" : null,
+                "workflowId" : "9zhGmY7FTlSnj2ALPvPTOQ"
+              },
+              "workflowVariables" : {
+                "Environment" : "448B_IQpS9qQ4axX-yfPnQ",
+                "InfraDefinition_KUBERNETES" : "${infra}",
+                "xxz" : "",
+                "message" : "HELLO WORLD",
+                "buildNumber" : "12345",
+                "ServiceId" : "NA2uRPKLTqm9VU3dPENb-g"
+              },
+              "runtimeInputsConfig" : {
+                "runtimeInputVariables" : [
+                  "InfraDefinition_KUBERNETES"
+                ],
+                "timeout" : 86400000,
+                "userGroupIds" : [
+                  "8u4n0jVISS2zv8LFRuj2uw"
+                ],
+                "timeoutAction" : "END_EXECUTION"
+              }
+            }
+          ]
+        },
+        {
+          "name" : "STAGE 2",
+          "parallel" : false,
+          "pipelineStageElements" : [
+            {
+              "uuid" : "iibzVUjNTlWsv23lQIrkWw",
+              "name" : "k8s-stage-2",
+              "type" : "ENV_LOOP_STATE",
+              "parallelIndex" : 4,
+              "properties" : {
+                "workflowVariables" : {
+                  "Environment" : "imRBOGz2ReyY89dr4K-vrQ",
+                  "ServiceId" : "NA2uRPKLTqm9VU3dPENb-g",
+                  "InfraDefinition_KUBERNETES" : "${infra1}",
+                  "message" : "Random Message",
+                  "buildNumber" : "12345",
+                  "xxz" : ""
+                },
+                "pipelineStageElementId" : "iibzVUjNTlWsv23lQIrkWw",
+                "timeoutAction" : "END_EXECUTION",
+                "envId" : "${env}",
+                "pipelineStageParallelIndex" : 4,
+                "userGroupIds" : [
+                  "8u4n0jVISS2zv8LFRuj2uw"
+                ],
+                "timeout" : 86400000,
+                "pipelineId" : "rF1mCEaETZ2gEXljOTwhrQ",
+                "runtimeInputVariables" : [
+                  "InfraDefinition_KUBERNETES"
+                ],
+                "loopedValues" : [
+                  "${infra1}"
+                ],
+                "stageName" : "STAGE 2",
+                "disable" : false,
+                "loopedVarName" : "InfraDefinition_KUBERNETES",
+                "disableAssertion" : null,
+                "workflowId" : "9zhGmY7FTlSnj2ALPvPTOQ"
+              },
+              "workflowVariables" : {
+                "Environment" : "imRBOGz2ReyY89dr4K-vrQ",
+                "InfraDefinition_KUBERNETES" : "${infra1}",
+                "xxz" : "",
+                "message" : "Random Message",
+                "buildNumber" : "12345",
+                "ServiceId" : "NA2uRPKLTqm9VU3dPENb-g"
+              },
+              "runtimeInputsConfig" : {
+                "runtimeInputVariables" : [
+                  "InfraDefinition_KUBERNETES"
+                ],
+                "timeout" : 86400000,
+                "userGroupIds" : [
+                  "8u4n0jVISS2zv8LFRuj2uw"
+                ],
+                "timeoutAction" : "END_EXECUTION"
+              }
+            }
+          ]
+        }
+      ],
+      "stateEtaMap" : {
+        "WqjOVP09QEG6hI1wx26DZw" : 18001,
+        "vT-QiBPYRRKhNEaG8c1YcQ" : 25344,
+        "qGuMt3aQSWuEq_4e4qLvKA" : 75307,
+        "Vu-0B-r3TzSE2SLAKZdhrg" : 19976,
+        "Y7hQMbB7RhedxANc86z2lA" : 75968,
+        "YXTHMTIpRl69OPZTsKY4kg" : 143606,
+        "oyOT9IBRTeCQx4NQnXAofQ" : 21162,
+        "AfW4AbhVRiegcp_MVy7UgQ" : 76586,
+        "EbgN4AQaR1eTmC9Bt74_iQ" : 25329,
+        "EIKKouOuQfSWalxigq4FYA" : 75953,
+        "oStkPg9MSEyaSu9734_MwQ" : 6769,
+        "hpus1FIeSqaIMJ9Jv-UCOg" : 79611,
+        "fP3-2FHfSMOWFXR2dvlOdA" : 18015,
+        "t7ifXkTqQ6KNxTKPPexslQ" : 146588,
+        "2odSFy-1ReSYYvdch9C9Uw" : 21202,
+        "KZPqXENuRbKqkuISe07JAQ" : 74468,
+        "zAVQ8RBGT9qXFRI0cEdbvQ" : 6775,
+        "YHexSc0nTw2FvJREjn5i5Q" : 19994,
+        "dJfrZ9KCTIO4LxOYhC7-CQ" : 80956
+      },
+      "keywords" : [
+        "pipeline",
+        "template-rolling-k8s-wf",
+        "template-pipeline-multi",
+        "build-wf"
+      ],
+      "accountId" : "kmpySmUISimoRrJL6NL73w",
+      "sample" : false,
+      "_id" : "5Qg9RKy3TrOVKHJQXxw8nw_embedded",
+      "appId" : "nCLN8c84SqWPr44sqg65JQ",
+      "createdBy" : {
+        "uuid" : "lv0euRhKRCyiXWzS7pOg6g",
+        "name" : "Admin",
+        "email" : "admin@harness.io"
+      },
+      "createdAt" : 1603858389476,
+      "lastUpdatedAt" : 1608036379678
+    },
+    "pipelineStageExecutions" : [
+      {
+        "pipelineStageElementId" : "zAVQ8RBGT9qXFRI0cEdbvQ",
+        "stateUuid" : "zAVQ8RBGT9qXFRI0cEdbvQ",
+        "stateName" : "build-wf",
+        "stateType" : "ENV_RESUME_STATE",
+        "status" : "SUCCESS",
+        "startTs" : 1608036347278,
+        "expiryTs" : 1608036407278,
+        "endTs" : 1608036347353,
+        "workflowExecutions" : [
+          {
+            "_id" : "Ws_tkfyIQU6KRI5-W4RQ6w",
+            "appId" : "nCLN8c84SqWPr44sqg65JQ",
+            "createdBy" : {
+              "uuid" : "lv0euRhKRCyiXWzS7pOg6g",
+              "name" : "Admin",
+              "email" : "admin@harness.io"
+            },
+            "createdAt" : 1608036162309,
+            "accountId" : "kmpySmUISimoRrJL6NL73w",
+            "workflowId" : "6IKPR0uPQdOjvAg8TdeBIw",
+            "workflowIds" : [
+              "6IKPR0uPQdOjvAg8TdeBIw"
+            ],
+            "appName" : "Puthraya App",
+            "workflowType" : "ORCHESTRATION",
+            "status" : "SUCCESS",
+            "pipelineExecutionId" : "afnvfFiBRNCIAb3oqsslWQ",
+            "stageName" : "STAGE 3",
+            "name" : "build-wf",
+            "releaseNo" : "27",
+            "total" : 3,
+            "breakdown" : {
+              "success" : 3,
+              "failed" : 0,
+              "inprogress" : 0,
+              "queued" : 0
+            },
+            "executionArgs" : {
+              "workflowType" : "ORCHESTRATION",
+              "orchestrationId" : "6IKPR0uPQdOjvAg8TdeBIw",
+              "triggeredFromPipeline" : true,
+              "pipelineId" : "rF1mCEaETZ2gEXljOTwhrQ",
+              "pipelinePhaseElementId" : "zAVQ8RBGT9qXFRI0cEdbvQ",
+              "pipelinePhaseParallelIndex" : 1,
+              "stageName" : "STAGE 3",
+              "workflowVariables" : {
+                "var2" : "",
+                "var1" : "23456"
+              },
+              "excludeHostsWithSameArtifact" : false,
+              "notifyTriggeredUserOnly" : false,
+              "targetToSpecificHosts" : false,
+              "continueWithDefaultValues" : false
+            },
+            "startTs" : 1608036162321,
+            "endTs" : 1608036168323,
+            "duration" : 6002,
+            "triggeredBy" : {
+              "uuid" : "lv0euRhKRCyiXWzS7pOg6g",
+              "name" : "Admin",
+              "email" : "admin@harness.io"
+            },
+            "pipelineSummary" : {
+              "pipelineId" : "rF1mCEaETZ2gEXljOTwhrQ",
+              "pipelineName" : "template-pipeline-multi"
+            },
+            "buildExecutionSummaries" : [
+              {
+                "artifactStreamId" : "CchJMhP6Tn6nFyca5lE1zw",
+                "artifactSource" : "deepakputhraya/python-hello",
+                "revision" : "N/A",
+                "buildName" : "deepakputhraya/python-hello (v3.0)",
+                "metadata" : "deepakputhraya/python-hello {image=registry.hub.docker.com/deepakputhraya/python-hello:v3.0, tag=v3.0}"
+              }
+            ],
+            "orchestrationType" : "BUILD",
+            "isBaseline" : false,
+            "keywords" : [
+              "orchestration",
+              "admin@harness.io",
+              "puthraya app",
+              "build-wf",
+              "template-pipeline-multi",
+              "admin"
+            ],
+            "onDemandRollback" : false,
+            "useSweepingOutputs" : false,
+            "latestPipelineResume" : false,
+            "cdPageCandidate" : false,
+            "nextIteration" : 1608036225385,
+            "validUntil" : "2021-06-15T12:42:42.299Z"
+          }
+        ],
+        "looped" : false,
+        "waitingForInputs" : false,
+        "parallelInfo" : {
+          "groupIndex" : 1
+        },
+        "triggeredBy" : {
+          "uuid" : "lv0euRhKRCyiXWzS7pOg6g",
+          "name" : "Admin",
+          "email" : "admin@harness.io"
+        }
+      },
+      {
+        "pipelineStageElementId" : "Be16BYtzRCCrnVlD44i5pA",
+        "stateUuid" : "Be16BYtzRCCrnVlD44i5pA",
+        "stateName" : "Approval 1",
+        "stateType" : "APPROVAL_RESUME",
+        "status" : "SUCCESS",
+        "startTs" : 1608036347388,
+        "expiryTs" : 1608036407388,
+        "endTs" : 1608036347412,
+        "stateExecutionData" : {
+          "className" : "software.wings.api.ApprovalStateExecutionData",
+          "approvedBy" : {
+            "uuid" : "lv0euRhKRCyiXWzS7pOg6g",
+            "name" : "Admin",
+            "email" : "admin@harness.io"
+          },
+          "approvedOn" : 1608036175354,
+          "comments" : "",
+          "approvalId" : "xIhLXs0WQcmevgZjJBhocg",
+          "workflowId" : "rF1mCEaETZ2gEXljOTwhrQ",
+          "appId" : "nCLN8c84SqWPr44sqg65JQ",
+          "timeoutMillis" : 86400000,
+          "triggeredBy" : {
+            "uuid" : "lv0euRhKRCyiXWzS7pOg6g",
+            "name" : "Admin",
+            "email" : "admin@harness.io"
+          },
+          "approvalStateType" : "USER_GROUP",
+          "userGroups" : [
+            "8u4n0jVISS2zv8LFRuj2uw"
+          ],
+          "waitingForChangeWindow" : false,
+          "approvalFromSlack" : false,
+          "stateName" : "Approval 1",
+          "stateType" : "APPROVAL_RESUME",
+          "startTs" : 1608036347388,
+          "endTs" : 1608036347412,
+          "status" : "SUCCESS"
+        },
+        "looped" : false,
+        "waitingForInputs" : false,
+        "parallelInfo" : {
+          "groupIndex" : 2
+        },
+        "triggeredBy" : {
+          "uuid" : "lv0euRhKRCyiXWzS7pOg6g",
+          "name" : "Admin",
+          "email" : "admin@harness.io"
+        }
+      },
+      {
+        "pipelineStageElementId" : "KZPqXENuRbKqkuISe07JAQ",
+        "stateUuid" : "qWuKVgrWSx-dhJlFCwnAnw",
+        "stateName" : "k8s-stage-1_1",
+        "stateType" : "ENV_STATE",
+        "status" : "FAILED",
+        "startTs" : 1608036373760,
+        "endTs" : 1608036378639,
+        "workflowExecutions" : [
+          {
+            "_id" : "utFrjZqOSRuJY8HoHsT-Ig",
+            "appId" : "nCLN8c84SqWPr44sqg65JQ",
+            "createdBy" : {
+              "uuid" : "lv0euRhKRCyiXWzS7pOg6g",
+              "name" : "Admin",
+              "email" : "admin@harness.io"
+            },
+            "createdAt" : 1608036373882,
+            "accountId" : "kmpySmUISimoRrJL6NL73w",
+            "workflowId" : "9zhGmY7FTlSnj2ALPvPTOQ",
+            "envId" : "448B_IQpS9qQ4axX-yfPnQ",
+            "envIds" : [
+              "448B_IQpS9qQ4axX-yfPnQ"
+            ],
+            "workflowIds" : [
+              "9zhGmY7FTlSnj2ALPvPTOQ"
+            ],
+            "cloudProviderIds" : [
+              "rh8rA9wDQmWSzFCIuUYYUg"
+            ],
+            "serviceIds" : [
+              "NA2uRPKLTqm9VU3dPENb-g"
+            ],
+            "infraMappingIds" : [
+              "75FLaKYMQIq0BSQ0Rm4C0A"
+            ],
+            "infraDefinitionIds" : [
+              "vjjZEIoNTiu26ZdtwONe_Q"
+            ],
+            "appName" : "Puthraya App",
+            "envName" : "Default",
+            "envType" : "PROD",
+            "workflowType" : "ORCHESTRATION",
+            "status" : "FAILED",
+            "pipelineExecutionId" : "5wT_EUyJQEKB66gmh6rrsg",
+            "stageName" : "STAGE 2",
+            "name" : "template-rolling-k8s-wf",
+            "releaseNo" : "335",
+            "total" : 2,
+            "breakdown" : {
+              "success" : 1,
+              "failed" : 1,
+              "inprogress" : 0,
+              "queued" : 0
+            },
+            "executionArgs" : {
+              "workflowType" : "ORCHESTRATION",
+              "artifacts" : [
+                {
+                  "artifactStreamId" : "CchJMhP6Tn6nFyca5lE1zw",
+                  "artifactSourceName" : "deepakputhraya/python-hello",
+                  "metadata" : {
+                    "image" : "registry.hub.docker.com/deepakputhraya/python-hello:v3.0",
+                    "tag" : "v3.0",
+                    "buildNo" : "v3.0"
+                  },
+                  "displayName" : "deepakputhraya/python-hello_v3.0_1709615",
+                  "serviceIds" : [
+                    "NA2uRPKLTqm9VU3dPENb-g"
+                  ],
+                  "status" : "APPROVED",
+                  "contentStatus" : "METADATA_ONLY",
+                  "settingId" : "P9tSEq2ATOiwLK2ws8On6g",
+                  "accountId" : "kmpySmUISimoRrJL6NL73w",
+                  "artifactStreamType" : "DOCKER",
+                  "uiDisplayName" : "Tag# v3.0",
+                  "buildIdentity" : "v3.0_3mL7TVTcTsqz6PjG7njoEw",
+                  "_id" : "FAtIyyQiQOuVlGoLTV_yLg",
+                  "appId" : "nCLN8c84SqWPr44sqg65JQ",
+                  "createdAt" : 1601379796657,
+                  "lastUpdatedAt" : 1608036379678
+                }
+              ],
+              "artifactIdNames" : {
+                "FAtIyyQiQOuVlGoLTV_yLg" : "deepakputhraya/python-hello_v3.0_1709615"
+              },
+              "orchestrationId" : "9zhGmY7FTlSnj2ALPvPTOQ",
+              "triggeredFromPipeline" : true,
+              "pipelineId" : "rF1mCEaETZ2gEXljOTwhrQ",
+              "pipelinePhaseElementId" : "KZPqXENuRbKqkuISe07JAQ",
+              "pipelinePhaseParallelIndex" : 3,
+              "stageName" : "STAGE 2",
+              "workflowVariables" : {
+                "Environment" : "448B_IQpS9qQ4axX-yfPnQ",
+                "InfraDefinition_KUBERNETES" : "vjjZEIoNTiu26ZdtwONe_Q",
+                "xxz" : "",
+                "message" : "HELLO WORLD",
+                "buildNumber" : "12345",
+                "ServiceId" : "NA2uRPKLTqm9VU3dPENb-g"
+              },
+              "excludeHostsWithSameArtifact" : false,
+              "notifyTriggeredUserOnly" : false,
+              "targetToSpecificHosts" : false,
+              "continueWithDefaultValues" : false
+            },
+            "serviceExecutionSummaries" : [
+            ],
+            "startTs" : 1608036373894,
+            "endTs" : 1608036377670,
+            "duration" : 3776,
+            "triggeredBy" : {
+              "uuid" : "lv0euRhKRCyiXWzS7pOg6g",
+              "name" : "Admin",
+              "email" : "admin@harness.io"
+            },
+            "pipelineSummary" : {
+              "pipelineId" : "rF1mCEaETZ2gEXljOTwhrQ",
+              "pipelineName" : "template-pipeline-multi"
+            },
+            "environments" : [
+              {
+                "name" : "Default",
+                "uuid" : "448B_IQpS9qQ4axX-yfPnQ",
+                "environmentType" : "PROD"
+              }
+            ],
+            "deployedEnvironments" : [
+              {
+                "name" : "Default",
+                "uuid" : "448B_IQpS9qQ4axX-yfPnQ",
+                "environmentType" : "PROD"
+              }
+            ],
+            "deployedServices" : [
+              "NA2uRPKLTqm9VU3dPENb-g"
+            ],
+            "deployedCloudProviders" : [
+              "rh8rA9wDQmWSzFCIuUYYUg"
+            ],
+            "orchestrationType" : "ROLLING",
+            "isBaseline" : false,
+            "artifacts" : [
+              {
+                "artifactStreamId" : "CchJMhP6Tn6nFyca5lE1zw",
+                "artifactSourceName" : "deepakputhraya/python-hello",
+                "metadata" : {
+                  "image" : "registry.hub.docker.com/deepakputhraya/python-hello:v3.0",
+                  "tag" : "v3.0",
+                  "buildNo" : "v3.0"
+                },
+                "displayName" : "deepakputhraya/python-hello_v3.0_1709615",
+                "serviceIds" : [
+                  "NA2uRPKLTqm9VU3dPENb-g"
+                ],
+                "status" : "APPROVED",
+                "contentStatus" : "METADATA_ONLY",
+                "settingId" : "P9tSEq2ATOiwLK2ws8On6g",
+                "accountId" : "kmpySmUISimoRrJL6NL73w",
+                "artifactStreamType" : "DOCKER",
+                "uiDisplayName" : "Tag# v3.0",
+                "buildIdentity" : "v3.0_3mL7TVTcTsqz6PjG7njoEw",
+                "_id" : "FAtIyyQiQOuVlGoLTV_yLg",
+                "appId" : "nCLN8c84SqWPr44sqg65JQ",
+                "createdAt" : 1601379796657,
+                "lastUpdatedAt" : 1608036379678
+              }
+            ],
+            "keywords" : [
+              "default",
+              "template-rolling-k8s-wf",
+              "orchestration",
+              "prod",
+              "deepakputhraya/python-hello",
+              "admin@harness.io",
+              "template-pipeline-multi",
+              "puthraya app",
+              "v3.0",
+              "admin",
+              "hello",
+              "registry.hub.docker.com/deepakputhraya/python-hello:v3.0"
+            ],
+            "onDemandRollback" : false,
+            "useSweepingOutputs" : false,
+            "concurrencyStrategy" : {
+              "unitType" : "INFRA",
+              "holdingScope" : "WORKFLOW",
+              "strategy" : "FIFO",
+              "resourceUnit" : "${infra.infraId}",
+              "notifyTriggeredByUser" : false
+            },
+            "latestPipelineResume" : false,
+            "cdPageCandidate" : false,
+            "nextIteration" : 1608036435391,
+            "validUntil" : "2021-06-15T12:46:13.860Z"
+          }
+        ],
+        "looped" : true,
+        "waitingForInputs" : false,
+        "parallelInfo" : {
+          "groupIndex" : 3
+        }
+      },
+      {
+        "pipelineStageElementId" : "iibzVUjNTlWsv23lQIrkWw",
+        "stateUuid" : "iibzVUjNTlWsv23lQIrkWw",
+        "stateName" : "k8s-stage-2",
+        "stateType" : "ENV_LOOP_STATE",
+        "status" : "QUEUED",
+        "looped" : false,
+        "waitingForInputs" : false,
+        "parallelInfo" : {
+          "groupIndex" : 4
+        }
+      }
+    ],
+    "status" : "FAILED",
+    "estimatedTime" : 300000
+  },
+  "name" : "template-pipeline-multi",
+  "releaseNo" : "147",
+  "total" : 0,
+  "executionArgs" : {
+    "workflowType" : "PIPELINE",
+    "triggeredFromPipeline" : false,
+    "pipelineId" : "rF1mCEaETZ2gEXljOTwhrQ",
+    "pipelinePhaseParallelIndex" : 0,
+    "workflowVariables" : {
+      "service" : "NA2uRPKLTqm9VU3dPENb-g",
+      "env" : "imRBOGz2ReyY89dr4K-vrQ",
+      "var1" : "23456",
+      "buildNumber" : "12345"
+    },
+    "createdByType" : "USER",
+    "excludeHostsWithSameArtifact" : false,
+    "notifyTriggeredUserOnly" : false,
+    "targetToSpecificHosts" : false,
+    "continueWithDefaultValues" : false
+  },
+  "serviceExecutionSummaries" : [
+  ],
+  "triggeredBy" : {
+    "uuid" : "lv0euRhKRCyiXWzS7pOg6g",
+    "name" : "Admin",
+    "email" : "admin@harness.io"
+  },
+  "pipelineSummary" : {
+    "pipelineId" : "rF1mCEaETZ2gEXljOTwhrQ",
+    "pipelineName" : "template-pipeline-multi"
+  },
+  "environments" : [
+    {
+      "name" : "Default",
+      "uuid" : "448B_IQpS9qQ4axX-yfPnQ",
+      "environmentType" : "PROD"
+    },
+    {
+      "name" : "DEV",
+      "uuid" : "imRBOGz2ReyY89dr4K-vrQ",
+      "environmentType" : "NON_PROD"
+    }
+  ],
+  "isBaseline" : false,
+  "keywords" : [
+    "pipeline",
+    "admin@harness.io",
+    "puthraya app",
+    "template-pipeline-multi",
+    "admin"
+  ],
+  "onDemandRollback" : false,
+  "useSweepingOutputs" : false,
+  "latestPipelineResume" : true,
+  "cdPageCandidate" : true,
+  "validUntil" : "2021-06-15T12:45:47.182Z",
+  "startTs" : 1608036347250,
+  "pipelineResumeId" : "afnvfFiBRNCIAb3oqsslWQ",
+  "nextIteration" : 1608036415391,
+  "artifacts" : [
+    {
+      "artifactStreamId" : "CchJMhP6Tn6nFyca5lE1zw",
+      "artifactSourceName" : "deepakputhraya/python-hello",
+      "metadata" : {
+        "image" : "registry.hub.docker.com/deepakputhraya/python-hello:v3.0",
+        "tag" : "v3.0",
+        "buildNo" : "v3.0"
+      },
+      "displayName" : "deepakputhraya/python-hello_v3.0_1709615",
+      "serviceIds" : [
+        "NA2uRPKLTqm9VU3dPENb-g"
+      ],
+      "status" : "APPROVED",
+      "contentStatus" : "METADATA_ONLY",
+      "settingId" : "P9tSEq2ATOiwLK2ws8On6g",
+      "accountId" : "kmpySmUISimoRrJL6NL73w",
+      "artifactStreamType" : "DOCKER",
+      "uiDisplayName" : "Tag# v3.0",
+      "buildIdentity" : "v3.0_3mL7TVTcTsqz6PjG7njoEw",
+      "_id" : "FAtIyyQiQOuVlGoLTV_yLg",
+      "appId" : "nCLN8c84SqWPr44sqg65JQ",
+      "createdAt" : 1601379796657,
+      "lastUpdatedAt" : 1608036377768
+    }
+  ],
+  "duration" : 32399,
+  "endTs" : 1608036379649,
+  "deployedCloudProviders" : [
+    "rh8rA9wDQmWSzFCIuUYYUg"
+  ],
+  "deployedEnvironments" : [
+    {
+      "name" : "Default",
+      "uuid" : "448B_IQpS9qQ4axX-yfPnQ",
+      "environmentType" : "PROD"
+    }
+  ],
+  "deployedServices" : [
+    "NA2uRPKLTqm9VU3dPENb-g"
+  ]
+}

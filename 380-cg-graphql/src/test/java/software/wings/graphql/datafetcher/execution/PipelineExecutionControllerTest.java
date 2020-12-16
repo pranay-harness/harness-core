@@ -114,6 +114,25 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
+  public void pipelineExecutionIsBuiltCorrectlyWithApprovalStageTriggerResumed() {
+    // Note: Deleted few fields from this due to issues with serialization
+    WorkflowExecution workflowExecution = JsonUtils.readResourceFile(
+        "./execution/workflow_execution_resumed_after_approval.json", WorkflowExecution.class);
+
+    WorkflowVariablesMetadata metadata = new WorkflowVariablesMetadata(Lists.newArrayList());
+    when(workflowExecutionService.fetchWorkflowVariables(any(), any(), anyString(), anyString())).thenReturn(metadata);
+
+    QLPipelineExecutionBuilder builder = QLPipelineExecution.builder();
+    pipelineExecutionController.populatePipelineExecution(workflowExecution, builder);
+    JsonNode actual = JsonUtils.toJsonNode(builder.build());
+    JsonNode expected = JsonUtils.readResourceFile(
+        "execution/qlPipeline_execution_expected_with_resumed_pipeline.json", JsonNode.class);
+    assertEquals("QLPipeline execution should be equal", expected, actual);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
   public void testRunningPipelineResolveNonRuntimeEnvVariable() throws Exception {
     // Test case for getting env variable for pipelines with non runtime env variable
 

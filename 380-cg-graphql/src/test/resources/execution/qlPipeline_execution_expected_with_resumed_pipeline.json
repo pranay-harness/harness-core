@@ -1,0 +1,57 @@
+{
+  "id": null,
+  "pipelineId": "rF1mCEaETZ2gEXljOTwhrQ",
+  "createdAt": 1608036347222,
+  "startedAt": 1608036347250,
+  "endedAt": 1608036379649,
+  "status": "FAILED",
+  "cause": {
+    "user": {
+      "id": "lv0euRhKRCyiXWzS7pOg6g",
+      "name": "Admin",
+      "email": "admin@harness.io",
+      "isEmailVerified": null,
+      "isTwoFactorAuthenticationEnabled": null,
+      "isUserLocked": null,
+      "isPasswordExpired": null,
+      "isImportedFromIdentityProvider": null
+    },
+    "using": "WEB_UI"
+  },
+  "notes": null,
+  "appId": "nCLN8c84SqWPr44sqg65JQ",
+  "tags": [],
+  "pipelineStageExecutions": [
+    {
+      "pipelineStageElementId": "zAVQ8RBGT9qXFRI0cEdbvQ",
+      "pipelineStepName": "build-wf",
+      "pipelineStageName": "STAGE 3",
+      "workflowExecutionId": null,
+      "runtimeInputVariables": null,
+      "status": "SUCCESS"
+    },
+    {
+      "pipelineStageElementId": "Be16BYtzRCCrnVlD44i5pA",
+      "pipelineStepName": "Approval 1",
+      "pipelineStageName": "STAGE 4",
+      "status": "SUCCESS",
+      "approvalStepType": null
+    },
+    {
+      "pipelineStageElementId": "KZPqXENuRbKqkuISe07JAQ",
+      "pipelineStepName": "k8s-stage-1",
+      "pipelineStageName": "STAGE 2",
+      "workflowExecutionId": null,
+      "runtimeInputVariables": null,
+      "status": "FAILED"
+    },
+    {
+      "pipelineStageElementId": "iibzVUjNTlWsv23lQIrkWw",
+      "pipelineStepName": "k8s-stage-2",
+      "pipelineStageName": "STAGE 2",
+      "workflowExecutionId": null,
+      "runtimeInputVariables": null,
+      "status": "QUEUED"
+    }
+  ]
+}
