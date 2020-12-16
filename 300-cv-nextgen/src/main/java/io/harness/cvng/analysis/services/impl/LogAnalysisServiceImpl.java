@@ -204,6 +204,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
         .project(LogAnalysisClusterKeys.label, true)
         .project(LogAnalysisClusterKeys.text, true)
         .project(LogAnalysisClusterKeys.frequencyTrend, true)
+        .project(LogAnalysisClusterKeys.firstSeenTime, true)
         .asList(new FindOptions().maxTime(MONGO_QUERY_TIMEOUT_SEC, TimeUnit.SECONDS));
   }
 
