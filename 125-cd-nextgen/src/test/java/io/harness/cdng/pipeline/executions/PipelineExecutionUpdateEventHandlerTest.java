@@ -18,13 +18,13 @@ import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
-import io.harness.engine.outcomes.OutcomeService;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
+import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.rule.Owner;
 import io.harness.steps.StepOutcomeGroup;
 

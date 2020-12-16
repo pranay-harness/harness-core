@@ -12,7 +12,7 @@ import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.expressions.NodeExecutionsCache;
-import io.harness.engine.outcomes.OutcomeService;
+import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
@@ -39,7 +39,7 @@ import org.mockito.junit.MockitoRule;
 
 public class NodeExecutionValueTest extends OrchestrationTestBase {
   @Mock NodeExecutionService nodeExecutionService;
-  @Mock OutcomeService outcomeService;
+  @Mock PmsOutcomeService pmsOutcomeService;
 
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -128,7 +128,7 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
     NodeExecutionChildFunctor functor =
         NodeExecutionChildFunctor.builder()
             .nodeExecutionsCache(new NodeExecutionsCache(nodeExecutionService, newAmbiance))
-            .outcomeService(outcomeService)
+            .pmsOutcomeService(pmsOutcomeService)
             .ambiance(newAmbiance)
             .build();
     NodeExecutionMap nodeExecutionMap = (NodeExecutionMap) functor.bind();
@@ -148,7 +148,7 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
     NodeExecutionAncestorFunctor functor =
         NodeExecutionAncestorFunctor.builder()
             .nodeExecutionsCache(new NodeExecutionsCache(nodeExecutionService, newAmbiance))
-            .outcomeService(outcomeService)
+            .pmsOutcomeService(pmsOutcomeService)
             .ambiance(newAmbiance)
             .groupAliases(ImmutableMap.of("stage", "STAGE"))
             .build();
@@ -170,7 +170,7 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
     NodeExecutionQualifiedFunctor functor =
         NodeExecutionQualifiedFunctor.builder()
             .nodeExecutionsCache(new NodeExecutionsCache(nodeExecutionService, ambiance))
-            .outcomeService(outcomeService)
+            .pmsOutcomeService(pmsOutcomeService)
             .ambiance(ambiance)
             .build();
     NodeExecutionMap nodeExecutionMap = (NodeExecutionMap) functor.bind();

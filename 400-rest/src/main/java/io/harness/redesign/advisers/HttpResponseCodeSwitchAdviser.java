@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.outcomes.OutcomeService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
@@ -15,6 +14,7 @@ import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent;
 import io.harness.pms.sdk.core.data.Outcome;
+import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.serializer.KryoSerializer;
 
 import software.wings.api.HttpStateExecutionData;

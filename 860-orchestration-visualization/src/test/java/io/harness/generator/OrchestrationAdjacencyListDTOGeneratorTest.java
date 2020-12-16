@@ -12,7 +12,7 @@ import io.harness.beans.converter.GraphVertexConverter;
 import io.harness.beans.internal.EdgeListInternal;
 import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.category.element.UnitTests;
-import io.harness.engine.outcomes.OutcomeService;
+import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
@@ -20,6 +20,7 @@ import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.rule.Owner;
 import io.harness.utils.DummyForkStepParameters;
@@ -51,13 +52,13 @@ public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVis
 
   private static final StepType DUMMY_STEP_TYPE = StepType.newBuilder().setType("DUMMY").build();
 
-  @Mock private OutcomeService outcomeService;
+  @Mock private PmsOutcomeService pmsOutcomeService;
   @InjectMocks @Inject private OrchestrationAdjacencyListGenerator orchestrationAdjacencyListGenerator;
 
   @Before
   public void setUp() {
-    when(outcomeService.findAllByRuntimeId(anyString(), anyString()))
-        .thenReturn(Collections.singletonList(new DummyOutcome("outcome")));
+    when(pmsOutcomeService.findAllByRuntimeId(anyString(), anyString()))
+        .thenReturn(Collections.singletonList(PmsOutcomeMapper.convertOutcomeValueToJson(new DummyOutcome("outcome"))));
   }
 
   @Test

@@ -15,20 +15,19 @@ import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepOutcomeGroup;
-import io.harness.yaml.core.StepElement;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import java.util.*;
 
-public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<StepElement> {
+public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<StepElementConfig> {
   @Inject private KryoSerializer kryoSerializer;
 
   public abstract Set<String> getSupportedStepTypes();
 
   @Override
-  public Class<StepElement> getFieldClass() {
-    return StepElement.class;
+  public Class<StepElementConfig> getFieldClass() {
+    return StepElementConfig.class;
   }
 
   @Override
@@ -41,7 +40,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
   }
 
   @Override
-  public PlanCreationResponse createPlanForField(PlanCreationContext ctx, StepElement stepElement) {
+  public PlanCreationResponse createPlanForField(PlanCreationContext ctx, StepElementConfig stepElement) {
     String nodeName;
 
     if (EmptyPredicate.isEmpty(stepElement.getName())) {

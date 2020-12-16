@@ -10,6 +10,7 @@ import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
+import org.bson.Document;
 
 @OwnedBy(CDC)
 public class OrchestrationVisualizationKryoRegistrar implements KryoRegistrar {
@@ -19,5 +20,6 @@ public class OrchestrationVisualizationKryoRegistrar implements KryoRegistrar {
     kryo.register(OrchestrationGraph.class, 3304);
     kryo.register(OrchestrationAdjacencyListInternal.class, 3305);
     kryo.register(EdgeListInternal.class, 3306);
+    kryo.register(Document.class, 3307);
   }
 }

@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.plan.PlanExecutionService;
-import io.harness.engine.outcomes.OutcomeService;
+import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -25,7 +25,7 @@ import org.junit.experimental.categories.Category;
 
 public class EngineExpressionServiceImplTest extends OrchestrationTestBase {
   @Inject EngineExpressionService engineExpressionService;
-  @Inject OutcomeService outcomeService;
+  @Inject PmsOutcomeService pmsOutcomeService;
   @Inject PmsSweepingOutputService pmsSweepingOutputService;
   @Inject PlanExecutionService planExecutionService;
 
@@ -38,7 +38,8 @@ public class EngineExpressionServiceImplTest extends OrchestrationTestBase {
   public void setup() {
     ambiance = AmbianceTestUtils.buildAmbiance();
     planExecutionService.save(PlanExecution.builder().uuid(ambiance.getPlanExecutionId()).build());
-    outcomeService.consume(ambiance, OUTCOME_NAME, DummyOutcome.builder().test("harness").build(), null);
+    pmsOutcomeService.consume(ambiance, OUTCOME_NAME,
+        DocumentOrchestrationUtils.convertToDocumentJson(DummyOutcome.builder().test("harness").build()), null);
     pmsSweepingOutputService.consume(ambiance, OUTPUT_NAME,
         DocumentOrchestrationUtils.convertToDocumentJson(DummySweepingOutput.builder().test("harness").build()), null);
   }

@@ -8,13 +8,14 @@ import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.beans.converter.GraphVertexConverter;
 import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.engine.outcomes.OutcomeService;
+import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.execution.NodeExecution;
 import io.harness.generator.OrchestrationAdjacencyListGenerator;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
+import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
 import io.harness.service.GraphGenerationService;
 
 import com.google.inject.Inject;
@@ -26,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 public class NodeExecutionStatusUpdateEventHandlerV2 implements AsyncOrchestrationEventHandler {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private GraphGenerationService graphGenerationService;
-  @Inject private OutcomeService outcomeService;
+  @Inject private PmsOutcomeService pmsOutcomeService;
   @Inject private OrchestrationAdjacencyListGenerator orchestrationAdjacencyListGenerator;
 
   @Override
@@ -55,7 +56,8 @@ public class NodeExecutionStatusUpdateEventHandlerV2 implements AsyncOrchestrati
         graphVertexMap.computeIfPresent(nodeExecutionId, (key, prevValue) -> {
           GraphVertex newValue = GraphVertexConverter.convertFrom(nodeExecution);
           if (StatusUtils.isFinalStatus(newValue.getStatus())) {
-            newValue.setOutcomes(outcomeService.findAllByRuntimeId(planExecutionId, nodeExecutionId));
+            newValue.setOutcomeDocuments(PmsOutcomeMapper.convertJsonToDocument(
+                pmsOutcomeService.findAllByRuntimeId(planExecutionId, nodeExecutionId)));
           }
           return newValue;
         });

@@ -243,7 +243,8 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
     Map<String, GraphVertex> graphVertexMap = updatedGraph.getAdjacencyList().getGraphVertexMap();
     assertThat(graphVertexMap.size()).isEqualTo(1);
     assertThat(graphVertexMap.get(dummyStart.getUuid()).getStatus()).isEqualTo(SUCCEEDED);
-    assertThat(graphVertexMap.get(dummyStart.getUuid()).getOutcomes()).containsExactlyInAnyOrder(dummyOutcome);
+    assertThat(graphVertexMap.get(dummyStart.getUuid()).getOutcomeDocuments())
+        .containsExactlyInAnyOrder(DocumentOrchestrationUtils.convertToDocument(dummyOutcome));
     assertThat(updatedGraph.getAdjacencyList().getAdjacencyMap().size()).isEqualTo(1);
     assertThat(updatedGraph.getStatus()).isEqualTo(planExecution.getStatus());
   }

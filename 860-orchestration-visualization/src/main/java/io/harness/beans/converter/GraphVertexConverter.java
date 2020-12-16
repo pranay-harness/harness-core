@@ -6,6 +6,7 @@ import io.harness.beans.GraphVertex;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.sdk.core.data.Outcome;
+import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 import io.harness.serializer.JsonUtils;
 
@@ -66,7 +67,7 @@ public class GraphVertexConverter {
         .interruptHistories(nodeExecution.getInterruptHistories())
         .retryIds(nodeExecution.getRetryIds())
         .skipType(nodeExecution.getNode().getSkipType())
-        .outcomes(outcomes)
+        .outcomeDocuments(PmsOutcomeMapper.convertOutcomesToDocumentList(outcomes))
         .progressDataMap(nodeExecution.getProgressDataMap())
         .build();
   }
