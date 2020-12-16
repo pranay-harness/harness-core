@@ -201,8 +201,7 @@ public class GcbServiceImpl implements GcbService {
         throw new GcbClientException(msg);
       }
     } catch (TokenResponseException e) {
-      log.info("GCB_TASK - GCB task failed due to: ", e);
-      throw new GcbClientException("407 Proxy Authentication Required");
+      throw new GcbClientException("GCB_TASK - GCB task failed due to:" + e.getMessage(), e);
     }
   }
 

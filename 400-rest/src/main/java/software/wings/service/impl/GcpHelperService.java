@@ -170,7 +170,10 @@ public class GcpHelperService {
   }
 
   private GoogleCredential checkIfUseProxyAndGetGoogleCredentials(GcpConfig gcpConfig) throws IOException {
-    return Http.getProxyHostName() != null
+    String tokenUri =
+        (String) (JsonUtils.asObject(new String(gcpConfig.getServiceAccountKeyFileContent()), HashMap.class))
+            .get("token_uri");
+    return Http.getProxyHostName() != null && !Http.shouldUseNonProxy(tokenUri)
         ? gcpCredentialsHelperService.getGoogleCredentialWithProxyConfiguredHttpTransport(gcpConfig)
         : gcpCredentialsHelperService.getGoogleCredentialWithDefaultHttpTransport(gcpConfig);
   }

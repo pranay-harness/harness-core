@@ -182,7 +182,7 @@ public class GcrServiceImpl implements GcrService {
         throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER).addParam("message", msg);
       }
     } catch (TokenResponseException e) {
-      throw new InvalidRequestException("407 Proxy Authentication Required");
+      throw new InvalidRequestException("Failed to refresh token: " + e.getMessage(), e);
     }
   }
 

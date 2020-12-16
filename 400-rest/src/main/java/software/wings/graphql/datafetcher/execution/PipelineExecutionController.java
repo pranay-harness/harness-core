@@ -10,9 +10,8 @@ import static software.wings.graphql.datafetcher.DataFetcherUtils.GENERIC_EXCEPT
 import static software.wings.service.impl.workflow.WorkflowServiceTemplateHelper.getTemplatizedEnvVariableName;
 import static software.wings.sm.states.ApprovalState.APPROVAL_STATE_TYPE_VARIABLE;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CreatedByType;
