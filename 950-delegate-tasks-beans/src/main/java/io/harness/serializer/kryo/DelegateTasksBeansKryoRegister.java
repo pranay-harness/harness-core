@@ -72,6 +72,7 @@ import io.harness.delegate.beans.connector.docker.DockerAuthCredentialsDTO;
 import io.harness.delegate.beans.connector.docker.DockerAuthType;
 import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
+import io.harness.delegate.beans.connector.docker.DockerRegistryProviderType;
 import io.harness.delegate.beans.connector.docker.DockerTestConnectionTaskParams;
 import io.harness.delegate.beans.connector.docker.DockerTestConnectionTaskResponse;
 import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
@@ -506,5 +507,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AzureWebAppListWebAppInstancesParameters.class, 19431);
     kryo.register(AzureWebAppListWebAppInstancesResponse.class, 19432);
     kryo.register(CommandUnitStatusProgress.class, 19433);
+    kryo.register(DockerRegistryProviderType.class, 19434);
   }
 }

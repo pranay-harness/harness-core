@@ -19,10 +19,11 @@ import java.util.List;
 public class DockerDTOToEntity implements ConnectorDTOToEntityMapper<DockerConnectorDTO> {
   @Override
   public DockerConnector toConnectorEntity(DockerConnectorDTO configDTO) {
-    DockerAuthType dockerAuthType =
-        configDTO.getAuth() != null ? configDTO.getAuth().getAuthType() : DockerAuthType.NO_AUTH;
-    DockerConnectorBuilder dockerConnectorBuilder =
-        DockerConnector.builder().url(configDTO.getDockerRegistryUrl()).authType(dockerAuthType);
+    DockerAuthType dockerAuthType = configDTO.getAuth().getAuthType();
+    DockerConnectorBuilder dockerConnectorBuilder = DockerConnector.builder()
+                                                        .url(configDTO.getDockerRegistryUrl())
+                                                        .providerType(configDTO.getProviderType())
+                                                        .authType(dockerAuthType);
     if (dockerAuthType == DockerAuthType.USER_PASSWORD) {
       DockerUserNamePasswordDTO dockerUserNamePasswordDTO =
           (DockerUserNamePasswordDTO) configDTO.getAuth().getCredentials();
