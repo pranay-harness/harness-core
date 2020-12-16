@@ -13,6 +13,7 @@ import io.harness.rule.Owner;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +36,7 @@ public class TimeSeriesCumulativeSumsTest extends CategoryTest {
       assertThat(metricSumsList.size()).isEqualTo(3);
       metricSumsList.forEach(metricSums -> {
         assertThat(Arrays.asList("metric1", "metric2", "metric3").contains(metricSums.getMetricName())).isTrue();
-        assertThat(metricSums.getSum()).isEqualTo(0.9);
+        assertThat(metricSums.getData()).isEqualTo(0.9);
         assertThat(metricSums.getRisk()).isEqualTo(0.5);
       });
     });
@@ -60,7 +61,8 @@ public class TimeSeriesCumulativeSumsTest extends CategoryTest {
                                                             .transactionMetricSums(buildTransactionMetricSums())
                                                             .build();
 
-    Map<String, Map<String, MetricSum>> txnMetricMap = timeSeriesCumulativeSums.convertToMap();
+    Map<String, Map<String, List<MetricSum>>> txnMetricMap =
+        TimeSeriesCumulativeSums.convertToMap(Collections.singletonList(timeSeriesCumulativeSums));
 
     assertThat(txnMetricMap.size()).isEqualTo(3);
     assertThat(txnMetricMap.containsKey("txn1")).isTrue();
@@ -68,14 +70,14 @@ public class TimeSeriesCumulativeSumsTest extends CategoryTest {
     assertThat(txnMetricMap.containsKey("txn3")).isTrue();
 
     for (String txn : txnMetricMap.keySet()) {
-      Map<String, MetricSum> metricSumsMap = txnMetricMap.get(txn);
+      Map<String, List<MetricSum>> metricSumsMap = txnMetricMap.get(txn);
       assertThat(metricSumsMap.size()).isEqualTo(3);
       assertThat(metricSumsMap.containsKey("metric1")).isTrue();
       assertThat(metricSumsMap.containsKey("metric2")).isTrue();
       assertThat(metricSumsMap.containsKey("metric3")).isTrue();
-      MetricSum sums = metricSumsMap.get("metric1");
+      MetricSum sums = metricSumsMap.get("metric1").get(0);
       assertThat(sums.getRisk()).isEqualTo(0.5);
-      assertThat(sums.getSum()).isEqualTo(0.9);
+      assertThat(sums.getData()).isEqualTo(0.9);
     }
   }
 
@@ -86,7 +88,8 @@ public class TimeSeriesCumulativeSumsTest extends CategoryTest {
     TimeSeriesCumulativeSums timeSeriesCumulativeSums =
         TimeSeriesCumulativeSums.builder().verificationTaskId(generateUuid()).transactionMetricSums(null).build();
 
-    Map<String, Map<String, MetricSum>> txnMetricMap = timeSeriesCumulativeSums.convertToMap();
+    Map<String, Map<String, List<MetricSum>>> txnMetricMap =
+        TimeSeriesCumulativeSums.convertToMap(Collections.singletonList(timeSeriesCumulativeSums));
     assertThat(txnMetricMap).isNotNull();
     assertThat(txnMetricMap.size()).isEqualTo(0);
   }
@@ -101,7 +104,7 @@ public class TimeSeriesCumulativeSumsTest extends CategoryTest {
           TransactionMetricSums.builder().transactionName(txn).metricSums(new ArrayList<>()).build();
 
       metricList.forEach(metric -> {
-        MetricSum metricSums = MetricSum.builder().metricName(metric).risk(0.5).sum(0.9).build();
+        MetricSum metricSums = MetricSum.builder().metricName(metric).risk(0.5).data(0.9).build();
         transactionMetricSums.getMetricSums().add(metricSums);
       });
       txnMetricSums.add(transactionMetricSums);
@@ -117,7 +120,7 @@ public class TimeSeriesCumulativeSumsTest extends CategoryTest {
       txnMetricSumMap.put(txn, new HashMap<>());
       metricList.forEach(metric -> {
         Map<String, MetricSum> metricSumsMap = txnMetricSumMap.get(txn);
-        metricSumsMap.put(metric, MetricSum.builder().risk(0.5).sum(0.9).build());
+        metricSumsMap.put(metric, MetricSum.builder().risk(0.5).data(0.9).build());
       });
     });
     return txnMetricSumMap;

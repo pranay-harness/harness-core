@@ -26,6 +26,7 @@ import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskTy
 import io.harness.cvng.analysis.entities.TimeSeriesAnomalousPatterns;
 import io.harness.cvng.analysis.entities.TimeSeriesCanaryLearningEngineTask;
 import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums;
+import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums.MetricSum;
 import io.harness.cvng.analysis.entities.TimeSeriesLearningEngineTask;
 import io.harness.cvng.analysis.entities.TimeSeriesLoadTestLearningEngineTask;
 import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary.TransactionMetricRisk;
@@ -168,9 +169,17 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
                                                   .build();
 
     hPersistence.save(cumulativeSums);
-    Map<String, Map<String, TimeSeriesCumulativeSums.MetricSum>> actual =
-        timeSeriesAnalysisService.getCumulativeSums(verificationTaskId, start, end);
-    Map<String, Map<String, TimeSeriesCumulativeSums.MetricSum>> expected = cumulativeSums.convertToMap();
+    TimeSeriesCumulativeSums cumulativeSums2 = TimeSeriesCumulativeSums.builder()
+                                                   .verificationTaskId(verificationTaskId)
+                                                   .analysisStartTime(start.minus(5, ChronoUnit.MINUTES))
+                                                   .analysisEndTime(end.minus(5, ChronoUnit.MINUTES))
+                                                   .transactionMetricSums(buildTransactionMetricSums())
+                                                   .build();
+    hPersistence.save(cumulativeSums2);
+    Map<String, Map<String, List<MetricSum>>> actual =
+        timeSeriesAnalysisService.getCumulativeSums(verificationTaskId, start.minus(10, ChronoUnit.MINUTES), end);
+    Map<String, Map<String, List<MetricSum>>> expected =
+        TimeSeriesCumulativeSums.convertToMap(Lists.newArrayList(cumulativeSums, cumulativeSums2));
     expected.forEach((key, map) -> {
       assertThat(actual.containsKey(key));
       map.forEach((metric, cumsum) -> {
@@ -289,7 +298,7 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     TimeSeriesCumulativeSums cumulativeSums =
         hPersistence.createQuery(TimeSeriesCumulativeSums.class).filter("verificationTaskId", verificationTaskId).get();
     assertThat(cumulativeSums).isNotNull();
-    assertThat(cumulativeSums.convertToMap()).isEmpty();
+    assertThat(TimeSeriesCumulativeSums.convertToMap(Collections.singletonList(cumulativeSums))).isEmpty();
     TimeSeriesAnomalousPatterns anomalousPatterns = hPersistence.createQuery(TimeSeriesAnomalousPatterns.class)
                                                         .filter("verificationTaskId", verificationTaskId)
                                                         .get();
@@ -327,7 +336,7 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         ServiceGuardTxnMetricAnalysisDataDTO txnMetricData =
             ServiceGuardTxnMetricAnalysisDataDTO.builder()
                 .isKeyTransaction(false)
-                .cumulativeSums(TimeSeriesCumulativeSums.MetricSum.builder().risk(0.5).sum(0.9).build())
+                .cumulativeSums(TimeSeriesCumulativeSums.MetricSum.builder().risk(0.5).data(0.9).build())
                 .shortTermHistory(Arrays.asList(0.1, 0.2, 0.3, 0.4))
                 .anomalousPatterns(Arrays.asList(TimeSeriesAnomalies.builder()
                                                      .transactionName(txn)
@@ -367,7 +376,7 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
       ServiceGuardTxnMetricAnalysisDataDTO txnMetricData =
           ServiceGuardTxnMetricAnalysisDataDTO.builder()
               .isKeyTransaction(false)
-              .cumulativeSums(TimeSeriesCumulativeSums.MetricSum.builder().risk(0.5).sum(0.9).build())
+              .cumulativeSums(TimeSeriesCumulativeSums.MetricSum.builder().risk(0.5).data(0.9).build())
               .shortTermHistory(Arrays.asList(0.1, 0.2, 0.3, 0.4))
               .anomalousPatterns(Arrays.asList(TimeSeriesAnomalies.builder()
                                                    .transactionName(txn)
@@ -635,7 +644,7 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
 
       metricList.forEach(metric -> {
         TimeSeriesCumulativeSums.MetricSum metricSums =
-            TimeSeriesCumulativeSums.MetricSum.builder().metricName(metric).risk(0.5).sum(0.9).build();
+            TimeSeriesCumulativeSums.MetricSum.builder().metricName(metric).risk(0.5).data(0.9).build();
         transactionMetricSums.getMetricSums().add(metricSums);
       });
       txnMetricSums.add(transactionMetricSums);

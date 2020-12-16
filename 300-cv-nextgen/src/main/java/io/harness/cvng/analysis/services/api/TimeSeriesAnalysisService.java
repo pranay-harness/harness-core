@@ -5,7 +5,7 @@ import io.harness.cvng.analysis.beans.ServiceGuardTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
 import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
-import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums;
+import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums.MetricSum;
 import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary;
 import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary.TransactionMetricRisk;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
@@ -24,7 +24,7 @@ public interface TimeSeriesAnalysisService {
   void logDeploymentVerificationProgress(AnalysisInput analysisInput, AnalysisStatus analysisStatus);
 
   Map<String, ExecutionStatus> getTaskStatus(String verificationTaskId, Set<String> taskIds);
-  Map<String, Map<String, TimeSeriesCumulativeSums.MetricSum>> getCumulativeSums(
+  Map<String, Map<String, List<MetricSum>>> getCumulativeSums(
       String verificationTaskId, Instant startTime, Instant endTime);
   Map<String, Map<String, List<Double>>> getShortTermHistory(String verificationTaskId);
   Map<String, Map<String, List<TimeSeriesAnomalies>>> getLongTermAnomalies(String verificationTaskId);

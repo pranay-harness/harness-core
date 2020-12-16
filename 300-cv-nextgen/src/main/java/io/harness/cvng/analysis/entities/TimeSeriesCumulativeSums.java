@@ -1,5 +1,6 @@
 package io.harness.cvng.analysis.entities;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotation.HarnessEntity;
@@ -13,6 +14,7 @@ import io.harness.persistence.UuidAware;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,7 +63,7 @@ public class TimeSeriesCumulativeSums implements PersistentEntity, UuidAware {
   public static class MetricSum {
     private String metricName;
     private double risk;
-    private double sum;
+    private double data;
   }
 
   public static List<TransactionMetricSums> convertMapToTransactionMetricSums(
@@ -85,17 +87,32 @@ public class TimeSeriesCumulativeSums implements PersistentEntity, UuidAware {
     return txnMetricSumList;
   }
 
-  public Map<String, Map<String, MetricSum>> convertToMap() {
-    if (this.transactionMetricSums == null) {
+  public static Map<String, Map<String, List<MetricSum>>> convertToMap(
+      List<TimeSeriesCumulativeSums> timeSeriesCumulativeSumsList) {
+    if (isEmpty(timeSeriesCumulativeSumsList)) {
       return new HashMap<>();
     }
-    Map<String, Map<String, MetricSum>> txnMetricMap = new HashMap<>();
-    transactionMetricSums.forEach(transactionSum -> {
-      String transactionName = transactionSum.getTransactionName();
-      txnMetricMap.put(transactionName, new HashMap<>());
-      transactionSum.getMetricSums().forEach(
-          metricSum -> { txnMetricMap.get(transactionName).put(metricSum.getMetricName(), metricSum); });
-    });
+    timeSeriesCumulativeSumsList.sort(Comparator.comparing(TimeSeriesCumulativeSums::getAnalysisStartTime));
+    Map<String, Map<String, List<MetricSum>>> txnMetricMap = new HashMap<>();
+
+    for (TimeSeriesCumulativeSums timeSeriesCumulativeSums : timeSeriesCumulativeSumsList) {
+      if (isEmpty(timeSeriesCumulativeSums.getTransactionMetricSums())) {
+        continue;
+      }
+      for (TransactionMetricSums transactionSum : timeSeriesCumulativeSums.getTransactionMetricSums()) {
+        String transactionName = transactionSum.getTransactionName();
+        if (!txnMetricMap.containsKey(transactionName)) {
+          txnMetricMap.put(transactionName, new HashMap<>());
+        }
+        transactionSum.getMetricSums().forEach(metricSum -> {
+          String metricName = metricSum.getMetricName();
+          if (!txnMetricMap.get(transactionName).containsKey(metricName)) {
+            txnMetricMap.get(transactionName).put(metricName, new ArrayList<>());
+          }
+          txnMetricMap.get(transactionName).get(metricName).add(metricSum);
+        });
+      }
+    }
     return txnMetricMap;
   }
 }
