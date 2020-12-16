@@ -14,6 +14,7 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.TaskType.ECS_COMMAND_TASK;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_STATE_TIMEOUT_BUFFER_MIN;
 import static software.wings.service.impl.aws.model.AwsConstants.ECS_ALL_PHASE_ROLLBACK_DONE;
 import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_DEPLOY_SWEEPING_OUTPUT_NAME;
 import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
@@ -1019,7 +1020,7 @@ public class EcsStateHelper {
   }
 
   long getTimeout(EcsDeployDataBag deployDataBag) {
-    return deployDataBag.getContainerElement().getServiceSteadyStateTimeout() + 30l;
+    return deployDataBag.getContainerElement().getServiceSteadyStateTimeout();
   }
 
   public EcsDeployDataBag prepareBagForEcsDeploy(ExecutionContext context,
@@ -1147,7 +1148,7 @@ public class EcsStateHelper {
   @Nullable
   public Integer getTimeout(Integer timeoutInMinutes) {
     try {
-      return Ints.checkedCast(TimeUnit.MINUTES.toMillis(timeoutInMinutes));
+      return Ints.checkedCast(TimeUnit.MINUTES.toMillis(timeoutInMinutes + DEFAULT_STATE_TIMEOUT_BUFFER_MIN));
     } catch (Exception e) {
       log.warn("Could not convert {} minutes to millis, falling back to default timeout", timeoutInMinutes);
       return null;

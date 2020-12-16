@@ -600,7 +600,7 @@ public class EcsStateHelperTest extends WingsBaseTest {
                               .containerElement(ContainerServiceElement.builder().serviceSteadyStateTimeout(10).build())
                               .build());
 
-    assertThat(timeout).isEqualTo(40l);
+    assertThat(timeout).isEqualTo(10);
   }
 
   @Test
@@ -697,7 +697,7 @@ public class EcsStateHelperTest extends WingsBaseTest {
     doReturn(ContainerServiceElement.builder().serviceSteadyStateTimeout(10).build())
         .when(helper)
         .getSetupElementFromSweepingOutput(anyObject(), anyBoolean());
-    assertThat(helper.getEcsStateTimeoutFromContext(mockContext, true)).isEqualTo(600000);
+    assertThat(helper.getEcsStateTimeoutFromContext(mockContext, true)).isEqualTo(900000);
 
     doReturn(ContainerServiceElement.builder().serviceSteadyStateTimeout(0).build())
         .when(helper)
@@ -714,7 +714,7 @@ public class EcsStateHelperTest extends WingsBaseTest {
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
   public void testGetTimeoutMillis() {
-    assertThat(helper.getTimeout(10)).isEqualTo(600000);
+    assertThat(helper.getTimeout(10)).isEqualTo(900000);
     assertThat(helper.getTimeout(35792)).isNull();
   }
 }
