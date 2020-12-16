@@ -10,7 +10,6 @@ import io.harness.validation.Update;
 
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -193,6 +192,4 @@ public interface ServiceTemplateService extends OwnedByEnvironment, OwnedByServi
    */
   ConfigFile computedConfigFileByRelativeFilePath(
       String appId, String envId, String templateId, String relativeFilePath);
-
-  List<InfrastructureMapping> getInfraMappingsFromServiceTemplate(String appId, String serviceTemplateId);
 }

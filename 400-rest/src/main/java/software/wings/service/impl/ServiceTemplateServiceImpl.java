@@ -1,7 +1,5 @@
 package software.wings.service.impl;
 
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -16,7 +14,6 @@ import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
@@ -30,7 +27,6 @@ import io.harness.validation.PersistenceValidator;
 
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceTemplate.ServiceTemplateKeys;
@@ -106,7 +102,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       PageRequest<ServiceTemplate> pageRequest, boolean withDetails, EncryptedFieldMode encryptedFieldMode) {
     PageResponse<ServiceTemplate> pageResponse = wingsPersistence.query(ServiceTemplate.class, pageRequest);
     List<ServiceTemplate> serviceTemplates = pageResponse.getResponse();
-    setArtifactTypeAndInfraMappings(serviceTemplates);
 
     if (withDetails) {
       long startTime = System.currentTimeMillis();
@@ -189,54 +184,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     return pageResponse;
   }
 
-  private void setArtifactTypeAndInfraMappings(List<ServiceTemplate> serviceTemplates) {
-    if (isEmpty(serviceTemplates)) {
-      return;
-    }
-    String appId = serviceTemplates.get(0).getAppId();
-
-    ImmutableMap<String, ServiceTemplate> serviceTemplateMap =
-        Maps.uniqueIndex(serviceTemplates, ServiceTemplate::getUuid);
-
-    List<String> serviceIds = new ArrayList<>();
-    serviceTemplates.forEach(serviceTemplate -> {
-      if (serviceTemplate.getServiceId() != null && !serviceIds.contains(serviceTemplate.getServiceId())) {
-        serviceIds.add(serviceTemplate.getServiceId());
-      }
-    });
-
-    List<Service> services = serviceResourceService.fetchServicesByUuids(appId, serviceIds);
-    if (isNotEmpty(services)) {
-      for (Service service : services) {
-        if (isBlank(service.getUuid())) {
-          log.info("Null Service name {} uuid {} appId {} accountId {}", service.getName(), service.getUuid(),
-              service.getAppId(), service.getAccountId());
-        }
-      }
-    }
-
-    ImmutableMap<String, Service> serviceMap;
-    try {
-      serviceMap = Maps.uniqueIndex(services, Service::getUuid);
-    } catch (Exception ex) {
-      log.warn("Logging services in case of NPE");
-      for (Service service : services) {
-        log.info("Service name {} uuid {} appId {} accountId {}", service.getName(), service.getUuid(),
-            service.getAppId(), service.getAccountId());
-      }
-
-      throw ex;
-    }
-
-    serviceTemplateMap.forEach((serviceTemplateId, serviceTemplate) -> {
-      Service tempService = serviceMap.get(serviceTemplate.getServiceId());
-      serviceTemplate.setServiceArtifactType(tempService != null ? tempService.getArtifactType() : ArtifactType.OTHER);
-    });
-    serviceTemplateMap.forEach((templateId, serviceTemplate)
-                                   -> serviceTemplate.setInfrastructureMappings(getInfraMappingsFromServiceTemplate(
-                                       serviceTemplate.getAppId(), serviceTemplate.getUuid())));
-  }
-
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ServiceTemplateService#save(software.wings.beans.ServiceTemplate)
    */
@@ -266,7 +213,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       EncryptedFieldMode encryptedFieldMode) {
     ServiceTemplate serviceTemplate = get(appId, serviceTemplateId);
     if (serviceTemplate != null) {
-      setArtifactTypeAndInfraMappings(asList(serviceTemplate));
       if (withDetails) {
         populateServiceAndOverrideConfigFiles(serviceTemplate);
         populateServiceAndOverrideServiceVariables(serviceTemplate, encryptedFieldMode);
@@ -287,7 +233,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       String appId, String serviceTemplateId, boolean withDetails, EncryptedFieldMode encryptedFieldMode) {
     ServiceTemplate serviceTemplate = get(appId, serviceTemplateId);
     if (serviceTemplate != null) {
-      setArtifactTypeAndInfraMappings(asList(serviceTemplate));
       if (withDetails) {
         populateServiceAndOverrideConfigFiles(serviceTemplate);
         populateServiceAndOverrideServiceVariables(serviceTemplate, encryptedFieldMode);
@@ -738,22 +683,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
                                 allServiceConfigFile != null ? asList(allServiceConfigFile) : asList()),
             templateConfigFile != null ? asList(templateConfigFile) : asList());
     return configFiles.isEmpty() ? null : configFiles.get(0);
-  }
-
-  @Override
-  public List<InfrastructureMapping> getInfraMappingsFromServiceTemplate(String appId, String serviceTemplateId) {
-    ServiceTemplate serviceTemplate = get(appId, serviceTemplateId);
-    if (serviceTemplate == null) {
-      return null;
-    }
-
-    PageRequest<InfrastructureMapping> infraPageRequest =
-        aPageRequest()
-            .addFilter("appId", EQ, appId)
-            .addFilter("envId", EQ, serviceTemplate.getEnvId())
-            .addFilter("serviceId", EQ, serviceTemplate.getServiceId())
-            .build();
-    return infrastructureMappingService.list(infraPageRequest).getResponse();
   }
 
   private String getValuesFileContent(ApplicationManifest applicationManifest) {
