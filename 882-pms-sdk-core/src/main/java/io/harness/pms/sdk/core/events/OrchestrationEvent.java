@@ -7,11 +7,13 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AutoLogContext;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.queue.Queuable;
 
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -30,8 +32,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @HarnessEntity(exportable = false)
 @TypeAlias("orchestrationEvent")
 public class OrchestrationEvent extends Queuable {
-  Ambiance ambiance;
-  OrchestrationEventType eventType;
+  @NotNull Ambiance ambiance;
+  NodeExecutionProto nodeExecutionProto;
+
+  @NotNull OrchestrationEventType eventType;
 
   public AutoLogContext autoLogContext() {
     Map<String, String> logContext = AmbianceUtils.logContextMap(ambiance);

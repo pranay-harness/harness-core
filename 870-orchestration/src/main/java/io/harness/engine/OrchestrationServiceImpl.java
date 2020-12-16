@@ -13,6 +13,7 @@ import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.plan.Plan;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.plan.PlanNodeProto;
@@ -53,17 +54,12 @@ public class OrchestrationServiceImpl implements OrchestrationService {
       return null;
     }
     PlanExecution savedPlanExecution = planExecutionService.save(planExecution);
-    eventEmitter.emitEvent(OrchestrationEvent.builder()
-                               .ambiance(Ambiance.newBuilder()
-                                             .setPlanExecutionId(savedPlanExecution.getUuid())
-                                             .putAllSetupAbstractions(savedPlanExecution.getSetupAbstractions())
-                                             .build())
-                               .eventType(OrchestrationEventType.ORCHESTRATION_START)
-                               .build());
     Ambiance ambiance = Ambiance.newBuilder()
                             .putAllSetupAbstractions(setupAbstractions)
                             .setPlanExecutionId(savedPlanExecution.getUuid())
                             .build();
+    eventEmitter.emitEvent(
+        OrchestrationEvent.builder().ambiance(ambiance).eventType(OrchestrationEventType.ORCHESTRATION_START).build());
     orchestrationEngine.triggerExecution(ambiance, planNode);
     return savedPlanExecution;
   }

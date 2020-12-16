@@ -20,10 +20,12 @@ import io.harness.data.OutcomeInstance;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
+import io.harness.execution.NodeExecutionMapper;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.ExecutionMode;
+import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepType;
@@ -75,6 +77,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
                                                  .setPlanExecutionId(planExecutionId)
                                                  .addAllLevels(Collections.singletonList(Level.newBuilder().build()))
                                                  .build())
+                                   .nodeExecutionProto(NodeExecutionProto.newBuilder().build())
                                    .eventType(NODE_EXECUTION_STATUS_UPDATE)
                                    .build();
     eventHandlerV2.handleEvent(event);
@@ -103,6 +106,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
                                              .setStepType(StepType.newBuilder().setType("DUMMY").build())
                                              .setIdentifier("identifier1")
                                              .build())
+                                   .status(Status.QUEUED)
                                    .build();
     nodeExecutionService.save(dummyStart);
 
@@ -130,6 +134,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
                                                  .addAllLevels(Collections.singletonList(
                                                      Level.newBuilder().setRuntimeId(dummyStart.getUuid()).build()))
                                                  .build())
+                                   .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(dummyStart))
                                    .eventType(NODE_EXECUTION_STATUS_UPDATE)
                                    .build();
     eventHandlerV2.handleEvent(event);
@@ -217,6 +222,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
                                                  .addAllLevels(Collections.singletonList(
                                                      Level.newBuilder().setRuntimeId(dummyStart.getUuid()).build()))
                                                  .build())
+                                   .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(dummyStart))
                                    .eventType(NODE_EXECUTION_STATUS_UPDATE)
                                    .build();
     eventHandlerV2.handleEvent(event);

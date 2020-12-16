@@ -139,7 +139,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
           "Node Execution Cannot be updated with provided operations" + nodeExecutionId);
     }
 
-    emitEvent(updated.getAmbiance());
+    emitEvent(updated);
     return updated;
   }
 
@@ -187,7 +187,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     if (updated == null) {
       log.warn("Cannot update execution status for the node {} with {}", nodeExecutionId, status);
     } else {
-      emitEvent(updated.getAmbiance());
+      emitEvent(updated);
     }
     return updated;
   }
@@ -282,9 +282,10 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     return JsonOrchestrationUtils.asObject(stepParameters, step.getStepParametersClass());
   }
 
-  private void emitEvent(Ambiance ambiance) {
+  private void emitEvent(NodeExecution nodeExecution) {
     eventEmitter.emitEvent(OrchestrationEvent.builder()
-                               .ambiance(ambiance)
+                               .ambiance(nodeExecution.getAmbiance())
+                               .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
                                .eventType(OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE)
                                .build());
   }

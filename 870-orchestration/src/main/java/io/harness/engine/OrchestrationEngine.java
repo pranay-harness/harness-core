@@ -368,11 +368,12 @@ public class OrchestrationEngine {
       waitNotifyEngine.doneWith(nodeExecution.getNotifyId(), responseData);
     } else {
       log.info("Ending Execution");
-      concludePlanExecution(nodeExecution.getAmbiance());
+      concludePlanExecution(nodeExecution);
     }
   }
 
-  private void concludePlanExecution(Ambiance ambiance) {
+  private void concludePlanExecution(NodeExecution nodeExecution) {
+    Ambiance ambiance = nodeExecution.getAmbiance();
     Status status = calculateEndStatus(ambiance.getPlanExecutionId());
     PlanExecution planExecution = planExecutionService.updateStatus(
         ambiance.getPlanExecutionId(), status, ops -> ops.set(PlanExecutionKeys.endTs, System.currentTimeMillis()));
@@ -381,6 +382,7 @@ public class OrchestrationEngine {
                                              .setPlanExecutionId(planExecution.getUuid())
                                              .putAllSetupAbstractions(planExecution.getSetupAbstractions())
                                              .build())
+                               .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
                                .eventType(OrchestrationEventType.ORCHESTRATION_END)
                                .build());
   }
