@@ -96,7 +96,7 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
     assertThat(forkVertex).isNotNull();
 
     OrchestrationGraphDTO partialOrchestrationResponse = requestOrchestrationGraph(
-        forkVertex.getPlanNodeId(), planExecutionResponse.getUuid(), "get-partial-orchestration-graph-v2");
+        forkVertex.getPlanNodeId(), planExecutionResponse.getUuid(), "get-partial-orchestration-graph");
     assertThat(partialOrchestrationResponse).isNotNull();
     assertThat(partialOrchestrationResponse.getAdjacencyList().getGraphVertexMap().size()).isEqualTo(3);
     assertThat(partialOrchestrationResponse.getAdjacencyList()
@@ -121,7 +121,7 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = ALEXEI, intermittent = true)
+  @Owner(developers = ALEXEI)
   @Category(FunctionalTests.class)
   public void shouldGenerateOrchestrationGraphWithBarriers() {
     List<String> nodeNames = Lists.newArrayList("Dummy Node 2", "barrier3", "Dummy Node 1", "barrier1", "Dummy Node 3",
