@@ -27,7 +27,7 @@ public class ParallelFilterJsonCreator extends ChildrenFilterJsonCreator<YamlFie
   }
 
   @Override
-  public String getStartingNodeId(YamlField field) {
+  public String getStartingNodeId(FilterCreationContext filterCreationContext, YamlField field) {
     return null;
   }
 

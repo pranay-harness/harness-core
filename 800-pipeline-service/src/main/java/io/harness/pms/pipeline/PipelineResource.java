@@ -28,6 +28,7 @@ import io.harness.pms.pipeline.resource.GraphLayoutNodeDTO;
 import io.harness.pms.pipeline.resource.PipelineExecutionDetailDTO;
 import io.harness.pms.pipeline.resource.PipelineExecutionSummaryDTO;
 import io.harness.pms.pipeline.service.PMSPipelineService;
+import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
 import io.harness.serializer.JsonUtils;
 import io.harness.tasks.ProgressData;
 import io.harness.utils.PageUtils;
@@ -222,10 +223,9 @@ public class PipelineResource {
       @QueryParam("sort") List<String> sort) {
     log.info("Get List of executions");
     List<PipelineExecutionSummaryDTO> planExecutionSummaryDTOS = new ArrayList<>();
-    planExecutionSummaryDTOS.add(generatePipelineExecutionSummaryDTO(null));
-    planExecutionSummaryDTOS.add(generatePipelineExecutionSummaryDTO(null));
-    planExecutionSummaryDTOS.add(generatePipelineExecutionSummaryDTO(null));
-    planExecutionSummaryDTOS.add(generatePipelineExecutionSummaryDTO(null));
+    planExecutionSummaryDTOS.add(
+        JsonUtils.asObject(PMSPipelineServiceImpl.PIPELINE_EXECUTION_SUMMARY_JSON, PipelineExecutionSummaryDTO.class));
+
     return ResponseDTO.newResponse(new PageImpl<>(
         planExecutionSummaryDTOS, PageUtils.getPageRequest(page, size, sort), planExecutionSummaryDTOS.size()));
   }
@@ -248,151 +248,26 @@ public class PipelineResource {
 
     PipelineExecutionDetailDTO pipelineExecutionDetailDTO =
         PipelineExecutionDetailDTO.builder()
-            .pipelineExecutionSummary(generatePipelineExecutionSummaryDTO(planExecutionId))
+            .pipelineExecutionSummary(JsonUtils.asObject(
+                PMSPipelineServiceImpl.PIPELINE_EXECUTION_SUMMARY_JSON, PipelineExecutionSummaryDTO.class))
             .executionGraph(executionGraph)
             .build();
 
     return ResponseDTO.newResponse(pipelineExecutionDetailDTO);
   }
 
-  private PipelineExecutionSummaryDTO generatePipelineExecutionSummaryDTO(String planExecutionId) {
-    if (planExecutionId == null) {
-      planExecutionId = generateUuid();
-    }
-    String pipelineNodeUuid = generateUuid();
-    String stageNodeUuid = generateUuid();
-    String ciStageUuid = generateUuid();
-    String ciUnitTest1Uuid = generateUuid();
-    String ciUnitTest2Uuid = generateUuid();
-    String staging1Uuid = generateUuid();
-    String cdStageUuid = generateUuid();
-    String cdRollingDeploymentId = generateUuid();
-
-    Map<String, GraphLayoutNodeDTO> layoutNodeMap = new HashMap<>();
-    GraphLayoutNodeDTO pipelineLayoutNode =
-        GraphLayoutNodeDTO.builder()
-            .nodeType("pipeline")
-            .nodeIdentifier("pipeline")
-            .nodeUuid(pipelineNodeUuid)
-            .status(ExecutionStatus.RUNNING)
-            .edgeLayoutList(EdgeLayoutListDTO.builder().nextIds(Collections.singletonList(stageNodeUuid)).build())
-            .build();
-
-    GraphLayoutNodeDTO stageLayoutNode =
-        GraphLayoutNodeDTO.builder()
-            .nodeUuid(stageNodeUuid)
-            .nodeType("stages")
-            .nodeIdentifier("stages")
-            .status(ExecutionStatus.RUNNING)
-            .edgeLayoutList(EdgeLayoutListDTO.builder().nextIds(Lists.newArrayList(ciStageUuid)).build())
-            .build();
-    GraphLayoutNodeDTO ciStage =
-        GraphLayoutNodeDTO.builder()
-            .nodeUuid(ciStageUuid)
-            .nodeType("ciStage")
-            .nodeIdentifier("ciStage")
-            .status(ExecutionStatus.RUNNING)
-            .edgeLayoutList(EdgeLayoutListDTO.builder()
-                                .currentNodeChildren(Lists.newArrayList(ciUnitTest1Uuid, ciUnitTest2Uuid))
-                                .nextIds(Lists.newArrayList(staging1Uuid))
-                                .build())
-            .build();
-    GraphLayoutNodeDTO ciTest1 = GraphLayoutNodeDTO.builder()
-                                     .nodeUuid(ciUnitTest1Uuid)
-                                     .nodeType("ci_unit_tests_1")
-                                     .nodeIdentifier("ci_unit_tests_1")
-                                     .status(ExecutionStatus.SUCCESS)
-                                     .moduleInfo(Maps.of("CI",
-                                         new org.bson.Document().append("unit-tests-1",
-                                             new org.bson.Document()
-                                                 .append("name", "unit-tests-1")
-                                                 .append("numberOfTests", "115")
-                                                 .append("numberOfFlakyTests", "0")
-                                                 .append("status", "success"))))
-                                     .edgeLayoutList(EdgeLayoutListDTO.builder().build())
-                                     .build();
-    GraphLayoutNodeDTO ciTest2 = GraphLayoutNodeDTO.builder()
-                                     .nodeUuid(ciUnitTest2Uuid)
-                                     .nodeType("ci_unit_tests_2")
-                                     .nodeIdentifier("ci_unit_tests_2")
-                                     .status(ExecutionStatus.SUSPENDED)
-                                     .edgeLayoutList(EdgeLayoutListDTO.builder().build())
-                                     .build();
-    GraphLayoutNodeDTO staging1 =
-        GraphLayoutNodeDTO.builder()
-            .nodeUuid(staging1Uuid)
-            .nodeType("Staging1")
-            .nodeIdentifier("Staging1")
-            .status(ExecutionStatus.RUNNING)
-            .edgeLayoutList(EdgeLayoutListDTO.builder().nextIds(Lists.newArrayList(cdStageUuid)).build())
-            .build();
-
-    GraphLayoutNodeDTO cdStage =
-        GraphLayoutNodeDTO.builder()
-            .nodeUuid(cdStageUuid)
-            .nodeType("cdStage")
-            .nodeIdentifier("cdStage")
-            .status(ExecutionStatus.RUNNING)
-            .moduleInfo(Maps.of(
-                "CD", new org.bson.Document().append("DeploymentType", "k8s").append("namespace", "mock-namespace")))
-            .edgeLayoutList(EdgeLayoutListDTO.builder().nextIds(Lists.newArrayList(cdRollingDeploymentId)).build())
-            .build();
-    GraphLayoutNodeDTO cdRollingDeployment = GraphLayoutNodeDTO.builder()
-                                                 .nodeUuid(cdRollingDeploymentId)
-                                                 .nodeType("Rolling Deployment")
-                                                 .nodeIdentifier("Rolling Deployments")
-                                                 .status(ExecutionStatus.RUNNING)
-                                                 .edgeLayoutList(EdgeLayoutListDTO.builder().build())
-                                                 .build();
-    layoutNodeMap.put(pipelineNodeUuid, pipelineLayoutNode);
-    layoutNodeMap.put(stageNodeUuid, stageLayoutNode);
-    layoutNodeMap.put(ciStageUuid, ciStage);
-    layoutNodeMap.put(ciUnitTest1Uuid, ciTest1);
-    layoutNodeMap.put(ciUnitTest2Uuid, ciTest2);
-    layoutNodeMap.put(staging1Uuid, staging1);
-    layoutNodeMap.put(cdStageUuid, cdStage);
-    layoutNodeMap.put(cdRollingDeploymentId, cdRollingDeployment);
-
-    Map<String, org.bson.Document> moduleInfo = new HashMap<>();
-    moduleInfo.put("CI",
-        new org.bson.Document().append("ciBuildBranchHook",
-            new org.bson.Document()
-                .append("name", "master")
-                .append("link", "https://github.com/wings-software/portal/blob/master/")
-                .append("state", "CLOSED")
-                .append("commits", "[]")));
-    moduleInfo.put("CD", new org.bson.Document().append("DeploymentType", "k8s").append("namespace", "mock-namespace"));
-
-    return PipelineExecutionSummaryDTO.builder()
-        .pipelineIdentifier(pipelineNodeUuid)
-        .planExecutionId(planExecutionId)
-        .name("Mock Pipeline")
-        .createdAt(System.currentTimeMillis())
-        .executionTriggerInfo(ExecutionTriggerInfo.builder()
-                                  .triggeredBy(EmbeddedUser.builder().name("Harness Dev").build())
-                                  .triggerType(TriggerType.MANUAL)
-                                  .build())
-        .startTs(System.currentTimeMillis())
-        .endTs(System.currentTimeMillis() + 5000)
-        .status(ExecutionStatus.RUNNING)
-        .layoutNodeMap(layoutNodeMap)
-        .startingNodeId(pipelineNodeUuid)
-        .moduleInfo(moduleInfo)
-        .build();
-  }
-
   private ExecutionGraph generateExecutionGraph(String stageIdentifier) {
-    String serviceUuid = generateUuid();
-    String provisioningInfraUuid = generateUuid();
-    String infraUuid = generateUuid();
-    String terraformPlanUuid = generateUuid();
-    String approvalUuid = generateUuid();
-    String terraformApplyUuid = generateUuid();
-    String executionUuid = generateUuid();
-    String k8sUpdateUuid = generateUuid();
-    String forkUuid = generateUuid();
-    String step1Uuid = generateUuid();
-    String step2Uuid = generateUuid();
+    String serviceUuid = "serviceUuid";
+    String provisioningInfraUuid = "provisioningInfraUuid";
+    String infraUuid = "infraUuid";
+    String terraformPlanUuid = "terraformPlanUuid";
+    String approvalUuid = "approvalUuid";
+    String terraformApplyUuid = "terraformApplyUuid";
+    String executionUuid = "executionUuid";
+    String k8sUpdateUuid = "K8sUpdateUuid";
+    String forkUuid = "forkUuid";
+    String step1Uuid = "step1Uuid";
+    String step2Uuid = "step2Uuid";
 
     Map<String, ExecutionNode> executionNodeMap = new HashMap<>();
     Map<String, ExecutionNodeAdjacencyList> nodeAdjacencyListMap = new HashMap<>();

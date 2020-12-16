@@ -8,17 +8,32 @@ import "io/harness/pms/contracts/execution/execution_error_info.proto";
 import "io/harness/pms/contracts/execution/status.proto";
 
 service PmsExecutionService {
-  rpc updateExecutionSummary(ExecutionSummaryRequest) returns (ExecutionSummaryResponse);
+  rpc updateExecutionSummary(ExecutionSummaryUpdateRequest) returns (ExecutionSummaryResponse);
+  rpc createExecutionSummary(ExecutionSummaryCreateRequest) returns (ExecutionSummaryResponse);
 }
 
-message ExecutionSummaryRequest {
-  string pipelineExecutionSummaryEntityId = 1;
+message ExecutionSummaryUpdateRequest {
+  string planExecutionId = 1;
   string moduleName = 2;
-  string stageIdentifier = 3;
+  string stageUuid = 3;
   string stageModuleInfoJson = 4;
   string pipelineModuleInfoJson = 5;
-  io.harness.pms.contracts.execution.Status status = 6;
-  io.harness.pms.contracts.execution.ExecutionErrorInfo executionErrorInfo = 7;
+  string nodeType = 6;
+  uint32 endTs = 7;
+  io.harness.pms.contracts.execution.Status status = 8;
+  io.harness.pms.contracts.execution.ExecutionErrorInfo executionErrorInfo = 9;
+}
+
+message ExecutionSummaryCreateRequest {
+  string pipelineId = 1;
+  string accountId = 2;
+  string orgId = 3;
+  string projectId = 4;
+  string inputSetYaml = 6;
+  uint32 startTs = 8;
+  uint32 endTs = 9;
+  string name = 10;
+  string planExecutionId = 11;
 }
 
 message ExecutionSummaryResponse {}

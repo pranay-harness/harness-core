@@ -1,7 +1,6 @@
 package io.harness.pms.sdk.core.pipeline.filters;
 
 import io.harness.plancreator.pipeline.PipelineInfoConfig;
-import io.harness.pms.contracts.plan.EdgeLayoutList;
 import io.harness.pms.contracts.plan.GraphLayoutNode;
 import io.harness.pms.pipeline.filter.PipelineFilter;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
@@ -35,8 +34,9 @@ public class PipelineFilterJsonCreator extends ChildrenFilterJsonCreator<Pipelin
   }
 
   @Override
-  public String getStartingNodeId(PipelineInfoConfig pipelineInfoConfig) {
-    return pipelineInfoConfig.getUuid();
+  public String getStartingNodeId(FilterCreationContext filterCreationContext, PipelineInfoConfig pipelineInfoConfig) {
+    return StagesFilterJsonCreator.getStartingNodeId(
+        Preconditions.checkNotNull(filterCreationContext.getCurrentField().getNode().getField("stages")));
   }
 
   @Override
@@ -45,14 +45,6 @@ public class PipelineFilterJsonCreator extends ChildrenFilterJsonCreator<Pipelin
     Map<String, GraphLayoutNode> layoutNodeMap = new HashMap<>();
     YamlField stagesYamlNode =
         Preconditions.checkNotNull(filterCreationContext.getCurrentField().getNode().getField("stages"));
-    GraphLayoutNode pipelineGraph =
-        GraphLayoutNode.newBuilder()
-            .setNodeType("pipeline")
-            .setNodeIdentifier("pipeline")
-            .setNodeUUID(pipelineInfoConfig.getUuid())
-            .setEdgeLayoutList(EdgeLayoutList.newBuilder().addNextIds(stagesYamlNode.getNode().getUuid()).build())
-            .build();
-    layoutNodeMap.put(pipelineInfoConfig.getUuid(), pipelineGraph);
     layoutNodeMap.putAll(StagesFilterJsonCreator.getStagesGraphLayoutNode(stagesYamlNode));
     return layoutNodeMap;
   }
