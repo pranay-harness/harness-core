@@ -1,6 +1,7 @@
 package io.harness.yaml.schema;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.yaml.schema.beans.YamlSchemaConfiguration;
 
@@ -43,7 +44,11 @@ public class YamlSchemaMojo extends AbstractMojo {
    * @throws MojoExecutionException An exception in case of errors and unexpected behavior
    */
   public void execute() throws MojoExecutionException {
+    if (IsRunningOnJenkins()) {
+      return;
+    }
     classLoader = getClassLoader();
+    Thread.currentThread().setContextClassLoader(classLoader);
     YamlSchemaGenerator generator = new YamlSchemaGenerator();
     String path = project.getBuild().getSourceDirectory() + "/../resources";
     path = isEmpty(generationFolder) ? path : path + File.separator + generationFolder;
@@ -51,6 +56,11 @@ public class YamlSchemaMojo extends AbstractMojo {
         YamlSchemaConfiguration.builder().generatedPathRoot(path).classLoader(classLoader).build();
 
     generator.generateYamlSchemaFiles(yamlSchemaConfiguration);
+  }
+
+  private boolean IsRunningOnJenkins() {
+    final String platform = System.getProperty("PLATFORM");
+    return isNotEmpty(platform) && platform.equals("jenkins");
   }
 
   /**

@@ -1,0 +1,34 @@
+{
+  "type": "object",
+  "required": [
+    "failureStrategies",
+    "identifier"
+  ],
+  "properties": {
+    "description": {
+      "type": "string"
+    },
+    "failureStrategies": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/FailureStrategyConfig"
+      }
+    },
+    "identifier": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "spec": {
+      "$ref": "#/definitions/StageInfoConfig"
+    },
+    "type": {
+      "type": "string"
+    },
+    "uuid": {
+      "type": "string"
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
