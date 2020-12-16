@@ -12,6 +12,8 @@ import static software.wings.sm.states.ApprovalState.APPROVAL_STATE_TYPE_VARIABL
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
@@ -86,6 +88,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
@@ -145,6 +148,7 @@ public class PipelineExecutionController {
                                           .map(exec
                                               -> populatePipelineStageExecution(workflowExecution.getUuid(), pipeline,
                                                   exec, workflowExecution.getExecutionArgs()))
+                                          .filter(Objects::nonNull)
                                           .collect(Collectors.toList()));
     }
 
@@ -164,6 +168,10 @@ public class PipelineExecutionController {
   private QLPipelineStageExecution populatePipelineStageExecution(
       String pipelineExecutionId, Pipeline pipeline, PipelineStageExecution execution, ExecutionArgs args) {
     StateType stateType = StateType.valueOf(execution.getStateType());
+    if (isBlank(execution.getPipelineStageElementId())) {
+      log.info("There was no pipelineStageElementId for the pipeline execution {}", pipelineExecutionId);
+      return null;
+    }
     PipelineStageElement element =
         pipeline.getPipelineStages()
             .stream()

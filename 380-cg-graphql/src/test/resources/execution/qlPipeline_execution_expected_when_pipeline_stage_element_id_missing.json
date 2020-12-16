@@ -1,0 +1,17 @@
+{
+  "id": null,
+  "pipelineId": "lx0lNQBySfqNJWCaOYuArg",
+  "createdAt": 1592230835510,
+  "startedAt": 1592230835696,
+  "endedAt": 1592230882705,
+  "status": "SUCCESS",
+  "cause": {
+    "context": {
+      "triggerId": "PflTj9ZiSLCvo-PVB0AW-Q"
+    }
+  },
+  "notes": null,
+  "appId": "au_XrR9CSfC3_fUU_ol-jg",
+  "tags": [],
+  "pipelineStageExecutions": []
+}

@@ -1,0 +1,430 @@
+{
+  "_id" : "HusHHxvRRHm8KQ5HS3EeEQ",
+  "appId" : "au_XrR9CSfC3_fUU_ol-jg",
+  "createdBy" : {
+    "name" : "radigio-creative-qa1 (Deployment Trigger)"
+  },
+  "createdByType" : "TRIGGER",
+  "createdAt" : 1592230835510,
+  "accountId" : "jrlHr17TQTOWdjR4oyyXQw",
+  "workflowId" : "lx0lNQBySfqNJWCaOYuArg",
+  "envIds" : [
+    "lNGE0WnmTlOZx1Di2LEcQw"
+  ],
+  "workflowIds" : [
+    "kIpbZjVhTmq0zYzO5zcBjg"
+  ],
+  "serviceIds" : [
+    "PV5zx324Tu6C26HUMN0RbA"
+  ],
+  "appName" : "radigio-creative",
+  "workflowType" : "PIPELINE",
+  "status" : "SUCCESS",
+  "pipelineExecution" : {
+    "createdAt" : 0,
+    "pipelineId" : "lx0lNQBySfqNJWCaOYuArg",
+    "pipeline" : {
+      "name" : "radigio-creative-qa1",
+      "description" : "radigio-creative-qa1",
+      "pipelineStages" : [
+        {
+          "name" : "STAGE 1",
+          "parallel" : false,
+          "pipelineStageElements" : [
+            {
+              "uuid" : "8ngYT4OeQCaoFXtWaH-sYQ",
+              "name" : "radigio-creative-qa1",
+              "type" : "ENV_STATE",
+              "parallelIndex" : 1,
+              "properties" : {
+                "workflowVariables" : null,
+                "pipelineStageElementId" : "8ngYT4OeQCaoFXtWaH-sYQ",
+                "stageName" : "STAGE 1",
+                "disable" : false,
+                "disableAssertion" : null,
+                "envId" : "lNGE0WnmTlOZx1Di2LEcQw",
+                "pipelineStageParallelIndex" : 1,
+                "workflowId" : "kIpbZjVhTmq0zYzO5zcBjg",
+                "pipelineId" : "lx0lNQBySfqNJWCaOYuArg"
+              }
+            }
+          ]
+        }
+      ],
+      "stateEtaMap" : {
+        "8ngYT4OeQCaoFXtWaH-sYQ" : 45929
+      },
+      "keywords" : [
+        "pipeline",
+        "radigio-creative_k8s_service",
+        "radigio-creative-qa1",
+        "deploy radigio-creative to qa1"
+      ],
+      "accountId" : "jrlHr17TQTOWdjR4oyyXQw",
+      "sample" : false,
+      "_id" : "2sjWZKDJSuGWNwWtYmrZZA_embedded",
+      "appId" : "au_XrR9CSfC3_fUU_ol-jg",
+      "createdBy" : {
+        "uuid" : "dXRoPSHlShKFqvM3qrFCbQ",
+        "name" : "karthikeyan nagarethinam",
+        "email" : "karthikeyan.n2@happiestminds.com"
+      },
+      "createdAt" : 1587044410892,
+      "lastUpdatedAt" : 1592230882718
+    },
+    "pipelineStageExecutions" : [
+      {
+        "stateUuid" : "8ngYT4OeQCaoFXtWaH-sYQ",
+        "stateName" : "radigio-creative-qa1",
+        "stateType" : "ENV_STATE",
+        "status" : "SUCCESS",
+        "startTs" : 1592230835528,
+        "endTs" : 1592230882702,
+        "workflowExecutions" : [
+          {
+            "_id" : "E0gM6sTjTTKCxrDoXgbo6w",
+            "appId" : "au_XrR9CSfC3_fUU_ol-jg",
+            "createdBy" : {
+              "name" : "radigio-creative-qa1 (Deployment Trigger)"
+            },
+            "createdAt" : 1592230835639,
+            "accountId" : "jrlHr17TQTOWdjR4oyyXQw",
+            "workflowId" : "kIpbZjVhTmq0zYzO5zcBjg",
+            "envId" : "lNGE0WnmTlOZx1Di2LEcQw",
+            "envIds" : [
+              "lNGE0WnmTlOZx1Di2LEcQw"
+            ],
+            "workflowIds" : [
+              "kIpbZjVhTmq0zYzO5zcBjg"
+            ],
+            "cloudProviderIds" : [
+              "TveWdCATTiezIHT_bJ__sg"
+            ],
+            "serviceIds" : [
+              "PV5zx324Tu6C26HUMN0RbA"
+            ],
+            "infraMappingIds" : [
+              "LaicN-lrRmm5QJGTcv_EBQ"
+            ],
+            "infraDefinitionIds" : [
+              "caZWFO0wS0SCELEs6auo6Q"
+            ],
+            "appName" : "radigio-creative",
+            "envName" : "mediascape-qa1",
+            "envType" : "NON_PROD",
+            "workflowType" : "ORCHESTRATION",
+            "status" : "SUCCESS",
+            "pipelineExecutionId" : "HusHHxvRRHm8KQ5HS3EeEQ",
+            "stageName" : "STAGE 1",
+            "name" : "deploy radigio-creative to qa1",
+            "releaseNo" : "7",
+            "total" : 3,
+            "breakdown" : {
+              "success" : 3,
+              "failed" : 0,
+              "inprogress" : 0,
+              "queued" : 0
+            },
+            "executionArgs" : {
+              "workflowType" : "ORCHESTRATION",
+              "artifacts" : [
+                {
+                  "artifactStreamId" : "6rrFV6gCTX-Bt8euXYKBFQ",
+                  "artifactSourceName" : "radigio-creative-qa",
+                  "metadata" : {
+                    "image" : "495483033202.dkr.ecr.us-east-1.amazonaws.com/radigio-creative-qa:2020-06-15_14-16-53.radigio-creative.401-66",
+                    "tag" : "2020-06-15_14-16-53.radigio-creative.401-66",
+                    "buildNo" : "2020-06-15_14-16-53.radigio-creative.401-66"
+                  },
+                  "displayName" : "radigio-creative-qa_2020-06-15_14-16-53.radigio-creative.401-66_1406293",
+                  "serviceIds" : [
+                    "PV5zx324Tu6C26HUMN0RbA"
+                  ],
+                  "status" : "APPROVED",
+                  "contentStatus" : "METADATA_ONLY",
+                  "settingId" : "zuFbNpc9TUmK8Zt_76AWvg",
+                  "accountId" : "jrlHr17TQTOWdjR4oyyXQw",
+                  "artifactStreamType" : "ECR",
+                  "uiDisplayName" : "Tag# 2020-06-15_14-16-53.radigio-creative.401-66",
+                  "buildIdentity" : "2020-06-15_14-16-53.radigio-creative.401-66_2PLn6rVcSjiZoZhSkFgkUw",
+                  "_id" : "rbmgtkAXQhe-eGK1kz9J1w",
+                  "appId" : "au_XrR9CSfC3_fUU_ol-jg",
+                  "createdAt" : 1592230835305,
+                  "lastUpdatedAt" : 1592230882718
+                }
+              ],
+              "artifactIdNames" : {
+                "rbmgtkAXQhe-eGK1kz9J1w" : "radigio-creative-qa_2020-06-15_14-16-53.radigio-creative.401-66_1406293"
+              },
+              "orchestrationId" : "kIpbZjVhTmq0zYzO5zcBjg",
+              "triggeredFromPipeline" : true,
+              "pipelineId" : "lx0lNQBySfqNJWCaOYuArg",
+              "pipelinePhaseElementId" : "8ngYT4OeQCaoFXtWaH-sYQ",
+              "pipelinePhaseParallelIndex" : 1,
+              "stageName" : "STAGE 1",
+              "excludeHostsWithSameArtifact" : false,
+              "notifyTriggeredUserOnly" : false,
+              "targetToSpecificHosts" : false
+            },
+            "serviceExecutionSummaries" : [
+              {
+                "instanceStatusSummaries" : [
+                  {
+                    "instanceElement" : {
+                      "uuid" : "creative-radigio-84fc587d58-lgzgv",
+                      "displayName" : "creative-radigio-84fc587d58-lgzgv",
+                      "hostName" : "creative-radigio-84fc587d58-lgzgv",
+                      "host" : {
+                        "hostName" : "creative-radigio-84fc587d58-lgzgv",
+                        "ip" : "10.20.69.6"
+                      },
+                      "podName" : "creative-radigio-84fc587d58-lgzgv",
+                      "newInstance" : true
+                    },
+                    "status" : "SUCCESS"
+                  },
+                  {
+                    "instanceElement" : {
+                      "uuid" : "creative-radigio-84fc587d58-zg4tk",
+                      "displayName" : "creative-radigio-84fc587d58-zg4tk",
+                      "hostName" : "creative-radigio-84fc587d58-zg4tk",
+                      "host" : {
+                        "hostName" : "creative-radigio-84fc587d58-zg4tk",
+                        "ip" : "10.20.188.195"
+                      },
+                      "podName" : "creative-radigio-84fc587d58-zg4tk",
+                      "newInstance" : true
+                    },
+                    "status" : "SUCCESS"
+                  }
+                ],
+                "startTs" : 1592230836049,
+                "endTs" : 1592230881073,
+                "status" : "SUCCESS",
+                "infraDefinitionSummaries" : [
+                  {
+                    "infraDefinitionId" : "caZWFO0wS0SCELEs6auo6Q",
+                    "cloudProviderType" : "KUBERNETES_CLUSTER",
+                    "deploymentType" : "KUBERNETES",
+                    "cloudProviderName" : "msp-dev",
+                    "displayName" : "Kubernetes Cluster_ msp-dev_DIRECT_Kubernetes_mediascape-qa1"
+                  }
+                ]
+              }
+            ],
+            "startTs" : 1592230835689,
+            "endTs" : 1592230882088,
+            "duration" : 46399,
+            "triggeredBy" : {
+              "name" : "radigio-creative-qa1 (Deployment Trigger)"
+            },
+            "pipelineSummary" : {
+              "pipelineId" : "lx0lNQBySfqNJWCaOYuArg",
+              "pipelineName" : "radigio-creative-qa1"
+            },
+            "environments" : [
+              {
+                "name" : "mediascape-qa1",
+                "uuid" : "lNGE0WnmTlOZx1Di2LEcQw",
+                "environmentType" : "NON_PROD"
+              }
+            ],
+            "deployedEnvironments" : [
+              {
+                "name" : "mediascape-qa1",
+                "uuid" : "lNGE0WnmTlOZx1Di2LEcQw",
+                "environmentType" : "NON_PROD"
+              }
+            ],
+            "deployedServices" : [
+              "PV5zx324Tu6C26HUMN0RbA"
+            ],
+            "deployedCloudProviders" : [
+              "TveWdCATTiezIHT_bJ__sg"
+            ],
+            "orchestrationType" : "ROLLING",
+            "isBaseline" : false,
+            "deploymentTriggerId" : "PflTj9ZiSLCvo-PVB0AW-Q",
+            "artifacts" : [
+              {
+                "artifactStreamId" : "6rrFV6gCTX-Bt8euXYKBFQ",
+                "artifactSourceName" : "radigio-creative-qa",
+                "metadata" : {
+                  "image" : "495483033202.dkr.ecr.us-east-1.amazonaws.com/radigio-creative-qa:2020-06-15_14-16-53.radigio-creative.401-66",
+                  "tag" : "2020-06-15_14-16-53.radigio-creative.401-66",
+                  "buildNo" : "2020-06-15_14-16-53.radigio-creative.401-66"
+                },
+                "displayName" : "radigio-creative-qa_2020-06-15_14-16-53.radigio-creative.401-66_1406293",
+                "serviceIds" : [
+                  "PV5zx324Tu6C26HUMN0RbA"
+                ],
+                "status" : "APPROVED",
+                "contentStatus" : "METADATA_ONLY",
+                "settingId" : "zuFbNpc9TUmK8Zt_76AWvg",
+                "accountId" : "jrlHr17TQTOWdjR4oyyXQw",
+                "artifactStreamType" : "ECR",
+                "uiDisplayName" : "Tag# 2020-06-15_14-16-53.radigio-creative.401-66",
+                "buildIdentity" : "2020-06-15_14-16-53.radigio-creative.401-66_2PLn6rVcSjiZoZhSkFgkUw",
+                "_id" : "rbmgtkAXQhe-eGK1kz9J1w",
+                "appId" : "au_XrR9CSfC3_fUU_ol-jg",
+                "createdAt" : 1592230835305,
+                "lastUpdatedAt" : 1592230882718
+              }
+            ],
+            "keywords" : [
+              "non_prod",
+              "radigio-creative_k8s_service",
+              "orchestration",
+              "radigio-creative-qa1",
+              "radigio-creative",
+              "2020-06-15_14-16-53.radigio-creative.401-66",
+              "deploy radigio-creative to qa1",
+              "radigio-creative-qa",
+              "radigio-creative-qa1 (deployment trigger)",
+              "495483033202.dkr.ecr.us-east-1.amazonaws.com/radigio-creative-qa:2020-06-15_14-16-53.radigio-creative.401-66",
+              "mediascape-qa1"
+            ],
+            "onDemandRollback" : false,
+            "useSweepingOutputs" : false,
+            "concurrencyStrategy" : {
+              "unitType" : "INFRA",
+              "holdingScope" : "WORKFLOW",
+              "strategy" : "FIFO",
+              "resourceUnit" : "${infra.infraId}",
+              "notifyTriggeredByUser" : false
+            },
+            "latestPipelineResume" : false,
+            "nextIteration" : 1592230897222,
+            "validUntil" : "2020-12-15T14:20:35.622Z"
+          }
+        ],
+        "looped" : true
+      }
+    ],
+    "status" : "SUCCESS",
+    "estimatedTime" : 300000
+  },
+  "name" : "radigio-creative-qa1",
+  "releaseNo" : "4",
+  "total" : 1,
+  "executionArgs" : {
+    "workflowType" : "PIPELINE",
+    "artifacts" : [
+      {
+        "artifactStreamId" : "6rrFV6gCTX-Bt8euXYKBFQ",
+        "artifactSourceName" : "radigio-creative-qa",
+        "metadata" : {
+          "image" : "495483033202.dkr.ecr.us-east-1.amazonaws.com/radigio-creative-qa:2020-06-15_14-16-53.radigio-creative.401-66",
+          "tag" : "2020-06-15_14-16-53.radigio-creative.401-66",
+          "buildNo" : "2020-06-15_14-16-53.radigio-creative.401-66"
+        },
+        "displayName" : "radigio-creative-qa_2020-06-15_14-16-53.radigio-creative.401-66_1406293",
+        "serviceIds" : [
+          "PV5zx324Tu6C26HUMN0RbA"
+        ],
+        "status" : "APPROVED",
+        "contentStatus" : "METADATA_ONLY",
+        "settingId" : "zuFbNpc9TUmK8Zt_76AWvg",
+        "accountId" : "jrlHr17TQTOWdjR4oyyXQw",
+        "artifactStreamType" : "ECR",
+        "uiDisplayName" : "Tag# 2020-06-15_14-16-53.radigio-creative.401-66",
+        "buildIdentity" : "2020-06-15_14-16-53.radigio-creative.401-66_2PLn6rVcSjiZoZhSkFgkUw",
+        "_id" : "rbmgtkAXQhe-eGK1kz9J1w",
+        "appId" : "au_XrR9CSfC3_fUU_ol-jg",
+        "createdAt" : 1592230835305,
+        "lastUpdatedAt" : 1592230835510
+      }
+    ],
+    "artifactIdNames" : {
+      "rbmgtkAXQhe-eGK1kz9J1w" : "radigio-creative-qa_2020-06-15_14-16-53.radigio-creative.401-66_1406293"
+    },
+    "orchestrationId" : "lx0lNQBySfqNJWCaOYuArg",
+    "triggeredFromPipeline" : false,
+    "pipelineId" : "lx0lNQBySfqNJWCaOYuArg",
+    "pipelinePhaseParallelIndex" : 0,
+    "createdByType" : "TRIGGER",
+    "excludeHostsWithSameArtifact" : false,
+    "notifyTriggeredUserOnly" : false,
+    "targetToSpecificHosts" : false
+  },
+  "triggeredBy" : {
+    "name" : "radigio-creative-qa1 (Deployment Trigger)"
+  },
+  "pipelineSummary" : {
+    "pipelineId" : "lx0lNQBySfqNJWCaOYuArg",
+    "pipelineName" : "radigio-creative-qa1"
+  },
+  "environments" : [
+    {
+      "name" : "mediascape-qa1",
+      "uuid" : "lNGE0WnmTlOZx1Di2LEcQw",
+      "environmentType" : "NON_PROD"
+    }
+  ],
+  "isBaseline" : false,
+  "deploymentTriggerId" : "PflTj9ZiSLCvo-PVB0AW-Q",
+  "artifacts" : [
+    {
+      "artifactStreamId" : "6rrFV6gCTX-Bt8euXYKBFQ",
+      "artifactSourceName" : "radigio-creative-qa",
+      "metadata" : {
+        "image" : "495483033202.dkr.ecr.us-east-1.amazonaws.com/radigio-creative-qa:2020-06-15_14-16-53.radigio-creative.401-66",
+        "tag" : "2020-06-15_14-16-53.radigio-creative.401-66",
+        "buildNo" : "2020-06-15_14-16-53.radigio-creative.401-66"
+      },
+      "displayName" : "radigio-creative-qa_2020-06-15_14-16-53.radigio-creative.401-66_1406293",
+      "serviceIds" : [
+        "PV5zx324Tu6C26HUMN0RbA"
+      ],
+      "status" : "APPROVED",
+      "contentStatus" : "METADATA_ONLY",
+      "settingId" : "zuFbNpc9TUmK8Zt_76AWvg",
+      "accountId" : "jrlHr17TQTOWdjR4oyyXQw",
+      "artifactStreamType" : "ECR",
+      "uiDisplayName" : "Tag# 2020-06-15_14-16-53.radigio-creative.401-66",
+      "buildIdentity" : "2020-06-15_14-16-53.radigio-creative.401-66_2PLn6rVcSjiZoZhSkFgkUw",
+      "_id" : "rbmgtkAXQhe-eGK1kz9J1w",
+      "appId" : "au_XrR9CSfC3_fUU_ol-jg",
+      "createdAt" : 1592230835305,
+      "lastUpdatedAt" : 1592230835510
+    }
+  ],
+  "keywords" : [
+    "pipeline",
+    "radigio-creative_k8s_service",
+    "radigio-creative-qa1",
+    "radigio-creative",
+    "2020-06-15_14-16-53.radigio-creative.401-66",
+    "radigio-creative-qa",
+    "radigio-creative-qa1 (deployment trigger)",
+    "495483033202.dkr.ecr.us-east-1.amazonaws.com/radigio-creative-qa:2020-06-15_14-16-53.radigio-creative.401-66"
+  ],
+  "onDemandRollback" : false,
+  "useSweepingOutputs" : false,
+  "latestPipelineResume" : false,
+  "validUntil" : "2020-12-15T14:20:35.510Z",
+  "startTs" : 1592230835696,
+  "nextIteration" : 1592230897222,
+  "duration" : 47009,
+  "endTs" : 1592230882705,
+  "deployedCloudProviders" : [
+    "TveWdCATTiezIHT_bJ__sg"
+  ],
+  "deployedEnvironments" : [
+    {
+      "name" : "mediascape-qa1",
+      "uuid" : "lNGE0WnmTlOZx1Di2LEcQw",
+      "environmentType" : "NON_PROD"
+    }
+  ],
+  "deployedServices" : [
+    "PV5zx324Tu6C26HUMN0RbA"
+  ],
+  "breakdown" : {
+    "success" : 1,
+    "failed" : 0,
+    "inprogress" : 0,
+    "queued" : 0
+  },
+  "cdPageCandidate" : true
+}
