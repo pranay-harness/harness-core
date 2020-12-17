@@ -33,18 +33,41 @@ import io.harness.utils.PageUtils;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import io.swagger.annotations.*;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.groovy.util.Maps;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @Api("pipelines")
@@ -231,32 +254,31 @@ public class PipelineResource {
     return ResponseDTO.newResponse(pipelineExecutionDetailDTO);
   }
 
+  @GET
+  @Path("/execution/{planExecutionId}/inputset")
+  @ApiOperation(value = "Gets  inputsetYaml", nickname = "getInputsetYaml")
+  public String getInputsetYaml(@PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
+    return pmsExecutionService.getInputsetYaml(planExecutionId);
+  }
+
   private ExecutionGraph generateExecutionGraph(String stageIdentifier) {
     String serviceUuid = "serviceUuid";
-    String provisioningInfraUuid = "provisioningInfraUuid";
     String infraUuid = "infraUuid";
-    String terraformPlanUuid = "terraformPlanUuid";
-    String approvalUuid = "approvalUuid";
-    String terraformApplyUuid = "terraformApplyUuid";
-    String executionUuid = "executionUuid";
-    String k8sUpdateUuid = "K8sUpdateUuid";
-    String forkUuid = "forkUuid";
-    String step1Uuid = "step1Uuid";
-    String step2Uuid = "step2Uuid";
+    String k8sRollingUuid = "K8sRollingUuid";
 
     Map<String, ExecutionNode> executionNodeMap = new HashMap<>();
     Map<String, ExecutionNodeAdjacencyList> nodeAdjacencyListMap = new HashMap<>();
 
-    ExecutionNode staging1 = ExecutionNode.builder()
-                                 .uuid(stageIdentifier)
-                                 .name("Staging1")
-                                 .startTs(System.currentTimeMillis())
-                                 .status(ExecutionStatus.RUNNING)
-                                 .stepType("STAGE")
-                                 .build();
-    executionNodeMap.put(stageIdentifier, staging1);
+    ExecutionNode qaStage = ExecutionNode.builder()
+                                .uuid(stageIdentifier)
+                                .name("qa stage")
+                                .startTs(System.currentTimeMillis())
+                                .status(ExecutionStatus.RUNNING)
+                                .stepType("SECTION")
+                                .build();
+    executionNodeMap.put(stageIdentifier, qaStage);
     nodeAdjacencyListMap.put(
-        stageIdentifier, ExecutionNodeAdjacencyList.builder().nextIds(Lists.newArrayList(serviceUuid)).build());
+        stageIdentifier, ExecutionNodeAdjacencyList.builder().children(Lists.newArrayList(serviceUuid)).build());
 
     ExecutionNode service = ExecutionNode.builder()
                                 .uuid(serviceUuid)
@@ -265,81 +287,13 @@ public class PipelineResource {
                                 .endTs(System.currentTimeMillis())
                                 .status(ExecutionStatus.SUCCESS)
                                 .stepType("SERVICE")
+                                .taskIdToProgressDataMap(Maps.of(generateUuid(),
+                                    Arrays.asList(DummyProgressData.builder().data("50% done").build(),
+                                        DummyProgressData.builder().data("99% done").build())))
                                 .build();
     executionNodeMap.put(serviceUuid, service);
     nodeAdjacencyListMap.put(
-        serviceUuid, ExecutionNodeAdjacencyList.builder().nextIds(Lists.newArrayList(provisioningInfraUuid)).build());
-
-    ExecutionNode provisioningInfra =
-        ExecutionNode.builder()
-            .uuid(provisioningInfraUuid)
-            .name("Provisioning Infrastructure")
-            .startTs(System.currentTimeMillis())
-            .endTs(System.currentTimeMillis())
-            .status(ExecutionStatus.SUCCESS)
-            .stepType("SECTION CHAIN")
-            .executableResponsesMetadata(
-                Lists.newArrayList(new org.bson.Document().append("status", "Done").append("approvalField", "status"),
-                    new org.bson.Document().append("terraformApplyResponse", "someResponse")))
-            .taskIdToProgressDataMap(Maps.of(generateUuid(),
-                Arrays.asList(DummyProgressData.builder().data("50% done").build(),
-                    DummyProgressData.builder().data("100% done").build()),
-                generateUuid(),
-                Arrays.asList(DummyProgressData.builder().data("33% done").build(),
-                    DummyProgressData.builder().data("100% done").build())))
-            .build();
-    executionNodeMap.put(provisioningInfraUuid, provisioningInfra);
-    nodeAdjacencyListMap.put(provisioningInfraUuid,
-        ExecutionNodeAdjacencyList.builder()
-            .children(Lists.newArrayList(terraformPlanUuid))
-            .nextIds(Lists.newArrayList(infraUuid))
-            .build());
-
-    ExecutionNode terraformPlan = ExecutionNode.builder()
-                                      .uuid(terraformPlanUuid)
-                                      .name("Terraform Plan")
-                                      .startTs(System.currentTimeMillis())
-                                      .endTs(System.currentTimeMillis())
-                                      .status(ExecutionStatus.SUCCESS)
-                                      .stepType("TASK")
-                                      .build();
-    executionNodeMap.put(terraformPlanUuid, terraformPlan);
-    nodeAdjacencyListMap.put(
-        terraformPlanUuid, ExecutionNodeAdjacencyList.builder().nextIds(Lists.newArrayList(approvalUuid)).build());
-
-    ExecutionNode approval =
-        ExecutionNode.builder()
-            .uuid(approvalUuid)
-            .name("Approve")
-            .startTs(System.currentTimeMillis())
-            .endTs(System.currentTimeMillis())
-            .status(ExecutionStatus.SUCCESS)
-            .stepType("TASK")
-            .executableResponsesMetadata(
-                Lists.newArrayList(new org.bson.Document().append("status", "Done").append("approvalField", "status")))
-            .taskIdToProgressDataMap(Maps.of(generateUuid(),
-                Arrays.asList(DummyProgressData.builder().data("50% done").build(),
-                    DummyProgressData.builder().data("100% done").build())))
-            .build();
-    executionNodeMap.put(approvalUuid, approval);
-    nodeAdjacencyListMap.put(
-        approvalUuid, ExecutionNodeAdjacencyList.builder().nextIds(Lists.newArrayList(terraformApplyUuid)).build());
-
-    ExecutionNode terraformApply = ExecutionNode.builder()
-                                       .uuid(terraformApplyUuid)
-                                       .name("Terraform Apply")
-                                       .startTs(System.currentTimeMillis())
-                                       .endTs(System.currentTimeMillis())
-                                       .status(ExecutionStatus.SUCCESS)
-                                       .stepType("TASK")
-                                       .executableResponsesMetadata(Lists.newArrayList(
-                                           new org.bson.Document().append("terraformApplyResponse", "someResponse")))
-                                       .taskIdToProgressDataMap(Maps.of(generateUuid(),
-                                           Arrays.asList(DummyProgressData.builder().data("33% done").build(),
-                                               DummyProgressData.builder().data("100% done").build())))
-                                       .build();
-    executionNodeMap.put(terraformApplyUuid, terraformApply);
-    nodeAdjacencyListMap.put(terraformApplyUuid, ExecutionNodeAdjacencyList.builder().build());
+        serviceUuid, ExecutionNodeAdjacencyList.builder().nextIds(Lists.newArrayList(infraUuid)).build());
 
     ExecutionNode infra = ExecutionNode.builder()
                               .uuid(infraUuid)
@@ -347,69 +301,34 @@ public class PipelineResource {
                               .startTs(System.currentTimeMillis())
                               .endTs(System.currentTimeMillis())
                               .status(ExecutionStatus.SUCCESS)
-                              .stepType("INFRA")
+                              .stepType("INFRASTRUCTURE")
+                              .taskIdToProgressDataMap(Maps.of(generateUuid(),
+                                  Arrays.asList(DummyProgressData.builder().data("33% done").build(),
+                                      DummyProgressData.builder().data("99% done").build())))
                               .build();
     executionNodeMap.put(infraUuid, infra);
     nodeAdjacencyListMap.put(
-        infraUuid, ExecutionNodeAdjacencyList.builder().nextIds(Lists.newArrayList(executionUuid)).build());
+        infraUuid, ExecutionNodeAdjacencyList.builder().nextIds(Lists.newArrayList(k8sRollingUuid)).build());
 
-    ExecutionNode execution = ExecutionNode.builder()
-                                  .uuid(executionUuid)
-                                  .name("Execution")
-                                  .startTs(System.currentTimeMillis())
-                                  .endTs(System.currentTimeMillis())
-                                  .status(ExecutionStatus.RUNNING)
-                                  .stepType("SECTION")
-                                  .build();
-    executionNodeMap.put(executionUuid, execution);
-    nodeAdjacencyListMap.put(
-        executionUuid, ExecutionNodeAdjacencyList.builder().children(Lists.newArrayList(k8sUpdateUuid)).build());
+    org.bson.Document loggingMetadata =
+        new org.bson.Document()
+            .append("baseLoggingKey", "baseKey")
+            .append("commandUnits",
+                Arrays.asList("Fetch Files", "Initialize", "Prepare", "Apply", "Wait for Steady State", "Wrap Up"));
 
-    ExecutionNode k8sUpdate = ExecutionNode.builder()
-                                  .uuid(k8sUpdateUuid)
-                                  .name("k8sUpdate")
-                                  .startTs(System.currentTimeMillis())
-                                  .endTs(System.currentTimeMillis())
-                                  .status(ExecutionStatus.SUCCESS)
-                                  .stepType("TASK")
-                                  .build();
-    executionNodeMap.put(k8sUpdateUuid, k8sUpdate);
-    nodeAdjacencyListMap.put(
-        k8sUpdateUuid, ExecutionNodeAdjacencyList.builder().nextIds(Lists.newArrayList(forkUuid)).build());
-
-    ExecutionNode fork = ExecutionNode.builder()
-                             .uuid(forkUuid)
-                             .name("Fork")
-                             .startTs(System.currentTimeMillis())
-                             .endTs(System.currentTimeMillis())
-                             .status(ExecutionStatus.RUNNING)
-                             .stepType("FORK")
-                             .build();
-    executionNodeMap.put(forkUuid, fork);
-    nodeAdjacencyListMap.put(
-        forkUuid, ExecutionNodeAdjacencyList.builder().children(Lists.newArrayList(step1Uuid, step2Uuid)).build());
-
-    ExecutionNode step1 = ExecutionNode.builder()
-                              .uuid(step1Uuid)
-                              .name("Step1")
-                              .startTs(System.currentTimeMillis())
-                              .endTs(System.currentTimeMillis())
-                              .status(ExecutionStatus.RUNNING)
-                              .stepType("TERRAFORM")
-                              .build();
-    executionNodeMap.put(step1Uuid, step1);
-    nodeAdjacencyListMap.put(step1Uuid, ExecutionNodeAdjacencyList.builder().build());
-
-    ExecutionNode step2 = ExecutionNode.builder()
-                              .uuid(step2Uuid)
-                              .name("Step2")
-                              .startTs(System.currentTimeMillis())
-                              .endTs(System.currentTimeMillis())
-                              .status(ExecutionStatus.WAITING)
-                              .stepType("APPROVAL")
-                              .build();
-    executionNodeMap.put(step2Uuid, step2);
-    nodeAdjacencyListMap.put(step2Uuid, ExecutionNodeAdjacencyList.builder().build());
+    ExecutionNode k8sRolling = ExecutionNode.builder()
+                                   .uuid(k8sRollingUuid)
+                                   .name("Rollout Deployment")
+                                   .startTs(System.currentTimeMillis())
+                                   .status(ExecutionStatus.RUNNING)
+                                   .stepType("K8S_ROLLING")
+                                   .executableResponsesMetadata(Lists.newArrayList(loggingMetadata))
+                                   .taskIdToProgressDataMap(Maps.of(generateUuid(),
+                                       Arrays.asList(DummyProgressData.builder().data("33% done").build(),
+                                           DummyProgressData.builder().data("55% done").build())))
+                                   .build();
+    executionNodeMap.put(k8sRollingUuid, k8sRolling);
+    nodeAdjacencyListMap.put(k8sRollingUuid, ExecutionNodeAdjacencyList.builder().build());
 
     return ExecutionGraph.builder()
         .rootNodeId(stageIdentifier)
@@ -422,11 +341,5 @@ public class PipelineResource {
   @Builder
   private static class DummyProgressData implements ProgressData {
     String data;
-  }
-  @GET
-  @Path("/execution/{planExecutionId}/inputset")
-  @ApiOperation(value = "Gets  inputsetYaml", nickname = "getInputsetYaml")
-  public String getInputsetYaml(@PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
-    return pmsExecutionService.getInputsetYaml(planExecutionId);
   }
 }
