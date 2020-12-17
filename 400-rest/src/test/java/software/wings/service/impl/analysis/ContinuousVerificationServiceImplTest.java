@@ -42,6 +42,7 @@ import io.harness.waiter.WaitNotifyEngine;
 import software.wings.WingsBaseTest;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.DatadogConfig;
+import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
@@ -70,6 +71,7 @@ import software.wings.service.impl.stackdriver.StackDriverLogDataCollectionInfo;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.datadog.DatadogService;
 import software.wings.service.intfc.security.SecretManager;
@@ -153,6 +155,7 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private AppService appService;
+  @Mock private EnvironmentService environmentService;
 
   private Logger logger = mock(Logger.class);
 
@@ -193,6 +196,10 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
     FieldUtils.writeField(continuousVerificationService, "waitNotifyEngine", waitNotifyEngine, true);
     FieldUtils.writeField(continuousVerificationService, "featureFlagService", featureFlagService, true);
     FieldUtils.writeField(continuousVerificationService, "appService", appService, true);
+    FieldUtils.writeField(continuousVerificationService, "environmentService", environmentService, true);
+
+    when(environmentService.get(anyString(), anyString()))
+        .thenReturn(Environment.Builder.anEnvironment().environmentType(EnvironmentType.PROD).build());
   }
 
   private ContinuousVerificationExecutionMetaData getExecutionMetadata() {

@@ -38,6 +38,8 @@ import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DatadogConfig;
+import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PrometheusConfig;
@@ -58,6 +60,7 @@ import software.wings.service.impl.log.CustomLogSetupTestNodeData;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.datadog.DatadogService;
 import software.wings.service.intfc.prometheus.PrometheusAnalysisService;
@@ -112,6 +115,7 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private CVActivityLogService cvActivityLogService;
   @Mock private DatadogService datadogService;
+  @Mock private EnvironmentService environmentService;
   @Mock MLServiceUtils mlServiceUtils;
   @InjectMocks ContinuousVerificationServiceImpl service;
   @Inject WingsPersistence wingsPersistence;
@@ -129,6 +133,8 @@ public class APMVerificationServiceImplTest extends WingsBaseTest {
     when(cvActivityLogService.getLoggerByStateExecutionId(anyString(), anyString())).thenReturn(mock(Logger.class));
     when(cvActivityLogService.getLoggerByCVConfigId(anyString(), anyString(), anyLong()))
         .thenReturn(mock(Logger.class));
+    when(environmentService.get(anyString(), anyString()))
+        .thenReturn(Environment.Builder.anEnvironment().environmentType(EnvironmentType.PROD).build());
   }
 
   @Test
