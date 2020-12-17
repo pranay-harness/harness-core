@@ -90,7 +90,9 @@ public class EmailState extends State {
     ccAddress = StringUtils.join(ccAddressMap.get(true), ", ");
 
     List<String> unregisteredAddressList =
-        Stream.concat(toAddressMap.get(false).stream(), ccAddressMap.get(false).stream()).collect(Collectors.toList());
+        Stream.concat(toAddressMap.get(false).stream(), ccAddressMap.get(false).stream())
+            .distinct()
+            .collect(Collectors.toList());
     String unregisteredAddress = StringUtils.join(unregisteredAddressList, ", ");
 
     emailStateExecutionData = getEmailStateExecutionData(toAddress, ccAddress, subject, body);
