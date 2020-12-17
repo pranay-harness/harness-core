@@ -32,7 +32,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Produces("application/json")
 @Scope(DELEGATE)
 @Slf4j
-public class DelegateTasksResource {
+public class DelegateTaskResource {
   @Inject DelegateTaskService delegateTaskService;
 
   @DelegateAuth
@@ -46,7 +46,12 @@ public class DelegateTasksResource {
     try (AutoLogContext ignore1 = new TaskLogContext(taskId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore3 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      delegateTaskService.processDelegateResponse(accountId, delegateId, taskId, delegateTaskResponse);
+      try {
+        delegateTaskService.processDelegateResponse(accountId, delegateId, taskId, delegateTaskResponse);
+      } catch (Exception exception) {
+        log.error("Error during update task response. delegateId: {}, taskId: {}, delegateTaskResponse: {}.",
+            delegateId, taskId, delegateTaskResponse, exception);
+      }
     }
   }
 }
