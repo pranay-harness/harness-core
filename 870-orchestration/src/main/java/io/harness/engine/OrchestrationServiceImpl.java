@@ -2,7 +2,6 @@ package io.harness.engine;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
@@ -13,7 +12,6 @@ import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.plan.Plan;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.plan.PlanNodeProto;
@@ -25,7 +23,6 @@ import java.util.Map;
 import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 
-@Redesign
 @OwnedBy(HarnessTeam.CDC)
 @Slf4j
 public class OrchestrationServiceImpl implements OrchestrationService {

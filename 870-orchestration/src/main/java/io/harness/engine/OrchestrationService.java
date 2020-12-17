@@ -2,7 +2,6 @@ package io.harness.engine;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.execution.PlanExecution;
@@ -14,7 +13,6 @@ import javax.validation.Valid;
 import lombok.NonNull;
 
 @OwnedBy(CDC)
-@Redesign
 public interface OrchestrationService {
   PlanExecution startExecution(@Valid Plan plan);
   PlanExecution startExecution(@Valid Plan plan, @NonNull Map<String, String> setupAbstractions);

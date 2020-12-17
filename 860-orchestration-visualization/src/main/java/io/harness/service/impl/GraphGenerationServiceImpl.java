@@ -2,7 +2,6 @@ package io.harness.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EphemeralOrchestrationGraph;
@@ -31,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Redesign
 @OwnedBy(HarnessTeam.CDC)
 @Singleton
 public class GraphGenerationServiceImpl implements GraphGenerationService {

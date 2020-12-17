@@ -1,6 +1,5 @@
 package software.wings.resources;
 
-import io.harness.annotations.Redesign;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.execution.PlanExecution;
@@ -16,7 +15,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.StreamingOutput;
 
-@Redesign
 @Path("/execute2")
 @Produces("application/json")
 public class CustomExecutionResource {

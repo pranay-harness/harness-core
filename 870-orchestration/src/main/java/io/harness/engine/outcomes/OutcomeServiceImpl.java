@@ -2,7 +2,6 @@ package io.harness.engine.outcomes;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -17,7 +16,6 @@ import java.util.List;
 import lombok.NonNull;
 
 @OwnedBy(CDC)
-@Redesign
 @Singleton
 public class OutcomeServiceImpl implements OutcomeService {
   @Inject private PmsOutcomeService pmsOutcomeService;

@@ -36,7 +36,7 @@ public class RetryAdviser implements Adviser {
 
   @Override
   public AdviserResponse onAdviseEvent(AdvisingEvent advisingEvent) {
-    io.harness.pms.sdk.core.adviser.retry.RetryAdviserParameters parameters = extractParameters(advisingEvent);
+    RetryAdviserParameters parameters = extractParameters(advisingEvent);
     NodeExecutionProto nodeExecution = advisingEvent.getNodeExecution();
 
     if (NodeExecutionUtils.retryCount(nodeExecution) < parameters.getRetryCount()) {
@@ -99,7 +99,7 @@ public class RetryAdviser implements Adviser {
   }
 
   @NotNull
-  private io.harness.pms.sdk.core.adviser.retry.RetryAdviserParameters extractParameters(AdvisingEvent advisingEvent) {
+  private RetryAdviserParameters extractParameters(AdvisingEvent advisingEvent) {
     return (RetryAdviserParameters) Preconditions.checkNotNull(
         kryoSerializer.asObject(advisingEvent.getAdviserParameters()));
   }

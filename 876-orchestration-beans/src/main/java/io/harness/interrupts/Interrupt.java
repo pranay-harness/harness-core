@@ -3,7 +3,6 @@ package io.harness.interrupts;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.PersistentEntity;
@@ -31,7 +30,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @OwnedBy(CDC)
 @Value
 @Builder
-@Redesign
 @Entity(value = "interrupts")
 @Document(value = "interrupts")
 @FieldNameConstants(innerTypeName = "InterruptKeys")

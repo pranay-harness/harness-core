@@ -4,7 +4,6 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
@@ -28,28 +27,6 @@ import org.junit.experimental.categories.Category;
 import org.reflections.Reflections;
 
 public class AnnotationMatcherTest extends WingsBaseTest {
-  @Test
-  @Owner(developers = PRASHANT)
-  @Category(UnitTests.class)
-  public void testAllAnnotatedClasses() throws IOException {
-    Set<Class<? extends Object>> redesignClasses = new HashSet<>();
-    Reflections reflectionsHarness = new Reflections("io.harness");
-    Reflections reflectionsWings = new Reflections("software.wings");
-    redesignClasses.addAll(reflectionsHarness.getTypesAnnotatedWith(ExcludeRedesign.class));
-    redesignClasses.addAll(reflectionsWings.getTypesAnnotatedWith(ExcludeRedesign.class));
-    List<String> nameList = redesignClasses.stream()
-                                .distinct()
-                                .filter(clazz -> !clazz.isAnonymousClass() && !clazz.isMemberClass())
-                                .map(Class::getName)
-                                .sorted()
-                                .collect(Collectors.toList());
-    List<String> expectedList;
-    try (InputStream in = getClass().getResourceAsStream("/annotations/redesign-class-list.txt")) {
-      expectedList = IOUtils.readLines(in, "UTF-8");
-    }
-    assertThat(expectedList).containsAll(nameList);
-  }
-
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)

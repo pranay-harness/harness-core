@@ -3,8 +3,6 @@ package io.harness.redesign.services;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import io.harness.annotations.Redesign;
-import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.config.MockServerConfig;
 import io.harness.delegate.task.shell.ScriptType;
@@ -66,9 +64,7 @@ import com.google.protobuf.ByteString;
 import java.time.Duration;
 
 @OwnedBy(CDC)
-@Redesign
 @Singleton
-@ExcludeRedesign
 public class CustomExecutionProvider {
   @Inject private MainConfiguration configuration;
   @Inject private KryoSerializer kryoSerializer;

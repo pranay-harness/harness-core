@@ -3,8 +3,6 @@ package io.harness.redesign.states.http.chain;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 
-import io.harness.annotations.Redesign;
-import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.TaskData;
@@ -32,8 +30,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.jetbrains.annotations.NotNull;
 
-@Redesign
-@ExcludeRedesign
 @OwnedBy(HarnessTeam.CDC)
 public class BasicHttpChainStep implements TaskChainExecutable<BasicHttpChainStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType("HTTP_CHAIN").build();

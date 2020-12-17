@@ -2,7 +2,6 @@ package io.harness.cdng.pipeline.steps;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -33,7 +32,6 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
-@Redesign
 @Slf4j
 public class HttpStep implements TaskExecutable<BasicHttpStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(ExecutionNodeType.HTTP.getName()).build();

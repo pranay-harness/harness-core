@@ -5,7 +5,6 @@ import static guru.nidi.graphviz.model.Factory.mutGraph;
 import static guru.nidi.graphviz.model.Factory.mutNode;
 import static guru.nidi.graphviz.model.Factory.to;
 
-import io.harness.annotations.dev.ExcludeRedesign;
 import io.harness.beans.EdgeList;
 import io.harness.dto.GraphVertexDTO;
 import io.harness.dto.OrchestrationAdjacencyListDTO;
@@ -35,7 +34,6 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 
-@ExcludeRedesign
 @Slf4j
 public class GraphVisualizer {
   private static final String BASE_DIRECTORY = "resources/graphviz/";
