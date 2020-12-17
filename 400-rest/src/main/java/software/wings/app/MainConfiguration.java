@@ -3,6 +3,7 @@ package software.wings.app;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 
+import io.harness.EventsFrameworkConfiguration;
 import io.harness.cache.CacheConfig;
 import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.commandlibrary.CommandLibraryServiceConfig;
@@ -166,6 +167,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("numberOfRemindersBeforeAccountDeletion") private int numberOfRemindersBeforeAccountDeletion;
   @JsonProperty("delegateGrpcServicePort") private Integer delegateGrpcServicePort;
   @JsonProperty("logStreamingServiceConfig") private LogStreamingServiceConfig logStreamingServiceConfig;
+  @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
 
   private int applicationPort;
   private boolean sslEnabled;

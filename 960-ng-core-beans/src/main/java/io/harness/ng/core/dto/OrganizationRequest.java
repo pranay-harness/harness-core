@@ -10,6 +10,4 @@ import lombok.Data;
 @Builder
 public class OrganizationRequest {
   @Valid @NotNull @JsonProperty("organization") private OrganizationDTO organization;
-  // TODO{karan} Remove this boolean field after creating default org with EDA
-  @Builder.Default private boolean harnessManaged = false;
 }

@@ -81,7 +81,7 @@ public class OrganizationRepositoryCustomImplTest {
     Update update = updateArgumentCaptor.getValue();
     assertFalse(deleted);
     assertEquals(1, update.getUpdateObject().size());
-    assertEquals(5, query.getQueryObject().size());
+    assertEquals(4, query.getQueryObject().size());
     assertTrue(query.getQueryObject().containsKey(OrganizationKeys.accountIdentifier));
     assertEquals(accountIdentifier, query.getQueryObject().get(OrganizationKeys.accountIdentifier));
     assertTrue(query.getQueryObject().containsKey(OrganizationKeys.identifier));

@@ -1,6 +1,7 @@
 package software.wings.app;
 
 import static io.harness.AuthorizationServiceHeader.MANAGER;
+import static io.harness.EntityCRUDEventsConstants.ENTITY_CRUD;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
 import io.harness.OrchestrationModule;
@@ -78,6 +79,9 @@ import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobServiceImpl;
 import io.harness.event.reconciliation.service.DeploymentReconService;
 import io.harness.event.reconciliation.service.DeploymentReconServiceImpl;
+import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.impl.NoOpProducer;
+import io.harness.eventsframework.impl.RedisProducer;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.ff.FeatureFlagModule;
 import io.harness.git.GitClientV2;
@@ -824,6 +828,21 @@ public class WingsModule extends AbstractModule implements ServersModule {
         configuration.getGrpcDelegateServiceClientConfig().getAuthority()));
     install(PersistentLockModule.getInstance());
     install(FeatureFlagModule.getInstance());
+    install(new AbstractModule() {
+      @Override
+      protected void configure() {
+        RedisConfig redisConfig = configuration.getEventsFrameworkConfiguration().getRedisConfig();
+        if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
+          bind(AbstractProducer.class)
+              .annotatedWith(Names.named(ENTITY_CRUD))
+              .toInstance(new NoOpProducer("dummy_topic_name"));
+        } else {
+          bind(AbstractProducer.class)
+              .annotatedWith(Names.named(ENTITY_CRUD))
+              .toInstance(new RedisProducer(ENTITY_CRUD, redisConfig));
+        }
+      }
+    });
 
     bind(MainConfiguration.class).toInstance(configuration);
     bind(SchedulerConfig.class)

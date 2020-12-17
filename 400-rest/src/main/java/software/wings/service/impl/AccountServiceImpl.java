@@ -1,6 +1,10 @@
 package software.wings.service.impl;
 
-import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
+import static io.harness.EntityCRUDEventsConstants.ACCOUNT_ENTITY;
+import static io.harness.EntityCRUDEventsConstants.ACTION_METADATA;
+import static io.harness.EntityCRUDEventsConstants.CREATE_ACTION;
+import static io.harness.EntityCRUDEventsConstants.ENTITY_CRUD;
+import static io.harness.EntityCRUDEventsConstants.ENTITY_TYPE_METADATA;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -30,7 +34,6 @@ import static software.wings.beans.SystemCatalog.CatalogType.APPSTACK;
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofDays;
 import static java.time.Duration.ofHours;
-import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -58,6 +61,9 @@ import io.harness.event.model.Event;
 import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
 import io.harness.event.publisher.EventPublisher;
+import io.harness.eventsframework.account.AccountEntityChangeDTO;
+import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.producer.Message;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -71,10 +77,7 @@ import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.managerclient.HttpsCertRequirement.CertRequirement;
 import io.harness.network.Http;
-import io.harness.ng.core.dto.OrganizationDTO;
-import io.harness.ng.core.dto.OrganizationRequest;
 import io.harness.observer.Subject;
-import io.harness.organizationmanagerclient.remote.OrganizationManagerClient;
 import io.harness.persistence.HIterator;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.seeddata.SampleDataProviderService;
@@ -148,6 +151,7 @@ import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.verification.CVConfiguration;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.gson.JsonElement;
@@ -250,10 +254,10 @@ public class AccountServiceImpl implements AccountService {
   @Inject private DelegateConnectionDao delegateConnectionDao;
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private DeleteAccountHelper deleteAccountHelper;
-  @Inject private OrganizationManagerClient organizationManagerClient;
   @Inject private AccountDao accountDao;
   @Inject private AccountDataRetentionService accountDataRetentionService;
   @Inject private PersistentLocker persistentLocker;
+  @Inject @Named(ENTITY_CRUD) private AbstractProducer eventProducer;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private GovernanceFeature governanceFeature;
@@ -301,10 +305,24 @@ public class AccountServiceImpl implements AccountService {
       }
 
       publishAccountChangeEvent(account);
+      publishAccountChangeEventViaEventFramework(account, CREATE_ACTION);
 
       log.info("Successfully created account.");
     }
     return account;
+  }
+
+  private void publishAccountChangeEventViaEventFramework(Account account, String action) {
+    try {
+      eventProducer.send(
+          Message.newBuilder()
+              .putAllMetadata(ImmutableMap.of(
+                  "accountId", account.getUuid(), ENTITY_TYPE_METADATA, ACCOUNT_ENTITY, ACTION_METADATA, action))
+              .setData(AccountEntityChangeDTO.newBuilder().setAccountId(account.getUuid()).build().toByteString())
+              .build());
+    } catch (Exception ex) {
+      log.error("Failed to publish account creation event via event framework.");
+    }
   }
 
   private void publishAccountChangeEvent(Account account) {
@@ -415,24 +433,6 @@ public class AccountServiceImpl implements AccountService {
     enableFeatureFlags(account);
     if (shouldCreateSampleApp) {
       sampleDataProviderService.createK8sV2SampleApp(account);
-    }
-    if (mainConfiguration.isNgManagerAvailable()) {
-      createDefaultOrganization(account.getUuid());
-    }
-  }
-
-  private void createDefaultOrganization(String accountId) {
-    OrganizationDTO createOrganizationDTO = OrganizationDTO.builder().build();
-    createOrganizationDTO.setIdentifier(DEFAULT_ORG_IDENTIFIER);
-    createOrganizationDTO.setName("Default");
-    createOrganizationDTO.setTags(emptyMap());
-    createOrganizationDTO.setDescription("Default Organization");
-    OrganizationRequest organizationRequestWrapper =
-        OrganizationRequest.builder().organization(createOrganizationDTO).harnessManaged(true).build();
-    try {
-      organizationManagerClient.createOrganization(accountId, organizationRequestWrapper).execute();
-    } catch (IOException ex) {
-      log.info(String.format("Failed to create Default Organization for account id: [%s]", accountId), ex);
     }
   }
 

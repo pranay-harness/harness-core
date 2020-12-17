@@ -5,6 +5,7 @@ import static io.harness.mongo.MongoModule.defaultMongoClientOptions;
 
 import static org.mockito.Mockito.mock;
 
+import io.harness.EventsFrameworkConfiguration;
 import io.harness.OrchestrationStepsModule;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheModule;
@@ -32,6 +33,7 @@ import io.harness.mongo.ObjectFactoryModule;
 import io.harness.mongo.QueryFactory;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
+import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rest.RestResponse;
 import io.harness.scm.ScmSecret;
@@ -323,6 +325,11 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     configuration.setNgManagerServiceHttpClientConfig(
         ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build());
     configuration.getBackgroundSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
+
+    configuration.setEventsFrameworkConfiguration(
+        EventsFrameworkConfiguration.builder()
+            .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
+            .build());
     return configuration;
   }
 

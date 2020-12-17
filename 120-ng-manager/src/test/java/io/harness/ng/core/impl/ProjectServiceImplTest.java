@@ -3,7 +3,6 @@ package io.harness.ng.core.impl;
 import static io.harness.ModuleType.CD;
 import static io.harness.ng.core.remote.ProjectMapper.toProject;
 import static io.harness.rule.OwnerRule.KARAN;
-import static io.harness.security.encryption.EncryptionType.GCP_KMS;
 import static io.harness.utils.PageTestUtils.getPage;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
@@ -13,7 +12,6 @@ import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -23,13 +21,10 @@ import static org.springframework.data.domain.Pageable.unpaged;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.connector.apis.dto.ConnectorResponseDTO;
-import io.harness.connector.services.ConnectorService;
 import io.harness.eventsframework.api.AbstractProducer;
 import io.harness.eventsframework.impl.NoOpProducer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
-import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ProjectFilterDTO;
 import io.harness.ng.core.entities.Organization;
@@ -40,7 +35,6 @@ import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.repositories.core.spring.ProjectRepository;
 import io.harness.rule.Owner;
-import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
 
 import io.dropwizard.jersey.validation.JerseyViolationException;
 import java.util.Optional;
@@ -56,8 +50,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class ProjectServiceImplTest extends CategoryTest {
   private ProjectRepository projectRepository;
   private OrganizationService organizationService;
-  private NGSecretManagerService ngSecretManagerService;
-  private ConnectorService secretManagerConnectorService;
   private ProjectServiceImpl projectService;
   private AbstractProducer eventProducer;
   private NgUserService ngUserService;
@@ -66,12 +58,9 @@ public class ProjectServiceImplTest extends CategoryTest {
   public void setup() {
     projectRepository = mock(ProjectRepository.class);
     organizationService = mock(OrganizationService.class);
-    ngSecretManagerService = mock(NGSecretManagerService.class);
-    secretManagerConnectorService = mock(ConnectorService.class);
     eventProducer = mock(NoOpProducer.class);
     ngUserService = mock(NgUserService.class);
-    projectService = spy(new ProjectServiceImpl(projectRepository, organizationService, ngSecretManagerService,
-        secretManagerConnectorService, eventProducer, ngUserService));
+    projectService = spy(new ProjectServiceImpl(projectRepository, organizationService, eventProducer, ngUserService));
   }
 
   private ProjectDTO createProjectDTO(String accountIdentifier, String orgIdentifier, String identifier) {
@@ -96,9 +85,6 @@ public class ProjectServiceImplTest extends CategoryTest {
     project.setOrgIdentifier(orgIdentifier);
 
     when(projectRepository.save(project)).thenReturn(project);
-    when(ngSecretManagerService.getGlobalSecretManager(accountIdentifier))
-        .thenReturn(GcpKmsConfigDTO.builder().encryptionType(GCP_KMS).build());
-    when(secretManagerConnectorService.create(any(), eq(accountIdentifier))).thenReturn(new ConnectorResponseDTO());
     when(organizationService.get(accountIdentifier, orgIdentifier)).thenReturn(Optional.of(random(Organization.class)));
     when(ngUserService.createUserProjectMap(any())).thenReturn(UserProjectMap.builder().build());
 

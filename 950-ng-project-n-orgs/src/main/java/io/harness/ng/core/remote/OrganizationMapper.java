@@ -27,13 +27,15 @@ public class OrganizationMapper {
   }
 
   public static OrganizationDTO writeDto(Organization organization) {
-    return OrganizationDTO.builder()
-        .description(organization.getDescription())
-        .identifier(organization.getIdentifier())
-        .accountIdentifier(organization.getAccountIdentifier())
-        .name(organization.getName())
-        .tags(convertToMap(organization.getTags()))
-        .build();
+    OrganizationDTO organizationDTO = OrganizationDTO.builder()
+                                          .description(organization.getDescription())
+                                          .identifier(organization.getIdentifier())
+                                          .accountIdentifier(organization.getAccountIdentifier())
+                                          .name(organization.getName())
+                                          .tags(convertToMap(organization.getTags()))
+                                          .build();
+    organizationDTO.setHarnessManaged(Boolean.TRUE.equals(organization.getHarnessManaged()));
+    return organizationDTO;
   }
 
   public static OrganizationResponse toResponseWrapper(Organization organization) {

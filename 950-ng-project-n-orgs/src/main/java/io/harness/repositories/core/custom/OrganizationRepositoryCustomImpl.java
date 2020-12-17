@@ -45,8 +45,6 @@ public class OrganizationRepositoryCustomImpl implements OrganizationRepositoryC
                             .is(accountIdentifier)
                             .and(OrganizationKeys.identifier)
                             .is(identifier)
-                            .and(OrganizationKeys.harnessManaged)
-                            .ne(Boolean.TRUE)
                             .and(OrganizationKeys.deleted)
                             .ne(Boolean.TRUE);
     if (version != null) {

@@ -70,7 +70,10 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
       String accountIdentifier, String orgIdentifier, String identifier) {
     // organization
     Optional<Organization> organizationOptional = organizationService.get(accountIdentifier, orgIdentifier);
-    organizationOptional.ifPresent(organization -> projectAggregateDTOBuilder.organization(writeDto(organization)));
+    organizationOptional.ifPresent(organization -> {
+      projectAggregateDTOBuilder.organization(writeDto(organization));
+      projectAggregateDTOBuilder.harnessManagedOrg(Boolean.TRUE.equals(organization.getHarnessManaged()));
+    });
 
     // admins and collaborators
     try {
@@ -153,9 +156,12 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
       Page<ProjectAggregateDTO> projectAggregateDTOs, String accountIdentifier, Page<ProjectResponse> projects) {
     // organization
     Map<String, OrganizationDTO> organizationMap = getOrganizations(accountIdentifier, projects);
-    projectAggregateDTOs.forEach(projectAggregateDTO
-        -> projectAggregateDTO.setOrganization(organizationMap.getOrDefault(
-            projectAggregateDTO.getProjectResponse().getProject().getOrgIdentifier(), null)));
+    projectAggregateDTOs.forEach(projectAggregateDTO -> {
+      String orgIdentifier = projectAggregateDTO.getProjectResponse().getProject().getOrgIdentifier();
+      projectAggregateDTO.setOrganization(organizationMap.getOrDefault(orgIdentifier, null));
+      projectAggregateDTO.setHarnessManagedOrg(organizationMap.containsKey(orgIdentifier)
+          && Boolean.TRUE.equals(organizationMap.get(orgIdentifier).isHarnessManaged()));
+    });
 
     // admins and collaborators
     try {

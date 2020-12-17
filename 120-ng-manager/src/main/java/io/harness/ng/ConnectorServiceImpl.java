@@ -2,6 +2,7 @@ package io.harness.ng;
 
 import static io.harness.EntityCRUDEventsConstants.ACTION_METADATA;
 import static io.harness.EntityCRUDEventsConstants.CONNECTOR_ENTITY;
+import static io.harness.EntityCRUDEventsConstants.ENTITY_CRUD;
 import static io.harness.EntityCRUDEventsConstants.ENTITY_TYPE_METADATA;
 import static io.harness.EntityCRUDEventsConstants.UPDATE_ACTION;
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
@@ -10,7 +11,6 @@ import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.delegate.beans.connector.ConnectorCategory.SECRET_MANAGER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.ng.NextGenModule.SECRET_MANAGER_CONNECTOR_SERVICE;
-import static io.harness.ng.eventsframework.EventsFrameworkModule.ENTITY_CRUD;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 

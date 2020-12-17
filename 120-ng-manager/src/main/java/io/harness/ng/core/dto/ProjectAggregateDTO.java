@@ -12,6 +12,7 @@ import lombok.Data;
 public class ProjectAggregateDTO {
   @NotNull ProjectResponse projectResponse;
   OrganizationDTO organization;
+  boolean harnessManagedOrg;
 
   List<UserSearchDTO> admins;
   List<UserSearchDTO> collaborators;
