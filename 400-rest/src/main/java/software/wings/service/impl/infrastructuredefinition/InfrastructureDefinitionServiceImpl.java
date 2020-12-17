@@ -80,6 +80,7 @@ import io.harness.exception.WingsException;
 import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.ExpressionReflectionUtils;
+import io.harness.expression.ExpressionReflectionUtils.NestedAnnotationResolver;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.Misc;
 import io.harness.observer.Subject;
@@ -896,6 +897,10 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
             ExpressionReflectionUtils.applyExpression(it.next(), safeExpressionResolver);
           }
           renderedFieldMap.put(entry.getKey(), objectList);
+        } else if (entry.getValue() instanceof NestedAnnotationResolver) {
+          Object object = entry.getValue();
+          ExpressionReflectionUtils.applyExpression(object, safeExpressionResolver);
+          renderedFieldMap.put(entry.getKey(), object);
         }
       }
       saveFieldMapForDefinition(infrastructureDefinition, renderedFieldMap);
@@ -915,13 +920,22 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   private ExpressionReflectionUtils.Functor buildSecretSafeFunctor(
       ExecutionContext context, ManagerPreviewExpressionEvaluator expressionEvaluator) {
     return (secretMode, value) -> {
+      Set<String> ignoredExpressions = ImmutableSet.of(InfrastructureConstants.INFRA_KUBERNETES_INFRAID_EXPRESSION);
       context.resetPreparedCache();
-      return expressionEvaluator.substitute(context.renderExpression(value,
-                                                StateExecutionContext.builder()
-                                                    .expressionFunctorToken(HashGenerator.generateIntegerHash())
-                                                    .adoptDelegateDecryption(true)
-                                                    .build()),
-          emptyMap());
+
+      if (value instanceof String && ExpressionEvaluator.containsVariablePattern(value)) {
+        String renderedValue = context.renderExpression(value,
+            StateExecutionContext.builder()
+                .expressionFunctorToken(HashGenerator.generateIntegerHash())
+                .adoptDelegateDecryption(true)
+                .build());
+        if ((value.equals(renderedValue) || renderedValue == null || NULL.equals(renderedValue))
+            && !isIgnored(ignoredExpressions, value)) {
+          throw new InvalidRequestException(format("Unable to resolve expression : \"%s\"", value), USER);
+        }
+        return expressionEvaluator.substitute(renderedValue, emptyMap());
+      }
+      return expressionEvaluator.substitute(value, emptyMap());
     };
   }
 

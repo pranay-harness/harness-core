@@ -1,6 +1,7 @@
 package software.wings.infra;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.expression.Expression.ALLOW_SECRETS;
 import static io.harness.validation.Validator.ensureType;
 
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
@@ -11,6 +12,7 @@ import static java.util.stream.Collectors.toList;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.expression.Expression;
 
 import software.wings.annotation.IncludeFieldMap;
 import software.wings.api.CloudProviderType;
@@ -47,7 +49,7 @@ public class AwsInstanceInfrastructure
   @Transient private String loadBalancerName;
   private boolean usePublicDns;
   private String hostConnectionType;
-  private AwsInstanceFilter awsInstanceFilter;
+  @Expression(ALLOW_SECRETS) private AwsInstanceFilter awsInstanceFilter;
   private String autoScalingGroupName;
   private boolean setDesiredCapacity;
   private int desiredCapacity;

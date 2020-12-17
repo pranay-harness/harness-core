@@ -5,6 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.Arrays.asList;
 
+import io.harness.expression.ExpressionEvaluator;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter;
@@ -58,7 +60,12 @@ public class AwsUtils {
       }
       if (isNotEmpty(instanceFilter.getTags())) {
         Multimap<String, String> tags = ArrayListMultimap.create();
-        instanceFilter.getTags().forEach(tag -> tags.put(tag.getKey(), tag.getValue()));
+        instanceFilter.getTags().forEach(tag -> {
+          if (!(ExpressionEvaluator.containsVariablePattern((String) tag.getKey())
+                  || ExpressionEvaluator.containsVariablePattern((String) tag.getValue()))) {
+            tags.put(tag.getKey(), tag.getValue());
+          }
+        });
         tags.keySet().forEach(key -> filters.add(new Filter("tag:" + key, new ArrayList<>(tags.get(key)))));
       }
       if (DeploymentType.WINRM == deploymentType) {
