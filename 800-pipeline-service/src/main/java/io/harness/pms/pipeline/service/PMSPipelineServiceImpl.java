@@ -157,7 +157,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
           pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier(), pipelineEntity.getIdentifier());
 
       // Todo: Uncomment when we have the CD Service integration with NextGenApp.
-      // updatePipelineInfo(pipelineEntity);
+      updatePipelineInfo(pipelineEntity);
 
       PipelineEntity createdEntity = pmsPipelineRepository.save(pipelineEntity);
       return createdEntity;
@@ -180,6 +180,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     validatePresenceOfRequiredFields(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),
         pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier());
 
+    updatePipelineInfo(pipelineEntity);
     Criteria criteria = getPipelineEqualityCriteria(pipelineEntity, pipelineEntity.getDeleted());
     PipelineEntity updateResult = pmsPipelineRepository.update(criteria, pipelineEntity);
     if (updateResult == null) {

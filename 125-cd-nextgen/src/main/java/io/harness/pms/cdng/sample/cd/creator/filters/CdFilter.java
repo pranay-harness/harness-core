@@ -21,6 +21,8 @@ public class CdFilter implements PipelineFilter {
   public void addDeploymentTypes(Set<String> deploymentTypes) {
     if (this.deploymentTypes == null) {
       this.deploymentTypes = new HashSet<>();
+    } else if (!(this.deploymentTypes instanceof HashSet)) {
+      this.deploymentTypes = new HashSet<>(this.deploymentTypes);
     }
 
     this.deploymentTypes.addAll(deploymentTypes);
@@ -29,6 +31,8 @@ public class CdFilter implements PipelineFilter {
   public void addServiceNames(Set<String> serviceNames) {
     if (this.serviceNames == null) {
       this.serviceNames = new HashSet<>();
+    } else if (!(this.serviceNames instanceof HashSet)) {
+      this.serviceNames = new HashSet<>(this.serviceNames);
     }
 
     this.serviceNames.addAll(serviceNames);
@@ -37,6 +41,8 @@ public class CdFilter implements PipelineFilter {
   public void addEnvironmentNames(Set<String> environmentNames) {
     if (this.environmentNames == null) {
       this.environmentNames = new HashSet<>();
+    } else if (!(this.environmentNames instanceof HashSet)) {
+      this.environmentNames = new HashSet<>(this.environmentNames);
     }
 
     this.environmentNames.addAll(environmentNames);
