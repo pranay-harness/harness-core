@@ -117,7 +117,7 @@ public class InstanceHelper {
   @Inject private SecretManager secretManager;
   @Inject private InstanceService instanceService;
   @Inject private PersistentLocker persistentLocker;
-  @Inject private InstanceHandlerFactory instanceHandlerFactory;
+  @Inject private InstanceHandlerFactoryService instanceHandlerFactory;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private DeploymentService deploymentService;

@@ -417,6 +417,8 @@ import software.wings.service.impl.instana.InstanaServiceImpl;
 import software.wings.service.impl.instance.CloudToHarnessMappingServiceImpl;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl;
 import software.wings.service.impl.instance.DeploymentServiceImpl;
+import software.wings.service.impl.instance.InstanceHandlerFactory;
+import software.wings.service.impl.instance.InstanceHandlerFactoryService;
 import software.wings.service.impl.instance.InstanceServiceImpl;
 import software.wings.service.impl.instance.InstanceSyncPerpetualTaskService;
 import software.wings.service.impl.instance.InstanceSyncPerpetualTaskServiceImpl;
@@ -890,6 +892,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(DashboardStatisticsService.class).to(DashboardStatisticsServiceImpl.class);
     bind(InstanceService.class).to(InstanceServiceImpl.class);
     bind(InstanceSyncPerpetualTaskService.class).to(InstanceSyncPerpetualTaskServiceImpl.class);
+    bind(InstanceHandlerFactoryService.class).to(InstanceHandlerFactory.class);
     bind(BuildSourceService.class).to(BuildSourceServiceImpl.class);
     bind(ServiceVariableService.class).to(ServiceVariableServiceImpl.class);
     bind(AccountService.class).to(AccountServiceImpl.class);

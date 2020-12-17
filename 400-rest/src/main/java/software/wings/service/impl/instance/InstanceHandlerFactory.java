@@ -18,7 +18,7 @@ import com.google.inject.Singleton;
 import java.util.Set;
 
 @Singleton
-public class InstanceHandlerFactory {
+public class InstanceHandlerFactory implements InstanceHandlerFactoryService {
   private ContainerInstanceHandler containerInstanceHandler;
   private AwsInstanceHandler awsInstanceHandler;
   private AwsAmiInstanceHandler awsAmiInstanceHandler;
@@ -57,6 +57,7 @@ public class InstanceHandlerFactory {
         && SPOTINST == ((AwsAmiInfrastructureMapping) infraMapping).getAmiDeploymentType();
   }
 
+  @Override
   public InstanceHandler getInstanceHandler(InfrastructureMapping infraMapping) {
     InfrastructureMappingType infraMappingType =
         Utils.getEnumFromString(InfrastructureMappingType.class, infraMapping.getInfraMappingType());
@@ -99,6 +100,7 @@ public class InstanceHandlerFactory {
     }
   }
 
+  @Override
   public Set<InstanceHandler> getAllInstanceHandlers() {
     return Sets.newHashSet(containerInstanceHandler, awsInstanceHandler, awsAmiInstanceHandler,
         awsCodeDeployInstanceHandler, pcfInstanceHandler, azureInstanceHandler, spotinstAmiInstanceHandler,
