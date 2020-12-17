@@ -655,14 +655,15 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
-  public void shouldReturnEmptyExpressionAnnotatedFields() {
+  public void shouldReturnAwsInstanceFilterExpressionAnnotatedFields() {
     InfrastructureDefinitionServiceImpl infrastructureDefinitionService =
         (InfrastructureDefinitionServiceImpl) this.infrastructureDefinitionService;
     AwsInstanceInfrastructure awsInstanceInfra = AwsInstanceInfrastructure.builder().build();
 
     Map<String, Object> allFields = infrastructureDefinitionService.getExpressionAnnotatedFields(awsInstanceInfra);
 
-    assertThat(allFields).isEmpty();
+    assertThat(allFields.size()).isEqualTo(1);
+    assertThat(allFields).containsKey("awsInstanceFilter");
   }
 
   @Test
