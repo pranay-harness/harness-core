@@ -2,10 +2,11 @@ package software.wings.service.impl.instance;
 
 import software.wings.api.DeploymentSummary;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.service.intfc.ownership.OwnedByInfrastructureMapping;
 
 import java.util.List;
 
-public interface InstanceSyncPerpetualTaskService {
+public interface InstanceSyncPerpetualTaskService extends OwnedByInfrastructureMapping {
   void createPerpetualTasks(InfrastructureMapping infrastructureMapping);
 
   void createPerpetualTasksForNewDeployment(

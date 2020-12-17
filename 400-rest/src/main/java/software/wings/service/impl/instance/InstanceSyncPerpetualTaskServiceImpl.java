@@ -8,6 +8,7 @@ import static java.util.Optional.ofNullable;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
+import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 
 import software.wings.api.DeploymentSummary;
 import software.wings.beans.InfrastructureMapping;
@@ -30,7 +31,7 @@ public class InstanceSyncPerpetualTaskServiceImpl implements InstanceSyncPerpetu
   @Inject private InstanceService instanceService;
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private InstanceHandlerFactory instanceHandlerFactory;
+  @Inject private InstanceHandlerFactoryService instanceHandlerFactory;
 
   @Override
   public void createPerpetualTasks(InfrastructureMapping infrastructureMapping) {
@@ -175,5 +176,22 @@ public class InstanceSyncPerpetualTaskServiceImpl implements InstanceSyncPerpetu
       info.getPerpetualTaskIds().addAll(perpetualTaskIds);
       save(info);
     }
+  }
+
+  @Override
+  public void pruneByInfrastructureMapping(String appId, String infrastructureMappingId) {
+    PerpetualTaskRecord perpetualTaskRecord =
+        wingsPersistence.createQuery(PerpetualTaskRecord.class)
+            .field(PerpetualTaskRecordKeys.client_params + ".infrastructureMappingId")
+            .equal(infrastructureMappingId)
+            .get();
+    if (perpetualTaskRecord == null) {
+      return;
+    }
+    deletePerpetualTasks(perpetualTaskRecord.getAccountId(), infrastructureMappingId);
+  }
+
+  private InfrastructureMapping get(String appId, String infraMappingId) {
+    return wingsPersistence.getWithAppId(InfrastructureMapping.class, appId, infraMappingId);
   }
 }

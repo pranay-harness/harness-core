@@ -271,6 +271,8 @@ helper shell scripts:
 
 9. Install bazel project plugin from the IntelliJ marketplace
 
+10. If facing build issues make sure you have enabled "Always update snapshots" in IntelliJ (Preferences > Build, Execution, Deployment > Build Tools > Maven) 
+
 
 ### Run from IntelliJ
 

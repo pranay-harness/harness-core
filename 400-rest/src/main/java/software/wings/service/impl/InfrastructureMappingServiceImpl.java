@@ -130,6 +130,7 @@ import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
 import software.wings.service.impl.aws.model.AwsSecurityGroup;
 import software.wings.service.impl.aws.model.AwsSubnet;
 import software.wings.service.impl.aws.model.AwsVPC;
+import software.wings.service.impl.instance.InstanceSyncPerpetualTaskService;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
@@ -215,6 +216,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private AppService appService;
   @Inject private EnvironmentService envService;
   // DO NOT DELETE THIS, PRUNE logic needs it
+  @Inject private InstanceSyncPerpetualTaskService instanceSyncPerpetualTaskService;
   @Inject private InstanceService instanceService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private FeatureFlagService featureFlagService;

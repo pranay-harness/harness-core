@@ -35,7 +35,7 @@ public class InstanceSyncPerpetualTaskMigrationJob implements Managed {
   private static final String LOCK_NAME = "InstanceSyncPerpetualTaskMigrationJobLock";
   private static final long DELAY_IN_MINUTES = TimeUnit.HOURS.toMinutes(6);
 
-  @Inject private InstanceHandlerFactory instanceHandlerFactory;
+  @Inject private InstanceHandlerFactoryService instanceHandlerFactory;
   @Inject private AccountService accountService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private PersistentLocker persistentLocker;
