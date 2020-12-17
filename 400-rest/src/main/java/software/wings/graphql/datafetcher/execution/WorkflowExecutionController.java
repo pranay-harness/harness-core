@@ -255,6 +255,7 @@ public class WorkflowExecutionController {
 
     validateRequiredVarsPresent(variableInputs, workflowVariables);
     validateFixedVarValueUnchanged(variableInputs, workflowVariables);
+    executionController.validateRestrictedVarsHaveAllowedValues(variableInputs, workflowVariables);
 
     Map<String, String> workflowVariableValues = new HashMap<>();
     for (QLVariableInput variableInput : variableInputs) {

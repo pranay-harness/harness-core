@@ -451,6 +451,7 @@ public class PipelineExecutionController {
       return new HashMap<>();
     }
     validateRuntimeReqVars(variableInputs, pipelineVariables);
+    executionController.validateRestrictedVarsHaveAllowedValues(variableInputs, pipelineVariables);
     return resolvePipelineVariables(pipeline, variableInputs, envId, extraVariables, isTriggerFlow);
   }
 
@@ -461,6 +462,7 @@ public class PipelineExecutionController {
       return new HashMap<>();
     }
     validateRequiredVarsPresent(variableInputs, pipelineVariables);
+    executionController.validateRestrictedVarsHaveAllowedValues(variableInputs, pipelineVariables);
     return resolvePipelineVariables(pipeline, variableInputs, envId, extraVariables, isTriggerFlow);
   }
 
