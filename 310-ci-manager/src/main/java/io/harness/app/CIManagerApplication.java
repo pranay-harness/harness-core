@@ -23,12 +23,11 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
-import io.harness.pms.contracts.execution.failure.FailureInfo;
-import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
+import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
@@ -42,8 +41,6 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationRegistrars;
 import io.harness.serializer.PersistenceRegistrars;
 import io.harness.serializer.YamlBeansModuleRegistrars;
-import io.harness.serializer.json.FailureInfoSerializer;
-import io.harness.serializer.json.StepTypeSerializer;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
@@ -56,7 +53,6 @@ import io.harness.waiter.OrchestrationNotifyEventListener;
 import io.harness.waiter.ProgressUpdateService;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -132,12 +128,8 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
   }
 
   public static void configureObjectMapper(final ObjectMapper mapper) {
-    SimpleModule module = new SimpleModule();
-    // Todo: Discuss with Prashant on having an impl just like Morphia Converters
-    module.addSerializer(StepType.class, new StepTypeSerializer());
-    module.addSerializer(FailureInfo.class, new FailureInfoSerializer());
-    mapper.registerModule(module);
     NGPipelineObjectMapperHelper.configureNGObjectMapper(mapper);
+    mapper.registerModule(new PmsBeansJacksonModule());
   }
 
   @Override
