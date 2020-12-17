@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import io.harness.exception.FailureType;
+import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.RepairActionCode;
 import io.harness.yaml.BaseYaml;
 
@@ -16,7 +17,7 @@ import lombok.NoArgsConstructor;
 import lombok.Value;
 
 @Value
-@Builder
+@Builder(toBuilder = true)
 public class FailureStrategy {
   @NotNull @Size(min = 1, message = "should not be empty") private List<FailureType> failureTypes;
   private ExecutionScope executionScope;
@@ -26,6 +27,8 @@ public class FailureStrategy {
   private RepairActionCode repairActionCodeAfterRetry;
   @Valid private FailureCriteria failureCriteria;
   private List<String> specificSteps;
+  private Long manualInterventionTimeout;
+  private ExecutionInterruptType actionAfterTimeout;
 
   @Data
   @NoArgsConstructor
