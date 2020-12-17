@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static java.time.Duration.ofDays;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
@@ -32,7 +31,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @OwnedBy(CDC)
 @Value
 @Builder
-@Redesign
 @FieldNameConstants(innerTypeName = "PlanExecutionKeys")
 @Entity(value = "planExecutions")
 @Document("planExecutions")

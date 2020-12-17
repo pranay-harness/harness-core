@@ -3,7 +3,6 @@ package io.harness.redesign.states.wait;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delay.SimpleNotifier;
@@ -29,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(CDC)
-@Redesign
 public class WaitStep implements AsyncExecutable<WaitStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType("WAIT_STATE").build();
 

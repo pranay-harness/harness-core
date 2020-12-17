@@ -2,7 +2,6 @@ package io.harness.engine.expressions;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
@@ -43,7 +42,6 @@ import org.hibernate.validator.constraints.NotEmpty;
  * sample implementation, look at SampleExpressionEvaluator.java and SampleExpressionEvaluatorProvider.java.
  */
 @OwnedBy(CDC)
-@Redesign
 public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
   @Inject private PmsOutcomeService pmsOutcomeService;
   @Inject private PmsSweepingOutputService pmsSweepingOutputService;

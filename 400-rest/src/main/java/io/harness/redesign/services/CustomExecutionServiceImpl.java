@@ -2,7 +2,6 @@ package io.harness.redesign.services;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.dto.OrchestrationGraphDTO;
@@ -27,7 +26,6 @@ import java.io.OutputStream;
 import java.util.Map;
 
 @OwnedBy(CDC)
-@Redesign
 @Singleton
 public class CustomExecutionServiceImpl implements CustomExecutionService {
   @Inject private OrchestrationService orchestrationService;

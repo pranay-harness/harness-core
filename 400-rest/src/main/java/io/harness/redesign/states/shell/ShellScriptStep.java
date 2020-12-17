@@ -15,7 +15,6 @@ import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
@@ -76,7 +75,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(CDC)
-@Redesign
 @Slf4j
 public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(SHELL_SCRIPT.name()).build();

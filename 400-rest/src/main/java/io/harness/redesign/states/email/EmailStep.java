@@ -3,7 +3,6 @@ package io.harness.redesign.states.email;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExceptionUtils;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -27,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(CDC)
-@Redesign
 @Slf4j
 public class EmailStep implements SyncExecutable<EmailStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType("EMAIL").build();

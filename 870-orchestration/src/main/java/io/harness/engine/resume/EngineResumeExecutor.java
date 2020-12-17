@@ -2,7 +2,6 @@ package io.harness.engine.resume;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.engine.OrchestrationEngine;
@@ -27,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 @Value
 @Builder
 @Slf4j
-@Redesign
 public class EngineResumeExecutor implements Runnable {
   boolean asyncError;
   Map<String, ResponseData> response;

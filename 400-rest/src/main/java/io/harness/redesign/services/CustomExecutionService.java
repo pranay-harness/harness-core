@@ -2,7 +2,6 @@ package io.harness.redesign.services;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.dto.OrchestrationGraphDTO;
@@ -15,7 +14,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 @OwnedBy(CDC)
-@Redesign
 public interface CustomExecutionService {
   PlanExecution executeHttpSwitch();
 

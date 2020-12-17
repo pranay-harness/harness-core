@@ -2,7 +2,6 @@ package io.harness.data;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.ExecutionSweepingOutputInstance.ExecutionSweepingOutputKeys;
 import io.harness.data.validator.Trimmed;
@@ -12,7 +11,6 @@ import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import io.harness.pms.contracts.ambiance.Level;
-import io.harness.pms.sdk.core.data.SweepingOutput;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
@@ -32,7 +30,6 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @OwnedBy(CDC)
-@Redesign
 @Value
 @Builder
 @NgUniqueIndex(name = "levelRuntimeIdUniqueIdx2",

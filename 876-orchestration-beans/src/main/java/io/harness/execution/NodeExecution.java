@@ -3,7 +3,6 @@ package io.harness.execution;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.mongo.index.FdIndex;
@@ -41,7 +40,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @OwnedBy(CDC)
 @Data
 @Builder
-@Redesign
 @FieldNameConstants(innerTypeName = "NodeExecutionKeys")
 @Entity(value = "nodeExecutions")
 @Document("nodeExecutions")

@@ -2,7 +2,6 @@ package io.harness.engine.expressions.functors;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.expression.LateBindingMap;
@@ -15,7 +14,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 @OwnedBy(CDC)
-@Redesign
 @Value
 @Builder
 @EqualsAndHashCode(callSuper = true)

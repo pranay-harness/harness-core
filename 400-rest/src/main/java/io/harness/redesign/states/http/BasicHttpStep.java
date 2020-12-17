@@ -7,7 +7,6 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import static java.util.stream.Collectors.toList;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.delegate.Capability;
@@ -51,7 +50,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 
 @OwnedBy(CDC)
-@Redesign
 @Slf4j
 public class BasicHttpStep implements TaskExecutable<BasicHttpStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType("BASIC_HTTP").build();

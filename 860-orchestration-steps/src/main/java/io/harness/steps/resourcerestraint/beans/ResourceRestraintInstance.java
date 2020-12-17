@@ -2,7 +2,6 @@ package io.harness.steps.resourcerestraint.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.constraint.Consumer;
 import io.harness.iterator.PersistentRegularIterable;
@@ -25,7 +24,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @OwnedBy(CDC)
 @Data
 @Builder
-@Redesign
 @FieldNameConstants(innerTypeName = "ResourceRestraintInstanceKeys")
 @Entity(value = "resourceRestraintInstances")
 @Document("resourceRestraintInstances")

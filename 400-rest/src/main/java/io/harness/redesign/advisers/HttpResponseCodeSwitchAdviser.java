@@ -2,7 +2,6 @@ package io.harness.redesign.advisers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.advisers.AdviseType;
@@ -24,7 +23,6 @@ import com.google.inject.Inject;
 import java.util.Map;
 
 @OwnedBy(CDC)
-@Redesign
 public class HttpResponseCodeSwitchAdviser implements Adviser {
   public static final AdviserType ADVISER_TYPE = AdviserType.newBuilder().setType("HTTP_RESPONSE_CODE_SWITCH").build();
   @Inject private OutcomeService outcomeService;

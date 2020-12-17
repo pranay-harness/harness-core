@@ -2,7 +2,6 @@ package io.harness.plan;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
@@ -39,7 +38,6 @@ import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDC)
 @Value
-@Redesign
 @FieldNameConstants(innerTypeName = "PlanKeys")
 @TypeAlias("plan")
 public final class Plan implements PersistentEntity {

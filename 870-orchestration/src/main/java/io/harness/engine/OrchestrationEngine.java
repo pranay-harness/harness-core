@@ -16,7 +16,6 @@ import static java.lang.String.format;
 
 import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationPublisherName;
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delay.DelayEventHelper;
 import io.harness.engine.advise.AdviseHandlerFactory;
@@ -104,7 +103,6 @@ import org.bson.Document;
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 @Slf4j
-@Redesign
 @OwnedBy(CDC)
 public class OrchestrationEngine {
   @Inject private WaitNotifyEngine waitNotifyEngine;

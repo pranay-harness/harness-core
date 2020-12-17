@@ -2,7 +2,6 @@ package io.harness.redesign.states.shell;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.shell.ScriptType;
@@ -28,7 +27,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Property;
 
 @OwnedBy(CDC)
-@Redesign
 @Data
 @Builder
 @NoArgsConstructor

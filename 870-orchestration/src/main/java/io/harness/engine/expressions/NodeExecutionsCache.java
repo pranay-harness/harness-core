@@ -2,14 +2,12 @@ package io.harness.engine.expressions;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,7 +19,6 @@ import lombok.Builder;
 import lombok.Value;
 
 @OwnedBy(CDC)
-@Redesign
 @Value
 public class NodeExecutionsCache {
   private static final String NULL_PARENT_ID = "__NULL_PARENT_ID__";
