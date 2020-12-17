@@ -76,6 +76,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.BugsnagConfig;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.DynaTraceConfig;
+import software.wings.beans.Environment;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PrometheusConfig;
@@ -135,6 +136,7 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -254,6 +256,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private PrometheusAnalysisService prometheusAnalysisService;
   @Inject private MLServiceUtils mlServiceUtils;
   @Inject private DatadogService datadogService;
+  @Inject private EnvironmentService environmentService;
 
   private static final String DATE_PATTERN = "yyyy-MM-dd HH:MM";
   public static final String HARNESS_DEFAULT_TAG = "_HARNESS_DEFAULT_TAG_";
@@ -2489,6 +2492,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     try (VerificationLogContext ignored =
              new VerificationLogContext(accountId, cvConfigId, stateExecutionId, stateType, OVERRIDE_ERROR)) {
       log.info("Triggered delegate task");
+      Environment environment = environmentService.get(appId, envId);
+      if (environment == null) {
+        String errMsg = "environment is null for envId: " + envId + " and appId: " + appId;
+        log.error(errMsg);
+        throw new VerificationOperationException(ErrorCode.DEFAULT_ERROR_CODE, errMsg);
+      }
       return DelegateTask.builder()
           .accountId(accountId)
           .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
@@ -2500,6 +2509,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                     .timeout(TimeUnit.MINUTES.toMillis(5))
                     .build())
           .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
+          .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, environment.getEnvironmentType().name())
           .build();
     }
   }
