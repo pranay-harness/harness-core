@@ -89,17 +89,6 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
   Map<String, List<ProgressData>> progressDataMap;
 
-  public boolean isRetry() {
-    return !isEmpty(retryIds);
-  }
-
-  public int retryCount() {
-    if (isRetry()) {
-      return retryIds.size();
-    }
-    return 0;
-  }
-
   public boolean isChildSpawningMode() {
     return mode == ExecutionMode.CHILD || mode == ExecutionMode.CHILDREN || mode == ExecutionMode.CHILD_CHAIN;
   }

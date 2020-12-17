@@ -38,6 +38,8 @@ public class NodeExecutionMapper {
         .timeoutDetails(null)
         .outcomeRefs(CollectionUtils.emptyIfNull(proto.getOutcomeRefsList()))
         .progressDataMap(new LinkedHashMap<>())
+        .retryIds(proto.getRetryIdsList())
+        .oldRetry(proto.getOldRetry())
         .build();
   }
 
@@ -46,7 +48,9 @@ public class NodeExecutionMapper {
                                              .setUuid(nodeExecution.getUuid())
                                              .setAmbiance(nodeExecution.getAmbiance())
                                              .setNode(nodeExecution.getNode())
-                                             .setStatus(nodeExecution.getStatus());
+                                             .setStatus(nodeExecution.getStatus())
+                                             .setOldRetry(nodeExecution.isOldRetry())
+                                             .addAllRetryIds(CollectionUtils.emptyIfNull(nodeExecution.getRetryIds()));
 
     if (nodeExecution.getMode() != null) {
       builder.setMode(nodeExecution.getMode());
@@ -84,6 +88,7 @@ public class NodeExecutionMapper {
     if (nodeExecution.getFailureInfo() != null) {
       builder.setFailureInfo(nodeExecution.getFailureInfo());
     }
+
     return builder.build();
   }
 }

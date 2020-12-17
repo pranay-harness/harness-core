@@ -35,7 +35,7 @@ public class OnMarkSuccessAdviser implements Adviser {
   @Override
   public boolean canAdvise(AdvisingEvent advisingEvent) {
     OnMarkSuccessAdviserParameters adviserParameters = extractParameters(advisingEvent);
-    FailureInfo failureInfo = advisingEvent.getFailureInfo();
+    FailureInfo failureInfo = advisingEvent.getNodeExecution().getFailureInfo();
     if (failureInfo != null && !isEmpty(failureInfo.getFailureTypesValueList())) {
       return !Collections.disjoint(adviserParameters.getApplicableFailureTypes(), failureInfo.getFailureTypesList());
     }

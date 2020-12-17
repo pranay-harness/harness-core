@@ -10,6 +10,7 @@ import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.MarkSuccessAdvise;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
@@ -54,9 +55,10 @@ public class OnMarkSuccessAdviserTest extends PmsSdkCoreTestBase {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestOnAdviseEvent() {
+    NodeExecutionProto nodeExecutionProto = NodeExecutionProto.newBuilder().setAmbiance(ambiance).build();
     String nextNodeId = generateUuid();
     AdvisingEvent advisingEvent = AdvisingEvent.builder()
-                                      .ambiance(ambiance)
+                                      .nodeExecution(nodeExecutionProto)
                                       .toStatus(Status.SUCCEEDED)
                                       .adviserParameters(kryoSerializer.asBytes(
                                           OnMarkSuccessAdviserParameters.builder().nextNodeId(nextNodeId).build()))
@@ -71,9 +73,10 @@ public class OnMarkSuccessAdviserTest extends PmsSdkCoreTestBase {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestCanAdvise() {
+    NodeExecutionProto nodeExecutionProto = NodeExecutionProto.newBuilder().setAmbiance(ambiance).build();
     AdvisingEvent advisingEvent =
         AdvisingEvent.builder()
-            .ambiance(ambiance)
+            .nodeExecution(nodeExecutionProto)
             .toStatus(Status.ABORTED)
             .adviserParameters(kryoSerializer.asBytes(OnMarkSuccessAdviserParameters.builder().build()))
             .build();
@@ -85,17 +88,20 @@ public class OnMarkSuccessAdviserTest extends PmsSdkCoreTestBase {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestCanAdviseWithFailureTypes() {
+    NodeExecutionProto nodeExecutionProto =
+        NodeExecutionProto.newBuilder()
+            .setAmbiance(ambiance)
+            .setFailureInfo(FailureInfo.newBuilder().addFailureTypes(FailureType.DELEGATE_PROVISIONING_FAILURE).build())
+            .build();
     byte[] paramBytes = kryoSerializer.asBytes(
         OnMarkSuccessAdviserParameters.builder()
             .applicableFailureTypes(EnumSet.of(FailureType.CONNECTIVITY_FAILURE, FailureType.AUTHENTICATION_FAILURE))
             .build());
-    AdvisingEvent advisingEvent =
-        AdvisingEvent.builder()
-            .ambiance(ambiance)
-            .toStatus(Status.ABORTED)
-            .adviserParameters(paramBytes)
-            .failureInfo(FailureInfo.newBuilder().addFailureTypes(FailureType.DELEGATE_PROVISIONING_FAILURE).build())
-            .build();
+    AdvisingEvent advisingEvent = AdvisingEvent.builder()
+                                      .nodeExecution(nodeExecutionProto)
+                                      .toStatus(Status.ABORTED)
+                                      .adviserParameters(paramBytes)
+                                      .build();
     boolean canAdvise = onMarkSuccessAdviser.canAdvise(advisingEvent);
     assertThat(canAdvise).isFalse();
   }

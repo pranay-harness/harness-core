@@ -10,6 +10,7 @@ import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
@@ -54,7 +55,9 @@ public class OnAbortAdviserTest extends PmsSdkCoreTestBase {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestOnAdviseEvent() {
-    AdvisingEvent advisingEvent = AdvisingEvent.builder().ambiance(ambiance).toStatus(Status.FAILED).build();
+    NodeExecutionProto nodeExecutionProto = NodeExecutionProto.newBuilder().setAmbiance(ambiance).build();
+    AdvisingEvent advisingEvent =
+        AdvisingEvent.builder().nodeExecution(nodeExecutionProto).toStatus(Status.FAILED).build();
     AdviserResponse adviserResponse = onAbortAdviser.onAdviseEvent(advisingEvent);
     assertThat(adviserResponse.getType()).isEqualTo(AdviseType.END_PLAN);
   }
@@ -64,8 +67,12 @@ public class OnAbortAdviserTest extends PmsSdkCoreTestBase {
   @Category(UnitTests.class)
   public void shouldTestCanAdvise() {
     byte[] paramBytes = kryoSerializer.asBytes(OnAbortAdviserParameters.builder().build());
-    AdvisingEvent advisingEvent =
-        AdvisingEvent.builder().ambiance(ambiance).toStatus(Status.ABORTED).adviserParameters(paramBytes).build();
+    NodeExecutionProto nodeExecutionProto = NodeExecutionProto.newBuilder().setAmbiance(ambiance).build();
+    AdvisingEvent advisingEvent = AdvisingEvent.builder()
+                                      .nodeExecution(nodeExecutionProto)
+                                      .toStatus(Status.ABORTED)
+                                      .adviserParameters(paramBytes)
+                                      .build();
     boolean canAdvise = onAbortAdviser.canAdvise(advisingEvent);
     assertThat(canAdvise).isTrue();
   }
@@ -74,17 +81,20 @@ public class OnAbortAdviserTest extends PmsSdkCoreTestBase {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestCanAdviseWithFailureTypes() {
+    NodeExecutionProto nodeExecutionProto =
+        NodeExecutionProto.newBuilder()
+            .setAmbiance(ambiance)
+            .setFailureInfo(FailureInfo.newBuilder().addFailureTypes(FailureType.TIMEOUT_FAILURE).build())
+            .build();
     byte[] paramBytes = kryoSerializer.asBytes(
         OnAbortAdviserParameters.builder()
             .applicableFailureTypes(EnumSet.of(FailureType.CONNECTIVITY_FAILURE, FailureType.AUTHENTICATION_FAILURE))
             .build());
-    AdvisingEvent advisingEvent =
-        AdvisingEvent.builder()
-            .ambiance(ambiance)
-            .toStatus(Status.ABORTED)
-            .adviserParameters(paramBytes)
-            .failureInfo(FailureInfo.newBuilder().addFailureTypes(FailureType.TIMEOUT_FAILURE).build())
-            .build();
+    AdvisingEvent advisingEvent = AdvisingEvent.builder()
+                                      .nodeExecution(nodeExecutionProto)
+                                      .toStatus(Status.ABORTED)
+                                      .adviserParameters(paramBytes)
+                                      .build();
     boolean canAdvise = onAbortAdviser.canAdvise(advisingEvent);
     assertThat(canAdvise).isFalse();
   }
