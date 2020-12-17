@@ -45,6 +45,10 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("grpcClientConfigs") private Map<String, GrpcClientConfig> grpcClientConfigs;
   @Builder.Default @JsonProperty("allowedOrigins") private List<String> allowedOrigins = new ArrayList<>();
 
+  private String managerServiceSecret;
+  private String managerTarget;
+  private String managerAuthority;
+
   public PipelineServiceConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();
     defaultServerFactory.setJerseyRootPath("/api");
