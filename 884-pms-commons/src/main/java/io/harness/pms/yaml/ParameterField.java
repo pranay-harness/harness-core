@@ -109,14 +109,17 @@ public class ParameterField<T> implements OrchestrationField, VisitorFieldWrappe
   }
 
   @Override
+  public Class<? extends OrchestrationField> getDeserializationClass() {
+    return ParameterField.class;
+  }
+
+  @Override
   public OrchestrationFieldType getType() {
     return ORCHESTRATION_FIELD_TYPE;
   }
 
   @Override
-  @JsonIgnore
-  @JsonOrchestrationIgnore
-  public Object getFinalValue() {
+  public Object fetchFinalValue() {
     return expression ? expressionValue : value;
   }
 

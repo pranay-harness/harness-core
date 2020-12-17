@@ -25,7 +25,6 @@ import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionTimeoutCallback;
 import io.harness.engine.executions.plan.PlanExecutionService;
-import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.engine.interrupts.InterruptCheck;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.pms.EngineAdviseCallback;
@@ -55,15 +54,16 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.pms.execution.utils.StatusUtils;
+import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
+import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
 import io.harness.pms.sdk.core.facilitator.FacilitatorResponse;
 import io.harness.pms.sdk.core.facilitator.FacilitatorResponseMapper;
 import io.harness.pms.sdk.core.registries.ResolverRegistry;
 import io.harness.pms.sdk.core.resolver.Resolver;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
@@ -180,9 +180,8 @@ public class OrchestrationEngine {
       String stepParameters = node.getStepParameters();
       Object obj = stepParameters == null
           ? null
-          : engineExpressionService.resolve(ambiance, nodeExecutionService.extractStepParameters(nodeExecution));
-      String json =
-          obj instanceof StepParameters ? ((StepParameters) obj).toJson() : JsonOrchestrationUtils.asJson(obj);
+          : engineExpressionService.resolve(ambiance, NodeExecutionUtils.extractStepParameters(stepParameters));
+      String json = JsonOrchestrationUtils.asJson(obj);
       Document resolvedStepParameters = obj == null ? null : Document.parse(json);
 
       NodeExecution updatedNodeExecution =
@@ -243,7 +242,7 @@ public class OrchestrationEngine {
   }
 
   private List<String> registerTimeouts(NodeExecution nodeExecution) {
-    StepParameters resolvedStepParameters = nodeExecutionService.extractResolvedStepParameters(nodeExecution);
+    // StepParameters resolvedStepParameters = nodeExecutionService.extractResolvedStepParameters(nodeExecution);
     List<TimeoutObtainment> timeoutObtainmentList =
         Collections.singletonList(TimeoutObtainment.builder()
                                       .type(AbsoluteTimeoutTrackerFactory.DIMENSION)

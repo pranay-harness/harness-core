@@ -4,8 +4,6 @@ import io.harness.ngpipeline.inputset.services.InputSetEntityService;
 import io.harness.ngpipeline.inputset.services.impl.InputSetEntityServiceImpl;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
 import io.harness.ngpipeline.pipeline.service.NGPipelineServiceImpl;
-import io.harness.pms.sdk.registries.registrar.OrchestrationFieldRegistrar;
-import io.harness.registrars.NGPipelineOrchestrationFieldRegistrar;
 import io.harness.registrars.NGPipelineVisitorFieldRegistrar;
 import io.harness.threading.ThreadPool;
 import io.harness.walktree.registries.registrars.VisitableFieldRegistrar;
@@ -31,11 +29,6 @@ public class NGPipelineCommonsModule extends AbstractModule {
   @Override
   protected void configure() {
     install(OrchestrationModule.getInstance());
-
-    MapBinder<String, OrchestrationFieldRegistrar> orchestrationFieldRegistrarMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, OrchestrationFieldRegistrar.class);
-    orchestrationFieldRegistrarMapBinder.addBinding(NGPipelineOrchestrationFieldRegistrar.class.getName())
-        .to(NGPipelineOrchestrationFieldRegistrar.class);
 
     MapBinder<String, VisitableFieldRegistrar> visitableFieldRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, VisitableFieldRegistrar.class);

@@ -101,12 +101,6 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
     when(nodeExecutionService.get(nodeExecution4.getUuid())).thenReturn(nodeExecution4);
     when(nodeExecutionService.get(nodeExecution5.getUuid())).thenReturn(nodeExecution5);
     when(nodeExecutionService.get(nodeExecution6.getUuid())).thenReturn(nodeExecution6);
-    when(nodeExecutionService.extractResolvedStepParameters(nodeExecution1)).thenReturn(prepareStepParameters("ao"));
-    when(nodeExecutionService.extractResolvedStepParameters(nodeExecution2)).thenReturn(prepareStepParameters("bo"));
-    when(nodeExecutionService.extractResolvedStepParameters(nodeExecution3)).thenReturn(prepareStepParameters("co"));
-    when(nodeExecutionService.extractStepParameters(nodeExecution4)).thenReturn(prepareStepParameters("di1"));
-    when(nodeExecutionService.extractResolvedStepParameters(nodeExecution5)).thenReturn(prepareStepParameters("do2"));
-    when(nodeExecutionService.extractResolvedStepParameters(nodeExecution6)).thenReturn(prepareStepParameters("eo"));
 
     String planExecutionId = ambiance.getPlanExecutionId();
     when(nodeExecutionService.fetchChildrenNodeExecutions(planExecutionId, null))

@@ -290,7 +290,7 @@ public class PlanCreatorResource {
   @GET
   @ApiOperation(value = "Get plan creation response for sample pipeline", nickname = "getPlanCreationResponse")
   public Response getPlanCreationResponse() throws IOException {
-    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(tempPipeline);
+    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(pipelineYaml);
     String json = JsonFormat.printer().print(resp);
     return Response.ok(json, MediaType.APPLICATION_JSON_TYPE).build();
   }

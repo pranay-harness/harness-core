@@ -1,10 +1,10 @@
 package io.harness.executionplan.stepsdependency.resolvers;
 
-import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.executionplan.stepsdependency.KeyAware;
 import io.harness.executionplan.stepsdependency.StepDependencyResolver;
 import io.harness.executionplan.stepsdependency.StepDependencyResolverContext;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
+import io.harness.pms.expression.EngineExpressionService;
 
 import com.google.inject.Inject;
 import java.util.Optional;

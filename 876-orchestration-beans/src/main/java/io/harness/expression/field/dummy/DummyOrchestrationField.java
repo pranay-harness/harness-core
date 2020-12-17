@@ -45,12 +45,17 @@ public class DummyOrchestrationField<T> implements OrchestrationField {
   }
 
   @Override
+  public Class<? extends OrchestrationField> getDeserializationClass() {
+    return DummyOrchestrationField.class;
+  }
+
+  @Override
   public OrchestrationFieldType getType() {
     return ORCHESTRATION_FIELD_TYPE;
   }
 
   @Override
-  public Object getFinalValue() {
+  public Object fetchFinalValue() {
     return isExpression ? expressionValue : value;
   }
 }

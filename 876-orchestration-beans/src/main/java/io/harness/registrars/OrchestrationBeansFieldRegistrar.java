@@ -8,6 +8,8 @@ import io.harness.expression.field.dummy.DummyOrchestrationFieldProcessor;
 import io.harness.pms.expression.OrchestrationFieldProcessor;
 import io.harness.pms.expression.OrchestrationFieldType;
 import io.harness.pms.sdk.registries.registrar.OrchestrationFieldRegistrar;
+import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.ParameterFieldProcessor;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -22,5 +24,7 @@ public class OrchestrationBeansFieldRegistrar implements OrchestrationFieldRegis
   public void register(Set<Pair<OrchestrationFieldType, OrchestrationFieldProcessor>> fieldClasses) {
     fieldClasses.add(Pair.of(DummyOrchestrationField.ORCHESTRATION_FIELD_TYPE,
         injector.getInstance(DummyOrchestrationFieldProcessor.class)));
+    fieldClasses.add(
+        Pair.of(ParameterField.ORCHESTRATION_FIELD_TYPE, injector.getInstance(ParameterFieldProcessor.class)));
   }
 }

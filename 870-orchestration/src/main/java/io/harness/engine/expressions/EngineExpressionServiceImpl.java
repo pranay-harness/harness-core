@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.expression.EngineExpressionService;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;

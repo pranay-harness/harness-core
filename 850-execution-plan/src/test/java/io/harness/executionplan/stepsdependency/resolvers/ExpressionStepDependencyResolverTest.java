@@ -7,10 +7,10 @@ import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.executionplan.stepsdependency.StepDependencyResolverContext;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.expression.EngineExpressionService;
 import io.harness.rule.Owner;
 
 import java.util.Optional;
