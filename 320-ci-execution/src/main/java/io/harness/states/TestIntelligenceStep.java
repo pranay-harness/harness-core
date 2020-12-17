@@ -1,8 +1,8 @@
 package io.harness.states;
 
-import io.harness.beans.steps.stepinfo.PluginStepInfo;
+import io.harness.beans.steps.stepinfo.TestIntelligenceStepInfo;
 import io.harness.pms.contracts.steps.StepType;
 
 public class TestIntelligenceStep extends AbstractStepExecutable {
-  public static final StepType STEP_TYPE = PluginStepInfo.typeInfo.getStepType();
+  public static final StepType STEP_TYPE = TestIntelligenceStepInfo.typeInfo.getStepType();
 }
