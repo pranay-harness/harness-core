@@ -15,6 +15,7 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.PRABU;
+import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -2739,5 +2740,61 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
     assertThatThrownBy(() -> srs.delete(APP_ID, SERVICE_ID)).isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void shouldCloneCommand() {
+    Command command = aCommand().withName("START").build();
+    ServiceCommand serviceCommand =
+        aServiceCommand().withName("START").withAppId(APP_ID).withServiceId(SERVICE_ID).withCommand(command).build();
+    Service service = serviceBuilder.build();
+    service.setServiceCommands(Arrays.asList(serviceCommand));
+    wingsPersistence.save(serviceCommand);
+    when(entityVersionService.newEntityVersion(
+             APP_ID, EntityType.COMMAND, ID_KEY, SERVICE_ID, "START", ChangeType.CREATED, null))
+        .thenReturn(anEntityVersion().withVersion(2).build());
+    when(commandService.getCommand(APP_ID, "SERVICE_COMMAND_ID", 1)).thenReturn(command);
+    doReturn(service).when(spyServiceResourceService).getServiceWithServiceCommands(APP_ID, SERVICE_ID);
+    when(mockWingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class)))
+        .thenAnswer(invocation -> {
+          ServiceCommand svccommand = invocation.getArgumentAt(1, ServiceCommand.class);
+          svccommand.setServiceId(SERVICE_ID);
+          svccommand.setUuid(ID_KEY);
+          return svccommand;
+        });
+    Service updatedService = srs.cloneCommand(APP_ID, SERVICE_ID, "START", serviceCommand);
+    verify(commandService).save(Mockito.any(Command.class), Mockito.anyBoolean());
+    assertThat(updatedService).isNotNull();
+    assertThat(updatedService.getServiceCommands()).isNotEmpty();
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testsetConfigMapYaml() {
+    wingsPersistence.save(Service.builder().uuid(SERVICE_ID).appId(APP_ID).build());
+    KubernetesPayload payload = new KubernetesPayload();
+    payload.setAdvancedConfig("${DOCKER_IMAGE_NAME}");
+    srs.setConfigMapYaml(APP_ID, SERVICE_ID, payload);
+    verify(mockWingsPersistence).update(any(Service.class), any(UpdateOperations.class));
+    verify(mockWingsPersistence).createUpdateOperations(Service.class);
+    verify(updateOperations).set("configMapYaml", "${DOCKER_IMAGE_NAME}");
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testsetK8v2ServiceFromAppManifest() {
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().storeType(StoreType.Local).serviceId(SERVICE_ID).build();
+    applicationManifest.setAppId(APP_ID);
+    applicationManifest.setUuid("APPMANIFEST_ID");
+    Service service = Service.builder().name("SERVICE_ID1").appId(APP_ID).uuid(SERVICE_ID).build();
+    wingsPersistence.save(service);
+    srs.setK8v2ServiceFromAppManifest(applicationManifest, ApplicationManifest.AppManifestSource.SERVICE);
+    verify(mockWingsPersistence).createUpdateOperations(Service.class);
+    verify(updateOperations).set("isK8sV2", true);
   }
 }

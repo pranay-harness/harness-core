@@ -12,6 +12,7 @@ import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 
@@ -35,8 +36,10 @@ import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+import static software.wings.utils.WingsTestConstants.SERVICE_TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import static java.util.Arrays.asList;
@@ -74,12 +77,17 @@ import software.wings.beans.EntityType;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
+import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.container.HelmChartSpecification;
+import software.wings.beans.container.KubernetesPayload;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -87,15 +95,18 @@ import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
 import software.wings.service.intfc.yaml.YamlPushService;
+import software.wings.utils.ApplicationManifestUtils;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.WingsTestConstants.MockChecker;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -113,6 +124,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.mongodb.morphia.query.UpdateOperations;
 
 public class ServiceResourceServiceImplTest extends WingsBaseTest {
@@ -125,6 +137,8 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Mock private LimitCheckerFactory limitCheckerFactory;
   @Mock private AuditServiceHelper auditServiceHelper;
   @Mock private ApplicationManifestService applicationManifestService;
+  @Mock private ApplicationManifestUtils applicationManifestUtils;
+  @Mock private HelmHelper helmHelper;
   @Mock private NotificationService notificationService;
   @Mock private CommandService commandService;
   @Inject @InjectMocks private ServiceResourceServiceImpl serviceResourceService;
@@ -134,12 +148,20 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Mock private ResourceLookupService resourceLookupService;
   @Mock private CustomDeploymentTypeService customDeploymentTypeService;
   @Mock private YamlPushService yamlPushService;
+  @Mock private InfrastructureMappingService infrastructureMappingService;
+  @Mock private UpdateOperations<Service> updateOperations;
   private ServiceResourceServiceImpl spyServiceResourceService = spy(new ServiceResourceServiceImpl());
+  private ApplicationManifest applicationManifest;
 
   @Before
   public void setUp() throws Exception {
+    MockitoAnnotations.initMocks(this);
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
+
+    applicationManifest = ApplicationManifest.builder().storeType(StoreType.Local).serviceId(SERVICE_ID).build();
+    applicationManifest.setUuid("APPMANIFEST_ID");
+    applicationManifest.setAppId(APP_ID);
   }
 
   @Test
@@ -838,5 +860,187 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
     Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).build();
     wingsPersistence.save(service);
     assertThat(serviceResourceService.getHelmCommandFlags(null, APP_ID, SERVICE_ID, null)).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testdeleteHelmValueYaml() {
+    when(applicationManifestService.getByServiceId(any(), any(), any())).thenReturn(applicationManifest);
+    serviceResourceService.deleteHelmValueYaml(APP_ID, SERVICE_ID);
+    verify(applicationManifestService, times(1)).deleteAppManifest(APP_ID, applicationManifest.getUuid());
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testcreateValuesAppManifest() {
+    ApplicationManifest appManifest =
+        ApplicationManifest.builder().storeType(StoreType.Local).serviceId(SERVICE_ID).build();
+    appManifest.setAppId(APP_ID);
+    when(applicationManifestService.create(appManifest)).thenReturn(appManifest);
+    assertThat(serviceResourceService.createValuesAppManifest(APP_ID, SERVICE_ID, appManifest)).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testupdateValuesAppManifest() {
+    ApplicationManifest savedApplicationManifest =
+        ApplicationManifest.builder().storeType(StoreType.Local).serviceId("SERVICE_ID2").build();
+    savedApplicationManifest.setAppId(APP_ID);
+
+    when(applicationManifestService.getById(APP_ID, "APPMANIFEST_ID")).thenReturn(savedApplicationManifest);
+    when(applicationManifestService.update(applicationManifest)).thenReturn(applicationManifest);
+    ApplicationManifest updatedManifest =
+        serviceResourceService.updateValuesAppManifest(APP_ID, SERVICE_ID, "APPMANIFEST_ID", applicationManifest);
+    assertThat(updatedManifest).isNotNull();
+    assertThat(updatedManifest.getServiceId()).isEqualTo("SERVICE_ID2");
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testupdateManifestFile() {
+    ManifestFile manifestFile = ManifestFile.builder().fileName("manifestFile1").build();
+    when(applicationManifestService.getAppManifest(APP_ID, null, SERVICE_ID, AppManifestKind.VALUES))
+        .thenReturn(applicationManifest);
+    when(applicationManifestService.getManifestFileById(APP_ID, "APPMANIFEST_ID")).thenReturn(manifestFile);
+    when(applicationManifestService.upsertApplicationManifestFile(manifestFile, applicationManifest, false))
+        .thenReturn(manifestFile);
+    ManifestFile updatedManifestFile = serviceResourceService.updateManifestFile(
+        APP_ID, SERVICE_ID, "APPMANIFEST_ID", manifestFile, AppManifestKind.VALUES);
+    assertThat(updatedManifestFile).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testaddArtifactStreamId() {
+    Service service = Service.builder().uuid(SERVICE_ID).appId(APP_ID).build();
+    wingsPersistence.save(service);
+    doReturn(service).when(spyServiceResourceService).get(APP_ID, SERVICE_ID, false);
+    Service updatedService = serviceResourceService.addArtifactStreamId(service, ARTIFACT_STREAM_ID);
+    assertThat(updatedService.getArtifactStreamIds()).isNotNull();
+    assertThat(updatedService.getArtifactStreamIds().get(0).equals(ARTIFACT_STREAM_ID)).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testsetHelmValueYaml() {
+    Service service = Service.builder().uuid(SERVICE_ID).appId(APP_ID).build();
+    wingsPersistence.save(service);
+
+    ManifestFile manifestFile =
+        ManifestFile.builder().applicationManifestId("APPMANIFEST_ID").fileName("manifestFile1").build();
+    when(applicationManifestService.getManifestFileById(APP_ID, "APPMANIFEST_ID")).thenReturn(manifestFile);
+    when(applicationManifestService.getManifestFileByFileName("APPMANIFEST_ID", "values.yaml"))
+        .thenReturn(manifestFile);
+
+    wingsPersistence.save(applicationManifest);
+    when(applicationManifestService.getAppManifest(APP_ID, null, SERVICE_ID, AppManifestKind.VALUES))
+        .thenReturn(applicationManifest);
+    when(applicationManifestService.getByServiceId(APP_ID, SERVICE_ID, AppManifestKind.VALUES))
+        .thenReturn(applicationManifest);
+
+    when(applicationManifestService.getManifestFileById(APP_ID, null)).thenReturn(manifestFile);
+    when(applicationManifestService.getManifestFileByFileName("APPMANIFEST_ID", "values.yaml"))
+        .thenReturn(manifestFile);
+    doReturn(service).when(spyServiceResourceService).get(APP_ID, SERVICE_ID, false);
+    assertThat(serviceResourceService.setHelmValueYaml(APP_ID, SERVICE_ID, KubernetesPayload.builder().build()))
+        .isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testgetWithHelmValues() {
+    Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).build();
+    wingsPersistence.save(service);
+    doReturn(service).when(spyServiceResourceService).get(APP_ID, SERVICE_ID);
+    assertThat(serviceResourceService.getWithHelmValues(APP_ID, SERVICE_ID, null)).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testupdateWithHelmValues() {
+    Service service = Service.builder().name("SERVICE_ID1").appId(APP_ID).uuid(SERVICE_ID).build();
+    wingsPersistence.save(service);
+    when(applicationManifestService.getAppManifest(APP_ID, null, SERVICE_ID, AppManifestKind.VALUES))
+        .thenReturn(applicationManifest);
+    ManifestFile manifestFile = ManifestFile.builder()
+                                    .applicationManifestId("APPMANIFEST_ID")
+                                    .fileContent("fileContent")
+                                    .fileName("manifestFile1")
+                                    .build();
+    when(applicationManifestService.getManifestFileByFileName("APPMANIFEST_ID", "values.yaml"))
+        .thenReturn(manifestFile);
+    doReturn(service).when(spyServiceResourceService).update(service, false);
+    Service updatedService = serviceResourceService.updateWithHelmValues(service);
+    assertThat(updatedService.getHelmValueYaml()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testcheckArtifactNeededForHelm() {
+    when(applicationManifestUtils.getHelmValuesYamlFiles(APP_ID, SERVICE_TEMPLATE_ID))
+        .thenReturn(Arrays.asList("values.yaml"));
+    assertThat(serviceResourceService.checkArtifactNeededForHelm(APP_ID, SERVICE_TEMPLATE_ID)).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testupsertHelmChartSpecification() {
+    Service service = getService();
+    wingsPersistence.save(service);
+    HelmChartSpecification helmChartSpecification =
+        HelmChartSpecification.builder().chartName("chartName").chartVersion("1.0").build();
+    helmChartSpecification.setAppId(APP_ID);
+    helmChartSpecification.setServiceId(SERVICE_ID);
+    HelmChartSpecification createdHelmChartSpec =
+        serviceResourceService.createHelmChartSpecification(helmChartSpecification);
+    assertThat(createdHelmChartSpec.getChartName()).isEqualTo("chartName");
+  }
+
+  private Service getService() {
+    return Service.builder().name("SERVICE_ID1").appId(APP_ID).uuid(SERVICE_ID).accountId(ACCOUNT_ID).build();
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testlistByCustomDeploymentTypeId() {
+    Service service = getService();
+    service.setDeploymentTypeTemplateId("DeploymentTypeTemplate");
+    wingsPersistence.save(service);
+    assertThat(
+        serviceResourceService.listByCustomDeploymentTypeId(ACCOUNT_ID, Arrays.asList("DeploymentTypeTemplate"), 10))
+        .isNotEmpty();
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testfetchServicesByUuids() {
+    wingsPersistence.save(getService());
+    List serviceUuids = Arrays.asList(SERVICE_ID, "SERVICE_ID1");
+    List<Service> services = serviceResourceService.fetchServicesByUuids(APP_ID, serviceUuids);
+    assertThat(services).isNotEmpty();
+    assertThat(services).hasSize(1);
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testfetchServicesByUuidsByAccountId() {
+    wingsPersistence.save(getService());
+    List serviceUuids = Arrays.asList(SERVICE_ID, "SERVICE_ID1");
+    List<Service> services = serviceResourceService.fetchServicesByUuidsByAccountId(ACCOUNT_ID, serviceUuids);
+    assertThat(services).isNotEmpty();
+    assertThat(services).hasSize(1);
   }
 }
