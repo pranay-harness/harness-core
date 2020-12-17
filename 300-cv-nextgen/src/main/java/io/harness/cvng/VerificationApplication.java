@@ -28,6 +28,7 @@ import io.harness.cvng.exception.BadRequestExceptionMapper;
 import io.harness.cvng.exception.ConstraintViolationExceptionMapper;
 import io.harness.cvng.exception.GenericExceptionMapper;
 import io.harness.cvng.exception.NotFoundExceptionMapper;
+import io.harness.cvng.migration.service.CVNGMigrationService;
 import io.harness.cvng.statemachine.jobs.AnalysisOrchestrationJob;
 import io.harness.cvng.statemachine.jobs.DeploymentVerificationJobInstanceOrchestrationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
@@ -237,6 +238,8 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerHealthChecks(environment, injector);
     log.info("Leaving startup maintenance mode");
     MaintenanceController.forceMaintenance(false);
+
+    runMigrations(injector);
 
     log.info("Starting app done");
   }
@@ -470,5 +473,9 @@ public class VerificationApplication extends Application<VerificationConfigurati
     jersey.register(ConstraintViolationExceptionMapper.class);
     jersey.register(NotFoundExceptionMapper.class);
     jersey.register(BadRequestExceptionMapper.class);
+  }
+
+  private void runMigrations(Injector injector) {
+    injector.getInstance(CVNGMigrationService.class).runMigrations();
   }
 }
