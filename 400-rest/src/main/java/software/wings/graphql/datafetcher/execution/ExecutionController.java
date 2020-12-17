@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -33,6 +34,7 @@ import software.wings.graphql.schema.mutation.execution.input.QLParameterValueIn
 import software.wings.graphql.schema.mutation.execution.input.QLParameterizedArtifactSourceInput;
 import software.wings.graphql.schema.mutation.execution.input.QLServiceInput;
 import software.wings.graphql.schema.mutation.execution.input.QLStartExecutionInput;
+import software.wings.graphql.schema.mutation.execution.input.QLVariableInput;
 import software.wings.graphql.schema.type.QLExecutionStatus;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.resources.graphql.TriggeredByType;
@@ -51,6 +53,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -363,5 +366,21 @@ public class ExecutionController {
                                 .value(artifact.getUuid())
                                 .build());
     }
+  }
+
+  void validateRestrictedVarsHaveAllowedValues(List<QLVariableInput> variableInputs, List<Variable> workflowVariables) {
+    Map<String, List<String>> allowedValuesMap =
+        workflowVariables.stream()
+            .filter(variable -> isNotEmpty(variable.getAllowedList()))
+            .collect(Collectors.toMap(Variable::getName, Variable::getAllowedList));
+    variableInputs.stream()
+        .filter(input
+            -> allowedValuesMap.containsKey(input.getName())
+                && !allowedValuesMap.get(input.getName()).contains(input.getVariableValue().getValue()))
+        .findAny()
+        .ifPresent(input -> {
+          throw new InvalidRequestException(
+              "Variable " + input.getName() + " can only take values " + allowedValuesMap.get(input.getName()));
+        });
   }
 }

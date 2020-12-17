@@ -6,13 +6,18 @@ import static io.harness.rule.OwnerRule.PRABU;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static java.util.Arrays.asList;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -29,10 +34,15 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
+import software.wings.beans.PipelineStage;
+import software.wings.beans.PipelineStage.PipelineStageElement;
+import software.wings.beans.RuntimeInputsConfig;
 import software.wings.beans.Variable;
 import software.wings.beans.Variable.VariableBuilder;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.deployment.WorkflowVariablesMetadata;
+import software.wings.graphql.datafetcher.MutationContext;
+import software.wings.graphql.schema.mutation.execution.input.QLStartExecutionInput;
 import software.wings.graphql.schema.mutation.execution.input.QLVariableInput;
 import software.wings.graphql.schema.mutation.execution.input.QLVariableValue;
 import software.wings.graphql.schema.mutation.execution.input.QLVariableValueType;
@@ -52,12 +62,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.api.client.util.Lists;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import graphql.schema.DataFetchingEnvironment;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 
 @OwnedBy(HarnessTeam.CDC)
 public class PipelineExecutionControllerTest extends WingsBaseTest {
@@ -321,6 +334,68 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
     JsonNode actual = JsonUtils.toJsonNode(builder.build());
     JsonNode expected = JsonUtils.readResourceFile("./execution/qlPipeline_execution_by_apikey.json", JsonNode.class);
     assertEquals("QLPipeline execution should be equal", expected, actual);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionForPassingDisallowedValues() {
+    Pipeline pipeline = Pipeline.builder().build();
+    pipeline.getPipelineVariables().add(VariableBuilder.aVariable().name("var").allowedList(asList("1", "2")).build());
+    doReturn(pipeline).when(pipelineService).readPipeline(any(), any(), eq(true));
+
+    doNothing().when(authService).checkIfUserAllowedToDeployPipelineToEnv(any(), anyString());
+    doCallRealMethod().when(executionController).validateRestrictedVarsHaveAllowedValues(anyList(), anyList());
+
+    QLStartExecutionInput startExecutionInput =
+        QLStartExecutionInput.builder()
+            .variableInputs(
+                asList(QLVariableInput.builder()
+                           .name("var")
+                           .variableValue(QLVariableValue.builder().type(QLVariableValueType.ID).value("3").build())
+                           .build()))
+            .build();
+    MutationContext mutationContext = MutationContext.builder()
+                                          .accountId("accountId")
+                                          .dataFetchingEnvironment(Mockito.mock(DataFetchingEnvironment.class))
+                                          .build();
+    assertThatThrownBy(() -> pipelineExecutionController.startPipelineExecution(startExecutionInput, mutationContext))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Variable var can only take values [1, 2]");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionForPassingDisallowedValuesInRuntime() {
+    Pipeline pipeline =
+        Pipeline.builder()
+            .pipelineStages(
+                asList(PipelineStage.builder()
+                           .pipelineStageElements(asList(
+                               PipelineStageElement.builder()
+                                   .uuid("PIPELINE_STAGE_ELEMENT_ID")
+                                   .workflowVariables(Collections.singletonMap("var", "${var}"))
+                                   .runtimeInputsConfig(
+                                       RuntimeInputsConfig.builder().runtimeInputVariables(asList("${var}")).build())
+                                   .build()))
+                           .build()))
+            .build();
+
+    pipeline.getPipelineVariables().add(VariableBuilder.aVariable().name("var").allowedList(asList("1", "2")).build());
+    doCallRealMethod().when(executionController).validateRestrictedVarsHaveAllowedValues(anyList(), anyList());
+
+    List<QLVariableInput> variableInputs =
+        asList(QLVariableInput.builder()
+                   .name("var")
+                   .variableValue(QLVariableValue.builder().type(QLVariableValueType.ID).value("3").build())
+                   .build());
+
+    assertThatThrownBy(()
+                           -> pipelineExecutionController.validateAndResolveRuntimePipelineStageVars(
+                               pipeline, variableInputs, null, new ArrayList<>(), "PIPELINE_STAGE_ELEMENT_ID", false))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Variable var can only take values [1, 2]");
   }
 
   private Variable buildVariable(String name, EntityType entityType, Boolean isRuntime) {
