@@ -19,6 +19,7 @@ import lombok.Data;
 public class StackdriverDashboardDetail {
   private static final String dataSetsJsonAppender = "{\"dataSets\": [";
   private static final String metricTypeField = "metric.type";
+
   String widgetName;
   Object dataSets;
   List<DataSet> dataSetList;

@@ -57,4 +57,8 @@ public class StackdriverUtils {
     RSAPrivateKey privKey = (RSAPrivateKey) kf.generatePrivate(keySpec);
     return privKey;
   }
+
+  public static <T> T checkForNullAndReturnValue(T value, T defaultValue) {
+    return value == null ? defaultValue : value;
+  }
 }

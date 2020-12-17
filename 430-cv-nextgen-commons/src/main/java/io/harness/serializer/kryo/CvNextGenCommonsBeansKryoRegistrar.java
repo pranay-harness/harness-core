@@ -34,8 +34,10 @@ import io.harness.cvng.beans.appd.AppDynamicsApplication;
 import io.harness.cvng.beans.appd.AppDynamicsTier;
 import io.harness.cvng.beans.splunk.SplunkDataCollectionRequest;
 import io.harness.cvng.beans.splunk.SplunkSavedSearchRequest;
+import io.harness.cvng.beans.stackdriver.StackDriverMetricDefinition;
 import io.harness.cvng.beans.stackdriver.StackdriverDashboardDetailsRequest;
 import io.harness.cvng.beans.stackdriver.StackdriverDashboardRequest;
+import io.harness.cvng.beans.stackdriver.StackdriverSampleDataRequest;
 import io.harness.cvng.models.VerificationType;
 import io.harness.serializer.KryoRegistrar;
 
@@ -83,5 +85,8 @@ public class CvNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(ActivityVerificationStatus.class, 9038);
     kryo.register(StackdriverDashboardRequest.class, 9039);
     kryo.register(StackdriverDashboardDetailsRequest.class, 9040);
+    kryo.register(StackdriverSampleDataRequest.class, 9041);
+    kryo.register(StackDriverMetricDefinition.class, 9042);
+    kryo.register(StackDriverMetricDefinition.Aggregation.class, 9043);
   }
 }
