@@ -21,6 +21,8 @@ import io.harness.serializer.spring.converters.advisers.type.AdviserTypeReadConv
 import io.harness.serializer.spring.converters.advisers.type.AdviserTypeWriteConverter;
 import io.harness.serializer.spring.converters.ambiance.AmbianceReadConverter;
 import io.harness.serializer.spring.converters.ambiance.AmbianceWriteConverter;
+import io.harness.serializer.spring.converters.errorInfo.ExecutionErrorInfoReadConverter;
+import io.harness.serializer.spring.converters.errorInfo.ExecutionErrorInfoWriteConverter;
 import io.harness.serializer.spring.converters.executableresponse.ExecutableResponseReadConverter;
 import io.harness.serializer.spring.converters.executableresponse.ExecutableResponseWriteConverter;
 import io.harness.serializer.spring.converters.facilitators.obtainment.FacilitatorObtainmentReadConverter;
@@ -106,5 +108,6 @@ public class OrchestrationRegistrars {
       PlanNodeProtoWriteConverter.class, StepOutcomeRefReadConverter.class, StepOutcomeRefWriteConverter.class,
       ExecutableResponseReadConverter.class, ExecutableResponseWriteConverter.class, NodeExecutionReadConverter.class,
       NodeExecutionWriteConverter.class, FacilitatorResponseReadConverter.class,
-      FacilitatorResponseWriteConverter.class, GraphLayoutReadConverter.class, GraphLayoutNodeWriteConverter.class);
+      FacilitatorResponseWriteConverter.class, GraphLayoutReadConverter.class, GraphLayoutNodeWriteConverter.class,
+      ExecutionErrorInfoReadConverter.class, ExecutionErrorInfoWriteConverter.class);
 }
