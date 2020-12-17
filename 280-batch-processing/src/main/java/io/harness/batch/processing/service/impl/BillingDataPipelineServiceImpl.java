@@ -190,9 +190,10 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
     String description = getDataSetDescription(accountId, accountName);
     Map<String, String> labelMap =
         BillingDataPipelineUtils.getLabelMap(accountName, BillingDataPipelineUtils.getAccountType(account));
+
+    ServiceAccountCredentials credentials = getCredentials(GOOGLE_CREDENTIALS_PATH);
+    BigQuery bigquery = BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
     try {
-      ServiceAccountCredentials credentials = getCredentials(GOOGLE_CREDENTIALS_PATH);
-      BigQuery bigquery = BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
       DatasetInfo datasetInfo =
           DatasetInfo.newBuilder(dataSetName).setDescription(description).setLabels(labelMap).build();
 
@@ -202,6 +203,9 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
     } catch (BigQueryException bigQueryEx) {
       // data set/PreAggregate Table already exists.
       if (bigQueryEx.getCode() == 409) {
+        if (bigquery.getTable(TableId.of(dataSetName, PRE_AGG_TABLE_NAME_VALUE)) == null) {
+          bigquery.create(getPreAggregateTableInfo(dataSetName));
+        }
         return dataSetName;
       }
       log.error("BQ Data Set was not created {} " + bigQueryEx);
