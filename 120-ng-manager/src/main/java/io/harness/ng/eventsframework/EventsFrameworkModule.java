@@ -33,41 +33,42 @@ public class EventsFrameworkModule extends AbstractModule {
     if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
       bind(AbstractProducer.class)
           .annotatedWith(Names.named(ENTITY_CRUD))
-          .toInstance(new NoOpProducer(DUMMY_TOPIC_NAME));
+          .toInstance(NoOpProducer.of(DUMMY_TOPIC_NAME));
       bind(AbstractConsumer.class)
           .annotatedWith(Names.named(ENTITY_CRUD))
-          .toInstance(new NoOpConsumer(DUMMY_TOPIC_NAME, DUMMY_GROUP_NAME, DUMMY_NAME));
+          .toInstance(NoOpConsumer.of(DUMMY_TOPIC_NAME, DUMMY_GROUP_NAME));
       bind(AbstractProducer.class)
           .annotatedWith(Names.named(SETUP_USAGE_CREATE))
-          .toInstance(new NoOpProducer(DUMMY_TOPIC_NAME));
+          .toInstance(NoOpProducer.of(DUMMY_TOPIC_NAME));
       bind(AbstractProducer.class)
           .annotatedWith(Names.named(SETUP_USAGE_DELETE))
-          .toInstance(new NoOpProducer(DUMMY_TOPIC_NAME));
+          .toInstance(NoOpProducer.of(DUMMY_TOPIC_NAME));
       bind(AbstractConsumer.class)
           .annotatedWith(Names.named(SETUP_USAGE_CREATE))
-          .toInstance(new NoOpConsumer(DUMMY_TOPIC_NAME, DUMMY_GROUP_NAME, DUMMY_NAME));
+          .toInstance(NoOpConsumer.of(DUMMY_TOPIC_NAME, DUMMY_GROUP_NAME));
       bind(AbstractConsumer.class)
           .annotatedWith(Names.named(SETUP_USAGE_DELETE))
-          .toInstance(new NoOpConsumer(DUMMY_TOPIC_NAME, DUMMY_GROUP_NAME, DUMMY_NAME));
+          .toInstance(NoOpConsumer.of(DUMMY_TOPIC_NAME, DUMMY_GROUP_NAME));
     } else {
       bind(AbstractProducer.class)
           .annotatedWith(Names.named(ENTITY_CRUD))
-          .toInstance(new RedisProducer(ENTITY_CRUD, redisConfig));
+          .toInstance(RedisProducer.of(ENTITY_CRUD, redisConfig));
       bind(AbstractConsumer.class)
           .annotatedWith(Names.named(ENTITY_CRUD))
-          .toInstance(new RedisConsumer(ENTITY_CRUD, NG_MANAGER.getServiceId(), redisConfig));
+          .toInstance(RedisConsumer.of(ENTITY_CRUD, NG_MANAGER.getServiceId(), redisConfig));
       bind(AbstractConsumer.class)
           .annotatedWith(Names.named(SETUP_USAGE_CREATE))
-          .toInstance(new RedisConsumer(SETUP_USAGE_CREATE, NG_MANAGER.getServiceId(), redisConfig));
+          .toInstance(RedisConsumer.of(SETUP_USAGE_CREATE, NG_MANAGER.getServiceId(), redisConfig));
       bind(AbstractConsumer.class)
           .annotatedWith(Names.named(SETUP_USAGE_DELETE))
-          .toInstance(new RedisConsumer(SETUP_USAGE_DELETE, NG_MANAGER.getServiceId(), redisConfig));
+          .toInstance(RedisConsumer.of(SETUP_USAGE_DELETE, NG_MANAGER.getServiceId(), redisConfig));
+
       bind(AbstractProducer.class)
           .annotatedWith(Names.named(SETUP_USAGE_CREATE))
-          .toInstance(new RedisProducer(SETUP_USAGE_CREATE, redisConfig));
+          .toInstance(RedisProducer.of(SETUP_USAGE_CREATE, redisConfig));
       bind(AbstractProducer.class)
           .annotatedWith(Names.named(SETUP_USAGE_DELETE))
-          .toInstance(new RedisProducer(SETUP_USAGE_DELETE, redisConfig));
+          .toInstance(RedisProducer.of(SETUP_USAGE_DELETE, redisConfig));
     }
   }
 }

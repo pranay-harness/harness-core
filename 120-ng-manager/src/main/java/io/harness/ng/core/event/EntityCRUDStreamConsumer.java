@@ -13,15 +13,15 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
 public class EntityCRUDStreamConsumer implements Runnable {
   private final AbstractConsumer redisConsumer;
-  private static final int CONSUMER_SLEEP_TIME = 1000;
   private final Map<String, ConsumerMessageProcessor> processorMap;
 
   @Inject
@@ -41,15 +41,12 @@ public class EntityCRUDStreamConsumer implements Runnable {
     log.info("Started the consumer for entity crud stream");
     try {
       while (true) {
-        Optional<Message> messageOptional = redisConsumer.read();
-        if (!messageOptional.isPresent()) {
-          sleepConsumer();
-          continue;
+        List<Message> messages = redisConsumer.read(2, TimeUnit.SECONDS);
+        for (Message message : messages) {
+          String messageId = message.getId();
+          processMessage(message);
+          redisConsumer.acknowledge(messageId);
         }
-        String messageId = messageOptional.get().getId();
-        processMessage(messageOptional.get());
-        redisConsumer.acknowledge(messageId);
-        sleepConsumer();
       }
     } catch (Exception ex) {
       log.info("The consumer for entity crud stream ended", ex);
@@ -71,14 +68,6 @@ public class EntityCRUDStreamConsumer implements Runnable {
           }
         }
       }
-    }
-  }
-
-  private void sleepConsumer() {
-    try {
-      Thread.sleep(CONSUMER_SLEEP_TIME);
-    } catch (InterruptedException ex) {
-      log.error("The thread processing the entity crud stream got interrupted");
     }
   }
 }

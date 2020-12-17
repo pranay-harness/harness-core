@@ -1,7 +1,10 @@
 package io.harness;
 
+import io.harness.eventsframework.ConsumerShutdownException;
+import io.harness.eventsframework.api.AbstractConsumer;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.impl.RedisConsumer;
+import io.harness.eventsframework.impl.RedisSerialConsumer;
 import io.harness.eventsframework.project.ProjectEntityChangeDTO;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.redis.RedisPersistentLocker;
@@ -9,30 +12,30 @@ import io.harness.redis.RedisConfig;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.time.Duration;
-import java.util.Optional;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class MessageConsumer implements Runnable {
-  String color;
-  String readVia;
-  String channel;
-  String groupName;
-  Integer processingTime;
-  RedisConsumer client;
-  RedisPersistentLocker redisLocker;
-
-  public MessageConsumer(String readVia, String channel, String color) {
-    this.readVia = readVia;
-    this.channel = channel;
-    this.color = color;
-  }
+  private final String color;
+  private final String readVia;
+  private final String channel;
+  private final String groupName;
+  private final Integer processingTime;
+  private final AbstractConsumer client;
+  private RedisPersistentLocker redisLocker;
 
   public MessageConsumer(
       String readVia, RedisConfig redisConfig, String channel, String groupName, Integer processingTime, String color) {
-    this(readVia, channel, color);
-    this.client = new RedisConsumer(channel, groupName, redisConfig);
+    this.readVia = readVia;
+    this.channel = channel;
+    this.color = color;
+    if (readVia.equals("serialConsumerGroups"))
+      this.client = RedisSerialConsumer.of(channel, groupName, "hardcodedconsumer", redisConfig);
+    else
+      this.client = RedisConsumer.of(channel, groupName, redisConfig);
     this.groupName = groupName;
     this.processingTime = processingTime;
   }
@@ -54,40 +57,56 @@ public class MessageConsumer implements Runnable {
   }
 
   private void readViaConsumerGroups() throws InterruptedException, InvalidProtocolBufferException {
-    Optional<Message> message;
+    List<Message> messages;
     while (true) {
-      message = client.read();
-      processMessage(message);
+      try {
+        messages = client.read(2, TimeUnit.SECONDS);
+      } catch (ConsumerShutdownException e) {
+        e.printStackTrace();
+        break;
+      }
+      for (Message message : messages) {
+        processMessage(message);
+      }
     }
   }
 
   private void readViaSerialConsumerGroups() throws InterruptedException, InvalidProtocolBufferException {
-    Optional<Message> message;
     AcquiredLock lock;
+    List<Message> messages;
     while (true) {
       lock = this.redisLocker.tryToAcquireLock(groupName, Duration.ofMinutes(1));
       if (lock == null) {
         Thread.sleep(1000);
         continue;
       }
-      message = client.read();
-      processMessage(message);
+
+      try {
+        messages = client.read(2, TimeUnit.SECONDS);
+      } catch (ConsumerShutdownException e) {
+        e.printStackTrace();
+        break;
+      }
+      for (Message message : messages) {
+        processMessage(message);
+      }
       redisLocker.destroy(lock);
 
       Thread.sleep(200);
     }
   }
 
-  private void processMessage(Optional<Message> message) throws InterruptedException, InvalidProtocolBufferException {
-    if (message.isPresent()) {
-      Message actualMessage = message.get();
-      ProjectEntityChangeDTO p = ProjectEntityChangeDTO.parseFrom(actualMessage.getMessage().getData());
-      log.info("{}Reading messageId: {} for Consumer - {} - pid: {}{}", color, actualMessage.getId(),
-          this.client.getName(), p.getIdentifier(), ColorConstants.TEXT_RESET);
-      Thread.sleep(processingTime);
-      log.info("{}Done processing for Consumer - {} - pid: {}{}", color, this.client.getName(), p.getIdentifier(),
-          ColorConstants.TEXT_RESET);
-      client.acknowledge(actualMessage.getId());
+  private void processMessage(Message message) throws InterruptedException, InvalidProtocolBufferException {
+    ProjectEntityChangeDTO p = ProjectEntityChangeDTO.parseFrom(message.getMessage().getData());
+    log.info("{}Reading messageId: {} for Consumer - {} - pid: {}{}", color, message.getId(), this.client.getName(),
+        p.getIdentifier(), ColorConstants.TEXT_RESET);
+    Thread.sleep(processingTime);
+    log.info("{}Done processing for Consumer - {} - pid: {}{}", color, this.client.getName(), p.getIdentifier(),
+        ColorConstants.TEXT_RESET);
+    try {
+      client.acknowledge(message.getId());
+    } catch (ConsumerShutdownException e) {
+      e.printStackTrace();
     }
   }
 }

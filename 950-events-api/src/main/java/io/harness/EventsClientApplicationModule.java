@@ -36,7 +36,7 @@ public class EventsClientApplicationModule extends AbstractModule {
   @Provides
   @Singleton
   RedisProducer getRedisProducer() {
-    return new RedisProducer("project_update", appConfig.getEventsFrameworkConfiguration().getRedisConfig());
+    return RedisProducer.of("project_update", appConfig.getEventsFrameworkConfiguration().getRedisConfig());
   }
 
   @Provides

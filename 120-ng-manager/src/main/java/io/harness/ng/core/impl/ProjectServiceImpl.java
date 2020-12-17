@@ -20,6 +20,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.eventsframework.ProducerShutdownException;
 import io.harness.eventsframework.api.AbstractProducer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.project.ProjectEntityChangeDTO;
@@ -163,11 +164,15 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   private void publishEvent(Project project, String action) {
-    eventProducer.send(Message.newBuilder()
-                           .putAllMetadata(ImmutableMap.of("accountId", project.getAccountIdentifier(),
-                               ENTITY_TYPE_METADATA, PROJECT_ENTITY, ACTION_METADATA, action))
-                           .setData(getProjectPayload(project))
-                           .build());
+    try {
+      eventProducer.send(Message.newBuilder()
+                             .putAllMetadata(ImmutableMap.of("accountId", project.getAccountIdentifier(),
+                                 ENTITY_TYPE_METADATA, PROJECT_ENTITY, ACTION_METADATA, action))
+                             .setData(getProjectPayload(project))
+                             .build());
+    } catch (ProducerShutdownException e) {
+      log.error("Failed to send event to events framework projectIdentifier: " + project.getIdentifier(), e);
+    }
   }
 
   private ByteString getProjectPayload(Project project) {
