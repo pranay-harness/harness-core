@@ -1,6 +1,9 @@
 package io.harness.ng;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.EntityCRUDEventsConstants.ACCOUNT_ENTITY;
+import static io.harness.EntityCRUDEventsConstants.ORGANIZATION_ENTITY;
+import static io.harness.EntityCRUDEventsConstants.PROJECT_ENTITY;
 
 import io.harness.NGTriggersModule;
 import io.harness.OrchestrationModule;
@@ -42,6 +45,10 @@ import io.harness.ng.core.api.UserGroupService;
 import io.harness.ng.core.api.impl.NGModulesServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretServiceV2Impl;
 import io.harness.ng.core.api.impl.UserGroupServiceImpl;
+import io.harness.ng.core.event.AccountChangeEventMessageProcessor;
+import io.harness.ng.core.event.ConsumerMessageProcessor;
+import io.harness.ng.core.event.OrganizationChangeEventMessageProcessor;
+import io.harness.ng.core.event.ProjectChangeEventMessageProcessor;
 import io.harness.ng.core.gitsync.GitChangeProcessorService;
 import io.harness.ng.core.gitsync.GitSyncManagerInterface;
 import io.harness.ng.core.gitsync.YamlHandler;
@@ -259,6 +266,16 @@ public class NextGenModule extends AbstractModule {
     bindYamlHandlers();
     bind(YamlBaseUrlService.class).to(YamlBaseUrlServiceImpl.class);
     bind(TriggerWebhookService.class).to(TriggerWebhookServiceImpl.class);
+
+    bind(ConsumerMessageProcessor.class)
+        .annotatedWith(Names.named(ACCOUNT_ENTITY))
+        .to(AccountChangeEventMessageProcessor.class);
+    bind(ConsumerMessageProcessor.class)
+        .annotatedWith(Names.named(ORGANIZATION_ENTITY))
+        .to(OrganizationChangeEventMessageProcessor.class);
+    bind(ConsumerMessageProcessor.class)
+        .annotatedWith(Names.named(PROJECT_ENTITY))
+        .to(ProjectChangeEventMessageProcessor.class);
   }
 
   @Provides

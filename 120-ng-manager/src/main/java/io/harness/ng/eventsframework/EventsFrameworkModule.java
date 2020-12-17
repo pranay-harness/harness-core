@@ -1,6 +1,7 @@
 package io.harness.ng.eventsframework;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.EntityCRUDEventsConstants.ENTITY_CRUD;
 
 import io.harness.EventsFrameworkConfiguration;
 import io.harness.eventsframework.api.AbstractConsumer;
@@ -17,9 +18,12 @@ import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public class EventsFrameworkModule extends AbstractModule {
-  public static final String ENTITY_CRUD = "entity_crud";
   public static final String SETUP_USAGE_CREATE = "setup_usage_create";
   public static final String SETUP_USAGE_DELETE = "setup_usage_delete";
+
+  private static final String DUMMY_TOPIC_NAME = "dummy_topic_name";
+  private static final String DUMMY_GROUP_NAME = "dummy_group_name";
+  private static final String DUMMY_NAME = "dummy_name";
 
   private final EventsFrameworkConfiguration eventsFrameworkConfiguration;
 
@@ -29,23 +33,29 @@ public class EventsFrameworkModule extends AbstractModule {
     if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
       bind(AbstractProducer.class)
           .annotatedWith(Names.named(ENTITY_CRUD))
-          .toInstance(new NoOpProducer("dummy_topic_name"));
+          .toInstance(new NoOpProducer(DUMMY_TOPIC_NAME));
+      bind(AbstractConsumer.class)
+          .annotatedWith(Names.named(ENTITY_CRUD))
+          .toInstance(new NoOpConsumer(DUMMY_TOPIC_NAME, DUMMY_GROUP_NAME, DUMMY_NAME));
       bind(AbstractProducer.class)
           .annotatedWith(Names.named(SETUP_USAGE_CREATE))
-          .toInstance(new NoOpProducer("dummy_topic_name"));
+          .toInstance(new NoOpProducer(DUMMY_TOPIC_NAME));
       bind(AbstractProducer.class)
           .annotatedWith(Names.named(SETUP_USAGE_DELETE))
-          .toInstance(new NoOpProducer("dummy_topic_name"));
+          .toInstance(new NoOpProducer(DUMMY_TOPIC_NAME));
       bind(AbstractConsumer.class)
           .annotatedWith(Names.named(SETUP_USAGE_CREATE))
-          .toInstance(new NoOpConsumer("dummy_topic_name", "dummy_group_name", "dummy_name"));
+          .toInstance(new NoOpConsumer(DUMMY_TOPIC_NAME, DUMMY_GROUP_NAME, DUMMY_NAME));
       bind(AbstractConsumer.class)
           .annotatedWith(Names.named(SETUP_USAGE_DELETE))
-          .toInstance(new NoOpConsumer("dummy_topic_name", "dummy_group_name", "dummy_name"));
+          .toInstance(new NoOpConsumer(DUMMY_TOPIC_NAME, DUMMY_GROUP_NAME, DUMMY_NAME));
     } else {
       bind(AbstractProducer.class)
           .annotatedWith(Names.named(ENTITY_CRUD))
           .toInstance(new RedisProducer(ENTITY_CRUD, redisConfig));
+      bind(AbstractConsumer.class)
+          .annotatedWith(Names.named(ENTITY_CRUD))
+          .toInstance(new RedisConsumer(ENTITY_CRUD, NG_MANAGER.getServiceId(), redisConfig));
       bind(AbstractConsumer.class)
           .annotatedWith(Names.named(SETUP_USAGE_CREATE))
           .toInstance(new RedisConsumer(SETUP_USAGE_CREATE, NG_MANAGER.getServiceId(), redisConfig));

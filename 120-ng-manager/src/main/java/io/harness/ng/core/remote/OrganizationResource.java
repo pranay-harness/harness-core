@@ -1,7 +1,9 @@
 package io.harness.ng.core.remote;
 
+import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.ng.core.remote.OrganizationMapper.toResponseWrapper;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
@@ -14,6 +16,7 @@ import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -72,7 +75,10 @@ public class OrganizationResource {
   public ResponseDTO<OrganizationResponse> create(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @NotNull @Valid OrganizationRequest organizationDTO) {
-    organizationDTO.getOrganization().setHarnessManaged(organizationDTO.isHarnessManaged());
+    if (DEFAULT_ORG_IDENTIFIER.equals(organizationDTO.getOrganization().getIdentifier())) {
+      throw new InvalidRequestException(
+          String.format("%s cannot be used as org identifier", DEFAULT_ORG_IDENTIFIER), USER);
+    }
     Organization updatedOrganization = organizationService.create(accountIdentifier, organizationDTO.getOrganization());
     return ResponseDTO.newResponse(updatedOrganization.getVersion().toString(), toResponseWrapper(updatedOrganization));
   }
@@ -115,6 +121,12 @@ public class OrganizationResource {
       @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @NotNull @Valid OrganizationRequest organizationDTO) {
+    if (DEFAULT_ORG_IDENTIFIER.equals(identifier)) {
+      throw new InvalidRequestException(
+          String.format(
+              "Update operation not supported for Default Organization (identifier: [%s])", DEFAULT_ORG_IDENTIFIER),
+          USER);
+    }
     organizationDTO.getOrganization().setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
     Organization updatedOrganization =
         organizationService.update(accountIdentifier, identifier, organizationDTO.getOrganization());
@@ -127,6 +139,12 @@ public class OrganizationResource {
   public ResponseDTO<Boolean> delete(@HeaderParam(IF_MATCH) String ifMatch,
       @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
+    if (DEFAULT_ORG_IDENTIFIER.equals(identifier)) {
+      throw new InvalidRequestException(
+          String.format(
+              "Delete operation not supported for Default Organization (identifier: [%s])", DEFAULT_ORG_IDENTIFIER),
+          USER);
+    }
     return ResponseDTO.newResponse(
         organizationService.delete(accountIdentifier, identifier, isNumeric(ifMatch) ? parseLong(ifMatch) : null));
   }

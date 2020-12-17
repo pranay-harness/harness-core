@@ -6,6 +6,7 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 
 import static org.mockito.Mockito.mock;
 
+import io.harness.EventsFrameworkConfiguration;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheConfig.CacheConfigBuilder;
 import io.harness.cache.CacheModule;
@@ -23,6 +24,7 @@ import io.harness.logstreaming.LogStreamingServiceConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
+import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
@@ -134,6 +136,10 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
 
     SegmentConfig segmentConfig = SegmentConfig.builder().enabled(false).url("dummy_url").apiKey("dummy_key").build();
     configuration.setSegmentConfig(segmentConfig);
+    configuration.setEventsFrameworkConfiguration(
+        EventsFrameworkConfiguration.builder()
+            .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
+            .build());
     return configuration;
   }
 

@@ -3,41 +3,32 @@ package io.harness.ng.core.impl;
 import static io.harness.EntityCRUDEventsConstants.ACTION_METADATA;
 import static io.harness.EntityCRUDEventsConstants.CREATE_ACTION;
 import static io.harness.EntityCRUDEventsConstants.DELETE_ACTION;
+import static io.harness.EntityCRUDEventsConstants.ENTITY_CRUD;
 import static io.harness.EntityCRUDEventsConstants.ENTITY_TYPE_METADATA;
 import static io.harness.EntityCRUDEventsConstants.PROJECT_ENTITY;
 import static io.harness.EntityCRUDEventsConstants.UPDATE_ACTION;
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
-import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
-import static io.harness.ng.NextGenModule.CONNECTOR_DECORATOR_SERVICE;
 import static io.harness.ng.core.remote.ProjectMapper.toProject;
-import static io.harness.ng.core.utils.NGUtils.getConnectorRequestDTO;
-import static io.harness.ng.core.utils.NGUtils.getDefaultHarnessSecretManagerName;
 import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
-import static io.harness.ng.eventsframework.EventsFrameworkModule.ENTITY_CRUD;
 
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.services.ConnectorService;
 import io.harness.eventsframework.api.AbstractProducer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.project.ProjectEntityChangeDTO;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.SecretManagementException;
 import io.harness.ng.core.DefaultOrganization;
 import io.harness.ng.core.OrgIdentifier;
 import io.harness.ng.core.ProjectIdentifier;
-import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ProjectFilterDTO;
@@ -49,7 +40,6 @@ import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.repositories.core.spring.ProjectRepository;
-import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.PrincipalType;
 
@@ -77,21 +67,15 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class ProjectServiceImpl implements ProjectService {
   private final ProjectRepository projectRepository;
   private final OrganizationService organizationService;
-  private final NGSecretManagerService ngSecretManagerService;
-  private final ConnectorService secretManagerConnectorService;
   private final AbstractProducer eventProducer;
   private final NgUserService ngUserService;
   private static final String PROJECT_ADMIN_ROLE_NAME = "Project Admin";
 
   @Inject
   public ProjectServiceImpl(ProjectRepository projectRepository, OrganizationService organizationService,
-      NGSecretManagerService ngSecretManagerService,
-      @Named(CONNECTOR_DECORATOR_SERVICE) ConnectorService secretManagerConnectorService,
       @Named(ENTITY_CRUD) AbstractProducer eventProducer, NgUserService ngUserService) {
     this.projectRepository = projectRepository;
     this.organizationService = organizationService;
-    this.ngSecretManagerService = ngSecretManagerService;
-    this.secretManagerConnectorService = secretManagerConnectorService;
     this.eventProducer = eventProducer;
     this.ngUserService = ngUserService;
   }
@@ -117,7 +101,6 @@ public class ProjectServiceImpl implements ProjectService {
 
   private void performActionsPostProjectCreation(Project project) {
     publishEvent(project, CREATE_ACTION);
-    createHarnessSecretManager(project);
     createUserProjectMap(project);
   }
 
@@ -139,24 +122,6 @@ public class ProjectServiceImpl implements ProjectService {
                                           .roles(singletonList(role))
                                           .build();
       ngUserService.createUserProjectMap(userProjectMap);
-    }
-  }
-
-  private void createHarnessSecretManager(Project project) {
-    try {
-      SecretManagerConfigDTO globalSecretManager =
-          ngSecretManagerService.getGlobalSecretManager(project.getAccountIdentifier());
-      globalSecretManager.setIdentifier(HARNESS_SECRET_MANAGER_IDENTIFIER);
-      globalSecretManager.setDescription("Project: " + project.getName());
-      globalSecretManager.setName(getDefaultHarnessSecretManagerName(globalSecretManager.getEncryptionType()));
-      globalSecretManager.setProjectIdentifier(project.getIdentifier());
-      globalSecretManager.setOrgIdentifier(project.getOrgIdentifier());
-      globalSecretManager.setDefault(true);
-      ConnectorDTO connectorDTO = getConnectorRequestDTO(globalSecretManager, true);
-      secretManagerConnectorService.create(connectorDTO, project.getAccountIdentifier());
-    } catch (Exception ex) {
-      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
-          String.format("Harness Secret Manager for project %s could not be created", project.getName()), ex, USER);
     }
   }
 
@@ -277,8 +242,6 @@ public class ProjectServiceImpl implements ProjectService {
                        .identifier(projectIdentifier)
                        .build(),
           DELETE_ACTION);
-      //      secretManagerConnectorService.delete(
-      //          accountIdentifier, orgIdentifier, projectIdentifier, HARNESS_SECRET_MANAGER_IDENTIFIER);
     }
     return delete;
   }

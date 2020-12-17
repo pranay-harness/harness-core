@@ -4,6 +4,8 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class EntityCRUDEventsConstants {
+  public static final String ENTITY_CRUD = "entity_crud";
+
   public static final String ACTION_METADATA = "action";
   public static final String CREATE_ACTION = "create";
   public static final String UPDATE_ACTION = "update";
@@ -13,4 +15,5 @@ public class EntityCRUDEventsConstants {
   public static final String PROJECT_ENTITY = "project";
   public static final String ORGANIZATION_ENTITY = "organization";
   public static final String CONNECTOR_ENTITY = "connector";
+  public static final String ACCOUNT_ENTITY = "account";
 }

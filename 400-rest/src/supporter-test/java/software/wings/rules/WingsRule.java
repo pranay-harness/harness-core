@@ -14,6 +14,7 @@ import static software.wings.utils.WingsTestConstants.VERIFICATION_PATH;
 import static java.util.Arrays.asList;
 import static org.mockito.Mockito.mock;
 
+import io.harness.EventsFrameworkConfiguration;
 import io.harness.NoopStatement;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheConfig.CacheConfigBuilder;
@@ -40,6 +41,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
+import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.Cache;
 import io.harness.rule.InjectorRuleMixin;
@@ -314,6 +316,11 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     configuration.setNgManagerServiceHttpClientConfig(ngManagerServiceHttpClientConfig);
 
     configuration.setDistributedLockImplementation(DistributedLockImplementation.NOOP);
+
+    configuration.setEventsFrameworkConfiguration(
+        EventsFrameworkConfiguration.builder()
+            .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
+            .build());
     return configuration;
   }
 

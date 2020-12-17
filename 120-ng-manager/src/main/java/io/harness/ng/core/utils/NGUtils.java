@@ -129,7 +129,7 @@ public class NGUtils {
   public static String getDefaultHarnessSecretManagerName(EncryptionType encryptionType) {
     switch (encryptionType) {
       case GCP_KMS:
-        return "Harness Secrets Manager - Google KMS";
+        return "Harness Secrets Manager Google KMS";
       case LOCAL:
         return "Harness Vault";
       default:
