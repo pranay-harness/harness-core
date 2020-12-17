@@ -2,7 +2,15 @@ package io.harness.pms.sample.cv;
 
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
+import io.harness.callback.DelegateCallback;
+import io.harness.callback.DelegateCallbackToken;
+import io.harness.callback.MongoDatabase;
+import io.harness.delegate.beans.DelegateAsyncTaskResponse;
+import io.harness.delegate.beans.DelegateSyncTaskResponse;
+import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
+import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
+import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistence;
@@ -14,7 +22,9 @@ import io.harness.serializer.OrchestrationBeansRegistrars;
 import io.harness.serializer.PmsSdkModuleRegistrars;
 import io.harness.springdata.SpringPersistenceModule;
 
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -24,9 +34,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 
+@Slf4j
 public class CvServiceModule extends AbstractModule {
   private final CvServiceConfiguration config;
 
@@ -56,6 +69,8 @@ public class CvServiceModule extends AbstractModule {
         });
       }
     });
+    install(new DelegateServiceDriverGrpcClientModule(
+        config.getManagerServiceSecret(), config.getManagerTarget(), config.getManagerAuthority()));
   }
 
   @Provides
@@ -101,7 +116,11 @@ public class CvServiceModule extends AbstractModule {
   @Singleton
   @Named("morphiaClasses")
   Map<Class, String> morphiaCustomCollectionNames() {
-    return Collections.emptyMap();
+    return ImmutableMap.<Class, String>builder()
+        .put(DelegateSyncTaskResponse.class, "cvSample_delegateSyncTaskResponses")
+        .put(DelegateAsyncTaskResponse.class, "cvSample_delegateAsyncTaskResponses")
+        .put(DelegateTaskProgressResponse.class, "cvSample_delegateTaskProgressResponses")
+        .build();
   }
 
   @Provides
@@ -112,5 +131,26 @@ public class CvServiceModule extends AbstractModule {
         .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
         .withPMS(true)
         .build();
+  }
+
+  @Provides
+  @Singleton
+  Supplier<DelegateCallbackToken> getDelegateCallbackTokenSupplier(
+      DelegateServiceGrpcClient delegateServiceGrpcClient) {
+    return (Supplier<DelegateCallbackToken>) Suppliers.memoize(
+        () -> getDelegateCallbackToken(delegateServiceGrpcClient));
+  }
+
+  private DelegateCallbackToken getDelegateCallbackToken(DelegateServiceGrpcClient delegateServiceClient) {
+    log.info("Generating Delegate callback token");
+    final DelegateCallbackToken delegateCallbackToken = delegateServiceClient.registerCallback(
+        DelegateCallback.newBuilder()
+            .setMongoDatabase(MongoDatabase.newBuilder()
+                                  .setCollectionNamePrefix("cvSample")
+                                  .setConnection(config.getMongoConfig().getUri())
+                                  .build())
+            .build());
+    log.info("delegate callback token generated =[{}]", delegateCallbackToken.getToken());
+    return delegateCallbackToken;
   }
 }

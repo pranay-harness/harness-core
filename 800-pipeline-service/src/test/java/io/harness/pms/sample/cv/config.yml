@@ -13,3 +13,7 @@ pmsSdkGrpcServerConfig:
 pmsGrpcClientConfig:
   target: localhost:12011
   authority: localhost
+
+managerTarget: localhost:9880
+managerAuthority: localhost
+managerServiceSecret: "dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq"
