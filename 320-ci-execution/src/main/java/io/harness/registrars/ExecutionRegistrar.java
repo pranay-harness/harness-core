@@ -15,9 +15,16 @@ import io.harness.states.IntegrationStageStep;
 import io.harness.states.LiteEngineTaskStep;
 import io.harness.states.PluginStep;
 import io.harness.states.PublishStep;
+import io.harness.states.RestoreCacheGCSStep;
+import io.harness.states.RestoreCacheS3Step;
 import io.harness.states.RestoreCacheStep;
 import io.harness.states.RunStep;
+import io.harness.states.SaveCacheGCSStep;
+import io.harness.states.SaveCacheS3Step;
 import io.harness.states.SaveCacheStep;
+import io.harness.states.TestIntelligenceStep;
+import io.harness.states.UploadToGCSStep;
+import io.harness.states.UploadToS3Step;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -44,5 +51,12 @@ public class ExecutionRegistrar implements StepRegistrar {
     stateClasses.add(Pair.of(ECRStep.STEP_TYPE, injector.getInstance(ECRStep.class)));
     stateClasses.add(Pair.of(GCRStep.STEP_TYPE, injector.getInstance(GCRStep.class)));
     stateClasses.add(Pair.of(DockerStep.STEP_TYPE, injector.getInstance(DockerStep.class)));
+    stateClasses.add(Pair.of(UploadToS3Step.STEP_TYPE, injector.getInstance(UploadToS3Step.class)));
+    stateClasses.add(Pair.of(SaveCacheS3Step.STEP_TYPE, injector.getInstance(SaveCacheS3Step.class)));
+    stateClasses.add(Pair.of(RestoreCacheS3Step.STEP_TYPE, injector.getInstance(RestoreCacheS3Step.class)));
+    stateClasses.add(Pair.of(UploadToGCSStep.STEP_TYPE, injector.getInstance(UploadToGCSStep.class)));
+    stateClasses.add(Pair.of(SaveCacheGCSStep.STEP_TYPE, injector.getInstance(SaveCacheGCSStep.class)));
+    stateClasses.add(Pair.of(RestoreCacheGCSStep.STEP_TYPE, injector.getInstance(RestoreCacheGCSStep.class)));
+    stateClasses.add(Pair.of(TestIntelligenceStep.STEP_TYPE, injector.getInstance(TestIntelligenceStep.class)));
   }
 }
