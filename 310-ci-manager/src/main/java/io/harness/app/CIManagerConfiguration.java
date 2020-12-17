@@ -36,6 +36,7 @@ public class CIManagerConfiguration extends Configuration implements AssetsBundl
           .build();
   @Builder.Default @JsonProperty("cimanager-mongo") private MongoConfig harnessCIMongo = MongoConfig.builder().build();
   @Builder.Default @JsonProperty("harness-mongo") private MongoConfig harnessMongo = MongoConfig.builder().build();
+  @JsonProperty("pmsMongo") private MongoConfig pmsMongoConfig;
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   private ScmConnectionConfig scmConnectionConfig;
 

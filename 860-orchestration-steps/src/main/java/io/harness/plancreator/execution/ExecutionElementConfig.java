@@ -10,6 +10,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("executionElementConfig")
 public class ExecutionElementConfig {
+  String uuid;
   @NotEmpty List<ExecutionWrapperConfig> steps;
   List<ExecutionWrapperConfig> rollbackSteps;
 }
