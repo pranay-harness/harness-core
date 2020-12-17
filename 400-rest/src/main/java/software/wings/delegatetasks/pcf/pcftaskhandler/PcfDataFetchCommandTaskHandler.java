@@ -102,18 +102,9 @@ public class PcfDataFetchCommandTaskHandler extends PcfCommandTaskHandler {
       PcfConfig pcfConfig) throws PivotalClientApiException {
     Integer count = Integer.valueOf(0);
 
-    List<ApplicationSummary> applicationSummaries = pcfDeploymentManager.getPreviousReleases(
-        PcfRequestConfig.builder()
-            .endpointUrl(pcfConfig.getEndpointUrl())
-            .limitPcfThreads(pcfInfraMappingDataRequest.isLimitPcfThreads())
-            .ignorePcfConnectionContextCache(pcfInfraMappingDataRequest.isIgnorePcfConnectionContextCache())
-            .orgName(pcfInfraMappingDataRequest.getOrganization())
-            .spaceName(pcfInfraMappingDataRequest.getSpace())
-            .userName(String.valueOf(pcfConfig.getUsername()))
-            .password(String.valueOf(pcfConfig.getPassword()))
-            .timeOutIntervalInMins(pcfInfraMappingDataRequest.getTimeoutIntervalInMin())
-            .build(),
-        pcfInfraMappingDataRequest.getApplicationNamePrefix());
+    List<ApplicationSummary> applicationSummaries =
+        pcfDeploymentManager.getPreviousReleases(getPcfRequestConfig(pcfInfraMappingDataRequest, pcfConfig),
+            pcfInfraMappingDataRequest.getApplicationNamePrefix());
 
     applicationSummaries = applicationSummaries.stream()
                                .filter(applicationSummary
@@ -137,17 +128,7 @@ public class PcfDataFetchCommandTaskHandler extends PcfCommandTaskHandler {
   private void getRoutes(PcfDeploymentManager pcfDeploymentManager,
       PcfInfraMappingDataRequest pcfInfraMappingDataRequest, PcfInfraMappingDataResponse pcfInfraMappingDataResponse,
       PcfConfig pcfConfig) throws PivotalClientApiException {
-    List<String> routes = pcfDeploymentManager.getRouteMaps(
-        PcfRequestConfig.builder()
-            .orgName(pcfInfraMappingDataRequest.getOrganization())
-            .limitPcfThreads(pcfInfraMappingDataRequest.isLimitPcfThreads())
-            .ignorePcfConnectionContextCache(pcfInfraMappingDataRequest.isIgnorePcfConnectionContextCache())
-            .spaceName(pcfInfraMappingDataRequest.getSpace())
-            .userName(String.valueOf(pcfConfig.getUsername()))
-            .password(String.valueOf(pcfConfig.getPassword()))
-            .endpointUrl(pcfConfig.getEndpointUrl())
-            .timeOutIntervalInMins(pcfInfraMappingDataRequest.getTimeoutIntervalInMin())
-            .build());
+    List<String> routes = pcfDeploymentManager.getRouteMaps(getPcfRequestConfig(pcfInfraMappingDataRequest, pcfConfig));
 
     pcfInfraMappingDataResponse.setRouteMaps(routes);
   }
@@ -155,34 +136,31 @@ public class PcfDataFetchCommandTaskHandler extends PcfCommandTaskHandler {
   private void getSpaces(PcfDeploymentManager pcfDeploymentManager,
       PcfInfraMappingDataRequest pcfInfraMappingDataRequest, PcfInfraMappingDataResponse pcfInfraMappingDataResponse,
       PcfConfig pcfConfig) throws PivotalClientApiException {
-    List<String> spaces = pcfDeploymentManager.getSpacesForOrganization(
-        PcfRequestConfig.builder()
-            .orgName(pcfInfraMappingDataRequest.getOrganization())
-            .spaceName(pcfInfraMappingDataRequest.getSpace())
-            .limitPcfThreads(pcfInfraMappingDataRequest.isLimitPcfThreads())
-            .ignorePcfConnectionContextCache(pcfInfraMappingDataRequest.isIgnorePcfConnectionContextCache())
-            .userName(String.valueOf(pcfConfig.getUsername()))
-            .password(String.valueOf(pcfConfig.getPassword()))
-            .endpointUrl(pcfConfig.getEndpointUrl())
-            .timeOutIntervalInMins(pcfInfraMappingDataRequest.getTimeoutIntervalInMin())
-            .build());
+    List<String> spaces =
+        pcfDeploymentManager.getSpacesForOrganization(getPcfRequestConfig(pcfInfraMappingDataRequest, pcfConfig));
 
     pcfInfraMappingDataResponse.setSpaces(spaces);
   }
 
   private void getOrgs(PcfDeploymentManager pcfDeploymentManager, PcfInfraMappingDataRequest pcfInfraMappingDataRequest,
       PcfInfraMappingDataResponse pcfInfraMappingDataResponse, PcfConfig pcfConfig) throws PivotalClientApiException {
-    List<String> orgs = pcfDeploymentManager.getOrganizations(
-        PcfRequestConfig.builder()
-            .orgName(pcfInfraMappingDataRequest.getOrganization())
-            .userName(String.valueOf(pcfConfig.getUsername()))
-            .password(String.valueOf(pcfConfig.getPassword()))
-            .endpointUrl(pcfConfig.getEndpointUrl())
-            .timeOutIntervalInMins(pcfInfraMappingDataRequest.getTimeoutIntervalInMin())
-            .limitPcfThreads(pcfInfraMappingDataRequest.isLimitPcfThreads())
-            .ignorePcfConnectionContextCache(pcfInfraMappingDataRequest.isIgnorePcfConnectionContextCache())
-            .build());
+    List<String> orgs =
+        pcfDeploymentManager.getOrganizations(getPcfRequestConfig(pcfInfraMappingDataRequest, pcfConfig));
 
     pcfInfraMappingDataResponse.setOrganizations(orgs);
+  }
+
+  private PcfRequestConfig getPcfRequestConfig(
+      PcfInfraMappingDataRequest pcfInfraMappingDataRequest, PcfConfig pcfConfig) {
+    return PcfRequestConfig.builder()
+        .endpointUrl(pcfConfig.getEndpointUrl())
+        .limitPcfThreads(pcfInfraMappingDataRequest.isLimitPcfThreads())
+        .ignorePcfConnectionContextCache(pcfInfraMappingDataRequest.isIgnorePcfConnectionContextCache())
+        .orgName(pcfInfraMappingDataRequest.getOrganization())
+        .spaceName(pcfInfraMappingDataRequest.getSpace())
+        .userName(String.valueOf(pcfConfig.getUsername()))
+        .password(String.valueOf(pcfConfig.getPassword()))
+        .timeOutIntervalInMins(pcfInfraMappingDataRequest.getTimeoutIntervalInMin())
+        .build();
   }
 }
