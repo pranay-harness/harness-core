@@ -9,12 +9,12 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
-import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.pms.exception.service.PMSExecutionService;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.beans.ExecutionGraph;
 import io.harness.pms.execution.beans.ExecutionNode;
@@ -23,8 +23,6 @@ import io.harness.pms.filter.creation.PMSPipelineFilterRequestDTO;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
 import io.harness.pms.pipeline.mappers.PMSPipelineFilterHelper;
-import io.harness.pms.pipeline.resource.EdgeLayoutListDTO;
-import io.harness.pms.pipeline.resource.GraphLayoutNodeDTO;
 import io.harness.pms.pipeline.resource.PipelineExecutionDetailDTO;
 import io.harness.pms.pipeline.resource.PipelineExecutionSummaryDTO;
 import io.harness.pms.pipeline.service.PMSPipelineService;
@@ -35,42 +33,18 @@ import io.harness.utils.PageUtils;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.*;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.groovy.util.Maps;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @Api("pipelines")
@@ -87,6 +61,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Slf4j
 public class PipelineResource {
   private PMSPipelineService pmsPipelineService;
+  private PMSExecutionService pmsExecutionService;
 
   @POST
   @ApiOperation(value = "Create a Pipeline", nickname = "createPipeline")
@@ -447,5 +422,11 @@ public class PipelineResource {
   @Builder
   private static class DummyProgressData implements ProgressData {
     String data;
+  }
+  @GET
+  @Path("/execution/{planExecutionId}/inputset")
+  @ApiOperation(value = "Gets  inputsetYaml", nickname = "getInputsetYaml")
+  public String getInputsetYaml(@PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
+    return pmsExecutionService.getInputsetYaml(planExecutionId);
   }
 }
