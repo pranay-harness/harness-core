@@ -175,7 +175,7 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
     Object value = super.evaluateInternal(expression, ctx);
     if (value instanceof OrchestrationField) {
       OrchestrationField orchestrationField = (OrchestrationField) value;
-      return orchestrationField.getFinalValue();
+      return orchestrationField.fetchFinalValue();
     }
     return value;
   }

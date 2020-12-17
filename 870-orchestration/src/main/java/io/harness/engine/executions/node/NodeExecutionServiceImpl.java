@@ -1,7 +1,6 @@
 package io.harness.engine.executions.node;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.pms.contracts.execution.Status.DISCONTINUING;
 import static io.harness.springdata.SpringDataMongoUtils.returnNewOptions;
 
@@ -16,17 +15,11 @@ import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.NodeExecutionMapper;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.InterruptEffect;
-import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
-import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
-import io.harness.pms.sdk.core.registries.StepRegistry;
-import io.harness.pms.sdk.core.steps.Step;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 
 import com.google.inject.Inject;
 import com.mongodb.client.result.UpdateResult;
@@ -47,7 +40,6 @@ import org.springframework.data.mongodb.core.query.Update;
 public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Inject private MongoTemplate mongoTemplate;
   @Inject private OrchestrationEventEmitter eventEmitter;
-  @Inject private StepRegistry stepRegistry;
 
   @Override
   public NodeExecution get(String nodeExecutionId) {
@@ -248,38 +240,6 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       return false;
     }
     return true;
-  }
-
-  @Override
-  public StepParameters extractStepParameters(NodeExecutionProto nodeExecution) {
-    return extractStepParametersInternal(
-        nodeExecution.getNode().getStepType(), nodeExecution.getNode().getStepParameters());
-  }
-
-  @Override
-  public StepParameters extractResolvedStepParameters(NodeExecutionProto nodeExecution) {
-    return extractStepParametersInternal(
-        nodeExecution.getNode().getStepType(), nodeExecution.getResolvedStepParameters());
-  }
-
-  @Override
-  public StepParameters extractStepParameters(NodeExecution nodeExecution) {
-    return extractStepParametersInternal(
-        nodeExecution.getNode().getStepType(), nodeExecution.getNode().getStepParameters());
-  }
-
-  @Override
-  public StepParameters extractResolvedStepParameters(NodeExecution nodeExecution) {
-    return extractStepParametersInternal(nodeExecution.getNode().getStepType(),
-        nodeExecution.getResolvedStepParameters() == null ? null : nodeExecution.getResolvedStepParameters().toJson());
-  }
-
-  private StepParameters extractStepParametersInternal(StepType stepType, String stepParameters) {
-    Step<?> step = stepRegistry.obtain(stepType);
-    if (isEmpty(stepParameters)) {
-      return null;
-    }
-    return JsonOrchestrationUtils.asObject(stepParameters, step.getStepParametersClass());
   }
 
   private void emitEvent(NodeExecution nodeExecution) {

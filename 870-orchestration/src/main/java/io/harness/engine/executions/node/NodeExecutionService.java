@@ -60,12 +60,4 @@ public interface NodeExecutionService {
   Optional<NodeExecution> getByNodeIdentifier(@NonNull String nodeIdentifier, @NonNull String planExecutionId);
 
   List<NodeExecution> findByParentIdAndStatusIn(String parentId, EnumSet<Status> flowingStatuses);
-
-  StepParameters extractStepParameters(NodeExecutionProto nodeExecution);
-
-  StepParameters extractResolvedStepParameters(NodeExecutionProto nodeExecution);
-
-  StepParameters extractStepParameters(NodeExecution nodeExecution);
-
-  StepParameters extractResolvedStepParameters(NodeExecution nodeExecution);
 }

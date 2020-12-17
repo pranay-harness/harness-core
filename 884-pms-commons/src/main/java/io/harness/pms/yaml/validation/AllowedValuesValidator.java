@@ -1,8 +1,7 @@
-package io.harness.ngpipeline.inputset.validators;
+package io.harness.pms.yaml.validation;
 
-import io.harness.common.NGExpressionUtils;
-import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.expression.EngineExpressionService;
 
 import java.util.Arrays;
 import java.util.List;
@@ -40,7 +39,7 @@ public class AllowedValuesValidator implements RuntimeValidator {
     boolean isJexlExpression = false;
 
     // Check whether this is jexl() or not. If yes, get content between braces.
-    if (NGExpressionUtils.containsPattern(JEXL_PATTERN, parameters)) {
+    if (ExpressionUtils.containsPattern(JEXL_PATTERN, parameters)) {
       isJexlExpression = true;
       parameters = JEXL_PATTERN.split(parameters)[1];
       parameters = parameters.substring(0, parameters.length() - 1);

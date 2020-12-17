@@ -1,8 +1,7 @@
-package io.harness.ngpipeline.inputset.validators;
+package io.harness.pms.yaml.validation;
 
-import io.harness.common.NGExpressionUtils;
-import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.expression.EngineExpressionService;
 
 import java.util.regex.Pattern;
 
@@ -29,7 +28,7 @@ public class RegexValidator implements RuntimeValidator {
 
     String regex = engineExpressionService.renderExpression(ambiance, parameters);
     if (currentValue instanceof String) {
-      if (!NGExpressionUtils.matchesPattern(Pattern.compile(regex), (String) currentValue)) {
+      if (!ExpressionUtils.matchesPattern(Pattern.compile(regex), (String) currentValue)) {
         return RuntimeValidatorResponse.builder().errorMessage("Current value does not match with given regex").build();
       }
       return RuntimeValidatorResponse.builder().isValid(true).build();

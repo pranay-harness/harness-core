@@ -18,7 +18,6 @@ import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.interrupts.Interrupt;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutableResponse;
-import io.harness.pms.contracts.execution.ExecutableResponse.ResponseCase;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.TaskChainExecutableResponse;
 import io.harness.pms.contracts.execution.TaskExecutableResponse;
@@ -26,7 +25,6 @@ import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
-import io.harness.pms.sdk.core.steps.executables.Abortable;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -74,16 +72,17 @@ public class AbortHelper {
               "Delegate Task Cannot be aborted : TaskId: {}, NodeExecutionId: {}", taskId, nodeExecution.getUuid());
         }
       }
-      if (currentState instanceof Abortable && executableResponse != null) {
-        if (executableResponse.getResponseCase() == ResponseCase.ASYNC) {
-          ((Abortable) currentState)
-              .handleAbort(ambiance, nodeExecutionService.extractResolvedStepParameters(nodeExecution),
-                  executableResponse.getAsync());
-        } else {
-          log.error("Executable Response of type {} is not supported for abort", executableResponse.getResponseCase());
-          throw new InvalidRequestException("Abort for nodeExecution [" + nodeExecution.getUuid() + "] failed");
-        }
-      }
+      //      if (currentState instanceof Abortable && executableResponse != null) {
+      //        if (executableResponse.getResponseCase() == ResponseCase.ASYNC) {
+      //          ((Abortable) currentState)
+      //              .handleAbort(ambiance, nodeExecutionService.extractResolvedStepParameters(nodeExecution),
+      //                  executableResponse.getAsync());
+      //        } else {
+      //          log.error("Executable Response of type {} is not supported for abort",
+      //          executableResponse.getResponseCase()); throw new InvalidRequestException("Abort for nodeExecution [" +
+      //          nodeExecution.getUuid() + "] failed");
+      //        }
+      //      }
 
       NodeExecution updatedNodeExecution = nodeExecutionService.updateStatusWithOps(
           nodeExecution.getUuid(), finalStatus, ops -> ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
