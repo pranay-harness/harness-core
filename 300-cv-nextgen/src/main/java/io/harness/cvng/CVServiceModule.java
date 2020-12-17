@@ -80,6 +80,8 @@ import io.harness.cvng.dashboard.services.impl.HealthVerificationHeatMapServiceI
 import io.harness.cvng.dashboard.services.impl.HeatMapServiceImpl;
 import io.harness.cvng.dashboard.services.impl.LogDashboardServiceImpl;
 import io.harness.cvng.dashboard.services.impl.TimeSeriesDashboardServiceImpl;
+import io.harness.cvng.migration.impl.CVNGMigrationServiceImpl;
+import io.harness.cvng.migration.service.CVNGMigrationService;
 import io.harness.cvng.statemachine.services.AnalysisStateMachineServiceImpl;
 import io.harness.cvng.statemachine.services.OrchestrationServiceImpl;
 import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
@@ -95,7 +97,9 @@ import io.harness.queue.QueueController;
 import io.harness.threading.ThreadPool;
 import io.harness.version.VersionInfoManager;
 
+import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -200,6 +204,8 @@ public class CVServiceModule extends AbstractModule {
       bind(CVSetupService.class).to(CVSetupServiceImpl.class);
       bindTheMonitoringSourceImportStatusCreators();
       bind(CD10MappingService.class).to(CD10MappingServiceImpl.class);
+      bind(CVNGMigrationService.class).to(CVNGMigrationServiceImpl.class).in(Singleton.class);
+      bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
       bind(StackdriverService.class).to(StackdriverServiceImpl.class);
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
