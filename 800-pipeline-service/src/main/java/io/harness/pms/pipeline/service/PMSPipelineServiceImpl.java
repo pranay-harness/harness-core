@@ -6,6 +6,7 @@ import static io.harness.exception.WingsException.USER_SRE;
 import static java.lang.String.format;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.steps.StepInfo;
@@ -18,6 +19,7 @@ import io.harness.pms.pipeline.StepCategory;
 import io.harness.pms.pipeline.StepData;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.repositories.pipeline.PMSPipelineRepository;
+import io.harness.service.GraphGenerationService;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -139,6 +141,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   @Inject private PMSPipelineRepository pmsPipelineRepository;
   @Inject private FilterCreatorMergeService filterCreatorMergeService;
   @Inject private PmsSdkInstanceService pmsSdkInstanceService;
+  @Inject private GraphGenerationService graphGenerationService;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "Pipeline [%s] under Project[%s], Organization [%s] already exists";
@@ -259,6 +262,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     }
   }
 
+  @Override
   public StepCategory getSteps(String module, String category) {
     Map<String, List<StepInfo>> serviceInstanceNameToSupportedSteps =
         pmsSdkInstanceService.getInstanceNameToSupportedSteps();
@@ -271,6 +275,11 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       stepCategory.addStepCategory(calculateStepsForCategory(entry.getKey(), entry.getValue()));
     }
     return stepCategory;
+  }
+
+  @Override
+  public OrchestrationGraphDTO getOrchestrationGraph(String stageIdentifier, String planExecutionId) {
+    return graphGenerationService.generatePartialOrchestrationGraphFromIdentifier(stageIdentifier, planExecutionId);
   }
 
   private StepCategory calculateStepsForCategory(String module, List<StepInfo> stepInfos) {

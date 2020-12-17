@@ -1,5 +1,6 @@
 package io.harness.pms.pipeline.service;
 
+import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.StepCategory;
 
@@ -22,4 +23,6 @@ public interface PMSPipelineService {
   Page<PipelineEntity> list(Criteria criteria, Pageable pageable);
 
   StepCategory getSteps(String module, String category);
+
+  OrchestrationGraphDTO getOrchestrationGraph(String stageIdentifier, String planExecutionId);
 }
