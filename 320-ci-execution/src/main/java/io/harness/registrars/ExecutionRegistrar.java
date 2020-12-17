@@ -12,6 +12,7 @@ import io.harness.states.ECRStep;
 import io.harness.states.GCRStep;
 import io.harness.states.GitCloneStep;
 import io.harness.states.IntegrationStageStep;
+import io.harness.states.IntegrationStageStepPMS;
 import io.harness.states.LiteEngineTaskStep;
 import io.harness.states.PluginStep;
 import io.harness.states.PublishStep;
@@ -58,5 +59,6 @@ public class ExecutionRegistrar implements StepRegistrar {
     stateClasses.add(Pair.of(SaveCacheGCSStep.STEP_TYPE, injector.getInstance(SaveCacheGCSStep.class)));
     stateClasses.add(Pair.of(RestoreCacheGCSStep.STEP_TYPE, injector.getInstance(RestoreCacheGCSStep.class)));
     stateClasses.add(Pair.of(TestIntelligenceStep.STEP_TYPE, injector.getInstance(TestIntelligenceStep.class)));
+    stateClasses.add(Pair.of(IntegrationStageStepPMS.STEP_TYPE, injector.getInstance(IntegrationStageStepPMS.class)));
   }
 }

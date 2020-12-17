@@ -41,6 +41,9 @@ grpcClientConfigs:
   cv:
     target: localhost:12201
     authority: localhost
+  ci:
+    target: localhost:12301
+    authority: localhost
 
 managerTarget: localhost:9880
 managerAuthority: localhost

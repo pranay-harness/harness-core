@@ -46,6 +46,13 @@ cimanager-mongo:
   serverSelectionTimeout: 90000
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
+pmsMongo:
+  uri: mongodb://localhost:27017/pms-harness
+  connectTimeout: 30000
+  serverSelectionTimeout: 90000
+  maxConnectionIdleTime: 600000
+  connectionsPerHost: 300
+  indexManagerMode: AUTO
 
 enableAuth: false
 
@@ -82,7 +89,7 @@ ciExecutionServiceConfig:
 
 pmsSdkGrpcServerConfig:
   connectors:
-    - port: 12101
+    - port: 12301
 
 pmsGrpcClientConfig:
   target: localhost:12011

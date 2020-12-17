@@ -16,6 +16,7 @@ public class CiExecutionRegistrars {
           .addAll(NGCoreRegistrars.kryoRegistrars)
           .addAll(NGPipelineRegistrars.kryoRegistrars)
           .addAll(ApiServicesRegistrars.kryoRegistrars)
+          .addAll(PmsSdkModuleRegistrars.kryoRegistrars)
           .addAll(SMCoreRegistrars.kryoRegistrars)
           .addAll(ConnectorNextGenRegistrars.kryoRegistrars)
 
@@ -29,6 +30,7 @@ public class CiExecutionRegistrars {
           .addAll(NGPipelineRegistrars.morphiaRegistrars)
           .addAll(ApiServicesRegistrars.morphiaRegistrars)
           .addAll(SMCoreRegistrars.morphiaRegistrars)
+          .addAll(PmsSdkModuleRegistrars.morphiaRegistrars)
           .addAll(ConnectorNextGenRegistrars.morphiaRegistrars)
           .build();
 

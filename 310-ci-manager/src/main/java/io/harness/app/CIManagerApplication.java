@@ -8,10 +8,12 @@ import static java.util.Collections.singletonList;
 
 import io.harness.AuthorizationServiceHeader;
 import io.harness.ci.plan.creator.CIPipelineServiceInfoProvider;
+import io.harness.ci.plan.creator.filter.CIFilterCreationResponseMerger;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.engine.events.OrchestrationEventListener;
+import io.harness.exception.GeneralException;
 import io.harness.executionplan.CIExecutionPlanCreatorRegistrar;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.govern.ProviderModule;
@@ -269,17 +271,22 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
   }
 
   private void registerPMSSDK(Injector injector, CIManagerConfiguration config) {
-    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
-                                        .serviceName("ci")
-                                        .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
-                                        .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
-                                        .pipelineServiceInfoProvider(new CIPipelineServiceInfoProvider())
-                                        .asyncWaitEngine(injector.getInstance(AsyncWaitEngine.class))
-                                        .build();
+    PmsSdkConfiguration sdkConfig =
+        PmsSdkConfiguration.builder()
+            .serviceName("ci")
+            .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
+            .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
+            .pipelineServiceInfoProvider(injector.getInstance(CIPipelineServiceInfoProvider.class))
+            .asyncWaitEngine(injector.getInstance(AsyncWaitEngine.class))
+            .mongoConfig(config.getPmsMongoConfig())
+            .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
+            .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
+            .filterCreationResponseMerger(new CIFilterCreationResponseMerger())
+            .build();
     try {
       PmsSdkModule.initializeDefaultInstance(sdkConfig);
     } catch (Exception e) {
-      // Ignore for Now
+      throw new GeneralException("Fail to start ci manager because pms sdk registration failed", e);
     }
   }
 
