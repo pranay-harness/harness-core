@@ -1,5 +1,6 @@
 package io.harness.eventsframework.impl;
 
+import io.harness.eventsframework.ProducerShutdownException;
 import io.harness.eventsframework.api.AbstractProducer;
 import io.harness.eventsframework.producer.Message;
 
@@ -9,7 +10,16 @@ public class NoOpProducer extends AbstractProducer {
   }
 
   @Override
-  public String send(Message message) {
+  public String send(Message message) throws ProducerShutdownException {
     return "dummy-message-id";
+  }
+
+  @Override
+  public void shutdown() {
+    // Nothing required to shutdown
+  }
+
+  public static NoOpProducer of(String topicName) {
+    return new NoOpProducer(topicName);
   }
 }

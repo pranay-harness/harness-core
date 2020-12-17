@@ -13,7 +13,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.util.Optional;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -38,30 +39,19 @@ public class EntitySetupUsageCreateEventsConsumer implements Runnable {
     log.info("Started the consumer for creating the entity setup usage");
     try {
       while (true) {
-        Optional<Message> messageOptional = redisConsumer.read();
-        if (!messageOptional.isPresent()) {
-          sleepConsumer();
-          continue;
+        List<Message> messages = redisConsumer.read(2, TimeUnit.SECONDS);
+        for (Message message : messages) {
+          String messageId = message.getId();
+          EntitySetupUsageCreateDTO setupUsageCreateDTO = getEntitySetupUsageCreateDTO(message);
+          EntitySetupUsageDTO entitySetupUsageDTO = entityEventDTOToRestDTOMapper.toRestDTO(setupUsageCreateDTO);
+          entitySetupUsageService.save(entitySetupUsageDTO);
+          log.info("Received setup usage creation event for {} with messageId {}",
+              entitySetupUsageDTO.getReferredEntity().getEntityRef().getFullyQualifiedName(), messageId);
+          redisConsumer.acknowledge(messageId);
         }
-        String messageId = messageOptional.get().getId();
-        EntitySetupUsageCreateDTO setupUsageCreateDTO = getEntitySetupUsageCreateDTO(messageOptional.get());
-        EntitySetupUsageDTO entitySetupUsageDTO = entityEventDTOToRestDTOMapper.toRestDTO(setupUsageCreateDTO);
-        entitySetupUsageService.save(entitySetupUsageDTO);
-        log.info("Received setup usage creation event for {} with messageId {}",
-            entitySetupUsageDTO.getReferredEntity().getEntityRef().getFullyQualifiedName(), messageId);
-        redisConsumer.acknowledge(messageId);
-        sleepConsumer();
       }
     } catch (Exception ex) {
       log.info("The consumer for creating the entity setup usage ended", ex);
-    }
-  }
-
-  private void sleepConsumer() {
-    try {
-      Thread.sleep(CONSUMER_SLEEP_TIME);
-    } catch (InterruptedException ex) {
-      log.error("The thread processing the setup usage creation got interrupted");
     }
   }
 

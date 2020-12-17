@@ -19,6 +19,7 @@ import static org.springframework.data.domain.Pageable.unpaged;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.eventsframework.ProducerShutdownException;
 import io.harness.eventsframework.api.AbstractProducer;
 import io.harness.eventsframework.impl.NoOpProducer;
 import io.harness.eventsframework.producer.Message;
@@ -80,7 +81,11 @@ public class OrganizationServiceImplTest extends CategoryTest {
     Organization createdOrganization = organizationService.create(accountIdentifier, organizationDTO);
 
     ArgumentCaptor<Message> producerMessage = ArgumentCaptor.forClass(Message.class);
-    verify(eventProducer, times(1)).send(producerMessage.capture());
+    try {
+      verify(eventProducer, times(1)).send(producerMessage.capture());
+    } catch (ProducerShutdownException e) {
+      e.printStackTrace();
+    }
 
     assertEquals(organization, createdOrganization);
   }
@@ -115,7 +120,11 @@ public class OrganizationServiceImplTest extends CategoryTest {
     Organization updatedOrganization = organizationService.update(accountIdentifier, identifier, organizationDTO);
 
     ArgumentCaptor<Message> producerMessage = ArgumentCaptor.forClass(Message.class);
-    verify(eventProducer, times(1)).send(producerMessage.capture());
+    try {
+      verify(eventProducer, times(1)).send(producerMessage.capture());
+    } catch (ProducerShutdownException e) {
+      e.printStackTrace();
+    }
 
     assertEquals(organization, updatedOrganization);
   }

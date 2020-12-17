@@ -837,11 +837,11 @@ public class WingsModule extends AbstractModule implements ServersModule {
         if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
           bind(AbstractProducer.class)
               .annotatedWith(Names.named(ENTITY_CRUD))
-              .toInstance(new NoOpProducer("dummy_topic_name"));
+              .toInstance(NoOpProducer.of("dummy_topic_name"));
         } else {
           bind(AbstractProducer.class)
               .annotatedWith(Names.named(ENTITY_CRUD))
-              .toInstance(new RedisProducer(ENTITY_CRUD, redisConfig));
+              .toInstance(RedisProducer.of(ENTITY_CRUD, redisConfig));
         }
       }
     });

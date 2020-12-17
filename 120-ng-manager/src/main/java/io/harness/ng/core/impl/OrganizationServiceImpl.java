@@ -16,6 +16,7 @@ import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.eventsframework.ProducerShutdownException;
 import io.harness.eventsframework.api.AbstractProducer;
 import io.harness.eventsframework.organization.OrganizationEntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
@@ -88,11 +89,15 @@ public class OrganizationServiceImpl implements OrganizationService {
   }
 
   private void publishEvent(Organization organization, String action) {
-    eventProducer.send(Message.newBuilder()
-                           .putAllMetadata(ImmutableMap.of("accountId", organization.getAccountIdentifier(),
-                               ENTITY_TYPE_METADATA, ORGANIZATION_ENTITY, ACTION_METADATA, action))
-                           .setData(getOrganizationPayload(organization))
-                           .build());
+    try {
+      eventProducer.send(Message.newBuilder()
+                             .putAllMetadata(ImmutableMap.of("accountId", organization.getAccountIdentifier(),
+                                 ENTITY_TYPE_METADATA, ORGANIZATION_ENTITY, ACTION_METADATA, action))
+                             .setData(getOrganizationPayload(organization))
+                             .build());
+    } catch (ProducerShutdownException e) {
+      log.error("Failed to send event to events framework orgIdentifier: " + organization.getIdentifier(), e);
+    }
   }
 
   private ByteString getOrganizationPayload(Organization organization) {

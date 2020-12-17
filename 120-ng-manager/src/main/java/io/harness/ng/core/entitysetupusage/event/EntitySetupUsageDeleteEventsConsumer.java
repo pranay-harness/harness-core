@@ -11,7 +11,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.util.Optional;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -26,30 +27,19 @@ public class EntitySetupUsageDeleteEventsConsumer implements Runnable {
     log.info("Started the consumer for deleting the entity setup usage");
     try {
       while (true) {
-        Optional<Message> messageOptional = redisConsumer.read();
-        if (!messageOptional.isPresent()) {
-          sleepConsumer();
-          continue;
+        List<Message> messages = redisConsumer.read(2, TimeUnit.SECONDS);
+        for (Message message : messages) {
+          String messageId = message.getId();
+          DeleteSetupUsageDTO deleteRequestDTO = getEntitySetupUsageDeleteDTO(message);
+          entitySetupUsageService.delete(deleteRequestDTO.getAccountIdentifier(),
+              deleteRequestDTO.getReferredEntityFQN(), deleteRequestDTO.getReferredByEntityFQN());
+          log.info("Received setup usage delete event for referredEntity {}, referredBy {}, with messageId {}",
+              deleteRequestDTO.getReferredEntityFQN(), deleteRequestDTO.getReferredByEntityFQN(), messageId);
+          redisConsumer.acknowledge(messageId);
         }
-        String messageId = messageOptional.get().getId();
-        DeleteSetupUsageDTO deleteRequestDTO = getEntitySetupUsageDeleteDTO(messageOptional.get());
-        entitySetupUsageService.delete(deleteRequestDTO.getAccountIdentifier(), deleteRequestDTO.getReferredEntityFQN(),
-            deleteRequestDTO.getReferredByEntityFQN());
-        log.info("Received setup usage delete event for referredEntity {}, referredBy {}, with messageId {}",
-            deleteRequestDTO.getReferredEntityFQN(), deleteRequestDTO.getReferredByEntityFQN(), messageId);
-        redisConsumer.acknowledge(messageId);
-        sleepConsumer();
       }
     } catch (Exception ex) {
       log.info("The consumer for deleting the entity setup usage ended", ex);
-    }
-  }
-
-  private void sleepConsumer() {
-    try {
-      Thread.sleep(CONSUMER_SLEEP_TIME);
-    } catch (InterruptedException ex) {
-      log.error("The thread processing the setup usage deletion got interrupted");
     }
   }
 
