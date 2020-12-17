@@ -48,6 +48,13 @@ import org.mongodb.morphia.annotations.Entity;
 @CdIndex(name = "gitCommitAccountIdCreatedAtDesc",
     fields = { @Field(GitCommitKeys.accountId)
                , @Field(value = GitCommitKeys.createdAt, type = IndexType.DESC), })
+@CdIndex(name = "gitCommitAccountIdYamlConfigIdsStatusLastUpdatedIdx",
+    fields =
+    {
+      @Field(GitCommitKeys.accountId)
+      , @Field(GitCommitKeys.yamlGitConfigIds), @Field(GitCommitKeys.status),
+          @Field(value = GitCommitKeys.lastUpdatedAt, type = IndexType.DESC)
+    })
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "GitCommitKeys")
 public class GitCommit extends Base implements AccountAccess {
