@@ -34,9 +34,11 @@ import io.harness.pms.contracts.refobjects.RefType;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.rest.RestResponse;
+import io.harness.steps.barriers.beans.BarrierOutcome;
 import io.harness.testframework.framework.Setup;
 
 import software.wings.api.HttpStateExecutionData;
+import software.wings.api.WaitStateExecutionData;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -67,7 +69,8 @@ public class OrchestrationEngineTestSetupHelper {
                       ObjectMapper mapper = new ObjectMapper();
                       mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                       mapper.registerModule(new JavaTimeModule());
-                      mapper.registerSubtypes(HttpStateExecutionData.class);
+                      mapper.registerSubtypes(
+                          HttpStateExecutionData.class, WaitStateExecutionData.class, BarrierOutcome.class);
                       mapper.addMixIn(StepParameters.class, StepParametersTestMixin.class);
                       mapper.addMixIn(Ambiance.class, AmbianceTestMixin.class);
                       mapper.addMixIn(AdviserType.class, AdviserTypeTestMixin.class);
