@@ -40,8 +40,11 @@ message NodeExecutionProto {
 
   io.harness.pms.contracts.execution.failure.FailureInfo failureInfo = 16;
 
+  repeated string retryIds = 17;
+
+  bool oldRetry = 18;
+
   // Missing Fields which needs to be added
   // Interrupt Effect
-  // Retry Information
   // Timeout Information
 }

@@ -36,7 +36,8 @@ public class HttpResponseCodeSwitchAdviser implements Adviser {
         (HttpResponseCodeSwitchAdviserParameters) Preconditions.checkNotNull(
             kryoSerializer.asObject(advisingEvent.getAdviserParameters()));
     // This will be changed to obtain via output type
-    Outcome outcome = outcomeService.fetchOutcome(advisingEvent.getStepOutcomeRef()
+    Outcome outcome = outcomeService.fetchOutcome(advisingEvent.getNodeExecution()
+                                                      .getOutcomeRefsList()
                                                       .stream()
                                                       .filter(oRef -> oRef.getName().equals("http"))
                                                       .findFirst()

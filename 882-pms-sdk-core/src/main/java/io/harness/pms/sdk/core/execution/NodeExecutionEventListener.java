@@ -163,12 +163,10 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
     for (AdviserObtainment obtainment : planNodeProto.getAdviserObtainmentsList()) {
       Adviser adviser = adviserRegistry.obtain(obtainment.getType());
       AdvisingEvent advisingEvent = AdvisingEvent.builder()
-                                        .ambiance(nodeExecutionProto.getAmbiance())
-                                        .stepOutcomeRef(nodeExecutionProto.getOutcomeRefsList())
+                                        .nodeExecution(nodeExecutionProto)
                                         .toStatus(data.getToStatus())
                                         .fromStatus(data.getFromStatus())
                                         .adviserParameters(obtainment.getParameters().toByteArray())
-                                        .failureInfo(nodeExecutionProto.getFailureInfo())
                                         .build();
       if (adviser.canAdvise(advisingEvent)) {
         adviserResponse = adviser.onAdviseEvent(advisingEvent);

@@ -28,6 +28,17 @@ public class NodeExecutionUtils {
     return mode == ExecutionMode.TASK || mode == ExecutionMode.TASK_CHAIN;
   }
 
+  public static int retryCount(NodeExecutionProto nodeExecutionProto) {
+    if (isRetry(nodeExecutionProto)) {
+      return nodeExecutionProto.getRetryIdsList().size();
+    }
+    return 0;
+  }
+
+  private static boolean isRetry(NodeExecutionProto nodeExecutionProto) {
+    return !isEmpty(nodeExecutionProto.getRetryIdsList());
+  }
+
   public ExecutableResponse obtainLatestExecutableResponse(NodeExecutionProto proto) {
     List<ExecutableResponse> executableResponses = proto.getExecutableResponsesList();
     if (isEmpty(executableResponses)) {

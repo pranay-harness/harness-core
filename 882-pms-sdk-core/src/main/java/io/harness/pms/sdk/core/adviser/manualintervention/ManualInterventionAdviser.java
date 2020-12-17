@@ -40,7 +40,7 @@ public class ManualInterventionAdviser implements Adviser {
     boolean canAdvise = StatusUtils.brokeStatuses().contains(advisingEvent.getToStatus())
         && advisingEvent.getFromStatus() != INTERVENTION_WAITING;
     ManualInterventionAdviserParameters parameters = extractParameters(advisingEvent);
-    FailureInfo failureInfo = advisingEvent.getFailureInfo();
+    FailureInfo failureInfo = advisingEvent.getNodeExecution().getFailureInfo();
     if (failureInfo != null && !isEmpty(failureInfo.getFailureTypesList())) {
       return canAdvise
           && !Collections.disjoint(parameters.getApplicableFailureTypes(), failureInfo.getFailureTypesList());

@@ -1,15 +1,11 @@
-package io.harness.advisers.retry;
+package io.harness.pms.sdk.core.adviser.retry;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 
-import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.NextStepAdvise;
@@ -17,18 +13,19 @@ import io.harness.pms.contracts.advisers.RetryAdvise;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.commons.RepairActionCode;
+import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.sdk.core.AmbianceTestUtils;
+import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent.AdvisingEventBuilder;
-import io.harness.pms.sdk.core.adviser.retry.RetryAdviserParameters;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
-import io.harness.utils.AmbianceTestUtils;
+import io.harness.serializer.ProtoUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -38,9 +35,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 
-public class RetryAdviserTest extends OrchestrationTestBase {
+public class RetryAdviserTest extends PmsSdkCoreTestBase {
   public static final String DUMMY_NODE_ID = generateUuid();
   public static final String NODE_EXECUTION_ID = generateUuid();
   public static final String NODE_SETUP_ID = generateUuid();
@@ -50,7 +46,6 @@ public class RetryAdviserTest extends OrchestrationTestBase {
 
   @InjectMocks @Inject RetryAdviser retryAdviser;
 
-  @Mock NodeExecutionService nodeExecutionService;
   @Inject KryoSerializer kryoSerializer;
 
   private Ambiance ambiance;
@@ -72,21 +67,21 @@ public class RetryAdviserTest extends OrchestrationTestBase {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestValidStatus() {
-    NodeExecution nodeExecution = NodeExecution.builder()
-                                      .uuid(NODE_EXECUTION_ID)
-                                      .ambiance(ambiance)
-                                      .node(PlanNodeProto.newBuilder()
-                                                .setUuid(NODE_SETUP_ID)
-                                                .setName(NODE_NAME)
-                                                .setIdentifier("dummy")
-                                                .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                                                .build())
-                                      .startTs(System.currentTimeMillis())
-                                      .status(Status.FAILED)
-                                      .build();
-    when(nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance))).thenReturn(nodeExecution);
+    NodeExecutionProto nodeExecutionProto =
+        NodeExecutionProto.newBuilder()
+            .setUuid(NODE_EXECUTION_ID)
+            .setAmbiance(ambiance)
+            .setNode(PlanNodeProto.newBuilder()
+                         .setUuid(NODE_SETUP_ID)
+                         .setName(NODE_NAME)
+                         .setIdentifier("dummy")
+                         .setStepType(StepType.newBuilder().setType("DUMMY").build())
+                         .build())
+            .setStartTs(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
+            .setStatus(Status.FAILED)
+            .build();
     AdvisingEvent advisingEvent = AdvisingEvent.builder()
-                                      .ambiance(ambiance)
+                                      .nodeExecution(nodeExecutionProto)
                                       .toStatus(Status.FAILED)
                                       .adviserParameters(kryoSerializer.asBytes(getRetryParamsWithIgnore()))
                                       .build();
@@ -103,23 +98,22 @@ public class RetryAdviserTest extends OrchestrationTestBase {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestLastWaitInterval() {
-    NodeExecution nodeExecution =
-        NodeExecution.builder()
-            .uuid(NODE_EXECUTION_ID)
-            .ambiance(ambiance)
-            .node(PlanNodeProto.newBuilder()
-                      .setUuid(NODE_SETUP_ID)
-                      .setName(NODE_NAME)
-                      .setIdentifier("dummy")
-                      .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                      .build())
-            .startTs(System.currentTimeMillis())
-            .status(Status.FAILED)
-            .retryIds(Arrays.asList(generateUuid(), generateUuid(), generateUuid(), generateUuid()))
+    NodeExecutionProto nodeExecutionProto =
+        NodeExecutionProto.newBuilder()
+            .setUuid(NODE_EXECUTION_ID)
+            .setAmbiance(ambiance)
+            .setNode(PlanNodeProto.newBuilder()
+                         .setUuid(NODE_SETUP_ID)
+                         .setName(NODE_NAME)
+                         .setIdentifier("dummy")
+                         .setStepType(StepType.newBuilder().setType("DUMMY").build())
+                         .build())
+            .setStartTs(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
+            .setStatus(Status.FAILED)
+            .addAllRetryIds(Arrays.asList(generateUuid(), generateUuid(), generateUuid(), generateUuid()))
             .build();
-    when(nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance))).thenReturn(nodeExecution);
     AdvisingEvent advisingEvent = AdvisingEvent.<io.harness.pms.sdk.core.adviser.retry.RetryAdviserParameters>builder()
-                                      .ambiance(ambiance)
+                                      .nodeExecution(nodeExecutionProto)
                                       .toStatus(Status.FAILED)
                                       .adviserParameters(kryoSerializer.asBytes(getRetryParamsWithIgnore()))
                                       .build();
@@ -136,23 +130,23 @@ public class RetryAdviserTest extends OrchestrationTestBase {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestAfterRetryStatus() {
-    NodeExecution nodeExecution =
-        NodeExecution.builder()
-            .uuid(NODE_EXECUTION_ID)
-            .ambiance(ambiance)
-            .node(PlanNodeProto.newBuilder()
-                      .setUuid(NODE_SETUP_ID)
-                      .setName(NODE_NAME)
-                      .setIdentifier("dummy")
-                      .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                      .build())
-            .startTs(System.currentTimeMillis())
-            .status(Status.FAILED)
-            .retryIds(Arrays.asList(generateUuid(), generateUuid(), generateUuid(), generateUuid(), generateUuid()))
+    NodeExecutionProto nodeExecutionProto =
+        NodeExecutionProto.newBuilder()
+            .setUuid(NODE_EXECUTION_ID)
+            .setAmbiance(ambiance)
+            .setNode(PlanNodeProto.newBuilder()
+                         .setUuid(NODE_SETUP_ID)
+                         .setName(NODE_NAME)
+                         .setIdentifier("dummy")
+                         .setStepType(StepType.newBuilder().setType("DUMMY").build())
+                         .build())
+            .setStartTs(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
+            .setStatus(Status.FAILED)
+            .addAllRetryIds(
+                Arrays.asList(generateUuid(), generateUuid(), generateUuid(), generateUuid(), generateUuid()))
             .build();
-    when(nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance))).thenReturn(nodeExecution);
     AdvisingEvent advisingEvent = AdvisingEvent.builder()
-                                      .ambiance(ambiance)
+                                      .nodeExecution(nodeExecutionProto)
                                       .toStatus(Status.FAILED)
                                       .adviserParameters(kryoSerializer.asBytes(getRetryParamsWithIgnore()))
                                       .build();
@@ -170,26 +164,30 @@ public class RetryAdviserTest extends OrchestrationTestBase {
   public void shouldTestCanAdvise() {
     AdvisingEventBuilder advisingEventBuilder =
         AdvisingEvent.builder()
-            .ambiance(ambiance)
             .toStatus(Status.FAILED)
             .adviserParameters(kryoSerializer.asBytes(getRetryParamsWithIgnore()));
 
-    AdvisingEvent authFailEvent =
-        advisingEventBuilder
-            .failureInfo(FailureInfo.newBuilder()
-                             .setErrorMessage("Auth Error")
-                             .addAllFailureTypes(EnumSet.of(FailureType.AUTHENTICATION_FAILURE))
-                             .build())
+    NodeExecutionProto nodeExecutionAuthFail =
+        NodeExecutionProto.newBuilder()
+            .setAmbiance(ambiance)
+            .setFailureInfo(FailureInfo.newBuilder()
+                                .setErrorMessage("Auth Error")
+                                .addAllFailureTypes(EnumSet.of(FailureType.AUTHENTICATION_FAILURE))
+                                .build())
             .build();
+    AdvisingEvent authFailEvent = advisingEventBuilder.nodeExecution(nodeExecutionAuthFail).build();
     boolean canAdvise = retryAdviser.canAdvise(authFailEvent);
     assertThat(canAdvise).isTrue();
 
-    AdvisingEvent appFailEvent = advisingEventBuilder
-                                     .failureInfo(FailureInfo.newBuilder()
-                                                      .setErrorMessage("Application Error")
-                                                      .addAllFailureTypes(EnumSet.of(FailureType.APPLICATION_FAILURE))
-                                                      .build())
-                                     .build();
+    NodeExecutionProto nodeExecutionAppFail =
+        NodeExecutionProto.newBuilder()
+            .setAmbiance(ambiance)
+            .setFailureInfo(FailureInfo.newBuilder()
+                                .setErrorMessage("Application Error")
+                                .addAllFailureTypes(EnumSet.of(FailureType.APPLICATION_FAILURE))
+                                .build())
+            .build();
+    AdvisingEvent appFailEvent = advisingEventBuilder.nodeExecution(nodeExecutionAppFail).build();
     canAdvise = retryAdviser.canAdvise(appFailEvent);
     assertThat(canAdvise).isFalse();
   }

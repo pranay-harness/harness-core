@@ -11,6 +11,7 @@ import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.NextStepAdvise;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
@@ -58,10 +59,11 @@ public class OnFailAdviserTest extends PmsSdkCoreTestBase {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestValidStatus() {
+    NodeExecutionProto nodeExecutionProto = NodeExecutionProto.newBuilder().setAmbiance(ambiance).build();
     String nextNodeId = generateUuid();
     AdvisingEvent advisingEvent =
         AdvisingEvent.builder()
-            .ambiance(ambiance)
+            .nodeExecution(nodeExecutionProto)
             .toStatus(Status.FAILED)
             .adviserParameters(kryoSerializer.asBytes(
                 io.harness.pms.sdk.core.adviser.fail.OnFailAdviserParameters.builder().nextNodeId(nextNodeId).build()))
@@ -77,19 +79,22 @@ public class OnFailAdviserTest extends PmsSdkCoreTestBase {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestCanAdviseNextNull() {
-    AdvisingEvent advisingEvent =
-        AdvisingEvent.<io.harness.pms.sdk.core.adviser.fail.OnFailAdviserParameters>builder()
-            .ambiance(ambiance)
-            .toStatus(Status.FAILED)
-            .adviserParameters(
-                kryoSerializer.asBytes(io.harness.pms.sdk.core.adviser.fail.OnFailAdviserParameters.builder()
-                                           .applicableFailureTypes(EnumSet.of(FailureType.AUTHENTICATION_FAILURE))
-                                           .build()))
-            .failureInfo(FailureInfo.newBuilder()
-                             .setErrorMessage("Auth Error")
-                             .addAllFailureTypes(EnumSet.of(FailureType.AUTHENTICATION_FAILURE))
-                             .build())
+    NodeExecutionProto nodeExecutionProto =
+        NodeExecutionProto.newBuilder()
+            .setAmbiance(ambiance)
+            .setFailureInfo(FailureInfo.newBuilder()
+                                .setErrorMessage("Auth Error")
+                                .addAllFailureTypes(EnumSet.of(FailureType.AUTHENTICATION_FAILURE))
+                                .build())
             .build();
+    AdvisingEvent advisingEvent = AdvisingEvent.<io.harness.pms.sdk.core.adviser.fail.OnFailAdviserParameters>builder()
+                                      .nodeExecution(nodeExecutionProto)
+                                      .toStatus(Status.FAILED)
+                                      .adviserParameters(kryoSerializer.asBytes(
+                                          io.harness.pms.sdk.core.adviser.fail.OnFailAdviserParameters.builder()
+                                              .applicableFailureTypes(EnumSet.of(FailureType.AUTHENTICATION_FAILURE))
+                                              .build()))
+                                      .build();
 
     boolean canAdvise = onFailAdviser.canAdvise(advisingEvent);
     assertThat(canAdvise).isFalse();
@@ -101,7 +106,6 @@ public class OnFailAdviserTest extends PmsSdkCoreTestBase {
   public void shouldTestCanAdvise() {
     AdvisingEventBuilder advisingEventBuilder =
         AdvisingEvent.builder()
-            .ambiance(ambiance)
             .toStatus(Status.FAILED)
             .adviserParameters(
                 kryoSerializer.asBytes(io.harness.pms.sdk.core.adviser.fail.OnFailAdviserParameters.builder()
@@ -109,23 +113,28 @@ public class OnFailAdviserTest extends PmsSdkCoreTestBase {
                                            .applicableFailureTypes(EnumSet.of(FailureType.AUTHENTICATION_FAILURE))
                                            .build()));
 
-    AdvisingEvent authFailEvent =
-        advisingEventBuilder
-            .failureInfo(FailureInfo.newBuilder()
-                             .setErrorMessage("Auth Error")
-                             .addAllFailureTypes(EnumSet.of(FailureType.AUTHENTICATION_FAILURE))
-                             .build())
+    NodeExecutionProto nodeExecutionAuthFail =
+        NodeExecutionProto.newBuilder()
+            .setAmbiance(ambiance)
+            .setFailureInfo(FailureInfo.newBuilder()
+                                .setErrorMessage("Auth Error")
+                                .addAllFailureTypes(EnumSet.of(FailureType.AUTHENTICATION_FAILURE))
+                                .build())
             .build();
+    AdvisingEvent authFailEvent = advisingEventBuilder.nodeExecution(nodeExecutionAuthFail).build();
 
     boolean canAdvise = onFailAdviser.canAdvise(authFailEvent);
     assertThat(canAdvise).isTrue();
 
-    AdvisingEvent appFailEvent = advisingEventBuilder
-                                     .failureInfo(FailureInfo.newBuilder()
-                                                      .setErrorMessage("Application Error")
-                                                      .addAllFailureTypes(EnumSet.of(FailureType.APPLICATION_FAILURE))
-                                                      .build())
-                                     .build();
+    NodeExecutionProto nodeExecutionAppFail =
+        NodeExecutionProto.newBuilder()
+            .setAmbiance(ambiance)
+            .setFailureInfo(FailureInfo.newBuilder()
+                                .setErrorMessage("Application Error")
+                                .addAllFailureTypes(EnumSet.of(FailureType.APPLICATION_FAILURE))
+                                .build())
+            .build();
+    AdvisingEvent appFailEvent = advisingEventBuilder.nodeExecution(nodeExecutionAppFail).build();
     canAdvise = onFailAdviser.canAdvise(appFailEvent);
     assertThat(canAdvise).isFalse();
   }
@@ -134,9 +143,10 @@ public class OnFailAdviserTest extends PmsSdkCoreTestBase {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestCanAdviseWithNoFailureInfo() {
+    NodeExecutionProto nodeExecutionProto = NodeExecutionProto.newBuilder().setAmbiance(ambiance).build();
     AdvisingEventBuilder advisingEventBuilder =
         AdvisingEvent.<io.harness.pms.sdk.core.adviser.fail.OnFailAdviserParameters>builder()
-            .ambiance(ambiance)
+            .nodeExecution(nodeExecutionProto)
             .toStatus(Status.FAILED)
             .adviserParameters(
                 kryoSerializer.asBytes(OnFailAdviserParameters.builder()
