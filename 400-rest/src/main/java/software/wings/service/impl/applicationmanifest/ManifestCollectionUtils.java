@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.validation.Validator.notNullCheck;
 
-import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -53,6 +52,7 @@ public class ManifestCollectionUtils {
   @Inject private SecretManager secretManager;
   @Inject private HelmChartService helmChartService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private AppManifestPTaskHelper appManifestPTaskHelper;
 
   public ManifestCollectionParams prepareCollectTaskParams(String appManifestId, String appId) {
     ApplicationManifest appManifest = applicationManifestService.getById(appId, appManifestId);
@@ -68,8 +68,8 @@ public class ManifestCollectionUtils {
     }
     HelmChartConfig helmChartConfig = appManifest.getHelmChartConfig();
 
-    HelmChartConfigParamsBuilder helmChartConfigParamsBuilder =
-        constructHelmChartConfigParamsBuilder(appId, helmChartConfig, service.getHelmVersion());
+    HelmChartConfigParamsBuilder helmChartConfigParamsBuilder = constructHelmChartConfigParamsBuilder(
+        appId, helmChartConfig, service.getHelmVersion(), appManifest.getPerpetualTaskId(), appManifestId, accountId);
 
     return HelmChartCollectionParams.builder()
         .accountId(accountId)
@@ -87,8 +87,9 @@ public class ManifestCollectionUtils {
                               : helmCharts.stream().map(HelmChart::getVersion).collect(Collectors.toSet());
   }
 
-  private HelmChartConfigParamsBuilder constructHelmChartConfigParamsBuilder(
-      String appId, HelmChartConfig helmChartConfig, HelmVersion helmVersion) {
+  private HelmChartConfigParamsBuilder constructHelmChartConfigParamsBuilder(String appId,
+      HelmChartConfig helmChartConfig, HelmVersion helmVersion, String perpetualTaskId, String appManifestId,
+      String accountId) {
     SettingAttribute settingAttribute = settingsService.get(helmChartConfig.getConnectorId());
     notNullCheck("Helm repo config not found with id " + helmChartConfig.getConnectorId(), settingAttribute);
 
@@ -108,16 +109,17 @@ public class ManifestCollectionUtils {
 
     if (isNotBlank(helmRepoConfig.getConnectorId())) {
       SettingAttribute connectorSettingAttribute = settingsService.get(helmRepoConfig.getConnectorId());
-      notNullCheck(format("Cloud provider deleted for helm repository connector [%s] selected in service",
-                       settingAttribute.getName()),
-          connectorSettingAttribute);
+      if (connectorSettingAttribute != null) {
+        SettingValue settingValue = connectorSettingAttribute.getValue();
+        List<EncryptedDataDetail> connectorEncryptedDataDetails =
+            secretManager.getEncryptionDetails((EncryptableSetting) settingValue, appId, null);
 
-      SettingValue settingValue = connectorSettingAttribute.getValue();
-      List<EncryptedDataDetail> connectorEncryptedDataDetails =
-          secretManager.getEncryptionDetails((EncryptableSetting) settingValue, appId, null);
-
-      helmChartConfigParamsBuilder.connectorConfig(settingValue)
-          .connectorEncryptedDataDetails(connectorEncryptedDataDetails);
+        helmChartConfigParamsBuilder.connectorConfig(settingValue)
+            .connectorEncryptedDataDetails(connectorEncryptedDataDetails);
+      } else {
+        log.warn("Cloud provider doesn't exist with id: " + helmRepoConfig.getConnectorId());
+        appManifestPTaskHelper.deletePerpetualTask(perpetualTaskId, appManifestId, accountId);
+      }
     }
     return helmChartConfigParamsBuilder;
   }
