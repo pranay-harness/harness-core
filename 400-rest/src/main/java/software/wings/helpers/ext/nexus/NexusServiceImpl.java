@@ -8,6 +8,7 @@ import static io.harness.exception.WingsException.USER;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.task.ListNotifyResponseData;
@@ -40,6 +41,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import javax.net.ssl.SSLHandshakeException;
 import javax.xml.stream.XMLStreamException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
@@ -128,6 +130,7 @@ public class NexusServiceImpl implements NexusService {
       if (e.getCause() != null && e.getCause() instanceof XMLStreamException) {
         throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Nexus may not be running");
       }
+      checkSSLHandshakeException(e);
       return emptyMap();
     }
   }
@@ -494,6 +497,7 @@ public class NexusServiceImpl implements NexusService {
         return true;
       } catch (Exception e) {
         log.warn("Failed to retrieve repositories. Ignoring validation for Nexus 3 for now. User can give custom path");
+        checkSSLHandshakeException(e);
         return true;
       }
     }
@@ -518,6 +522,13 @@ public class NexusServiceImpl implements NexusService {
       return nexusTwoService.getFileSize(nexusConfig, encryptionDetails, artifactName, artifactUrl);
     } else {
       return nexusThreeService.getFileSize(nexusConfig, encryptionDetails, artifactName, artifactUrl);
+    }
+  }
+
+  private void checkSSLHandshakeException(Exception e) {
+    if (e.getCause() instanceof SSLHandshakeException
+        || ExceptionUtils.getMessage(e).contains("unable to find valid certification path")) {
+      throw new ArtifactServerException("Certificate validation failed:" + getRootCauseMessage(e), e);
     }
   }
 }
