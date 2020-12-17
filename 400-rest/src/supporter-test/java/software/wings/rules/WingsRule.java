@@ -14,7 +14,6 @@ import static software.wings.utils.WingsTestConstants.VERIFICATION_PATH;
 import static java.util.Arrays.asList;
 import static org.mockito.Mockito.mock;
 
-import io.harness.EventsFrameworkConfiguration;
 import io.harness.NoopStatement;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheConfig.CacheConfigBuilder;
@@ -24,6 +23,7 @@ import io.harness.config.PublisherConfiguration;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
+import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.globalcontex.AuditGlobalContextData;

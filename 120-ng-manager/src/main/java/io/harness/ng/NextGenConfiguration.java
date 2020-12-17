@@ -2,7 +2,7 @@ package io.harness.ng;
 
 import static java.util.stream.Collectors.toSet;
 
-import io.harness.EventsFrameworkConfiguration;
+import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;

@@ -284,11 +284,10 @@ java_library(
     ],
 )
 
-java_binary(
+java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
     data = ["//:resource"],
-    main_class = "io.harness.EventsClientApplication",
     resources = [],
     visibility = ["//visibility:public"],
     runtime_deps = [
@@ -299,6 +298,23 @@ java_binary(
         "//:lombok",
         "//950-events-api/src/main/proto:950_events_api_java_proto",
         "//950-events-api/src/main/proto:950_events_api_proto",
+    ],
+)
+
+java_binary(
+    name = "events_framework_test",
+    srcs = glob(["src/test/**/*.java"]),
+    data = ["//:resource"],
+    main_class = "io.harness.EventsClientApplication",
+    resources = [],
+    visibility = ["//visibility:private"],
+    runtime_deps = [
+        "@maven//:javax_ws_rs_javax_ws_rs_api",
+    ],
+    deps = [
+        "maven_deps",
+        "module",
+        "//:lombok",
     ],
 )
 

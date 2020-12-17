@@ -1,4 +1,4 @@
-package io.harness;
+package io.harness.eventsframework;
 
 import io.harness.redis.RedisConfig;
 

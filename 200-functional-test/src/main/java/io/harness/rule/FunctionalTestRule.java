@@ -5,7 +5,6 @@ import static io.harness.mongo.MongoModule.defaultMongoClientOptions;
 
 import static org.mockito.Mockito.mock;
 
-import io.harness.EventsFrameworkConfiguration;
 import io.harness.OrchestrationStepsModule;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheModule;
@@ -17,6 +16,7 @@ import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.segment.SegmentConfig;
+import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.functional.AbstractFunctionalTest;
