@@ -23,6 +23,7 @@ import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
+import static software.wings.beans.command.TailFilePatternEntry.Builder.aTailFilePatternEntry;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -108,10 +109,10 @@ import software.wings.beans.command.CopyConfigCommandUnit;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
-import software.wings.beans.command.TailFilePatternEntry;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.template.ReferencedTemplate;
 import software.wings.beans.template.Template;
+import software.wings.beans.template.TemplateReference;
 import software.wings.beans.template.TemplateUtils;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
@@ -243,12 +244,31 @@ public class CommandStateTest extends WingsBaseTest {
 
   private AbstractCommandUnit commandUnit =
       anExecCommandUnit().withName(COMMAND_UNIT_NAME).withCommandString("rm -f $HOME/jetty").build();
+
+  private AbstractCommandUnit execCommandUnitWithTailPattern =
+      anExecCommandUnit()
+          .withName(COMMAND_UNIT_NAME)
+          .withCommandString("echo 1")
+          .withTailPatterns(singletonList(aTailFilePatternEntry().withFilePath("delegate.log").withPattern("").build()))
+          .build();
+
   private Command command = aCommand()
                                 .withName(COMMAND_NAME)
                                 .addCommandUnits(commandUnit)
                                 .withTemplateVariables(asList(aVariable().name("var1").value("var1Value").build(),
                                     aVariable().name("var2").value("var2Value").build()))
                                 .build();
+
+  private Command commandWithTemplateReference =
+      aCommand()
+          .withName(COMMAND_NAME)
+          .addCommandUnits(commandUnit)
+          .withTemplateVariables(asList(
+              aVariable().name("var1").value("var1Value").build(), aVariable().name("var2").value("var2Value").build()))
+          .withTemplateReference(
+              TemplateReference.builder().templateUuid("TEMPLATE_ID").templateVersion(Long.valueOf(2)).build())
+          .build();
+
   @Mock ArtifactStream artifactStream;
   @Inject private ExecutorService executorService;
 
@@ -1124,7 +1144,7 @@ public class CommandStateTest extends WingsBaseTest {
         CommandStateExecutionData.Builder.aCommandStateExecutionData().build();
     ExecCommandUnit execCommandUnit = anExecCommandUnit()
                                           .withCommandString("echo \"Hello World\"")
-                                          .withTailPatterns(asList(TailFilePatternEntry.Builder.aTailFilePatternEntry()
+                                          .withTailPatterns(asList(aTailFilePatternEntry()
                                                                        .withFilePath("${serviceVariable.testfile}")
                                                                        .withPattern("${serviceVariable.filepattern}")
                                                                        .build()))
@@ -1403,6 +1423,106 @@ public class CommandStateTest extends WingsBaseTest {
         .thenReturn(Template.builder()
                         .templateObject(SshCommandTemplate.builder().commandUnits(Arrays.asList(commandUnit)).build())
                         .build());
+
+    ExecutionResponse executionResponse = commandState.execute(context);
+
+    when(context.getStateExecutionData()).thenReturn(executionResponse.getStateExecutionData());
+    commandState.handleAsyncResponse(
+        context, ImmutableMap.of(ACTIVITY_ID, CommandExecutionResult.builder().status(SUCCESS).build()));
+
+    verify(serviceResourceService).getWithDetails(APP_ID, null);
+
+    verify(activityHelperService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
+
+    verify(context, times(4)).getContextElement(ContextElementType.STANDARD);
+    verify(context, times(1)).getContextElement(ContextElementType.INSTANCE);
+    verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
+    verify(context).getStateExecutionData();
+
+    verify(context, times(5)).renderExpression(anyString());
+
+    verify(settingsService, times(4)).getByName(eq(ACCOUNT_ID), eq(APP_ID), eq(ENV_ID), anyString());
+    verify(settingsService, times(2)).get(anyString());
+
+    verify(workflowExecutionService).incrementInProgressCount(eq(APP_ID), anyString(), eq(1));
+    verify(workflowExecutionService).incrementSuccess(eq(APP_ID), anyString(), eq(1));
+    verifyNoMoreInteractions(serviceInstanceService, serviceCommandExecutorService, settingsService,
+        workflowExecutionService, artifactStreamService);
+    verify(activityService).getCommandUnits(APP_ID, ACTIVITY_ID);
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void executeLinkedServiceCommandWithSshConnectionWithTailPattern() {
+    commandState.setTemplateUuid(TEMPLATE_ID);
+
+    commandState.setHost(HOST_NAME);
+    commandState.setSshKeyRef("ssh_key_ref");
+    commandState.setConnectionType(CommandState.ConnectionType.SSH);
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build());
+
+    when(serviceCommandExecutorService.execute(eq(COMMAND), any())).thenReturn(SUCCESS);
+    when(settingsService.get("ssh_key_ref")).thenReturn(settingAttribute);
+    when(serviceResourceService.getWithDetails(APP_ID, null)).thenReturn(SERVICE);
+
+    when(templateService.get("TEMPLATE_ID", null))
+        .thenReturn(
+            Template.builder()
+                .templateObject(
+                    SshCommandTemplate.builder().commandUnits(Arrays.asList(execCommandUnitWithTailPattern)).build())
+                .build());
+
+    ExecutionResponse executionResponse = commandState.execute(context);
+
+    when(context.getStateExecutionData()).thenReturn(executionResponse.getStateExecutionData());
+    commandState.handleAsyncResponse(
+        context, ImmutableMap.of(ACTIVITY_ID, CommandExecutionResult.builder().status(SUCCESS).build()));
+
+    verify(serviceResourceService).getWithDetails(APP_ID, null);
+
+    verify(activityHelperService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
+
+    verify(context, times(4)).getContextElement(ContextElementType.STANDARD);
+    verify(context, times(1)).getContextElement(ContextElementType.INSTANCE);
+    verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
+    verify(context).getStateExecutionData();
+
+    verify(context, times(5)).renderExpression(anyString());
+
+    verify(settingsService, times(4)).getByName(eq(ACCOUNT_ID), eq(APP_ID), eq(ENV_ID), anyString());
+    verify(settingsService, times(2)).get(anyString());
+
+    verify(workflowExecutionService).incrementInProgressCount(eq(APP_ID), anyString(), eq(1));
+    verify(workflowExecutionService).incrementSuccess(eq(APP_ID), anyString(), eq(1));
+    verifyNoMoreInteractions(serviceInstanceService, serviceCommandExecutorService, settingsService,
+        workflowExecutionService, artifactStreamService);
+    verify(activityService).getCommandUnits(APP_ID, ACTIVITY_ID);
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void executeNestedLinkedServiceCommandWithSshConnectionWithTailPattern() {
+    commandState.setTemplateUuid(TEMPLATE_ID);
+
+    commandState.setHost(HOST_NAME);
+    commandState.setSshKeyRef("ssh_key_ref");
+    commandState.setConnectionType(CommandState.ConnectionType.SSH);
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build());
+
+    when(serviceCommandExecutorService.execute(eq(COMMAND), any())).thenReturn(SUCCESS);
+    when(settingsService.get("ssh_key_ref")).thenReturn(settingAttribute);
+    when(serviceResourceService.getWithDetails(APP_ID, null)).thenReturn(SERVICE);
+
+    when(templateService.get("TEMPLATE_ID", null))
+        .thenReturn(
+            Template.builder()
+                .templateObject(
+                    SshCommandTemplate.builder().commandUnits(Arrays.asList(commandWithTemplateReference)).build())
+                .build());
 
     ExecutionResponse executionResponse = commandState.execute(context);
 
