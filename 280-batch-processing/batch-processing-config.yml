@@ -42,6 +42,7 @@ billingDataPipelineConfig:
   gcsBasePath: gcsBasePathPlaceHolder
   gcpPipelinePubSubTopic: "ce-gcpdata"
   gcpUseNewPipeline: false
+  awsUseNewPipeline: false
   clusterDataGcsBucketName: "clusterdata-qa"
   clusterDataGcsBackupBucketName: "clusterdata-qa-backup"
 
