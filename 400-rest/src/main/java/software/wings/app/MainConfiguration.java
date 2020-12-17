@@ -3,7 +3,6 @@ package software.wings.app;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 
-import io.harness.EventsFrameworkConfiguration;
 import io.harness.cache.CacheConfig;
 import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.commandlibrary.CommandLibraryServiceConfig;
@@ -18,6 +17,7 @@ import io.harness.cvng.client.CVNGClientConfig;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SalesforceConfig;
 import io.harness.event.handler.segment.SegmentConfig;
+import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.lock.DistributedLockImplementation;

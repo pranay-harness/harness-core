@@ -1,8 +1,7 @@
 package io.harness;
 
-import static io.harness.logging.LoggingInitializer.initializeLogging;
-
 import io.harness.lock.redis.RedisPersistentLocker;
+import io.harness.logging.LoggingInitializer;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.queue.QueueListenerController;
@@ -44,7 +43,7 @@ public class EventsClientApplication extends Application<EventsClientApplication
 
   @Override
   public void initialize(Bootstrap<EventsClientApplicationConfiguration> bootstrap) {
-    initializeLogging();
+    LoggingInitializer.initializeLogging();
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
@@ -59,8 +58,8 @@ public class EventsClientApplication extends Application<EventsClientApplication
       throws InvalidProtocolBufferException, UnsupportedEncodingException, InterruptedException {
     log.info("Starting Next Gen Application ...");
     MaintenanceController.forceMaintenance(true);
-    Injector injector = Guice.createInjector(
-        new io.harness.EventsClientApplicationModule(appConfig), new MetricRegistryModule(metricRegistry));
+    Injector injector =
+        Guice.createInjector(new EventsClientApplicationModule(appConfig), new MetricRegistryModule(metricRegistry));
 
     registerJerseyFeatures(environment);
     registerManagedBeans(environment, injector);

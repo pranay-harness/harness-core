@@ -3,7 +3,7 @@ package io.harness.ng.eventsframework;
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.EntityCRUDEventsConstants.ENTITY_CRUD;
 
-import io.harness.EventsFrameworkConfiguration;
+import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.eventsframework.api.AbstractConsumer;
 import io.harness.eventsframework.api.AbstractProducer;
 import io.harness.eventsframework.impl.NoOpConsumer;

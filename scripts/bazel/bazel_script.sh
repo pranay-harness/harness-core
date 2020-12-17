@@ -81,7 +81,6 @@ BAZEL_MODULES="\
   //950-delegate-tasks-beans:module \
   //950-events-api/src/main/proto:all \
   //950-events-api:module \
-  //950-events-api:module_deploy.jar \
   //950-events-framework:module \
   //950-feature-flag:module \
   //950-ng-core:module \
@@ -236,7 +235,6 @@ build_proto_module() {
 build_bazel_application 800-pipeline-service
 build_bazel_application 930-notification-service
 build_bazel_application 940-notification-client
-build_bazel_application 950-events-api
 
 build_bazel_module 420-delegate-agent
 build_bazel_module 420-delegate-service
@@ -271,6 +269,7 @@ build_bazel_module 940-secret-manager-client
 build_bazel_module 950-command-library-common
 build_bazel_module 950-common-entities
 build_bazel_module 950-delegate-tasks-beans
+build_bazel_module 950-events-api
 build_bazel_module 950-events-framework
 build_bazel_module 950-feature-flag
 build_bazel_module 950-ng-core

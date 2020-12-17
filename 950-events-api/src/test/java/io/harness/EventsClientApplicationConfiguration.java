@@ -1,5 +1,6 @@
 package io.harness;
 
+import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.redis.RedisConfig;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

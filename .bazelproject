@@ -64,7 +64,8 @@ workspace_type: java
 java_language_level: 8
 
 import_run_configurations:
-  DelegateApp.xml
-  WingsApp.xml
-  Notification Microservice.xml
-  Notification Client.xml
+  run-configurations/DelegateApp.xml
+  run-configurations/WingsApp.xml
+  run-configurations/Notification Microservice.xml
+  run-configurations/Notification Client.xml
+  run-configurations/EventsFrameworkTest.xml

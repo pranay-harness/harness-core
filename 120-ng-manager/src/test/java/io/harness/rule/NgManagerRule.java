@@ -2,8 +2,8 @@ package io.harness.rule;
 
 import static org.mockito.Mockito.mock;
 
-import io.harness.EventsFrameworkConfiguration;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
+import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
