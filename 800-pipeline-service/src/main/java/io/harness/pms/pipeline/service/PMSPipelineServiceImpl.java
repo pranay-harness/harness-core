@@ -24,6 +24,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.client.result.UpdateResult;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -281,12 +282,15 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   private StepCategory calculateStepsForModuleBasedOnCategory(String category, List<StepInfo> stepInfos) {
-    List<StepInfo> filteredStepTypes =
-        stepInfos.stream()
-            .filter(stepInfo
-                -> EmptyPredicate.isEmpty(category) || stepInfo.getStepMetaData().getCategoryList().contains(category)
-                    || EmptyPredicate.isEmpty(stepInfo.getStepMetaData().getCategoryList()))
-            .collect(Collectors.toList());
+    List<StepInfo> filteredStepTypes = new ArrayList<StepInfo>();
+    if (!stepInfos.isEmpty()) {
+      filteredStepTypes =
+          stepInfos.stream()
+              .filter(stepInfo
+                  -> EmptyPredicate.isEmpty(category) || stepInfo.getStepMetaData().getCategoryList().contains(category)
+                      || EmptyPredicate.isEmpty(stepInfo.getStepMetaData().getCategoryList()))
+              .collect(Collectors.toList());
+    }
     filteredStepTypes.addAll(CommonStepInfo.getCommonSteps());
     StepCategory stepCategory = StepCategory.builder().name(LIBRARY).build();
     for (StepInfo stepType : filteredStepTypes) {
@@ -296,12 +300,14 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   private void addToTopLevel(StepCategory stepCategory, StepInfo stepInfo) {
-    String folderPath = stepInfo.getStepMetaData().getFolderPath();
-    String[] categoryArrayName = folderPath.split("/");
     StepCategory currentStepCategory = stepCategory;
-    for (String catogoryName : categoryArrayName) {
-      currentStepCategory = currentStepCategory.getOrCreateChildStepCategory(catogoryName);
+    if (stepInfo != null) {
+      String folderPath = stepInfo.getStepMetaData().getFolderPath();
+      String[] categoryArrayName = folderPath.split("/");
+      for (String catogoryName : categoryArrayName) {
+        currentStepCategory = currentStepCategory.getOrCreateChildStepCategory(catogoryName);
+      }
+      currentStepCategory.addStepData(StepData.builder().name(stepInfo.getName()).type(stepInfo.getType()).build());
     }
-    currentStepCategory.addStepData(StepData.builder().name(stepInfo.getName()).type(stepInfo.getType()).build());
   }
 }
