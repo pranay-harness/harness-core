@@ -9,6 +9,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.batch.processing.config.BatchMainConfig;
+import io.harness.batch.processing.config.BillingDataPipelineConfig;
 import io.harness.batch.processing.dao.intfc.BatchJobScheduledDataDao;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
 import io.harness.category.element.UnitTests;
@@ -30,6 +32,7 @@ public class BillingDataPipelineHealthStatusServiceImplTest extends CategoryTest
   @InjectMocks BillingDataPipelineHealthStatusServiceImpl billingDataPipelineHealthStatusService;
   @Mock BillingDataPipelineRecordDao billingDataPipelineRecordDao;
   @Mock BatchJobScheduledDataDao batchJobScheduledDataDao;
+  @Mock BatchMainConfig mainConfig;
 
   private static final String displayName = "displayName";
 
@@ -38,6 +41,8 @@ public class BillingDataPipelineHealthStatusServiceImplTest extends CategoryTest
     MockitoAnnotations.initMocks(this);
     BillingDataPipelineRecord billingDataPipelineRecord =
         BillingDataPipelineRecord.builder().cloudProvider("AWS").build();
+    when(mainConfig.getBillingDataPipelineConfig())
+        .thenReturn(BillingDataPipelineConfig.builder().awsUseNewPipeline(false).gcpUseNewPipeline(false).build());
     when(billingDataPipelineRecordDao.listAllBillingDataPipelineRecords())
         .thenReturn(Collections.singletonList(billingDataPipelineRecord));
     when(batchJobScheduledDataDao.fetchLastBatchJobScheduledData(anyString(), any())).thenReturn(null);

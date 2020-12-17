@@ -12,6 +12,8 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.batch.processing.ccm.CCMJobConstants;
+import io.harness.batch.processing.config.BatchMainConfig;
+import io.harness.batch.processing.config.BillingDataPipelineConfig;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
 import io.harness.batch.processing.service.impl.BillingDataPipelineServiceImpl;
 import io.harness.category.element.UnitTests;
@@ -52,6 +54,7 @@ public class AwsBillingDataPipelineTaskletTest extends CategoryTest {
   @Mock BillingDataPipelineRecordDao billingDataPipelineRecordDao;
   @Mock BillingDataPipelineServiceImpl billingDataPipelineService;
   @Mock CloudToHarnessMappingService cloudToHarnessMappingService;
+  @Mock BatchMainConfig mainConfig;
 
   @InjectMocks AwsBillingDataPipelineTasklet awsBillingDataPipelineTasklet;
 
@@ -85,6 +88,9 @@ public class AwsBillingDataPipelineTaskletTest extends CategoryTest {
             .withUuid(settingId)
             .withValue(CEAwsConfig.builder().curReportName(curReportName).awsMasterAccountId(masterAccountId).build())
             .build();
+    when(mainConfig.getBillingDataPipelineConfig())
+        .thenReturn(BillingDataPipelineConfig.builder().awsUseNewPipeline(false).build());
+
     when(cloudToHarnessMappingService.getAccountInfoFromId(accountId))
         .thenReturn(Account.Builder.anAccount().withAccountName(accountName).build());
     when(cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(

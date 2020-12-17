@@ -1,0 +1,267 @@
+// Package cloudFunction contains a Google Cloud Storage Cloud Function which handle AWS -> BQ Ingestion
+package cloudFunction
+
+import (
+	"context"
+	"encoding/json"
+	"io/ioutil"
+	"log"
+	"regexp"
+	"strconv"
+	"strings"
+	"fmt"
+	"os"
+	"time"
+	"cloud.google.com/go/scheduler/apiv1"
+	schedulerpb "google.golang.org/genproto/googleapis/cloud/scheduler/v1"
+	"cloud.google.com/go/bigquery"
+	"cloud.google.com/go/storage"
+	"google.golang.org/api/iterator"
+)
+
+// GCSEvent is the payload of a GCS event. Please refer to the docs for
+// additional information regarding GCS events.
+type GCSEvent struct {
+	Bucket string `json:"bucket"`
+	Name   string `json:"name"`
+}
+
+//Column : The Columns in the Manifest Json
+type Column struct {
+	Category string `json:"category"`
+	Name     string `json:"name"`
+	DataType string `json:"type"`
+}
+
+//BillingPeriod : The BillingPeriod Details in the Manifest Json
+type BillingPeriod struct {
+	Start string `json:"start"`
+	End   string `json:"end"`
+}
+
+//ManifestJson : The Json Structure AWS publishes in the CUR report
+type manifestJSON struct {
+	AssemblyID             string        `json:"assemblyId"`
+	Account                string        `json:"account"`
+	Columns                []Column      `json:"columns"`
+	Charset                string        `json:"charset"`
+	Compression            string        `json:"compression"`
+	ContentType            string        `json:"contentType"`
+	ReportID               string        `json:"reportId"`
+	ReportName             string        `json:"reportName"`
+	BillingPeriod          BillingPeriod `json:"billingPeriod"`
+	Bucket                 string        `json:"bucket"`
+	ReportKeys             []string      `json:"reportKeys"`
+	AdditionalArtifactKeys []string      `json:"additionalArtifactKeys"`
+}
+
+//CreateTable : is responsible for creating a Table in BigQuery
+func CreateTable(ctx context.Context, e GCSEvent) error {
+	ctxBack := context.Background()
+	projectId := os.Getenv("GCP_PROJECT")
+	if len(projectId) == 0 {
+    projectId = "ce-prod-274307"
+  }
+	client, bigQueryErr := bigquery.NewClient(ctxBack, projectId)
+	if bigQueryErr != nil {
+		log.Fatal("error creating client: {}", bigQueryErr.Error())
+	}
+	storageClient, errStorage := storage.NewClient(ctxBack)
+	if errStorage != nil {
+		log.Fatal("error creating Storage client: {}", errStorage.Error())
+	}
+	PathSlice := strings.Split(e.Name, "/")
+	awsRoleIdWithaccountIdSlice:= strings.Split(PathSlice[0], ":")
+	accountId := strings.ToLower(awsRoleIdWithaccountIdSlice[len(awsRoleIdWithaccountIdSlice) - 1])
+	inValidRegex, _ := regexp.Compile("[^a-z0-9_]")
+  if inValidRegex.MatchString(accountId) {
+    accountId = inValidRegex.ReplaceAllString(accountId, "_")
+  }
+	datasetName := "BillingReport_" + accountId
+	// 4th from left is definite to be the date folder
+  DateFolderSlice := strings.Split(PathSlice[3], "-")
+  TableDateSuffix := DateFolderSlice[0][:4] + "_" + DateFolderSlice[0][4:6]
+	tableName := "awsCurTable_" + TableDateSuffix
+
+
+  if !strings.HasSuffix(e.Name, ".json") {
+    return nil
+  }
+	fmt.Printf("Processing JSON")
+  rc, readerClientErr := storageClient.Bucket(e.Bucket).Object(e.Name).NewReader(ctxBack)
+  // log.Printf("Printing Event Context %+v\n", e)
+  if readerClientErr != nil {
+    log.Fatal(readerClientErr)
+  }
+  defer rc.Close()
+  body, readingErr := ioutil.ReadAll(rc)
+  if readingErr != nil {
+    log.Fatal(readingErr)
+  }
+  var jsonData manifestJSON
+  if readingErr = json.Unmarshal(body, &jsonData); readingErr != nil {
+    log.Fatal("Could not Deserialise Manifest File: {}", readingErr.Error())
+  }
+
+  createDataSet := true
+  datasetsIterator := client.Datasets(ctxBack)
+  for {
+    dataset, err := datasetsIterator.Next()
+    if err == iterator.Done {
+      break
+    }
+    if dataset.DatasetID == "BillingReport_"+accountId {
+      createDataSet = false
+      break
+    }
+  }
+
+  if createDataSet {
+    dataSetMetaData := &bigquery.DatasetMetadata{
+      Location: "US",
+    }
+    if dataSetCreationErr := client.Dataset("BillingReport_"+accountId).Create(ctxBack, dataSetMetaData); dataSetCreationErr != nil {
+      log.Fatal("Error Creating DataSet: {}", dataSetCreationErr.Error())
+    }
+  }
+
+  CloudFunctionsDataset := client.Dataset(datasetName)
+  CloudFunctionsDataset.Table(tableName).Delete(ctxBack)
+  if tableCreateErr := CloudFunctionsDataset.Table(tableName).Create(ctxBack, &bigquery.TableMetadata{Schema: getSchema(jsonData)}); tableCreateErr != nil {
+    log.Fatal("Error Creating File: {}", tableCreateErr.Error())
+  }
+
+  if DeleteObjectErr := storageClient.Bucket(e.Bucket).Object(e.Name).Delete(ctxBack); DeleteObjectErr != nil {
+    log.Fatal("Error Deleting Json Manifest File Post Processing: {}", DeleteObjectErr.Error())
+  }
+
+  // CloudScheduler Code
+  fmt.Printf("Processing CloudScheduler code")
+  ctxBack = context.Background()
+  c, err := scheduler.NewCloudSchedulerClient(ctxBack)
+  if err != nil {
+    fmt.Printf("%S", err)
+    return err
+  }
+  msgData := make(map[string]string)
+  msgData["accountId"] = accountId
+  msgData["bucket"] = e.Bucket
+  msgData["fileName"] = e.Name
+  msgData["datasetName"] = datasetName
+  msgData["tableName"] = tableName
+  msgData["projectId"] = projectId
+  msgData["tableSuffix"] = TableDateSuffix
+  msgDataJson, _ := json.Marshal(msgData)
+  msgDataString := string(msgDataJson)
+
+  triggerTime := time.Now().UTC()
+  triggerTime = triggerTime.Add(10 * time.Minute) // after 10 mins
+  fmt.Printf("triggerTime after 10 mins %s", triggerTime)
+  schedule := fmt.Sprintf("%d %d %d %d *", triggerTime.Minute(), triggerTime.Hour(), triggerTime.Day(), int(triggerTime.Month()))
+  fmt.Printf("schedule %s", schedule)
+
+  topic := fmt.Sprintf("projects/%s/topics/ce-awsdata-scheduler", projectId)
+  fmt.Printf("Topic: %s", topic)
+  fmt.Printf("msgDataJson: %s", msgDataJson)
+  var pubsubtarget = &schedulerpb.PubsubTarget {
+    TopicName: topic,
+    Data: []byte(msgDataString),
+  }
+
+  var jobTarget = &schedulerpb.Job_PubsubTarget {
+    PubsubTarget: pubsubtarget,
+  }
+  paths := strings.Split(e.Name, "/")
+  // It is quite definite that 4th from left will be the month folder always.
+  month := paths[3]
+  var name string
+  if strings.HasSuffix(paths[4], ".json") {
+    name = fmt.Sprintf("projects/%s/locations/us-central1/jobs/ce-awsdata-%s-%s", projectId, accountId, month)
+  } else if strings.HasSuffix(paths[5], ".json") {
+    subfolder := paths[4]
+    name = fmt.Sprintf("projects/%s/locations/us-central1/jobs/ce-awsdata-%s-%s-%s", projectId, accountId, month, subfolder)
+  }
+  description := fmt.Sprintf("Scheduler for %s", accountId)
+  var job = &schedulerpb.Job {
+    Name: name,
+    Description: description,
+    Target: jobTarget,
+    Schedule: schedule,
+  }
+
+  // https://godoc.org/google.golang.org/genproto/googleapis/cloud/scheduler/v1#DeleteJobRequest
+  req1 := &schedulerpb.DeleteJobRequest{
+    Name: name,
+  }
+  err = c.DeleteJob(ctxBack, req1)
+  if err != nil {
+    fmt.Printf("%s", err)
+  }
+
+  req := &schedulerpb.CreateJobRequest{
+    Parent: "projects/ccm-play/locations/us-central1",
+    Job: job,
+  }
+  resp, err := c.CreateJob(ctxBack, req)
+  if err != nil {
+    fmt.Printf("%s", err)
+  }
+  fmt.Printf("%s", resp)
+	return nil
+}
+
+//getSchema Method creates the Schema of the BQ table
+func getSchema(jsonData manifestJSON) bigquery.Schema {
+	var columnsArray []*bigquery.FieldSchema
+	mapOfNames := make(map[string]int)
+	for _, column := range jsonData.Columns {
+		name := strings.ToLower(column.Name)
+		// Handle Tag based rows which have `:` [Tags]
+		inValidRegex, _ := regexp.Compile("[^a-zA-Z0-9_]")
+		if inValidRegex.MatchString(column.Name) {
+			name = "TAG_" + inValidRegex.ReplaceAllString(column.Name, "_")
+		}
+		nameReferenceForMapCount := strings.ToLower(name)
+		NoOfOccurences, isPresent := mapOfNames[nameReferenceForMapCount]
+		if !isPresent {
+			mapOfNames[nameReferenceForMapCount] = 1
+		} else {
+			// Handle the case-insesitive nature of BQ columns
+			log.Print("Name: " + name + " Occurence? ", NoOfOccurences)
+			mapOfNames[nameReferenceForMapCount] = NoOfOccurences + 1
+			name = name + "_" + strconv.Itoa(NoOfOccurences)
+		}
+		dataType := getMappedDataColumn(column.DataType)
+		column := &bigquery.FieldSchema{
+			Required: false,
+			Name:     name,
+			Type:     dataType,
+		}
+		columnsArray = append(columnsArray, column)
+	}
+	return bigquery.Schema(columnsArray)
+}
+
+//getMappedDataColumn get the BQ compliant DataType
+func getMappedDataColumn(dataType string) bigquery.FieldType {
+	var modifiedDataType bigquery.FieldType
+	switch dataType {
+	case "String":
+		modifiedDataType = bigquery.StringFieldType
+	case "OptionalString":
+		modifiedDataType = bigquery.StringFieldType
+	case "Interval":
+		modifiedDataType = bigquery.StringFieldType
+	case "DateTime":
+		modifiedDataType = bigquery.TimestampFieldType
+	case "BigDecimal":
+		modifiedDataType = bigquery.FloatFieldType
+	case "OptionalBigDecimal":
+		modifiedDataType = bigquery.FloatFieldType
+	default:
+		modifiedDataType = bigquery.StringFieldType
+	}
+	return modifiedDataType
+}
+
+

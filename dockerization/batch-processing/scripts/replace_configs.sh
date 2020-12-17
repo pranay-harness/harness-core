@@ -83,6 +83,10 @@ if [[ "" != "$GCP_USE_NEW_PIPELINE" ]]; then
   yq write -i $CONFIG_FILE billingDataPipelineConfig.gcpUseNewPipeline "$GCP_USE_NEW_PIPELINE"
 fi
 
+if [[ "" != "$AWS_USE_NEW_PIPELINE" ]]; then
+  yq write -i $CONFIG_FILE billingDataPipelineConfig.awsUseNewPipeline "$AWS_USE_NEW_PIPELINE"
+fi
+
 if [[ "" != "$CLUSTER_DATA_GCS_BUCKET" ]]; then
   yq write -i $CONFIG_FILE billingDataPipelineConfig.clusterDataGcsBucketName "$CLUSTER_DATA_GCS_BUCKET"
 fi

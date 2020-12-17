@@ -4,6 +4,7 @@ import static io.harness.batch.processing.service.impl.BillingDataPipelineServic
 import static io.harness.batch.processing.service.impl.BillingDataPipelineServiceImpl.scheduledQueryKey;
 
 import io.harness.batch.processing.ccm.CCMJobConstants;
+import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.BillingDataPipelineService;
@@ -31,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Slf4j
 @Singleton
 public class AwsBillingDataPipelineTasklet implements Tasklet {
+  @Autowired private BatchMainConfig mainConfig;
   @Autowired private BillingDataPipelineService billingDataPipelineService;
   @Autowired private BillingDataPipelineRecordDao billingDataPipelineRecordDao;
   @Autowired protected CloudToHarnessMappingService cloudToHarnessMappingService;
@@ -48,6 +50,7 @@ public class AwsBillingDataPipelineTasklet implements Tasklet {
         CCMJobConstants.getFieldValueFromJobParams(parameters, CCMJobConstants.JOB_START_DATE).toEpochMilli(),
         CCMJobConstants.getFieldValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE).toEpochMilli());
 
+    boolean awsUseNewPipeline = mainConfig.getBillingDataPipelineConfig().isAwsUseNewPipeline();
     ceConnectorsList.forEach(settingAttribute -> {
       String settingId = settingAttribute.getUuid();
       CEAwsConfig awsConfig = (CEAwsConfig) settingAttribute.getValue();
@@ -57,16 +60,20 @@ public class AwsBillingDataPipelineTasklet implements Tasklet {
       if (null == billingDataPipelineRecord) {
         try {
           String dataSetId = billingDataPipelineService.createDataSet(account);
-          String dataTransferJobName;
-          HashMap<String, String> scheduledQueryJobsMap;
-          dataTransferJobName = billingDataPipelineService.createDataTransferJobFromGCS(
-              dataSetId, settingId, accountId, accountName, awsConfig.getCurReportName(), false);
-          // Prev Month Transfer Job
-          billingDataPipelineService.createDataTransferJobFromGCS(
-              dataSetId, settingId, accountId, accountName, awsConfig.getCurReportName(), true);
-          scheduledQueryJobsMap =
-              billingDataPipelineService.createScheduledQueriesForAWS(dataSetId, accountId, accountName);
-
+          String dataTransferJobName = "";
+          HashMap<String, String> scheduledQueryJobsMap = new HashMap<>();
+          if (awsUseNewPipeline) {
+            log.info("Using new AWS pipeline. Skipping creation of AWS transfer jobs and scheduled queries");
+          } else {
+            log.info("Using old AWS pipeline. Creating AWS transfer jobs and scheduled queries");
+            dataTransferJobName = billingDataPipelineService.createDataTransferJobFromGCS(
+                dataSetId, settingId, accountId, accountName, awsConfig.getCurReportName(), false);
+            // Prev Month Transfer Job
+            billingDataPipelineService.createDataTransferJobFromGCS(
+                dataSetId, settingId, accountId, accountName, awsConfig.getCurReportName(), true);
+            scheduledQueryJobsMap =
+                billingDataPipelineService.createScheduledQueriesForAWS(dataSetId, accountId, accountName);
+          }
           BillingDataPipelineRecord dataPipelineRecord =
               BillingDataPipelineRecord.builder()
                   .accountId(accountId)
@@ -76,8 +83,8 @@ public class AwsBillingDataPipelineTasklet implements Tasklet {
                   .settingId(settingId)
                   .dataSetId(dataSetId)
                   .dataTransferJobName(dataTransferJobName)
-                  .awsFallbackTableScheduledQueryName(scheduledQueryJobsMap.get(scheduledQueryKey))
-                  .preAggregatedScheduledQueryName(scheduledQueryJobsMap.get(preAggQueryKey))
+                  .awsFallbackTableScheduledQueryName(scheduledQueryJobsMap.getOrDefault(scheduledQueryKey, ""))
+                  .preAggregatedScheduledQueryName(scheduledQueryJobsMap.getOrDefault(preAggQueryKey, ""))
                   .build();
           billingDataPipelineRecordDao.create(dataPipelineRecord);
         } catch (IOException e) {
