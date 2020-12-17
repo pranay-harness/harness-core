@@ -41,6 +41,10 @@ public class MetricPackServiceImpl implements MetricPackService {
   static final List<String> APPDYNAMICS_METRICPACK_FILES =
       Lists.newArrayList("/appdynamics/metric-packs/peformance-pack.yml", "/appdynamics/metric-packs/quality-pack.yml",
           "/appdynamics/metric-packs/infrastructure-pack.yml");
+  static final List<String> STACKDRIVER_METRICPACK_FILES =
+      Lists.newArrayList("/stackdriver/metric-packs/default-performance-pack.yaml",
+          "/stackdriver/metric-packs/default-error-pack.yaml", "/stackdriver/metric-packs/default-infra-pack.yaml");
+
   private static final URL APPDYNAMICS_PERFORMANCE_PACK_DSL_PATH =
       MetricPackServiceImpl.class.getResource("/appdynamics/dsl/performance-pack.datacollection");
   public static final String APPDYNAMICS_PERFORMANCE_PACK_DSL;
@@ -108,29 +112,41 @@ public class MetricPackServiceImpl implements MetricPackService {
 
     // TODO: when new datasource is on boarded we should stub this out to its own piece so that the switch statements do
     // not grow
+    List<String> yamlFileNames = new ArrayList<>();
     switch (dataSourceType) {
       case APP_DYNAMICS:
-        YamlUtils yamlUtils = new YamlUtils();
-        APPDYNAMICS_METRICPACK_FILES.forEach(metricPackPath -> {
-          try {
-            final String metricPackYaml =
-                Resources.toString(MetricPackService.class.getResource(metricPackPath), Charsets.UTF_8);
-            final MetricPack metricPack = yamlUtils.read(metricPackYaml, new TypeReference<MetricPack>() {});
-            metricPack.setAccountId(accountId);
-            metricPack.setProjectIdentifier(projectIdentifier);
-            metricPack.setDataSourceType(dataSourceType);
-            metricPack.getMetrics().forEach(
-                metricDefinition -> metricDefinition.setThresholds(Collections.emptyList()));
-            metricPacks.put(metricPack.getIdentifier(), metricPack);
-          } catch (IOException e) {
-            throw new IllegalStateException("Error reading metric packs", e);
-          }
-        });
-        return metricPacks;
+        yamlFileNames.addAll(APPDYNAMICS_METRICPACK_FILES);
+        break;
+      case STACKDRIVER:
+        yamlFileNames.addAll(STACKDRIVER_METRICPACK_FILES);
+        break;
       default:
         unhandled(dataSourceType);
         throw new IllegalStateException("Invalid dataSourceType " + dataSourceType);
     }
+
+    yamlFileNames.forEach(metricPackPath -> {
+      try {
+        final String metricPackYaml =
+            Resources.toString(MetricPackService.class.getResource(metricPackPath), Charsets.UTF_8);
+        MetricPack metricPack = buildPack(metricPackYaml, accountId, projectIdentifier, dataSourceType);
+        metricPacks.put(metricPack.getIdentifier(), metricPack);
+      } catch (IOException e) {
+        throw new IllegalStateException("Error reading metric packs", e);
+      }
+    });
+    return metricPacks;
+  }
+
+  private MetricPack buildPack(String metricPackYaml, String accountId, String projectIdentifier,
+      DataSourceType dataSourceType) throws IOException {
+    YamlUtils yamlUtils = new YamlUtils();
+    final MetricPack metricPack = yamlUtils.read(metricPackYaml, new TypeReference<MetricPack>() {});
+    metricPack.setAccountId(accountId);
+    metricPack.setProjectIdentifier(projectIdentifier);
+    metricPack.setDataSourceType(dataSourceType);
+    metricPack.getMetrics().forEach(metricDefinition -> metricDefinition.setThresholds(Collections.emptyList()));
+    return metricPack;
   }
 
   @Override

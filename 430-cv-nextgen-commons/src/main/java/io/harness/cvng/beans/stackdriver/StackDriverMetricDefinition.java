@@ -7,26 +7,29 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.FieldNameConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 @Builder
 @Data
+@FieldNameConstants(innerTypeName = "StackDriverMetricDefinitionKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class StackDriverMetricDefinition {
-  private static final String dataSetsKey = "dataSets";
-  private static final String timeSeriesFilterKey = "timeSeriesFilter";
-  private static final String timeSeriesQueryKey = "timeSeriesQuery";
-  private static final String aggregationKey = "aggregations";
-  private static final String perSeriesAlignerKey = "perSeriesAligner";
-  private static final String crossSeriesReducerKey = "crossSeriesReducer";
-  private static final String groupByKey = "groupByFields";
+  public static final String dataSetsKey = "dataSets";
+  public static final String timeSeriesFilterKey = "timeSeriesFilter";
+  public static final String timeSeriesQueryKey = "timeSeriesQuery";
+  public static final String aggregationKey = "aggregations";
+  public static final String perSeriesAlignerKey = "perSeriesAligner";
+  public static final String crossSeriesReducerKey = "crossSeriesReducer";
+  public static final String groupByKey = "groupByFields";
 
   String filter;
   Aggregation aggregation;
 
   @Builder
   @Data
+  @FieldNameConstants(innerTypeName = "AggregationKeys")
   public static class Aggregation {
     @Builder.Default String alignmentPeriod = "60s";
     String perSeriesAligner;
