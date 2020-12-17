@@ -1,6 +1,14 @@
 package io.harness;
 
+import io.harness.callback.DelegateCallback;
+import io.harness.callback.DelegateCallbackToken;
+import io.harness.callback.MongoDatabase;
+import io.harness.delegate.beans.DelegateAsyncTaskResponse;
+import io.harness.delegate.beans.DelegateSyncTaskResponse;
+import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
+import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
+import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.grpc.server.PipelineServiceGrpcModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
@@ -16,25 +24,35 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
 import io.harness.springdata.SpringPersistenceModule;
 
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 
+@Slf4j
 public class PipelineServiceModule extends AbstractModule {
+  private final PipelineServiceConfiguration configuration;
+
   private static PipelineServiceModule instance;
 
-  public static PipelineServiceModule getInstance() {
+  private PipelineServiceModule(PipelineServiceConfiguration configuration) {
+    this.configuration = configuration;
+  }
+
+  public static PipelineServiceModule getInstance(PipelineServiceConfiguration appConfig) {
     if (instance == null) {
-      instance = new PipelineServiceModule();
+      instance = new PipelineServiceModule(appConfig);
     }
     return instance;
   }
@@ -61,6 +79,8 @@ public class PipelineServiceModule extends AbstractModule {
         });
       }
     });
+    install(new DelegateServiceDriverGrpcClientModule(configuration.getManagerServiceSecret(),
+        configuration.getManagerTarget(), configuration.getManagerAuthority()));
 
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);
@@ -109,7 +129,11 @@ public class PipelineServiceModule extends AbstractModule {
   @Singleton
   @Named("morphiaClasses")
   Map<Class, String> morphiaCustomCollectionNames() {
-    return Collections.emptyMap();
+    return ImmutableMap.<Class, String>builder()
+        .put(DelegateSyncTaskResponse.class, "pms_delegateSyncTaskResponses")
+        .put(DelegateAsyncTaskResponse.class, "pms_delegateAsyncTaskResponses")
+        .put(DelegateTaskProgressResponse.class, "pms_delegateTaskProgressResponses")
+        .build();
   }
 
   @Provides
@@ -119,5 +143,26 @@ public class PipelineServiceModule extends AbstractModule {
         .serviceName("PIPELINE")
         .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
         .build();
+  }
+
+  @Provides
+  @Singleton
+  Supplier<DelegateCallbackToken> getDelegateCallbackTokenSupplier(
+      DelegateServiceGrpcClient delegateServiceGrpcClient) {
+    return (Supplier<DelegateCallbackToken>) Suppliers.memoize(
+        () -> getDelegateCallbackToken(delegateServiceGrpcClient));
+  }
+
+  private DelegateCallbackToken getDelegateCallbackToken(DelegateServiceGrpcClient delegateServiceClient) {
+    log.info("Generating Delegate callback token");
+    final DelegateCallbackToken delegateCallbackToken = delegateServiceClient.registerCallback(
+        DelegateCallback.newBuilder()
+            .setMongoDatabase(MongoDatabase.newBuilder()
+                                  .setCollectionNamePrefix("pms")
+                                  .setConnection(configuration.getMongoConfig().getUri())
+                                  .build())
+            .build());
+    log.info("delegate callback token generated =[{}]", delegateCallbackToken.getToken());
+    return delegateCallbackToken;
   }
 }

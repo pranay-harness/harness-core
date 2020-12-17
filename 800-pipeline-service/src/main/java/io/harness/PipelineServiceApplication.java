@@ -81,7 +81,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         return appConfig;
       }
     });
-    modules.add(PipelineServiceModule.getInstance());
+    modules.add(PipelineServiceModule.getInstance(appConfig));
 
     Injector injector = Guice.createInjector(modules);
     injector.getInstance(HPersistence.class);
