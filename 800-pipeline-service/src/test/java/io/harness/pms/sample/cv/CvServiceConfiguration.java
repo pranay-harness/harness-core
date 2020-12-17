@@ -24,6 +24,10 @@ public class CvServiceConfiguration extends Configuration {
   @JsonProperty("pmsSdkGrpcServerConfig") private GrpcServerConfig pmsSdkGrpcServerConfig;
   @JsonProperty("pmsGrpcClientConfig") private GrpcClientConfig pmsGrpcClientConfig;
 
+  private String managerServiceSecret;
+  private String managerTarget;
+  private String managerAuthority;
+
   public CvServiceConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();
     defaultServerFactory.setJerseyRootPath("/api");
