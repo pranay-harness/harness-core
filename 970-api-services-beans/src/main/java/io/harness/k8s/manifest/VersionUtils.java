@@ -1,6 +1,5 @@
 package io.harness.k8s.manifest;
 
-import static io.harness.k8s.manifest.ObjectYamlUtils.encodeDot;
 import static io.harness.k8s.model.Kind.ConfigMap;
 import static io.harness.k8s.model.Kind.CronJob;
 import static io.harness.k8s.model.Kind.DaemonSet;
@@ -32,8 +31,7 @@ public class VersionUtils {
 
   private static boolean shouldVersion(KubernetesResource resource) {
     if (versionedKinds.contains(resource.getResourceId().getKind())) {
-      String skipVersioning =
-          (String) resource.getField("metadata.annotations." + encodeDot(HarnessAnnotations.skipVersioning));
+      String skipVersioning = resource.getMetadataAnnotationValue(HarnessAnnotations.skipVersioning);
       if (StringUtils.equalsIgnoreCase(skipVersioning, "true")) {
         return false;
       }
