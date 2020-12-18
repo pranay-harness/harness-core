@@ -36,7 +36,7 @@ public class ViewFilterStatsDataFetcherTest extends CategoryTest {
   @Mock BigQueryService bigQueryService;
   @Mock BigQuery bigQuery;
 
-  List<QLCEViewFilter> filters = new ArrayList<>();
+  List<QLCEViewFilterWrapper> filters = new ArrayList<>();
   List<String> values = new ArrayList<>();
 
   @Before

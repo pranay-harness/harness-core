@@ -13,8 +13,8 @@ import com.google.cloud.bigquery.TableResult;
 import java.util.List;
 
 public interface ViewsBillingService {
-  List<String> getFilterValueStats(
-      BigQuery bigQuery, List<QLCEViewFilter> filters, String cloudProviderTableName, Integer limit, Integer offset);
+  List<String> getFilterValueStats(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
+      String cloudProviderTableName, Integer limit, Integer offset);
 
   List<QLCEViewEntityStatsDataPoint> getEntityStatsDataPoints(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
       List<QLCEViewGroupBy> groupBy, List<QLCEViewAggregation> aggregateFunction, List<QLCEViewSortCriteria> sort,
