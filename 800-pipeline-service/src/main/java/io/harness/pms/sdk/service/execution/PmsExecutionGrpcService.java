@@ -1,15 +1,12 @@
 package io.harness.pms.sdk.service.execution;
 
-import io.harness.pms.contracts.plan.GraphLayoutNode;
-import io.harness.pms.contracts.service.ExecutionSummaryCreateRequest;
+import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.service.ExecutionSummaryResponse;
 import io.harness.pms.contracts.service.ExecutionSummaryUpdateRequest;
 import io.harness.pms.contracts.service.PmsExecutionServiceGrpc.PmsExecutionServiceImplBase;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.entity.PipelineExecutionSummaryEntity;
-import io.harness.pms.pipeline.mappers.GraphLayoutDtoMapper;
-import io.harness.pms.pipeline.resource.GraphLayoutNodeDTO;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 import io.harness.serializer.JsonUtils;
@@ -20,6 +17,7 @@ import io.grpc.stub.StreamObserver;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
@@ -35,52 +33,22 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
 
   @Inject PmsExecutionSummaryRespository pmsExecutionSummaryRepository;
   @Inject private PMSPipelineService pmsPipelineService;
+  @Inject private NodeExecutionService nodeExecutionService;
 
   @Override
   public void updateExecutionSummary(
       ExecutionSummaryUpdateRequest request, StreamObserver<ExecutionSummaryResponse> responseObserver) {
-    updatePipelineInfoJson(request);
-    updateStageModuleInfo(request);
+    NodeExecution nodeExecution = nodeExecutionService.get(request.getNodeExecutionId());
+    updatePipelineInfoJson(request, nodeExecution);
+    updateStageModuleInfo(request, nodeExecution);
     responseObserver.onNext(ExecutionSummaryResponse.newBuilder().build());
     responseObserver.onCompleted();
   }
 
-  @Override
-  public void createExecutionSummary(
-      ExecutionSummaryCreateRequest request, StreamObserver<ExecutionSummaryResponse> responseObserver) {
-    Optional<PipelineEntity> pipelineEntity = pmsPipelineService.get(
-        request.getAccountId(), request.getOrgId(), request.getProjectId(), request.getPipelineId(), false);
-    if (!pipelineEntity.isPresent()) {
-      return;
-    }
-    Map<String, GraphLayoutNode> layoutNodeMap = pipelineEntity.get().getLayoutNodeMap();
-    String startingNodeId = pipelineEntity.get().getStartingNodeID();
-    Map<String, GraphLayoutNodeDTO> layoutNodeDTOMap = new HashMap<>();
-    for (Map.Entry<String, GraphLayoutNode> entry : layoutNodeMap.entrySet()) {
-      layoutNodeDTOMap.put(entry.getKey(), GraphLayoutDtoMapper.toDto(entry.getValue()));
-    }
-    PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity =
-        PipelineExecutionSummaryEntity.builder()
-            .layoutNodeMap(layoutNodeDTOMap)
-            .pipelineIdentifier(request.getPipelineId())
-            .startingNodeId(pipelineEntity.get().getStartingNodeID())
-            .planExecutionId(request.getPlanExecutionId())
-            .name(request.getName())
-            .inputSetYaml(request.getInputSetYaml())
-            .status(ExecutionStatus.NOT_STARTED)
-            .startTs((long) request.getStartTs())
-            .endTs((long) request.getEndTs())
-            .startingNodeId(startingNodeId)
-            .build();
-    pmsExecutionSummaryRepository.save(pipelineExecutionSummaryEntity);
-    responseObserver.onNext(ExecutionSummaryResponse.newBuilder().build());
-    responseObserver.onCompleted();
-  }
-
-  private void updatePipelineInfoJson(ExecutionSummaryUpdateRequest request) {
+  private void updatePipelineInfoJson(ExecutionSummaryUpdateRequest request, NodeExecution nodeExecution) {
     String moduleName = request.getModuleName();
     String planExecutionId = request.getPlanExecutionId();
-    ExecutionStatus status = ExecutionStatus.getExecutionStatus(request.getStatus());
+    ExecutionStatus status = ExecutionStatus.getExecutionStatus(nodeExecution.getStatus());
     Map<String, Object> fieldToValues = JsonUtils.asMap(request.getPipelineModuleInfoJson());
     Update update = new Update();
 
@@ -100,10 +68,10 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
         }
       }
     }
-    if (request.getNodeType().equals("pipeline")) {
+    if (Objects.equals(nodeExecution.getNode().getGroup(), "pipeline")) {
       update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.status, status);
       if (ExecutionStatus.isTerminal(status)) {
-        update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.endTs, request.getEndTs());
+        update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.endTs, nodeExecution.getEndTs());
       }
     }
     Criteria criteria =
@@ -112,11 +80,11 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
     pmsExecutionSummaryRepository.update(query, update);
   }
 
-  private void updateStageModuleInfo(ExecutionSummaryUpdateRequest request) {
-    String stageUuid = request.getStageUuid();
+  private void updateStageModuleInfo(ExecutionSummaryUpdateRequest request, NodeExecution nodeExecution) {
+    String stageUuid = request.getNodeUuid();
     String moduleName = request.getModuleName();
-    String stageInfo = request.getStageModuleInfoJson();
-    ExecutionStatus status = ExecutionStatus.getExecutionStatus(request.getStatus());
+    String stageInfo = request.getNodeModuleInfoJson();
+    ExecutionStatus status = ExecutionStatus.getExecutionStatus(nodeExecution.getStatus());
     String planExecutionId = request.getPlanExecutionId();
     if (stageUuid == null) {
       return;
@@ -139,7 +107,7 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
         }
       }
     }
-    if (request.getNodeType().equals("stage")) {
+    if (Objects.equals(nodeExecution.getNode().getGroup(), "stage")) {
       update.set(
           PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".status", status);
     }
