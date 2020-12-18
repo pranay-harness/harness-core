@@ -119,7 +119,8 @@ public class DeploymentSummary extends Base {
       AwsAmiDeploymentKey awsAmiDeploymentKey, AwsCodeDeployDeploymentKey awsCodeDeployDeploymentKey,
       ContainerDeploymentKey containerDeploymentKey, SpotinstAmiDeploymentKey spotinstAmiDeploymentKey,
       AwsLambdaDeploymentKey awsLambdaDeploymentKey, K8sDeploymentKey k8sDeploymentKey,
-      AzureVMSSDeploymentKey azureVMSSDeploymentKey, AzureWebAppDeploymentKey azureWebAppDeploymentKey) {
+      CustomDeploymentKey customDeploymentKey, AzureVMSSDeploymentKey azureVMSSDeploymentKey,
+      AzureWebAppDeploymentKey azureWebAppDeploymentKey) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.accountId = accountId;
     this.infraMappingId = infraMappingId;
@@ -145,6 +146,7 @@ public class DeploymentSummary extends Base {
     this.spotinstAmiDeploymentKey = spotinstAmiDeploymentKey;
     this.awsLambdaDeploymentKey = awsLambdaDeploymentKey;
     this.k8sDeploymentKey = k8sDeploymentKey;
+    this.customDeploymentKey = customDeploymentKey;
     this.azureVMSSDeploymentKey = azureVMSSDeploymentKey;
     this.azureWebAppDeploymentKey = azureWebAppDeploymentKey;
   }

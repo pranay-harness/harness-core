@@ -170,6 +170,10 @@ public class DeploymentServiceImpl implements DeploymentService {
       query.filter(
           join(".", DeploymentSummaryKeys.customDeploymentKey, CustomDeploymentFieldKeys.instanceFetchScriptHash),
           customDeploymentKey.getInstanceFetchScriptHash());
+      if (isNotEmpty(customDeploymentKey.getTags())) {
+        query.filter(join(".", DeploymentSummaryKeys.customDeploymentKey, CustomDeploymentFieldKeys.tags),
+            customDeploymentKey.getTags());
+      }
       return customDeploymentKey;
     } else if (deploymentSummary.getAzureVMSSDeploymentKey() != null) {
       AzureVMSSDeploymentKey azureVMSSDeploymentKey = deploymentSummary.getAzureVMSSDeploymentKey();

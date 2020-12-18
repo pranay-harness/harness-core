@@ -1,5 +1,7 @@
 package io.harness.perpetualtask;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
 import static software.wings.sm.states.customdeployment.InstanceFetchState.OUTPUT_PATH_KEY;
 
 import io.harness.beans.DelegateTask;
@@ -23,6 +25,8 @@ import software.wings.service.intfc.security.SecretManager;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.protobuf.Message;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -73,6 +77,14 @@ public class CustomDeploymentInstanceSyncClient implements PerpetualTaskServiceC
 
   @Override
   public DelegateTask getValidationTask(PerpetualTaskClientContext clientContext, String accountId) {
+    final Optional<DeploymentSummary> deploymentSummaryOptional =
+        deploymentService.getWithInfraMappingId(getAccountId(clientContext), getInfraMappingId(clientContext));
+    List<String> tags = new ArrayList<>();
+    if (deploymentSummaryOptional.isPresent()) {
+      CustomDeploymentTypeInfo deploymentInfo =
+          (CustomDeploymentTypeInfo) (deploymentSummaryOptional.get().getDeploymentInfo());
+      tags = deploymentInfo.getTags();
+    }
     ShellScriptProvisionParameters taskParameters =
         ShellScriptProvisionParameters.builder()
             .accountId(accountId)
@@ -81,11 +93,13 @@ public class CustomDeploymentInstanceSyncClient implements PerpetualTaskServiceC
             .commandUnit(CommandUnitDetails.CommandUnitType.CUSTOM_DEPLOYMENT_FETCH_INSTANCES.getName())
             .outputPathKey(OUTPUT_PATH_KEY)
             .workflowExecutionId("test-execution-id")
+            .activityId(generateUuid())
             .build();
     return DelegateTask.builder()
         .accountId(accountId)
         .description("Fetch Instances")
         .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, getAppId(clientContext))
+        .tags(tags)
         .data(TaskData.builder()
                   .async(true)
                   .parameters(new Object[] {taskParameters})
