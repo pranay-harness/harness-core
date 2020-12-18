@@ -40,6 +40,9 @@ public class CCMConfigYamlHandler extends BaseYamlHandler<CCMConfig.Yaml, CCMCon
 
   private CCMConfig toBean(ChangeContext<CCMConfig.Yaml> changeContext) {
     CCMConfig.Yaml yaml = changeContext.getYaml();
+    if (null == yaml) {
+      return null;
+    }
     boolean isContinuousEfficiencyEnabled = yaml.isContinuousEfficiencyEnabled();
     return CCMConfig.builder().cloudCostEnabled(isContinuousEfficiencyEnabled).build();
   }
