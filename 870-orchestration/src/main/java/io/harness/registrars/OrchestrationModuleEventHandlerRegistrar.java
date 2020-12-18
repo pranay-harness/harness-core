@@ -5,20 +5,20 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.NodeExecutionStatusUpdateEventHandler;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
-import io.harness.pms.sdk.registries.registrar.OrchestrationEventHandlerRegistrar;
 
-import com.google.inject.Inject;
 import com.google.inject.Injector;
-import java.util.Set;
-import org.apache.commons.lang3.tuple.Pair;
+import java.util.HashMap;
+import java.util.Map;
+import lombok.experimental.UtilityClass;
 
 @OwnedBy(HarnessTeam.CDC)
-public class OrchestrationModuleEventHandlerRegistrar implements OrchestrationEventHandlerRegistrar {
-  @Inject private Injector injector;
+@UtilityClass
+public class OrchestrationModuleEventHandlerRegistrar {
+  public Map<OrchestrationEventType, OrchestrationEventHandler> getEngineEventHandlers(Injector injector) {
+    Map<OrchestrationEventType, OrchestrationEventHandler> engineEventHandlersMap = new HashMap<>();
 
-  @Override
-  public void register(Set<Pair<OrchestrationEventType, OrchestrationEventHandler>> handlerClasses) {
-    handlerClasses.add(Pair.of(OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE,
-        injector.getInstance(NodeExecutionStatusUpdateEventHandler.class)));
+    engineEventHandlersMap.put(OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE,
+        injector.getInstance(NodeExecutionStatusUpdateEventHandler.class));
+    return engineEventHandlersMap;
   }
 }

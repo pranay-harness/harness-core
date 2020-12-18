@@ -45,6 +45,7 @@ import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.registrars.OrchestrationAdviserRegistrar;
+import io.harness.registrars.OrchestrationExecutionEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.security.JWTAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -214,6 +215,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
               .engineSteps(NgStepRegistrar.getEngineSteps(injector))
               .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers(injector))
               .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators(injector))
+              .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers(injector))
               .build();
       modules.add(PmsSdkRegistryModule.getInstance(sdkConfig));
     }
@@ -235,6 +237,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
               .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers(injector))
               .kryoSerializer(injector.getInstance(KryoSerializer.class))
               .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators(injector))
+              .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers(injector))
               .build();
       try {
         PmsSdkModule.initializeDefaultInstance(sdkConfig);

@@ -4,9 +4,11 @@ import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.pms.contracts.advisers.AdviserType;
+import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.adviser.Adviser;
+import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.facilitator.Facilitator;
 import io.harness.pms.sdk.core.pipeline.filters.FilterCreationResponseMerger;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
@@ -33,6 +35,7 @@ public class PmsSdkConfiguration {
   Map<StepType, Step> engineSteps;
   Map<AdviserType, Adviser> engineAdvisers;
   Map<FacilitatorType, Facilitator> engineFacilitators;
+  Map<OrchestrationEventType, OrchestrationEventHandler> engineEventHandlersMap;
 
   public enum DeployMode {
     LOCAL,

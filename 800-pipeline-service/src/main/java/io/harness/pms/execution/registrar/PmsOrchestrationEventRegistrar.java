@@ -7,19 +7,23 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.execution.handlers.ExecutionSummaryCreateEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
-import io.harness.pms.sdk.registries.registrar.OrchestrationEventHandlerRegistrar;
+import io.harness.registrars.OrchestrationModuleEventHandlerRegistrar;
+import io.harness.registrars.OrchestrationVisualizationModuleEventHandlerRegistrar;
 
-import com.google.inject.Inject;
 import com.google.inject.Injector;
-import java.util.Set;
-import org.apache.commons.lang3.tuple.Pair;
+import java.util.HashMap;
+import java.util.Map;
+import lombok.experimental.UtilityClass;
 
 @OwnedBy(CDC)
-public class PmsOrchestrationEventRegistrar implements OrchestrationEventHandlerRegistrar {
-  @Inject private Injector injector;
-
-  @Override
-  public void register(Set<Pair<OrchestrationEventType, OrchestrationEventHandler>> handlerClasses) {
-    handlerClasses.add(Pair.of(ORCHESTRATION_START, injector.getInstance(ExecutionSummaryCreateEventHandler.class)));
+@UtilityClass
+public class PmsOrchestrationEventRegistrar {
+  public Map<OrchestrationEventType, OrchestrationEventHandler> getEngineEventHandlers(Injector injector) {
+    Map<OrchestrationEventType, OrchestrationEventHandler> engineEventHandlersMap = new HashMap<>();
+    engineEventHandlersMap.put(ORCHESTRATION_START, injector.getInstance(ExecutionSummaryCreateEventHandler.class));
+    engineEventHandlersMap.putAll(
+        OrchestrationVisualizationModuleEventHandlerRegistrar.getEngineEventHandlers(injector));
+    engineEventHandlersMap.putAll(OrchestrationModuleEventHandlerRegistrar.getEngineEventHandlers(injector));
+    return engineEventHandlersMap;
   }
 }

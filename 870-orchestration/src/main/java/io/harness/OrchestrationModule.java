@@ -33,10 +33,8 @@ import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingGrpcOutputServi
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.pms.sdk.execution.PmsNodeExecutionServiceGrpcImpl;
-import io.harness.pms.sdk.registries.registrar.OrchestrationEventHandlerRegistrar;
 import io.harness.pms.sdk.registries.registrar.ResolverRegistrar;
 import io.harness.queue.TimerScheduledExecutorService;
-import io.harness.registrars.OrchestrationModuleEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationResolverRegistrar;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.state.inspection.StateInspectionService;
@@ -89,10 +87,6 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
         MapBinder.newMapBinder(binder(), String.class, ResolverRegistrar.class);
     resolverRegistrarMapBinder.addBinding(OrchestrationResolverRegistrar.class.getName())
         .to(OrchestrationResolverRegistrar.class);
-    MapBinder<String, OrchestrationEventHandlerRegistrar> orchestrationEventHandlerRegistrarMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, OrchestrationEventHandlerRegistrar.class);
-    orchestrationEventHandlerRegistrarMapBinder.addBinding(OrchestrationModuleEventHandlerRegistrar.class.getName())
-        .to(OrchestrationModuleEventHandlerRegistrar.class);
 
     MapBinder<TaskCategory, TaskExecutor> taskExecutorMap =
         MapBinder.newMapBinder(binder(), TaskCategory.class, TaskExecutor.class);

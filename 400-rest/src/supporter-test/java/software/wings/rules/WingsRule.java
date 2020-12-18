@@ -38,13 +38,17 @@ import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.sdk.PmsSdkConfiguration;
+import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.redis.RedisConfig;
+import io.harness.registrars.OrchestrationStepsModuleEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
+import io.harness.registrars.OrchestrationVisualizationModuleEventHandlerRegistrar;
 import io.harness.registrars.WingsAdviserRegistrar;
 import io.harness.registrars.WingsStepRegistrar;
 import io.harness.remote.client.ServiceHttpClientConfig;
@@ -107,8 +111,10 @@ import io.dropwizard.lifecycle.Managed;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -245,6 +251,10 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
 
   public void getPmsSDKModules(List<Module> modules) {
     Injector injector = Guice.createInjector(modules);
+    Map<OrchestrationEventType, OrchestrationEventHandler> engineEventHandlersMap = new HashMap<>();
+    engineEventHandlersMap.putAll(
+        OrchestrationVisualizationModuleEventHandlerRegistrar.getEngineEventHandlers(injector));
+    engineEventHandlersMap.putAll(OrchestrationStepsModuleEventHandlerRegistrar.getEngineEventHandlers(injector));
     PmsSdkConfiguration sdkConfig =
         PmsSdkConfiguration.builder()
             .deploymentMode(PmsSdkConfiguration.DeployMode.LOCAL)
@@ -252,6 +262,7 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
             .engineSteps(WingsStepRegistrar.getEngineSteps(injector))
             .engineAdvisers(WingsAdviserRegistrar.getEngineAdvisers(injector))
             .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators(injector))
+            .engineEventHandlersMap(engineEventHandlersMap)
             .build();
     modules.add(PmsSdkRegistryModule.getInstance(sdkConfig));
   }

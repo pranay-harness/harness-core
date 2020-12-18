@@ -18,15 +18,11 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.exception.service.PMSExecutionService;
 import io.harness.pms.exception.service.PMSExecutionServiceImpl;
-import io.harness.pms.execution.registrar.PmsOrchestrationEventRegistrar;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetServiceImpl;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
-import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.StepTypeLookupServiceImpl;
-import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
-import io.harness.pms.sdk.registries.registrar.OrchestrationEventHandlerRegistrar;
 import io.harness.queue.QueueController;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
@@ -39,7 +35,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import java.util.List;
 import java.util.Map;
@@ -92,18 +87,11 @@ public class PipelineServiceModule extends AbstractModule {
     install(OrchestrationVisualizationModule.getInstance());
     install(new DelegateServiceDriverGrpcClientModule(configuration.getManagerServiceSecret(),
         configuration.getManagerTarget(), configuration.getManagerAuthority()));
-    install(PmsSdkRegistryModule.getInstance(PmsSdkConfiguration.builder().build()));
 
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);
     bind(PMSInputSetService.class).to(PMSInputSetServiceImpl.class);
     bind(PMSExecutionService.class).to(PMSExecutionServiceImpl.class);
-
-    // event registrar binding
-    MapBinder<String, OrchestrationEventHandlerRegistrar> orchestrationEventHandlerRegistrarMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, OrchestrationEventHandlerRegistrar.class);
-    orchestrationEventHandlerRegistrarMapBinder.addBinding(PmsOrchestrationEventRegistrar.class.getName())
-        .to(PmsOrchestrationEventRegistrar.class);
 
     bind(StepTypeLookupService.class).to(StepTypeLookupServiceImpl.class);
   }

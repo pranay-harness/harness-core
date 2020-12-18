@@ -13,9 +13,7 @@ import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionServiceImp
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.ng.core.NGCoreModule;
 import io.harness.ngpipeline.pipeline.executions.registries.StageTypeToStageExecutionMapperRegistryModule;
-import io.harness.pms.sdk.registries.registrar.OrchestrationEventHandlerRegistrar;
 import io.harness.registrars.NGStageTypeToStageExecutionSummaryMapperRegistrar;
-import io.harness.registrars.OrchestrationExecutionEventHandlerRegistrar;
 import io.harness.registrars.StageTypeToStageExecutionMapperRegistrar;
 
 import com.google.inject.AbstractModule;
@@ -44,11 +42,6 @@ public class NGModule extends AbstractModule {
     bind(NgPipelineExecutionService.class).to(NgPipelineExecutionServiceImpl.class);
     bind(DockerResourceService.class).to(DockerResourceServiceImpl.class);
     bind(JiraResourceService.class).to(JiraResourceServiceImpl.class);
-
-    MapBinder<String, OrchestrationEventHandlerRegistrar> orchestrationEventHandlerRegistrarMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, OrchestrationEventHandlerRegistrar.class);
-    orchestrationEventHandlerRegistrarMapBinder.addBinding(OrchestrationExecutionEventHandlerRegistrar.class.getName())
-        .to(OrchestrationExecutionEventHandlerRegistrar.class);
 
     MapBinder<String, StageTypeToStageExecutionMapperRegistrar> stageExecutionHelperRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, StageTypeToStageExecutionMapperRegistrar.class);
