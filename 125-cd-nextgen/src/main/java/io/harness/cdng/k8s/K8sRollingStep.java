@@ -23,8 +23,6 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.tasks.ResponseData;
 
-import software.wings.sm.states.k8s.K8sRollingDeploy;
-
 import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +30,7 @@ import java.util.Map;
 public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParameters>, K8sStepExecutor {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_ROLLING.getName()).build();
+  private final String K8S_ROLLING_DEPLOY_COMMAND_NAME = "Rolling Deployment";
 
   @Inject private K8sStepHelper k8sStepHelper;
 
@@ -57,7 +56,7 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
             .skipDryRun(stepParameters.getSkipDryRun().getValue())
             .inCanaryWorkflow(false)
             .releaseName(releaseName)
-            .commandName(K8sRollingDeploy.K8S_ROLLING_DEPLOY_COMMAND_NAME)
+            .commandName(K8S_ROLLING_DEPLOY_COMMAND_NAME)
             .taskType(K8sTaskType.DEPLOYMENT_ROLLING)
             .localOverrideFeatureFlag(false)
             .timeoutIntervalInMin(

@@ -207,6 +207,7 @@ import io.harness.delegate.task.jira.JiraTaskNGParameters;
 import io.harness.delegate.task.jira.response.JiraTaskNGResponse;
 import io.harness.delegate.task.jira.response.JiraTaskNGResponse.JiraIssueData;
 import io.harness.delegate.task.k8s.DirectK8sInfraDelegateConfig;
+import io.harness.delegate.task.k8s.K8sApplyRequest;
 import io.harness.delegate.task.k8s.K8sBGDeployRequest;
 import io.harness.delegate.task.k8s.K8sBGDeployResponse;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
@@ -243,7 +244,6 @@ import io.harness.delegate.task.stepstatus.StepMapOutput;
 import io.harness.delegate.task.stepstatus.StepStatus;
 import io.harness.delegate.task.stepstatus.StepStatusTaskParameters;
 import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
-import io.harness.expression.ExpressionEvaluator;
 import io.harness.serializer.KryoRegistrar;
 
 import software.wings.beans.TaskType;
@@ -512,5 +512,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(DockerRegistryProviderType.class, 19434);
     kryo.register(K8sBGDeployRequest.class, 19435);
     kryo.register(K8sBGDeployResponse.class, 19436);
+    kryo.register(K8sApplyRequest.class, 19437);
   }
 }
