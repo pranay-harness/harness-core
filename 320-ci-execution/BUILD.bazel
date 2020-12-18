@@ -21,7 +21,6 @@ java_library(
         "//870-yaml-beans:module",
         "//876-orchestration-beans:module",
         "//879-pms-sdk:module",
-        "//890-orchestration-persistence:module",
         "//890-pms-contracts/src/main/proto:890_pms_contracts_java_proto",
         "//890-sm-core:module",
         "//910-delegate-service-driver:module",

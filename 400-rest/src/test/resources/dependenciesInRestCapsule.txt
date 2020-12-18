@@ -621,7 +621,6 @@ software.wings:890-sm-core:jar:0.0.1-SNAPSHOT
 software.wings:950-common-entities:jar:0.0.1-SNAPSHOT
 software.wings:24-manager-delegate-service-beans:jar:0.0.1-SNAPSHOT
 software.wings:25-manager-delegate-service-driver:jar:0.0.1-SNAPSHOT
-software.wings:890-orchestration-persistence:jar:0.0.1-SNAPSHOT
 software.wings:880-orchestration-beans:jar:0.0.1-SNAPSHOT
 software.wings:870-orchestration:jar:0.0.1-SNAPSHOT
 software.wings:860-orchestration-steps:jar:0.0.1-SNAPSHOT

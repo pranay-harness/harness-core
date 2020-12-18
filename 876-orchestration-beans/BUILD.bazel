@@ -12,7 +12,6 @@ java_library(
     visibility = ["//visibility:public"],
     exports = [
         "//879-pms-sdk:module",
-        "//890-orchestration-persistence:module",
         "//890-pms-contracts:module",
         "//950-timeout-engine:module",
         "//960-persistence:module",

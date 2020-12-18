@@ -1,7 +1,5 @@
 package io.harness;
 
-import io.harness.orchestration.OrchestrationPersistenceModule;
-
 import com.google.inject.AbstractModule;
 
 public class PmsCommonsModule extends AbstractModule {
@@ -15,7 +13,5 @@ public class PmsCommonsModule extends AbstractModule {
   }
 
   @Override
-  protected void configure() {
-    install(OrchestrationPersistenceModule.getInstance());
-  }
+  protected void configure() {}
 }

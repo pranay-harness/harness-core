@@ -55,7 +55,6 @@ BAZEL_MODULES="\
   //879-pms-sdk:module \
   //882-pms-sdk-core:module \
   //884-pms-commons:module \
-  //890-orchestration-persistence:module \
   //890-pms-contracts/src/main/proto:all \
   //890-pms-contracts:module \
   //890-sm-core:module \
@@ -254,7 +253,6 @@ build_bazel_module 876-orchestration-beans
 build_bazel_module 879-pms-sdk
 build_bazel_module 882-pms-sdk-core
 build_bazel_module 884-pms-commons
-build_bazel_module 890-orchestration-persistence
 build_bazel_module 890-pms-contracts
 build_bazel_module 890-sm-core
 #build_bazel_module 900-yaml-sdk
