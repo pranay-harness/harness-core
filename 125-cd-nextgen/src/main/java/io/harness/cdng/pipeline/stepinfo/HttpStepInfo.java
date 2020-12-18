@@ -56,7 +56,7 @@ public class HttpStepInfo extends BasicHttpStepParameters implements CDStepInfo,
   @Override
   @JsonIgnore
   public String getFacilitatorType() {
-    return OrchestrationFacilitatorType.TASK_V3;
+    return OrchestrationFacilitatorType.TASK;
   }
 
   @Override

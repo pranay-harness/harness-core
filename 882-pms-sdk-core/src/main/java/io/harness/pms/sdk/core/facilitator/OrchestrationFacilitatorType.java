@@ -15,11 +15,7 @@ public class OrchestrationFacilitatorType {
   public static final String CHILD = "CHILD";
   public static final String CHILDREN = "CHILDREN";
   public static final String TASK = "TASK";
-  public static final String TASK_V2 = "TASK_V2";
-  public static final String TASK_V3 = "TASK_V3";
   public static final String TASK_CHAIN = "TASK_CHAIN";
-  public static final String TASK_CHAIN_V2 = "TASK_CHAIN_V2";
-  public static final String TASK_CHAIN_V3 = "TASK_CHAIN_V3";
   public static final String CHILD_CHAIN = "CHILD_CHAIN";
   public static final String BARRIER = "BARRIER";
   public static final String RESOURCE_RESTRAINT = "RESOURCE_RESTRAINT";

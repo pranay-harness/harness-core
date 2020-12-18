@@ -56,7 +56,7 @@ public class NgOrchestrationResource {
   public RestResponse<PlanExecution> triggerHttpChainV2Plan(
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("appId") @NotNull String appId) {
     PlanExecution execution = orchestrationService.startExecution(
-        customExecutionProvider.provideTaskChainPlan(OrchestrationFacilitatorType.TASK_CHAIN_V2),
+        customExecutionProvider.provideTaskChainPlan(OrchestrationFacilitatorType.TASK_CHAIN),
         getAbstractions(accountId, appId));
     return new RestResponse<>(execution);
   }
@@ -67,7 +67,7 @@ public class NgOrchestrationResource {
   public RestResponse<PlanExecution> triggerHttpChainV3Plan(
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("appId") @NotNull String appId) {
     PlanExecution execution = orchestrationService.startExecution(
-        customExecutionProvider.provideTaskChainPlan(OrchestrationFacilitatorType.TASK_CHAIN_V3),
+        customExecutionProvider.provideTaskChainPlan(OrchestrationFacilitatorType.TASK_CHAIN),
         getAbstractions(accountId, appId));
     return new RestResponse<>(execution);
   }

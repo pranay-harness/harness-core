@@ -68,7 +68,7 @@ public class K8sRollingStepInfo extends K8sRollingStepParameters implements CDSt
 
   @Override
   public String getFacilitatorType() {
-    return OrchestrationFacilitatorType.TASK_CHAIN_V3;
+    return OrchestrationFacilitatorType.TASK_CHAIN;
   }
 
   @Override

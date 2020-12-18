@@ -68,7 +68,7 @@ public class K8sBlueGreenStepInfo extends K8sBlueGreenStepParameters implements 
 
   @Override
   public String getFacilitatorType() {
-    return OrchestrationFacilitatorType.TASK_CHAIN_V3;
+    return OrchestrationFacilitatorType.TASK_CHAIN;
   }
 
   @Override

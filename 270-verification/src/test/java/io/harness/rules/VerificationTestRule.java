@@ -49,6 +49,9 @@ public class VerificationTestRule extends WingsRule {
   }
 
   @Override
+  public void getPmsSDKModules(List<Module> modules) {}
+
+  @Override
   public List<Module> modules(List<Annotation> annotations) {
     List<Module> modules = new ArrayList<>();
     modules.add(new ClosingFactoryModule(closingFactory));

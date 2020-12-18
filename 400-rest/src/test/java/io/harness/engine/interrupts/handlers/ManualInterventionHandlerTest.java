@@ -22,6 +22,8 @@ import io.harness.execution.PlanExecution;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.Interrupt;
 import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
+import io.harness.pms.sdk.core.registries.AdviserRegistry;
+import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.rule.Owner;
 import io.harness.waiter.OrchestrationNotifyEventListener;
@@ -45,6 +47,8 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private InterruptTestHelper interruptTestHelper;
   @Inject private StepRegistry stepRegistry;
+  @Inject private FacilitatorRegistry facilitatorRegistry;
+  @Inject private AdviserRegistry adviserRegistry;
   @Inject private PlanRepo planRepo;
 
   @Before

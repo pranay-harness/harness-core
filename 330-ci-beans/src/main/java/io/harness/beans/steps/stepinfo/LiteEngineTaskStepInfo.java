@@ -88,6 +88,6 @@ public class LiteEngineTaskStepInfo implements CIStepInfo {
 
   @Override
   public String getFacilitatorType() {
-    return OrchestrationFacilitatorType.TASK_V3;
+    return OrchestrationFacilitatorType.TASK;
   }
 }

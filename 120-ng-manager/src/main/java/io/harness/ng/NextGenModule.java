@@ -16,7 +16,6 @@ import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
 import io.harness.cdng.NGModule;
 import io.harness.cdng.expressions.CDExpressionEvaluatorProvider;
-import io.harness.cdng.orchestration.NgStepRegistrar;
 import io.harness.connector.ConnectorModule;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
@@ -62,7 +61,6 @@ import io.harness.ng.gitsync.NgCoreGitChangeSetProcessorServiceImpl;
 import io.harness.ng.gitsync.handlers.ConnectorYamlHandler;
 import io.harness.ngtriggers.service.TriggerWebhookService;
 import io.harness.ngtriggers.service.impl.TriggerWebhookServiceImpl;
-import io.harness.pms.sdk.registries.registrar.StepRegistrar;
 import io.harness.queue.QueueController;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.redesign.services.CustomExecutionServiceImpl;
@@ -83,7 +81,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
@@ -245,9 +242,6 @@ public class NextGenModule extends AbstractModule {
     install(OrchestrationVisualizationModule.getInstance());
     install(ExecutionPlanModule.getInstance());
 
-    MapBinder<String, StepRegistrar> stepRegistrarMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);
-    stepRegistrarMapBinder.addBinding(NgStepRegistrar.class.getName()).to(NgStepRegistrar.class);
     bind(ProjectService.class).to(ProjectServiceImpl.class);
     bind(OrganizationService.class).to(OrganizationServiceImpl.class);
     bind(NGModulesService.class).to(NGModulesServiceImpl.class);

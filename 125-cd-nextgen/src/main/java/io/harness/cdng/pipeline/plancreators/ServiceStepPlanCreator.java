@@ -87,7 +87,7 @@ public class ServiceStepPlanCreator
                 ServiceStepParameters.builder().service(serviceConfig).serviceOverrides(serviceOverrides).build())
             .facilitatorObtainment(
                 FacilitatorObtainment.newBuilder()
-                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK_CHAIN_V3).build())
+                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK_CHAIN).build())
                     .build());
 
     // Adding dependency provider.

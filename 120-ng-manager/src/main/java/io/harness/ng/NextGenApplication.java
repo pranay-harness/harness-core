@@ -14,6 +14,7 @@ import static com.google.common.collect.ImmutableMap.of;
 import io.harness.cdng.creator.CDNGPlanCreatorProvider;
 import io.harness.cdng.creator.filters.CDNGFilterCreationResponseMerger;
 import io.harness.cdng.executionplan.ExecutionPlanCreatorRegistrar;
+import io.harness.cdng.orchestration.NgStepRegistrar;
 import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.gitsync.core.runnable.GitChangeSetRunnable;
 import io.harness.maintenance.MaintenanceController;
@@ -34,10 +35,12 @@ import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.ngtriggers.service.TriggerWebhookService;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.PmsSdkConfiguration;
+import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
+import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
@@ -147,6 +150,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     modules.add(new SCMGrpcClientModule(appConfig.getScmConnectionConfig()));
     modules.add(new NextGenModule(appConfig));
     modules.add(new MetricRegistryModule(metricRegistry));
+
+    getPmsSDKModules(modules, appConfig);
     Injector injector = Guice.createInjector(modules);
 
     // Will create collections and Indexes
@@ -191,10 +196,28 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     YamlSdkModule.initializeDefaultInstance(yamlSdkConfiguration);
   }
 
+  private void getPmsSDKModules(List<Module> modules, NextGenConfiguration appConfig) {
+    Injector injector = Guice.createInjector(modules);
+    boolean remote = false;
+    if (appConfig.getShouldConfigureWithPMS() != null && appConfig.getShouldConfigureWithPMS()) {
+      remote = true;
+    }
+    if (!remote) {
+      PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
+                                          .deploymentMode(DeployMode.LOCAL)
+                                          .serviceName("cd")
+                                          .asyncWaitEngine(injector.getInstance(AsyncWaitEngine.class))
+                                          .engineSteps(NgStepRegistrar.getEngineSteps(injector))
+                                          .build();
+      modules.add(PmsSdkRegistryModule.getInstance(sdkConfig));
+    }
+  }
+
   public void registerPipelineSDK(Injector injector, NextGenConfiguration appConfig) {
     if (appConfig.getShouldConfigureWithPMS() != null && appConfig.getShouldConfigureWithPMS()) {
       PmsSdkConfiguration sdkConfig =
           PmsSdkConfiguration.builder()
+              .deploymentMode(DeployMode.REMOTE)
               .serviceName("cd")
               .mongoConfig(appConfig.getPmsMongoConfig())
               .grpcServerConfig(appConfig.getPmsSdkGrpcServerConfig())
@@ -202,6 +225,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
               .pipelineServiceInfoProvider(injector.getInstance(CDNGPlanCreatorProvider.class))
               .filterCreationResponseMerger(new CDNGFilterCreationResponseMerger())
               .asyncWaitEngine(injector.getInstance(AsyncWaitEngine.class))
+              .engineSteps(NgStepRegistrar.getEngineSteps(injector))
               .build();
       try {
         PmsSdkModule.initializeDefaultInstance(sdkConfig);
