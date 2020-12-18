@@ -3,9 +3,12 @@ package io.harness.pms.sdk;
 import io.harness.PmsSdkCoreModule;
 import io.harness.pms.contracts.plan.InitializeSdkRequest;
 import io.harness.pms.contracts.plan.PmsServiceGrpc.PmsServiceBlockingStub;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
+import io.harness.pms.sdk.core.registries.StepRegistry;
+import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
 import io.harness.queue.QueueListenerController;
 
@@ -15,7 +18,9 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import io.grpc.StatusRuntimeException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -76,12 +81,16 @@ public class PmsSdkModule {
   private void registerSdk(
       PipelineServiceInfoProvider pipelineServiceInfoProvider, String serviceName, Injector injector) {
     try {
+      StepRegistry stepRegistry = injector.getInstance(StepRegistry.class);
+      Map<StepType, Step> registry = stepRegistry.getRegistry();
+      List<StepType> stepTypes = registry == null ? Collections.emptyList() : new ArrayList<>(registry.keySet());
       PmsServiceBlockingStub pmsClient = injector.getInstance(PmsServiceBlockingStub.class);
       pmsClient.initializeSdk(
           InitializeSdkRequest.newBuilder()
               .setName(serviceName)
               .putAllSupportedTypes(PmsSdkInitHelper.calculateSupportedTypes(pipelineServiceInfoProvider))
               .addAllSupportedSteps(pipelineServiceInfoProvider.getStepInfo())
+              .addAllSupportedStepTypes(stepTypes)
               .build());
     } catch (StatusRuntimeException ex) {
       log.error("Sdk Initialization failed with StatusRuntimeException Status: {}", ex.getStatus());

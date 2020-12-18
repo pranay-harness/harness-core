@@ -10,6 +10,7 @@ import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 
 import com.google.inject.Singleton;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.NonNull;
@@ -18,6 +19,10 @@ import lombok.NonNull;
 @Singleton
 public class StepRegistry implements Registry<StepType, Step> {
   Map<StepType, Step> registry = new ConcurrentHashMap<>();
+
+  public Map<StepType, Step> getRegistry() {
+    return new HashMap<>(registry);
+  }
 
   public void register(@NonNull StepType stepType, @NonNull Step step) {
     if (registry.containsKey(stepType)) {

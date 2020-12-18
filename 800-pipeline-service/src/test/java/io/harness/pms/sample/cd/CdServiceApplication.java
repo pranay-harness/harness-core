@@ -10,6 +10,7 @@ import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
+import io.harness.serializer.KryoSerializer;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -68,6 +69,8 @@ public class CdServiceApplication extends Application<CdServiceConfiguration> {
             .pipelineServiceInfoProvider(injector.getInstance(CdPipelineServiceInfoProvider.class))
             .filterCreationResponseMerger(new CDFilterCreationResponseMerger())
             .asyncWaitEngine(injector.getInstance(AsyncWaitEngine.class))
+            .kryoSerializer(injector.getInstance(KryoSerializer.class))
+            .engineSteps(CdServiceStepRegistrar.getEngineSteps(injector))
             .build();
     try {
       PmsSdkModule.initializeDefaultInstance(sdkConfig);

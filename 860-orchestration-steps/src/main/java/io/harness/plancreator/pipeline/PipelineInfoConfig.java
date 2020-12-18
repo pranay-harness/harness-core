@@ -15,11 +15,13 @@ import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.Singular;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
+@NoArgsConstructor
 @AllArgsConstructor
 @TypeAlias("pipelineInfoConfig")
 public class PipelineInfoConfig {

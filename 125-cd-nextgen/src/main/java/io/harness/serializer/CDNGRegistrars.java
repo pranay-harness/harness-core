@@ -17,7 +17,6 @@ public class CDNGRegistrars {
           .addAll(ExecutionPlanModuleRegistrars.kryoRegistrars)
           .addAll(NGPipelineRegistrars.kryoRegistrars)
           .addAll(ConnectorNextGenRegistrars.kryoRegistrars)
-          .addAll(PmsSdkModuleRegistrars.kryoRegistrars)
           .add(NGKryoRegistrar.class)
           .build();
 
@@ -29,7 +28,6 @@ public class CDNGRegistrars {
           .addAll(ExecutionPlanModuleRegistrars.morphiaRegistrars)
           .addAll(NGPipelineRegistrars.morphiaRegistrars)
           .addAll(ConnectorNextGenRegistrars.morphiaRegistrars)
-          .addAll(PmsSdkModuleRegistrars.morphiaRegistrars)
           .add(NGMorphiaRegistrar.class)
           .build();
 }

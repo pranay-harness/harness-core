@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.orchestration.persistence.ProtoWriteConverter;
-import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 
 import com.google.inject.Singleton;

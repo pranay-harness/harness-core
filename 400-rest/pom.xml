@@ -819,6 +819,12 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>950-events-api-proto</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>950-events-framework</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

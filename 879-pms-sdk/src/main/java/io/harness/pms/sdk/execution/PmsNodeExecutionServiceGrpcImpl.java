@@ -70,12 +70,14 @@ public class PmsNodeExecutionServiceGrpcImpl implements PmsNodeExecutionService 
   @Override
   public void addExecutableResponse(
       @NonNull String nodeExecutionId, Status status, ExecutableResponse executableResponse, List<String> callbackIds) {
-    nodeExecutionProtoServiceBlockingStub.addExecutableResponse(AddExecutableResponseRequest.newBuilder()
-                                                                    .setNodeExecutionId(nodeExecutionId)
-                                                                    .setStatus(status)
-                                                                    .setExecutableResponse(executableResponse)
-                                                                    .addAllCallbackIds(callbackIds)
-                                                                    .build());
+    AddExecutableResponseRequest.Builder builder = AddExecutableResponseRequest.newBuilder()
+                                                       .setNodeExecutionId(nodeExecutionId)
+                                                       .setExecutableResponse(executableResponse)
+                                                       .addAllCallbackIds(callbackIds);
+    if (status != null && status != Status.UNRECOGNIZED) {
+      builder.setStatus(status);
+    }
+    nodeExecutionProtoServiceBlockingStub.addExecutableResponse(builder.build());
   }
 
   @Override
@@ -103,12 +105,12 @@ public class PmsNodeExecutionServiceGrpcImpl implements PmsNodeExecutionService 
   public Map<String, ResponseData> accumulateResponses(String planExecutionId, String notifyId) {
     AccumulateResponsesResponse response = nodeExecutionProtoServiceBlockingStub.accumulateResponses(
         AccumulateResponsesRequest.newBuilder().setPlanExecutionId(planExecutionId).setNotifyId(notifyId).build());
-    Map<String, ResponseData> responseBytes = new HashMap<>();
+    Map<String, ResponseData> responseDataMap = new HashMap<>();
     if (EmptyPredicate.isNotEmpty(response.getResponseMap())) {
       response.getResponseMap().forEach(
-          (k, v) -> responseBytes.put(k, (ResponseData) kryoSerializer.asInflatedObject(v.toByteArray())));
+          (k, v) -> responseDataMap.put(k, (ResponseData) kryoSerializer.asObject(v.toByteArray())));
     }
-    return null;
+    return responseDataMap;
   }
 
   @Override

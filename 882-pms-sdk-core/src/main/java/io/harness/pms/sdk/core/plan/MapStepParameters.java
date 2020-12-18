@@ -1,7 +1,7 @@
 package io.harness.pms.sdk.core.plan;
 
 import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.serializer.JsonUtils;
+import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 
 import java.util.HashMap;
 
@@ -15,6 +15,6 @@ public class MapStepParameters extends HashMap<String, Object> implements StepPa
 
   @Override
   public String toJson() {
-    return JsonUtils.asJson(this);
+    return JsonOrchestrationUtils.asJson(this);
   }
 }

@@ -8,6 +8,7 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 import io.harness.pms.contracts.steps.StepInfo;
+import io.harness.pms.contracts.steps.StepType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -40,6 +41,7 @@ public class PmsSdkInstance implements PersistentEntity, UuidAware, CreatedAtAwa
   @NotNull @FdUniqueIndex String name;
   Map<String, Set<String>> supportedTypes;
   List<StepInfo> supportedSteps;
+  List<StepType> supportedStepTypes;
 
   @SchemaIgnore @FdIndex @CreatedDate private long createdAt;
   @SchemaIgnore @NotNull @LastModifiedDate private long lastUpdatedAt;

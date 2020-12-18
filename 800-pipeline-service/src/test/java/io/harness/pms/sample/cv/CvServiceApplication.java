@@ -9,6 +9,7 @@ import io.harness.pms.sample.cv.creator.filters.CVFilterCreationResponseMerger;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
+import io.harness.serializer.KryoSerializer;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -67,6 +68,8 @@ public class CvServiceApplication extends Application<CvServiceConfiguration> {
             .pipelineServiceInfoProvider(injector.getInstance(CvPipelineServiceInfoProvider.class))
             .filterCreationResponseMerger(new CVFilterCreationResponseMerger())
             .asyncWaitEngine(injector.getInstance(AsyncWaitEngine.class))
+            .kryoSerializer(injector.getInstance(KryoSerializer.class))
+            .engineSteps(CvServiceStepRegistrar.getEngineSteps(injector))
             .build();
     try {
       PmsSdkModule.initializeDefaultInstance(sdkConfig);
