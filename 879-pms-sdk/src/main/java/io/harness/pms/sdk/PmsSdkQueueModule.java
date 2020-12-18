@@ -5,7 +5,7 @@ import static java.time.Duration.ofSeconds;
 import io.harness.config.PublisherConfiguration;
 import io.harness.mongo.queue.QueueFactory;
 import io.harness.pms.execution.NodeExecutionEvent;
-import io.harness.pms.sdk.execution.NodeExecutionEventListener;
+import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListener;

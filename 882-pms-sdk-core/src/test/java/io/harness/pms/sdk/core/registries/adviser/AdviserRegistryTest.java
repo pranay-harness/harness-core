@@ -1,14 +1,14 @@
-package io.harness.registries.adviser;
+package io.harness.pms.sdk.core.registries.adviser;
 
 import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.harness.OrchestrationBeansTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.AdviserType;
+import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent;
 import io.harness.pms.sdk.core.registries.AdviserRegistry;
@@ -22,7 +22,7 @@ import com.google.inject.Injector;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class AdviserRegistryTest extends OrchestrationBeansTestBase {
+public class AdviserRegistryTest extends PmsSdkCoreTestBase {
   @Inject private Injector injector;
   @Inject private AdviserRegistry adviserRegistry;
 

@@ -27,13 +27,9 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
-
 @OwnedBy(CDC)
 @Slf4j
 public class PmsSdkRegistryModule extends AbstractModule {
@@ -58,10 +54,6 @@ public class PmsSdkRegistryModule extends AbstractModule {
     facilitatorRegistrarMapBinder.addBinding(PmsSdkFacilitatorRegistrar.class.getName())
         .to(PmsSdkFacilitatorRegistrar.class);
 
-    MapBinder<String, AdviserRegistrar> adviserRegistrarMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, AdviserRegistrar.class);
-    adviserRegistrarMapBinder.addBinding(PmsSdkAdviserRegistrar.class.getName()).to(PmsSdkAdviserRegistrar.class);
-
     MapBinder.newMapBinder(binder(), String.class, OrchestrationEventHandlerRegistrar.class);
 
     MapBinder.newMapBinder(binder(), String.class, ResolverRegistrar.class);
@@ -82,12 +74,16 @@ public class PmsSdkRegistryModule extends AbstractModule {
 
   @Provides
   @Singleton
-  AdviserRegistry providesAdviserRegistry(Injector injector, Map<String, AdviserRegistrar> adviserRegistrarMap) {
-    Set<Pair<AdviserType, Adviser>> classes = new HashSet<>();
-    adviserRegistrarMap.values().forEach(adviserRegistrar -> adviserRegistrar.register(classes));
+  AdviserRegistry providesAdviserRegistry(Injector injector) {
     AdviserRegistry adviserRegistry = new AdviserRegistry();
-    injector.injectMembers(adviserRegistry);
-    classes.forEach(pair -> adviserRegistry.register(pair.getLeft(), pair.getRight()));
+    Map<AdviserType, Adviser> engineAdvisers = config.getEngineAdvisers();
+    if (EmptyPredicate.isEmpty(engineAdvisers)) {
+      engineAdvisers = new HashMap<>();
+    }
+    engineAdvisers.putAll(PmsSdkAdviserRegistrar.getEngineAdvisers(injector));
+    if (EmptyPredicate.isNotEmpty(engineAdvisers)) {
+      engineAdvisers.forEach(adviserRegistry::register);
+    }
     return adviserRegistry;
   }
 

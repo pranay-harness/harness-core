@@ -100,6 +100,7 @@ import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.queue.TimerScheduledExecutorService;
+import io.harness.registrars.WingsAdviserRegistrar;
 import io.harness.registrars.WingsStepRegistrar;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.secrets.SecretMigrationEventListener;
@@ -612,6 +613,7 @@ public class WingsApplication extends Application<MainConfiguration> {
                                         .deploymentMode(PmsSdkConfiguration.DeployMode.LOCAL)
                                         .serviceName("wings")
                                         .engineSteps(WingsStepRegistrar.getEngineSteps(injector))
+                                        .engineAdvisers(WingsAdviserRegistrar.getEngineAdvisers(injector))
                                         .build();
     modules.add(PmsSdkRegistryModule.getInstance(sdkConfig));
   }
