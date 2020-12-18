@@ -36,6 +36,7 @@ import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.registrars.ExecutionRegistrar;
+import io.harness.registrars.OrchestrationAdviserRegistrar;
 import io.harness.security.JWTAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.serializer.CiBeansRegistrars;
@@ -285,6 +286,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
                                           .serviceName("ci")
                                           .asyncWaitEngine(injector.getInstance(AsyncWaitEngine.class))
                                           .engineSteps(ExecutionRegistrar.getEngineSteps(injector))
+                                          .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers(injector))
                                           .build();
       modules.add(PmsSdkRegistryModule.getInstance(sdkConfig));
     }
@@ -303,6 +305,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
               .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
               .filterCreationResponseMerger(new CIFilterCreationResponseMerger())
               .engineSteps(ExecutionRegistrar.getEngineSteps(injector))
+              .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers(injector))
               .kryoSerializer(injector.getInstance(KryoSerializer.class))
               .build();
       try {

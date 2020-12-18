@@ -12,26 +12,27 @@ import io.harness.pms.sdk.core.adviser.manualintervention.ManualInterventionAdvi
 import io.harness.pms.sdk.core.adviser.marksuccess.OnMarkSuccessAdviser;
 import io.harness.pms.sdk.core.adviser.retry.RetryAdviser;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviser;
-import io.harness.pms.sdk.registries.registrar.AdviserRegistrar;
 
-import com.google.inject.Inject;
 import com.google.inject.Injector;
-import java.util.Set;
-import org.apache.commons.lang3.tuple.Pair;
+import java.util.HashMap;
+import java.util.Map;
+import lombok.experimental.UtilityClass;
 
 @OwnedBy(CDC)
-public class PmsSdkAdviserRegistrar implements AdviserRegistrar {
-  @Inject private Injector injector;
 
-  @Override
-  public void register(Set<Pair<AdviserType, Adviser>> adviserClasses) {
-    adviserClasses.add(Pair.of(RetryAdviser.ADVISER_TYPE, injector.getInstance(RetryAdviser.class)));
-    adviserClasses.add(Pair.of(IgnoreAdviser.ADVISER_TYPE, injector.getInstance(IgnoreAdviser.class)));
-    adviserClasses.add(Pair.of(OnSuccessAdviser.ADVISER_TYPE, injector.getInstance(OnSuccessAdviser.class)));
-    adviserClasses.add(Pair.of(OnFailAdviser.ADVISER_TYPE, injector.getInstance(OnFailAdviser.class)));
-    adviserClasses.add(
-        Pair.of(ManualInterventionAdviser.ADVISER_TYPE, injector.getInstance(ManualInterventionAdviser.class)));
-    adviserClasses.add(Pair.of(OnAbortAdviser.ADVISER_TYPE, injector.getInstance(OnAbortAdviser.class)));
-    adviserClasses.add(Pair.of(OnMarkSuccessAdviser.ADVISER_TYPE, injector.getInstance(OnMarkSuccessAdviser.class)));
+@UtilityClass
+public class PmsSdkAdviserRegistrar {
+  public Map<AdviserType, Adviser> getEngineAdvisers(Injector injector) {
+    Map<AdviserType, Adviser> engineAdvisers = new HashMap<>();
+
+    engineAdvisers.put(IgnoreAdviser.ADVISER_TYPE, injector.getInstance(IgnoreAdviser.class));
+    engineAdvisers.put(OnSuccessAdviser.ADVISER_TYPE, injector.getInstance(OnSuccessAdviser.class));
+    engineAdvisers.put(OnFailAdviser.ADVISER_TYPE, injector.getInstance(OnFailAdviser.class));
+    engineAdvisers.put(ManualInterventionAdviser.ADVISER_TYPE, injector.getInstance(ManualInterventionAdviser.class));
+    engineAdvisers.put(OnAbortAdviser.ADVISER_TYPE, injector.getInstance(OnAbortAdviser.class));
+    engineAdvisers.put(OnMarkSuccessAdviser.ADVISER_TYPE, injector.getInstance(OnMarkSuccessAdviser.class));
+    engineAdvisers.put(RetryAdviser.ADVISER_TYPE, injector.getInstance(RetryAdviser.class));
+
+    return engineAdvisers;
   }
 }

@@ -44,6 +44,7 @@ import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.redis.RedisConfig;
+import io.harness.registrars.WingsAdviserRegistrar;
 import io.harness.registrars.WingsStepRegistrar;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.Cache;
@@ -247,6 +248,7 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
                                         .deploymentMode(PmsSdkConfiguration.DeployMode.LOCAL)
                                         .serviceName("wings")
                                         .engineSteps(WingsStepRegistrar.getEngineSteps(injector))
+                                        .engineAdvisers(WingsAdviserRegistrar.getEngineAdvisers(injector))
                                         .build();
     modules.add(PmsSdkRegistryModule.getInstance(sdkConfig));
   }

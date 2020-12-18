@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -47,8 +48,9 @@ public class PipelinePlanTest extends CDNGBaseTest {
   }
 
   @Test
-  @Owner(developers = ARCHIT, intermittent = true)
+  @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
+  @Ignore("New Test in PMS will be written")
   public void testPipelinePlanForGivenYaml() throws IOException {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("cdng/multiStagePipeline.yml");

@@ -33,11 +33,9 @@ import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingGrpcOutputServi
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.pms.sdk.execution.PmsNodeExecutionServiceGrpcImpl;
-import io.harness.pms.sdk.registries.registrar.AdviserRegistrar;
 import io.harness.pms.sdk.registries.registrar.OrchestrationEventHandlerRegistrar;
 import io.harness.pms.sdk.registries.registrar.ResolverRegistrar;
 import io.harness.queue.TimerScheduledExecutorService;
-import io.harness.registrars.OrchestrationAdviserRegistrar;
 import io.harness.registrars.OrchestrationModuleEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationResolverRegistrar;
 import io.harness.service.DelegateServiceDriverModule;
@@ -87,10 +85,6 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     bind(OrchestrationService.class).to(OrchestrationServiceImpl.class);
     bind(EngineObtainmentHelper.class).in(Singleton.class);
 
-    MapBinder<String, AdviserRegistrar> adviserRegistrarMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, AdviserRegistrar.class);
-    adviserRegistrarMapBinder.addBinding(OrchestrationAdviserRegistrar.class.getName())
-        .to(OrchestrationAdviserRegistrar.class);
     MapBinder<String, ResolverRegistrar> resolverRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ResolverRegistrar.class);
     resolverRegistrarMapBinder.addBinding(OrchestrationResolverRegistrar.class.getName())

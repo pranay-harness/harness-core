@@ -44,6 +44,7 @@ import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
+import io.harness.registrars.OrchestrationAdviserRegistrar;
 import io.harness.security.JWTAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.serializer.KryoSerializer;
@@ -209,6 +210,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
                                           .serviceName("cd")
                                           .asyncWaitEngine(injector.getInstance(AsyncWaitEngine.class))
                                           .engineSteps(NgStepRegistrar.getEngineSteps(injector))
+                                          .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers(injector))
                                           .build();
       modules.add(PmsSdkRegistryModule.getInstance(sdkConfig));
     }
@@ -227,6 +229,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
               .filterCreationResponseMerger(new CDNGFilterCreationResponseMerger())
               .asyncWaitEngine(injector.getInstance(AsyncWaitEngine.class))
               .engineSteps(NgStepRegistrar.getEngineSteps(injector))
+              .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers(injector))
               .kryoSerializer(injector.getInstance(KryoSerializer.class))
               .build();
       try {
