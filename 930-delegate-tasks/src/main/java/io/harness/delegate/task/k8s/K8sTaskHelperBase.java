@@ -158,6 +158,7 @@ import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceBuilder;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.StartedProcess;
@@ -1944,6 +1945,41 @@ public class K8sTaskHelperBase {
         throw new UnsupportedOperationException(
             String.format("Manifest delegate config type: [%s]", manifestType.name()));
     }
+  }
+
+  public List<FileData> renderTemplateForGivenFiles(K8sDelegateTaskParams k8sDelegateTaskParams,
+      ManifestDelegateConfig manifestDelegateConfig, String manifestFilesDirectory, @NotEmpty List<String> filesList,
+      List<String> valuesFiles, String releaseName, String namespace, LogCallback executionLogCallback,
+      Integer timeoutInMin) throws Exception {
+    ManifestType manifestType = manifestDelegateConfig.getManifestType();
+    long timeoutInMillis = K8sTaskHelperBase.getTimeoutMillisFromMinutes(timeoutInMin);
+
+    switch (manifestType) {
+      case K8S_MANIFEST:
+        List<FileData> manifestFiles = readFilesFromDirectory(manifestFilesDirectory, filesList, executionLogCallback);
+        return renderManifestFilesForGoTemplate(
+            k8sDelegateTaskParams, manifestFiles, valuesFiles, executionLogCallback, timeoutInMillis);
+
+      default:
+        throw new UnsupportedOperationException(
+            String.format("Manifest delegate config type: [%s]", manifestType.name()));
+    }
+  }
+
+  public List<KubernetesResource> getResourcesFromManifests(K8sDelegateTaskParams k8sDelegateTaskParams,
+      ManifestDelegateConfig manifestDelegateConfig, String manifestFilesDirectory, @NotEmpty List<String> filesList,
+      List<String> valuesFiles, String releaseName, String namespace, LogCallback logCallback, Integer timeoutInMin)
+      throws Exception {
+    List<FileData> manifestFiles = renderTemplateForGivenFiles(k8sDelegateTaskParams, manifestDelegateConfig,
+        manifestFilesDirectory, filesList, valuesFiles, releaseName, namespace, logCallback, timeoutInMin);
+    if (isEmpty(manifestFiles)) {
+      return new ArrayList<>();
+    }
+
+    List<KubernetesResource> resources = readManifests(manifestFiles, logCallback);
+    setNamespaceToKubernetesResourcesIfRequired(resources, namespace);
+
+    return resources;
   }
 
   public boolean fetchManifestFilesAndWriteToDirectory(ManifestDelegateConfig manifestDelegateConfig,
