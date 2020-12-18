@@ -56,7 +56,6 @@ import com.amazonaws.services.ecs.model.RunTaskResult;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.Task;
 import com.amazonaws.services.ecs.model.TaskDefinition;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -158,31 +157,28 @@ public class EcsDeployCommandTaskHelper {
     });
   }
 
-  @VisibleForTesting
-  boolean attachAutoScalarInRollbackPhase(EcsResizeParams resizeParams, ExecutionLogCallback logCallback) {
-    if (!resizeParams.isRollback()) {
-      return false;
-    }
-
-    List<AwsAutoScalarConfig> awsAutoScalarConfigs = resizeParams.getPreviousAwsAutoScalarConfigs();
-    if (isEmpty(awsAutoScalarConfigs)) {
-      logCallback.saveExecutionLog("No Auto-scalar configs to restore");
-      return false;
-    }
-
-    return true;
-  }
-
-  public void restoreAutoScalarConfigs(ContextData contextData, ExecutionLogCallback executionLogCallback) {
+  public void restoreAutoScalarConfigs(
+      ContextData contextData, ContainerServiceData containerServiceData, ExecutionLogCallback executionLogCallback) {
     EcsResizeParams resizeParams = contextData.getResizeParams();
 
-    if (!attachAutoScalarInRollbackPhase(resizeParams, executionLogCallback)) {
+    // This action is required in rollback stage only
+    if (!resizeParams.isRollback()) {
       return;
     }
 
-    // This is for services those are being upsized in Rollback
+    // Delete eauto scalar for newly created Service that will be downsized as part of rollback
+    deleteAutoScalarForNewService(contextData, executionLogCallback);
+
+    // This is for services those are being upsized in Rollbak
     List<AwsAutoScalarConfig> awsAutoScalarConfigs = resizeParams.getPreviousAwsAutoScalarConfigs();
+
+    if (isEmpty(awsAutoScalarConfigs)) {
+      executionLogCallback.saveExecutionLog("No Auto-scalar configs to restore");
+      return;
+    }
+
     AwsConfig awsConfig = contextData.getAwsConfig();
+
     awsAutoScalarConfigs.forEach(awsAutoScalarConfig -> {
       if (StringUtils.isNotBlank(awsAutoScalarConfig.getScalableTargetJson())) {
         ScalableTarget scalableTarget =
@@ -215,13 +211,17 @@ public class EcsDeployCommandTaskHelper {
       ContextData contextData, ContainerServiceData containerServiceData, ExecutionLogCallback executionLogCallback) {
     EcsResizeParams resizeParams = contextData.getResizeParams();
 
+    int maxDesiredCount =
+        resizeParams.isUseFixedInstances() ? resizeParams.getFixedInstances() : resizeParams.getMaxInstances();
+
     /*
      * If Rollback or this is not final resize stage, just return.
      * We create AutoScalar after new service has been completely upsized.
      * This method should also not get invoked if the service being sized is NOT the
      * new service.
      */
-    if (resizeParams.isRollback() || !resizeParams.getContainerServiceName().equals(containerServiceData.getName())) {
+    if (resizeParams.isRollback() || maxDesiredCount > containerServiceData.getDesiredCount()
+        || !resizeParams.getContainerServiceName().equals(containerServiceData.getName())) {
       return;
     }
 
@@ -351,7 +351,7 @@ public class EcsDeployCommandTaskHelper {
     return deployingToHundredPercent;
   }
 
-  public ContainerServiceData getNewInstanceData(ContextData contextData, ExecutionLogCallback logCallback) {
+  public ContainerServiceData getNewInstanceData(ContextData contextData) {
     Optional<Integer> previousDesiredCount = getServiceDesiredCount(contextData);
 
     String containerServiceName = contextData.getResizeParams().getContainerServiceName();
@@ -363,10 +363,10 @@ public class EcsDeployCommandTaskHelper {
     int desiredCount = getNewInstancesDesiredCount(contextData);
 
     if (desiredCount < previousCount) {
-      String message = format("Desired count: [%d] is less than previous count: [%d]. Updating desired count to: [%d]",
-          desiredCount, previousCount, previousCount);
-      logCallback.saveExecutionLog(message);
-      desiredCount = previousCount;
+      String msg = "Desired instance count must be greater than or equal to the current instance count: {current: "
+          + previousCount + ", desired: " + desiredCount + "}";
+      log.error(msg);
+      throw new InvalidRequestException(msg);
     }
 
     return ContainerServiceData.builder()
@@ -553,41 +553,6 @@ public class EcsDeployCommandTaskHelper {
       }
     } catch (Exception e) {
       Misc.logAllMessages(e, executionLogCallback);
-    }
-  }
-
-  boolean isFinalDeployStep(ContextData contextData, ExecutionLogCallback executionLogCallback,
-      List<ContainerServiceData> newInstanceDataList, List<ContainerServiceData> oldInstanceDataList) {
-    if (contextData.getResizeParams().isRollback()) {
-      boolean newServiceCompletelyDownsized =
-          isEmpty(oldInstanceDataList) || oldInstanceDataList.get(0).getDesiredCount() == 0;
-      Map<String, Integer> originalServiceCounts =
-          listOfStringArrayToMap(contextData.getResizeParams().getOriginalServiceCounts());
-      boolean oldServiceCompletelyUpsized =
-          isEmpty(newInstanceDataList) || newInstanceDataList.stream().allMatch(data -> {
-            Integer originalCountForService = originalServiceCounts.get(data.getName());
-            if (originalCountForService == null) {
-              return true;
-            }
-            return data.getDesiredCount() >= originalCountForService;
-          });
-      if (newServiceCompletelyDownsized && oldServiceCompletelyUpsized) {
-        executionLogCallback.saveExecutionLog("Old services upsized in rollback. Autoscalar will be attached"
-            + "to older service");
-        return true;
-      } else {
-        return false;
-      }
-    } else {
-      boolean allOldDownsized =
-          isEmpty(oldInstanceDataList) || oldInstanceDataList.stream().allMatch(data -> data.getDesiredCount() == 0);
-      if (contextData.isDeployingToHundredPercent() && allOldDownsized) {
-        executionLogCallback.saveExecutionLog("New service upscaled to 100% and all old downsized. "
-            + "Autoscalar will be attached in this Phase to new service");
-        return true;
-      } else {
-        return false;
-      }
     }
   }
 

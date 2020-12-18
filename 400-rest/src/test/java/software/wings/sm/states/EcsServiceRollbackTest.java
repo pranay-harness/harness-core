@@ -18,6 +18,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -36,6 +37,7 @@ import software.wings.api.ContainerServiceElement;
 import software.wings.beans.Activity;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Service;
+import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 
@@ -120,8 +122,47 @@ public class EcsServiceRollbackTest extends WingsBaseTest {
   public void testHandleAsyncResponse() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
     ecsServiceRollback.handleAsyncResponse(mockContext, null);
-    verify(mockEcsStateHelper)
-        .handleDelegateResponseForEcsDeploy(any(), any(), anyBoolean(), any(), anyBoolean(), any());
+    verify(mockEcsStateHelper).handleDelegateResponseForEcsDeploy(any(), any(), anyBoolean(), any(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testExecuteWithRollbackAllPhases() {
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    ContainerRollbackRequestElement deployElement = ContainerRollbackRequestElement.builder().build();
+    doReturn(deployElement).when(mockEcsStateHelper).getDeployElementFromSweepingOutput(any());
+    Activity activity = Activity.builder().uuid(ACTIVITY_ID).build();
+    doReturn(activity).when(mockEcsStateHelper).createActivity(any(), any(), any(), any(), any());
+    EcsDeployDataBag dataBag =
+        EcsDeployDataBag.builder()
+            .service(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build())
+            .app(anApplication().uuid(APP_ID).name(APP_NAME).build())
+            .env(anEnvironment().uuid(ENV_ID).name(ENV_NAME).build())
+            .region("us-east-1")
+            .ecsInfrastructureMapping(anEcsInfrastructureMapping()
+                                          .withUuid(INFRA_MAPPING_ID)
+                                          .withClusterName(CLUSTER_NAME)
+                                          .withRegion("us-east-1")
+                                          .withVpcId("vpc-id")
+                                          .withAssignPublicIp(true)
+                                          .withLaunchType("Ec2")
+                                          .build())
+            .rollbackElement(ContainerRollbackRequestElement.builder().build())
+            .awsConfig(AwsConfig.builder().build())
+            .encryptedDataDetails(emptyList())
+            .containerElement(ContainerServiceElement.builder()
+                                  .clusterName(CLUSTER_NAME)
+                                  .previousAwsAutoScalarConfigs(singletonList(AwsAutoScalarConfig.builder().build()))
+                                  .serviceSteadyStateTimeout(10)
+                                  .build())
+            .build();
+    doReturn(dataBag).when(mockEcsStateHelper).prepareBagForEcsDeploy(any(), any(), any(), any(), any(), anyBoolean());
+    doReturn("TASKID")
+        .when(mockEcsStateHelper)
+        .createAndQueueDelegateTaskForEcsServiceDeploy(any(), any(), any(), any());
+    ExecutionResponse response = ecsServiceRollback.execute(mockContext);
+    assertThat(ecsServiceRollback.isRollbackAllPhases()).isTrue();
   }
 
   @Test
