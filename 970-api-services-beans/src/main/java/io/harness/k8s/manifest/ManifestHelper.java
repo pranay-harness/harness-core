@@ -1,5 +1,6 @@
 package io.harness.k8s.manifest;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.k8s.manifest.ObjectYamlUtils.YAML_DOCUMENT_DELIMITER;
 import static io.harness.k8s.manifest.ObjectYamlUtils.newLineRegex;
 import static io.harness.k8s.manifest.ObjectYamlUtils.splitYamlFile;
@@ -7,6 +8,7 @@ import static io.harness.k8s.model.Kind.Secret;
 import static io.harness.k8s.model.KubernetesResource.redactSecretValues;
 
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.exception.KubernetesValuesException;
@@ -16,12 +18,13 @@ import io.harness.k8s.model.HarnessAnnotations;
 import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
+import io.harness.k8s.model.ListKind;
 
-import com.esotericsoftware.yamlbeans.YamlConfig;
 import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.YamlReader;
 import com.esotericsoftware.yamlbeans.parser.Parser.ParserException;
 import com.esotericsoftware.yamlbeans.tokenizer.Tokenizer.TokenizerException;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -32,6 +35,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.SafeConstructor;
+import org.yaml.snakeyaml.error.YAMLException;
 
 @UtilityClass
 public class ManifestHelper {
@@ -45,25 +51,76 @@ public class ManifestHelper {
   public static final int MAX_VALUES_EXPRESSION_RECURSION_DEPTH = 10;
 
   public static KubernetesResource getKubernetesResourceFromSpec(String spec) {
-    Map map = null;
+    Map map = readKubernetesSpecAsMap(spec);
+    if (map == null) {
+      return null;
+    }
+    return getKubernetesResource(spec, map);
+  }
 
+  public static List<KubernetesResource> getKubernetesResourcesFromSpec(String spec) {
+    Map map = readKubernetesSpecAsMap(spec);
+    if (map == null) {
+      return emptyList();
+    }
+
+    ListKind listKind = getListKind(map);
+    return listKind != null ? getKubernetesResources(map, listKind)
+                            : ImmutableList.of(getKubernetesResource(spec, map));
+  }
+
+  private ListKind getListKind(Map map) {
+    String kind = getKind(map);
+    for (ListKind listKind : ListKind.values()) {
+      if (listKind.name().equalsIgnoreCase(kind)) {
+        return listKind;
+      }
+    }
+    return null;
+  }
+
+  private List<KubernetesResource> getKubernetesResources(Map map, ListKind listKind) {
+    List<KubernetesResource> resources = getItems(map)
+                                             .stream()
+                                             .map(item -> {
+                                               try {
+                                                 return getKubernetesResource(ObjectYamlUtils.toYaml(item), item);
+                                               } catch (YamlException e) {
+                                                 throw new KubernetesYamlException(e.getMessage(), e.getCause());
+                                               }
+                                             })
+                                             .collect(Collectors.toList());
+
+    resources.forEach(resource -> {
+      if (listKind.getItemKind() != null
+          && !resource.getResourceId().getKind().equalsIgnoreCase(listKind.getItemKind().name())) {
+        throw new KubernetesYamlException(
+            String.format("Error processing yaml manifest. %s should only contain %s kind", listKind.name(),
+                listKind.getItemKind().name()));
+      }
+    });
+
+    return resources;
+  }
+
+  private static Map readKubernetesSpecAsMap(String spec) {
     try {
-      YamlConfig config = new YamlConfig();
-      config.readConfig.setClassTags(false);
-      YamlReader reader = new YamlReader(spec, config);
-      Object o = reader.read();
+      Yaml yaml = new Yaml(new SafeConstructor());
+      Object o = yaml.load(spec);
       if (o == null) {
         return null;
       }
       if (o instanceof Map) {
-        map = (Map) o;
+        return (Map) o;
       } else {
         throw new KubernetesYamlException("Invalid Yaml. Object is not a map.");
       }
-    } catch (YamlException e) {
+    } catch (YAMLException e) {
       throw new KubernetesYamlException(e.getMessage(), e.getCause());
     }
+  }
 
+  private static KubernetesResource getKubernetesResource(String spec, Map map) {
     String kind = getKind(map);
     Map metadata = getMetadata(map);
     String name = getName(metadata);
@@ -115,15 +172,27 @@ public class ManifestHelper {
     return map.get("kind").toString();
   }
 
+  private static List<Map> getItems(Map metadata) {
+    if (!metadata.containsKey("items")) {
+      throw new KubernetesYamlException("Error processing yaml manifest. items not found in spec.");
+    }
+
+    if (metadata.get("items") == null) {
+      throw new KubernetesYamlException("Error processing yaml manifest. items is set to null in spec.");
+    }
+
+    return (List<Map>) metadata.get("items");
+  }
+
   public static List<KubernetesResource> processYaml(String yamlString) {
     List<String> specs = splitYamlFile(yamlString);
 
     List<KubernetesResource> resources = new ArrayList<>();
 
     for (String spec : specs) {
-      KubernetesResource resourceFromSpec = getKubernetesResourceFromSpec(spec);
-      if (resourceFromSpec != null) {
-        resources.add(resourceFromSpec);
+      List<KubernetesResource> resourcesFromSpec = getKubernetesResourcesFromSpec(spec);
+      if (isNotEmpty(resourcesFromSpec)) {
+        resources.addAll(resourcesFromSpec);
       }
     }
 

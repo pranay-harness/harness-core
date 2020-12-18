@@ -101,6 +101,215 @@ public class ManifestHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void processYamlListMultiResourceTest() throws Exception {
+    URL url = this.getClass().getResource("/list-mongo.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    List<KubernetesResource> resources = processYaml(fileContents);
+
+    assertThat(resources).hasSize(4);
+    assertThat(resources.get(0).getResourceId())
+        .isEqualTo(KubernetesResourceId.builder().kind("Namespace").name("mongo").build());
+
+    assertThat(resources.get(1).getResourceId())
+        .isEqualTo(
+            KubernetesResourceId.builder().kind("PersistentVolumeClaim").name("mongo-data").namespace("mongo").build());
+
+    assertThat(resources.get(2).getResourceId())
+        .isEqualTo(KubernetesResourceId.builder().kind("Service").name("mongo").namespace("mongo").build());
+    assertThat(resources.get(2).getField("metadata.labels.testNumberAsString")).isInstanceOf(String.class);
+
+    assertThat(resources.get(3).getResourceId())
+        .isEqualTo(KubernetesResourceId.builder().kind("Deployment").name("mongo").namespace("mongo").build());
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void processYamlListMultiResourceSameAsWithoutListTest() throws Exception {
+    URL listUrl = this.getClass().getResource("/list-mongo.yaml");
+    String listFileContents = Resources.toString(listUrl, Charsets.UTF_8);
+    List<KubernetesResource> listResources = processYaml(listFileContents);
+
+    URL url = this.getClass().getResource("/list-mongo.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    List<KubernetesResource> resources = processYaml(fileContents);
+
+    assertThat(listResources.size()).isEqualTo(resources.size()).isEqualTo(4);
+
+    assertThat(listResources.get(0)).isEqualTo(resources.get(0));
+    assertThat(listResources.get(0).getResourceId())
+        .isEqualTo(resources.get(0).getResourceId())
+        .isEqualTo(KubernetesResourceId.builder().kind("Namespace").name("mongo").build());
+
+    assertThat(listResources.get(1)).isEqualTo(resources.get(1));
+    assertThat(listResources.get(1).getResourceId())
+        .isEqualTo(resources.get(1).getResourceId())
+        .isEqualTo(
+            KubernetesResourceId.builder().kind("PersistentVolumeClaim").name("mongo-data").namespace("mongo").build());
+
+    assertThat(listResources.get(2)).isEqualTo(resources.get(2));
+    assertThat(listResources.get(2).getResourceId())
+        .isEqualTo(resources.get(2).getResourceId())
+        .isEqualTo(KubernetesResourceId.builder().kind("Service").name("mongo").namespace("mongo").build());
+
+    assertThat(listResources.get(3)).isEqualTo(resources.get(3));
+    assertThat(listResources.get(3).getResourceId())
+        .isEqualTo(resources.get(3).getResourceId())
+        .isEqualTo(KubernetesResourceId.builder().kind("Deployment").name("mongo").namespace("mongo").build());
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void processYamlNamespaceListResourceTest() throws Exception {
+    URL url = this.getClass().getResource("/namespace-list.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    List<KubernetesResource> resources = processYaml(fileContents);
+
+    assertThat(resources).hasSize(2);
+    assertThat(resources.get(0).getResourceId())
+        .isEqualTo(KubernetesResourceId.builder().kind("Namespace").name("my-namespace-1").build());
+
+    assertThat(resources.get(1).getResourceId())
+        .isEqualTo(KubernetesResourceId.builder().kind("Namespace").name("my-namespace-2").build());
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void processYamlNamespaceListResourceOnlyTest() throws Exception {
+    URL url = this.getClass().getResource("/namespace-list-corrupt.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    try {
+      processYaml(fileContents);
+    } catch (KubernetesYamlException e) {
+      assertThat(ExceptionUtils.getMessage(e))
+          .contains("Error processing yaml manifest. NamespaceList should only contain Namespace kind.");
+    }
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void processYamlServiceListResourceTest() throws Exception {
+    URL url = this.getClass().getResource("/service-list.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    List<KubernetesResource> resources = processYaml(fileContents);
+
+    assertThat(resources).hasSize(2);
+    assertThat(resources.get(0).getResourceId())
+        .isEqualTo(KubernetesResourceId.builder().kind("Service").name("my-service-1").build());
+
+    assertThat(resources.get(1).getResourceId())
+        .isEqualTo(KubernetesResourceId.builder().kind("Service").name("my-service-2").build());
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void processYamlServiceListResourceOnlyTest() throws Exception {
+    URL url = this.getClass().getResource("/service-list-corrupt.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    try {
+      processYaml(fileContents);
+    } catch (KubernetesYamlException e) {
+      assertThat(ExceptionUtils.getMessage(e))
+          .contains("Error processing yaml manifest. ServiceList should only contain Service kind.");
+    }
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void processYamlDeploymentListResourceTest() throws Exception {
+    URL url = this.getClass().getResource("/deployment-list.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    List<KubernetesResource> resources = processYaml(fileContents);
+
+    assertThat(resources).hasSize(2);
+    assertThat(resources.get(0).getResourceId())
+        .isEqualTo(KubernetesResourceId.builder().kind("Deployment").name("nginx-deployment-1").build());
+
+    assertThat(resources.get(1).getResourceId())
+        .isEqualTo(KubernetesResourceId.builder().kind("Deployment").name("nginx-deployment-2").build());
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void processYamlDeploymentListResourceOnlyTest() throws Exception {
+    URL url = this.getClass().getResource("/deployment-list-corrupt.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    try {
+      processYaml(fileContents);
+    } catch (KubernetesYamlException e) {
+      assertThat(ExceptionUtils.getMessage(e))
+          .contains("Error processing yaml manifest. DeploymentList should only contain Deployment kind.");
+    }
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void processYamlRoleBindingListResourceTest() throws Exception {
+    URL url = this.getClass().getResource("/rolebinding-list.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    List<KubernetesResource> resources = processYaml(fileContents);
+
+    assertThat(resources).hasSize(2);
+    assertThat(resources.get(0).getResourceId())
+        .isEqualTo(KubernetesResourceId.builder().kind("RoleBinding").name("rolebinding-1").build());
+
+    assertThat(resources.get(1).getResourceId())
+        .isEqualTo(KubernetesResourceId.builder().kind("RoleBinding").name("rolebinding-2").build());
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void processYamlRoleBindingListResourceOnlyTest() throws Exception {
+    URL url = this.getClass().getResource("/rolebinding-list-corrupt.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    try {
+      processYaml(fileContents);
+    } catch (KubernetesYamlException e) {
+      assertThat(ExceptionUtils.getMessage(e))
+          .contains("Error processing yaml manifest. RoleBindingList should only contain RoleBinding kind.");
+    }
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void processYamlListEmptyResourceTest() throws Exception {
+    URL url = this.getClass().getResource("/empty-list.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+
+    try {
+      processYaml(fileContents);
+    } catch (KubernetesYamlException e) {
+      assertThat(ExceptionUtils.getMessage(e))
+          .contains("Error processing yaml manifest. items is set to null in spec.");
+    }
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void processYamlListNoResourceItemsTest() throws Exception {
+    URL url = this.getClass().getResource("/list-no-items.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+
+    try {
+      processYaml(fileContents);
+    } catch (KubernetesYamlException e) {
+      assertThat(ExceptionUtils.getMessage(e)).contains("Error processing yaml manifest. items not found in spec.");
+    }
+  }
+
+  @Test
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void invalidYamlTest() {
