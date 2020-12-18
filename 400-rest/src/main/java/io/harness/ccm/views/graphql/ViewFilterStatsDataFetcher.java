@@ -17,15 +17,16 @@ import graphql.schema.DataFetchingEnvironment;
 import java.util.List;
 
 public class ViewFilterStatsDataFetcher extends AbstractStatsDataFetcherWithAggregationListAndLimit<QLCEViewAggregation,
-    QLCEViewFilter, QLCEViewGroupBy, QLCEViewSortCriteria> {
+    QLCEViewFilterWrapper, QLCEViewGroupBy, QLCEViewSortCriteria> {
   @Inject ViewsBillingService viewsBillingService;
   @Inject CloudBillingHelper cloudBillingHelper;
   @Inject BigQueryService bigQueryService;
 
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
-  protected QLData fetch(String accountId, List<QLCEViewAggregation> aggregateFunction, List<QLCEViewFilter> filters,
-      List<QLCEViewGroupBy> groupBy, List<QLCEViewSortCriteria> sort, Integer limit, Integer offset) {
+  protected QLData fetch(String accountId, List<QLCEViewAggregation> aggregateFunction,
+      List<QLCEViewFilterWrapper> filters, List<QLCEViewGroupBy> groupBy, List<QLCEViewSortCriteria> sort,
+      Integer limit, Integer offset) {
     String cloudProviderTableName = cloudBillingHelper.getCloudProviderTableName(accountId, unified);
     BigQuery bigQuery = bigQueryService.get();
     return QLCEViewFilterData.builder()
@@ -42,8 +43,8 @@ public class ViewFilterStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
 
   @Override
   protected QLData fetchSelectedFields(String accountId, List<QLCEViewAggregation> aggregateFunction,
-      List<QLCEViewFilter> filters, List<QLCEViewGroupBy> groupBy, List<QLCEViewSortCriteria> sort, Integer limit,
-      Integer offset, DataFetchingEnvironment dataFetchingEnvironment) {
+      List<QLCEViewFilterWrapper> filters, List<QLCEViewGroupBy> groupBy, List<QLCEViewSortCriteria> sort,
+      Integer limit, Integer offset, DataFetchingEnvironment dataFetchingEnvironment) {
     return null;
   }
 

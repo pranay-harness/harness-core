@@ -1,6 +1,7 @@
 extend type Query {
   viewFields(filters: [CEViewFilterWrapper]): viewFieldData @dataFetcher(name: viewFields)
-  viewFilterStats(limit: Int, offset: Int, filters: [CEViewFilter]): viewFiterData @dataFetcher(name: viewFilterStats)
+  viewFilterStats(limit: Int, offset: Int, filters: [CEViewFilterWrapper]): viewFiterData
+    @dataFetcher(name: viewFilterStats)
   views: ViewsData @dataFetcher(name: views)
 
   viewEntityStats(
