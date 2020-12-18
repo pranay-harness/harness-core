@@ -45,6 +45,7 @@ import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.registrars.OrchestrationAdviserRegistrar;
+import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.security.JWTAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.serializer.KryoSerializer;
@@ -205,13 +206,15 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
       remote = true;
     }
     if (!remote) {
-      PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
-                                          .deploymentMode(DeployMode.LOCAL)
-                                          .serviceName("cd")
-                                          .asyncWaitEngine(injector.getInstance(AsyncWaitEngine.class))
-                                          .engineSteps(NgStepRegistrar.getEngineSteps(injector))
-                                          .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers(injector))
-                                          .build();
+      PmsSdkConfiguration sdkConfig =
+          PmsSdkConfiguration.builder()
+              .deploymentMode(DeployMode.LOCAL)
+              .serviceName("cd")
+              .asyncWaitEngine(injector.getInstance(AsyncWaitEngine.class))
+              .engineSteps(NgStepRegistrar.getEngineSteps(injector))
+              .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers(injector))
+              .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators(injector))
+              .build();
       modules.add(PmsSdkRegistryModule.getInstance(sdkConfig));
     }
   }
@@ -231,6 +234,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
               .engineSteps(NgStepRegistrar.getEngineSteps(injector))
               .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers(injector))
               .kryoSerializer(injector.getInstance(KryoSerializer.class))
+              .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators(injector))
               .build();
       try {
         PmsSdkModule.initializeDefaultInstance(sdkConfig);

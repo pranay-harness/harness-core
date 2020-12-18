@@ -1,14 +1,14 @@
-package io.harness.registries.facilitator;
+package io.harness.pms.sdk.core.registries.facilitator;
 
 import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.harness.OrchestrationBeansTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
 import io.harness.pms.sdk.core.facilitator.Facilitator;
 import io.harness.pms.sdk.core.facilitator.FacilitatorResponse;
 import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
@@ -25,7 +25,7 @@ import lombok.Value;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class FacilitatorRegistryTest extends OrchestrationBeansTestBase {
+public class FacilitatorRegistryTest extends PmsSdkCoreTestBase {
   @Inject private FacilitatorRegistry facilitatorRegistry;
 
   @Test
