@@ -65,7 +65,7 @@ public class K8sApplyStepInfo extends K8sApplyStepParameters implements CDStepIn
 
   @Override
   public String getFacilitatorType() {
-    return OrchestrationFacilitatorType.TASK_CHAIN_V3;
+    return OrchestrationFacilitatorType.TASK_CHAIN;
   }
 
   @Override
