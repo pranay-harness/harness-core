@@ -1,5 +1,6 @@
 package io.harness.functional;
 
+import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -122,7 +123,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   }
 
   @Inject private DelegateExecutor delegateExecutor;
-  @Inject private io.harness.functional.AccountSetupService accountSetupService;
+  @Inject private AccountSetupService accountSetupService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private UserService userService;
 
@@ -403,6 +404,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
       for (CommandUnit commandUnit : activity.getCommandUnits()) {
         log.info("Logs For {}", commandUnit.getName());
         PageRequest<Log> request = new PageRequest<>();
+        request.setLimit(UNLIMITED);
         request.addFilter("activityId", EQ, activity.getUuid());
         request.addFilter("commandUnitName", EQ, commandUnit.getName());
         PageResponse<Log> logPageResponse = logService.list(workflowExecution.getAppId(), request);
