@@ -3,21 +3,21 @@ package io.harness.serializer;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.morphia.MorphiaRegistrar;
+import io.harness.serializer.spring.converters.facilitators.response.FacilitatorResponseReadConverter;
+import io.harness.serializer.spring.converters.facilitators.response.FacilitatorResponseWriteConverter;
+import io.harness.serializer.spring.converters.nodeexecution.NodeExecutionReadConverter;
+import io.harness.serializer.spring.converters.nodeexecution.NodeExecutionWriteConverter;
+import io.harness.serializer.spring.converters.plannode.PlanNodeProtoReadConverter;
+import io.harness.serializer.spring.converters.plannode.PlanNodeProtoWriteConverter;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import lombok.experimental.UtilityClass;
-import org.mongodb.morphia.converters.TypeConverter;
+import org.springframework.core.convert.converter.Converter;
 
 @OwnedBy(CDC)
 @UtilityClass
 public class PmsSdkModuleRegistrars {
-  public final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
-      ImmutableSet.<Class<? extends KryoRegistrar>>builder().build();
-
-  public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
-      ImmutableSet.<Class<? extends MorphiaRegistrar>>builder().build();
-
-  public final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
-      ImmutableSet.<Class<? extends TypeConverter>>builder().build();
+  public final ImmutableList<Class<? extends Converter<?, ?>>> springConverters = ImmutableList.of(
+      FacilitatorResponseReadConverter.class, FacilitatorResponseWriteConverter.class, PlanNodeProtoReadConverter.class,
+      PlanNodeProtoWriteConverter.class, NodeExecutionReadConverter.class, NodeExecutionWriteConverter.class);
 }

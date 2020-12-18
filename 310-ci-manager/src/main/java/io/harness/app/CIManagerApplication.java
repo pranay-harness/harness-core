@@ -43,6 +43,7 @@ import io.harness.serializer.CiExecutionRegistrars;
 import io.harness.serializer.ConnectorNextGenRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.KryoSerializer;
 import io.harness.serializer.OrchestrationRegistrars;
 import io.harness.serializer.PersistenceRegistrars;
 import io.harness.serializer.YamlBeansModuleRegistrars;
@@ -302,6 +303,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
               .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
               .filterCreationResponseMerger(new CIFilterCreationResponseMerger())
               .engineSteps(ExecutionRegistrar.getEngineSteps(injector))
+              .kryoSerializer(injector.getInstance(KryoSerializer.class))
               .build();
       try {
         PmsSdkModule.initializeDefaultInstance(sdkConfig);

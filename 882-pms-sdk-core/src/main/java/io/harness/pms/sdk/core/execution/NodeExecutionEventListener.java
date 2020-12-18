@@ -116,6 +116,7 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
               .nodeExecution(nodeExecution)
               .build());
     } catch (Exception ignored) {
+      log.error("Error starting execution");
       // TODO: Send error to pipeline service for processing
     }
   }
@@ -146,6 +147,7 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
                                  .responseDataMap(eventData.getResponse())
                                  .build());
     } catch (Exception ex) {
+      log.error("Error resuming execution");
       // TODO: Send error to pipeline service for processing
     }
   }

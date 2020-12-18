@@ -7,7 +7,6 @@ import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.plan.creation.PlanCreatorMergeService;
 
 import com.google.inject.Inject;
-import com.google.protobuf.util.JsonFormat;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import java.io.IOException;
@@ -28,6 +27,55 @@ import lombok.extern.slf4j.Slf4j;
 @Consumes({"application/json"})
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 public class PlanExecutionResource {
+  private static final String pipelineYaml = "pipeline:\n"
+      + "        identifier: p1\n"
+      + "        name: pipeline1\n"
+      + "        stages:\n"
+      + "          - stage:\n"
+      + "              identifier: managerDeployment\n"
+      + "              type: deployment\n"
+      + "              name: managerDeployment\n"
+      + "              spec:\n"
+      + "                service:\n"
+      + "                  identifier: manager\n"
+      + "                  name: manager\n"
+      + "                  serviceDefinition:\n"
+      + "                    type: k8s\n"
+      + "                    spec:\n"
+      + "                      field11: value1\n"
+      + "                      field12: value2\n"
+      + "                infrastructure:\n"
+      + "                  environment:\n"
+      + "                    identifier: stagingInfra\n"
+      + "                    type: preProduction\n"
+      + "                    name: staging\n"
+      + "                  infrastructureDefinition:\n"
+      + "                    type: k8sDirect\n"
+      + "                    spec:\n"
+      + "                      connectorRef: pEIkEiNPSgSUsbWDDyjNKw\n"
+      + "                      namespace: harness\n"
+      + "                      releaseName: testingqa\n"
+      + "                execution:\n"
+      + "                  steps:\n"
+      + "                    - step:\n"
+      + "                        identifier: managerCanary\n"
+      + "                        type: k8sCanary\n"
+      + "                        spec:\n"
+      + "                          field11: value1\n"
+      + "                          field12: value2\n"
+      + "                    - step:\n"
+      + "                        identifier: managerVerify\n"
+      + "                        type: appdVerify\n"
+      + "                        spec:\n"
+      + "                          field21: value1\n"
+      + "                          field22: value2\n"
+      + "                    - step:\n"
+      + "                        identifier: managerRolling\n"
+      + "                        type: k8sRolling\n"
+      + "                        spec:\n"
+      + "                          field31: value1\n"
+      + "                          field32: value2\n";
+
   @Inject private OrchestrationService orchestrationService;
   @Inject private PlanCreatorMergeService planCreatorMergeService;
 
@@ -200,7 +248,7 @@ public class PlanExecutionResource {
   @GET
   @ApiOperation(value = "Execute A Pipeline", nickname = "executePipeline")
   public Response executePipeline() throws IOException {
-    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(tempPipeline);
+    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(pipelineYaml);
     Plan plan = PlanExecutionUtils.extractPlan(resp);
     PlanExecution planExecution = orchestrationService.startExecution(plan);
     return Response.ok(planExecution, MediaType.APPLICATION_JSON_TYPE).build();

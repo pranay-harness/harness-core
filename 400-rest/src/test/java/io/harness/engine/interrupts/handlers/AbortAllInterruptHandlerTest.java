@@ -19,7 +19,6 @@ import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.rule.Owner;
-import io.harness.steps.section.SectionStep;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 
 import software.wings.WingsBaseTest;

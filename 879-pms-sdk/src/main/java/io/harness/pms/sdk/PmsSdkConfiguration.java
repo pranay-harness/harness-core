@@ -8,6 +8,7 @@ import io.harness.pms.sdk.core.pipeline.filters.FilterCreationResponseMerger;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
+import io.harness.serializer.KryoSerializer;
 
 import java.util.Map;
 import lombok.Builder;
@@ -24,6 +25,7 @@ public class PmsSdkConfiguration {
   PipelineServiceInfoProvider pipelineServiceInfoProvider;
   FilterCreationResponseMerger filterCreationResponseMerger;
   AsyncWaitEngine asyncWaitEngine;
+  KryoSerializer kryoSerializer;
   Map<StepType, Step> engineSteps;
 
   public enum DeployMode {

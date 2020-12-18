@@ -67,7 +67,6 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
-import io.harness.queue.QueuePublisher;
 import io.harness.registries.timeout.TimeoutRegistry;
 import io.harness.tasks.ResponseData;
 import io.harness.timeout.TimeoutCallback;
@@ -120,7 +119,7 @@ public class OrchestrationEngine {
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
   @Inject private OrchestrationEventEmitter eventEmitter;
   @Inject private OrchestrationModuleConfig config;
-  @Inject private QueuePublisher<NodeExecutionEvent> nodeExecutionEventQueuePublisher;
+  @Inject private NodeExecutionEventQueuePublisher nodeExecutionEventQueuePublisher;
 
   public void startNodeExecution(String nodeExecutionId) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
@@ -190,7 +189,7 @@ public class OrchestrationEngine {
                                      .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(updatedNodeExecution))
                                      .eventType(NodeExecutionEventType.FACILITATE)
                                      .build();
-      nodeExecutionEventQueuePublisher.send(Collections.singletonList(config.getServiceName()), event);
+      nodeExecutionEventQueuePublisher.send(event);
       waitNotifyEngine.waitForAllOn(publisherName,
           EngineFacilitationCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build(), event.getNotifyId());
     } catch (Exception exception) {
@@ -236,7 +235,7 @@ public class OrchestrationEngine {
                                         .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
                                         .eventData(startNodeExecutionEventData)
                                         .build();
-    nodeExecutionEventQueuePublisher.send(Collections.singletonList(config.getServiceName()), startEvent);
+    nodeExecutionEventQueuePublisher.send(startEvent);
   }
 
   private List<String> registerTimeouts(NodeExecution nodeExecution) {
@@ -310,7 +309,7 @@ public class OrchestrationEngine {
                 AdviseNodeExecutionEventData.builder().toStatus(status).fromStatus(nodeExecution.getStatus()).build())
             .build();
 
-    nodeExecutionEventQueuePublisher.send(Collections.singletonList(config.getServiceName()), adviseEvent);
+    nodeExecutionEventQueuePublisher.send(adviseEvent);
     waitNotifyEngine.waitForAllOn(publisherName,
         EngineAdviseCallback.builder().nodeExecutionId(nodeExecution.getUuid()).status(status).build(),
         adviseEvent.getNotifyId());
@@ -427,7 +426,7 @@ public class OrchestrationEngine {
                                            .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
                                            .eventData(data)
                                            .build();
-      nodeExecutionEventQueuePublisher.send(Collections.singletonList(config.getServiceName()), resumeEvent);
+      nodeExecutionEventQueuePublisher.send(resumeEvent);
       // Do something with the waitId
     } catch (Exception exception) {
       handleError(ambiance, exception);

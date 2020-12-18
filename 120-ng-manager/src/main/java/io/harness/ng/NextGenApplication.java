@@ -46,6 +46,7 @@ import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.security.JWTAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
+import io.harness.serializer.KryoSerializer;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
@@ -226,6 +227,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
               .filterCreationResponseMerger(new CDNGFilterCreationResponseMerger())
               .asyncWaitEngine(injector.getInstance(AsyncWaitEngine.class))
               .engineSteps(NgStepRegistrar.getEngineSteps(injector))
+              .kryoSerializer(injector.getInstance(KryoSerializer.class))
               .build();
       try {
         PmsSdkModule.initializeDefaultInstance(sdkConfig);

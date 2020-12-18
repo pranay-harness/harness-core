@@ -16,10 +16,8 @@ public class CiExecutionRegistrars {
           .addAll(NGCoreRegistrars.kryoRegistrars)
           .addAll(NGPipelineRegistrars.kryoRegistrars)
           .addAll(ApiServicesRegistrars.kryoRegistrars)
-          .addAll(PmsSdkModuleRegistrars.kryoRegistrars)
           .addAll(SMCoreRegistrars.kryoRegistrars)
           .addAll(ConnectorNextGenRegistrars.kryoRegistrars)
-
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -30,7 +28,6 @@ public class CiExecutionRegistrars {
           .addAll(NGPipelineRegistrars.morphiaRegistrars)
           .addAll(ApiServicesRegistrars.morphiaRegistrars)
           .addAll(SMCoreRegistrars.morphiaRegistrars)
-          .addAll(PmsSdkModuleRegistrars.morphiaRegistrars)
           .addAll(ConnectorNextGenRegistrars.morphiaRegistrars)
           .build();
 

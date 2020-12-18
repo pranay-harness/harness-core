@@ -2,21 +2,29 @@ package io.harness;
 
 import static io.harness.PipelineServiceConfiguration.getResourceClasses;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
+import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static java.util.Collections.singletonList;
 
 import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.exception.WingsExceptionMapper;
 import io.harness.queue.QueueListenerController;
+import io.harness.queue.QueuePublisher;
+import io.harness.waiter.NotifyEvent;
+import io.harness.waiter.NotifyQueuePublisherRegister;
+import io.harness.waiter.OrchestrationNotifyEventListener;
 
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -85,6 +93,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
     Injector injector = Guice.createInjector(modules);
     injector.getInstance(HPersistence.class);
+    registerEventListeners(injector);
+    registerWaitEnginePublishers(injector);
     registerCorsFilter(appConfig, environment);
     registerResources(environment, injector);
     registerJerseyProviders(environment, injector);
@@ -96,6 +106,20 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
 
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void registerEventListeners(Injector injector) {
+    QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
+    queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class), 5);
+  }
+
+  private void registerWaitEnginePublishers(Injector injector) {
+    final QueuePublisher<NotifyEvent> publisher =
+        injector.getInstance(Key.get(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}));
+    final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
+        injector.getInstance(NotifyQueuePublisherRegister.class);
+    notifyQueuePublisherRegister.register(
+        ORCHESTRATION, payload -> publisher.send(singletonList(ORCHESTRATION), payload));
   }
 
   private void registerManagedBeans(Environment environment, Injector injector) {

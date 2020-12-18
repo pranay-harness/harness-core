@@ -19,7 +19,6 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationBeansRegistrars;
-import io.harness.serializer.PmsSdkModuleRegistrars;
 import io.harness.springdata.SpringPersistenceModule;
 
 import com.google.common.base.Suppliers;
@@ -30,7 +29,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -77,7 +75,6 @@ public class CvServiceModule extends AbstractModule {
   @Singleton
   public Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
     return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-        .addAll(PmsSdkModuleRegistrars.kryoRegistrars)
         .addAll(OrchestrationBeansRegistrars.kryoRegistrars)
         .build();
   }
@@ -86,7 +83,6 @@ public class CvServiceModule extends AbstractModule {
   @Singleton
   public Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
     return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-        .addAll(PmsSdkModuleRegistrars.morphiaRegistrars)
         .addAll(OrchestrationBeansRegistrars.morphiaRegistrars)
         .build();
   }
@@ -95,7 +91,6 @@ public class CvServiceModule extends AbstractModule {
   @Singleton
   public Set<Class<? extends TypeConverter>> morphiaConverters() {
     return ImmutableSet.<Class<? extends TypeConverter>>builder()
-        .addAll(PmsSdkModuleRegistrars.morphiaConverters)
         .addAll(OrchestrationBeansRegistrars.morphiaConverters)
         .build();
   }

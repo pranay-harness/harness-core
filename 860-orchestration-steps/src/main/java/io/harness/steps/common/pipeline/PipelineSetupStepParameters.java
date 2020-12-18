@@ -10,11 +10,13 @@ import io.harness.yaml.extended.ci.codebase.CodeBase;
 import java.util.List;
 import java.util.Map;
 import lombok.Builder;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Value;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.TypeAlias;
 
-@Value
+@Data
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TypeAlias("pipelineSetupStepParameters")
 public class PipelineSetupStepParameters extends PipelineInfoConfig implements StepParameters {

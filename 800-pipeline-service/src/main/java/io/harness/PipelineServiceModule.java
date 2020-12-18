@@ -6,6 +6,7 @@ import io.harness.callback.MongoDatabase;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
+import io.harness.engine.StepTypeLookupService;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
@@ -22,6 +23,9 @@ import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetServiceImpl;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
+import io.harness.pms.sdk.PmsSdkConfiguration;
+import io.harness.pms.sdk.StepTypeLookupServiceImpl;
+import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
 import io.harness.pms.sdk.registries.registrar.OrchestrationEventHandlerRegistrar;
 import io.harness.queue.QueueController;
 import io.harness.serializer.KryoRegistrar;
@@ -84,8 +88,10 @@ public class PipelineServiceModule extends AbstractModule {
         });
       }
     });
+    install(OrchestrationVisualizationModule.getInstance());
     install(new DelegateServiceDriverGrpcClientModule(configuration.getManagerServiceSecret(),
         configuration.getManagerTarget(), configuration.getManagerAuthority()));
+    install(PmsSdkRegistryModule.getInstance(PmsSdkConfiguration.builder().build()));
 
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);
@@ -97,6 +103,8 @@ public class PipelineServiceModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), String.class, OrchestrationEventHandlerRegistrar.class);
     orchestrationEventHandlerRegistrarMapBinder.addBinding(PmsOrchestrationEventRegistrar.class.getName())
         .to(PmsOrchestrationEventRegistrar.class);
+
+    bind(StepTypeLookupService.class).to(StepTypeLookupServiceImpl.class);
   }
 
   @Provides
