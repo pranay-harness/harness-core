@@ -72,6 +72,7 @@ public class PipelineServiceModule extends AbstractModule {
     install(PipelineServiceGrpcModule.getInstance());
     install(new SpringPersistenceModule());
     install(OrchestrationModule.getInstance());
+    install(OrchestrationVisualizationModule.getInstance());
     install(new AbstractModule() {
       @Override
       protected void configure() {
