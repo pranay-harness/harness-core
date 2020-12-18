@@ -3,6 +3,7 @@ package io.harness.pms.sdk.execution;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.service.ExecutionSummaryUpdateRequest;
 import io.harness.pms.contracts.service.PmsExecutionServiceGrpc;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.execution.beans.PipelineModuleInfo;
@@ -29,14 +30,8 @@ public abstract class ExecutionSummaryUpdateEventHandler implements AsyncOrchest
             .setModuleName("cd")
             .setPlanExecutionId(nodeExecutionProto.getAmbiance().getPlanExecutionId())
             .setPipelineModuleInfoJson(getPipelineLevelModuleInfo(nodeExecutionProto).toJson())
-            .setStageModuleInfoJson(getStageLevelModuleInfo(nodeExecutionProto).toJson());
-    if (nodeExecutionProto.getNode().getGroup().equalsIgnoreCase("stage")) {
-      executionSummaryUpdateRequest.setStageUuid(nodeExecutionProto.getNode().getUuid());
-    }
-    if (nodeExecutionProto.getNode().getGroup().equalsIgnoreCase("stage")
-        || nodeExecutionProto.getNode().getGroup().equalsIgnoreCase("pipeline")) {
-      executionSummaryUpdateRequest.setStatus(nodeExecutionProto.getStatus());
-    }
+            .setNodeModuleInfoJson(getStageLevelModuleInfo(nodeExecutionProto).toJson())
+            .setNodeExecutionId(nodeExecutionProto.getUuid());
     try {
       PmsExecutionServiceGrpc.PmsExecutionServiceBlockingStub pmsClient =
           injector.getInstance(PmsExecutionServiceGrpc.PmsExecutionServiceBlockingStub.class);

@@ -85,4 +85,16 @@ public class AmbianceUtils {
     }
     return logContext;
   }
+
+  public static String getAccountId(Ambiance ambiance) {
+    return ambiance.getSetupAbstractionsMap().get("accountId");
+  }
+
+  public static String getProjectIdentifier(Ambiance ambiance) {
+    return ambiance.getSetupAbstractionsMap().get("projectIdentifier");
+  }
+
+  public static String getOrgIdentifier(Ambiance ambiance) {
+    return ambiance.getSetupAbstractionsMap().get("orgIdentifier");
+  }
 }
