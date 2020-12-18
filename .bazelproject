@@ -20,7 +20,6 @@ directories:
   879-pms-sdk
   882-pms-sdk-core
   884-pms-commons
-  890-orchestration-persistence
   890-pms-contracts
   890-sm-core
   910-delegate-service-driver

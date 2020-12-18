@@ -1,7 +1,7 @@
 package io.harness.serializer.spring.converters.executableresponse;
 
-import io.harness.orchestration.persistence.ProtoReadConverter;
 import io.harness.pms.contracts.execution.ExecutableResponse;
+import io.harness.serializer.spring.ProtoReadConverter;
 
 import com.google.inject.Singleton;
 import org.springframework.data.convert.ReadingConverter;

@@ -12,7 +12,6 @@ java_library(
     visibility = ["//visibility:public"],
     exports = [
         "//876-orchestration-beans:module",
-        "//890-orchestration-persistence:module",
         "//890-pms-contracts:module",
         "//910-delegate-service-driver:module",
         "//930-delegate-tasks:module",

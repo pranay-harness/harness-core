@@ -1,4 +1,4 @@
-package io.harness.orchestration.persistence;
+package io.harness.serializer.spring;
 
 import com.google.inject.Inject;
 import com.google.protobuf.Message;

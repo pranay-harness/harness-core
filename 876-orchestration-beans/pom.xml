@@ -73,12 +73,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>890-orchestration-persistence</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>882-pms-sdk-core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
