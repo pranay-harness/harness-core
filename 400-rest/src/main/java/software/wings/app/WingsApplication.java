@@ -93,11 +93,14 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
+import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.queue.TimerScheduledExecutorService;
+import io.harness.registrars.WingsStepRegistrar;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.secrets.SecretMigrationEventListener;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
@@ -499,6 +502,8 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     modules.add(new CommandLibraryServiceClientModule(configuration.getCommandLibraryServiceConfig()));
 
+    getPmsSDKModules(modules);
+
     Injector injector = Guice.createInjector(modules);
 
     // Access all caches before coming out of maintenance
@@ -599,6 +604,16 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     log.info("Starting app done");
     log.info("Manager is running on JRE: {}", System.getProperty("java.version"));
+  }
+
+  private void getPmsSDKModules(List<Module> modules) {
+    Injector injector = Guice.createInjector(modules);
+    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
+                                        .deploymentMode(PmsSdkConfiguration.DeployMode.LOCAL)
+                                        .serviceName("wings")
+                                        .engineSteps(WingsStepRegistrar.getEngineSteps(injector))
+                                        .build();
+    modules.add(PmsSdkRegistryModule.getInstance(sdkConfig));
   }
 
   private void registerCVNGVerificationTaskIterator(Injector injector) {

@@ -124,13 +124,11 @@ import io.harness.perpetualtask.PerpetualTaskServiceModule;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.sdk.registries.registrar.AdviserRegistrar;
-import io.harness.pms.sdk.registries.registrar.StepRegistrar;
 import io.harness.queue.QueueController;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.redesign.services.CustomExecutionServiceImpl;
 import io.harness.redis.RedisConfig;
 import io.harness.registrars.WingsAdviserRegistrar;
-import io.harness.registrars.WingsStepRegistrar;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.SchedulerConfig;
 import io.harness.secretmanagers.SecretManagerConfigService;
@@ -1260,10 +1258,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
     MapBinder<TaskCategory, TaskExecutor> taskExecutorMap =
         MapBinder.newMapBinder(binder(), TaskCategory.class, TaskExecutor.class);
     taskExecutorMap.addBinding(TaskCategory.DELEGATE_TASK_V1).to(DelegateTaskExecutor.class);
-
-    MapBinder<String, StepRegistrar> stepRegistrarMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);
-    stepRegistrarMapBinder.addBinding(WingsStepRegistrar.class.getName()).to(WingsStepRegistrar.class);
 
     MapBinder<String, AdviserRegistrar> adviserRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, AdviserRegistrar.class);

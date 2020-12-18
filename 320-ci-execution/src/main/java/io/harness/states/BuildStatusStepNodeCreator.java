@@ -29,7 +29,7 @@ public class BuildStatusStepNodeCreator {
                             .build())
         .facilitatorObtainment(
             FacilitatorObtainment.newBuilder()
-                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK_V3).build())
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
                 .build())
         .build();
   }

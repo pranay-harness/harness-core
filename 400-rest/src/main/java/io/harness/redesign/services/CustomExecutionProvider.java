@@ -187,7 +187,7 @@ public class CustomExecutionProvider {
                   .stepParameters(basicHttpStateParameters)
                   .facilitatorObtainment(
                       FacilitatorObtainment.newBuilder()
-                          .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK_V2).build())
+                          .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
                           .build())
                   .build())
         .startingNodeId(httpNodeId)
@@ -208,7 +208,7 @@ public class CustomExecutionProvider {
                   .stepParameters(basicHttpStateParameters)
                   .facilitatorObtainment(
                       FacilitatorObtainment.newBuilder()
-                          .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK_V3).build())
+                          .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
                           .build())
                   .build())
         .startingNodeId(httpNodeId)

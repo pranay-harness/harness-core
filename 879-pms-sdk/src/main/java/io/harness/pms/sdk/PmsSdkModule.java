@@ -3,8 +3,11 @@ package io.harness.pms.sdk;
 import io.harness.PmsSdkCoreModule;
 import io.harness.pms.contracts.plan.InitializeSdkRequest;
 import io.harness.pms.contracts.plan.PmsServiceGrpc.PmsServiceBlockingStub;
+import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
+import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
+import io.harness.queue.QueueListenerController;
 
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.Guice;
@@ -42,22 +45,32 @@ public class PmsSdkModule {
     PipelineServiceInfoProvider pipelineServiceInfoProvider = config.getPipelineServiceInfoProvider();
     String serviceName = config.getServiceName();
     Injector injector = Guice.createInjector(getModules(serviceName));
-    ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
-    serviceManager.awaitHealthy();
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
-    registerSdk(pipelineServiceInfoProvider, serviceName, injector);
+    if (config.getDeploymentMode().equals(DeployMode.REMOTE)) {
+      ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
+      serviceManager.awaitHealthy();
+      Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
+      registerSdk(pipelineServiceInfoProvider, serviceName, injector);
+      registerEventListeners(injector);
+    }
   }
 
   @NotNull
   private List<Module> getModules(String serviceName) {
     List<Module> modules = new ArrayList<>();
     modules.add(PmsSdkCoreModule.getInstance());
-    modules.add(PmsSdkRegistryModule.getInstance());
-    modules.add(PmsSdkPersistenceModule.getInstance());
-    modules.add(PmsSdkProviderModule.getInstance(config));
-    modules.add(PmsSdkGrpcModule.getInstance(config));
-    modules.add(PmsSdkQueueModule.getInstance(config));
+    if (config.getDeploymentMode().equals(DeployMode.REMOTE)) {
+      modules.add(PmsSdkRegistryModule.getInstance(config));
+      modules.add(PmsSdkPersistenceModule.getInstance());
+      modules.add(PmsSdkProviderModule.getInstance(config));
+      modules.add(PmsSdkGrpcModule.getInstance(config));
+      modules.add(PmsSdkQueueModule.getInstance(config));
+    }
     return modules;
+  }
+
+  private void registerEventListeners(Injector injector) {
+    QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
+    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
   }
 
   private void registerSdk(

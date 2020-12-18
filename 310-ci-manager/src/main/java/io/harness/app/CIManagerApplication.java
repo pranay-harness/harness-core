@@ -26,13 +26,16 @@ import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
 import io.harness.pms.sdk.PmsSdkConfiguration;
+import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
+import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
+import io.harness.registrars.ExecutionRegistrar;
 import io.harness.security.JWTAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.serializer.CiBeansRegistrars;
@@ -226,10 +229,9 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
       }
     });
 
+    getPmsSDKModules(modules, configuration);
     Injector injector = Guice.createInjector(modules);
-    if (configuration.getShouldConfigureWithPMS() != null && configuration.getShouldConfigureWithPMS()) {
-      registerPMSSDK(injector, configuration);
-    }
+    registerPMSSDK(injector, configuration);
     registerResources(environment, injector);
     registerWaitEnginePublishers(injector);
     registerManagedBeans(environment, injector);
@@ -270,23 +272,42 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     }
   }
 
+  private void getPmsSDKModules(List<Module> modules, CIManagerConfiguration appConfig) {
+    Injector injector = Guice.createInjector(modules);
+    boolean remote = false;
+    if (appConfig.getShouldConfigureWithPMS() != null && appConfig.getShouldConfigureWithPMS()) {
+      remote = true;
+    }
+    if (!remote) {
+      PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
+                                          .deploymentMode(DeployMode.LOCAL)
+                                          .serviceName("ci")
+                                          .asyncWaitEngine(injector.getInstance(AsyncWaitEngine.class))
+                                          .engineSteps(ExecutionRegistrar.getEngineSteps(injector))
+                                          .build();
+      modules.add(PmsSdkRegistryModule.getInstance(sdkConfig));
+    }
+  }
+
   private void registerPMSSDK(Injector injector, CIManagerConfiguration config) {
-    PmsSdkConfiguration sdkConfig =
-        PmsSdkConfiguration.builder()
-            .serviceName("ci")
-            .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
-            .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
-            .pipelineServiceInfoProvider(injector.getInstance(CIPipelineServiceInfoProvider.class))
-            .asyncWaitEngine(injector.getInstance(AsyncWaitEngine.class))
-            .mongoConfig(config.getPmsMongoConfig())
-            .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
-            .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
-            .filterCreationResponseMerger(new CIFilterCreationResponseMerger())
-            .build();
-    try {
-      PmsSdkModule.initializeDefaultInstance(sdkConfig);
-    } catch (Exception e) {
-      throw new GeneralException("Fail to start ci manager because pms sdk registration failed", e);
+    if (config.getShouldConfigureWithPMS() != null && config.getShouldConfigureWithPMS()) {
+      PmsSdkConfiguration sdkConfig =
+          PmsSdkConfiguration.builder()
+              .deploymentMode(DeployMode.REMOTE)
+              .serviceName("ci")
+              .pipelineServiceInfoProvider(injector.getInstance(CIPipelineServiceInfoProvider.class))
+              .asyncWaitEngine(injector.getInstance(AsyncWaitEngine.class))
+              .mongoConfig(config.getPmsMongoConfig())
+              .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
+              .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
+              .filterCreationResponseMerger(new CIFilterCreationResponseMerger())
+              .engineSteps(ExecutionRegistrar.getEngineSteps(injector))
+              .build();
+      try {
+        PmsSdkModule.initializeDefaultInstance(sdkConfig);
+      } catch (Exception e) {
+        throw new GeneralException("Fail to start ci manager because pms sdk registration failed", e);
+      }
     }
   }
 

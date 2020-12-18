@@ -8,8 +8,6 @@ import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.impl.CIPipelineExecutionService;
 import io.harness.impl.CIPipelineExecutionServiceImpl;
 import io.harness.pms.sdk.registries.registrar.OrchestrationEventHandlerRegistrar;
-import io.harness.pms.sdk.registries.registrar.StepRegistrar;
-import io.harness.registrars.ExecutionRegistrar;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 
 import ci.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
@@ -43,9 +41,6 @@ public class CIExecutionServiceModule extends AbstractModule {
     bind(CIBuildService.class).to(CIBuildServiceImpl.class);
     this.bind(CIExecutionServiceConfig.class).toInstance(this.ciExecutionServiceConfig);
     bind(CIPipelineExecutionService.class).to(CIPipelineExecutionServiceImpl.class);
-    MapBinder<String, StepRegistrar> stepRegistrarMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);
-    stepRegistrarMapBinder.addBinding(ExecutionRegistrar.class.getName()).to(ExecutionRegistrar.class);
   }
 
   @Provides

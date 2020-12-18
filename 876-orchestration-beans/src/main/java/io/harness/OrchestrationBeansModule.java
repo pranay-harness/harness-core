@@ -1,6 +1,7 @@
 package io.harness;
 
 import io.harness.orchestration.OrchestrationPersistenceModule;
+import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
 import io.harness.pms.sdk.registries.registrar.OrchestrationFieldRegistrar;
 import io.harness.registrars.OrchestrationBeansFieldRegistrar;
@@ -26,7 +27,6 @@ public class OrchestrationBeansModule extends AbstractModule {
   protected void configure() {
     install(TimeoutEngineModule.getInstance());
     install(OrchestrationPersistenceModule.getInstance());
-    install(PmsSdkRegistryModule.getInstance());
 
     MapBinder<String, OrchestrationFieldRegistrar> orchestrationFieldRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, OrchestrationFieldRegistrar.class);

@@ -38,10 +38,13 @@ import io.harness.manage.GlobalContextManager.GlobalContextGuard;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.sdk.PmsSdkConfiguration;
+import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.redis.RedisConfig;
+import io.harness.registrars.WingsStepRegistrar;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.Cache;
 import io.harness.rule.InjectorRuleMixin;
@@ -222,6 +225,7 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     CacheModule cacheModule = new CacheModule(cacheConfigBuilder.build());
     modules.add(0, cacheModule);
 
+    getPmsSDKModules(modules);
     injector = Guice.createInjector(modules);
     registerListeners(annotations.stream().filter(Listeners.class ::isInstance).findFirst());
     registerScheduledJobs(injector);
@@ -235,6 +239,16 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
         }
       }
     }
+  }
+
+  public void getPmsSDKModules(List<Module> modules) {
+    Injector injector = Guice.createInjector(modules);
+    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
+                                        .deploymentMode(PmsSdkConfiguration.DeployMode.LOCAL)
+                                        .serviceName("wings")
+                                        .engineSteps(WingsStepRegistrar.getEngineSteps(injector))
+                                        .build();
+    modules.add(PmsSdkRegistryModule.getInstance(sdkConfig));
   }
 
   protected Set<Class<? extends KryoRegistrar>> getKryoRegistrars() {

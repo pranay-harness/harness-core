@@ -3,6 +3,7 @@ package io.harness.pms.sdk.registries;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
@@ -10,23 +11,14 @@ import io.harness.pms.contracts.refobjects.RefType;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.expression.OrchestrationFieldProcessor;
 import io.harness.pms.expression.OrchestrationFieldType;
+import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.facilitator.Facilitator;
-import io.harness.pms.sdk.core.registries.AdviserRegistry;
-import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
-import io.harness.pms.sdk.core.registries.OrchestrationEventHandlerRegistry;
-import io.harness.pms.sdk.core.registries.OrchestrationFieldRegistry;
-import io.harness.pms.sdk.core.registries.ResolverRegistry;
-import io.harness.pms.sdk.core.registries.StepRegistry;
+import io.harness.pms.sdk.core.registries.*;
 import io.harness.pms.sdk.core.resolver.Resolver;
 import io.harness.pms.sdk.core.steps.Step;
-import io.harness.pms.sdk.registries.registrar.AdviserRegistrar;
-import io.harness.pms.sdk.registries.registrar.FacilitatorRegistrar;
-import io.harness.pms.sdk.registries.registrar.OrchestrationEventHandlerRegistrar;
-import io.harness.pms.sdk.registries.registrar.OrchestrationFieldRegistrar;
-import io.harness.pms.sdk.registries.registrar.ResolverRegistrar;
-import io.harness.pms.sdk.registries.registrar.StepRegistrar;
+import io.harness.pms.sdk.registries.registrar.*;
 import io.harness.pms.sdk.registries.registrar.local.PmsSdkAdviserRegistrar;
 import io.harness.pms.sdk.registries.registrar.local.PmsSdkFacilitatorRegistrar;
 
@@ -45,13 +37,19 @@ import org.apache.commons.lang3.tuple.Pair;
 @OwnedBy(CDC)
 @Slf4j
 public class PmsSdkRegistryModule extends AbstractModule {
+  private final PmsSdkConfiguration config;
+
   private static PmsSdkRegistryModule instance;
 
-  public static synchronized PmsSdkRegistryModule getInstance() {
+  public static synchronized PmsSdkRegistryModule getInstance(PmsSdkConfiguration config) {
     if (instance == null) {
-      instance = new PmsSdkRegistryModule();
+      instance = new PmsSdkRegistryModule(config);
     }
     return instance;
+  }
+
+  public PmsSdkRegistryModule(PmsSdkConfiguration config) {
+    this.config = config;
   }
 
   public void configure() {
@@ -66,8 +64,6 @@ public class PmsSdkRegistryModule extends AbstractModule {
 
     MapBinder.newMapBinder(binder(), String.class, OrchestrationEventHandlerRegistrar.class);
 
-    MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);
-
     MapBinder.newMapBinder(binder(), String.class, ResolverRegistrar.class);
 
     MapBinder.newMapBinder(binder(), String.class, OrchestrationFieldRegistrar.class);
@@ -75,12 +71,12 @@ public class PmsSdkRegistryModule extends AbstractModule {
 
   @Provides
   @Singleton
-  StepRegistry providesStateRegistry(Injector injector, Map<String, StepRegistrar> stepRegistrarMap) {
-    Set<Pair<StepType, Step>> classes = new HashSet<>();
-    stepRegistrarMap.values().forEach(stepRegistrar -> stepRegistrar.register(classes));
+  StepRegistry providesStateRegistry() {
     StepRegistry stepRegistry = new StepRegistry();
-    injector.injectMembers(stepRegistry);
-    classes.forEach(pair -> { stepRegistry.register(pair.getLeft(), pair.getRight()); });
+    Map<StepType, Step> engineSteps = config.getEngineSteps();
+    if (EmptyPredicate.isNotEmpty(engineSteps)) {
+      engineSteps.forEach(stepRegistry::register);
+    }
     return stepRegistry;
   }
 

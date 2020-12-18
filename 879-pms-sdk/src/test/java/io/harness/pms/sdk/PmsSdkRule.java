@@ -50,7 +50,7 @@ public class PmsSdkRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
     modules.add(new ClosingFactoryModule(closingFactory));
     modules.add(PmsSdkCoreModule.getInstance());
     modules.add(PmsCommonsModule.getInstance());
-    modules.add(PmsSdkRegistryModule.getInstance());
+    modules.add(PmsSdkRegistryModule.getInstance(PmsSdkConfiguration.builder().build()));
     modules.add(mongoTypeModule(annotations));
     modules.add(KryoModule.getInstance());
 

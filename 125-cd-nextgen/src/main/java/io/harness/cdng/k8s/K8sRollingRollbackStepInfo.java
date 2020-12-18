@@ -61,7 +61,7 @@ public class K8sRollingRollbackStepInfo extends K8sRollingRollbackStepParameters
 
   @Override
   public String getFacilitatorType() {
-    return OrchestrationFacilitatorType.TASK_V3;
+    return OrchestrationFacilitatorType.TASK;
   }
 
   @Override

@@ -59,6 +59,7 @@ public class CvServiceApplication extends Application<CvServiceConfiguration> {
 
     PmsSdkConfiguration sdkConfig =
         PmsSdkConfiguration.builder()
+            .deploymentMode(PmsSdkConfiguration.DeployMode.REMOTE)
             .serviceName("cv")
             .mongoConfig(config.getMongoConfig())
             .grpcServerConfig(config.getPmsSdkGrpcServerConfig())

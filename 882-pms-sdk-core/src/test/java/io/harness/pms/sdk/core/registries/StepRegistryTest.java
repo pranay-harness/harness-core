@@ -1,15 +1,13 @@
-package io.harness.registries.state;
+package io.harness.pms.sdk.core.registries;
 
 import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.harness.OrchestrationBeansTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.registries.RegistryType;
-import io.harness.pms.sdk.core.registries.StepRegistry;
+import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.io.EmptyStepParameters;
 import io.harness.registries.exceptions.DuplicateRegistryException;
@@ -22,7 +20,7 @@ import lombok.Value;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class StepRegistryTest extends OrchestrationBeansTestBase {
+public class StepRegistryTest extends PmsSdkCoreTestBase {
   @Inject private StepRegistry stepRegistry;
 
   @Test

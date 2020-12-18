@@ -2,7 +2,6 @@ package io.harness.registrars;
 
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.Step;
-import io.harness.pms.sdk.registries.registrar.StepRegistrar;
 import io.harness.states.BuildStatusStep;
 import io.harness.states.BuildStep;
 import io.harness.states.CIPipelineSetupStep;
@@ -27,38 +26,40 @@ import io.harness.states.TestIntelligenceStep;
 import io.harness.states.UploadToGCSStep;
 import io.harness.states.UploadToS3Step;
 
-import com.google.inject.Inject;
 import com.google.inject.Injector;
-import java.util.Set;
-import org.apache.commons.lang3.tuple.Pair;
+import java.util.HashMap;
+import java.util.Map;
+import lombok.experimental.UtilityClass;
 
-public class ExecutionRegistrar implements StepRegistrar {
-  @Inject private Injector injector;
+@UtilityClass
+public class ExecutionRegistrar {
+  public Map<StepType, Step> getEngineSteps(Injector injector) {
+    Map<StepType, Step> engineSteps = new HashMap<>();
 
-  @Override
-  public void register(Set<Pair<StepType, Step>> stateClasses) {
-    stateClasses.add(Pair.of(LiteEngineTaskStep.STEP_TYPE, injector.getInstance(LiteEngineTaskStep.class)));
-    stateClasses.add(Pair.of(CleanupStep.STEP_TYPE, injector.getInstance(CleanupStep.class)));
-    stateClasses.add(Pair.of(BuildStep.STEP_TYPE, injector.getInstance(BuildStep.class)));
-    stateClasses.add(Pair.of(GitCloneStep.STEP_TYPE, injector.getInstance(GitCloneStep.class)));
-    stateClasses.add(Pair.of(RunStep.STEP_TYPE, injector.getInstance(RunStep.class)));
-    stateClasses.add(Pair.of(RestoreCacheStep.STEP_TYPE, injector.getInstance(RestoreCacheStep.class)));
-    stateClasses.add(Pair.of(SaveCacheStep.STEP_TYPE, injector.getInstance(SaveCacheStep.class)));
-    stateClasses.add(Pair.of(PublishStep.STEP_TYPE, injector.getInstance(PublishStep.class)));
-    stateClasses.add(Pair.of(IntegrationStageStep.STEP_TYPE, injector.getInstance(IntegrationStageStep.class)));
-    stateClasses.add(Pair.of(CIPipelineSetupStep.STEP_TYPE, injector.getInstance(CIPipelineSetupStep.class)));
-    stateClasses.add(Pair.of(BuildStatusStep.STEP_TYPE, injector.getInstance(BuildStatusStep.class)));
-    stateClasses.add(Pair.of(PluginStep.STEP_TYPE, injector.getInstance(PluginStep.class)));
-    stateClasses.add(Pair.of(ECRStep.STEP_TYPE, injector.getInstance(ECRStep.class)));
-    stateClasses.add(Pair.of(GCRStep.STEP_TYPE, injector.getInstance(GCRStep.class)));
-    stateClasses.add(Pair.of(DockerStep.STEP_TYPE, injector.getInstance(DockerStep.class)));
-    stateClasses.add(Pair.of(UploadToS3Step.STEP_TYPE, injector.getInstance(UploadToS3Step.class)));
-    stateClasses.add(Pair.of(SaveCacheS3Step.STEP_TYPE, injector.getInstance(SaveCacheS3Step.class)));
-    stateClasses.add(Pair.of(RestoreCacheS3Step.STEP_TYPE, injector.getInstance(RestoreCacheS3Step.class)));
-    stateClasses.add(Pair.of(UploadToGCSStep.STEP_TYPE, injector.getInstance(UploadToGCSStep.class)));
-    stateClasses.add(Pair.of(SaveCacheGCSStep.STEP_TYPE, injector.getInstance(SaveCacheGCSStep.class)));
-    stateClasses.add(Pair.of(RestoreCacheGCSStep.STEP_TYPE, injector.getInstance(RestoreCacheGCSStep.class)));
-    stateClasses.add(Pair.of(TestIntelligenceStep.STEP_TYPE, injector.getInstance(TestIntelligenceStep.class)));
-    stateClasses.add(Pair.of(IntegrationStageStepPMS.STEP_TYPE, injector.getInstance(IntegrationStageStepPMS.class)));
+    engineSteps.put(LiteEngineTaskStep.STEP_TYPE, injector.getInstance(LiteEngineTaskStep.class));
+    engineSteps.put(CleanupStep.STEP_TYPE, injector.getInstance(CleanupStep.class));
+    engineSteps.put(BuildStep.STEP_TYPE, injector.getInstance(BuildStep.class));
+    engineSteps.put(GitCloneStep.STEP_TYPE, injector.getInstance(GitCloneStep.class));
+    engineSteps.put(RunStep.STEP_TYPE, injector.getInstance(RunStep.class));
+    engineSteps.put(RestoreCacheStep.STEP_TYPE, injector.getInstance(RestoreCacheStep.class));
+    engineSteps.put(SaveCacheStep.STEP_TYPE, injector.getInstance(SaveCacheStep.class));
+    engineSteps.put(PublishStep.STEP_TYPE, injector.getInstance(PublishStep.class));
+    engineSteps.put(IntegrationStageStep.STEP_TYPE, injector.getInstance(IntegrationStageStep.class));
+    engineSteps.put(CIPipelineSetupStep.STEP_TYPE, injector.getInstance(CIPipelineSetupStep.class));
+    engineSteps.put(BuildStatusStep.STEP_TYPE, injector.getInstance(BuildStatusStep.class));
+    engineSteps.put(PluginStep.STEP_TYPE, injector.getInstance(PluginStep.class));
+    engineSteps.put(ECRStep.STEP_TYPE, injector.getInstance(ECRStep.class));
+    engineSteps.put(GCRStep.STEP_TYPE, injector.getInstance(GCRStep.class));
+    engineSteps.put(DockerStep.STEP_TYPE, injector.getInstance(DockerStep.class));
+    engineSteps.put(UploadToS3Step.STEP_TYPE, injector.getInstance(UploadToS3Step.class));
+    engineSteps.put(SaveCacheS3Step.STEP_TYPE, injector.getInstance(SaveCacheS3Step.class));
+    engineSteps.put(RestoreCacheS3Step.STEP_TYPE, injector.getInstance(RestoreCacheS3Step.class));
+    engineSteps.put(UploadToGCSStep.STEP_TYPE, injector.getInstance(UploadToGCSStep.class));
+    engineSteps.put(SaveCacheGCSStep.STEP_TYPE, injector.getInstance(SaveCacheGCSStep.class));
+    engineSteps.put(RestoreCacheGCSStep.STEP_TYPE, injector.getInstance(RestoreCacheGCSStep.class));
+    engineSteps.put(TestIntelligenceStep.STEP_TYPE, injector.getInstance(TestIntelligenceStep.class));
+    engineSteps.put(IntegrationStageStepPMS.STEP_TYPE, injector.getInstance(IntegrationStageStepPMS.class));
+
+    return engineSteps;
   }
 }
