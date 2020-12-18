@@ -18,12 +18,14 @@ public class InstanceFetchStateExecutionSummary extends StepExecutionSummary imp
   private String instanceFetchScript;
   private String scriptOutput;
   private String activityId;
+  private List<String> tags;
 
   @Override
   public Optional<List<DeploymentInfo>> extractDeploymentInfo() {
     return Optional.of(singletonList(CustomDeploymentTypeInfo.builder()
                                          .scriptOutput(scriptOutput)
                                          .instanceFetchScript(instanceFetchScript)
+                                         .tags(tags)
                                          .build()));
   }
 }

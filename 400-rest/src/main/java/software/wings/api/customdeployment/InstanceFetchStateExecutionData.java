@@ -26,6 +26,7 @@ public class InstanceFetchStateExecutionData extends StateExecutionData implemen
   private Map<String, String> hostAttributes;
   private String scriptOutput;
   @Builder.Default private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
+  private List<String> tags;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
@@ -52,6 +53,7 @@ public class InstanceFetchStateExecutionData extends StateExecutionData implemen
         .activityId(activityId)
         .instanceFetchScript(instanceFetchScript)
         .scriptOutput(scriptOutput)
+        .tags(tags)
         .build();
   }
 

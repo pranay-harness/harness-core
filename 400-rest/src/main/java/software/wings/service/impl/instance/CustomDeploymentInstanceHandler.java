@@ -213,8 +213,10 @@ public class CustomDeploymentInstanceHandler extends InstanceHandler implements 
 
   @Override
   public DeploymentKey generateDeploymentKey(DeploymentInfo deploymentInfo) {
+    final CustomDeploymentTypeInfo customDeploymentTypeInfo = (CustomDeploymentTypeInfo) deploymentInfo;
     return CustomDeploymentKey.builder()
-        .instanceFetchScriptHash(((CustomDeploymentTypeInfo) deploymentInfo).getInstanceFetchScript().hashCode())
+        .instanceFetchScriptHash(customDeploymentTypeInfo.getInstanceFetchScript().hashCode())
+        .tags(customDeploymentTypeInfo.getTags())
         .build();
   }
 

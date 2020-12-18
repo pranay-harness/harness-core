@@ -1,6 +1,7 @@
 package software.wings.service.impl.instance;
 
 import static io.harness.rule.OwnerRule.HITESH;
+import static io.harness.rule.OwnerRule.YOGESH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -13,6 +14,7 @@ import software.wings.api.DeploymentSummary;
 import software.wings.api.K8sDeploymentInfo;
 import software.wings.beans.container.Label;
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
+import software.wings.beans.infrastructure.instance.key.deployment.CustomDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.K8sDeploymentKey;
 
 import com.google.inject.Inject;
@@ -35,6 +37,7 @@ public class DeploymentServiceImplTest extends WingsBaseTest {
   private final String ECS_CLUSTER_NAME = "ecs_cluster_name";
   private final String INFRA_MAPPING_ID_ECS = "infra_mapping_id_ecs";
   private final String INFRA_MAPPING_ID_K8S = "infra_mapping_id_k8s";
+  private final String INFRA_MAPPING_ID_CUSTOM = "infra_mapping_id_custom";
 
   private final Instant NOW = Instant.now();
   private final Instant START_TIME = NOW.minus(1, ChronoUnit.DAYS);
@@ -71,6 +74,17 @@ public class DeploymentServiceImplTest extends WingsBaseTest {
     Optional<DeploymentSummary> savedK8sDeploymentSummary = deploymentService.getWithAccountId(deploymentSummary);
     assertThat(savedK8sDeploymentSummary).isPresent();
     assertThat(savedK8sDeploymentSummary).map(DeploymentSummary::getInfraMappingId).hasValue(INFRA_MAPPING_ID_K8S);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testGetDeploymentSummaryForCustomDeployment() {
+    DeploymentSummary deploymentSummary = getCustomDeploymentSummary();
+    deploymentService.save(deploymentSummary);
+    Optional<DeploymentSummary> savedK8sDeploymentSummary = deploymentService.getWithAccountId(deploymentSummary);
+    assertThat(savedK8sDeploymentSummary).isPresent();
+    assertThat(savedK8sDeploymentSummary).map(DeploymentSummary::getInfraMappingId).hasValue(INFRA_MAPPING_ID_CUSTOM);
   }
 
   @Test
@@ -119,6 +133,14 @@ public class DeploymentServiceImplTest extends WingsBaseTest {
         .accountId(ACCOUNT_ID)
         .containerDeploymentKey(containerDeploymentKey)
         .infraMappingId(INFRA_MAPPING_ID_K8S)
+        .build();
+  }
+
+  private DeploymentSummary getCustomDeploymentSummary() {
+    return DeploymentSummary.builder()
+        .infraMappingId(INFRA_MAPPING_ID_CUSTOM)
+        .customDeploymentKey(
+            CustomDeploymentKey.builder().instanceFetchScriptHash(1234).tags(Arrays.asList("foo", "bar")).build())
         .build();
   }
 

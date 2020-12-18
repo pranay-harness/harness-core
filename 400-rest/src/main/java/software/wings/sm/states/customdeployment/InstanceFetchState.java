@@ -243,6 +243,7 @@ public class InstanceFetchState extends State {
                                 .hostObjectArrayPath(deploymentTypeTemplate.getHostObjectArrayPath())
                                 .hostAttributes(deploymentTypeTemplate.getHostAttributes())
                                 .instanceFetchScript(getRenderedScriptExceptSecrets(taskParameters.getScriptBody()))
+                                .tags(getRenderedTags(context))
                                 .build())
         .build();
   }
@@ -442,6 +443,7 @@ public class InstanceFetchState extends State {
           .filter(StringUtils::isNotBlank)
           .map(StringUtils::trim)
           .distinct()
+          .sorted()
           .collect(Collectors.toList());
     }
     return Collections.emptyList();

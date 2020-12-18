@@ -9,6 +9,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,6 +41,7 @@ import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
+import software.wings.beans.infrastructure.instance.key.deployment.CustomDeploymentKey;
 import software.wings.beans.template.deploymenttype.CustomDeploymentTypeTemplate;
 import software.wings.service.CustomDeploymentInstanceSyncPTCreator;
 import software.wings.service.intfc.AppService;
@@ -292,6 +294,16 @@ public class CustomDeploymentInstanceHandlerTest extends WingsBaseTest {
         buildInfraMapping(), buildPerpetualTaskResponse(buildSampleInstancesJson(1, 2, 3, 4, 5)));
     verify(instanceService, never()).save(any(Instance.class));
     verify(instanceService, never()).delete(anySet());
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.YOGESH)
+  @Category(UnitTests.class)
+  public void generateDeploymentKey() {
+    final CustomDeploymentKey deploymentKey = (CustomDeploymentKey) handler.generateDeploymentKey(
+        CustomDeploymentTypeInfo.builder().instanceFetchScript("echo hello").tags(asList("tag1", "tag2")).build());
+    assertThat(deploymentKey.getInstanceFetchScriptHash()).isEqualTo("echo hello".hashCode());
+    assertThat(deploymentKey.getTags()).containsExactly("tag1", "tag2");
   }
 
   private List<Instance> buildSampleInstances(int... indexes) {
