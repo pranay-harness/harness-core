@@ -156,6 +156,6 @@
 
   CE_CLOUD_ACCOUNTS:
     FULL_TRIAL:
-      maxCloudAccountsAllowed: 1
+      maxCloudAccountsAllowed: 2
     LIMITED_TRIAL:
       maxCloudAccountsAllowed: 1
