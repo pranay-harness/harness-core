@@ -163,7 +163,9 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
 
     if (optionalPrevious.isPresent() && ccmSettingService.isCloudCostEnabled(previous.getAccountId())) {
       CCMConfig ccmConfig = ccmConfigYamlHandler.upsertFromYaml(clonedContext, changeSetContext);
-      kubernetesClusterConfig.setCcmConfig(ccmConfig);
+      if (null != ccmConfig) {
+        kubernetesClusterConfig.setCcmConfig(ccmConfig);
+      }
     }
 
     String encryptedRef = yaml.getUsernameSecretId();
