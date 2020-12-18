@@ -30,6 +30,7 @@ import com.google.inject.multibindings.MapBinder;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
+
 @OwnedBy(CDC)
 @Slf4j
 public class PmsSdkRegistryModule extends AbstractModule {
@@ -49,11 +50,6 @@ public class PmsSdkRegistryModule extends AbstractModule {
   }
 
   public void configure() {
-    MapBinder<String, FacilitatorRegistrar> facilitatorRegistrarMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, FacilitatorRegistrar.class);
-    facilitatorRegistrarMapBinder.addBinding(PmsSdkFacilitatorRegistrar.class.getName())
-        .to(PmsSdkFacilitatorRegistrar.class);
-
     MapBinder.newMapBinder(binder(), String.class, OrchestrationEventHandlerRegistrar.class);
 
     MapBinder.newMapBinder(binder(), String.class, ResolverRegistrar.class);
@@ -100,13 +96,14 @@ public class PmsSdkRegistryModule extends AbstractModule {
 
   @Provides
   @Singleton
-  FacilitatorRegistry providesFacilitatorRegistry(
-      Injector injector, Map<String, FacilitatorRegistrar> facilitatorRegistrarMap) {
-    Set<Pair<FacilitatorType, Facilitator>> pairs = new HashSet<>();
-    facilitatorRegistrarMap.values().forEach(facilitatorRegistrar -> facilitatorRegistrar.register(pairs));
+  FacilitatorRegistry providesFacilitatorRegistry(Injector injector) {
     FacilitatorRegistry facilitatorRegistry = new FacilitatorRegistry();
-    injector.injectMembers(facilitatorRegistry);
-    pairs.forEach(pair -> { facilitatorRegistry.register(pair.getLeft(), pair.getRight()); });
+    Map<FacilitatorType, Facilitator> engineFacilitators = config.getEngineFacilitators();
+    if (EmptyPredicate.isEmpty(engineFacilitators)) {
+      engineFacilitators = new HashMap<>();
+    }
+    engineFacilitators.putAll(PmsSdkFacilitatorRegistrar.getEngineFacilitators(injector));
+    engineFacilitators.forEach(facilitatorRegistry::register);
     return facilitatorRegistry;
   }
 

@@ -44,6 +44,7 @@ import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.redis.RedisConfig;
+import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.registrars.WingsAdviserRegistrar;
 import io.harness.registrars.WingsStepRegistrar;
 import io.harness.remote.client.ServiceHttpClientConfig;
@@ -244,12 +245,14 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
 
   public void getPmsSDKModules(List<Module> modules) {
     Injector injector = Guice.createInjector(modules);
-    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
-                                        .deploymentMode(PmsSdkConfiguration.DeployMode.LOCAL)
-                                        .serviceName("wings")
-                                        .engineSteps(WingsStepRegistrar.getEngineSteps(injector))
-                                        .engineAdvisers(WingsAdviserRegistrar.getEngineAdvisers(injector))
-                                        .build();
+    PmsSdkConfiguration sdkConfig =
+        PmsSdkConfiguration.builder()
+            .deploymentMode(PmsSdkConfiguration.DeployMode.LOCAL)
+            .serviceName("wings")
+            .engineSteps(WingsStepRegistrar.getEngineSteps(injector))
+            .engineAdvisers(WingsAdviserRegistrar.getEngineAdvisers(injector))
+            .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators(injector))
+            .build();
     modules.add(PmsSdkRegistryModule.getInstance(sdkConfig));
   }
 
