@@ -23,6 +23,7 @@ import io.harness.remote.NGObjectMapperHelper;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.dropwizard.Application;
@@ -75,41 +76,44 @@ public class NotificationClientApplication extends Application<NotificationClien
     Injector injector = Guice.createInjector(
         new NotificationClientApplicationModule(appConfig), new MetricRegistryModule(metricRegistry));
     NotificationClientImpl notificationClient = injector.getInstance(NotificationClientImpl.class);
-    notificationClient.sendNotificationAsync(EmailChannel.builder()
-                                                 .accountId("kmpySmUISimoRrJL6NL73w")
-                                                 .recipients(Collections.emptyList())
-                                                 .team(Team.CD)
-                                                 .templateId("email_test")
-                                                 .templateData(Collections.emptyMap())
-                                                 .userGroupIds(Collections.emptyList())
-                                                 .build());
+    //    notificationClient.sendNotificationAsync(EmailChannel.builder()
+    //                                                 .accountId("kmpySmUISimoRrJL6NL73w")
+    //                                                 .recipients(Collections.emptyList())
+    //                                                 .team(Team.CD)
+    //                                                 .templateId("email_test")
+    //                                                 .templateData(Collections.emptyMap())
+    //                                                 .userGroupIds(Collections.emptyList())
+    //                                                 .build());
+    //
+    //    notificationClient.sendNotificationAsync(SlackChannel.builder()
+    //                                                 .accountId("kmpySmUISimoRrJL6NL73w")
+    //                                                 .slackWebHookURLs(Collections.emptyList())
+    //                                                 .team(Team.CD)
+    //                                                 .templateId("slack_test")
+    //                                                 .templateData(Collections.emptyMap())
+    //                                                 .userGroupIds(Collections.emptyList())
+    //                                                 .build());
 
-    notificationClient.sendNotificationAsync(SlackChannel.builder()
-                                                 .accountId("kmpySmUISimoRrJL6NL73w")
-                                                 .slackWebHookURLs(Collections.emptyList())
-                                                 .team(Team.CD)
-                                                 .templateId("slack_test")
-                                                 .templateData(Collections.emptyMap())
-                                                 .userGroupIds(Collections.emptyList())
-                                                 .build());
+    NotificationResult result = notificationClient.sendNotificationAsync(
+        PagerDutyChannel.builder()
+            .accountId("kmpySmUISimoRrJL6NL73w")
+            .pagerDutyIntegrationKeys(Collections.emptyList())
+            .team(Team.CD)
+            .templateId("pd_vanilla")
+            .templateData(ImmutableMap.of(
+                "message", "this is test plain message", "link_href", "www.google.com", "link_text", "Google"))
+            .userGroupIds(Collections.emptyList())
+            .build());
+    log.info("Result {}", result.getNotificationId());
 
-    notificationClient.sendNotificationAsync(PagerDutyChannel.builder()
-                                                 .accountId("kmpySmUISimoRrJL6NL73w")
-                                                 .pagerDutyIntegrationKeys(Collections.emptyList())
-                                                 .team(Team.CD)
-                                                 .templateId("pd_test")
-                                                 .templateData(Collections.emptyMap())
-                                                 .userGroupIds(Collections.emptyList())
-                                                 .build());
-
-    notificationClient.sendNotificationAsync(MSTeamChannel.builder()
-                                                 .accountId("kmpySmUISimoRrJL6NL73w")
-                                                 .msTeamKeys(Collections.emptyList())
-                                                 .team(Team.CD)
-                                                 .templateId("msteams_test")
-                                                 .templateData(Collections.emptyMap())
-                                                 .userGroupIds(Collections.emptyList())
-                                                 .build());
+    //    notificationClient.sendNotificationAsync(MSTeamChannel.builder()
+    //                                                 .accountId("kmpySmUISimoRrJL6NL73w")
+    //                                                 .msTeamKeys(Collections.emptyList())
+    //                                                 .team(Team.CD)
+    //                                                 .templateId("msteams_test")
+    //                                                 .templateData(Collections.emptyMap())
+    //                                                 .userGroupIds(Collections.emptyList())
+    //                                                 .build());
 
     //    notificationClient.testNotificationChannel(EmailSettingDTO.builder()
     //                                                   .accountId("kmpySmUISimoRrJL6NL73w")
