@@ -11,6 +11,9 @@ import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.exception.WingsExceptionMapper;
+import io.harness.pms.execution.registrar.PmsOrchestrationEventRegistrar;
+import io.harness.pms.sdk.PmsSdkConfiguration;
+import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.waiter.NotifyEvent;
@@ -18,13 +21,7 @@ import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 
 import com.google.common.util.concurrent.ServiceManager;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.Module;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
+import com.google.inject.*;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -91,6 +88,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     });
     modules.add(PipelineServiceModule.getInstance(appConfig));
 
+    getPmsSDKModules(modules);
     Injector injector = Guice.createInjector(modules);
     injector.getInstance(HPersistence.class);
     registerEventListeners(injector);
@@ -106,6 +104,16 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
 
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void getPmsSDKModules(List<Module> modules) {
+    Injector injector = Guice.createInjector(modules);
+    PmsSdkConfiguration sdkConfig =
+        PmsSdkConfiguration.builder()
+            .serviceName("pms")
+            .engineEventHandlersMap(PmsOrchestrationEventRegistrar.getEngineEventHandlers(injector))
+            .build();
+    modules.add(PmsSdkRegistryModule.getInstance(sdkConfig));
   }
 
   private void registerEventListeners(Injector injector) {

@@ -50,8 +50,6 @@ public class PmsSdkRegistryModule extends AbstractModule {
   }
 
   public void configure() {
-    MapBinder.newMapBinder(binder(), String.class, OrchestrationEventHandlerRegistrar.class);
-
     MapBinder.newMapBinder(binder(), String.class, ResolverRegistrar.class);
 
     MapBinder.newMapBinder(binder(), String.class, OrchestrationFieldRegistrar.class);
@@ -109,14 +107,12 @@ public class PmsSdkRegistryModule extends AbstractModule {
 
   @Provides
   @Singleton
-  OrchestrationEventHandlerRegistry providesEventHandlerRegistry(
-      Injector injector, Map<String, OrchestrationEventHandlerRegistrar> orchestrationEventHandlerRegistrarMap) {
-    Set<Pair<OrchestrationEventType, OrchestrationEventHandler>> classes = new HashSet<>();
-    orchestrationEventHandlerRegistrarMap.values().forEach(
-        orchestrationEventHandlerRegistrar -> orchestrationEventHandlerRegistrar.register(classes));
+  OrchestrationEventHandlerRegistry providesEventHandlerRegistry() {
     OrchestrationEventHandlerRegistry handlerRegistry = new OrchestrationEventHandlerRegistry();
-    injector.injectMembers(handlerRegistry);
-    classes.forEach(pair -> handlerRegistry.register(pair.getLeft(), Collections.singleton(pair.getRight())));
+    Map<OrchestrationEventType, OrchestrationEventHandler> engineEventHandlersMap = config.getEngineEventHandlersMap();
+    if (EmptyPredicate.isNotEmpty(engineEventHandlersMap)) {
+      engineEventHandlersMap.forEach((k, v) -> handlerRegistry.register(k, Collections.singleton(v)));
+    }
     return handlerRegistry;
   }
 

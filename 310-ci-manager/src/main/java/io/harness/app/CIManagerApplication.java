@@ -60,6 +60,7 @@ import io.harness.waiter.NotifyResponseCleaner;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 import io.harness.waiter.ProgressUpdateService;
 
+import ci.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -290,6 +291,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
               .engineSteps(ExecutionRegistrar.getEngineSteps(injector))
               .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers(injector))
               .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators(injector))
+              .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers(injector))
               .build();
       modules.add(PmsSdkRegistryModule.getInstance(sdkConfig));
     }
@@ -311,6 +313,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
               .kryoSerializer(injector.getInstance(KryoSerializer.class))
               .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers(injector))
               .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators(injector))
+              .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers(injector))
               .build();
       try {
         PmsSdkModule.initializeDefaultInstance(sdkConfig);

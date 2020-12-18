@@ -91,16 +91,20 @@ import io.harness.perpetualtask.internal.PerpetualTaskRecordHandler;
 import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
+import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.PmsSdkConfiguration;
+import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
 import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.queue.TimerScheduledExecutorService;
+import io.harness.registrars.OrchestrationStepsModuleEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
+import io.harness.registrars.OrchestrationVisualizationModuleEventHandlerRegistrar;
 import io.harness.registrars.WingsAdviserRegistrar;
 import io.harness.registrars.WingsStepRegistrar;
 import io.harness.scheduler.PersistentScheduler;
@@ -259,6 +263,7 @@ import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -610,6 +615,10 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private void getPmsSDKModules(List<Module> modules) {
     Injector injector = Guice.createInjector(modules);
+    Map<OrchestrationEventType, OrchestrationEventHandler> engineEventHandlersMap = new HashMap<>();
+    engineEventHandlersMap.putAll(
+        OrchestrationVisualizationModuleEventHandlerRegistrar.getEngineEventHandlers(injector));
+    engineEventHandlersMap.putAll(OrchestrationStepsModuleEventHandlerRegistrar.getEngineEventHandlers(injector));
     PmsSdkConfiguration sdkConfig =
         PmsSdkConfiguration.builder()
             .deploymentMode(PmsSdkConfiguration.DeployMode.LOCAL)
@@ -617,6 +626,7 @@ public class WingsApplication extends Application<MainConfiguration> {
             .engineSteps(WingsStepRegistrar.getEngineSteps(injector))
             .engineAdvisers(WingsAdviserRegistrar.getEngineAdvisers(injector))
             .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators(injector))
+            .engineEventHandlersMap(engineEventHandlersMap)
             .build();
     modules.add(PmsSdkRegistryModule.getInstance(sdkConfig));
   }
