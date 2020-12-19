@@ -1,15 +1,15 @@
-package io.harness.pms.sdk.core.recast.converters;
+package io.harness.pms.sdk.core.recast.transformers.simplevalue;
 
-import io.harness.pms.sdk.core.recast.CastedField;
-import io.harness.pms.sdk.core.recast.RecastConverter;
-import io.harness.pms.sdk.core.recast.RecastReflectionUtils;
+import io.harness.pms.sdk.core.recast.RecastTransformer;
+import io.harness.pms.sdk.core.recast.beans.CastedField;
+import io.harness.pms.sdk.core.recast.utils.RecastReflectionUtils;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 
-public class LongRecastConverter extends RecastConverter {
-  public LongRecastConverter() {
-    super(ImmutableList.of(long.class, Long.class, long[].class, Long[].class));
+public class DoubleRecastTransformer extends RecastTransformer implements SimpleValueTransformer {
+  public DoubleRecastTransformer() {
+    super(ImmutableList.of(double.class, Double.class, double[].class, Double[].class));
   }
 
   @Override
@@ -18,12 +18,12 @@ public class LongRecastConverter extends RecastConverter {
       return null;
     }
 
-    if (object instanceof Long) {
+    if (object instanceof Double) {
       return object;
     }
 
     if (object instanceof Number) {
-      return ((Number) object).longValue();
+      return ((Number) object).doubleValue();
     }
 
     if (object instanceof List) {
@@ -31,7 +31,7 @@ public class LongRecastConverter extends RecastConverter {
       return RecastReflectionUtils.convertToArray(type, (List<?>) object);
     }
 
-    return Long.parseLong(object.toString());
+    return Double.parseDouble(object.toString());
   }
 
   @Override

@@ -1,16 +1,16 @@
-package io.harness.pms.sdk.core.recast.converters;
+package io.harness.pms.sdk.core.recast.transformers.simplevalue;
 
-import io.harness.pms.sdk.core.recast.CastedField;
-import io.harness.pms.sdk.core.recast.RecastConverter;
+import io.harness.pms.sdk.core.recast.RecastTransformer;
+import io.harness.pms.sdk.core.recast.beans.CastedField;
 
 import java.util.Collections;
 import org.mongodb.morphia.mapping.MappingException;
 
-public class ClassRecastConverter extends RecastConverter {
+public class ClassRecastTransformer extends RecastTransformer implements SimpleValueTransformer {
   /**
    * Creates the Converter.
    */
-  public ClassRecastConverter() {
+  public ClassRecastTransformer() {
     super(Collections.singletonList(Class.class));
   }
 

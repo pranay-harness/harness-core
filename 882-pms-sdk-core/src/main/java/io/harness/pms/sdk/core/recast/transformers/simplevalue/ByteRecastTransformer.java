@@ -1,13 +1,13 @@
-package io.harness.pms.sdk.core.recast.converters;
+package io.harness.pms.sdk.core.recast.transformers.simplevalue;
 
-import io.harness.pms.sdk.core.recast.CastedField;
-import io.harness.pms.sdk.core.recast.RecastConverter;
+import io.harness.pms.sdk.core.recast.RecastTransformer;
+import io.harness.pms.sdk.core.recast.beans.CastedField;
 
 import com.google.common.collect.ImmutableList;
 import java.lang.reflect.Array;
 
-public class ByteRecastConverter extends RecastConverter {
-  public ByteRecastConverter() {
+public class ByteRecastTransformer extends RecastTransformer implements SimpleValueTransformer {
+  public ByteRecastTransformer() {
     super(ImmutableList.of(byte.class, Byte.class, byte[].class, Byte[].class));
   }
 

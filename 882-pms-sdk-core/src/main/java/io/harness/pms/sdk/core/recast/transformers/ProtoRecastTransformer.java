@@ -1,7 +1,7 @@
-package io.harness.pms.sdk.core.recast.converters;
+package io.harness.pms.sdk.core.recast.transformers;
 
-import io.harness.pms.sdk.core.recast.CastedField;
-import io.harness.pms.sdk.core.recast.RecastConverter;
+import io.harness.pms.sdk.core.recast.RecastTransformer;
+import io.harness.pms.sdk.core.recast.beans.CastedField;
 
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
@@ -9,8 +9,8 @@ import com.google.protobuf.util.JsonFormat;
 import java.util.Collections;
 import lombok.SneakyThrows;
 
-public class ProtoRecastConverter extends RecastConverter {
-  public ProtoRecastConverter() {
+public class ProtoRecastTransformer extends RecastTransformer {
+  public ProtoRecastTransformer() {
     super(Collections.singletonList(Message.class));
   }
 

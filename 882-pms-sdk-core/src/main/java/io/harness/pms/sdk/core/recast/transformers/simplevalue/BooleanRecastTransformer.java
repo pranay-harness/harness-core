@@ -1,8 +1,8 @@
-package io.harness.pms.sdk.core.recast.converters;
+package io.harness.pms.sdk.core.recast.transformers.simplevalue;
 
-import io.harness.pms.sdk.core.recast.CastedField;
-import io.harness.pms.sdk.core.recast.RecastConverter;
-import io.harness.pms.sdk.core.recast.RecastReflectionUtils;
+import io.harness.pms.sdk.core.recast.RecastTransformer;
+import io.harness.pms.sdk.core.recast.beans.CastedField;
+import io.harness.pms.sdk.core.recast.utils.RecastReflectionUtils;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -11,11 +11,11 @@ import java.util.List;
  * @author Uwe Schaefer, (us@thomas-daily.de)
  * @author scotthernandez
  */
-public class BooleanRecastConverter extends RecastConverter {
+public class BooleanRecastTransformer extends RecastTransformer implements SimpleValueTransformer {
   /**
    * Creates the Converter.
    */
-  public BooleanRecastConverter() {
+  public BooleanRecastTransformer() {
     super(ImmutableList.of(boolean.class, Boolean.class, boolean[].class, Boolean[].class));
   }
 

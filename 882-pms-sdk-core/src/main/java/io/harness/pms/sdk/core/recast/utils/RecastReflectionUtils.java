@@ -1,4 +1,6 @@
-package io.harness.pms.sdk.core.recast;
+package io.harness.pms.sdk.core.recast.utils;
+
+import io.harness.pms.sdk.core.recast.beans.CastedField;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.DBObject;
@@ -224,5 +226,21 @@ public class RecastReflectionUtils {
     boolean anAbstract = Modifier.isAbstract(cf.getSubClass().getModifiers());
     boolean equals = cf.getSubClass().equals(rawVal.getClass());
     return convertedVal == null || !isDBObject || anInterface || anAbstract || !equals;
+  }
+
+  public static <T> List<T> iterToList(final Iterable<T> it) {
+    if (it instanceof List) {
+      return (List<T>) it;
+    }
+    if (it == null) {
+      return null;
+    }
+
+    final List<T> ar = new ArrayList<T>();
+    for (final T o : it) {
+      ar.add(o);
+    }
+
+    return ar;
   }
 }
