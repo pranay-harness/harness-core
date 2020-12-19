@@ -85,15 +85,17 @@ func CreateTable(ctx context.Context, e GCSEvent) error {
 
 
   if !strings.HasSuffix(e.Name, ".json") {
+    fmt.Println("Not a JSON file. Exiting :", e.Name)
     return nil
   }
-	fmt.Printf("Processing JSON")
+	fmt.Println("Processing JSON from path:", e.Name)
   rc, readerClientErr := storageClient.Bucket(e.Bucket).Object(e.Name).NewReader(ctxBack)
   // log.Printf("Printing Event Context %+v\n", e)
   if readerClientErr != nil {
     log.Fatal(readerClientErr)
   }
   defer rc.Close()
+  fmt.Println("Reading data from manifest")
   body, readingErr := ioutil.ReadAll(rc)
   if readingErr != nil {
     log.Fatal(readingErr)
@@ -121,26 +123,22 @@ func CreateTable(ctx context.Context, e GCSEvent) error {
       Location: "US",
     }
     if dataSetCreationErr := client.Dataset("BillingReport_"+accountId).Create(ctxBack, dataSetMetaData); dataSetCreationErr != nil {
-      log.Fatal("Error Creating DataSet: {}", dataSetCreationErr.Error())
+      fmt.Println("Error Creating DataSet:", dataSetCreationErr.Error())
     }
   }
 
   CloudFunctionsDataset := client.Dataset(datasetName)
   CloudFunctionsDataset.Table(tableName).Delete(ctxBack)
   if tableCreateErr := CloudFunctionsDataset.Table(tableName).Create(ctxBack, &bigquery.TableMetadata{Schema: getSchema(jsonData)}); tableCreateErr != nil {
-    log.Fatal("Error Creating File: {}", tableCreateErr.Error())
-  }
-
-  if DeleteObjectErr := storageClient.Bucket(e.Bucket).Object(e.Name).Delete(ctxBack); DeleteObjectErr != nil {
-    log.Fatal("Error Deleting Json Manifest File Post Processing: {}", DeleteObjectErr.Error())
+    fmt.Println("Error Creating table. This error can be ignored.", tableCreateErr.Error())
   }
 
   // CloudScheduler Code
-  fmt.Printf("Processing CloudScheduler code")
+  fmt.Println("Processing CloudScheduler code")
   ctxBack = context.Background()
   c, err := scheduler.NewCloudSchedulerClient(ctxBack)
   if err != nil {
-    fmt.Printf("%S", err)
+    fmt.Println(err)
     return err
   }
   msgData := make(map[string]string)
@@ -156,13 +154,11 @@ func CreateTable(ctx context.Context, e GCSEvent) error {
 
   triggerTime := time.Now().UTC()
   triggerTime = triggerTime.Add(10 * time.Minute) // after 10 mins
-  fmt.Printf("triggerTime after 10 mins %s", triggerTime)
   schedule := fmt.Sprintf("%d %d %d %d *", triggerTime.Minute(), triggerTime.Hour(), triggerTime.Day(), int(triggerTime.Month()))
-  fmt.Printf("schedule %s", schedule)
 
   topic := fmt.Sprintf("projects/%s/topics/ce-awsdata-scheduler", projectId)
-  fmt.Printf("Topic: %s", topic)
-  fmt.Printf("msgDataJson: %s", msgDataJson)
+  fmt.Println("Topic: ", topic)
+  fmt.Println("msgDataString:", msgDataString)
   var pubsubtarget = &schedulerpb.PubsubTarget {
     TopicName: topic,
     Data: []byte(msgDataString),
@@ -195,18 +191,24 @@ func CreateTable(ctx context.Context, e GCSEvent) error {
   }
   err = c.DeleteJob(ctxBack, req1)
   if err != nil {
-    fmt.Printf("%s", err)
+    fmt.Printf("Error while trying to delete older schedules. This can be ignored. %s\n", err)
   }
 
   req := &schedulerpb.CreateJobRequest{
-    Parent: "projects/ccm-play/locations/us-central1",
+    Parent: fmt.Sprintf("projects/%s/locations/us-central1", projectId),
     Job: job,
   }
-  resp, err := c.CreateJob(ctxBack, req)
+  _, err = c.CreateJob(ctxBack, req)
   if err != nil {
-    fmt.Printf("%s", err)
+    fmt.Printf("%s\n", err)
+    return err
   }
-  fmt.Printf("%s", resp)
+
+  // Delete manifest only when scheduler is set
+  if DeleteObjectErr := storageClient.Bucket(e.Bucket).Object(e.Name).Delete(ctxBack); DeleteObjectErr != nil {
+    fmt.Println("Error Deleting Json Manifest File Post Processing:", DeleteObjectErr.Error())
+  }
+  fmt.Println("Processed and deleted JSON:", e.Name)
 	return nil
 }
 

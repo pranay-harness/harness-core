@@ -101,14 +101,15 @@ def ingestDataFromCsvToAwsCurTableTable(client, jsonData):
     load_job.result()  # Wait for the job to complete.
 
     table = client.get_table(table_id)
-    print("Loaded {} rows to table {}".format(table.num_rows, table_id))
+    print("Total {} rows in table {}".format(table.num_rows, table_id))
     storage_client = storage.Client(jsonData["projectId"])
     blobs = storage_client.list_blobs(
         jsonData["bucket"], prefix="/".join(jsonData["fileName"].split("/")[:-1])
     )
     for blob in blobs:
-        blob.delete()
-        print("Blob {} deleted.".format(blob.name))
+        if blob.name.endswith(".csv") or blob.name.endswith(".csv.gz"):
+            blob.delete()
+            print("Blob {} deleted.".format(blob.name))
 
 def ingestDataToAwsCurTable(client, jsonData):
     ds = "%s.%s" % (jsonData["projectId"], jsonData["datasetName"])
