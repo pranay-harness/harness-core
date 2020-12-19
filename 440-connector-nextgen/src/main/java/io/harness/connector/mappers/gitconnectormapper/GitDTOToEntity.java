@@ -41,7 +41,7 @@ public class GitDTOToEntity implements ConnectorDTOToEntityMapper<GitConfigDTO> 
 
   @Override
   public List<ConnectorCategory> getConnectorCategory() {
-    return Collections.singletonList(ConnectorCategory.CLOUD_PROVIDER);
+    return Collections.singletonList(ConnectorCategory.CODE_REPO);
   }
 
   private String getBranchName(GitConfigDTO gitConfigDTO) {
