@@ -9,6 +9,7 @@ import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.sdk.core.execution.ExecutableProcessor;
 import io.harness.pms.sdk.core.execution.ResumePackage;
@@ -39,14 +40,15 @@ public class EngineResumeExecutor implements Runnable {
     try {
       if (asyncError) {
         ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) response.values().iterator().next();
-        StepResponse stepResponse = StepResponse.builder()
-                                        .status(Status.ERRORED)
-                                        .failureInfo(FailureInfo.newBuilder()
-                                                         .addAllFailureTypes(EngineExceptionUtils.transformFailureTypes(
-                                                             errorNotifyResponseData.getFailureTypes()))
-                                                         .setErrorMessage(errorNotifyResponseData.getErrorMessage())
-                                                         .build())
-                                        .build();
+        StepResponseProto stepResponse =
+            StepResponseProto.newBuilder()
+                .setStatus(Status.ERRORED)
+                .setFailureInfo(FailureInfo.newBuilder()
+                                    .addAllFailureTypes(EngineExceptionUtils.transformFailureTypes(
+                                        errorNotifyResponseData.getFailureTypes()))
+                                    .setErrorMessage(errorNotifyResponseData.getErrorMessage())
+                                    .build())
+                .build();
         orchestrationEngine.handleStepResponse(nodeExecution.getUuid(), stepResponse);
         return;
       }

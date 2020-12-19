@@ -7,11 +7,13 @@ import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 
 import lombok.Builder;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Value;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.TypeAlias;
 
-@Value
+@Data
+@NoArgsConstructor
 @TypeAlias("infraSectionStepParameters")
 @EqualsAndHashCode(callSuper = true)
 public class InfraSectionStepParameters extends PipelineInfrastructure implements StepParameters {

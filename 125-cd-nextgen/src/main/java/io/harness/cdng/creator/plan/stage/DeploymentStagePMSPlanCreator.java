@@ -53,12 +53,14 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
     // Adding infrastructure node
     String infraDefNodeUuid = ctx.getCurrentField()
                                   .getNode()
+                                  .getField("spec")
+                                  .getNode()
                                   .getField("infrastructure")
                                   .getNode()
                                   .getField("infrastructureDefinition")
                                   .getNode()
                                   .getUuid();
-    YamlField infraField = ctx.getCurrentField().getNode().getField("infrastructure");
+    YamlField infraField = ctx.getCurrentField().getNode().getField("spec").getNode().getField("infrastructure");
     YamlNode infraNode = infraField.getNode();
 
     PlanNode infraStepNode = InfrastructurePmsPlanCreator.getInfraStepPlanNode(
@@ -73,7 +75,7 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
         infraNode.getUuid(), PlanCreationResponse.builder().node(infraNode.getUuid(), infraSectionPlanNode).build());
 
     // Add dependency for execution
-    YamlField executionField = ctx.getCurrentField().getNode().getField("execution");
+    YamlField executionField = ctx.getCurrentField().getNode().getField("spec").getNode().getField("execution");
     dependenciesNodeMap.put(executionField.getNode().getUuid(), executionField);
 
     planCreationResponseMap.put(

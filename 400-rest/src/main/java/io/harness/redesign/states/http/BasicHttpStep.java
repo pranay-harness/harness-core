@@ -81,7 +81,7 @@ public class BasicHttpStep implements TaskExecutable<BasicHttpStepParameters> {
             .setAccountId(ambiance.getSetupAbstractionsMap().get("accountId"))
             .setDetails(
                 TaskDetails.newBuilder()
-                    .setKryoParameters(ByteString.copyFrom(kryoSerializer.asBytes(httpTaskParameters)))
+                    .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(httpTaskParameters)))
                     .setExecutionTimeout(Duration.newBuilder().setSeconds(DEFAULT_ASYNC_CALL_TIMEOUT * 1000).build())
                     // TODO : Change this somehow and obtain from ambiance
                     .setExpressionFunctorToken(HashGenerator.generateIntegerHash())

@@ -2,14 +2,18 @@ package io.harness.executionplan.rule;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import static org.mockito.Mockito.mock;
+
 import io.harness.CIExecutionServiceModule;
 import io.harness.CIExecutionTestModule;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.delegate.DelegateServiceGrpc;
+import io.harness.engine.pms.tasks.NgDelegate2TaskExecutor;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
+import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
@@ -26,6 +30,8 @@ import com.google.common.base.Suppliers;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import java.io.Closeable;
@@ -101,6 +107,14 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
 
         bind(new TypeLiteral<DelegateServiceGrpc.DelegateServiceBlockingStub>() {
         }).toInstance(DelegateServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(generateUuid()).build()));
+      }
+    });
+
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      protected NgDelegate2TaskExecutor ngDelegate2TaskExecutor() {
+        return mock(NgDelegate2TaskExecutor.class);
       }
     });
     return modules;

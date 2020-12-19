@@ -34,8 +34,10 @@ public class DeploymentStageStepParameters implements StepParameters {
     }
     DeploymentStageConfig stageType = (DeploymentStageConfig) config.getStageType();
     Map<String, Object> variablesMap = new HashMap<>();
-    for (NGVariable variable : stageType.getVariables()) {
-      variablesMap.put(variable.getName(), variable.getValue());
+    if (stageType.getVariables() != null) {
+      for (NGVariable variable : stageType.getVariables()) {
+        variablesMap.put(variable.getName(), variable.getValue());
+      }
     }
     return DeploymentStageStepParameters.builder()
         .identifier(config.getIdentifier())

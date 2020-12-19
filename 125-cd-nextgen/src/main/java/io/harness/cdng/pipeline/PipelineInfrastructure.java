@@ -13,11 +13,13 @@ import io.harness.walktree.visitor.Visitable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.Wither;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
+@NoArgsConstructor
 @AllArgsConstructor
 @SimpleVisitorHelper(helperClass = PipelineInfrastructureVisitorHelper.class)
 @TypeAlias("pipelineInfrastructure")
