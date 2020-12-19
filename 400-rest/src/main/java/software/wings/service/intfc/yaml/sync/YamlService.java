@@ -31,8 +31,9 @@ public interface YamlService<Y extends BaseYaml, B extends Base> {
   /**
    * @param yamlPayload
    * @param accountId
+   * @param entityId
    */
-  RestResponse<B> update(YamlPayload yamlPayload, String accountId);
+  RestResponse<B> update(YamlPayload yamlPayload, String accountId, String entityId);
 
   RestResponse processYamlFilesAsZip(String accountId, InputStream fileInputStream, String yamlPath) throws IOException;
 

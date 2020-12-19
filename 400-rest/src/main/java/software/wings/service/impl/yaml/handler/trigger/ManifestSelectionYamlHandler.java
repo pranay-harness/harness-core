@@ -5,8 +5,8 @@ import static io.harness.validation.Validator.notNullCheck;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.UnsupportedOperationException;
 import io.harness.exception.WingsException;
 import io.harness.exception.YamlException;
 
@@ -96,6 +96,6 @@ public class ManifestSelectionYamlHandler extends BaseYamlHandler<Yaml, Manifest
 
   @Override
   public ManifestSelection get(String accountId, String yamlFilePath) {
-    throw new UnsupportedOperationException("Yaml file lookup not supported");
+    throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
   }
 }

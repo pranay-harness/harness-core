@@ -3,7 +3,9 @@ package software.wings.service.impl.yaml.handler.templatelibrary;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.GeneralException;
+import io.harness.exception.WingsException;
 
 import software.wings.beans.template.artifactsource.CustomArtifactSourceTemplate;
 import software.wings.beans.yaml.ChangeContext;
@@ -51,6 +53,6 @@ public class CustomArtifactSourceYamlHandler
 
   @Override
   public CustomArtifactSourceTemplate get(String accountId, String yamlFilePath) {
-    throw new GeneralException("Not implemented");
+    throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
   }
 }

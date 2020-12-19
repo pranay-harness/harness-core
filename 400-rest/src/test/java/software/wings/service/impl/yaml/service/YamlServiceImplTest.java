@@ -5,6 +5,7 @@ import static io.harness.git.model.ChangeType.MODIFY;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ALEXEI;
+import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
@@ -25,12 +26,15 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.ChangeType;
 import io.harness.rule.Owner;
@@ -39,13 +43,16 @@ import software.wings.WingsBaseTest;
 import software.wings.audit.AuditHeader;
 import software.wings.beans.Application;
 import software.wings.beans.yaml.Change;
+import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 import software.wings.common.AuditHelper;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.YamlProcessingException;
+import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.app.ApplicationYamlHandler;
+import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHelper;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.yaml.YamlOperationResponse;
@@ -64,6 +71,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import javax.activity.InvalidActivityException;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -72,6 +80,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
+@Slf4j
 public class YamlServiceImplTest extends WingsBaseTest {
   @Mock private YamlHandlerFactory yamlHandlerFactory;
   @Mock private YamlHelper yamlHelper;
@@ -83,6 +92,8 @@ public class YamlServiceImplTest extends WingsBaseTest {
   @Mock private AuditService auditService;
   private static final String resourcePath = "./yaml";
   @Mock ApplicationYamlHandler applicationYamlHandler;
+  @Mock BaseYamlHandler baseYamlHandler;
+  @Mock HarnessTagYamlHelper harnessTagYamlHelper;
 
   @Before
   public void setUp() {
@@ -252,6 +263,44 @@ public class YamlServiceImplTest extends WingsBaseTest {
     final YamlOperationResponse yamlOperationResponse = yamlService.upsertYAMLFilesAsZip(testAccountId, zipfile);
     assertThat(yamlOperationResponse).isNotNull();
     verify(auditHelper, times(1)).setAuditContext(auditHeader);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void testUpsertFromYamlWhenEntityIdInChangeDoesNotMatchTheYamlEntityId() throws Exception {
+    GitFileChange change = GitFileChange.Builder.aGitFileChange()
+                               .withChangeType(ChangeType.MODIFY)
+                               .withFileContent("")
+                               .withFilePath("Setup/Applications/app1/Index.yaml")
+                               .withAccountId("TestAccountID")
+                               .withEntityId("inputEntityId")
+                               .build();
+    ChangeContext changeContext =
+        ChangeContext.Builder.aChangeContext().withChange(change).withYamlSyncHandler(applicationYamlHandler).build();
+    when(applicationYamlHandler.get(any(), anyString(), any()))
+        .thenReturn(Application.Builder.anApplication().uuid("newEntityId").build());
+    yamlService.upsertFromYaml(changeContext, Collections.singletonList(changeContext));
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void testUpsertFromYaml() throws Exception {
+    GitFileChange change = GitFileChange.Builder.aGitFileChange()
+                               .withChangeType(ChangeType.MODIFY)
+                               .withFileContent("")
+                               .withFilePath("Setup/Applications/app1/Index.yaml")
+                               .withAccountId("TestAccountID")
+                               .withEntityId("inputEntityId")
+                               .build();
+    ChangeContext changeContext =
+        ChangeContext.Builder.aChangeContext().withChange(change).withYamlSyncHandler(applicationYamlHandler).build();
+    when(applicationYamlHandler.get(any(), anyString(), any()))
+        .thenReturn(Application.Builder.anApplication().uuid("inputEntityId").build());
+    yamlService.upsertFromYaml(changeContext, Collections.singletonList(changeContext));
+    verify(applicationYamlHandler, times(1)).upsertFromYaml(any(), anyList());
+    verify(harnessTagYamlHelper, times(1)).upsertTagLinksIfRequired(any());
   }
 
   private void shouldThrowInvalidYamlNameException(YamlPayload yamlPayload) {

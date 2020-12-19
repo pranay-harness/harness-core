@@ -6,7 +6,8 @@ import static io.harness.validation.Validator.notEmptyCheck;
 import static io.harness.validation.Validator.notNullCheck;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.UnsupportedOperationException;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
@@ -91,7 +92,7 @@ public class StepSkipStrategyYamlHandler extends BaseYamlHandler<Yaml, StepSkipS
 
   @Override
   public StepSkipStrategy get(String accountId, String yamlFilePath) {
-    throw new UnsupportedOperationException("get method not supported for StepSkipStrategyYamlHandler");
+    throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
   }
 
   @Override

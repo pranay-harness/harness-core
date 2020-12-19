@@ -80,11 +80,14 @@ import io.harness.eraro.ResponseMessage;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.HarnessException;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.exception.YamlException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.ChangeType;
 import io.harness.logging.ExceptionLogger;
+import io.harness.persistence.UuidAware;
 import io.harness.rest.RestResponse;
 import io.harness.rest.RestResponse.Builder;
 import io.harness.yaml.BaseYaml;
@@ -293,12 +296,13 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   }
 
   @Override
-  public RestResponse<B> update(YamlPayload yamlPayload, String accountId) {
+  public RestResponse<B> update(YamlPayload yamlPayload, String accountId, String entityId) {
     GitFileChange change = GitFileChange.Builder.aGitFileChange()
                                .withChangeType(ChangeType.MODIFY)
                                .withFileContent(yamlPayload.getYaml())
                                .withFilePath(yamlPayload.getPath())
                                .withAccountId(accountId)
+                               .withEntityId(entityId)
                                .build();
     RestResponse rr = new RestResponse<>();
     List<GitFileChange> gitFileChangeList = asList(change);
@@ -821,14 +825,15 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         || filePath.contains(OC_PARAMS_FILE);
   }
 
-  private void upsertFromYaml(ChangeContext changeContext, List<ChangeContext> changeContextList)
-      throws HarnessException {
+  @VisibleForTesting
+  void upsertFromYaml(ChangeContext changeContext, List<ChangeContext> changeContextList) throws HarnessException {
     GitFileChange change = (GitFileChange) changeContext.getChange();
     String commitId = change.getCommitId();
     String accountId = change.getAccountId();
     BaseYamlHandler yamlSyncHandler = changeContext.getYamlSyncHandler();
 
     try {
+      checkThatEntityIdInChangeAndInYamlIsSame(yamlSyncHandler, accountId, change.getFilePath(), changeContext);
       yamlSyncHandler.upsertFromYaml(changeContext, changeContextList);
 
       // Handling for tags
@@ -841,6 +846,41 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       }
       throw e;
     }
+  }
+
+  private void checkThatEntityIdInChangeAndInYamlIsSame(
+      BaseYamlHandler yamlSyncHandler, String accountId, String filePath, ChangeContext changeContext) {
+    GitFileChange change = (GitFileChange) changeContext.getChange();
+    if (changeContext.getYamlType() == TAG || changeContext.getYamlType() == APPLICATION_DEFAULTS) {
+      return;
+    }
+    String entityIdFromYaml;
+    try {
+      UuidAware entity = (UuidAware) yamlSyncHandler.get(accountId, filePath, changeContext);
+      entityIdFromYaml = entity == null ? null : entity.getUuid();
+    } catch (WingsException ex) {
+      // There are entities which we don't store and get is not supported for them
+      // For those entities we don't have to validate the ids
+      if (ex.getCode() == ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION) {
+        return;
+      }
+      log.error("Exception while getting entity from the change context for filePath : [{}] in accountId : [{}]",
+          filePath, accountId, ex);
+      throw new UnexpectedException("Error while updating the entity using the YAML");
+    }
+
+    if (isNotEmpty(change.getEntityId())) {
+      // Its an update operation
+      if (!change.getEntityId().equals(entityIdFromYaml)) {
+        throw new InvalidRequestException(
+            "The entity Id provided in the request and the entity Id of the Yaml doesn't match");
+      }
+    }
+  }
+
+  private String getEntityIdFromYaml(
+      BaseYamlHandler yamlHandler, String accountId, String filePath, ChangeContext changeContext) {
+    return null;
   }
 
   private BaseYaml getYaml(String yamlString, Class<? extends BaseYaml> yamlClass) throws IOException {
