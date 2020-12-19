@@ -3,6 +3,7 @@ package io.harness.pms.sdk.core.execution;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserResponse;
@@ -30,9 +31,13 @@ import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
+import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ErrorResponseData;
+import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
@@ -43,6 +48,7 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
   @Inject private PmsNodeExecutionService pmsNodeExecutionService;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private ExecutableProcessorFactory executableProcessorFactory;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Inject
   public NodeExecutionEventListener(QueueConsumer<NodeExecutionEvent> queueConsumer) {
@@ -125,9 +131,13 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
     NodeExecutionProto nodeExecution = event.getNodeExecution();
     ExecutableProcessor processor = executableProcessorFactory.obtainProcessor(nodeExecution.getMode());
     ResumeNodeExecutionEventData eventData = (ResumeNodeExecutionEventData) event.getEventData();
+    Map<String, ResponseData> response = new HashMap<>();
+    if (EmptyPredicate.isNotEmpty(eventData.getResponse())) {
+      eventData.getResponse().forEach((k, v) -> response.put(k, (ResponseData) kryoSerializer.asInflatedObject(v)));
+    }
     try {
       if (eventData.isAsyncError()) {
-        ErrorResponseData errorResponseData = (ErrorResponseData) eventData.getResponse().values().iterator().next();
+        ErrorResponseData errorResponseData = (ErrorResponseData) response.values().iterator().next();
         StepResponseProto stepResponse =
             StepResponseProto.newBuilder()
                 .setStatus(Status.ERRORED)
@@ -144,7 +154,7 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
       processor.handleResume(ResumePackage.builder()
                                  .nodeExecution(nodeExecution)
                                  .nodes(eventData.getNodes())
-                                 .responseDataMap(eventData.getResponse())
+                                 .responseDataMap(response)
                                  .build());
     } catch (Exception ex) {
       log.error("Error resuming execution");

@@ -82,8 +82,8 @@ public class ArtifactStepTest extends CDNGBaseTest {
     assertThat(delegateTaskRequest.getAccountId()).isEqualTo("ACCOUNT_ID");
     assertThat(delegateTaskRequest.getDetails().getType().getType()).isEqualTo(TaskType.DOCKER_ARTIFACT_TASK_NG.name());
 
-    TaskParameters taskParameters =
-        (TaskParameters) kryoSerializer.asObject(delegateTaskRequest.getDetails().getKryoParameters().toByteArray());
+    TaskParameters taskParameters = (TaskParameters) kryoSerializer.asInflatedObject(
+        delegateTaskRequest.getDetails().getKryoParameters().toByteArray());
     assertThat(taskParameters).isInstanceOf(ArtifactTaskParameters.class);
     ArtifactTaskParameters taskParams = (ArtifactTaskParameters) taskParameters;
 

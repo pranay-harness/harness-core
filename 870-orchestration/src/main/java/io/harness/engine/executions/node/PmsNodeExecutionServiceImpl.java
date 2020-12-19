@@ -26,8 +26,8 @@ import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
+import io.harness.pms.sdk.core.steps.io.ResponseDataMapper;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.ResponseData;
@@ -39,6 +39,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.google.protobuf.ByteString;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -55,8 +56,9 @@ public class PmsNodeExecutionServiceImpl implements PmsNodeExecutionService {
   @Inject private StepRegistry stepRegistry;
   @Inject private InvocationHelper invocationHelper;
   @Inject private WaitNotifyEngine waitNotifyEngine;
-  @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
+  @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) private String publisherName;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
+  @Inject private ResponseDataMapper responseDataMapper;
 
   @Override
   public void queueNodeExecution(NodeExecutionProto nodeExecution) {
@@ -94,12 +96,13 @@ public class PmsNodeExecutionServiceImpl implements PmsNodeExecutionService {
 
   @Override
   public void handleStepResponse(@NonNull String nodeExecutionId, @NonNull StepResponseProto stepResponse) {
-    engine.handleStepResponse(nodeExecutionId, StepResponseMapper.fromStepResponseProto(stepResponse));
+    engine.handleStepResponse(nodeExecutionId, stepResponse);
   }
 
   @Override
   public void resumeNodeExecution(String nodeExecutionId, Map<String, ResponseData> response, boolean asyncError) {
-    engine.resume(nodeExecutionId, response, asyncError);
+    Map<String, ByteString> responseBytes = responseDataMapper.toResponseDataProto(response);
+    engine.resume(nodeExecutionId, responseBytes, asyncError);
   }
 
   @Override

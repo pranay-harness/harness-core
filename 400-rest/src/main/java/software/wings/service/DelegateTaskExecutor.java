@@ -50,7 +50,8 @@ public class DelegateTaskExecutor implements TaskExecutor {
         .data(TaskData.builder()
                   .async(taskDetails.getParked())
                   .taskType(taskDetails.getType().getType())
-                  .parameters(new Object[] {kryoSerializer.asObject(taskDetails.getKryoParameters().toByteArray())})
+                  .parameters(
+                      new Object[] {kryoSerializer.asInflatedObject(taskDetails.getKryoParameters().toByteArray())})
                   .timeout(taskDetails.getExecutionTimeout().getSeconds() * 1000)
                   .build())
         .setupAbstractions(abstractions)

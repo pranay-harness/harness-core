@@ -105,17 +105,18 @@ public class StepUtils {
     DelegateTaskRequest.Builder requestBuilder =
         DelegateTaskRequest.newBuilder()
             .setAccountId(accountId)
-            .setDetails(TaskDetails.newBuilder()
-                            .setKryoParameters(ByteString.copyFrom(kryoSerializer.asBytes(taskParameters) == null
-                                    ? new byte[] {}
-                                    : kryoSerializer.asBytes(taskParameters)))
-                            .setExecutionTimeout(Duration.newBuilder().setSeconds(taskData.getTimeout() * 1000).build())
-                            // TODO : Change this spmehow and obtain from ambiance
-                            .setExpressionFunctorToken(HashGenerator.generateIntegerHash())
-                            .setMode(taskData.isAsync() ? TaskMode.ASYNC : TaskMode.SYNC)
-                            .setParked(taskData.isParked())
-                            .setType(TaskType.newBuilder().setType(taskData.getTaskType()).build())
-                            .build())
+            .setDetails(
+                TaskDetails.newBuilder()
+                    .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(taskParameters) == null
+                            ? new byte[] {}
+                            : kryoSerializer.asDeflatedBytes(taskParameters)))
+                    .setExecutionTimeout(Duration.newBuilder().setSeconds(taskData.getTimeout() * 1000).build())
+                    // TODO : Change this spmehow and obtain from ambiance
+                    .setExpressionFunctorToken(HashGenerator.generateIntegerHash())
+                    .setMode(taskData.isAsync() ? TaskMode.ASYNC : TaskMode.SYNC)
+                    .setParked(taskData.isParked())
+                    .setType(TaskType.newBuilder().setType(taskData.getTaskType()).build())
+                    .build())
             .setLogAbstractions(TaskLogAbstractions.newBuilder()
                                     .putAllValues(logAbstractions)
                                     .putValues(Cd1SetupFields.APP_ID_FIELD, accountId)
@@ -129,9 +130,9 @@ public class StepUtils {
           capabilities.stream()
               .map(capability
                   -> Capability.newBuilder()
-                         .setKryoCapability(ByteString.copyFrom(kryoSerializer.asBytes(capability) == null
+                         .setKryoCapability(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(capability) == null
                                  ? new byte[] {}
-                                 : kryoSerializer.asBytes(capability)))
+                                 : kryoSerializer.asDeflatedBytes(capability)))
                          .build())
               .collect(toList()));
     }

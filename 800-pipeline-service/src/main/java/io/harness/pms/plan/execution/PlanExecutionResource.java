@@ -6,10 +6,12 @@ import io.harness.plan.Plan;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.plan.creation.PlanCreatorMergeService;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import java.io.IOException;
+import java.util.HashMap;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -245,12 +247,66 @@ public class PlanExecutionResource {
       + "                  spec:\n"
       + "                    timeout: 120000";
 
+  private static final String ngPipeline = "pipeline:\n"
+      + "  name: P1\n"
+      + "  identifier: P1\n"
+      + "  description: \"\"\n"
+      + "  stages:\n"
+      + "    - stage:\n"
+      + "        name: S1\n"
+      + "        identifier: S1\n"
+      + "        description: \"\"\n"
+      + "        type: Deployment\n"
+      + "        spec:\n"
+      + "          service:\n"
+      + "            identifier: nginx\n"
+      + "            name: nginx\n"
+      + "            description: \"\"\n"
+      + "            serviceDefinition:\n"
+      + "              type: Kubernetes\n"
+      + "              spec:\n"
+      + "                artifacts:\n"
+      + "                  sidecars: []\n"
+      + "                  primary:\n"
+      + "                    type: Dockerhub\n"
+      + "                    spec:\n"
+      + "                      connectorRef: docker_public\n"
+      + "                      imagePath: library/nginx\n"
+      + "                      tag: stable-perl\n"
+      + "                manifests: []\n"
+      + "                artifactOverrideSets: []\n"
+      + "                manifestOverrideSets: []\n"
+      + "          infrastructure:\n"
+      + "            environment:\n"
+      + "              name: k8s\n"
+      + "              identifier: k8s\n"
+      + "              description: \"\"\n"
+      + "              type: PreProduction\n"
+      + "            infrastructureDefinition:\n"
+      + "              type: KubernetesDirect\n"
+      + "              spec:\n"
+      + "                connectorRef: k8s_sa\n"
+      + "                namespace: garvit-test\n"
+      + "                releaseName: garvit-test-nginx\n"
+      + "          execution:\n"
+      + "            steps:\n"
+      + "              - step:\n"
+      + "                  name: http step 1\n"
+      + "                  identifier: httpStep1\n"
+      + "                  type: Http\n"
+      + "                  spec:\n"
+      + "                    socketTimeoutMillis: 1000\n"
+      + "                    method: GET\n"
+      + "                    url: https://www.google.com/\n";
+
   @GET
   @ApiOperation(value = "Execute A Pipeline", nickname = "executePipeline")
   public Response executePipeline() throws IOException {
-    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(pipelineYaml);
+    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(ngPipeline);
     Plan plan = PlanExecutionUtils.extractPlan(resp);
-    PlanExecution planExecution = orchestrationService.startExecution(plan);
+    PlanExecution planExecution = orchestrationService.startExecution(plan,
+        new HashMap<>(ImmutableMap.of(
+            "accountId", "kmpySmUISimoRrJL6NL73w", "orgIdentifier", "Main", "projectIdentifier", "Sample")));
     return Response.ok(planExecution, MediaType.APPLICATION_JSON_TYPE).build();
   }
 }

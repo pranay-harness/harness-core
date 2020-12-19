@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
-import io.harness.pms.sdk.core.facilitator.FacilitatorResponseMapper;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
@@ -33,8 +32,7 @@ public class EngineFacilitationCallback implements NotifyCallback {
     FacilitatorResponseProto facilitatorResponseProto =
         FacilitatorResponseProto.parseFrom(binaryResponseData.getData());
     if (facilitatorResponseProto.getIsSuccessful()) {
-      orchestrationEngine.facilitateExecution(
-          nodeExecutionId, FacilitatorResponseMapper.fromFacilitatorResponseProto(facilitatorResponseProto));
+      orchestrationEngine.facilitateExecution(nodeExecutionId, facilitatorResponseProto);
     } else {
       // TODO => Handle Error
     }

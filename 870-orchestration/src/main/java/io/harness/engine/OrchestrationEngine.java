@@ -28,6 +28,7 @@ import io.harness.engine.interrupts.InterruptCheck;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.pms.EngineAdviseCallback;
 import io.harness.engine.pms.EngineFacilitationCallback;
+import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.engine.resume.EngineWaitResumeCallback;
 import io.harness.exception.ExceptionUtils;
 import io.harness.execution.NodeExecution;
@@ -42,7 +43,10 @@ import io.harness.pms.contracts.data.StepOutcomeRef;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.io.StepOutcomeProto;
+import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.execution.AdviseNodeExecutionEventData;
 import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.execution.NodeExecutionEventType;
@@ -63,7 +67,7 @@ import io.harness.pms.sdk.core.facilitator.FacilitatorResponseMapper;
 import io.harness.pms.sdk.core.registries.ResolverRegistry;
 import io.harness.pms.sdk.core.resolver.Resolver;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
-import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepOutcomeMapper;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
@@ -82,10 +86,12 @@ import io.harness.waiter.WaitNotifyEngine;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.google.protobuf.ByteString;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -120,6 +126,7 @@ public class OrchestrationEngine {
   @Inject private OrchestrationEventEmitter eventEmitter;
   @Inject private OrchestrationModuleConfig config;
   @Inject private NodeExecutionEventQueuePublisher nodeExecutionEventQueuePublisher;
+  @Inject private PmsOutcomeService pmsOutcomeService;
 
   public void startNodeExecution(String nodeExecutionId) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
@@ -197,7 +204,7 @@ public class OrchestrationEngine {
     }
   }
 
-  public void facilitateExecution(String nodeExecutionId, FacilitatorResponse facilitatorResponse) {
+  public void facilitateExecution(String nodeExecutionId, FacilitatorResponseProto facilitatorResponse) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     Ambiance ambiance = nodeExecution.getAmbiance();
     PlanNodeProto node = nodeExecution.getNode();
@@ -221,15 +228,14 @@ public class OrchestrationEngine {
     invokeExecutable(ambiance, facilitatorResponse);
   }
 
-  public void invokeExecutable(Ambiance ambiance, FacilitatorResponse facilitatorResponse) {
+  public void invokeExecutable(Ambiance ambiance, FacilitatorResponseProto facilitatorResponse) {
     PlanExecution planExecution = Preconditions.checkNotNull(planExecutionService.get(ambiance.getPlanExecutionId()));
     NodeExecution nodeExecution = prepareNodeExecutionForInvocation(ambiance, facilitatorResponse);
 
-    StartNodeExecutionEventData startNodeExecutionEventData =
-        StartNodeExecutionEventData.builder()
-            .facilitatorResponse(FacilitatorResponseMapper.toFacilitatorResponseProto(facilitatorResponse))
-            .nodes(planExecution.getPlan().getNodes())
-            .build();
+    StartNodeExecutionEventData startNodeExecutionEventData = StartNodeExecutionEventData.builder()
+                                                                  .facilitatorResponse(facilitatorResponse)
+                                                                  .nodes(planExecution.getPlan().getNodes())
+                                                                  .build();
     NodeExecutionEvent startEvent = NodeExecutionEvent.builder()
                                         .eventType(NodeExecutionEventType.START)
                                         .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
@@ -271,7 +277,8 @@ public class OrchestrationEngine {
     return timeoutInstanceIds;
   }
 
-  private NodeExecution prepareNodeExecutionForInvocation(Ambiance ambiance, FacilitatorResponse facilitatorResponse) {
+  private NodeExecution prepareNodeExecutionForInvocation(
+      Ambiance ambiance, FacilitatorResponseProto facilitatorResponse) {
     NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
     return Preconditions.checkNotNull(nodeExecutionService.updateStatusWithOps(
         AmbianceUtils.obtainCurrentRuntimeId(ambiance), Status.RUNNING, ops -> {
@@ -281,10 +288,10 @@ public class OrchestrationEngine {
         }));
   }
 
-  public void handleStepResponse(@NonNull String nodeExecutionId, @NonNull StepResponse stepResponse) {
+  public void handleStepResponse(@NonNull String nodeExecutionId, @NonNull StepResponseProto stepResponse) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     Ambiance ambiance = nodeExecution.getAmbiance();
-    List<StepOutcomeRef> outcomeRefs = handleOutcomes(ambiance, stepResponse.stepOutcomeMap());
+    List<StepOutcomeRef> outcomeRefs = handleOutcomes(ambiance, stepResponse.getStepOutcomesList());
 
     NodeExecution updatedNodeExecution = nodeExecutionService.update(nodeExecutionId, ops -> {
       setUnset(ops, NodeExecutionKeys.failureInfo, stepResponse.getFailureInfo());
@@ -327,19 +334,33 @@ public class OrchestrationEngine {
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
-  private List<StepOutcomeRef> handleOutcomes(Ambiance ambiance, Map<String, StepOutcome> stepOutcomes) {
+  private List<StepOutcomeRef> handleOutcomes(Ambiance ambiance, List<StepOutcomeProto> stepOutcomeProtos) {
     List<StepOutcomeRef> outcomeRefs = new ArrayList<>();
-    if (stepOutcomes == null) {
+    if (isEmpty(stepOutcomeProtos)) {
       return outcomeRefs;
     }
-    stepOutcomes.forEach((name, stepOutcome) -> {
-      Outcome outcome = stepOutcome.getOutcome();
-      if (outcome != null) {
-        Resolver resolver = resolverRegistry.obtain(Outcome.REF_TYPE);
-        String instanceId = resolver.consume(ambiance, name, outcome, stepOutcome.getGroup());
-        outcomeRefs.add(StepOutcomeRef.newBuilder().setName(name).setInstanceId(instanceId).build());
-      }
-    });
+
+    if (config.isWithPMS()) {
+      stepOutcomeProtos.forEach(proto -> {
+        if (isNotEmpty(proto.getOutcome())) {
+          String instanceId =
+              pmsOutcomeService.consume(ambiance, proto.getName(), proto.getOutcome(), proto.getGroup());
+          outcomeRefs.add(StepOutcomeRef.newBuilder().setName(proto.getName()).setInstanceId(instanceId).build());
+        }
+      });
+    } else {
+      Map<String, StepOutcome> stepOutcomes = new HashMap<>();
+      stepOutcomeProtos.forEach(
+          proto -> stepOutcomes.put(proto.getName(), StepOutcomeMapper.fromStepOutcomeProto(proto)));
+      stepOutcomes.forEach((name, stepOutcome) -> {
+        Outcome outcome = stepOutcome.getOutcome();
+        if (outcome != null) {
+          Resolver resolver = resolverRegistry.obtain(Outcome.REF_TYPE);
+          String instanceId = resolver.consume(ambiance, name, outcome, stepOutcome.getGroup());
+          outcomeRefs.add(StepOutcomeRef.newBuilder().setName(name).setInstanceId(instanceId).build());
+        }
+      });
+    }
     return outcomeRefs;
   }
 
@@ -401,7 +422,7 @@ public class OrchestrationEngine {
     adviserResponseHandler.handleAdvise(nodeExecution, adviserResponse);
   }
 
-  public void resume(String nodeExecutionId, Map<String, ResponseData> response, boolean asyncError) {
+  public void resume(String nodeExecutionId, Map<String, ByteString> response, boolean asyncError) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     Ambiance ambiance = nodeExecution.getAmbiance();
     try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {
@@ -416,10 +437,14 @@ public class OrchestrationEngine {
         nodeExecution = Preconditions.checkNotNull(nodeExecutionService.updateStatus(nodeExecutionId, RUNNING));
       }
 
+      Map<String, byte[]> byteResponseMap = new HashMap<>();
+      if (isNotEmpty(response)) {
+        response.forEach((k, v) -> byteResponseMap.put(k, v.toByteArray()));
+      }
       ResumeNodeExecutionEventData data = ResumeNodeExecutionEventData.builder()
                                               .asyncError(asyncError)
                                               .nodes(planExecution.getPlan().getNodes())
-                                              .response(response)
+                                              .response(byteResponseMap)
                                               .build();
       NodeExecutionEvent resumeEvent = NodeExecutionEvent.builder()
                                            .eventType(NodeExecutionEventType.RESUME)
@@ -435,13 +460,13 @@ public class OrchestrationEngine {
 
   public void handleError(Ambiance ambiance, Exception exception) {
     try {
-      StepResponse response =
-          StepResponse.builder()
-              .status(Status.FAILED)
-              .failureInfo(FailureInfo.newBuilder()
-                               .setErrorMessage(ExceptionUtils.getMessage(exception))
-                               .addAllFailureTypes(EngineExceptionUtils.getOrchestrationFailureTypes(exception))
-                               .build())
+      StepResponseProto response =
+          StepResponseProto.newBuilder()
+              .setStatus(Status.FAILED)
+              .setFailureInfo(FailureInfo.newBuilder()
+                                  .setErrorMessage(ExceptionUtils.getMessage(exception))
+                                  .addAllFailureTypes(EngineExceptionUtils.getOrchestrationFailureTypes(exception))
+                                  .build())
               .build();
       handleStepResponse(AmbianceUtils.obtainCurrentRuntimeId(ambiance), response);
     } catch (RuntimeException ex) {

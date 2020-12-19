@@ -27,6 +27,7 @@ import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
+import io.harness.pms.sdk.core.steps.io.ResponseDataMapper;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 import io.harness.serializer.KryoSerializer;
@@ -48,7 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 public class PmsNodeExecutionServiceGrpcImpl implements PmsNodeExecutionService {
   @Inject private NodeExecutionProtoServiceBlockingStub nodeExecutionProtoServiceBlockingStub;
   @Inject private StepRegistry stepRegistry;
-  @Inject private KryoSerializer kryoSerializer;
+  @Inject private ResponseDataMapper responseDataMapper;
 
   @Override
   public void queueNodeExecution(NodeExecutionProto nodeExecution) {
@@ -90,10 +91,7 @@ public class PmsNodeExecutionServiceGrpcImpl implements PmsNodeExecutionService 
 
   @Override
   public void resumeNodeExecution(String nodeExecutionId, Map<String, ResponseData> response, boolean asyncError) {
-    Map<String, ByteString> responseBytes = new HashMap<>();
-    if (EmptyPredicate.isNotEmpty(response)) {
-      response.forEach((k, v) -> responseBytes.put(k, ByteString.copyFrom(kryoSerializer.asBytes(v))));
-    }
+    Map<String, ByteString> responseBytes = responseDataMapper.toResponseDataProto(response);
     nodeExecutionProtoServiceBlockingStub.resumeNodeExecution(ResumeNodeExecutionRequest.newBuilder()
                                                                   .setNodeExecutionId(nodeExecutionId)
                                                                   .putAllResponse(responseBytes)
@@ -105,12 +103,7 @@ public class PmsNodeExecutionServiceGrpcImpl implements PmsNodeExecutionService 
   public Map<String, ResponseData> accumulateResponses(String planExecutionId, String notifyId) {
     AccumulateResponsesResponse response = nodeExecutionProtoServiceBlockingStub.accumulateResponses(
         AccumulateResponsesRequest.newBuilder().setPlanExecutionId(planExecutionId).setNotifyId(notifyId).build());
-    Map<String, ResponseData> responseDataMap = new HashMap<>();
-    if (EmptyPredicate.isNotEmpty(response.getResponseMap())) {
-      response.getResponseMap().forEach(
-          (k, v) -> responseDataMap.put(k, (ResponseData) kryoSerializer.asObject(v.toByteArray())));
-    }
-    return responseDataMap;
+    return responseDataMapper.fromResponseDataProto(response.getResponseMap());
   }
 
   @Override

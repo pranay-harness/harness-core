@@ -16,6 +16,6 @@ import lombok.Value;
 @Builder
 public class ResumeNodeExecutionEventData implements NodeExecutionEventData {
   List<PlanNodeProto> nodes;
-  Map<String, ResponseData> response;
+  Map<String, byte[]> response;
   boolean asyncError;
 }

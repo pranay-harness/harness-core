@@ -11,6 +11,7 @@ import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.grpc.server.PipelineServiceGrpcModule;
+import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistence;
@@ -36,9 +37,11 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.converters.TypeConverter;
@@ -94,6 +97,9 @@ public class PipelineServiceModule extends AbstractModule {
     bind(PMSExecutionService.class).to(PMSExecutionServiceImpl.class);
 
     bind(StepTypeLookupService.class).to(StepTypeLookupServiceImpl.class);
+    bind(ScheduledExecutorService.class)
+        .annotatedWith(Names.named("taskPollExecutor"))
+        .toInstance(new ManagedScheduledExecutorService("TaskPoll-Thread"));
   }
 
   @Provides
@@ -151,6 +157,7 @@ public class PipelineServiceModule extends AbstractModule {
     return OrchestrationModuleConfig.builder()
         .serviceName("PIPELINE")
         .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+        .withPMS(true)
         .build();
   }
 

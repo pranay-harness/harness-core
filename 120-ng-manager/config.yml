@@ -133,4 +133,3 @@ pmsGrpcClientConfig:
   authority: localhost
 
 shouldConfigureWithPMS: false
-

@@ -27,12 +27,9 @@ import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
-import io.harness.pms.sdk.core.resolver.outcome.OutcomeGrpcServiceImpl;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
-import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingGrpcOutputService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
-import io.harness.pms.sdk.execution.PmsNodeExecutionServiceGrpcImpl;
 import io.harness.pms.sdk.registries.registrar.ResolverRegistrar;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.registrars.OrchestrationResolverRegistrar;
@@ -96,6 +93,9 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     // PMS Services
     bind(PmsSweepingOutputService.class).to(PmsSweepingOutputServiceImpl.class).in(Singleton.class);
     bind(PmsOutcomeService.class).to(PmsOutcomeServiceImpl.class).in(Singleton.class);
+    bind(PmsNodeExecutionService.class).to(PmsNodeExecutionServiceImpl.class).in(Singleton.class);
+    bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingOutputServiceImpl.class).in(Singleton.class);
+    bind(OutcomeService.class).to(OutcomeServiceImpl.class).in(Singleton.class);
   }
 
   @Provides
@@ -116,37 +116,6 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
   @Named(OrchestrationPublisherName.PUBLISHER_NAME)
   public String publisherName(OrchestrationModuleConfig config) {
     return config.getPublisherName();
-  }
-
-  @Provides
-  @Singleton
-  public ExecutionSweepingOutputService executionSweepingOutputService(
-      OrchestrationModuleConfig config, Injector injector) {
-    if (config.isWithPMS()) {
-      return injector.getInstance(ExecutionSweepingGrpcOutputService.class);
-    } else {
-      return injector.getInstance(ExecutionSweepingOutputServiceImpl.class);
-    }
-  }
-
-  @Provides
-  @Singleton
-  public OutcomeService outcomeService(OrchestrationModuleConfig config, Injector injector) {
-    if (config.isWithPMS()) {
-      return injector.getInstance(OutcomeGrpcServiceImpl.class);
-    } else {
-      return injector.getInstance(OutcomeServiceImpl.class);
-    }
-  }
-
-  @Provides
-  @Singleton
-  public PmsNodeExecutionService pmsNodeExecutionService(OrchestrationModuleConfig config, Injector injector) {
-    if (config.isWithPMS()) {
-      return injector.getInstance(PmsNodeExecutionServiceGrpcImpl.class);
-    } else {
-      return injector.getInstance(PmsNodeExecutionServiceImpl.class);
-    }
   }
 
   @Provides

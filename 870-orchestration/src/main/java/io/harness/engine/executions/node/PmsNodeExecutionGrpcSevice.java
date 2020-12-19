@@ -1,6 +1,6 @@
 package io.harness.engine.executions.node;
 
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.engine.OrchestrationEngine;
 import io.harness.pms.contracts.plan.AccumulateResponsesRequest;
 import io.harness.pms.contracts.plan.AccumulateResponsesResponse;
 import io.harness.pms.contracts.plan.AddExecutableResponseRequest;
@@ -18,20 +18,20 @@ import io.harness.pms.contracts.plan.QueueTaskRequest;
 import io.harness.pms.contracts.plan.QueueTaskResponse;
 import io.harness.pms.contracts.plan.ResumeNodeExecutionRequest;
 import io.harness.pms.contracts.plan.ResumeNodeExecutionResponse;
-import io.harness.serializer.KryoSerializer;
+import io.harness.pms.sdk.core.steps.io.ResponseDataMapper;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
-import java.util.HashMap;
 import java.util.Map;
 
 @Singleton
 public class PmsNodeExecutionGrpcSevice extends NodeExecutionProtoServiceImplBase {
-  @Inject private KryoSerializer kryoSerializer;
+  @Inject private OrchestrationEngine engine;
   @Inject private PmsNodeExecutionServiceImpl pmsNodeExecutionService;
+  @Inject private ResponseDataMapper responseDataMapper;
 
   @Override
   public void queueNodeExecution(
@@ -69,12 +69,7 @@ public class PmsNodeExecutionGrpcSevice extends NodeExecutionProtoServiceImplBas
   @Override
   public void resumeNodeExecution(
       ResumeNodeExecutionRequest request, StreamObserver<ResumeNodeExecutionResponse> responseObserver) {
-    Map<String, ResponseData> response = new HashMap<>();
-    if (EmptyPredicate.isNotEmpty(request.getResponseMap())) {
-      request.getResponseMap().forEach(
-          (k, v) -> response.put(k, (ResponseData) kryoSerializer.asInflatedObject(v.toByteArray())));
-    }
-    pmsNodeExecutionService.resumeNodeExecution(request.getNodeExecutionId(), response, request.getAsyncError());
+    engine.resume(request.getNodeExecutionId(), request.getResponseMap(), request.getAsyncError());
     responseObserver.onNext(ResumeNodeExecutionResponse.newBuilder().build());
     responseObserver.onCompleted();
   }
@@ -84,10 +79,7 @@ public class PmsNodeExecutionGrpcSevice extends NodeExecutionProtoServiceImplBas
       AccumulateResponsesRequest request, StreamObserver<AccumulateResponsesResponse> responseObserver) {
     Map<String, ResponseData> responseDataMap =
         pmsNodeExecutionService.accumulateResponses(request.getPlanExecutionId(), request.getNotifyId());
-    Map<String, ByteString> response = new HashMap<>();
-    if (EmptyPredicate.isNotEmpty(responseDataMap)) {
-      responseDataMap.forEach((k, v) -> response.put(k, ByteString.copyFrom(kryoSerializer.asBytes(v))));
-    }
+    Map<String, ByteString> response = responseDataMapper.toResponseDataProto(responseDataMap);
     responseObserver.onNext(AccumulateResponsesResponse.newBuilder().putAllResponse(response).build());
     responseObserver.onCompleted();
   }

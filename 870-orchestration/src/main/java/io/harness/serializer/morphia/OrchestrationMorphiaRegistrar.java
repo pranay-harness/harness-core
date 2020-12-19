@@ -9,6 +9,7 @@ import io.harness.delay.DelayEvent;
 import io.harness.delay.DelayEventNotifyData;
 import io.harness.engine.pms.EngineAdviseCallback;
 import io.harness.engine.pms.EngineFacilitationCallback;
+import io.harness.engine.progress.EngineProgressCallback;
 import io.harness.engine.resume.EngineResumeAllCallback;
 import io.harness.engine.resume.EngineResumeCallback;
 import io.harness.engine.resume.EngineWaitResumeCallback;
@@ -41,6 +42,7 @@ public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
     h.put("engine.resume.EngineWaitRetryCallback", EngineWaitRetryCallback.class);
     h.put("engine.pms.EngineFacilitationCallback", EngineFacilitationCallback.class);
     h.put("engine.pms.EngineAdviseCallback", EngineAdviseCallback.class);
+    h.put("engine.progress.EngineProgressCallback", EngineProgressCallback.class);
 
     // Facilitator related classes
     h.put("delay.DelayEventNotifyData", DelayEventNotifyData.class);

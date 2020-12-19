@@ -12,6 +12,7 @@ import io.harness.callback.DelegateCallbackToken;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
+import io.harness.engine.pms.tasks.NgDelegate2TaskExecutor;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.factory.ClosingFactory;
@@ -151,6 +152,14 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
             return false;
           }
         });
+      }
+    });
+
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      protected NgDelegate2TaskExecutor ngDelegate2TaskExecutor() {
+        return mock(NgDelegate2TaskExecutor.class);
       }
     });
 
