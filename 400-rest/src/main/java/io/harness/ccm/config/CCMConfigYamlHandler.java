@@ -1,5 +1,8 @@
 package io.harness.ccm.config;
 
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
+
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 
@@ -29,8 +32,7 @@ public class CCMConfigYamlHandler extends BaseYamlHandler<CCMConfig.Yaml, CCMCon
 
   @Override
   public CCMConfig get(String accountId, String yamlFilePath) {
-    log.error("This method is not supported.");
-    return null;
+    throw new WingsException(ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION);
   }
 
   @Override

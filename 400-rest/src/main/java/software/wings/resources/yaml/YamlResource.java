@@ -186,8 +186,9 @@ public class YamlResource {
   @ExceptionMetered
   @AuthRule(permissionType = TEMPLATE_MANAGEMENT, action = Action.UPDATE)
   public RestResponse<Template> updateTemplate(@QueryParam("accountId") String accountId,
-      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, YamlPayload yamlPayload) {
-    return yamlService.update(yamlPayload, accountId);
+      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, YamlPayload yamlPayload,
+      @PathParam("templateId") String templateId) {
+    return yamlService.update(yamlPayload, accountId, templateId);
   }
 
   /**
@@ -212,9 +213,10 @@ public class YamlResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PROVISIONER, action = Action.UPDATE)
-  public RestResponse<InfrastructureProvisioner> updateProvisioner(
-      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, YamlPayload yamlPayload) {
-    return yamlService.update(yamlPayload, accountId);
+  public RestResponse<InfrastructureProvisioner> updateProvisioner(@QueryParam("accountId") String accountId,
+      @QueryParam("appId") String appId, YamlPayload yamlPayload,
+      @PathParam("infraProvisionerId") String infraProvisionerId) {
+    return yamlService.update(yamlPayload, accountId, infraProvisionerId);
   }
 
   // TODO - need to add a PUT for updateWorkflow HERE
@@ -247,9 +249,10 @@ public class YamlResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
-  public RestResponse<ArtifactStream> updateArtifactTrigger(
-      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, YamlPayload yamlPayload) {
-    return yamlService.update(yamlPayload, accountId);
+  public RestResponse<ArtifactStream> updateArtifactTrigger(@QueryParam("accountId") String accountId,
+      @QueryParam("appId") String appId, YamlPayload yamlPayload,
+      @PathParam("artifactStreamId") String artifactStreamId) {
+    return yamlService.update(yamlPayload, accountId, artifactStreamId);
   }
 
   /**
@@ -281,8 +284,9 @@ public class YamlResource {
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<Base> updateTrigger(@QueryParam("appId") String appId, @QueryParam("accountId") String accountId,
-      YamlPayload yamlPayload, @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return yamlService.update(yamlPayload, accountId);
+      YamlPayload yamlPayload, @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled,
+      @PathParam("triggerId") String triggerId) {
+    return yamlService.update(yamlPayload, accountId, triggerId);
   }
 
   /**
@@ -320,7 +324,7 @@ public class YamlResource {
   public RestResponse<YamlPayload> updateApplicationManifest(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, @QueryParam("serviceId") String serviceId,
       @PathParam("applicationManifestId") String applicationManifestId, YamlPayload yamlPayload) {
-    return yamlService.update(yamlPayload, accountId);
+    return yamlService.update(yamlPayload, accountId, applicationManifestId);
   }
 
   @GET
@@ -339,8 +343,9 @@ public class YamlResource {
   @ExceptionMetered
   @AuthRule(permissionType = SERVICE, action = Action.UPDATE, skipAuth = true)
   public RestResponse<ManifestFile> updateManifestFile(@QueryParam("accountId") String accountId,
-      @QueryParam("serviceId") String serviceId, @QueryParam("appId") String appId, YamlPayload yamlPayload) {
-    return yamlService.update(yamlPayload, accountId);
+      @QueryParam("serviceId") String serviceId, @QueryParam("appId") String appId, YamlPayload yamlPayload,
+      @PathParam("manifestFileId") String manifestFileId) {
+    return yamlService.update(yamlPayload, accountId, manifestFileId);
   }
 
   /**
@@ -355,9 +360,9 @@ public class YamlResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PIPELINE, action = Action.UPDATE)
-  public RestResponse<Pipeline> updatePipeline(
-      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, YamlPayload yamlPayload) {
-    return yamlService.update(yamlPayload, accountId);
+  public RestResponse<Pipeline> updatePipeline(@QueryParam("accountId") String accountId,
+      @QueryParam("appId") String appId, YamlPayload yamlPayload, @PathParam("pipelineId") String pipelineId) {
+    return yamlService.update(yamlPayload, accountId, pipelineId);
   }
 
   @PUT
@@ -365,9 +370,9 @@ public class YamlResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = WORKFLOW, action = Action.UPDATE)
-  public RestResponse<Workflow> updateWorkflow(
-      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, YamlPayload yamlPayload) {
-    return yamlService.update(yamlPayload, accountId);
+  public RestResponse<Workflow> updateWorkflow(@QueryParam("accountId") String accountId,
+      @QueryParam("appId") String appId, YamlPayload yamlPayload, @PathParam("workflowId") String workflowId) {
+    return yamlService.update(yamlPayload, accountId, workflowId);
   }
 
   /**
@@ -414,9 +419,9 @@ public class YamlResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = SERVICE, action = Action.UPDATE)
-  public RestResponse<ServiceCommand> updateServiceCommand(
-      @QueryParam("accountId") String accountId, YamlPayload yamlPayload) {
-    return yamlService.update(yamlPayload, accountId);
+  public RestResponse<ServiceCommand> updateServiceCommand(@QueryParam("accountId") String accountId,
+      YamlPayload yamlPayload, @PathParam("serviceCommandId") String serviceCommandId) {
+    return yamlService.update(yamlPayload, accountId, serviceCommandId);
   }
 
   /**
@@ -480,8 +485,8 @@ public class YamlResource {
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<ServiceCommand> updateDefaults(
-      @QueryParam("accountId") String accountId, YamlPayload yamlPayload) {
-    return yamlService.update(yamlPayload, accountId);
+      @QueryParam("accountId") String accountId, YamlPayload yamlPayload, @PathParam("uuid") String uuid) {
+    return yamlService.update(yamlPayload, accountId, uuid);
   }
 
   /**
@@ -503,7 +508,7 @@ public class YamlResource {
   public RestResponse<SettingAttribute> updateSettingAttribute(@QueryParam("accountId") String accountId,
       @PathParam("uuid") String uuid, @QueryParam("type") String type, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return yamlService.update(yamlPayload, accountId);
+    return yamlService.update(yamlPayload, accountId, uuid);
   }
 
   /**
@@ -546,7 +551,7 @@ public class YamlResource {
   @AuthRule(permissionType = ENV, action = Action.UPDATE)
   public RestResponse<Environment> updateEnvironment(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, YamlPayload yamlPayload, @PathParam("envId") String envId) {
-    return yamlService.update(yamlPayload, accountId);
+    return yamlService.update(yamlPayload, accountId, envId);
   }
 
   /**
@@ -579,9 +584,9 @@ public class YamlResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = SERVICE, action = Action.UPDATE)
-  public RestResponse<Service> updateService(
-      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId, YamlPayload yamlPayload) {
-    return yamlService.update(yamlPayload, accountId);
+  public RestResponse<Service> updateService(@QueryParam("accountId") String accountId,
+      @QueryParam("appId") String appId, YamlPayload yamlPayload, @PathParam("serviceId") String serviceId) {
+    return yamlService.update(yamlPayload, accountId, serviceId);
   }
 
   /**
@@ -601,7 +606,7 @@ public class YamlResource {
   public RestResponse<ConfigFile> updateConfigFile(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, @PathParam("configId") String configId, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return yamlService.update(yamlPayload, accountId);
+    return yamlService.update(yamlPayload, accountId, configId);
   }
 
   /**
@@ -746,8 +751,9 @@ public class YamlResource {
   @AuthRule(permissionType = ENV, action = Action.UPDATE)
   public RestResponse<Base> updateInfraMapping(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
-      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return yamlService.update(yamlPayload, accountId);
+      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled,
+      @PathParam("infraMappingId") String infraMappingId) {
+    return yamlService.update(yamlPayload, accountId, infraMappingId);
   }
 
   @GET
@@ -766,8 +772,9 @@ public class YamlResource {
   @AuthRule(permissionType = ENV, action = Action.UPDATE, skipAuth = true)
   public RestResponse<InfrastructureDefinition> updateInfraDefinition(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
-      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return yamlService.update(yamlPayload, accountId);
+      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled,
+      @PathParam("infraDefinitionId") String infraDefinitionId) {
+    return yamlService.update(yamlPayload, accountId, infraDefinitionId);
   }
 
   @GET
@@ -796,8 +803,9 @@ public class YamlResource {
   @AuthRule(permissionType = SERVICE, action = Action.UPDATE, skipAuth = true)
   public RestResponse<Base> updateEcsServiceSpecification(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
-      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return yamlService.update(yamlPayload, accountId);
+      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled,
+      @PathParam("ecsServiceSpecificationId") String ecsServiceSpecificationId) {
+    return yamlService.update(yamlPayload, accountId, ecsServiceSpecificationId);
   }
 
   @PUT
@@ -807,8 +815,9 @@ public class YamlResource {
   @AuthRule(permissionType = SERVICE, action = Action.UPDATE, skipAuth = true)
   public RestResponse<Base> updateContainerTask(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
-      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return yamlService.update(yamlPayload, accountId);
+      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled,
+      @PathParam("containerTaskId") String containerTaskId) {
+    return yamlService.update(yamlPayload, accountId, containerTaskId);
   }
 
   @GET
@@ -828,8 +837,9 @@ public class YamlResource {
   @AuthRule(permissionType = SERVICE, action = Action.UPDATE, skipAuth = true)
   public RestResponse<Base> updatePcfServiceSpecification(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
-      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return yamlService.update(yamlPayload, accountId);
+      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled,
+      @PathParam("pcfservicespecificationId") String pcfservicespecificationId) {
+    return yamlService.update(yamlPayload, accountId, pcfservicespecificationId);
   }
 
   @GET
@@ -849,8 +859,9 @@ public class YamlResource {
   @AuthRule(permissionType = SERVICE, action = Action.UPDATE, skipAuth = true)
   public RestResponse<Base> updateHelmChartSpecification(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
-      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return yamlService.update(yamlPayload, accountId);
+      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled,
+      @PathParam("helmChartSpecificationId") String helmChartSpecificationId) {
+    return yamlService.update(yamlPayload, accountId, helmChartSpecificationId);
   }
 
   @GET
@@ -869,8 +880,9 @@ public class YamlResource {
   @AuthRule(permissionType = SERVICE, action = Action.UPDATE)
   public RestResponse<Base> updateUserDataSpec(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
-      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return yamlService.update(yamlPayload, accountId);
+      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled,
+      @PathParam("userDataSpecId") String userDataSpecId) {
+    return yamlService.update(yamlPayload, accountId, userDataSpecId);
   }
 
   @GET
@@ -889,8 +901,9 @@ public class YamlResource {
   @AuthRule(permissionType = SERVICE, action = Action.UPDATE, skipAuth = true)
   public RestResponse<Base> updateLambdaSpec(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
-      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
-    return yamlService.update(yamlPayload, accountId);
+      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled,
+      @PathParam("lambdaSpecId") String lambdaSpecId) {
+    return yamlService.update(yamlPayload, accountId, lambdaSpecId);
   }
 
   /**
@@ -904,7 +917,7 @@ public class YamlResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Base> updateYaml(@QueryParam("accountId") String accountId, YamlPayload yamlPayload) {
-    return yamlService.update(yamlPayload, accountId);
+    return yamlService.update(yamlPayload, accountId, null);
   }
 
   /**
@@ -1127,7 +1140,7 @@ public class YamlResource {
   @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<Base> updateCVConfiguration(@PathParam("cvConfigId") String cvConfigId,
       @QueryParam("appId") String appId, @QueryParam("accountId") String accountId, YamlPayload yamlPayload) {
-    return yamlService.update(yamlPayload, accountId);
+    return yamlService.update(yamlPayload, accountId, cvConfigId);
   }
 
   @POST
@@ -1154,8 +1167,9 @@ public class YamlResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = MANAGE_TAGS)
-  public RestResponse<ServiceCommand> updateTags(@QueryParam("accountId") String accountId, YamlPayload yamlPayload) {
-    return yamlService.update(yamlPayload, accountId);
+  public RestResponse<ServiceCommand> updateTags(
+      @QueryParam("accountId") String accountId, YamlPayload yamlPayload, @PathParam("uuid") String uuid) {
+    return yamlService.update(yamlPayload, accountId, uuid);
   }
 
   @GET

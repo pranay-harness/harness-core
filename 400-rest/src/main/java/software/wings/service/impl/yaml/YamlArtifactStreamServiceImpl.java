@@ -114,6 +114,6 @@ public class YamlArtifactStreamServiceImpl implements YamlArtifactStreamService 
         }
       }
     }
-    return yamlSyncService.update(yamlPayload, accountId);
+    return yamlSyncService.update(yamlPayload, accountId, artifactStreamId);
   }
 }

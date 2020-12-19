@@ -54,6 +54,6 @@ public class AppYamlResourceServiceImpl implements AppYamlResourceService {
   @Override
   public RestResponse<Application> updateApp(String appId, YamlPayload yamlPayload, boolean deleteEnabled) {
     String accountId = appService.getAccountIdByAppId(appId);
-    return yamlSyncService.update(yamlPayload, accountId);
+    return yamlSyncService.update(yamlPayload, accountId, appId);
   }
 }

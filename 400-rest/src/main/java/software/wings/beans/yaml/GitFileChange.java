@@ -26,6 +26,7 @@ public class GitFileChange extends Change {
   private Long processingCommitTimeMs;
   private String commitMessage;
   private String processingCommitMessage;
+  private String entityId;
 
   public static final class Builder {
     private String commitId;
@@ -43,6 +44,7 @@ public class GitFileChange extends Change {
     private Long processingCommitTimeMs;
     private String commitMessage;
     private String processingCommitMessage;
+    private String entityId;
 
     private Builder() {}
 
@@ -124,6 +126,11 @@ public class GitFileChange extends Change {
       return this;
     }
 
+    public Builder withEntityId(String entityId) {
+      this.entityId = entityId;
+      return this;
+    }
+
     public Builder but() {
       return aGitFileChange()
           .withCommitId(commitId)
@@ -140,7 +147,8 @@ public class GitFileChange extends Change {
           .withCommitTimeMs(commitTimeMs)
           .withProcessingCommitTimeMs(processingCommitTimeMs)
           .withCommitMessage(commitMessage)
-          .withProcessingCommitMessage(processingCommitMessage);
+          .withProcessingCommitMessage(processingCommitMessage)
+          .withEntityId(entityId);
     }
 
     public GitFileChange build() {
@@ -160,6 +168,7 @@ public class GitFileChange extends Change {
       gitFileChange.setProcessingCommitTimeMs(processingCommitTimeMs);
       gitFileChange.setCommitMessage(commitMessage);
       gitFileChange.setProcessingCommitMessage(processingCommitMessage);
+      gitFileChange.setEntityId(entityId);
       return gitFileChange;
     }
   }
