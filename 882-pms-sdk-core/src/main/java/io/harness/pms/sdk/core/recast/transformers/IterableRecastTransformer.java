@@ -1,12 +1,12 @@
-package io.harness.pms.sdk.core.recast.converters;
+package io.harness.pms.sdk.core.recast.transformers;
 
 import static java.lang.String.format;
 
-import io.harness.pms.sdk.core.recast.CastedField;
-import io.harness.pms.sdk.core.recast.EphemeralCastedField;
-import io.harness.pms.sdk.core.recast.RecastConverter;
 import io.harness.pms.sdk.core.recast.RecastObjectFactory;
+import io.harness.pms.sdk.core.recast.RecastTransformer;
 import io.harness.pms.sdk.core.recast.Transformer;
+import io.harness.pms.sdk.core.recast.beans.CastedField;
+import io.harness.pms.sdk.core.recast.beans.EphemeralCastedField;
 
 import com.mongodb.DBObject;
 import java.lang.reflect.Array;
@@ -21,7 +21,7 @@ import org.mongodb.morphia.utils.ReflectionUtils;
  * @author Uwe Schaefer, (us@thomas-daily.de)
  * @author scotthernandez
  */
-public class IterableRecastConverter extends RecastConverter {
+public class IterableRecastTransformer extends RecastTransformer {
   @Override
   @SuppressWarnings("unchecked")
   public Object decode(final Class targetClass, final Object fromDBObject, final CastedField castedField) {

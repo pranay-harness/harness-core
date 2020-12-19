@@ -1,9 +1,9 @@
-package io.harness.pms.sdk.core.recast.converters;
+package io.harness.pms.sdk.core.recast.transformers.simplevalue;
 
-import io.harness.pms.sdk.core.recast.CastedField;
-import io.harness.pms.sdk.core.recast.RecastConverter;
+import io.harness.pms.sdk.core.recast.RecastTransformer;
+import io.harness.pms.sdk.core.recast.beans.CastedField;
 
-public class EnumRecastConverter extends RecastConverter {
+public class EnumRecastTransformer extends RecastTransformer implements SimpleValueTransformer {
   @Override
   @SuppressWarnings("unchecked")
   public Object decode(final Class targetClass, final Object fromDBObject, final CastedField castedField) {

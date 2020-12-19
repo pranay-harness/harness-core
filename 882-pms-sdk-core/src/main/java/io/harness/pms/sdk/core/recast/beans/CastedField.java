@@ -1,6 +1,10 @@
-package io.harness.pms.sdk.core.recast;
+package io.harness.pms.sdk.core.recast.beans;
 
 import static java.lang.String.format;
+
+import io.harness.pms.sdk.core.recast.Recaster;
+import io.harness.pms.sdk.core.recast.RecasterException;
+import io.harness.pms.sdk.core.recast.utils.RecastReflectionUtils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
@@ -20,13 +24,13 @@ import java.util.Map;
 import java.util.Set;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 
 @SuppressWarnings("rawtypes")
 @Slf4j
 @Getter
 public class CastedField {
-  private final Map<Class<? extends Annotation>, Annotation> foundAnnotations =
-      new HashMap<Class<? extends Annotation>, Annotation>();
+  private final Map<Class<? extends Annotation>, Annotation> foundAnnotations = new HashMap<>();
   private final List<CastedField> typeParameters = new ArrayList<>();
   private Class persistedClass;
   private Field field;
@@ -343,6 +347,18 @@ public class CastedField {
     } catch (IllegalAccessException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public void setFieldValue(final Object instance, final Object value) {
+    try {
+      field.set(instance, value);
+    } catch (IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public Object getDocumentValue(final Document document) {
+    return document.get(field.getName());
   }
 
   public String getNameToStore() {

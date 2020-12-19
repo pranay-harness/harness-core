@@ -1,13 +1,19 @@
-package io.harness.pms.sdk.core.recast;
+package io.harness.pms.sdk.core.recast.beans;
+
+import io.harness.pms.sdk.core.recast.Recaster;
+import io.harness.pms.sdk.core.recast.utils.RecastReflectionUtils;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.Set;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
 public class EphemeralCastedField extends CastedField {
   private ParameterizedType pType;
-  private Object value;
+  @Setter private Object value;
   private CastedField parent;
 
   public EphemeralCastedField(final ParameterizedType t, final CastedField cf, final Recaster recaster) {
@@ -15,7 +21,7 @@ public class EphemeralCastedField extends CastedField {
     parent = cf;
     pType = t;
     final Class rawClass = (Class) t.getRawType();
-    setIsSet(RecastReflectionUtils.implementsInterface(rawClass, Set.class));
+    setIsSet(io.harness.pms.sdk.core.recast.utils.RecastReflectionUtils.implementsInterface(rawClass, Set.class));
     setIsMap(RecastReflectionUtils.implementsInterface(rawClass, Map.class));
     setMapKeyType(getMapKeyClass());
     setSubType(getSubType());

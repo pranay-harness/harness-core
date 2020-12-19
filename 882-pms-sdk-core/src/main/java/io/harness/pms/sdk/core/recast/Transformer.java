@@ -1,20 +1,27 @@
 package io.harness.pms.sdk.core.recast;
 
-import io.harness.pms.sdk.core.recast.converters.BooleanRecastConverter;
-import io.harness.pms.sdk.core.recast.converters.ByteRecastConverter;
-import io.harness.pms.sdk.core.recast.converters.CharacterArrayRecastConverter;
-import io.harness.pms.sdk.core.recast.converters.CharacterRecastConverter;
-import io.harness.pms.sdk.core.recast.converters.ClassRecastConverter;
-import io.harness.pms.sdk.core.recast.converters.DoubleRecastConverter;
-import io.harness.pms.sdk.core.recast.converters.EnumRecastConverter;
-import io.harness.pms.sdk.core.recast.converters.FloatRecastConverter;
-import io.harness.pms.sdk.core.recast.converters.IntegerRecastConverter;
-import io.harness.pms.sdk.core.recast.converters.IterableRecastConverter;
-import io.harness.pms.sdk.core.recast.converters.LongRecastConverter;
-import io.harness.pms.sdk.core.recast.converters.ProtoRecastConverter;
-import io.harness.pms.sdk.core.recast.converters.StringRecastConverter;
+import static java.lang.String.format;
+
+import io.harness.pms.sdk.core.recast.beans.CastedField;
+import io.harness.pms.sdk.core.recast.transformers.DefaultRecastTransformer;
+import io.harness.pms.sdk.core.recast.transformers.IterableRecastTransformer;
+import io.harness.pms.sdk.core.recast.transformers.ProtoRecastTransformer;
+import io.harness.pms.sdk.core.recast.transformers.simplevalue.BooleanRecastTransformer;
+import io.harness.pms.sdk.core.recast.transformers.simplevalue.ByteRecastTransformer;
+import io.harness.pms.sdk.core.recast.transformers.simplevalue.CharacterArrayRecastTransformer;
+import io.harness.pms.sdk.core.recast.transformers.simplevalue.CharacterRecastTransformer;
+import io.harness.pms.sdk.core.recast.transformers.simplevalue.ClassRecastTransformer;
+import io.harness.pms.sdk.core.recast.transformers.simplevalue.DoubleRecastTransformer;
+import io.harness.pms.sdk.core.recast.transformers.simplevalue.EnumRecastTransformer;
+import io.harness.pms.sdk.core.recast.transformers.simplevalue.FloatRecastTransformer;
+import io.harness.pms.sdk.core.recast.transformers.simplevalue.IntegerRecastTransformer;
+import io.harness.pms.sdk.core.recast.transformers.simplevalue.LongRecastTransformer;
+import io.harness.pms.sdk.core.recast.transformers.simplevalue.SimpleValueTransformer;
+import io.harness.pms.sdk.core.recast.transformers.simplevalue.StringRecastTransformer;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
@@ -22,41 +29,45 @@ import org.bson.Document;
 @Slf4j
 public class Transformer {
   Recaster recaster;
-  Map<Class<?>, RecastConverter> converterMap = new HashMap<>();
+  Map<Class<?>, RecastTransformer> converterMap = new HashMap<>();
+  private final List<RecastTransformer> untypedTypeTransformers = new LinkedList<>();
+  private final RecastTransformer passThroughTransformer = new DefaultRecastTransformer();
 
   public Transformer(Recaster recaster) {
     this.recaster = recaster;
-    initializeConverters();
+    initializeTransformers();
   }
 
-  private void initializeConverters() {
-    addConverter(new BooleanRecastConverter());
-    addConverter(new ByteRecastConverter());
-    addConverter(new ClassRecastConverter());
-    addConverter(new EnumRecastConverter());
-    addConverter(new IterableRecastConverter());
-    addConverter(new ProtoRecastConverter());
-    addConverter(new StringRecastConverter());
-    addConverter(new LongRecastConverter());
-    addConverter(new IntegerRecastConverter());
-    addConverter(new DoubleRecastConverter());
-    addConverter(new FloatRecastConverter());
-    addConverter(new CharacterRecastConverter());
-    addConverter(new CharacterArrayRecastConverter());
+  private void initializeTransformers() {
+    addTransformer(new BooleanRecastTransformer());
+    addTransformer(new ByteRecastTransformer());
+    addTransformer(new ClassRecastTransformer());
+    addTransformer(new EnumRecastTransformer());
+    addTransformer(new IterableRecastTransformer());
+    addTransformer(new ProtoRecastTransformer());
+    addTransformer(new StringRecastTransformer());
+    addTransformer(new LongRecastTransformer());
+    addTransformer(new IntegerRecastTransformer());
+    addTransformer(new DoubleRecastTransformer());
+    addTransformer(new FloatRecastTransformer());
+    addTransformer(new CharacterRecastTransformer());
+    addTransformer(new CharacterArrayRecastTransformer());
   }
 
-  private RecastConverter addConverter(RecastConverter recastConverter) {
-    if (recastConverter.getSupportedTypes() != null) {
-      for (final Class c : recastConverter.getSupportedTypes()) {
-        addTypedConverter(c, recastConverter);
+  private RecastTransformer addTransformer(RecastTransformer recastTransformer) {
+    if (recastTransformer.getSupportedTypes() != null) {
+      for (final Class c : recastTransformer.getSupportedTypes()) {
+        addTypedConverter(c, recastTransformer);
       }
+    } else {
+      untypedTypeTransformers.add(recastTransformer);
     }
-    recastConverter.setRecaster(recaster);
+    recastTransformer.setRecaster(recaster);
 
-    return recastConverter;
+    return recastTransformer;
   }
 
-  private void addTypedConverter(final Class type, final RecastConverter rc) {
+  private void addTypedConverter(final Class type, final RecastTransformer rc) {
     if (converterMap.containsKey(type)) {
       log.error("Added duplicate converter for " + type + " ; " + converterMap.get(type));
       // TODO : Create a custom exception here
@@ -66,12 +77,12 @@ public class Transformer {
     }
   }
 
-  public Object decode(final Class c, final Object fromDBObject, final CastedField cf) {
+  public Object decode(final Class c, final Object docObject, final CastedField cf) {
     Class toDecode = c;
     if (toDecode == null) {
-      toDecode = fromDBObject.getClass();
+      toDecode = docObject.getClass();
     }
-    return getEncoder(toDecode).decode(toDecode, fromDBObject, cf);
+    return getTransformer(toDecode).decode(toDecode, docObject, cf);
   }
 
   public Object encode(final Object o) {
@@ -81,35 +92,51 @@ public class Transformer {
     return encode(o.getClass(), o);
   }
 
+  public void fromDocument(final Object targetEntity, final CastedField cf, final Document document) {
+    final Object object = cf.getDocumentValue(document);
+    if (object != null) {
+      RecastTransformer transformer = getTransformer(null, cf);
+      Object decodedValue = transformer.decode(cf.getType(), object, cf);
+      try {
+        cf.setFieldValue(targetEntity, decodedValue);
+      } catch (IllegalArgumentException e) {
+        throw new RecasterException(format("Error setting value from converter (%s) for %s to %s",
+                                        transformer.getClass().getSimpleName(), cf.getFullName(), decodedValue),
+            e);
+      }
+    }
+  }
+
   public void toDocument(final Object containingObject, final CastedField cf, final Document document) {
     final Object fieldValue = cf.getFieldValue(containingObject);
-    final RecastConverter enc = getEncoder(fieldValue, cf);
+    final RecastTransformer enc = getTransformer(fieldValue, cf);
 
     final Object encoded = enc.encode(fieldValue, cf);
     document.put(cf.getNameToStore(), encoded);
   }
 
   public Object encode(final Class c, final Object o) {
-    return getEncoder(c).encode(o, null);
+    return getTransformer(c).encode(o, null);
   }
 
-  protected RecastConverter getEncoder(final Class c) {
-    RecastConverter recastConverter = converterMap.get(c);
-    if (recastConverter != null) {
-      return recastConverter;
+  protected RecastTransformer getTransformer(final Class c) {
+    RecastTransformer recastTransformer = converterMap.get(c);
+    if (recastTransformer != null) {
+      return recastTransformer;
     }
 
-    for (RecastConverter rc : converterMap.values()) {
-      if (rc.canConvert(c)) {
+    for (RecastTransformer rc : untypedTypeTransformers) {
+      if (rc.canTransform(c)) {
         return rc;
       }
     }
 
+    // TODO(Alexei) Throw exception
     return null;
   }
 
-  protected RecastConverter getEncoder(final Object val, final CastedField cf) {
-    RecastConverter rc = null;
+  protected RecastTransformer getTransformer(final Object val, final CastedField cf) {
+    RecastTransformer rc = null;
     if (val != null) {
       rc = converterMap.get(val.getClass());
     }
@@ -122,20 +149,38 @@ public class Transformer {
       return rc;
     }
 
-    for (RecastConverter recastConverter : converterMap.values()) {
-      if (recastConverter.canConvert(cf) && (val != null && recastConverter.isSupported(val.getClass(), cf))) {
-        return recastConverter;
+    for (RecastTransformer recastTransformer : untypedTypeTransformers) {
+      if (recastTransformer.canTransform(cf) && (val != null && recastTransformer.isSupported(val.getClass(), cf))) {
+        return recastTransformer;
       }
     }
 
+    // TODO(Alexei) Throw exception
     return null;
   }
 
-  public boolean hasConverter(CastedField cf) {
-    return getEncoder(cf.getType()) != null;
+  public boolean hasSimpleValueTransformer(final Object o) {
+    if (o == null) {
+      return false;
+    }
+    if (o instanceof Class) {
+      return hasSimpleValueTransformer((Class) o);
+    } else if (o instanceof CastedField) {
+      return hasSimpleValueTransformer((CastedField) o);
+    } else {
+      return hasSimpleValueTransformer(o.getClass());
+    }
   }
 
-  public boolean hasConverter(Class c) {
-    return getEncoder(c) != null;
+  public boolean hasSimpleValueTransformer(CastedField cf) {
+    return (getTransformer(cf) instanceof SimpleValueTransformer);
+  }
+
+  public boolean hasSimpleValueTransformer(Class c) {
+    return (getTransformer(c) instanceof SimpleValueTransformer);
+  }
+
+  private RecastTransformer getTransformer(CastedField cf) {
+    return getTransformer(null, cf);
   }
 }

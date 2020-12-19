@@ -1,5 +1,7 @@
 package io.harness.pms.sdk.core.recast;
 
+import io.harness.pms.sdk.core.recast.beans.CastedField;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;

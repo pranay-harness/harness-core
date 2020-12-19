@@ -1,5 +1,7 @@
 package io.harness.pms.sdk.core.recast;
 
+import io.harness.pms.sdk.core.recast.beans.CastedField;
+
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -43,8 +45,8 @@ public class RecastObjectCreator implements RecastObjectFactory {
   }
 
   @Override
-  public <T> T createInstance(final Class<T> clazz, final Document dbObj) {
-    Class<T> c = getClass(dbObj);
+  public <T> T createInstance(final Class<T> clazz, final Document document) {
+    Class<T> c = getClass(document);
     if (c == null) {
       c = clazz;
     }
