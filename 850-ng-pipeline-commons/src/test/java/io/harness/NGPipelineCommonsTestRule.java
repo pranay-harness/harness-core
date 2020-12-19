@@ -1,8 +1,11 @@
 package io.harness;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
 import static org.mockito.Mockito.mock;
 
 import io.harness.callback.DelegateCallbackToken;
+import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.factory.ClosingFactory;
@@ -37,6 +40,7 @@ import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import io.grpc.inprocess.InProcessChannelBuilder;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -117,6 +121,8 @@ public class NGPipelineCommonsTestRule implements MethodRule, InjectorRuleMixin,
         }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
         bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
         bind(HPersistence.class).to(MongoPersistence.class);
+        bind(new TypeLiteral<DelegateServiceGrpc.DelegateServiceBlockingStub>() {
+        }).toInstance(DelegateServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(generateUuid()).build()));
       }
     });
 

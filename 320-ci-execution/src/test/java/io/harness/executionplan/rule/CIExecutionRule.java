@@ -1,9 +1,12 @@
 package io.harness.executionplan.rule;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
 import io.harness.CIExecutionServiceModule;
 import io.harness.CIExecutionTestModule;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.ci.config.CIExecutionServiceConfig;
+import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
@@ -24,6 +27,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.TypeLiteral;
+import io.grpc.inprocess.InProcessChannelBuilder;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -94,6 +98,9 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
       protected void configure() {
         bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {
         }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
+
+        bind(new TypeLiteral<DelegateServiceGrpc.DelegateServiceBlockingStub>() {
+        }).toInstance(DelegateServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(generateUuid()).build()));
       }
     });
     return modules;
