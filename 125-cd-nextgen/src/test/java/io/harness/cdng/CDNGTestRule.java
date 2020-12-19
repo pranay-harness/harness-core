@@ -1,6 +1,7 @@
 package io.harness.cdng;
 
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static org.mockito.Mockito.mock;
 
@@ -9,6 +10,7 @@ import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationVisualizationModule;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.connector.services.ConnectorService;
+import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.executionplan.ExecutionPlanModule;
@@ -43,6 +45,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
+import io.grpc.inprocess.InProcessChannelBuilder;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -121,6 +124,8 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
         bind(EntitySetupUsageClient.class).toInstance(mock(EntitySetupUsageClient.class));
         bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {
         }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
+        bind(new TypeLiteral<DelegateServiceGrpc.DelegateServiceBlockingStub>() {
+        }).toInstance(DelegateServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(generateUuid()).build()));
       }
     });
     modules.add(TimeModule.getInstance());

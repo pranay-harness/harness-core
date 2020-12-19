@@ -1,11 +1,13 @@
 package io.harness;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import static org.mockito.Mockito.mock;
 
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.delay.DelayEventListener;
+import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
@@ -46,6 +48,7 @@ import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import io.grpc.inprocess.InProcessChannelBuilder;
 import java.io.Closeable;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -131,6 +134,8 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
         bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {
         }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
         bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
+        bind(new TypeLiteral<DelegateServiceGrpc.DelegateServiceBlockingStub>() {
+        }).toInstance(DelegateServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(generateUuid()).build()));
       }
     });
 

@@ -1,38 +1,26 @@
 package io.harness.engine.pms.tasks;
 
-import io.harness.beans.DelegateTaskRequest;
-import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.TaskDetails;
-import io.harness.delegate.task.TaskParameters;
-import io.harness.exception.InvalidRequestException;
+import io.harness.callback.DelegateCallbackToken;
+import io.harness.delegate.AccountId;
+import io.harness.delegate.DelegateServiceGrpc.DelegateServiceBlockingStub;
+import io.harness.delegate.SubmitTaskRequest;
+import io.harness.delegate.SubmitTaskResponse;
+import io.harness.pms.contracts.execution.tasks.DelegateTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
-import io.harness.serializer.KryoSerializer;
-import io.harness.service.DelegateGrpcClientWrapper;
 
 import com.google.inject.Inject;
-import java.time.Duration;
-import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 public class NgDelegate2TaskExecutor implements TaskExecutor {
-  @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
-  @Inject private KryoSerializer kryoSerializer;
+  @Inject private DelegateServiceBlockingStub delegateServiceBlockingStub;
+  @Inject private Supplier<DelegateCallbackToken> tokenSupplier;
 
   @Override
   public String queueTask(Map<String, String> setupAbstractions, TaskRequest taskRequest) {
-    String accountId = taskRequest.getDelegateTaskRequest().getAccountId();
-    TaskDetails taskDetails = taskRequest.getDelegateTaskRequest().getDetails();
-    final DelegateTaskRequest delegateTaskRequest =
-        DelegateTaskRequest.builder()
-            .accountId(accountId)
-            .taskType(taskDetails.getType().getType())
-            .taskParameters(extractTaskParameters(taskDetails))
-            .executionTimeout(Duration.ofSeconds(taskDetails.getExecutionTimeout().getSeconds()))
-            .taskSetupAbstractions(taskRequest.getDelegateTaskRequest().getSetupAbstractions().getValuesMap())
-            .logStreamingAbstractions(
-                new LinkedHashMap<>(taskRequest.getDelegateTaskRequest().getLogAbstractions().getValuesMap()))
-            .build();
-    return delegateGrpcClientWrapper.submitAsyncTask(delegateTaskRequest);
+    SubmitTaskRequest submitTaskRequest = buildSubmitTaskRequest(taskRequest);
+    SubmitTaskResponse submitTaskResponse = delegateServiceBlockingStub.submitTask(submitTaskRequest);
+    return submitTaskResponse.getTaskId().getId();
   }
 
   @Override
@@ -46,14 +34,16 @@ public class NgDelegate2TaskExecutor implements TaskExecutor {
     return false;
   }
 
-  private TaskParameters extractTaskParameters(TaskDetails taskDetails) {
-    if (taskDetails == null || EmptyPredicate.isEmpty(taskDetails.getKryoParameters().toByteArray())) {
-      return null;
-    }
-    Object params = kryoSerializer.asObject(taskDetails.getKryoParameters().toByteArray());
-    if (params instanceof TaskParameters) {
-      return (TaskParameters) params;
-    }
-    throw new InvalidRequestException("Task Execution not supported for type");
+  SubmitTaskRequest buildSubmitTaskRequest(TaskRequest taskRequest) {
+    DelegateTaskRequest delegateTaskRequest = taskRequest.getDelegateTaskRequest();
+    return SubmitTaskRequest.newBuilder()
+        .setAccountId(AccountId.newBuilder().setId(delegateTaskRequest.getAccountId()).build())
+        .setDetails(delegateTaskRequest.getDetails())
+        .setLogAbstractions(delegateTaskRequest.getLogAbstractions())
+        .setSetupAbstractions(delegateTaskRequest.getSetupAbstractions())
+        .addAllSelectors(delegateTaskRequest.getSelectorsList())
+        .addAllCapabilities(delegateTaskRequest.getCapabilitiesList())
+        .setCallbackToken(tokenSupplier.get())
+        .build();
   }
 }
