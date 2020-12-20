@@ -5,7 +5,9 @@ import static java.time.Duration.ofSeconds;
 import io.harness.config.PublisherConfiguration;
 import io.harness.mongo.queue.QueueFactory;
 import io.harness.pms.execution.NodeExecutionEvent;
+import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
+import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListener;
@@ -42,6 +44,7 @@ public class PmsSdkQueueModule extends AbstractModule {
   protected void configure() {
     bind(QueueController.class).toInstance(new PmsSdkQueueController());
     bind(new TypeLiteral<QueueListener<NodeExecutionEvent>>() {}).to(NodeExecutionEventListener.class);
+    bind(new TypeLiteral<QueueListener<OrchestrationEvent>>() {}).to(SdkOrchestrationEventListener.class);
   }
 
   @Provides
@@ -53,6 +56,17 @@ public class PmsSdkQueueModule extends AbstractModule {
         ImmutableList.of(versionInfoManager.getVersionInfo().getVersion()), ImmutableList.of(config.getServiceName()));
     return QueueFactory.createNgQueueConsumer(
         injector, NodeExecutionEvent.class, ofSeconds(5), topicExpressions, publisherConfiguration, sdkTemplate);
+  }
+
+  @Provides
+  @Singleton
+  public QueueConsumer<OrchestrationEvent> orchestrationEventQueueConsumer(
+      Injector injector, PublisherConfiguration publisherConfiguration, VersionInfoManager versionInfoManager) {
+    MongoTemplate sdkTemplate = injector.getInstance(Key.get(MongoTemplate.class, Names.named("pmsSdkMongoTemplate")));
+    List<List<String>> topicExpressions = ImmutableList.of(
+        ImmutableList.of(versionInfoManager.getVersionInfo().getVersion()), ImmutableList.of(config.getServiceName()));
+    return QueueFactory.createNgQueueConsumer(
+        injector, OrchestrationEvent.class, ofSeconds(5), topicExpressions, publisherConfiguration, sdkTemplate);
   }
 
   private static class PmsSdkQueueController implements QueueController {

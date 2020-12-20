@@ -7,6 +7,7 @@ import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 
+import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.persistence.HPersistence;
@@ -14,6 +15,7 @@ import io.harness.pms.exception.WingsExceptionMapper;
 import io.harness.pms.execution.registrar.PmsOrchestrationEventRegistrar;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
+import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
@@ -84,6 +86,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         return appConfig.getSwaggerBundleConfiguration();
       }
     });
+    bootstrap.getObjectMapper().registerModule(new PmsBeansJacksonModule());
   }
 
   @Override
@@ -133,6 +136,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   private void registerEventListeners(Injector injector) {
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class), 5);
+    queueListenerController.register(injector.getInstance(OrchestrationEventListener.class), 1);
   }
 
   private void registerWaitEnginePublishers(Injector injector) {

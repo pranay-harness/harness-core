@@ -279,6 +279,9 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
 
   @Override
   public OrchestrationGraphDTO getOrchestrationGraph(String stageIdentifier, String planExecutionId) {
+    if (stageIdentifier == null) {
+      return graphGenerationService.generateOrchestrationGraphV2(planExecutionId);
+    }
     return graphGenerationService.generatePartialOrchestrationGraphFromIdentifier(stageIdentifier, planExecutionId);
   }
 

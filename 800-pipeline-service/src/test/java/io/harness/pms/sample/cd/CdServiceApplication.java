@@ -71,6 +71,7 @@ public class CdServiceApplication extends Application<CdServiceConfiguration> {
             .asyncWaitEngine(injector.getInstance(AsyncWaitEngine.class))
             .kryoSerializer(injector.getInstance(KryoSerializer.class))
             .engineSteps(CdServiceStepRegistrar.getEngineSteps(injector))
+            .executionSummaryModuleInfoProvider(injector.getInstance(CDExecutionSummaryModuleInfoProvider.class))
             .build();
     try {
       PmsSdkModule.initializeDefaultInstance(sdkConfig);

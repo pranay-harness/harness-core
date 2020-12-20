@@ -21,6 +21,7 @@ import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.registries.registrar.*;
 import io.harness.pms.sdk.registries.registrar.local.PmsSdkAdviserRegistrar;
 import io.harness.pms.sdk.registries.registrar.local.PmsSdkFacilitatorRegistrar;
+import io.harness.pms.sdk.registries.registrar.local.PmsSdkOrchestrationEventRegistrars;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -107,11 +108,13 @@ public class PmsSdkRegistryModule extends AbstractModule {
 
   @Provides
   @Singleton
-  OrchestrationEventHandlerRegistry providesEventHandlerRegistry() {
+  OrchestrationEventHandlerRegistry providesEventHandlerRegistry(Injector injector) {
     OrchestrationEventHandlerRegistry handlerRegistry = new OrchestrationEventHandlerRegistry();
-    Map<OrchestrationEventType, OrchestrationEventHandler> engineEventHandlersMap = config.getEngineEventHandlersMap();
+    Map<OrchestrationEventType, Set<OrchestrationEventHandler>> engineEventHandlersMap =
+        config.getEngineEventHandlersMap();
     if (EmptyPredicate.isNotEmpty(engineEventHandlersMap)) {
-      engineEventHandlersMap.forEach((k, v) -> handlerRegistry.register(k, Collections.singleton(v)));
+      mergeEventHandlers(engineEventHandlersMap, PmsSdkOrchestrationEventRegistrars.getHandlers(injector));
+      engineEventHandlersMap.forEach((k, v) -> handlerRegistry.register(k, v));
     }
     return handlerRegistry;
   }
@@ -127,5 +130,18 @@ public class PmsSdkRegistryModule extends AbstractModule {
     injector.injectMembers(orchestrationFieldRegistry);
     classes.forEach(pair -> orchestrationFieldRegistry.register(pair.getLeft(), pair.getRight()));
     return orchestrationFieldRegistry;
+  }
+
+  private void mergeEventHandlers(Map<OrchestrationEventType, Set<OrchestrationEventHandler>> finalHandlers,
+      Map<OrchestrationEventType, Set<OrchestrationEventHandler>> handlers) {
+    for (Map.Entry<OrchestrationEventType, Set<OrchestrationEventHandler>> entry : handlers.entrySet()) {
+      if (finalHandlers.containsKey(entry.getKey())) {
+        Set<OrchestrationEventHandler> existing = finalHandlers.get(entry.getKey());
+        existing.addAll(entry.getValue());
+        finalHandlers.put(entry.getKey(), existing);
+      } else {
+        finalHandlers.put(entry.getKey(), entry.getValue());
+      }
+    }
   }
 }

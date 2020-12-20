@@ -1,5 +1,6 @@
 package io.harness.pms.sdk.service.execution;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.service.ExecutionSummaryResponse;
@@ -68,7 +69,7 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
         }
       }
     }
-    if (Objects.equals(nodeExecution.getNode().getGroup(), "pipeline")) {
+    if (Objects.equals(nodeExecution.getNode().getGroup(), "PIPELINE")) {
       update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.status, status);
       if (ExecutionStatus.isTerminal(status)) {
         update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.endTs, nodeExecution.getEndTs());
@@ -86,7 +87,7 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
     String stageInfo = request.getNodeModuleInfoJson();
     ExecutionStatus status = ExecutionStatus.getExecutionStatus(nodeExecution.getStatus());
     String planExecutionId = request.getPlanExecutionId();
-    if (stageUuid == null) {
+    if (EmptyPredicate.isEmpty(stageUuid)) {
       return;
     }
     Map<String, Object> fieldToValues = JsonUtils.asMap(stageInfo);

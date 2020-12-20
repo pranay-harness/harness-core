@@ -46,6 +46,7 @@ import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.redis.RedisConfig;
+import io.harness.registrars.OrchestrationModuleRegistrarHelper;
 import io.harness.registrars.OrchestrationStepsModuleEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.registrars.OrchestrationVisualizationModuleEventHandlerRegistrar;
@@ -251,10 +252,11 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
 
   public void getPmsSDKModules(List<Module> modules) {
     Injector injector = Guice.createInjector(modules);
-    Map<OrchestrationEventType, OrchestrationEventHandler> engineEventHandlersMap = new HashMap<>();
-    engineEventHandlersMap.putAll(
-        OrchestrationVisualizationModuleEventHandlerRegistrar.getEngineEventHandlers(injector));
-    engineEventHandlersMap.putAll(OrchestrationStepsModuleEventHandlerRegistrar.getEngineEventHandlers(injector));
+    Map<OrchestrationEventType, Set<OrchestrationEventHandler>> engineEventHandlersMap = new HashMap<>();
+    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
+        engineEventHandlersMap, OrchestrationVisualizationModuleEventHandlerRegistrar.getEngineEventHandlers(injector));
+    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
+        engineEventHandlersMap, OrchestrationStepsModuleEventHandlerRegistrar.getEngineEventHandlers(injector));
     PmsSdkConfiguration sdkConfig =
         PmsSdkConfiguration.builder()
             .deploymentMode(PmsSdkConfiguration.DeployMode.LOCAL)

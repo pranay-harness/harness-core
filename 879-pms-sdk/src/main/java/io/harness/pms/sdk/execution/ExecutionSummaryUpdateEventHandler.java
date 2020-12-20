@@ -2,39 +2,39 @@ package io.harness.pms.sdk.execution;
 
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.service.ExecutionSummaryUpdateRequest;
-import io.harness.pms.contracts.service.PmsExecutionServiceGrpc;
-import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
-import io.harness.pms.sdk.execution.beans.PipelineModuleInfo;
-import io.harness.pms.sdk.execution.beans.StageModuleInfo;
+import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
+import io.harness.pms.sdk.core.execution.PmsExecutionGrpcClient;
 
-import com.google.inject.Injector;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.grpc.StatusRuntimeException;
+import java.util.Objects;
 
-public abstract class ExecutionSummaryUpdateEventHandler implements AsyncOrchestrationEventHandler {
-  Injector injector;
+@Singleton
+public class ExecutionSummaryUpdateEventHandler implements AsyncOrchestrationEventHandler {
+  @Inject(optional = true) PmsExecutionGrpcClient pmsClient;
+  @Inject(optional = true) ExecutionSummaryModuleInfoProvider executionSummaryModuleInfoProvider;
 
-  public ExecutionSummaryUpdateEventHandler(Injector injector) {
-    this.injector = injector;
-  }
-  public abstract PipelineModuleInfo getPipelineLevelModuleInfo(NodeExecutionProto nodeExecutionProto);
-
-  public abstract StageModuleInfo getStageLevelModuleInfo(NodeExecutionProto nodeExecutionProto);
+  public ExecutionSummaryUpdateEventHandler() {}
 
   @Override
   public void handleEvent(OrchestrationEvent orchestrationEvent) {
-    NodeExecutionProto nodeExecutionProto = NodeExecutionProto.newBuilder().build();
+    NodeExecutionProto nodeExecutionProto = orchestrationEvent.getNodeExecutionProto();
     ExecutionSummaryUpdateRequest.Builder executionSummaryUpdateRequest =
         ExecutionSummaryUpdateRequest.newBuilder()
             .setModuleName("cd")
             .setPlanExecutionId(nodeExecutionProto.getAmbiance().getPlanExecutionId())
-            .setPipelineModuleInfoJson(getPipelineLevelModuleInfo(nodeExecutionProto).toJson())
-            .setNodeModuleInfoJson(getStageLevelModuleInfo(nodeExecutionProto).toJson())
+            .setPipelineModuleInfoJson(
+                executionSummaryModuleInfoProvider.getPipelineLevelModuleInfo(nodeExecutionProto).toJson())
+            .setNodeModuleInfoJson(
+                executionSummaryModuleInfoProvider.getStageLevelModuleInfo(nodeExecutionProto).toJson())
             .setNodeExecutionId(nodeExecutionProto.getUuid());
+    if (Objects.equals(nodeExecutionProto.getNode().getGroup(), "stage")) {
+      executionSummaryUpdateRequest.setNodeUuid(nodeExecutionProto.getNode().getIdentifier());
+    }
     try {
-      PmsExecutionServiceGrpc.PmsExecutionServiceBlockingStub pmsClient =
-          injector.getInstance(PmsExecutionServiceGrpc.PmsExecutionServiceBlockingStub.class);
       pmsClient.updateExecutionSummary(executionSummaryUpdateRequest.build());
     } catch (StatusRuntimeException ex) {
       throw ex;
