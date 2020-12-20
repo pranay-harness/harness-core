@@ -1,5 +1,6 @@
-package io.harness.ng.core.entitysetupusage.mapper;
+package io.harness.ng.core.entitydetail;
 
+import static io.harness.data.structure.HarnessStringUtils.nullIfEmpty;
 import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.CONNECTORS;
 import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.INPUT_SETS;
 import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.PIPELINES;
@@ -8,6 +9,8 @@ import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.SECR
 import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.SERVICE;
 
 import io.harness.EntityType;
+import io.harness.beans.IdentifierRef;
+import io.harness.beans.InputSetReference;
 import io.harness.common.EntityReference;
 import io.harness.encryption.Scope;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
@@ -15,30 +18,16 @@ import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
 import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
 import io.harness.eventsframework.schemas.entity.InputSetReferenceProtoDTO;
 import io.harness.eventsframework.schemas.entity.ScopeProtoEnum;
-import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateDTO;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.ng.core.EntityDetail;
-import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 
 import com.google.inject.Singleton;
 import java.util.EnumMap;
 import java.util.Map;
 
 @Singleton
-public class EntityEventDTOToRestDTOMapper {
-  public EntitySetupUsageDTO toRestDTO(EntitySetupUsageCreateDTO setupUsageEventsDTO) {
-    EntityDetail referredEntity = createEntityDetailDTO(setupUsageEventsDTO.getReferredEntity());
-    EntityDetail referredByEntity = createEntityDetailDTO(setupUsageEventsDTO.getReferredByEntity());
-
-    return EntitySetupUsageDTO.builder()
-        .accountIdentifier(setupUsageEventsDTO.getAccountIdentifier())
-        .createdAt(setupUsageEventsDTO.getCreatedAt())
-        .referredByEntity(referredByEntity)
-        .referredEntity(referredEntity)
-        .build();
-  }
-
-  private EntityDetail createEntityDetailDTO(EntityDetailProtoDTO entityDetail) {
+public class EntityDetailProtoToRestMapper {
+  public EntityDetail createEntityDetailDTO(EntityDetailProtoDTO entityDetail) {
     return EntityDetail.builder()
         .name(entityDetail.getName())
         .entityRef(createEntityReference(entityDetail))
@@ -55,10 +44,10 @@ public class EntityEventDTOToRestDTOMapper {
   }
 
   private EntityReference createIdentifierRef(IdentifierRefProtoDTO identifierRef) {
-    return io.harness.beans.IdentifierRef.builder()
+    return IdentifierRef.builder()
         .accountIdentifier(identifierRef.getAccountIdentifier().getValue())
-        .orgIdentifier(identifierRef.getOrgIdentifier().getValue())
-        .projectIdentifier(identifierRef.getProjectIdentifier().getValue())
+        .orgIdentifier(nullIfEmpty(identifierRef.getOrgIdentifier().getValue()))
+        .projectIdentifier(nullIfEmpty(identifierRef.getProjectIdentifier().getValue()))
         .scope(mapEventToRestScopeEnum(identifierRef.getScope()))
         .identifier(identifierRef.getIdentifier().getValue())
         .build();
@@ -79,13 +68,22 @@ public class EntityEventDTOToRestDTOMapper {
   }
 
   private EntityReference createInputSetRef(InputSetReferenceProtoDTO inputSetReference) {
-    return io.harness.beans.InputSetReference.builder()
+    return InputSetReference.builder()
         .accountIdentifier(inputSetReference.getAccountIdentifier().getValue())
         .identifier(inputSetReference.getIdentifier().getValue())
-        .orgIdentifier(inputSetReference.getOrgIdentifier().getValue())
-        .projectIdentifier(inputSetReference.getProjectIdentifier().getValue())
+        .orgIdentifier(nullIfEmpty(inputSetReference.getOrgIdentifier().getValue()))
+        .projectIdentifier(nullIfEmpty(inputSetReference.getProjectIdentifier().getValue()))
         .pipelineIdentifier(inputSetReference.getPipelineIdentifier().getValue())
         .build();
+  }
+
+  private EntityType mapEventToRestEntityType(EntityTypeProtoEnum type) {
+    Map<EntityTypeProtoEnum, EntityType> mappingBetweenProtoAndActualEnum = getEntityTypeProtoEnumToRestEnumMap();
+    if (mappingBetweenProtoAndActualEnum.containsKey(type)) {
+      return mappingBetweenProtoAndActualEnum.get(type);
+    } else {
+      throw new UnknownEnumTypeException("entityType", String.valueOf(type));
+    }
   }
 
   private Map<EntityTypeProtoEnum, EntityType> getEntityTypeProtoEnumToRestEnumMap() {
@@ -96,14 +94,5 @@ public class EntityEventDTOToRestDTOMapper {
     mappingBetweenProtoAndActualEnum.put(SERVICE, EntityType.SERVICE);
     mappingBetweenProtoAndActualEnum.put(CONNECTORS, EntityType.CONNECTORS);
     return mappingBetweenProtoAndActualEnum;
-  }
-
-  private EntityType mapEventToRestEntityType(EntityTypeProtoEnum type) {
-    Map<EntityTypeProtoEnum, EntityType> mappingBetweenProtoAndActualEnum = getEntityTypeProtoEnumToRestEnumMap();
-    if (mappingBetweenProtoAndActualEnum.containsKey(type)) {
-      return mappingBetweenProtoAndActualEnum.get(type);
-    } else {
-      throw new UnknownEnumTypeException("entityType", String.valueOf(type));
-    }
   }
 }

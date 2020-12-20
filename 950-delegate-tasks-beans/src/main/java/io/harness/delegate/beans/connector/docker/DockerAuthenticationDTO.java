@@ -26,7 +26,6 @@ public class DockerAuthenticationDTO {
   @JsonProperty("spec")
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
-  @NotNull
   @Valid
   DockerAuthCredentialsDTO credentials;
 }

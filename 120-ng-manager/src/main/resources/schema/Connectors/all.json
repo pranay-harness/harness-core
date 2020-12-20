@@ -560,7 +560,6 @@
     "DockerAuthenticationDTO": {
       "type": "object",
       "required": [
-        "spec",
         "type"
       ],
       "properties": {

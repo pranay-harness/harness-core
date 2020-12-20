@@ -346,7 +346,6 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     configuration.setNgManagerServiceHttpClientConfig(ngManagerServiceHttpClientConfig);
 
     configuration.setDistributedLockImplementation(DistributedLockImplementation.NOOP);
-
     configuration.setEventsFrameworkConfiguration(
         EventsFrameworkConfiguration.builder()
             .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())

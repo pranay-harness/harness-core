@@ -74,7 +74,6 @@ import io.harness.encryptors.managerproxy.ManagerKmsEncryptor;
 import io.harness.encryptors.managerproxy.ManagerVaultEncryptor;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.engine.pms.tasks.TaskExecutor;
-import io.harness.entityactivity.EntityActivityClientModule;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobServiceImpl;
 import io.harness.event.reconciliation.service.DeploymentReconService;
@@ -1242,8 +1241,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(new PerpetualTaskServiceModule());
     install(new CESetupServiceModule());
     install(new CVNextGenCommonsServiceModule());
-    install(new EntityActivityClientModule(configuration.getNgManagerServiceHttpClientConfig(),
-        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
     install(new ConnectorResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
     install(new OrganizationManagementClientModule(configuration.getNgManagerServiceHttpClientConfig(),
