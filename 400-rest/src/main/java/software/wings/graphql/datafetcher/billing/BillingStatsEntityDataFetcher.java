@@ -441,4 +441,9 @@ public class BillingStatsEntityDataFetcher
   protected QLCCMEntityGroupBy getEntityAggregation(QLCCMGroupBy groupBy) {
     return groupBy.getEntityGroupBy();
   }
+
+  @Override
+  public boolean isCESampleAccountIdAllowed() {
+    return true;
+  }
 }

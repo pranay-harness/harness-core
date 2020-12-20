@@ -143,4 +143,9 @@ public class CeActivePodCountDataFetcher extends AbstractStatsDataFetcherWithAgg
   public String getEntityType() {
     return null;
   }
+
+  @Override
+  public boolean isCESampleAccountIdAllowed() {
+    return true;
+  }
 }

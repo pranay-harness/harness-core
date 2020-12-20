@@ -52,4 +52,9 @@ public class ViewFilterStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
   public String getEntityType() {
     return null;
   }
+
+  @Override
+  public boolean isCESampleAccountIdAllowed() {
+    return false;
+  }
 }

@@ -3,6 +3,8 @@ package software.wings.graphql.datafetcher;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import static org.apache.commons.lang3.BooleanUtils.isTrue;
+
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -37,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public abstract class AbstractStatsDataFetcherWithAggregationListAndLimit<A, F, G, S>
-    implements DataFetcher, BaseStatsDataFetcher {
+    implements DataFetcher, BaseStatsDataFetcher, CEBaseStatsDataFetcher {
   private static final Integer DEFAULT_LIMIT = Integer.MAX_VALUE - 1;
   private static final Integer DEFAULT_OFFSET = 0;
   private static final boolean DEFAULT_INCLUDE_OTHERS = true;
@@ -88,7 +90,8 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndLimit<A, F, 
       final boolean includeOthers = fetchIncludeOthers(dataFetchingEnvironment);
 
       String accountId = utils.getAccountId(dataFetchingEnvironment);
-      final String accountIdDataToFetch = utils.fetchSampleAccountIdIfNoClusterData(accountId);
+      final String accountIdDataToFetch =
+          isTrue(isCESampleAccountIdAllowed()) ? utils.fetchSampleAccountIdIfNoClusterData(accountId) : accountId;
 
       try (AutoLogContext ignore1 =
                new AggregateFunctionLogContext(aggregationFunctionClass.getSimpleName(), OVERRIDE_ERROR);
