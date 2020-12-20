@@ -4,11 +4,15 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 
 import io.harness.maintenance.MaintenanceController;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.sample.cv.creator.CvPipelineServiceInfoProvider;
 import io.harness.pms.sample.cv.creator.filters.CVFilterCreationResponseMerger;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
+import io.harness.pms.sdk.execution.beans.PipelineModuleInfo;
+import io.harness.pms.sdk.execution.beans.StageModuleInfo;
 import io.harness.serializer.KryoSerializer;
 
 import com.google.inject.Guice;
@@ -70,6 +74,17 @@ public class CvServiceApplication extends Application<CvServiceConfiguration> {
             .asyncWaitEngine(injector.getInstance(AsyncWaitEngine.class))
             .kryoSerializer(injector.getInstance(KryoSerializer.class))
             .engineSteps(CvServiceStepRegistrar.getEngineSteps(injector))
+            .executionSummaryModuleInfoProvider(new ExecutionSummaryModuleInfoProvider() {
+              @Override
+              public PipelineModuleInfo getPipelineLevelModuleInfo(NodeExecutionProto nodeExecutionProto) {
+                return null;
+              }
+
+              @Override
+              public StageModuleInfo getStageLevelModuleInfo(NodeExecutionProto nodeExecutionProto) {
+                return null;
+              }
+            })
             .build();
     try {
       PmsSdkModule.initializeDefaultInstance(sdkConfig);

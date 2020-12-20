@@ -22,6 +22,7 @@ import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Singleton
 public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEventHandler {
@@ -31,19 +32,19 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
 
   @Override
   public void handleEvent(OrchestrationEvent event) {
-    NodeExecutionProto nodeExecutionProto = event.getNodeExecutionProto();
-    Ambiance ambiance = nodeExecutionProto.getAmbiance();
+    Ambiance ambiance = event.getAmbiance();
     String accountId = AmbianceUtils.getAccountId(ambiance);
     String projectId = AmbianceUtils.getProjectIdentifier(ambiance);
     String orgId = AmbianceUtils.getProjectIdentifier(ambiance);
     String planExecutionId = ambiance.getPlanExecutionId();
     PlanExecution planExecution = planExecutionService.get(planExecutionId);
     String pipelineId = planExecution.getPlan().getNodes().get(0).getIdentifier();
-    Optional<PipelineEntity> pipelineEntity = pmsPipelineService.get(accountId, orgId, projectId, pipelineId, false);
+    Optional<PipelineEntity> pipelineEntity = pmsPipelineService.get("a", "o", "p", "p1", false);
     if (!pipelineEntity.isPresent()) {
       return;
     }
-    Map<String, GraphLayoutNode> layoutNodeMap = pipelineEntity.get().getLayoutNodeMap();
+    Map<String, GraphLayoutNode> layoutNodeMap = pipelineEntity.get().getLayoutNodeMap().values().stream().collect(
+        Collectors.toMap(GraphLayoutNode::getNodeIdentifier, graphLayoutNode -> graphLayoutNode));
     String startingNodeId = pipelineEntity.get().getStartingNodeID();
     Map<String, GraphLayoutNodeDTO> layoutNodeDTOMap = new HashMap<>();
     for (Map.Entry<String, GraphLayoutNode> entry : layoutNodeMap.entrySet()) {
@@ -58,8 +59,11 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
             .name(pipelineEntity.get().getName())
             .inputSetYaml(ambiance.getSetupAbstractionsMap().get("inputSetYaml"))
             .status(ExecutionStatus.NOT_STARTED)
-            .startTs(Timestamp.fromProto(nodeExecutionProto.getStartTs()).getSeconds())
+            .startTs(planExecution.getStartTs())
             .startingNodeId(startingNodeId)
+            .accountId(accountId)
+            .projectIdentifier(projectId)
+            .orgIdentifier(orgId)
             .build();
     pmsExecutionSummaryRespository.save(pipelineExecutionSummaryEntity);
   }

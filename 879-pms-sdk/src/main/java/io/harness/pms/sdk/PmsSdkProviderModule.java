@@ -1,6 +1,7 @@
 package io.harness.pms.sdk;
 
 import io.harness.mongo.MongoConfig;
+import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
 import io.harness.pms.sdk.core.pipeline.filters.FilterCreationResponseMerger;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
@@ -47,6 +48,12 @@ class PmsSdkProviderModule extends AbstractModule {
   @Singleton
   public PipelineServiceInfoProvider pipelineServiceInfoProvider() {
     return config.getPipelineServiceInfoProvider();
+  }
+
+  @Provides
+  @Singleton
+  public ExecutionSummaryModuleInfoProvider moduleInfoProvider() {
+    return config.getExecutionSummaryModuleInfoProvider();
   }
 
   @Provides

@@ -15,5 +15,7 @@ public class PmsExecutionGrpcClient {
     this.pmsExecutionServiceBlockingStub = pmsExecutionServiceBlockingStub;
   }
 
-  public void updateExecutionSummary(ExecutionSummaryUpdateRequest request) {}
+  public void updateExecutionSummary(ExecutionSummaryUpdateRequest request) {
+    pmsExecutionServiceBlockingStub.updateExecutionSummary(request);
+  }
 }

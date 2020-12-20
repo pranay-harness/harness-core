@@ -11,6 +11,7 @@ import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRAT
 
 import static com.google.common.collect.ImmutableMap.of;
 
+import io.harness.cdng.creator.CDNGModuleInfoProvider;
 import io.harness.cdng.creator.CDNGPlanCreatorProvider;
 import io.harness.cdng.creator.filters.CDNGFilterCreationResponseMerger;
 import io.harness.cdng.executionplan.ExecutionPlanCreatorRegistrar;
@@ -234,6 +235,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
               .kryoSerializer(injector.getInstance(KryoSerializer.class))
               .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators(injector))
               .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers(injector))
+              .executionSummaryModuleInfoProvider(injector.getInstance(CDNGModuleInfoProvider.class))
               .build();
       try {
         PmsSdkModule.initializeDefaultInstance(sdkConfig);

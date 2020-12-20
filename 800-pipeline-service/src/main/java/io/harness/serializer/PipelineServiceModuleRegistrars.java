@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.serializer.kryo.OrchestrationVisualizationKryoRegistrar;
 import io.harness.serializer.morphia.PMSPipelineMorphiaRegistrar;
 
 import com.google.common.collect.ImmutableList;
@@ -16,7 +17,10 @@ import org.springframework.core.convert.converter.Converter;
 @UtilityClass
 public class PipelineServiceModuleRegistrars {
   public final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
-      ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(OrchestrationRegistrars.kryoRegistrars).build();
+      ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+          .addAll(OrchestrationRegistrars.kryoRegistrars)
+          .add(OrchestrationVisualizationKryoRegistrar.class)
+          .build();
 
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()

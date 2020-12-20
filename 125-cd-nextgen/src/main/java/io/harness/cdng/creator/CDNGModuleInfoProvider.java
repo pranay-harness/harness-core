@@ -1,4 +1,4 @@
-package io.harness.cdng.pipeline.executions;
+package io.harness.cdng.creator;
 
 import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.environment.EnvironmentOutcome;
@@ -16,27 +16,20 @@ import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
-import io.harness.pms.sdk.execution.ExecutionSummaryUpdateEventHandler;
 import io.harness.pms.sdk.execution.beans.PipelineModuleInfo;
 import io.harness.pms.sdk.execution.beans.StageModuleInfo;
 
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Singleton
-public class CDExecutionSummaryPmsUpdateEventHandler extends ExecutionSummaryUpdateEventHandler {
-  private OutcomeService outcomeService;
-
-  @Inject
-  public CDExecutionSummaryPmsUpdateEventHandler(Injector injector, OutcomeService outcomeService) {
-    super(injector);
-    this.outcomeService = outcomeService;
-  }
+public class CDNGModuleInfoProvider implements ExecutionSummaryModuleInfoProvider {
+  @Inject OutcomeService outcomeService;
 
   public ServiceExecutionSummary.ArtifactsSummary mapArtifactsOutcomeToSummary(ServiceOutcome serviceOutcome) {
     ServiceExecutionSummary.ArtifactsSummary.ArtifactsSummaryBuilder artifactsSummaryBuilder =

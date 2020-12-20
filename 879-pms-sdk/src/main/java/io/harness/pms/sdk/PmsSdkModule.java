@@ -9,6 +9,7 @@ import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
+import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
 import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
 import io.harness.queue.QueueListenerController;
 
@@ -76,6 +77,7 @@ public class PmsSdkModule {
   private void registerEventListeners(Injector injector) {
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 1);
   }
 
   private void registerSdk(

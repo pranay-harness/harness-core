@@ -1,6 +1,7 @@
 package io.harness.pms.pipeline.entity;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.persistence.CreatedAtAware;
@@ -39,6 +40,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @HarnessEntity(exportable = true)
 public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id @org.mongodb.morphia.annotations.Id private String uuid;
+
+  @NotEmpty String accountId;
+  @NotEmpty String orgIdentifier;
+  @Trimmed @NotEmpty String projectIdentifier;
 
   @NotEmpty @FdUniqueIndex private String pipelineIdentifier;
   @NotEmpty @FdUniqueIndex private String planExecutionId;

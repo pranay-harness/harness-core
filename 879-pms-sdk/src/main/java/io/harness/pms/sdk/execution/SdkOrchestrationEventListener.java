@@ -1,4 +1,4 @@
-package io.harness.engine.events;
+package io.harness.pms.sdk.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
@@ -12,17 +12,16 @@ import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
-public class OrchestrationEventListener extends QueueListener<OrchestrationEvent> {
-  @Inject private Injector injector;
+public class SdkOrchestrationEventListener extends QueueListener<OrchestrationEvent> {
+  @Inject private OrchestrationEventHandlerRegistry handlerRegistry;
 
   @Inject
-  public OrchestrationEventListener(QueueConsumer<OrchestrationEvent> queueConsumer) {
+  public SdkOrchestrationEventListener(QueueConsumer<OrchestrationEvent> queueConsumer) {
     super(queueConsumer, false);
   }
 
@@ -32,8 +31,7 @@ public class OrchestrationEventListener extends QueueListener<OrchestrationEvent
       log.info("Notifying for OrchestrationEvent");
 
       try {
-        Set<OrchestrationEventHandler> handlers =
-            injector.getInstance(OrchestrationEventHandlerRegistry.class).obtain(event.getEventType());
+        Set<OrchestrationEventHandler> handlers = handlerRegistry.obtain(event.getEventType());
         OrchestrationSubject subject = new OrchestrationSubject();
         subject.registerAll(handlers);
         subject.handleEventAsync(event);

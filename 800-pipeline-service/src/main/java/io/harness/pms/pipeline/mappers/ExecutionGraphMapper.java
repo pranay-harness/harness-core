@@ -39,4 +39,14 @@ public class ExecutionGraphMapper {
              .nodeAdjacencyListMap(orchestrationGraph.getAdjacencyList().getAdjacencyMap().entrySet().stream().collect(
                  Collectors.toMap(Map.Entry::getKey, entry -> toExecutionNodeAdjacencyList.apply(entry.getValue()))))
              .build();
+
+  public static ExecutionGraph toExecutionGraph(OrchestrationGraphDTO orchestrationGraph) {
+    return ExecutionGraph.builder()
+        .rootNodeId(orchestrationGraph.getRootNodeIds().get(0))
+        .nodeMap(orchestrationGraph.getAdjacencyList().getGraphVertexMap().entrySet().stream().collect(
+            Collectors.toMap(Map.Entry::getKey, entry -> toExecutionNode.apply(entry.getValue()))))
+        .nodeAdjacencyListMap(orchestrationGraph.getAdjacencyList().getAdjacencyMap().entrySet().stream().collect(
+            Collectors.toMap(Map.Entry::getKey, entry -> toExecutionNodeAdjacencyList.apply(entry.getValue()))))
+        .build();
+  }
 }
