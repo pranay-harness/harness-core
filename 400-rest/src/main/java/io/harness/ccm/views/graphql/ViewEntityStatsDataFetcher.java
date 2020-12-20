@@ -53,4 +53,9 @@ public class ViewEntityStatsDataFetcher extends AbstractStatsDataFetcherWithAggr
   public String getEntityType() {
     return null;
   }
+
+  @Override
+  public boolean isCESampleAccountIdAllowed() {
+    return false;
+  }
 }

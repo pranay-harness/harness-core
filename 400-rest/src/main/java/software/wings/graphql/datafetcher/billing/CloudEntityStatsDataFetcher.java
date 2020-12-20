@@ -110,4 +110,9 @@ public class CloudEntityStatsDataFetcher
   public String getEntityType() {
     return null;
   }
+
+  @Override
+  public boolean isCESampleAccountIdAllowed() {
+    return false;
+  }
 }

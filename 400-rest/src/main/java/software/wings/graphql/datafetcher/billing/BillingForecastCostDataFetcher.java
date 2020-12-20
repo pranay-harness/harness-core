@@ -93,4 +93,9 @@ public class BillingForecastCostDataFetcher
   public String getEntityType() {
     return null;
   }
+
+  @Override
+  public boolean isCESampleAccountIdAllowed() {
+    return true;
+  }
 }

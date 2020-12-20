@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-
 @Slf4j
 public class SunburstChartStatsDataFetcher
     extends AbstractStatsDataFetcherWithAggregationListAndLimit<QLCCMAggregationFunction, QLBillingDataFilter,
@@ -264,5 +263,10 @@ public class SunburstChartStatsDataFetcher
   @Override
   public String getEntityType() {
     return null;
+  }
+
+  @Override
+  public boolean isCESampleAccountIdAllowed() {
+    return true;
   }
 }

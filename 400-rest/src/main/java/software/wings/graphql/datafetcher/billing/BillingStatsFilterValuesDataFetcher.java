@@ -549,4 +549,9 @@ public class BillingStatsFilterValuesDataFetcher
         .searchString(searchString)
         .build();
   }
+
+  @Override
+  public boolean isCESampleAccountIdAllowed() {
+    return true;
+  }
 }

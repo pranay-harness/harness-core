@@ -58,4 +58,9 @@ public class GcpBillingEntityStatsDataFetcher extends AbstractStatsDataFetcherWi
       List<CloudBillingAggregate> aggregations, List<QLBillingSortCriteria> sort, QLData qlData) {
     return null;
   }
+
+  @Override
+  public boolean isCESampleAccountIdAllowed() {
+    return false;
+  }
 }

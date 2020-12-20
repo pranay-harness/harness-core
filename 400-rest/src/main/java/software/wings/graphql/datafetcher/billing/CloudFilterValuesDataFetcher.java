@@ -85,4 +85,9 @@ public class CloudFilterValuesDataFetcher
       Integer limit, Integer offset, DataFetchingEnvironment dataFetchingEnvironment) {
     return null;
   }
+
+  @Override
+  public boolean isCESampleAccountIdAllowed() {
+    return false;
+  }
 }

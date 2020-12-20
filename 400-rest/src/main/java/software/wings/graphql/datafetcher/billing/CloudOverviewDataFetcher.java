@@ -66,4 +66,9 @@ public class CloudOverviewDataFetcher extends AbstractStatsDataFetcherWithAggreg
   public String getEntityType() {
     return null;
   }
+
+  @Override
+  public boolean isCESampleAccountIdAllowed() {
+    return false;
+  }
 }

@@ -329,4 +329,9 @@ public class BillingTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAg
   public String getEntityType() {
     return null;
   }
+
+  @Override
+  public boolean isCESampleAccountIdAllowed() {
+    return true;
+  }
 }

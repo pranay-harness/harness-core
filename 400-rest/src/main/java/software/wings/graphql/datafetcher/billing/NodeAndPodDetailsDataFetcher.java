@@ -334,4 +334,9 @@ public class NodeAndPodDetailsDataFetcher
       Integer offset, DataFetchingEnvironment dataFetchingEnvironment) {
     return null;
   }
+
+  @Override
+  public boolean isCESampleAccountIdAllowed() {
+    return true;
+  }
 }

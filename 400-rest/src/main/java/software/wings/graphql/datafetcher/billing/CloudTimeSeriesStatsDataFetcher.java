@@ -160,4 +160,9 @@ public class CloudTimeSeriesStatsDataFetcher
     });
     return limitProcessedData;
   }
+
+  @Override
+  public boolean isCESampleAccountIdAllowed() {
+    return false;
+  }
 }
