@@ -22,8 +22,6 @@ import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.EtagFilter;
-import io.harness.ng.core.entitysetupusage.event.EntitySetupUsageCreateEventsConsumer;
-import io.harness.ng.core.entitysetupusage.event.EntitySetupUsageDeleteEventsConsumer;
 import io.harness.ng.core.event.EntityCRUDStreamConsumer;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
@@ -185,8 +183,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   }
 
   private void createConsumerThreadsToListenToEvents(Injector injector) {
-    new Thread(injector.getInstance(EntitySetupUsageCreateEventsConsumer.class)).start();
-    new Thread(injector.getInstance(EntitySetupUsageDeleteEventsConsumer.class)).start();
     new Thread(injector.getInstance(EntityCRUDStreamConsumer.class)).start();
   }
 

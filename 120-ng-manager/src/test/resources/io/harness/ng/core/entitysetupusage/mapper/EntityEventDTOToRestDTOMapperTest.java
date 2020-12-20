@@ -26,7 +26,7 @@ import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 
 public class EntityEventDTOToRestDTOMapperTest extends CategoryTest {
-  @InjectMocks EntityEventDTOToRestDTOMapper entityEventDTOToRestDTOMapper;
+  @InjectMocks EntitySetupUsageEventDTOToRestDTOMapper entitySetupUsageEventDTOToRestDTOMapper;
 
   @Before
   public void setUp() throws Exception {
@@ -75,7 +75,7 @@ public class EntityEventDTOToRestDTOMapperTest extends CategoryTest {
                                                         .setReferredEntity(referredEntity)
                                                         .setReferredByEntity(referredByEntity)
                                                         .build();
-    EntitySetupUsageDTO entitySetupUsage = entityEventDTOToRestDTOMapper.toRestDTO(entitySetupUsageDTO);
+    EntitySetupUsageDTO entitySetupUsage = entitySetupUsageEventDTOToRestDTOMapper.toRestDTO(entitySetupUsageDTO);
     assertThat(entitySetupUsage).isNotNull();
     assertThat(entitySetupUsage.getAccountIdentifier()).isEqualTo(accountIdentifier);
     assertThat(entitySetupUsage.getReferredEntity().getName()).isEqualTo(referredEntityName);

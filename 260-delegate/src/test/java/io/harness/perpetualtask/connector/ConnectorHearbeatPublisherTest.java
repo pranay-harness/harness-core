@@ -4,24 +4,25 @@ import static io.harness.ng.core.activityhistory.NGActivityStatus.SUCCESS;
 import static io.harness.ng.core.activityhistory.NGActivityType.CONNECTIVITY_CHECK;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.powermock.api.mockito.PowerMockito.doReturn;
 
 import io.harness.CategoryTest;
-import io.harness.beans.IdentifierRef;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
-import io.harness.entityactivity.remote.EntityActivityClient;
-import io.harness.ng.core.activityhistory.dto.NGActivityDTO;
-import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.producer.Message;
+import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
+import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
+import io.harness.eventsframework.schemas.entityactivity.EntityActivityCreateDTO;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
 import java.io.IOException;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -29,20 +30,19 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import retrofit2.Call;
-import retrofit2.Response;
 
+@Slf4j
 public class ConnectorHearbeatPublisherTest extends CategoryTest {
   @InjectMocks ConnectorHearbeatPublisher connectorHearbeatPublisher;
-  @Mock EntityActivityClient entityActivityClient;
+  @Mock AbstractProducer eventProducer;
+  @Mock IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper;
   private static final String accountId = "accountId";
-  @Mock private Call<ResponseDTO<NGActivityDTO>> call;
 
   @Before
   public void setUp() throws IOException {
     MockitoAnnotations.initMocks(this);
-    when(entityActivityClient.save(any())).thenReturn(call);
-    doReturn(Response.success(ResponseDTO.newResponse())).when(call).execute();
+    when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(anyString(), anyString(), anyString(), anyString()))
+        .thenCallRealMethod();
   }
 
   @Test
@@ -67,21 +67,30 @@ public class ConnectorHearbeatPublisherTest extends CategoryTest {
             .connectorValidationResult(connectorValidationResult)
             .build();
     connectorHearbeatPublisher.pushConnectivityCheckActivity(accountId, connectorHeartbeatDelegateResponse);
-    ArgumentCaptor<NGActivityDTO> argumentCaptor = ArgumentCaptor.forClass(NGActivityDTO.class);
-    verify(entityActivityClient, times(1)).save(argumentCaptor.capture());
-    NGActivityDTO ngActivityDTO = argumentCaptor.getValue();
+    ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
+    try {
+      verify(eventProducer, times(1)).send(argumentCaptor.capture());
+    } catch (Exception ex) {
+      log.error("Encountered error while sending tast {}", ex);
+    }
+    EntityActivityCreateDTO ngActivityDTO = null;
+    try {
+      ngActivityDTO = EntityActivityCreateDTO.parseFrom(argumentCaptor.getValue().getData());
+    } catch (Exception ex) {
+      log.info("UnExpected Exception", ex);
+    }
     assertThat(ngActivityDTO).isNotNull();
-    assertThat(ngActivityDTO.getType()).isEqualTo(CONNECTIVITY_CHECK);
+    assertThat(ngActivityDTO.getType()).isEqualTo(CONNECTIVITY_CHECK.toString());
     assertThat(ngActivityDTO.getAccountIdentifier()).isEqualTo(accountId);
-    assertThat(ngActivityDTO.getActivityStatus()).isEqualTo(SUCCESS);
+    assertThat(ngActivityDTO.getStatus()).isEqualTo(SUCCESS.toString());
     assertThat(ngActivityDTO.getActivityTime()).isEqualTo(testedAtTime);
     assertThat(ngActivityDTO.getErrorMessage()).isEqualTo(errorMessage);
-    assertThat(ngActivityDTO.getReferredEntity().getType().toString()).isEqualTo("Connectors");
+    assertThat(ngActivityDTO.getReferredEntity().getType().toString()).isEqualTo("CONNECTORS");
     assertThat(ngActivityDTO.getReferredEntity().getName()).isEqualTo("connectorName");
-    IdentifierRef entityReference = (IdentifierRef) ngActivityDTO.getReferredEntity().getEntityRef();
-    assertThat(entityReference.getAccountIdentifier()).isEqualTo(accountId);
-    assertThat(entityReference.getIdentifier()).isEqualTo(connectorIdentifier);
-    assertThat(entityReference.getOrgIdentifier()).isEqualTo(orgIdentifier);
-    assertThat(entityReference.getProjectIdentifier()).isEqualTo(projectIdentifier);
+    IdentifierRefProtoDTO entityReference = ngActivityDTO.getReferredEntity().getIdentifierRef();
+    assertThat(entityReference.getAccountIdentifier().getValue()).isEqualTo(accountId);
+    assertThat(entityReference.getIdentifier().getValue()).isEqualTo(connectorIdentifier);
+    assertThat(entityReference.getOrgIdentifier().getValue()).isEqualTo(orgIdentifier);
+    assertThat(entityReference.getProjectIdentifier().getValue()).isEqualTo(projectIdentifier);
   }
 }

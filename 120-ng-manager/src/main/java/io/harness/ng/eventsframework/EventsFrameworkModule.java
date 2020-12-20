@@ -20,6 +20,7 @@ import lombok.AllArgsConstructor;
 public class EventsFrameworkModule extends AbstractModule {
   public static final String SETUP_USAGE_CREATE = "setup_usage_create";
   public static final String SETUP_USAGE_DELETE = "setup_usage_delete";
+  public static final String ENTITY_ACTIVITY_CREATE = "entity_activity_create";
 
   private static final String DUMMY_TOPIC_NAME = "dummy_topic_name";
   private static final String DUMMY_GROUP_NAME = "dummy_group_name";
@@ -37,18 +38,6 @@ public class EventsFrameworkModule extends AbstractModule {
       bind(AbstractConsumer.class)
           .annotatedWith(Names.named(ENTITY_CRUD))
           .toInstance(NoOpConsumer.of(DUMMY_TOPIC_NAME, DUMMY_GROUP_NAME));
-      bind(AbstractProducer.class)
-          .annotatedWith(Names.named(SETUP_USAGE_CREATE))
-          .toInstance(NoOpProducer.of(DUMMY_TOPIC_NAME));
-      bind(AbstractProducer.class)
-          .annotatedWith(Names.named(SETUP_USAGE_DELETE))
-          .toInstance(NoOpProducer.of(DUMMY_TOPIC_NAME));
-      bind(AbstractConsumer.class)
-          .annotatedWith(Names.named(SETUP_USAGE_CREATE))
-          .toInstance(NoOpConsumer.of(DUMMY_TOPIC_NAME, DUMMY_GROUP_NAME));
-      bind(AbstractConsumer.class)
-          .annotatedWith(Names.named(SETUP_USAGE_DELETE))
-          .toInstance(NoOpConsumer.of(DUMMY_TOPIC_NAME, DUMMY_GROUP_NAME));
     } else {
       bind(AbstractProducer.class)
           .annotatedWith(Names.named(ENTITY_CRUD))
@@ -56,19 +45,6 @@ public class EventsFrameworkModule extends AbstractModule {
       bind(AbstractConsumer.class)
           .annotatedWith(Names.named(ENTITY_CRUD))
           .toInstance(RedisConsumer.of(ENTITY_CRUD, NG_MANAGER.getServiceId(), redisConfig));
-      bind(AbstractConsumer.class)
-          .annotatedWith(Names.named(SETUP_USAGE_CREATE))
-          .toInstance(RedisConsumer.of(SETUP_USAGE_CREATE, NG_MANAGER.getServiceId(), redisConfig));
-      bind(AbstractConsumer.class)
-          .annotatedWith(Names.named(SETUP_USAGE_DELETE))
-          .toInstance(RedisConsumer.of(SETUP_USAGE_DELETE, NG_MANAGER.getServiceId(), redisConfig));
-
-      bind(AbstractProducer.class)
-          .annotatedWith(Names.named(SETUP_USAGE_CREATE))
-          .toInstance(RedisProducer.of(SETUP_USAGE_CREATE, redisConfig));
-      bind(AbstractProducer.class)
-          .annotatedWith(Names.named(SETUP_USAGE_DELETE))
-          .toInstance(RedisProducer.of(SETUP_USAGE_DELETE, redisConfig));
     }
   }
 }

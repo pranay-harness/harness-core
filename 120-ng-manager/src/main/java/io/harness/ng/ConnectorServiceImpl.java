@@ -124,16 +124,20 @@ public class ConnectorServiceImpl implements ConnectorService {
 
   private void publishEventForConnectorUpdate(String accountIdentifier, ConnectorInfoDTO savedConnector) {
     try {
+      ConnectorEntityChangeDTO.Builder connectorUpdateDTOBuilder =
+          ConnectorEntityChangeDTO.newBuilder()
+              .setAccountIdentifier(StringValue.of(accountIdentifier))
+              .setIdentifier(StringValue.of(savedConnector.getIdentifier()));
+      if (isNotBlank(savedConnector.getOrgIdentifier())) {
+        connectorUpdateDTOBuilder.setOrgIdentifier(StringValue.of(savedConnector.getOrgIdentifier()));
+      }
+      if (isNotBlank(savedConnector.getProjectIdentifier())) {
+        connectorUpdateDTOBuilder.setProjectIdentifier(StringValue.of(savedConnector.getProjectIdentifier()));
+      }
       eventProducer.send(Message.newBuilder()
                              .putAllMetadata(ImmutableMap.of("accountId", accountIdentifier, ENTITY_TYPE_METADATA,
                                  CONNECTOR_ENTITY, ACTION_METADATA, UPDATE_ACTION))
-                             .setData(ConnectorEntityChangeDTO.newBuilder()
-                                          .setAccountIdentifier(StringValue.of(accountIdentifier))
-                                          .setOrgIdentifier(StringValue.of(savedConnector.getOrgIdentifier()))
-                                          .setProjectIdentifier(StringValue.of(savedConnector.getProjectIdentifier()))
-                                          .setIdentifier(StringValue.of(savedConnector.getIdentifier()))
-                                          .build()
-                                          .toByteString())
+                             .setData(connectorUpdateDTOBuilder.build().toByteString())
                              .build());
     } catch (Exception ex) {
       log.info("Exception while publishing the event of connector update for {}",

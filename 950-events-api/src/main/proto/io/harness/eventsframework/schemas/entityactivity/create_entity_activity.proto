@@ -1,0 +1,27 @@
+syntax = "proto3";
+package io.harness.eventsframework.schemas.entityactivity;
+
+import "io/harness/eventsframework/schemas/entity/entity_detail.proto";
+
+option java_multiple_files = true;
+
+message EntityActivityCreateDTO {
+  string accountIdentifier = 1;
+  io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO referredEntity = 2;
+  string type = 3;
+  string status = 4;
+  int64 activityTime = 5;
+  string description = 6;
+  string errorMessage = 7;
+  oneof details {
+    ConnectivityCheckActivityDetailProtoDTO connectivityDetail = 8;
+    EntityUsageActivityDetailProtoDTO entityUsageDetail = 9;
+  }
+
+  message ConnectivityCheckActivityDetailProtoDTO {}
+
+  message EntityUsageActivityDetailProtoDTO {
+    io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO referredByEntity = 1;
+    string activityStatusMessage = 2;
+  }
+}

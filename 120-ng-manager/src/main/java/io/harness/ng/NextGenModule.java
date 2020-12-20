@@ -2,8 +2,10 @@ package io.harness.ng;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.EntityCRUDEventsConstants.ACCOUNT_ENTITY;
+import static io.harness.EntityCRUDEventsConstants.ACTIVITY_ENTITY;
 import static io.harness.EntityCRUDEventsConstants.ORGANIZATION_ENTITY;
 import static io.harness.EntityCRUDEventsConstants.PROJECT_ENTITY;
+import static io.harness.EntityCRUDEventsConstants.SETUP_USAGE_ENTITY;
 
 import io.harness.NGTriggersModule;
 import io.harness.OrchestrationModule;
@@ -44,6 +46,8 @@ import io.harness.ng.core.api.UserGroupService;
 import io.harness.ng.core.api.impl.NGModulesServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretServiceV2Impl;
 import io.harness.ng.core.api.impl.UserGroupServiceImpl;
+import io.harness.ng.core.entityactivity.event.EntityActivityCrudEventMessageProcessor;
+import io.harness.ng.core.entitysetupusage.event.SetupUsageChangeEventMessageProcessor;
 import io.harness.ng.core.event.AccountChangeEventMessageProcessor;
 import io.harness.ng.core.event.ConsumerMessageProcessor;
 import io.harness.ng.core.event.OrganizationChangeEventMessageProcessor;
@@ -270,6 +274,12 @@ public class NextGenModule extends AbstractModule {
     bind(ConsumerMessageProcessor.class)
         .annotatedWith(Names.named(PROJECT_ENTITY))
         .to(ProjectChangeEventMessageProcessor.class);
+    bind(ConsumerMessageProcessor.class)
+        .annotatedWith(Names.named(SETUP_USAGE_ENTITY))
+        .to(SetupUsageChangeEventMessageProcessor.class);
+    bind(ConsumerMessageProcessor.class)
+        .annotatedWith(Names.named(ACTIVITY_ENTITY))
+        .to(EntityActivityCrudEventMessageProcessor.class);
   }
 
   @Provides

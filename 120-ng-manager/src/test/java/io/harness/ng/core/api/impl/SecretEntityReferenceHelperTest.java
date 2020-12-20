@@ -17,6 +17,7 @@ import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.eventsframework.ProducerShutdownException;
 import io.harness.eventsframework.api.AbstractProducer;
 import io.harness.eventsframework.producer.Message;
+import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
 import io.harness.eventsframework.schemas.entitysetupusage.DeleteSetupUsageDTO;
 import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateDTO;
 import io.harness.rule.Owner;
@@ -39,10 +40,13 @@ public class SecretEntityReferenceHelperTest extends CategoryTest {
   @Mock EntitySetupUsageClient entityReferenceClient;
   @Mock AbstractProducer abstractProducer;
   @Mock EntitySetupUsageHelper entityReferenceHelper;
+  @Mock IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper;
 
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
+    when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(anyString(), anyString(), anyString(), anyString()))
+        .thenCallRealMethod();
   }
 
   @Test
