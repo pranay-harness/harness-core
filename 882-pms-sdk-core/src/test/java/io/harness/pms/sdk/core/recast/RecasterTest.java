@@ -5,12 +5,19 @@ import static io.harness.rule.OwnerRule.ALEXEI;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.pms.contracts.execution.ExecutionErrorInfo;
 import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
+import io.harness.pms.sdk.core.recast.beans.CastedField;
+import io.harness.pms.sdk.core.recast.transformers.simplevalue.SimpleValueTransformer;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.protobuf.Message;
+import com.google.protobuf.util.JsonFormat;
+import com.mongodb.BasicDBObject;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +25,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.experimental.FieldNameConstants;
 import org.bson.Document;
 import org.junit.Test;
@@ -382,6 +390,63 @@ public class RecasterTest extends PmsSdkCoreTestBase {
     private static class User {
       private String name;
       private Integer age;
+    }
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestRecasterWithProto() {
+    ExecutionErrorInfo info = ExecutionErrorInfo.newBuilder().setMessage("message").build();
+    ExecutionErrorInfoDTO dto = ExecutionErrorInfoDTO.builder().executionErrorInfo(info).build();
+
+    ExecutionErrorInfoProtoTransformer transformer = new ExecutionErrorInfoProtoTransformer();
+    recaster.getTransformer().addTransformer(transformer);
+    new Recast(recaster, ImmutableSet.of(ExecutionErrorInfoDTO.class));
+    Document document = recaster.toDocument(dto);
+
+    assertThat(document).isNotEmpty();
+    assertThat(document.get("executionErrorInfo")).isEqualTo(Document.parse(JsonOrchestrationUtils.asJson(info)));
+
+    ExecutionErrorInfoDTO recastedInfo = recaster.fromDocument(document, ExecutionErrorInfoDTO.class);
+    assertThat(recastedInfo).isNotNull();
+    assertThat(recastedInfo.executionErrorInfo).isEqualTo(info);
+  }
+
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  private static class ExecutionErrorInfoDTO {
+    private ExecutionErrorInfo executionErrorInfo;
+  }
+
+  private static class ExecutionErrorInfoProtoTransformer extends RecastTransformer implements SimpleValueTransformer {
+    public ExecutionErrorInfoProtoTransformer() {
+      super(Collections.singletonList(ExecutionErrorInfo.class));
+    }
+
+    @SneakyThrows
+    @Override
+    public Object decode(Class<?> targetClass, Object fromObject, CastedField castedField) {
+      if (fromObject == null) {
+        return null;
+      }
+      Message.Builder builder;
+      builder = (Message.Builder) targetClass.getMethod("newBuilder").invoke(null);
+      JsonFormat.parser().ignoringUnknownFields().merge(((Document) fromObject).toJson(), builder);
+      return builder.build();
+    }
+
+    @SneakyThrows
+    @Override
+    public Object encode(Object value, CastedField castedField) {
+      if (value == null) {
+        return null;
+      }
+
+      Message message = (Message) value;
+      String entityJson = JsonFormat.printer().print(message);
+      return Document.parse(entityJson);
     }
   }
 }
