@@ -51,6 +51,7 @@ import io.harness.cdng.service.steps.ServiceStep.ServiceStepPassThroughData;
 import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchOutcome;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchParameters;
+import io.harness.http.HttpOutcome;
 import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -114,5 +115,6 @@ public class NGKryoRegistrar implements KryoRegistrar {
 
     // Starting using 12500 series as 8100 series is also used in 400-rest
     kryo.register(K8sBlueGreenOutcome.class, 12500);
+    kryo.register(HttpOutcome.class, 12501);
   }
 }

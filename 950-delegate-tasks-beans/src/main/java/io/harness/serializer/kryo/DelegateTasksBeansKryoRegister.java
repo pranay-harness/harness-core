@@ -202,7 +202,9 @@ import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.git.GitFetchRequest;
 import io.harness.delegate.task.git.GitFetchResponse;
 import io.harness.delegate.task.git.TaskStatus;
+import io.harness.delegate.task.http.HttpStepResponse;
 import io.harness.delegate.task.http.HttpTaskParameters;
+import io.harness.delegate.task.http.HttpTaskParametersNg;
 import io.harness.delegate.task.jira.JiraTaskNGParameters;
 import io.harness.delegate.task.jira.response.JiraTaskNGResponse;
 import io.harness.delegate.task.jira.response.JiraTaskNGResponse.JiraIssueData;
@@ -513,5 +515,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(K8sBGDeployRequest.class, 19435);
     kryo.register(K8sBGDeployResponse.class, 19436);
     kryo.register(K8sApplyRequest.class, 19437);
+    kryo.register(HttpTaskParametersNg.class, 19438);
+    kryo.register(HttpStepResponse.class, 19439);
   }
 }

@@ -1,5 +1,6 @@
 package io.harness.http.beans;
 
+import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
 
@@ -9,6 +10,7 @@ public class HttpInternalConfig {
   String method;
   String url;
   String header;
+  Map<String, String> requestHeaders;
   String body;
   int socketTimeoutMillis;
   boolean useProxy;
