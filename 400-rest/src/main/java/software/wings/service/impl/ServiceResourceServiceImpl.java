@@ -3086,4 +3086,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     return HelmCommandFlagConstants.getFilteredHelmSubCommands(version, service.getDeploymentType(), storeType);
   }
+
+  @Override
+  public boolean isK8sV2Service(String appId, String serviceId) {
+    Service service = get(appId, serviceId, false);
+    return service != null && service.isK8sV2();
+  }
 }

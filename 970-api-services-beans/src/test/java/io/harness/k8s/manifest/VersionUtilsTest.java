@@ -2,7 +2,9 @@ package io.harness.k8s.manifest;
 
 import static io.harness.k8s.manifest.ManifestHelper.processYaml;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
+import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
 import static io.harness.rule.OwnerRule.PUNEET;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -13,6 +15,7 @@ import io.harness.rule.Owner;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
+import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import org.junit.Test;
@@ -226,5 +229,22 @@ public class VersionUtilsTest extends CategoryTest {
 
     assertThat(resourcesWithRevision.get(1).getField("spec.containers[0].env[0].valueFrom.configMapKeyRef.name"))
         .isEqualTo(resources.get(1).getField("spec.containers[0].env[0].valueFrom.configMapKeyRef.name"));
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testMarkVersionedResources() throws IOException {
+    URL url = this.getClass().getResource("/configmap-pod-env.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    List<KubernetesResource> resources = processYaml(fileContents);
+
+    List<KubernetesResource> resourcesAfterMarkedVersioned = processYaml(fileContents);
+    markVersionedResources(resourcesAfterMarkedVersioned);
+
+    assertThat(resourcesAfterMarkedVersioned.get(0).getField("metadata.name"))
+        .isEqualTo(resources.get(0).getField("metadata.name"));
+    assertThat(resourcesAfterMarkedVersioned.get(0).getResourceId().isVersioned()).isTrue();
+    assertThat(resourcesAfterMarkedVersioned.get(1).getResourceId().isVersioned()).isFalse();
   }
 }

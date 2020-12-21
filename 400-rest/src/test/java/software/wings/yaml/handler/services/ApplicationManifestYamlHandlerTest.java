@@ -1,6 +1,7 @@
 package software.wings.yaml.handler.services;
 
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
@@ -14,11 +15,14 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 
@@ -121,6 +125,17 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
       + "storeType: Remote";
   private String envServiceOverrideValidYamlFilePath =
       "Setup/Applications/APP_NAME/Environments/ENV_NAME/Values/Services/SERVICE_NAME/Index.yaml";
+
+  private String remoteYamlContentWithSkipVersioing = "harnessApiVersion: '1.0'\n"
+      + "type: APPLICATION_MANIFEST\n"
+      + "gitFileConfig:\n"
+      + "  branch: BRANCH\n"
+      + "  connectorName: CONNECTOR_NAME\n"
+      + "  filePath: ABC/\n"
+      + "  useBranch: true\n"
+      + "  useInlineServiceDefinition: false\n"
+      + "storeType: Remote\n"
+      + "skipVersioningForAllK8sObjects: true";
 
   private static final String resourcePath = "./yaml/ApplicationManifest";
   private static final String kustomizeYamlFile = "kustomize_manifest.yaml";
@@ -421,5 +436,38 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
       fail("Unable to find yaml file " + fileName);
     }
     return FileUtils.readFileToString(yamlFile, "UTF-8");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testSkipVersioningForAllK8sObjectException() throws IOException {
+    doReturn(false).when(serviceResourceService).isK8sV2Service(any(), any());
+    ChangeContext<ApplicationManifest.Yaml> changeContext =
+        createChangeContext(remoteYamlContentWithSkipVersioing, validYamlFilePath);
+
+    ApplicationManifest.Yaml yamlObject =
+        (ApplicationManifest.Yaml) getYaml(remoteYamlContentWithSkipVersioing, ApplicationManifest.Yaml.class);
+    changeContext.setYaml(yamlObject);
+
+    assertThatThrownBy(() -> yamlHandler.upsertFromYaml(changeContext, asList(changeContext)))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("SkipVersioning is only allowed for k8s services at the service level");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testSkipVersioningForAllK8sObject() throws IOException {
+    doReturn(true).when(serviceResourceService).isK8sV2Service(any(), any());
+    ChangeContext<ApplicationManifest.Yaml> changeContext =
+        createChangeContext(remoteYamlContentWithSkipVersioing, validYamlFilePath);
+
+    ApplicationManifest.Yaml yamlObject =
+        (ApplicationManifest.Yaml) getYaml(remoteYamlContentWithSkipVersioing, ApplicationManifest.Yaml.class);
+    changeContext.setYaml(yamlObject);
+
+    ApplicationManifest applicationManifest = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
+    assertThat(applicationManifest.getSkipVersioningForAllK8sObjects()).isTrue();
   }
 }

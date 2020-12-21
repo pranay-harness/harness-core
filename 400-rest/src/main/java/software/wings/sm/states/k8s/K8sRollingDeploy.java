@@ -123,6 +123,8 @@ public class K8sRollingDeploy extends State implements K8sStateExecutor {
             .skipDryRun(skipDryRun)
             .localOverrideFeatureFlag(
                 featureFlagService.isEnabled(FeatureName.LOCAL_DELEGATE_CONFIG_OVERRIDE, infraMapping.getAccountId()))
+            .skipVersioningForAllK8sObjects(
+                appManifestMap.get(K8sValuesLocation.Service).getSkipVersioningForAllK8sObjects())
             .build();
 
     return k8sStateHelper.queueK8sDelegateTask(context, k8sTaskParameters);
