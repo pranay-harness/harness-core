@@ -472,8 +472,15 @@ public class TriggerServiceImpl implements TriggerService {
       String accountId, String appId, String artifactStreamId, List<Artifact> artifacts) {
     executorService.execute(() -> {
       if (featureFlagService.isEnabled(FeatureName.TRIGGER_FOR_ALL_ARTIFACTS, accountId)) {
-        triggerExecutionPostArtifactCollectionForAllArtifacts(appId, artifactStreamId, artifacts);
+        List<Artifact> nonDuplicates = artifacts.stream().filter(t -> !t.isDuplicate()).collect(toList());
+        triggerExecutionPostArtifactCollectionForAllArtifacts(appId, artifactStreamId, nonDuplicates);
       } else {
+        Artifact lastArtifact = artifacts.get(artifacts.size() - 1);
+        if (lastArtifact.isDuplicate()) {
+          log.info("Skipping trigger as the last collected Artifact is Duplicate, Artifact was already collected: "
+              + lastArtifact.getBuildNo());
+          return;
+        }
         triggerExecutionPostArtifactCollection(appId, artifactStreamId, artifacts);
       }
     });
