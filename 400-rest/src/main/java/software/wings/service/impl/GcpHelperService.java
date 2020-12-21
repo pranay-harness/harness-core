@@ -158,7 +158,7 @@ public class GcpHelperService {
   public GoogleCredential getGoogleCredential(
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails, boolean isInstanceSync) throws IOException {
     if (gcpConfig.isUseDelegate()) {
-      return GoogleCredential.getApplicationDefault();
+      return gcpCredentialsHelperService.getApplicationDefaultCredentials();
     }
     if (isNotEmpty(encryptedDataDetails)) {
       encryptionService.decrypt(gcpConfig, encryptedDataDetails, isInstanceSync);

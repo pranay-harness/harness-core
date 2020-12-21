@@ -1,8 +1,11 @@
 package software.wings.service.impl.gcp;
 
+import io.harness.network.Http;
+
 import software.wings.beans.GcpConfig;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.googleapis.auth.oauth2.OAuth2Utils;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.container.ContainerScopes;
@@ -36,5 +39,12 @@ public class GcpCredentialsHelperService {
       return googleCredential.createScoped(Collections.singletonList(ContainerScopes.CLOUD_PLATFORM));
     }
     return googleCredential;
+  }
+
+  public GoogleCredential getApplicationDefaultCredentials() throws IOException {
+    return Http.getProxyHostName() != null && !Http.shouldUseNonProxy(OAuth2Utils.getMetadataServerUrl())
+        ? GoogleCredential.getApplicationDefault(
+            gcpHttpTransportHelperService.getProxyConfiguredHttpTransport(), JacksonFactory.getDefaultInstance())
+        : GoogleCredential.getApplicationDefault();
   }
 }
