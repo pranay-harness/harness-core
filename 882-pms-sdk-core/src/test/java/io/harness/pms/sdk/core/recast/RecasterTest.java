@@ -12,15 +12,21 @@ import io.harness.pms.sdk.core.recast.transformers.simplevalue.SimpleValueTransf
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 import io.harness.rule.Owner;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.Message;
 import com.google.protobuf.util.JsonFormat;
-import com.mongodb.BasicDBObject;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -291,6 +297,34 @@ public class RecasterTest extends PmsSdkCoreTestBase {
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
+  public void shouldTestRecasterWithStringKeyValueMap() {
+    Map<String, Map<String, String>> map = new HashMap<>();
+    map.put("Test", ImmutableMap.of("status", "Success"));
+    map.put("Test1", ImmutableMap.of("status", "Success"));
+    new Recast(recaster, ImmutableSet.of(DummyStringKeyValueMap.class));
+    DummyStringKeyValueMap stringKeyMap = DummyStringKeyValueMap.builder().map(map).build();
+
+    Document document = recaster.toDocument(stringKeyMap);
+    assertThat(document).isNotEmpty();
+    assertThat(((Document) document.get(DummyStringKeyValueMap.DummyStringKeyValueMapNameConstants.map)))
+        .isEqualTo(Document.parse(JsonOrchestrationUtils.asJson(map)));
+
+    DummyStringKeyValueMap recastedDummyMap = recaster.fromDocument(document, DummyStringKeyValueMap.class);
+    assertThat(recastedDummyMap).isNotNull();
+    assertThat(recastedDummyMap.map).isEqualTo(map);
+  }
+
+  @Builder
+  @FieldNameConstants(innerTypeName = "DummyStringKeyValueMapNameConstants")
+  @NoArgsConstructor
+  @AllArgsConstructor
+  private static class DummyStringKeyValueMap {
+    private Map<String, Map<String, String>> map;
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
   public void shouldTestRecasterWithBasicCharacterArray() {
     final Character[] characterClassArray = new Character[] {'A', 'B'};
     final char[] charPrimitiveArray = new char[] {'a', 'b'};
@@ -347,6 +381,33 @@ public class RecasterTest extends PmsSdkCoreTestBase {
   @AllArgsConstructor
   private static class DummySimpleList {
     private List<Integer> list;
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestRecasterWithSimpleSet() {
+    final Set<Integer> set = ImmutableSet.of(1, 2, 3);
+
+    new Recast(recaster, ImmutableSet.of(DummySimpleSet.class));
+    DummySimpleSet dummySet = DummySimpleSet.builder().set(set).build();
+    Document document = recaster.toDocument(dummySet);
+
+    assertThat(document).isNotEmpty();
+    assertThat((List) document.get(DummySimpleSet.DummySimpleSetConstants.set))
+        .containsExactlyInAnyOrderElementsOf(set);
+
+    DummySimpleSet recastedSimpleSet = recaster.fromDocument(document, DummySimpleSet.class);
+    assertThat(recastedSimpleSet).isNotNull();
+    assertThat(recastedSimpleSet.set).isEqualTo(set);
+  }
+
+  @Builder
+  @FieldNameConstants(innerTypeName = "DummySimpleSetConstants")
+  @NoArgsConstructor
+  @AllArgsConstructor
+  private static class DummySimpleSet {
+    private Set<Integer> set;
   }
 
   @Test
@@ -448,5 +509,135 @@ public class RecasterTest extends PmsSdkCoreTestBase {
       String entityJson = JsonFormat.printer().print(message);
       return Document.parse(entityJson);
     }
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestRecasterWithDate() {
+    final Instant instant = Instant.now();
+
+    new Recast(recaster, ImmutableSet.of(DummyDate.class));
+    DummyDate dummyDate = DummyDate.builder().date(Date.from(instant)).build();
+    Document document = recaster.toDocument(dummyDate);
+
+    assertThat(document).isNotEmpty();
+    assertThat(document.get(DummyDate.DummyDateConstants.date)).isEqualTo(dummyDate.date);
+
+    DummyDate recastedDummyDate = recaster.fromDocument(document, DummyDate.class);
+    assertThat(recastedDummyDate).isNotNull();
+    assertThat(recastedDummyDate.date.toInstant().toEpochMilli()).isEqualTo(instant.toEpochMilli());
+  }
+
+  @Builder
+  @FieldNameConstants(innerTypeName = "DummyDateConstants")
+  @NoArgsConstructor
+  @AllArgsConstructor
+  private static class DummyDate {
+    private Date date;
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestRecasterWithLocalDate() {
+    final LocalDate now = LocalDate.now();
+
+    new Recast(recaster, ImmutableSet.of(DummyLocalDate.class));
+    DummyLocalDate dummyLocalDate = DummyLocalDate.builder().localDate(now).build();
+    Document document = recaster.toDocument(dummyLocalDate);
+
+    assertThat(document).isNotEmpty();
+    assertThat(document.get(DummyLocalDate.DummyLocalDateConstants.localDate)).isEqualTo(dummyLocalDate.localDate);
+
+    DummyLocalDate recastedDummyLocalDate = recaster.fromDocument(document, DummyLocalDate.class);
+    assertThat(recastedDummyLocalDate).isNotNull();
+    assertThat(recastedDummyLocalDate.localDate).isEqualTo(now);
+  }
+
+  @Builder
+  @FieldNameConstants(innerTypeName = "DummyLocalDateConstants")
+  @NoArgsConstructor
+  @AllArgsConstructor
+  private static class DummyLocalDate {
+    private LocalDate localDate;
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestRecasterWithLocalDateTime() {
+    final LocalDateTime now = LocalDateTime.now();
+
+    new Recast(recaster, ImmutableSet.of(DummyLocalDateTime.class));
+    DummyLocalDateTime dummyLocalDateTime = DummyLocalDateTime.builder().localDatetime(now).build();
+    Document document = recaster.toDocument(dummyLocalDateTime);
+
+    assertThat(document).isNotEmpty();
+    assertThat(document.get(DummyLocalDateTime.DummyLocalDateTimeConstants.localDatetime)).isEqualTo(now);
+
+    DummyLocalDateTime recastedDummyLocalDateTime = recaster.fromDocument(document, DummyLocalDateTime.class);
+    assertThat(recastedDummyLocalDateTime).isNotNull();
+    assertThat(recastedDummyLocalDateTime.localDatetime).isEqualTo(now);
+  }
+
+  @Builder
+  @FieldNameConstants(innerTypeName = "DummyLocalDateTimeConstants")
+  @NoArgsConstructor
+  @AllArgsConstructor
+  private static class DummyLocalDateTime {
+    private LocalDateTime localDatetime;
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestRecasterWithLocalTime() {
+    final LocalTime now = LocalTime.now();
+
+    new Recast(recaster, ImmutableSet.of(DummyLocalTime.class));
+    DummyLocalTime dummyLocalDateTime = DummyLocalTime.builder().localTime(now).build();
+    Document document = recaster.toDocument(dummyLocalDateTime);
+
+    assertThat(document).isNotEmpty();
+    assertThat(document.get(DummyLocalTime.DummyLocalTimeConstants.localTime)).isEqualTo(now);
+
+    DummyLocalTime recastedDummyLocalTime = recaster.fromDocument(document, DummyLocalTime.class);
+    assertThat(recastedDummyLocalTime).isNotNull();
+    assertThat(recastedDummyLocalTime.localTime).isEqualTo(now);
+  }
+
+  @Builder
+  @FieldNameConstants(innerTypeName = "DummyLocalTimeConstants")
+  @NoArgsConstructor
+  @AllArgsConstructor
+  private static class DummyLocalTime {
+    private LocalTime localTime;
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestRecasterWithInstant() {
+    final Instant instant = Instant.now();
+
+    new Recast(recaster, ImmutableSet.of(DummyInstant.class));
+    DummyInstant dummyInstant = DummyInstant.builder().instant(instant).build();
+    Document document = recaster.toDocument(dummyInstant);
+
+    assertThat(document).isNotEmpty();
+    assertThat(document.get(DummyInstant.DummyInstantConstants.instant)).isEqualTo(instant);
+
+    DummyInstant recastedDummyInstant = recaster.fromDocument(document, DummyInstant.class);
+    assertThat(recastedDummyInstant).isNotNull();
+    assertThat(recastedDummyInstant.instant).isEqualTo(instant);
+  }
+
+  @Builder
+  @FieldNameConstants(innerTypeName = "DummyInstantConstants")
+  @NoArgsConstructor
+  @AllArgsConstructor
+  private static class DummyInstant {
+    private Instant instant;
   }
 }

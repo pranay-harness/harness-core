@@ -1,4 +1,4 @@
-package io.harness.pms.sdk.core.recast.transformers;
+package io.harness.pms.sdk.core.recast.transformers.simplevalue;
 
 import static java.lang.String.format;
 
@@ -7,6 +7,7 @@ import io.harness.pms.sdk.core.recast.RecastTransformer;
 import io.harness.pms.sdk.core.recast.Transformer;
 import io.harness.pms.sdk.core.recast.beans.CastedField;
 import io.harness.pms.sdk.core.recast.beans.EphemeralCastedField;
+import io.harness.pms.sdk.core.recast.transformers.simplevalue.SimpleValueTransformer;
 
 import com.mongodb.DBObject;
 import java.lang.reflect.Array;
@@ -21,7 +22,7 @@ import org.mongodb.morphia.utils.ReflectionUtils;
  * @author Uwe Schaefer, (us@thomas-daily.de)
  * @author scotthernandez
  */
-public class IterableRecastTransformer extends RecastTransformer {
+public class IterableRecastTransformer extends RecastTransformer implements SimpleValueTransformer {
   @Override
   @SuppressWarnings("unchecked")
   public Object decode(final Class targetClass, final Object fromDBObject, final CastedField castedField) {

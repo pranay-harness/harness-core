@@ -4,17 +4,22 @@ import static java.lang.String.format;
 
 import io.harness.pms.sdk.core.recast.beans.CastedField;
 import io.harness.pms.sdk.core.recast.transformers.DefaultRecastTransformer;
-import io.harness.pms.sdk.core.recast.transformers.IterableRecastTransformer;
 import io.harness.pms.sdk.core.recast.transformers.ProtoRecastTransformer;
 import io.harness.pms.sdk.core.recast.transformers.simplevalue.BooleanRecastTransformer;
 import io.harness.pms.sdk.core.recast.transformers.simplevalue.ByteRecastTransformer;
 import io.harness.pms.sdk.core.recast.transformers.simplevalue.CharacterArrayRecastTransformer;
 import io.harness.pms.sdk.core.recast.transformers.simplevalue.CharacterRecastTransformer;
 import io.harness.pms.sdk.core.recast.transformers.simplevalue.ClassRecastTransformer;
+import io.harness.pms.sdk.core.recast.transformers.simplevalue.DateRecastTransformer;
 import io.harness.pms.sdk.core.recast.transformers.simplevalue.DoubleRecastTransformer;
 import io.harness.pms.sdk.core.recast.transformers.simplevalue.EnumRecastTransformer;
 import io.harness.pms.sdk.core.recast.transformers.simplevalue.FloatRecastTransformer;
+import io.harness.pms.sdk.core.recast.transformers.simplevalue.InstantRecastTransformer;
 import io.harness.pms.sdk.core.recast.transformers.simplevalue.IntegerRecastTransformer;
+import io.harness.pms.sdk.core.recast.transformers.simplevalue.IterableRecastTransformer;
+import io.harness.pms.sdk.core.recast.transformers.simplevalue.LocalDateRecastTransformer;
+import io.harness.pms.sdk.core.recast.transformers.simplevalue.LocalDateTimeRecastTransformer;
+import io.harness.pms.sdk.core.recast.transformers.simplevalue.LocalTimeRecastTransformer;
 import io.harness.pms.sdk.core.recast.transformers.simplevalue.LongRecastTransformer;
 import io.harness.pms.sdk.core.recast.transformers.simplevalue.SimpleValueTransformer;
 import io.harness.pms.sdk.core.recast.transformers.simplevalue.StringRecastTransformer;
@@ -52,6 +57,11 @@ public class Transformer {
     addTransformer(new FloatRecastTransformer());
     addTransformer(new CharacterRecastTransformer());
     addTransformer(new CharacterArrayRecastTransformer());
+    addTransformer(new DateRecastTransformer());
+    addTransformer(new LocalDateRecastTransformer());
+    addTransformer(new LocalDateTimeRecastTransformer());
+    addTransformer(new LocalTimeRecastTransformer());
+    addTransformer(new InstantRecastTransformer());
   }
 
   public RecastTransformer addTransformer(RecastTransformer recastTransformer) {
@@ -131,8 +141,7 @@ public class Transformer {
       }
     }
 
-    // TODO(Alexei) Throw exception
-    return null;
+    return passThroughTransformer;
   }
 
   protected RecastTransformer getTransformer(final Object val, final CastedField cf) {
@@ -155,8 +164,7 @@ public class Transformer {
       }
     }
 
-    // TODO(Alexei) Throw exception
-    return null;
+    return passThroughTransformer;
   }
 
   public boolean hasSimpleValueTransformer(final Object o) {
