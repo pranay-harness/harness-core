@@ -324,7 +324,7 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
     }
   }
 
-  private String getApplicationName(String entityId) {
+  public String getApplicationName(String entityId) {
     try {
       Application app = persistence.get(Application.class, entityId);
       if (app != null) {
@@ -338,7 +338,7 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
     }
   }
 
-  private String getServiceName(String entityId) {
+  public String getServiceName(String entityId) {
     try {
       Service service = persistence.get(Service.class, entityId);
       if (service != null) {
@@ -352,7 +352,7 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
     }
   }
 
-  private String getEnvironmentName(String entityId) {
+  public String getEnvironmentName(String entityId) {
     try {
       Environment env = persistence.get(Environment.class, entityId);
       if (env != null) {

@@ -16,9 +16,9 @@ import org.apache.avro.util.Utf8;
 @org.apache.avro.specific.AvroGenerated
 public class ClusterBillingData
     extends org.apache.avro.specific.SpecificRecordBase implements org.apache.avro.specific.SpecificRecord {
-  private static final long serialVersionUID = 7112171691313885001L;
+  private static final long serialVersionUID = -8172501526855763485L;
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse(
-      "{\"type\":\"record\",\"name\":\"ClusterBillingData\",\"namespace\":\"io.harness.avro\",\"fields\":[{\"name\":\"starttime\",\"type\":\"long\"},{\"name\":\"endtime\",\"type\":\"long\"},{\"name\":\"accountid\",\"type\":\"string\"},{\"name\":\"settingid\",\"type\":[\"string\",\"null\"]},{\"name\":\"instanceid\",\"type\":\"string\"},{\"name\":\"instancetype\",\"type\":\"string\"},{\"name\":\"billingaccountid\",\"type\":[\"string\",\"null\"]},{\"name\":\"clusterid\",\"type\":[\"string\",\"null\"]},{\"name\":\"clustername\",\"type\":[\"string\",\"null\"]},{\"name\":\"appid\",\"type\":[\"string\",\"null\"]},{\"name\":\"serviceid\",\"type\":[\"string\",\"null\"]},{\"name\":\"envid\",\"type\":[\"string\",\"null\"]},{\"name\":\"cloudproviderid\",\"type\":[\"string\",\"null\"]},{\"name\":\"parentinstanceid\",\"type\":[\"string\",\"null\"]},{\"name\":\"region\",\"type\":[\"string\",\"null\"]},{\"name\":\"launchtype\",\"type\":[\"string\",\"null\"]},{\"name\":\"clustertype\",\"type\":[\"string\",\"null\"]},{\"name\":\"workloadname\",\"type\":[\"string\",\"null\"]},{\"name\":\"workloadtype\",\"type\":[\"string\",\"null\"]},{\"name\":\"namespace\",\"type\":[\"string\",\"null\"]},{\"name\":\"cloudservicename\",\"type\":[\"string\",\"null\"]},{\"name\":\"taskid\",\"type\":[\"string\",\"null\"]},{\"name\":\"cloudprovider\",\"type\":[\"string\",\"null\"]},{\"name\":\"billingamount\",\"type\":\"double\"},{\"name\":\"cpubillingamount\",\"type\":[\"double\",\"null\"]},{\"name\":\"memorybillingamount\",\"type\":[\"double\",\"null\"]},{\"name\":\"idlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpuidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"memoryidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"usagedurationseconds\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpuunitseconds\",\"type\":[\"double\",\"null\"]},{\"name\":\"memorymbseconds\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxcpuutilization\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxmemoryutilization\",\"type\":[\"double\",\"null\"]},{\"name\":\"avgcpuutilization\",\"type\":[\"double\",\"null\"]},{\"name\":\"avgmemoryutilization\",\"type\":[\"double\",\"null\"]},{\"name\":\"systemcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpusystemcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"memorysystemcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"actualidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpuactualidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"memoryactualidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"unallocatedcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpuunallocatedcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"memoryunallocatedcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"instancename\",\"type\":[\"string\",\"null\"]},{\"name\":\"cpurequest\",\"type\":[\"double\",\"null\"]},{\"name\":\"memoryrequest\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpulimit\",\"type\":[\"double\",\"null\"]},{\"name\":\"memorylimit\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxcpuutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxmemoryutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"avgcpuutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"avgmemoryutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"networkcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"pricingsource\",\"type\":[\"string\",\"null\"]},{\"name\":\"labels\",\"type\":{\"type\":\"array\",\"items\":[{\"type\":\"record\",\"name\":\"Label\",\"fields\":[{\"name\":\"key\",\"type\":[\"null\",\"string\"]},{\"name\":\"value\",\"type\":[\"null\",\"string\"]}]}]}}],\"javaAnnotation\":[\"javax.annotation.Generated(\\\"avro\\\")\"]}");
+      "{\"type\":\"record\",\"name\":\"ClusterBillingData\",\"namespace\":\"io.harness.avro\",\"fields\":[{\"name\":\"starttime\",\"type\":\"long\"},{\"name\":\"endtime\",\"type\":\"long\"},{\"name\":\"accountid\",\"type\":\"string\"},{\"name\":\"settingid\",\"type\":[\"string\",\"null\"]},{\"name\":\"instanceid\",\"type\":\"string\"},{\"name\":\"instancetype\",\"type\":\"string\"},{\"name\":\"billingaccountid\",\"type\":[\"string\",\"null\"]},{\"name\":\"clusterid\",\"type\":[\"string\",\"null\"]},{\"name\":\"clustername\",\"type\":[\"string\",\"null\"]},{\"name\":\"appid\",\"type\":[\"string\",\"null\"]},{\"name\":\"serviceid\",\"type\":[\"string\",\"null\"]},{\"name\":\"envid\",\"type\":[\"string\",\"null\"]},{\"name\":\"appname\",\"type\":[\"string\",\"null\"]},{\"name\":\"servicename\",\"type\":[\"string\",\"null\"]},{\"name\":\"envname\",\"type\":[\"string\",\"null\"]},{\"name\":\"cloudproviderid\",\"type\":[\"string\",\"null\"]},{\"name\":\"parentinstanceid\",\"type\":[\"string\",\"null\"]},{\"name\":\"region\",\"type\":[\"string\",\"null\"]},{\"name\":\"launchtype\",\"type\":[\"string\",\"null\"]},{\"name\":\"clustertype\",\"type\":[\"string\",\"null\"]},{\"name\":\"workloadname\",\"type\":[\"string\",\"null\"]},{\"name\":\"workloadtype\",\"type\":[\"string\",\"null\"]},{\"name\":\"namespace\",\"type\":[\"string\",\"null\"]},{\"name\":\"cloudservicename\",\"type\":[\"string\",\"null\"]},{\"name\":\"taskid\",\"type\":[\"string\",\"null\"]},{\"name\":\"cloudprovider\",\"type\":[\"string\",\"null\"]},{\"name\":\"billingamount\",\"type\":\"double\"},{\"name\":\"cpubillingamount\",\"type\":[\"double\",\"null\"]},{\"name\":\"memorybillingamount\",\"type\":[\"double\",\"null\"]},{\"name\":\"idlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpuidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"memoryidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"usagedurationseconds\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpuunitseconds\",\"type\":[\"double\",\"null\"]},{\"name\":\"memorymbseconds\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxcpuutilization\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxmemoryutilization\",\"type\":[\"double\",\"null\"]},{\"name\":\"avgcpuutilization\",\"type\":[\"double\",\"null\"]},{\"name\":\"avgmemoryutilization\",\"type\":[\"double\",\"null\"]},{\"name\":\"systemcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpusystemcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"memorysystemcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"actualidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpuactualidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"memoryactualidlecost\",\"type\":[\"double\",\"null\"]},{\"name\":\"unallocatedcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpuunallocatedcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"memoryunallocatedcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"instancename\",\"type\":[\"string\",\"null\"]},{\"name\":\"cpurequest\",\"type\":[\"double\",\"null\"]},{\"name\":\"memoryrequest\",\"type\":[\"double\",\"null\"]},{\"name\":\"cpulimit\",\"type\":[\"double\",\"null\"]},{\"name\":\"memorylimit\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxcpuutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"maxmemoryutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"avgcpuutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"avgmemoryutilizationvalue\",\"type\":[\"double\",\"null\"]},{\"name\":\"networkcost\",\"type\":[\"double\",\"null\"]},{\"name\":\"pricingsource\",\"type\":[\"string\",\"null\"]},{\"name\":\"labels\",\"type\":{\"type\":\"array\",\"items\":[{\"type\":\"record\",\"name\":\"Label\",\"fields\":[{\"name\":\"key\",\"type\":[\"null\",\"string\"]},{\"name\":\"value\",\"type\":[\"null\",\"string\"]}]}]}}],\"javaAnnotation\":[\"javax.annotation.Generated(\\\"avro\\\")\"]}");
   public static org.apache.avro.Schema getClassSchema() {
     return SCHEMA$;
   }
@@ -87,6 +87,9 @@ public class ClusterBillingData
   @Deprecated public java.lang.CharSequence appid;
   @Deprecated public java.lang.CharSequence serviceid;
   @Deprecated public java.lang.CharSequence envid;
+  @Deprecated public java.lang.CharSequence appname;
+  @Deprecated public java.lang.CharSequence servicename;
+  @Deprecated public java.lang.CharSequence envname;
   @Deprecated public java.lang.CharSequence cloudproviderid;
   @Deprecated public java.lang.CharSequence parentinstanceid;
   @Deprecated public java.lang.CharSequence region;
@@ -154,6 +157,9 @@ public class ClusterBillingData
    * @param appid The new value for appid
    * @param serviceid The new value for serviceid
    * @param envid The new value for envid
+   * @param appname The new value for appname
+   * @param servicename The new value for servicename
+   * @param envname The new value for envname
    * @param cloudproviderid The new value for cloudproviderid
    * @param parentinstanceid The new value for parentinstanceid
    * @param region The new value for region
@@ -204,6 +210,7 @@ public class ClusterBillingData
       java.lang.CharSequence settingid, java.lang.CharSequence instanceid, java.lang.CharSequence instancetype,
       java.lang.CharSequence billingaccountid, java.lang.CharSequence clusterid, java.lang.CharSequence clustername,
       java.lang.CharSequence appid, java.lang.CharSequence serviceid, java.lang.CharSequence envid,
+      java.lang.CharSequence appname, java.lang.CharSequence servicename, java.lang.CharSequence envname,
       java.lang.CharSequence cloudproviderid, java.lang.CharSequence parentinstanceid, java.lang.CharSequence region,
       java.lang.CharSequence launchtype, java.lang.CharSequence clustertype, java.lang.CharSequence workloadname,
       java.lang.CharSequence workloadtype, java.lang.CharSequence namespace, java.lang.CharSequence cloudservicename,
@@ -232,6 +239,9 @@ public class ClusterBillingData
     this.appid = appid;
     this.serviceid = serviceid;
     this.envid = envid;
+    this.appname = appname;
+    this.servicename = servicename;
+    this.envname = envname;
     this.cloudproviderid = cloudproviderid;
     this.parentinstanceid = parentinstanceid;
     this.region = region;
@@ -313,94 +323,100 @@ public class ClusterBillingData
       case 11:
         return envid;
       case 12:
-        return cloudproviderid;
+        return appname;
       case 13:
-        return parentinstanceid;
+        return servicename;
       case 14:
-        return region;
+        return envname;
       case 15:
-        return launchtype;
+        return cloudproviderid;
       case 16:
-        return clustertype;
+        return parentinstanceid;
       case 17:
-        return workloadname;
+        return region;
       case 18:
-        return workloadtype;
+        return launchtype;
       case 19:
-        return namespace;
+        return clustertype;
       case 20:
-        return cloudservicename;
+        return workloadname;
       case 21:
-        return taskid;
+        return workloadtype;
       case 22:
-        return cloudprovider;
+        return namespace;
       case 23:
-        return billingamount;
+        return cloudservicename;
       case 24:
-        return cpubillingamount;
+        return taskid;
       case 25:
-        return memorybillingamount;
+        return cloudprovider;
       case 26:
-        return idlecost;
+        return billingamount;
       case 27:
-        return cpuidlecost;
+        return cpubillingamount;
       case 28:
-        return memoryidlecost;
+        return memorybillingamount;
       case 29:
-        return usagedurationseconds;
+        return idlecost;
       case 30:
-        return cpuunitseconds;
+        return cpuidlecost;
       case 31:
-        return memorymbseconds;
+        return memoryidlecost;
       case 32:
-        return maxcpuutilization;
+        return usagedurationseconds;
       case 33:
-        return maxmemoryutilization;
+        return cpuunitseconds;
       case 34:
-        return avgcpuutilization;
+        return memorymbseconds;
       case 35:
-        return avgmemoryutilization;
+        return maxcpuutilization;
       case 36:
-        return systemcost;
+        return maxmemoryutilization;
       case 37:
-        return cpusystemcost;
+        return avgcpuutilization;
       case 38:
-        return memorysystemcost;
+        return avgmemoryutilization;
       case 39:
-        return actualidlecost;
+        return systemcost;
       case 40:
-        return cpuactualidlecost;
+        return cpusystemcost;
       case 41:
-        return memoryactualidlecost;
+        return memorysystemcost;
       case 42:
-        return unallocatedcost;
+        return actualidlecost;
       case 43:
-        return cpuunallocatedcost;
+        return cpuactualidlecost;
       case 44:
-        return memoryunallocatedcost;
+        return memoryactualidlecost;
       case 45:
-        return instancename;
+        return unallocatedcost;
       case 46:
-        return cpurequest;
+        return cpuunallocatedcost;
       case 47:
-        return memoryrequest;
+        return memoryunallocatedcost;
       case 48:
-        return cpulimit;
+        return instancename;
       case 49:
-        return memorylimit;
+        return cpurequest;
       case 50:
-        return maxcpuutilizationvalue;
+        return memoryrequest;
       case 51:
-        return maxmemoryutilizationvalue;
+        return cpulimit;
       case 52:
-        return avgcpuutilizationvalue;
+        return memorylimit;
       case 53:
-        return avgmemoryutilizationvalue;
+        return maxcpuutilizationvalue;
       case 54:
-        return networkcost;
+        return maxmemoryutilizationvalue;
       case 55:
-        return pricingsource;
+        return avgcpuutilizationvalue;
       case 56:
+        return avgmemoryutilizationvalue;
+      case 57:
+        return networkcost;
+      case 58:
+        return pricingsource;
+      case 59:
         return labels;
       default:
         throw new org.apache.avro.AvroRuntimeException("Bad index");
@@ -448,139 +464,148 @@ public class ClusterBillingData
         envid = (java.lang.CharSequence) value$;
         break;
       case 12:
-        cloudproviderid = (java.lang.CharSequence) value$;
+        appname = (java.lang.CharSequence) value$;
         break;
       case 13:
-        parentinstanceid = (java.lang.CharSequence) value$;
+        servicename = (java.lang.CharSequence) value$;
         break;
       case 14:
-        region = (java.lang.CharSequence) value$;
+        envname = (java.lang.CharSequence) value$;
         break;
       case 15:
-        launchtype = (java.lang.CharSequence) value$;
+        cloudproviderid = (java.lang.CharSequence) value$;
         break;
       case 16:
-        clustertype = (java.lang.CharSequence) value$;
+        parentinstanceid = (java.lang.CharSequence) value$;
         break;
       case 17:
-        workloadname = (java.lang.CharSequence) value$;
+        region = (java.lang.CharSequence) value$;
         break;
       case 18:
-        workloadtype = (java.lang.CharSequence) value$;
+        launchtype = (java.lang.CharSequence) value$;
         break;
       case 19:
+        clustertype = (java.lang.CharSequence) value$;
+        break;
+      case 20:
+        workloadname = (java.lang.CharSequence) value$;
+        break;
+      case 21:
+        workloadtype = (java.lang.CharSequence) value$;
+        break;
+      case 22:
         namespace
         = (java.lang.CharSequence) value$;
         break;
-      case 20:
+      case 23:
         cloudservicename = (java.lang.CharSequence) value$;
         break;
-      case 21:
+      case 24:
         taskid = (java.lang.CharSequence) value$;
         break;
-      case 22:
+      case 25:
         cloudprovider = (java.lang.CharSequence) value$;
         break;
-      case 23:
+      case 26:
         billingamount = (java.lang.Double) value$;
         break;
-      case 24:
+      case 27:
         cpubillingamount = (java.lang.Double) value$;
         break;
-      case 25:
+      case 28:
         memorybillingamount = (java.lang.Double) value$;
         break;
-      case 26:
+      case 29:
         idlecost = (java.lang.Double) value$;
         break;
-      case 27:
+      case 30:
         cpuidlecost = (java.lang.Double) value$;
         break;
-      case 28:
+      case 31:
         memoryidlecost = (java.lang.Double) value$;
         break;
-      case 29:
+      case 32:
         usagedurationseconds = (java.lang.Double) value$;
         break;
-      case 30:
+      case 33:
         cpuunitseconds = (java.lang.Double) value$;
         break;
-      case 31:
+      case 34:
         memorymbseconds = (java.lang.Double) value$;
         break;
-      case 32:
+      case 35:
         maxcpuutilization = (java.lang.Double) value$;
         break;
-      case 33:
+      case 36:
         maxmemoryutilization = (java.lang.Double) value$;
         break;
-      case 34:
+      case 37:
         avgcpuutilization = (java.lang.Double) value$;
         break;
-      case 35:
+      case 38:
         avgmemoryutilization = (java.lang.Double) value$;
         break;
-      case 36:
+      case 39:
         systemcost = (java.lang.Double) value$;
         break;
-      case 37:
+      case 40:
         cpusystemcost = (java.lang.Double) value$;
         break;
-      case 38:
+      case 41:
         memorysystemcost = (java.lang.Double) value$;
         break;
-      case 39:
+      case 42:
         actualidlecost = (java.lang.Double) value$;
         break;
-      case 40:
+      case 43:
         cpuactualidlecost = (java.lang.Double) value$;
         break;
-      case 41:
+      case 44:
         memoryactualidlecost = (java.lang.Double) value$;
         break;
-      case 42:
+      case 45:
         unallocatedcost = (java.lang.Double) value$;
         break;
-      case 43:
+      case 46:
         cpuunallocatedcost = (java.lang.Double) value$;
         break;
-      case 44:
+      case 47:
         memoryunallocatedcost = (java.lang.Double) value$;
         break;
-      case 45:
+      case 48:
         instancename = (java.lang.CharSequence) value$;
         break;
-      case 46:
+      case 49:
         cpurequest = (java.lang.Double) value$;
         break;
-      case 47:
+      case 50:
         memoryrequest = (java.lang.Double) value$;
         break;
-      case 48:
+      case 51:
         cpulimit = (java.lang.Double) value$;
         break;
-      case 49:
+      case 52:
         memorylimit = (java.lang.Double) value$;
         break;
-      case 50:
+      case 53:
         maxcpuutilizationvalue = (java.lang.Double) value$;
         break;
-      case 51:
+      case 54:
         maxmemoryutilizationvalue = (java.lang.Double) value$;
         break;
-      case 52:
+      case 55:
         avgcpuutilizationvalue = (java.lang.Double) value$;
         break;
-      case 53:
+      case 56:
         avgmemoryutilizationvalue = (java.lang.Double) value$;
         break;
-      case 54:
+      case 57:
         networkcost = (java.lang.Double) value$;
         break;
-      case 55:
+      case 58:
         pricingsource = (java.lang.CharSequence) value$;
         break;
-      case 56:
+      case 59:
         labels = (java.util.List<java.lang.Object>) value$;
         break;
       default:
@@ -778,6 +803,54 @@ public class ClusterBillingData
    */
   public void setEnvid(java.lang.CharSequence value) {
     this.envid = value;
+  }
+
+  /**
+   * Gets the value of the 'appname' field.
+   * @return The value of the 'appname' field.
+   */
+  public java.lang.CharSequence getAppname() {
+    return appname;
+  }
+
+  /**
+   * Sets the value of the 'appname' field.
+   * @param value the value to set.
+   */
+  public void setAppname(java.lang.CharSequence value) {
+    this.appname = value;
+  }
+
+  /**
+   * Gets the value of the 'servicename' field.
+   * @return The value of the 'servicename' field.
+   */
+  public java.lang.CharSequence getServicename() {
+    return servicename;
+  }
+
+  /**
+   * Sets the value of the 'servicename' field.
+   * @param value the value to set.
+   */
+  public void setServicename(java.lang.CharSequence value) {
+    this.servicename = value;
+  }
+
+  /**
+   * Gets the value of the 'envname' field.
+   * @return The value of the 'envname' field.
+   */
+  public java.lang.CharSequence getEnvname() {
+    return envname;
+  }
+
+  /**
+   * Sets the value of the 'envname' field.
+   * @param value the value to set.
+   */
+  public void setEnvname(java.lang.CharSequence value) {
+    this.envname = value;
   }
 
   /**
@@ -1552,6 +1625,9 @@ public class ClusterBillingData
     private java.lang.CharSequence appid;
     private java.lang.CharSequence serviceid;
     private java.lang.CharSequence envid;
+    private java.lang.CharSequence appname;
+    private java.lang.CharSequence servicename;
+    private java.lang.CharSequence envname;
     private java.lang.CharSequence cloudproviderid;
     private java.lang.CharSequence parentinstanceid;
     private java.lang.CharSequence region;
@@ -1657,185 +1733,197 @@ public class ClusterBillingData
         this.envid = data().deepCopy(fields()[11].schema(), other.envid);
         fieldSetFlags()[11] = other.fieldSetFlags()[11];
       }
-      if (isValidValue(fields()[12], other.cloudproviderid)) {
-        this.cloudproviderid = data().deepCopy(fields()[12].schema(), other.cloudproviderid);
+      if (isValidValue(fields()[12], other.appname)) {
+        this.appname = data().deepCopy(fields()[12].schema(), other.appname);
         fieldSetFlags()[12] = other.fieldSetFlags()[12];
       }
-      if (isValidValue(fields()[13], other.parentinstanceid)) {
-        this.parentinstanceid = data().deepCopy(fields()[13].schema(), other.parentinstanceid);
+      if (isValidValue(fields()[13], other.servicename)) {
+        this.servicename = data().deepCopy(fields()[13].schema(), other.servicename);
         fieldSetFlags()[13] = other.fieldSetFlags()[13];
       }
-      if (isValidValue(fields()[14], other.region)) {
-        this.region = data().deepCopy(fields()[14].schema(), other.region);
+      if (isValidValue(fields()[14], other.envname)) {
+        this.envname = data().deepCopy(fields()[14].schema(), other.envname);
         fieldSetFlags()[14] = other.fieldSetFlags()[14];
       }
-      if (isValidValue(fields()[15], other.launchtype)) {
-        this.launchtype = data().deepCopy(fields()[15].schema(), other.launchtype);
+      if (isValidValue(fields()[15], other.cloudproviderid)) {
+        this.cloudproviderid = data().deepCopy(fields()[15].schema(), other.cloudproviderid);
         fieldSetFlags()[15] = other.fieldSetFlags()[15];
       }
-      if (isValidValue(fields()[16], other.clustertype)) {
-        this.clustertype = data().deepCopy(fields()[16].schema(), other.clustertype);
+      if (isValidValue(fields()[16], other.parentinstanceid)) {
+        this.parentinstanceid = data().deepCopy(fields()[16].schema(), other.parentinstanceid);
         fieldSetFlags()[16] = other.fieldSetFlags()[16];
       }
-      if (isValidValue(fields()[17], other.workloadname)) {
-        this.workloadname = data().deepCopy(fields()[17].schema(), other.workloadname);
+      if (isValidValue(fields()[17], other.region)) {
+        this.region = data().deepCopy(fields()[17].schema(), other.region);
         fieldSetFlags()[17] = other.fieldSetFlags()[17];
       }
-      if (isValidValue(fields()[18], other.workloadtype)) {
-        this.workloadtype = data().deepCopy(fields()[18].schema(), other.workloadtype);
+      if (isValidValue(fields()[18], other.launchtype)) {
+        this.launchtype = data().deepCopy(fields()[18].schema(), other.launchtype);
         fieldSetFlags()[18] = other.fieldSetFlags()[18];
       }
-      if (isValidValue(fields()[19], other.namespace)) {
-        this.namespace = data().deepCopy(fields()[19].schema(), other.namespace);
+      if (isValidValue(fields()[19], other.clustertype)) {
+        this.clustertype = data().deepCopy(fields()[19].schema(), other.clustertype);
         fieldSetFlags()[19] = other.fieldSetFlags()[19];
       }
-      if (isValidValue(fields()[20], other.cloudservicename)) {
-        this.cloudservicename = data().deepCopy(fields()[20].schema(), other.cloudservicename);
+      if (isValidValue(fields()[20], other.workloadname)) {
+        this.workloadname = data().deepCopy(fields()[20].schema(), other.workloadname);
         fieldSetFlags()[20] = other.fieldSetFlags()[20];
       }
-      if (isValidValue(fields()[21], other.taskid)) {
-        this.taskid = data().deepCopy(fields()[21].schema(), other.taskid);
+      if (isValidValue(fields()[21], other.workloadtype)) {
+        this.workloadtype = data().deepCopy(fields()[21].schema(), other.workloadtype);
         fieldSetFlags()[21] = other.fieldSetFlags()[21];
       }
-      if (isValidValue(fields()[22], other.cloudprovider)) {
-        this.cloudprovider = data().deepCopy(fields()[22].schema(), other.cloudprovider);
+      if (isValidValue(fields()[22], other.namespace)) {
+        this.namespace = data().deepCopy(fields()[22].schema(), other.namespace);
         fieldSetFlags()[22] = other.fieldSetFlags()[22];
       }
-      if (isValidValue(fields()[23], other.billingamount)) {
-        this.billingamount = data().deepCopy(fields()[23].schema(), other.billingamount);
+      if (isValidValue(fields()[23], other.cloudservicename)) {
+        this.cloudservicename = data().deepCopy(fields()[23].schema(), other.cloudservicename);
         fieldSetFlags()[23] = other.fieldSetFlags()[23];
       }
-      if (isValidValue(fields()[24], other.cpubillingamount)) {
-        this.cpubillingamount = data().deepCopy(fields()[24].schema(), other.cpubillingamount);
+      if (isValidValue(fields()[24], other.taskid)) {
+        this.taskid = data().deepCopy(fields()[24].schema(), other.taskid);
         fieldSetFlags()[24] = other.fieldSetFlags()[24];
       }
-      if (isValidValue(fields()[25], other.memorybillingamount)) {
-        this.memorybillingamount = data().deepCopy(fields()[25].schema(), other.memorybillingamount);
+      if (isValidValue(fields()[25], other.cloudprovider)) {
+        this.cloudprovider = data().deepCopy(fields()[25].schema(), other.cloudprovider);
         fieldSetFlags()[25] = other.fieldSetFlags()[25];
       }
-      if (isValidValue(fields()[26], other.idlecost)) {
-        this.idlecost = data().deepCopy(fields()[26].schema(), other.idlecost);
+      if (isValidValue(fields()[26], other.billingamount)) {
+        this.billingamount = data().deepCopy(fields()[26].schema(), other.billingamount);
         fieldSetFlags()[26] = other.fieldSetFlags()[26];
       }
-      if (isValidValue(fields()[27], other.cpuidlecost)) {
-        this.cpuidlecost = data().deepCopy(fields()[27].schema(), other.cpuidlecost);
+      if (isValidValue(fields()[27], other.cpubillingamount)) {
+        this.cpubillingamount = data().deepCopy(fields()[27].schema(), other.cpubillingamount);
         fieldSetFlags()[27] = other.fieldSetFlags()[27];
       }
-      if (isValidValue(fields()[28], other.memoryidlecost)) {
-        this.memoryidlecost = data().deepCopy(fields()[28].schema(), other.memoryidlecost);
+      if (isValidValue(fields()[28], other.memorybillingamount)) {
+        this.memorybillingamount = data().deepCopy(fields()[28].schema(), other.memorybillingamount);
         fieldSetFlags()[28] = other.fieldSetFlags()[28];
       }
-      if (isValidValue(fields()[29], other.usagedurationseconds)) {
-        this.usagedurationseconds = data().deepCopy(fields()[29].schema(), other.usagedurationseconds);
+      if (isValidValue(fields()[29], other.idlecost)) {
+        this.idlecost = data().deepCopy(fields()[29].schema(), other.idlecost);
         fieldSetFlags()[29] = other.fieldSetFlags()[29];
       }
-      if (isValidValue(fields()[30], other.cpuunitseconds)) {
-        this.cpuunitseconds = data().deepCopy(fields()[30].schema(), other.cpuunitseconds);
+      if (isValidValue(fields()[30], other.cpuidlecost)) {
+        this.cpuidlecost = data().deepCopy(fields()[30].schema(), other.cpuidlecost);
         fieldSetFlags()[30] = other.fieldSetFlags()[30];
       }
-      if (isValidValue(fields()[31], other.memorymbseconds)) {
-        this.memorymbseconds = data().deepCopy(fields()[31].schema(), other.memorymbseconds);
+      if (isValidValue(fields()[31], other.memoryidlecost)) {
+        this.memoryidlecost = data().deepCopy(fields()[31].schema(), other.memoryidlecost);
         fieldSetFlags()[31] = other.fieldSetFlags()[31];
       }
-      if (isValidValue(fields()[32], other.maxcpuutilization)) {
-        this.maxcpuutilization = data().deepCopy(fields()[32].schema(), other.maxcpuutilization);
+      if (isValidValue(fields()[32], other.usagedurationseconds)) {
+        this.usagedurationseconds = data().deepCopy(fields()[32].schema(), other.usagedurationseconds);
         fieldSetFlags()[32] = other.fieldSetFlags()[32];
       }
-      if (isValidValue(fields()[33], other.maxmemoryutilization)) {
-        this.maxmemoryutilization = data().deepCopy(fields()[33].schema(), other.maxmemoryutilization);
+      if (isValidValue(fields()[33], other.cpuunitseconds)) {
+        this.cpuunitseconds = data().deepCopy(fields()[33].schema(), other.cpuunitseconds);
         fieldSetFlags()[33] = other.fieldSetFlags()[33];
       }
-      if (isValidValue(fields()[34], other.avgcpuutilization)) {
-        this.avgcpuutilization = data().deepCopy(fields()[34].schema(), other.avgcpuutilization);
+      if (isValidValue(fields()[34], other.memorymbseconds)) {
+        this.memorymbseconds = data().deepCopy(fields()[34].schema(), other.memorymbseconds);
         fieldSetFlags()[34] = other.fieldSetFlags()[34];
       }
-      if (isValidValue(fields()[35], other.avgmemoryutilization)) {
-        this.avgmemoryutilization = data().deepCopy(fields()[35].schema(), other.avgmemoryutilization);
+      if (isValidValue(fields()[35], other.maxcpuutilization)) {
+        this.maxcpuutilization = data().deepCopy(fields()[35].schema(), other.maxcpuutilization);
         fieldSetFlags()[35] = other.fieldSetFlags()[35];
       }
-      if (isValidValue(fields()[36], other.systemcost)) {
-        this.systemcost = data().deepCopy(fields()[36].schema(), other.systemcost);
+      if (isValidValue(fields()[36], other.maxmemoryutilization)) {
+        this.maxmemoryutilization = data().deepCopy(fields()[36].schema(), other.maxmemoryutilization);
         fieldSetFlags()[36] = other.fieldSetFlags()[36];
       }
-      if (isValidValue(fields()[37], other.cpusystemcost)) {
-        this.cpusystemcost = data().deepCopy(fields()[37].schema(), other.cpusystemcost);
+      if (isValidValue(fields()[37], other.avgcpuutilization)) {
+        this.avgcpuutilization = data().deepCopy(fields()[37].schema(), other.avgcpuutilization);
         fieldSetFlags()[37] = other.fieldSetFlags()[37];
       }
-      if (isValidValue(fields()[38], other.memorysystemcost)) {
-        this.memorysystemcost = data().deepCopy(fields()[38].schema(), other.memorysystemcost);
+      if (isValidValue(fields()[38], other.avgmemoryutilization)) {
+        this.avgmemoryutilization = data().deepCopy(fields()[38].schema(), other.avgmemoryutilization);
         fieldSetFlags()[38] = other.fieldSetFlags()[38];
       }
-      if (isValidValue(fields()[39], other.actualidlecost)) {
-        this.actualidlecost = data().deepCopy(fields()[39].schema(), other.actualidlecost);
+      if (isValidValue(fields()[39], other.systemcost)) {
+        this.systemcost = data().deepCopy(fields()[39].schema(), other.systemcost);
         fieldSetFlags()[39] = other.fieldSetFlags()[39];
       }
-      if (isValidValue(fields()[40], other.cpuactualidlecost)) {
-        this.cpuactualidlecost = data().deepCopy(fields()[40].schema(), other.cpuactualidlecost);
+      if (isValidValue(fields()[40], other.cpusystemcost)) {
+        this.cpusystemcost = data().deepCopy(fields()[40].schema(), other.cpusystemcost);
         fieldSetFlags()[40] = other.fieldSetFlags()[40];
       }
-      if (isValidValue(fields()[41], other.memoryactualidlecost)) {
-        this.memoryactualidlecost = data().deepCopy(fields()[41].schema(), other.memoryactualidlecost);
+      if (isValidValue(fields()[41], other.memorysystemcost)) {
+        this.memorysystemcost = data().deepCopy(fields()[41].schema(), other.memorysystemcost);
         fieldSetFlags()[41] = other.fieldSetFlags()[41];
       }
-      if (isValidValue(fields()[42], other.unallocatedcost)) {
-        this.unallocatedcost = data().deepCopy(fields()[42].schema(), other.unallocatedcost);
+      if (isValidValue(fields()[42], other.actualidlecost)) {
+        this.actualidlecost = data().deepCopy(fields()[42].schema(), other.actualidlecost);
         fieldSetFlags()[42] = other.fieldSetFlags()[42];
       }
-      if (isValidValue(fields()[43], other.cpuunallocatedcost)) {
-        this.cpuunallocatedcost = data().deepCopy(fields()[43].schema(), other.cpuunallocatedcost);
+      if (isValidValue(fields()[43], other.cpuactualidlecost)) {
+        this.cpuactualidlecost = data().deepCopy(fields()[43].schema(), other.cpuactualidlecost);
         fieldSetFlags()[43] = other.fieldSetFlags()[43];
       }
-      if (isValidValue(fields()[44], other.memoryunallocatedcost)) {
-        this.memoryunallocatedcost = data().deepCopy(fields()[44].schema(), other.memoryunallocatedcost);
+      if (isValidValue(fields()[44], other.memoryactualidlecost)) {
+        this.memoryactualidlecost = data().deepCopy(fields()[44].schema(), other.memoryactualidlecost);
         fieldSetFlags()[44] = other.fieldSetFlags()[44];
       }
-      if (isValidValue(fields()[45], other.instancename)) {
-        this.instancename = data().deepCopy(fields()[45].schema(), other.instancename);
+      if (isValidValue(fields()[45], other.unallocatedcost)) {
+        this.unallocatedcost = data().deepCopy(fields()[45].schema(), other.unallocatedcost);
         fieldSetFlags()[45] = other.fieldSetFlags()[45];
       }
-      if (isValidValue(fields()[46], other.cpurequest)) {
-        this.cpurequest = data().deepCopy(fields()[46].schema(), other.cpurequest);
+      if (isValidValue(fields()[46], other.cpuunallocatedcost)) {
+        this.cpuunallocatedcost = data().deepCopy(fields()[46].schema(), other.cpuunallocatedcost);
         fieldSetFlags()[46] = other.fieldSetFlags()[46];
       }
-      if (isValidValue(fields()[47], other.memoryrequest)) {
-        this.memoryrequest = data().deepCopy(fields()[47].schema(), other.memoryrequest);
+      if (isValidValue(fields()[47], other.memoryunallocatedcost)) {
+        this.memoryunallocatedcost = data().deepCopy(fields()[47].schema(), other.memoryunallocatedcost);
         fieldSetFlags()[47] = other.fieldSetFlags()[47];
       }
-      if (isValidValue(fields()[48], other.cpulimit)) {
-        this.cpulimit = data().deepCopy(fields()[48].schema(), other.cpulimit);
+      if (isValidValue(fields()[48], other.instancename)) {
+        this.instancename = data().deepCopy(fields()[48].schema(), other.instancename);
         fieldSetFlags()[48] = other.fieldSetFlags()[48];
       }
-      if (isValidValue(fields()[49], other.memorylimit)) {
-        this.memorylimit = data().deepCopy(fields()[49].schema(), other.memorylimit);
+      if (isValidValue(fields()[49], other.cpurequest)) {
+        this.cpurequest = data().deepCopy(fields()[49].schema(), other.cpurequest);
         fieldSetFlags()[49] = other.fieldSetFlags()[49];
       }
-      if (isValidValue(fields()[50], other.maxcpuutilizationvalue)) {
-        this.maxcpuutilizationvalue = data().deepCopy(fields()[50].schema(), other.maxcpuutilizationvalue);
+      if (isValidValue(fields()[50], other.memoryrequest)) {
+        this.memoryrequest = data().deepCopy(fields()[50].schema(), other.memoryrequest);
         fieldSetFlags()[50] = other.fieldSetFlags()[50];
       }
-      if (isValidValue(fields()[51], other.maxmemoryutilizationvalue)) {
-        this.maxmemoryutilizationvalue = data().deepCopy(fields()[51].schema(), other.maxmemoryutilizationvalue);
+      if (isValidValue(fields()[51], other.cpulimit)) {
+        this.cpulimit = data().deepCopy(fields()[51].schema(), other.cpulimit);
         fieldSetFlags()[51] = other.fieldSetFlags()[51];
       }
-      if (isValidValue(fields()[52], other.avgcpuutilizationvalue)) {
-        this.avgcpuutilizationvalue = data().deepCopy(fields()[52].schema(), other.avgcpuutilizationvalue);
+      if (isValidValue(fields()[52], other.memorylimit)) {
+        this.memorylimit = data().deepCopy(fields()[52].schema(), other.memorylimit);
         fieldSetFlags()[52] = other.fieldSetFlags()[52];
       }
-      if (isValidValue(fields()[53], other.avgmemoryutilizationvalue)) {
-        this.avgmemoryutilizationvalue = data().deepCopy(fields()[53].schema(), other.avgmemoryutilizationvalue);
+      if (isValidValue(fields()[53], other.maxcpuutilizationvalue)) {
+        this.maxcpuutilizationvalue = data().deepCopy(fields()[53].schema(), other.maxcpuutilizationvalue);
         fieldSetFlags()[53] = other.fieldSetFlags()[53];
       }
-      if (isValidValue(fields()[54], other.networkcost)) {
-        this.networkcost = data().deepCopy(fields()[54].schema(), other.networkcost);
+      if (isValidValue(fields()[54], other.maxmemoryutilizationvalue)) {
+        this.maxmemoryutilizationvalue = data().deepCopy(fields()[54].schema(), other.maxmemoryutilizationvalue);
         fieldSetFlags()[54] = other.fieldSetFlags()[54];
       }
-      if (isValidValue(fields()[55], other.pricingsource)) {
-        this.pricingsource = data().deepCopy(fields()[55].schema(), other.pricingsource);
+      if (isValidValue(fields()[55], other.avgcpuutilizationvalue)) {
+        this.avgcpuutilizationvalue = data().deepCopy(fields()[55].schema(), other.avgcpuutilizationvalue);
         fieldSetFlags()[55] = other.fieldSetFlags()[55];
       }
-      if (isValidValue(fields()[56], other.labels)) {
-        this.labels = data().deepCopy(fields()[56].schema(), other.labels);
+      if (isValidValue(fields()[56], other.avgmemoryutilizationvalue)) {
+        this.avgmemoryutilizationvalue = data().deepCopy(fields()[56].schema(), other.avgmemoryutilizationvalue);
         fieldSetFlags()[56] = other.fieldSetFlags()[56];
+      }
+      if (isValidValue(fields()[57], other.networkcost)) {
+        this.networkcost = data().deepCopy(fields()[57].schema(), other.networkcost);
+        fieldSetFlags()[57] = other.fieldSetFlags()[57];
+      }
+      if (isValidValue(fields()[58], other.pricingsource)) {
+        this.pricingsource = data().deepCopy(fields()[58].schema(), other.pricingsource);
+        fieldSetFlags()[58] = other.fieldSetFlags()[58];
+      }
+      if (isValidValue(fields()[59], other.labels)) {
+        this.labels = data().deepCopy(fields()[59].schema(), other.labels);
+        fieldSetFlags()[59] = other.fieldSetFlags()[59];
       }
     }
 
@@ -1893,185 +1981,197 @@ public class ClusterBillingData
         this.envid = data().deepCopy(fields()[11].schema(), other.envid);
         fieldSetFlags()[11] = true;
       }
-      if (isValidValue(fields()[12], other.cloudproviderid)) {
-        this.cloudproviderid = data().deepCopy(fields()[12].schema(), other.cloudproviderid);
+      if (isValidValue(fields()[12], other.appname)) {
+        this.appname = data().deepCopy(fields()[12].schema(), other.appname);
         fieldSetFlags()[12] = true;
       }
-      if (isValidValue(fields()[13], other.parentinstanceid)) {
-        this.parentinstanceid = data().deepCopy(fields()[13].schema(), other.parentinstanceid);
+      if (isValidValue(fields()[13], other.servicename)) {
+        this.servicename = data().deepCopy(fields()[13].schema(), other.servicename);
         fieldSetFlags()[13] = true;
       }
-      if (isValidValue(fields()[14], other.region)) {
-        this.region = data().deepCopy(fields()[14].schema(), other.region);
+      if (isValidValue(fields()[14], other.envname)) {
+        this.envname = data().deepCopy(fields()[14].schema(), other.envname);
         fieldSetFlags()[14] = true;
       }
-      if (isValidValue(fields()[15], other.launchtype)) {
-        this.launchtype = data().deepCopy(fields()[15].schema(), other.launchtype);
+      if (isValidValue(fields()[15], other.cloudproviderid)) {
+        this.cloudproviderid = data().deepCopy(fields()[15].schema(), other.cloudproviderid);
         fieldSetFlags()[15] = true;
       }
-      if (isValidValue(fields()[16], other.clustertype)) {
-        this.clustertype = data().deepCopy(fields()[16].schema(), other.clustertype);
+      if (isValidValue(fields()[16], other.parentinstanceid)) {
+        this.parentinstanceid = data().deepCopy(fields()[16].schema(), other.parentinstanceid);
         fieldSetFlags()[16] = true;
       }
-      if (isValidValue(fields()[17], other.workloadname)) {
-        this.workloadname = data().deepCopy(fields()[17].schema(), other.workloadname);
+      if (isValidValue(fields()[17], other.region)) {
+        this.region = data().deepCopy(fields()[17].schema(), other.region);
         fieldSetFlags()[17] = true;
       }
-      if (isValidValue(fields()[18], other.workloadtype)) {
-        this.workloadtype = data().deepCopy(fields()[18].schema(), other.workloadtype);
+      if (isValidValue(fields()[18], other.launchtype)) {
+        this.launchtype = data().deepCopy(fields()[18].schema(), other.launchtype);
         fieldSetFlags()[18] = true;
       }
-      if (isValidValue(fields()[19], other.namespace)) {
-        this.namespace = data().deepCopy(fields()[19].schema(), other.namespace);
+      if (isValidValue(fields()[19], other.clustertype)) {
+        this.clustertype = data().deepCopy(fields()[19].schema(), other.clustertype);
         fieldSetFlags()[19] = true;
       }
-      if (isValidValue(fields()[20], other.cloudservicename)) {
-        this.cloudservicename = data().deepCopy(fields()[20].schema(), other.cloudservicename);
+      if (isValidValue(fields()[20], other.workloadname)) {
+        this.workloadname = data().deepCopy(fields()[20].schema(), other.workloadname);
         fieldSetFlags()[20] = true;
       }
-      if (isValidValue(fields()[21], other.taskid)) {
-        this.taskid = data().deepCopy(fields()[21].schema(), other.taskid);
+      if (isValidValue(fields()[21], other.workloadtype)) {
+        this.workloadtype = data().deepCopy(fields()[21].schema(), other.workloadtype);
         fieldSetFlags()[21] = true;
       }
-      if (isValidValue(fields()[22], other.cloudprovider)) {
-        this.cloudprovider = data().deepCopy(fields()[22].schema(), other.cloudprovider);
+      if (isValidValue(fields()[22], other.namespace)) {
+        this.namespace = data().deepCopy(fields()[22].schema(), other.namespace);
         fieldSetFlags()[22] = true;
       }
-      if (isValidValue(fields()[23], other.billingamount)) {
-        this.billingamount = data().deepCopy(fields()[23].schema(), other.billingamount);
+      if (isValidValue(fields()[23], other.cloudservicename)) {
+        this.cloudservicename = data().deepCopy(fields()[23].schema(), other.cloudservicename);
         fieldSetFlags()[23] = true;
       }
-      if (isValidValue(fields()[24], other.cpubillingamount)) {
-        this.cpubillingamount = data().deepCopy(fields()[24].schema(), other.cpubillingamount);
+      if (isValidValue(fields()[24], other.taskid)) {
+        this.taskid = data().deepCopy(fields()[24].schema(), other.taskid);
         fieldSetFlags()[24] = true;
       }
-      if (isValidValue(fields()[25], other.memorybillingamount)) {
-        this.memorybillingamount = data().deepCopy(fields()[25].schema(), other.memorybillingamount);
+      if (isValidValue(fields()[25], other.cloudprovider)) {
+        this.cloudprovider = data().deepCopy(fields()[25].schema(), other.cloudprovider);
         fieldSetFlags()[25] = true;
       }
-      if (isValidValue(fields()[26], other.idlecost)) {
-        this.idlecost = data().deepCopy(fields()[26].schema(), other.idlecost);
+      if (isValidValue(fields()[26], other.billingamount)) {
+        this.billingamount = data().deepCopy(fields()[26].schema(), other.billingamount);
         fieldSetFlags()[26] = true;
       }
-      if (isValidValue(fields()[27], other.cpuidlecost)) {
-        this.cpuidlecost = data().deepCopy(fields()[27].schema(), other.cpuidlecost);
+      if (isValidValue(fields()[27], other.cpubillingamount)) {
+        this.cpubillingamount = data().deepCopy(fields()[27].schema(), other.cpubillingamount);
         fieldSetFlags()[27] = true;
       }
-      if (isValidValue(fields()[28], other.memoryidlecost)) {
-        this.memoryidlecost = data().deepCopy(fields()[28].schema(), other.memoryidlecost);
+      if (isValidValue(fields()[28], other.memorybillingamount)) {
+        this.memorybillingamount = data().deepCopy(fields()[28].schema(), other.memorybillingamount);
         fieldSetFlags()[28] = true;
       }
-      if (isValidValue(fields()[29], other.usagedurationseconds)) {
-        this.usagedurationseconds = data().deepCopy(fields()[29].schema(), other.usagedurationseconds);
+      if (isValidValue(fields()[29], other.idlecost)) {
+        this.idlecost = data().deepCopy(fields()[29].schema(), other.idlecost);
         fieldSetFlags()[29] = true;
       }
-      if (isValidValue(fields()[30], other.cpuunitseconds)) {
-        this.cpuunitseconds = data().deepCopy(fields()[30].schema(), other.cpuunitseconds);
+      if (isValidValue(fields()[30], other.cpuidlecost)) {
+        this.cpuidlecost = data().deepCopy(fields()[30].schema(), other.cpuidlecost);
         fieldSetFlags()[30] = true;
       }
-      if (isValidValue(fields()[31], other.memorymbseconds)) {
-        this.memorymbseconds = data().deepCopy(fields()[31].schema(), other.memorymbseconds);
+      if (isValidValue(fields()[31], other.memoryidlecost)) {
+        this.memoryidlecost = data().deepCopy(fields()[31].schema(), other.memoryidlecost);
         fieldSetFlags()[31] = true;
       }
-      if (isValidValue(fields()[32], other.maxcpuutilization)) {
-        this.maxcpuutilization = data().deepCopy(fields()[32].schema(), other.maxcpuutilization);
+      if (isValidValue(fields()[32], other.usagedurationseconds)) {
+        this.usagedurationseconds = data().deepCopy(fields()[32].schema(), other.usagedurationseconds);
         fieldSetFlags()[32] = true;
       }
-      if (isValidValue(fields()[33], other.maxmemoryutilization)) {
-        this.maxmemoryutilization = data().deepCopy(fields()[33].schema(), other.maxmemoryutilization);
+      if (isValidValue(fields()[33], other.cpuunitseconds)) {
+        this.cpuunitseconds = data().deepCopy(fields()[33].schema(), other.cpuunitseconds);
         fieldSetFlags()[33] = true;
       }
-      if (isValidValue(fields()[34], other.avgcpuutilization)) {
-        this.avgcpuutilization = data().deepCopy(fields()[34].schema(), other.avgcpuutilization);
+      if (isValidValue(fields()[34], other.memorymbseconds)) {
+        this.memorymbseconds = data().deepCopy(fields()[34].schema(), other.memorymbseconds);
         fieldSetFlags()[34] = true;
       }
-      if (isValidValue(fields()[35], other.avgmemoryutilization)) {
-        this.avgmemoryutilization = data().deepCopy(fields()[35].schema(), other.avgmemoryutilization);
+      if (isValidValue(fields()[35], other.maxcpuutilization)) {
+        this.maxcpuutilization = data().deepCopy(fields()[35].schema(), other.maxcpuutilization);
         fieldSetFlags()[35] = true;
       }
-      if (isValidValue(fields()[36], other.systemcost)) {
-        this.systemcost = data().deepCopy(fields()[36].schema(), other.systemcost);
+      if (isValidValue(fields()[36], other.maxmemoryutilization)) {
+        this.maxmemoryutilization = data().deepCopy(fields()[36].schema(), other.maxmemoryutilization);
         fieldSetFlags()[36] = true;
       }
-      if (isValidValue(fields()[37], other.cpusystemcost)) {
-        this.cpusystemcost = data().deepCopy(fields()[37].schema(), other.cpusystemcost);
+      if (isValidValue(fields()[37], other.avgcpuutilization)) {
+        this.avgcpuutilization = data().deepCopy(fields()[37].schema(), other.avgcpuutilization);
         fieldSetFlags()[37] = true;
       }
-      if (isValidValue(fields()[38], other.memorysystemcost)) {
-        this.memorysystemcost = data().deepCopy(fields()[38].schema(), other.memorysystemcost);
+      if (isValidValue(fields()[38], other.avgmemoryutilization)) {
+        this.avgmemoryutilization = data().deepCopy(fields()[38].schema(), other.avgmemoryutilization);
         fieldSetFlags()[38] = true;
       }
-      if (isValidValue(fields()[39], other.actualidlecost)) {
-        this.actualidlecost = data().deepCopy(fields()[39].schema(), other.actualidlecost);
+      if (isValidValue(fields()[39], other.systemcost)) {
+        this.systemcost = data().deepCopy(fields()[39].schema(), other.systemcost);
         fieldSetFlags()[39] = true;
       }
-      if (isValidValue(fields()[40], other.cpuactualidlecost)) {
-        this.cpuactualidlecost = data().deepCopy(fields()[40].schema(), other.cpuactualidlecost);
+      if (isValidValue(fields()[40], other.cpusystemcost)) {
+        this.cpusystemcost = data().deepCopy(fields()[40].schema(), other.cpusystemcost);
         fieldSetFlags()[40] = true;
       }
-      if (isValidValue(fields()[41], other.memoryactualidlecost)) {
-        this.memoryactualidlecost = data().deepCopy(fields()[41].schema(), other.memoryactualidlecost);
+      if (isValidValue(fields()[41], other.memorysystemcost)) {
+        this.memorysystemcost = data().deepCopy(fields()[41].schema(), other.memorysystemcost);
         fieldSetFlags()[41] = true;
       }
-      if (isValidValue(fields()[42], other.unallocatedcost)) {
-        this.unallocatedcost = data().deepCopy(fields()[42].schema(), other.unallocatedcost);
+      if (isValidValue(fields()[42], other.actualidlecost)) {
+        this.actualidlecost = data().deepCopy(fields()[42].schema(), other.actualidlecost);
         fieldSetFlags()[42] = true;
       }
-      if (isValidValue(fields()[43], other.cpuunallocatedcost)) {
-        this.cpuunallocatedcost = data().deepCopy(fields()[43].schema(), other.cpuunallocatedcost);
+      if (isValidValue(fields()[43], other.cpuactualidlecost)) {
+        this.cpuactualidlecost = data().deepCopy(fields()[43].schema(), other.cpuactualidlecost);
         fieldSetFlags()[43] = true;
       }
-      if (isValidValue(fields()[44], other.memoryunallocatedcost)) {
-        this.memoryunallocatedcost = data().deepCopy(fields()[44].schema(), other.memoryunallocatedcost);
+      if (isValidValue(fields()[44], other.memoryactualidlecost)) {
+        this.memoryactualidlecost = data().deepCopy(fields()[44].schema(), other.memoryactualidlecost);
         fieldSetFlags()[44] = true;
       }
-      if (isValidValue(fields()[45], other.instancename)) {
-        this.instancename = data().deepCopy(fields()[45].schema(), other.instancename);
+      if (isValidValue(fields()[45], other.unallocatedcost)) {
+        this.unallocatedcost = data().deepCopy(fields()[45].schema(), other.unallocatedcost);
         fieldSetFlags()[45] = true;
       }
-      if (isValidValue(fields()[46], other.cpurequest)) {
-        this.cpurequest = data().deepCopy(fields()[46].schema(), other.cpurequest);
+      if (isValidValue(fields()[46], other.cpuunallocatedcost)) {
+        this.cpuunallocatedcost = data().deepCopy(fields()[46].schema(), other.cpuunallocatedcost);
         fieldSetFlags()[46] = true;
       }
-      if (isValidValue(fields()[47], other.memoryrequest)) {
-        this.memoryrequest = data().deepCopy(fields()[47].schema(), other.memoryrequest);
+      if (isValidValue(fields()[47], other.memoryunallocatedcost)) {
+        this.memoryunallocatedcost = data().deepCopy(fields()[47].schema(), other.memoryunallocatedcost);
         fieldSetFlags()[47] = true;
       }
-      if (isValidValue(fields()[48], other.cpulimit)) {
-        this.cpulimit = data().deepCopy(fields()[48].schema(), other.cpulimit);
+      if (isValidValue(fields()[48], other.instancename)) {
+        this.instancename = data().deepCopy(fields()[48].schema(), other.instancename);
         fieldSetFlags()[48] = true;
       }
-      if (isValidValue(fields()[49], other.memorylimit)) {
-        this.memorylimit = data().deepCopy(fields()[49].schema(), other.memorylimit);
+      if (isValidValue(fields()[49], other.cpurequest)) {
+        this.cpurequest = data().deepCopy(fields()[49].schema(), other.cpurequest);
         fieldSetFlags()[49] = true;
       }
-      if (isValidValue(fields()[50], other.maxcpuutilizationvalue)) {
-        this.maxcpuutilizationvalue = data().deepCopy(fields()[50].schema(), other.maxcpuutilizationvalue);
+      if (isValidValue(fields()[50], other.memoryrequest)) {
+        this.memoryrequest = data().deepCopy(fields()[50].schema(), other.memoryrequest);
         fieldSetFlags()[50] = true;
       }
-      if (isValidValue(fields()[51], other.maxmemoryutilizationvalue)) {
-        this.maxmemoryutilizationvalue = data().deepCopy(fields()[51].schema(), other.maxmemoryutilizationvalue);
+      if (isValidValue(fields()[51], other.cpulimit)) {
+        this.cpulimit = data().deepCopy(fields()[51].schema(), other.cpulimit);
         fieldSetFlags()[51] = true;
       }
-      if (isValidValue(fields()[52], other.avgcpuutilizationvalue)) {
-        this.avgcpuutilizationvalue = data().deepCopy(fields()[52].schema(), other.avgcpuutilizationvalue);
+      if (isValidValue(fields()[52], other.memorylimit)) {
+        this.memorylimit = data().deepCopy(fields()[52].schema(), other.memorylimit);
         fieldSetFlags()[52] = true;
       }
-      if (isValidValue(fields()[53], other.avgmemoryutilizationvalue)) {
-        this.avgmemoryutilizationvalue = data().deepCopy(fields()[53].schema(), other.avgmemoryutilizationvalue);
+      if (isValidValue(fields()[53], other.maxcpuutilizationvalue)) {
+        this.maxcpuutilizationvalue = data().deepCopy(fields()[53].schema(), other.maxcpuutilizationvalue);
         fieldSetFlags()[53] = true;
       }
-      if (isValidValue(fields()[54], other.networkcost)) {
-        this.networkcost = data().deepCopy(fields()[54].schema(), other.networkcost);
+      if (isValidValue(fields()[54], other.maxmemoryutilizationvalue)) {
+        this.maxmemoryutilizationvalue = data().deepCopy(fields()[54].schema(), other.maxmemoryutilizationvalue);
         fieldSetFlags()[54] = true;
       }
-      if (isValidValue(fields()[55], other.pricingsource)) {
-        this.pricingsource = data().deepCopy(fields()[55].schema(), other.pricingsource);
+      if (isValidValue(fields()[55], other.avgcpuutilizationvalue)) {
+        this.avgcpuutilizationvalue = data().deepCopy(fields()[55].schema(), other.avgcpuutilizationvalue);
         fieldSetFlags()[55] = true;
       }
-      if (isValidValue(fields()[56], other.labels)) {
-        this.labels = data().deepCopy(fields()[56].schema(), other.labels);
+      if (isValidValue(fields()[56], other.avgmemoryutilizationvalue)) {
+        this.avgmemoryutilizationvalue = data().deepCopy(fields()[56].schema(), other.avgmemoryutilizationvalue);
         fieldSetFlags()[56] = true;
+      }
+      if (isValidValue(fields()[57], other.networkcost)) {
+        this.networkcost = data().deepCopy(fields()[57].schema(), other.networkcost);
+        fieldSetFlags()[57] = true;
+      }
+      if (isValidValue(fields()[58], other.pricingsource)) {
+        this.pricingsource = data().deepCopy(fields()[58].schema(), other.pricingsource);
+        fieldSetFlags()[58] = true;
+      }
+      if (isValidValue(fields()[59], other.labels)) {
+        this.labels = data().deepCopy(fields()[59].schema(), other.labels);
+        fieldSetFlags()[59] = true;
       }
     }
 
@@ -2530,6 +2630,120 @@ public class ClusterBillingData
     }
 
     /**
+     * Gets the value of the 'appname' field.
+     * @return The value.
+     */
+    public java.lang.CharSequence getAppname() {
+      return appname;
+    }
+
+    /**
+     * Sets the value of the 'appname' field.
+     * @param value The value of 'appname'.
+     * @return This builder.
+     */
+    public io.harness.avro.ClusterBillingData.Builder setAppname(java.lang.CharSequence value) {
+      validate(fields()[12], value);
+      this.appname = value;
+      fieldSetFlags()[12] = true;
+      return this;
+    }
+
+    /**
+     * Checks whether the 'appname' field has been set.
+     * @return True if the 'appname' field has been set, false otherwise.
+     */
+    public boolean hasAppname() {
+      return fieldSetFlags()[12];
+    }
+
+    /**
+     * Clears the value of the 'appname' field.
+     * @return This builder.
+     */
+    public io.harness.avro.ClusterBillingData.Builder clearAppname() {
+      appname = null;
+      fieldSetFlags()[12] = false;
+      return this;
+    }
+
+    /**
+     * Gets the value of the 'servicename' field.
+     * @return The value.
+     */
+    public java.lang.CharSequence getServicename() {
+      return servicename;
+    }
+
+    /**
+     * Sets the value of the 'servicename' field.
+     * @param value The value of 'servicename'.
+     * @return This builder.
+     */
+    public io.harness.avro.ClusterBillingData.Builder setServicename(java.lang.CharSequence value) {
+      validate(fields()[13], value);
+      this.servicename = value;
+      fieldSetFlags()[13] = true;
+      return this;
+    }
+
+    /**
+     * Checks whether the 'servicename' field has been set.
+     * @return True if the 'servicename' field has been set, false otherwise.
+     */
+    public boolean hasServicename() {
+      return fieldSetFlags()[13];
+    }
+
+    /**
+     * Clears the value of the 'servicename' field.
+     * @return This builder.
+     */
+    public io.harness.avro.ClusterBillingData.Builder clearServicename() {
+      servicename = null;
+      fieldSetFlags()[13] = false;
+      return this;
+    }
+
+    /**
+     * Gets the value of the 'envname' field.
+     * @return The value.
+     */
+    public java.lang.CharSequence getEnvname() {
+      return envname;
+    }
+
+    /**
+     * Sets the value of the 'envname' field.
+     * @param value The value of 'envname'.
+     * @return This builder.
+     */
+    public io.harness.avro.ClusterBillingData.Builder setEnvname(java.lang.CharSequence value) {
+      validate(fields()[14], value);
+      this.envname = value;
+      fieldSetFlags()[14] = true;
+      return this;
+    }
+
+    /**
+     * Checks whether the 'envname' field has been set.
+     * @return True if the 'envname' field has been set, false otherwise.
+     */
+    public boolean hasEnvname() {
+      return fieldSetFlags()[14];
+    }
+
+    /**
+     * Clears the value of the 'envname' field.
+     * @return This builder.
+     */
+    public io.harness.avro.ClusterBillingData.Builder clearEnvname() {
+      envname = null;
+      fieldSetFlags()[14] = false;
+      return this;
+    }
+
+    /**
      * Gets the value of the 'cloudproviderid' field.
      * @return The value.
      */
@@ -2543,9 +2757,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setCloudproviderid(java.lang.CharSequence value) {
-      validate(fields()[12], value);
+      validate(fields()[15], value);
       this.cloudproviderid = value;
-      fieldSetFlags()[12] = true;
+      fieldSetFlags()[15] = true;
       return this;
     }
 
@@ -2554,7 +2768,7 @@ public class ClusterBillingData
      * @return True if the 'cloudproviderid' field has been set, false otherwise.
      */
     public boolean hasCloudproviderid() {
-      return fieldSetFlags()[12];
+      return fieldSetFlags()[15];
     }
 
     /**
@@ -2563,7 +2777,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearCloudproviderid() {
       cloudproviderid = null;
-      fieldSetFlags()[12] = false;
+      fieldSetFlags()[15] = false;
       return this;
     }
 
@@ -2581,9 +2795,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setParentinstanceid(java.lang.CharSequence value) {
-      validate(fields()[13], value);
+      validate(fields()[16], value);
       this.parentinstanceid = value;
-      fieldSetFlags()[13] = true;
+      fieldSetFlags()[16] = true;
       return this;
     }
 
@@ -2592,7 +2806,7 @@ public class ClusterBillingData
      * @return True if the 'parentinstanceid' field has been set, false otherwise.
      */
     public boolean hasParentinstanceid() {
-      return fieldSetFlags()[13];
+      return fieldSetFlags()[16];
     }
 
     /**
@@ -2601,7 +2815,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearParentinstanceid() {
       parentinstanceid = null;
-      fieldSetFlags()[13] = false;
+      fieldSetFlags()[16] = false;
       return this;
     }
 
@@ -2619,9 +2833,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setRegion(java.lang.CharSequence value) {
-      validate(fields()[14], value);
+      validate(fields()[17], value);
       this.region = value;
-      fieldSetFlags()[14] = true;
+      fieldSetFlags()[17] = true;
       return this;
     }
 
@@ -2630,7 +2844,7 @@ public class ClusterBillingData
      * @return True if the 'region' field has been set, false otherwise.
      */
     public boolean hasRegion() {
-      return fieldSetFlags()[14];
+      return fieldSetFlags()[17];
     }
 
     /**
@@ -2639,7 +2853,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearRegion() {
       region = null;
-      fieldSetFlags()[14] = false;
+      fieldSetFlags()[17] = false;
       return this;
     }
 
@@ -2657,9 +2871,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setLaunchtype(java.lang.CharSequence value) {
-      validate(fields()[15], value);
+      validate(fields()[18], value);
       this.launchtype = value;
-      fieldSetFlags()[15] = true;
+      fieldSetFlags()[18] = true;
       return this;
     }
 
@@ -2668,7 +2882,7 @@ public class ClusterBillingData
      * @return True if the 'launchtype' field has been set, false otherwise.
      */
     public boolean hasLaunchtype() {
-      return fieldSetFlags()[15];
+      return fieldSetFlags()[18];
     }
 
     /**
@@ -2677,7 +2891,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearLaunchtype() {
       launchtype = null;
-      fieldSetFlags()[15] = false;
+      fieldSetFlags()[18] = false;
       return this;
     }
 
@@ -2695,9 +2909,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setClustertype(java.lang.CharSequence value) {
-      validate(fields()[16], value);
+      validate(fields()[19], value);
       this.clustertype = value;
-      fieldSetFlags()[16] = true;
+      fieldSetFlags()[19] = true;
       return this;
     }
 
@@ -2706,7 +2920,7 @@ public class ClusterBillingData
      * @return True if the 'clustertype' field has been set, false otherwise.
      */
     public boolean hasClustertype() {
-      return fieldSetFlags()[16];
+      return fieldSetFlags()[19];
     }
 
     /**
@@ -2715,7 +2929,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearClustertype() {
       clustertype = null;
-      fieldSetFlags()[16] = false;
+      fieldSetFlags()[19] = false;
       return this;
     }
 
@@ -2733,9 +2947,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setWorkloadname(java.lang.CharSequence value) {
-      validate(fields()[17], value);
+      validate(fields()[20], value);
       this.workloadname = value;
-      fieldSetFlags()[17] = true;
+      fieldSetFlags()[20] = true;
       return this;
     }
 
@@ -2744,7 +2958,7 @@ public class ClusterBillingData
      * @return True if the 'workloadname' field has been set, false otherwise.
      */
     public boolean hasWorkloadname() {
-      return fieldSetFlags()[17];
+      return fieldSetFlags()[20];
     }
 
     /**
@@ -2753,7 +2967,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearWorkloadname() {
       workloadname = null;
-      fieldSetFlags()[17] = false;
+      fieldSetFlags()[20] = false;
       return this;
     }
 
@@ -2771,9 +2985,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setWorkloadtype(java.lang.CharSequence value) {
-      validate(fields()[18], value);
+      validate(fields()[21], value);
       this.workloadtype = value;
-      fieldSetFlags()[18] = true;
+      fieldSetFlags()[21] = true;
       return this;
     }
 
@@ -2782,7 +2996,7 @@ public class ClusterBillingData
      * @return True if the 'workloadtype' field has been set, false otherwise.
      */
     public boolean hasWorkloadtype() {
-      return fieldSetFlags()[18];
+      return fieldSetFlags()[21];
     }
 
     /**
@@ -2791,7 +3005,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearWorkloadtype() {
       workloadtype = null;
-      fieldSetFlags()[18] = false;
+      fieldSetFlags()[21] = false;
       return this;
     }
 
@@ -2809,9 +3023,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setNamespace(java.lang.CharSequence value) {
-      validate(fields()[19], value);
+      validate(fields()[22], value);
       this.namespace = value;
-      fieldSetFlags()[19] = true;
+      fieldSetFlags()[22] = true;
       return this;
     }
 
@@ -2820,7 +3034,7 @@ public class ClusterBillingData
      * @return True if the 'namespace' field has been set, false otherwise.
      */
     public boolean hasNamespace() {
-      return fieldSetFlags()[19];
+      return fieldSetFlags()[22];
     }
 
     /**
@@ -2829,7 +3043,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearNamespace() {
       namespace = null;
-      fieldSetFlags()[19] = false;
+      fieldSetFlags()[22] = false;
       return this;
     }
 
@@ -2847,9 +3061,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setCloudservicename(java.lang.CharSequence value) {
-      validate(fields()[20], value);
+      validate(fields()[23], value);
       this.cloudservicename = value;
-      fieldSetFlags()[20] = true;
+      fieldSetFlags()[23] = true;
       return this;
     }
 
@@ -2858,7 +3072,7 @@ public class ClusterBillingData
      * @return True if the 'cloudservicename' field has been set, false otherwise.
      */
     public boolean hasCloudservicename() {
-      return fieldSetFlags()[20];
+      return fieldSetFlags()[23];
     }
 
     /**
@@ -2867,7 +3081,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearCloudservicename() {
       cloudservicename = null;
-      fieldSetFlags()[20] = false;
+      fieldSetFlags()[23] = false;
       return this;
     }
 
@@ -2885,9 +3099,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setTaskid(java.lang.CharSequence value) {
-      validate(fields()[21], value);
+      validate(fields()[24], value);
       this.taskid = value;
-      fieldSetFlags()[21] = true;
+      fieldSetFlags()[24] = true;
       return this;
     }
 
@@ -2896,7 +3110,7 @@ public class ClusterBillingData
      * @return True if the 'taskid' field has been set, false otherwise.
      */
     public boolean hasTaskid() {
-      return fieldSetFlags()[21];
+      return fieldSetFlags()[24];
     }
 
     /**
@@ -2905,7 +3119,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearTaskid() {
       taskid = null;
-      fieldSetFlags()[21] = false;
+      fieldSetFlags()[24] = false;
       return this;
     }
 
@@ -2923,9 +3137,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setCloudprovider(java.lang.CharSequence value) {
-      validate(fields()[22], value);
+      validate(fields()[25], value);
       this.cloudprovider = value;
-      fieldSetFlags()[22] = true;
+      fieldSetFlags()[25] = true;
       return this;
     }
 
@@ -2934,7 +3148,7 @@ public class ClusterBillingData
      * @return True if the 'cloudprovider' field has been set, false otherwise.
      */
     public boolean hasCloudprovider() {
-      return fieldSetFlags()[22];
+      return fieldSetFlags()[25];
     }
 
     /**
@@ -2943,7 +3157,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearCloudprovider() {
       cloudprovider = null;
-      fieldSetFlags()[22] = false;
+      fieldSetFlags()[25] = false;
       return this;
     }
 
@@ -2961,9 +3175,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setBillingamount(double value) {
-      validate(fields()[23], value);
+      validate(fields()[26], value);
       this.billingamount = value;
-      fieldSetFlags()[23] = true;
+      fieldSetFlags()[26] = true;
       return this;
     }
 
@@ -2972,7 +3186,7 @@ public class ClusterBillingData
      * @return True if the 'billingamount' field has been set, false otherwise.
      */
     public boolean hasBillingamount() {
-      return fieldSetFlags()[23];
+      return fieldSetFlags()[26];
     }
 
     /**
@@ -2980,7 +3194,7 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder clearBillingamount() {
-      fieldSetFlags()[23] = false;
+      fieldSetFlags()[26] = false;
       return this;
     }
 
@@ -2998,9 +3212,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setCpubillingamount(java.lang.Double value) {
-      validate(fields()[24], value);
+      validate(fields()[27], value);
       this.cpubillingamount = value;
-      fieldSetFlags()[24] = true;
+      fieldSetFlags()[27] = true;
       return this;
     }
 
@@ -3009,7 +3223,7 @@ public class ClusterBillingData
      * @return True if the 'cpubillingamount' field has been set, false otherwise.
      */
     public boolean hasCpubillingamount() {
-      return fieldSetFlags()[24];
+      return fieldSetFlags()[27];
     }
 
     /**
@@ -3018,7 +3232,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearCpubillingamount() {
       cpubillingamount = null;
-      fieldSetFlags()[24] = false;
+      fieldSetFlags()[27] = false;
       return this;
     }
 
@@ -3036,9 +3250,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setMemorybillingamount(java.lang.Double value) {
-      validate(fields()[25], value);
+      validate(fields()[28], value);
       this.memorybillingamount = value;
-      fieldSetFlags()[25] = true;
+      fieldSetFlags()[28] = true;
       return this;
     }
 
@@ -3047,7 +3261,7 @@ public class ClusterBillingData
      * @return True if the 'memorybillingamount' field has been set, false otherwise.
      */
     public boolean hasMemorybillingamount() {
-      return fieldSetFlags()[25];
+      return fieldSetFlags()[28];
     }
 
     /**
@@ -3056,7 +3270,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearMemorybillingamount() {
       memorybillingamount = null;
-      fieldSetFlags()[25] = false;
+      fieldSetFlags()[28] = false;
       return this;
     }
 
@@ -3074,9 +3288,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setIdlecost(java.lang.Double value) {
-      validate(fields()[26], value);
+      validate(fields()[29], value);
       this.idlecost = value;
-      fieldSetFlags()[26] = true;
+      fieldSetFlags()[29] = true;
       return this;
     }
 
@@ -3085,7 +3299,7 @@ public class ClusterBillingData
      * @return True if the 'idlecost' field has been set, false otherwise.
      */
     public boolean hasIdlecost() {
-      return fieldSetFlags()[26];
+      return fieldSetFlags()[29];
     }
 
     /**
@@ -3094,7 +3308,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearIdlecost() {
       idlecost = null;
-      fieldSetFlags()[26] = false;
+      fieldSetFlags()[29] = false;
       return this;
     }
 
@@ -3112,9 +3326,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setCpuidlecost(java.lang.Double value) {
-      validate(fields()[27], value);
+      validate(fields()[30], value);
       this.cpuidlecost = value;
-      fieldSetFlags()[27] = true;
+      fieldSetFlags()[30] = true;
       return this;
     }
 
@@ -3123,7 +3337,7 @@ public class ClusterBillingData
      * @return True if the 'cpuidlecost' field has been set, false otherwise.
      */
     public boolean hasCpuidlecost() {
-      return fieldSetFlags()[27];
+      return fieldSetFlags()[30];
     }
 
     /**
@@ -3132,7 +3346,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearCpuidlecost() {
       cpuidlecost = null;
-      fieldSetFlags()[27] = false;
+      fieldSetFlags()[30] = false;
       return this;
     }
 
@@ -3150,9 +3364,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setMemoryidlecost(java.lang.Double value) {
-      validate(fields()[28], value);
+      validate(fields()[31], value);
       this.memoryidlecost = value;
-      fieldSetFlags()[28] = true;
+      fieldSetFlags()[31] = true;
       return this;
     }
 
@@ -3161,7 +3375,7 @@ public class ClusterBillingData
      * @return True if the 'memoryidlecost' field has been set, false otherwise.
      */
     public boolean hasMemoryidlecost() {
-      return fieldSetFlags()[28];
+      return fieldSetFlags()[31];
     }
 
     /**
@@ -3170,7 +3384,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearMemoryidlecost() {
       memoryidlecost = null;
-      fieldSetFlags()[28] = false;
+      fieldSetFlags()[31] = false;
       return this;
     }
 
@@ -3188,9 +3402,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setUsagedurationseconds(java.lang.Double value) {
-      validate(fields()[29], value);
+      validate(fields()[32], value);
       this.usagedurationseconds = value;
-      fieldSetFlags()[29] = true;
+      fieldSetFlags()[32] = true;
       return this;
     }
 
@@ -3199,7 +3413,7 @@ public class ClusterBillingData
      * @return True if the 'usagedurationseconds' field has been set, false otherwise.
      */
     public boolean hasUsagedurationseconds() {
-      return fieldSetFlags()[29];
+      return fieldSetFlags()[32];
     }
 
     /**
@@ -3208,7 +3422,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearUsagedurationseconds() {
       usagedurationseconds = null;
-      fieldSetFlags()[29] = false;
+      fieldSetFlags()[32] = false;
       return this;
     }
 
@@ -3226,9 +3440,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setCpuunitseconds(java.lang.Double value) {
-      validate(fields()[30], value);
+      validate(fields()[33], value);
       this.cpuunitseconds = value;
-      fieldSetFlags()[30] = true;
+      fieldSetFlags()[33] = true;
       return this;
     }
 
@@ -3237,7 +3451,7 @@ public class ClusterBillingData
      * @return True if the 'cpuunitseconds' field has been set, false otherwise.
      */
     public boolean hasCpuunitseconds() {
-      return fieldSetFlags()[30];
+      return fieldSetFlags()[33];
     }
 
     /**
@@ -3246,7 +3460,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearCpuunitseconds() {
       cpuunitseconds = null;
-      fieldSetFlags()[30] = false;
+      fieldSetFlags()[33] = false;
       return this;
     }
 
@@ -3264,9 +3478,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setMemorymbseconds(java.lang.Double value) {
-      validate(fields()[31], value);
+      validate(fields()[34], value);
       this.memorymbseconds = value;
-      fieldSetFlags()[31] = true;
+      fieldSetFlags()[34] = true;
       return this;
     }
 
@@ -3275,7 +3489,7 @@ public class ClusterBillingData
      * @return True if the 'memorymbseconds' field has been set, false otherwise.
      */
     public boolean hasMemorymbseconds() {
-      return fieldSetFlags()[31];
+      return fieldSetFlags()[34];
     }
 
     /**
@@ -3284,7 +3498,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearMemorymbseconds() {
       memorymbseconds = null;
-      fieldSetFlags()[31] = false;
+      fieldSetFlags()[34] = false;
       return this;
     }
 
@@ -3302,9 +3516,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setMaxcpuutilization(java.lang.Double value) {
-      validate(fields()[32], value);
+      validate(fields()[35], value);
       this.maxcpuutilization = value;
-      fieldSetFlags()[32] = true;
+      fieldSetFlags()[35] = true;
       return this;
     }
 
@@ -3313,7 +3527,7 @@ public class ClusterBillingData
      * @return True if the 'maxcpuutilization' field has been set, false otherwise.
      */
     public boolean hasMaxcpuutilization() {
-      return fieldSetFlags()[32];
+      return fieldSetFlags()[35];
     }
 
     /**
@@ -3322,7 +3536,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearMaxcpuutilization() {
       maxcpuutilization = null;
-      fieldSetFlags()[32] = false;
+      fieldSetFlags()[35] = false;
       return this;
     }
 
@@ -3340,9 +3554,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setMaxmemoryutilization(java.lang.Double value) {
-      validate(fields()[33], value);
+      validate(fields()[36], value);
       this.maxmemoryutilization = value;
-      fieldSetFlags()[33] = true;
+      fieldSetFlags()[36] = true;
       return this;
     }
 
@@ -3351,7 +3565,7 @@ public class ClusterBillingData
      * @return True if the 'maxmemoryutilization' field has been set, false otherwise.
      */
     public boolean hasMaxmemoryutilization() {
-      return fieldSetFlags()[33];
+      return fieldSetFlags()[36];
     }
 
     /**
@@ -3360,7 +3574,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearMaxmemoryutilization() {
       maxmemoryutilization = null;
-      fieldSetFlags()[33] = false;
+      fieldSetFlags()[36] = false;
       return this;
     }
 
@@ -3378,9 +3592,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setAvgcpuutilization(java.lang.Double value) {
-      validate(fields()[34], value);
+      validate(fields()[37], value);
       this.avgcpuutilization = value;
-      fieldSetFlags()[34] = true;
+      fieldSetFlags()[37] = true;
       return this;
     }
 
@@ -3389,7 +3603,7 @@ public class ClusterBillingData
      * @return True if the 'avgcpuutilization' field has been set, false otherwise.
      */
     public boolean hasAvgcpuutilization() {
-      return fieldSetFlags()[34];
+      return fieldSetFlags()[37];
     }
 
     /**
@@ -3398,7 +3612,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearAvgcpuutilization() {
       avgcpuutilization = null;
-      fieldSetFlags()[34] = false;
+      fieldSetFlags()[37] = false;
       return this;
     }
 
@@ -3416,9 +3630,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setAvgmemoryutilization(java.lang.Double value) {
-      validate(fields()[35], value);
+      validate(fields()[38], value);
       this.avgmemoryutilization = value;
-      fieldSetFlags()[35] = true;
+      fieldSetFlags()[38] = true;
       return this;
     }
 
@@ -3427,7 +3641,7 @@ public class ClusterBillingData
      * @return True if the 'avgmemoryutilization' field has been set, false otherwise.
      */
     public boolean hasAvgmemoryutilization() {
-      return fieldSetFlags()[35];
+      return fieldSetFlags()[38];
     }
 
     /**
@@ -3436,7 +3650,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearAvgmemoryutilization() {
       avgmemoryutilization = null;
-      fieldSetFlags()[35] = false;
+      fieldSetFlags()[38] = false;
       return this;
     }
 
@@ -3454,9 +3668,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setSystemcost(java.lang.Double value) {
-      validate(fields()[36], value);
+      validate(fields()[39], value);
       this.systemcost = value;
-      fieldSetFlags()[36] = true;
+      fieldSetFlags()[39] = true;
       return this;
     }
 
@@ -3465,7 +3679,7 @@ public class ClusterBillingData
      * @return True if the 'systemcost' field has been set, false otherwise.
      */
     public boolean hasSystemcost() {
-      return fieldSetFlags()[36];
+      return fieldSetFlags()[39];
     }
 
     /**
@@ -3474,7 +3688,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearSystemcost() {
       systemcost = null;
-      fieldSetFlags()[36] = false;
+      fieldSetFlags()[39] = false;
       return this;
     }
 
@@ -3492,9 +3706,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setCpusystemcost(java.lang.Double value) {
-      validate(fields()[37], value);
+      validate(fields()[40], value);
       this.cpusystemcost = value;
-      fieldSetFlags()[37] = true;
+      fieldSetFlags()[40] = true;
       return this;
     }
 
@@ -3503,7 +3717,7 @@ public class ClusterBillingData
      * @return True if the 'cpusystemcost' field has been set, false otherwise.
      */
     public boolean hasCpusystemcost() {
-      return fieldSetFlags()[37];
+      return fieldSetFlags()[40];
     }
 
     /**
@@ -3512,7 +3726,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearCpusystemcost() {
       cpusystemcost = null;
-      fieldSetFlags()[37] = false;
+      fieldSetFlags()[40] = false;
       return this;
     }
 
@@ -3530,9 +3744,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setMemorysystemcost(java.lang.Double value) {
-      validate(fields()[38], value);
+      validate(fields()[41], value);
       this.memorysystemcost = value;
-      fieldSetFlags()[38] = true;
+      fieldSetFlags()[41] = true;
       return this;
     }
 
@@ -3541,7 +3755,7 @@ public class ClusterBillingData
      * @return True if the 'memorysystemcost' field has been set, false otherwise.
      */
     public boolean hasMemorysystemcost() {
-      return fieldSetFlags()[38];
+      return fieldSetFlags()[41];
     }
 
     /**
@@ -3550,7 +3764,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearMemorysystemcost() {
       memorysystemcost = null;
-      fieldSetFlags()[38] = false;
+      fieldSetFlags()[41] = false;
       return this;
     }
 
@@ -3568,9 +3782,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setActualidlecost(java.lang.Double value) {
-      validate(fields()[39], value);
+      validate(fields()[42], value);
       this.actualidlecost = value;
-      fieldSetFlags()[39] = true;
+      fieldSetFlags()[42] = true;
       return this;
     }
 
@@ -3579,7 +3793,7 @@ public class ClusterBillingData
      * @return True if the 'actualidlecost' field has been set, false otherwise.
      */
     public boolean hasActualidlecost() {
-      return fieldSetFlags()[39];
+      return fieldSetFlags()[42];
     }
 
     /**
@@ -3588,7 +3802,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearActualidlecost() {
       actualidlecost = null;
-      fieldSetFlags()[39] = false;
+      fieldSetFlags()[42] = false;
       return this;
     }
 
@@ -3606,9 +3820,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setCpuactualidlecost(java.lang.Double value) {
-      validate(fields()[40], value);
+      validate(fields()[43], value);
       this.cpuactualidlecost = value;
-      fieldSetFlags()[40] = true;
+      fieldSetFlags()[43] = true;
       return this;
     }
 
@@ -3617,7 +3831,7 @@ public class ClusterBillingData
      * @return True if the 'cpuactualidlecost' field has been set, false otherwise.
      */
     public boolean hasCpuactualidlecost() {
-      return fieldSetFlags()[40];
+      return fieldSetFlags()[43];
     }
 
     /**
@@ -3626,7 +3840,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearCpuactualidlecost() {
       cpuactualidlecost = null;
-      fieldSetFlags()[40] = false;
+      fieldSetFlags()[43] = false;
       return this;
     }
 
@@ -3644,9 +3858,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setMemoryactualidlecost(java.lang.Double value) {
-      validate(fields()[41], value);
+      validate(fields()[44], value);
       this.memoryactualidlecost = value;
-      fieldSetFlags()[41] = true;
+      fieldSetFlags()[44] = true;
       return this;
     }
 
@@ -3655,7 +3869,7 @@ public class ClusterBillingData
      * @return True if the 'memoryactualidlecost' field has been set, false otherwise.
      */
     public boolean hasMemoryactualidlecost() {
-      return fieldSetFlags()[41];
+      return fieldSetFlags()[44];
     }
 
     /**
@@ -3664,7 +3878,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearMemoryactualidlecost() {
       memoryactualidlecost = null;
-      fieldSetFlags()[41] = false;
+      fieldSetFlags()[44] = false;
       return this;
     }
 
@@ -3682,9 +3896,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setUnallocatedcost(java.lang.Double value) {
-      validate(fields()[42], value);
+      validate(fields()[45], value);
       this.unallocatedcost = value;
-      fieldSetFlags()[42] = true;
+      fieldSetFlags()[45] = true;
       return this;
     }
 
@@ -3693,7 +3907,7 @@ public class ClusterBillingData
      * @return True if the 'unallocatedcost' field has been set, false otherwise.
      */
     public boolean hasUnallocatedcost() {
-      return fieldSetFlags()[42];
+      return fieldSetFlags()[45];
     }
 
     /**
@@ -3702,7 +3916,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearUnallocatedcost() {
       unallocatedcost = null;
-      fieldSetFlags()[42] = false;
+      fieldSetFlags()[45] = false;
       return this;
     }
 
@@ -3720,9 +3934,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setCpuunallocatedcost(java.lang.Double value) {
-      validate(fields()[43], value);
+      validate(fields()[46], value);
       this.cpuunallocatedcost = value;
-      fieldSetFlags()[43] = true;
+      fieldSetFlags()[46] = true;
       return this;
     }
 
@@ -3731,7 +3945,7 @@ public class ClusterBillingData
      * @return True if the 'cpuunallocatedcost' field has been set, false otherwise.
      */
     public boolean hasCpuunallocatedcost() {
-      return fieldSetFlags()[43];
+      return fieldSetFlags()[46];
     }
 
     /**
@@ -3740,7 +3954,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearCpuunallocatedcost() {
       cpuunallocatedcost = null;
-      fieldSetFlags()[43] = false;
+      fieldSetFlags()[46] = false;
       return this;
     }
 
@@ -3758,9 +3972,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setMemoryunallocatedcost(java.lang.Double value) {
-      validate(fields()[44], value);
+      validate(fields()[47], value);
       this.memoryunallocatedcost = value;
-      fieldSetFlags()[44] = true;
+      fieldSetFlags()[47] = true;
       return this;
     }
 
@@ -3769,7 +3983,7 @@ public class ClusterBillingData
      * @return True if the 'memoryunallocatedcost' field has been set, false otherwise.
      */
     public boolean hasMemoryunallocatedcost() {
-      return fieldSetFlags()[44];
+      return fieldSetFlags()[47];
     }
 
     /**
@@ -3778,7 +3992,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearMemoryunallocatedcost() {
       memoryunallocatedcost = null;
-      fieldSetFlags()[44] = false;
+      fieldSetFlags()[47] = false;
       return this;
     }
 
@@ -3796,9 +4010,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setInstancename(java.lang.CharSequence value) {
-      validate(fields()[45], value);
+      validate(fields()[48], value);
       this.instancename = value;
-      fieldSetFlags()[45] = true;
+      fieldSetFlags()[48] = true;
       return this;
     }
 
@@ -3807,7 +4021,7 @@ public class ClusterBillingData
      * @return True if the 'instancename' field has been set, false otherwise.
      */
     public boolean hasInstancename() {
-      return fieldSetFlags()[45];
+      return fieldSetFlags()[48];
     }
 
     /**
@@ -3816,7 +4030,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearInstancename() {
       instancename = null;
-      fieldSetFlags()[45] = false;
+      fieldSetFlags()[48] = false;
       return this;
     }
 
@@ -3834,9 +4048,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setCpurequest(java.lang.Double value) {
-      validate(fields()[46], value);
+      validate(fields()[49], value);
       this.cpurequest = value;
-      fieldSetFlags()[46] = true;
+      fieldSetFlags()[49] = true;
       return this;
     }
 
@@ -3845,7 +4059,7 @@ public class ClusterBillingData
      * @return True if the 'cpurequest' field has been set, false otherwise.
      */
     public boolean hasCpurequest() {
-      return fieldSetFlags()[46];
+      return fieldSetFlags()[49];
     }
 
     /**
@@ -3854,7 +4068,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearCpurequest() {
       cpurequest = null;
-      fieldSetFlags()[46] = false;
+      fieldSetFlags()[49] = false;
       return this;
     }
 
@@ -3872,9 +4086,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setMemoryrequest(java.lang.Double value) {
-      validate(fields()[47], value);
+      validate(fields()[50], value);
       this.memoryrequest = value;
-      fieldSetFlags()[47] = true;
+      fieldSetFlags()[50] = true;
       return this;
     }
 
@@ -3883,7 +4097,7 @@ public class ClusterBillingData
      * @return True if the 'memoryrequest' field has been set, false otherwise.
      */
     public boolean hasMemoryrequest() {
-      return fieldSetFlags()[47];
+      return fieldSetFlags()[50];
     }
 
     /**
@@ -3892,7 +4106,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearMemoryrequest() {
       memoryrequest = null;
-      fieldSetFlags()[47] = false;
+      fieldSetFlags()[50] = false;
       return this;
     }
 
@@ -3910,9 +4124,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setCpulimit(java.lang.Double value) {
-      validate(fields()[48], value);
+      validate(fields()[51], value);
       this.cpulimit = value;
-      fieldSetFlags()[48] = true;
+      fieldSetFlags()[51] = true;
       return this;
     }
 
@@ -3921,7 +4135,7 @@ public class ClusterBillingData
      * @return True if the 'cpulimit' field has been set, false otherwise.
      */
     public boolean hasCpulimit() {
-      return fieldSetFlags()[48];
+      return fieldSetFlags()[51];
     }
 
     /**
@@ -3930,7 +4144,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearCpulimit() {
       cpulimit = null;
-      fieldSetFlags()[48] = false;
+      fieldSetFlags()[51] = false;
       return this;
     }
 
@@ -3948,9 +4162,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setMemorylimit(java.lang.Double value) {
-      validate(fields()[49], value);
+      validate(fields()[52], value);
       this.memorylimit = value;
-      fieldSetFlags()[49] = true;
+      fieldSetFlags()[52] = true;
       return this;
     }
 
@@ -3959,7 +4173,7 @@ public class ClusterBillingData
      * @return True if the 'memorylimit' field has been set, false otherwise.
      */
     public boolean hasMemorylimit() {
-      return fieldSetFlags()[49];
+      return fieldSetFlags()[52];
     }
 
     /**
@@ -3968,7 +4182,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearMemorylimit() {
       memorylimit = null;
-      fieldSetFlags()[49] = false;
+      fieldSetFlags()[52] = false;
       return this;
     }
 
@@ -3986,9 +4200,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setMaxcpuutilizationvalue(java.lang.Double value) {
-      validate(fields()[50], value);
+      validate(fields()[53], value);
       this.maxcpuutilizationvalue = value;
-      fieldSetFlags()[50] = true;
+      fieldSetFlags()[53] = true;
       return this;
     }
 
@@ -3997,7 +4211,7 @@ public class ClusterBillingData
      * @return True if the 'maxcpuutilizationvalue' field has been set, false otherwise.
      */
     public boolean hasMaxcpuutilizationvalue() {
-      return fieldSetFlags()[50];
+      return fieldSetFlags()[53];
     }
 
     /**
@@ -4006,7 +4220,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearMaxcpuutilizationvalue() {
       maxcpuutilizationvalue = null;
-      fieldSetFlags()[50] = false;
+      fieldSetFlags()[53] = false;
       return this;
     }
 
@@ -4024,9 +4238,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setMaxmemoryutilizationvalue(java.lang.Double value) {
-      validate(fields()[51], value);
+      validate(fields()[54], value);
       this.maxmemoryutilizationvalue = value;
-      fieldSetFlags()[51] = true;
+      fieldSetFlags()[54] = true;
       return this;
     }
 
@@ -4035,7 +4249,7 @@ public class ClusterBillingData
      * @return True if the 'maxmemoryutilizationvalue' field has been set, false otherwise.
      */
     public boolean hasMaxmemoryutilizationvalue() {
-      return fieldSetFlags()[51];
+      return fieldSetFlags()[54];
     }
 
     /**
@@ -4044,7 +4258,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearMaxmemoryutilizationvalue() {
       maxmemoryutilizationvalue = null;
-      fieldSetFlags()[51] = false;
+      fieldSetFlags()[54] = false;
       return this;
     }
 
@@ -4062,9 +4276,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setAvgcpuutilizationvalue(java.lang.Double value) {
-      validate(fields()[52], value);
+      validate(fields()[55], value);
       this.avgcpuutilizationvalue = value;
-      fieldSetFlags()[52] = true;
+      fieldSetFlags()[55] = true;
       return this;
     }
 
@@ -4073,7 +4287,7 @@ public class ClusterBillingData
      * @return True if the 'avgcpuutilizationvalue' field has been set, false otherwise.
      */
     public boolean hasAvgcpuutilizationvalue() {
-      return fieldSetFlags()[52];
+      return fieldSetFlags()[55];
     }
 
     /**
@@ -4082,7 +4296,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearAvgcpuutilizationvalue() {
       avgcpuutilizationvalue = null;
-      fieldSetFlags()[52] = false;
+      fieldSetFlags()[55] = false;
       return this;
     }
 
@@ -4100,9 +4314,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setAvgmemoryutilizationvalue(java.lang.Double value) {
-      validate(fields()[53], value);
+      validate(fields()[56], value);
       this.avgmemoryutilizationvalue = value;
-      fieldSetFlags()[53] = true;
+      fieldSetFlags()[56] = true;
       return this;
     }
 
@@ -4111,7 +4325,7 @@ public class ClusterBillingData
      * @return True if the 'avgmemoryutilizationvalue' field has been set, false otherwise.
      */
     public boolean hasAvgmemoryutilizationvalue() {
-      return fieldSetFlags()[53];
+      return fieldSetFlags()[56];
     }
 
     /**
@@ -4120,7 +4334,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearAvgmemoryutilizationvalue() {
       avgmemoryutilizationvalue = null;
-      fieldSetFlags()[53] = false;
+      fieldSetFlags()[56] = false;
       return this;
     }
 
@@ -4138,9 +4352,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setNetworkcost(java.lang.Double value) {
-      validate(fields()[54], value);
+      validate(fields()[57], value);
       this.networkcost = value;
-      fieldSetFlags()[54] = true;
+      fieldSetFlags()[57] = true;
       return this;
     }
 
@@ -4149,7 +4363,7 @@ public class ClusterBillingData
      * @return True if the 'networkcost' field has been set, false otherwise.
      */
     public boolean hasNetworkcost() {
-      return fieldSetFlags()[54];
+      return fieldSetFlags()[57];
     }
 
     /**
@@ -4158,7 +4372,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearNetworkcost() {
       networkcost = null;
-      fieldSetFlags()[54] = false;
+      fieldSetFlags()[57] = false;
       return this;
     }
 
@@ -4176,9 +4390,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setPricingsource(java.lang.CharSequence value) {
-      validate(fields()[55], value);
+      validate(fields()[58], value);
       this.pricingsource = value;
-      fieldSetFlags()[55] = true;
+      fieldSetFlags()[58] = true;
       return this;
     }
 
@@ -4187,7 +4401,7 @@ public class ClusterBillingData
      * @return True if the 'pricingsource' field has been set, false otherwise.
      */
     public boolean hasPricingsource() {
-      return fieldSetFlags()[55];
+      return fieldSetFlags()[58];
     }
 
     /**
@@ -4196,7 +4410,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearPricingsource() {
       pricingsource = null;
-      fieldSetFlags()[55] = false;
+      fieldSetFlags()[58] = false;
       return this;
     }
 
@@ -4214,9 +4428,9 @@ public class ClusterBillingData
      * @return This builder.
      */
     public io.harness.avro.ClusterBillingData.Builder setLabels(java.util.List<java.lang.Object> value) {
-      validate(fields()[56], value);
+      validate(fields()[59], value);
       this.labels = value;
-      fieldSetFlags()[56] = true;
+      fieldSetFlags()[59] = true;
       return this;
     }
 
@@ -4225,7 +4439,7 @@ public class ClusterBillingData
      * @return True if the 'labels' field has been set, false otherwise.
      */
     public boolean hasLabels() {
-      return fieldSetFlags()[56];
+      return fieldSetFlags()[59];
     }
 
     /**
@@ -4234,7 +4448,7 @@ public class ClusterBillingData
      */
     public io.harness.avro.ClusterBillingData.Builder clearLabels() {
       labels = null;
-      fieldSetFlags()[56] = false;
+      fieldSetFlags()[59] = false;
       return this;
     }
 
@@ -4257,82 +4471,86 @@ public class ClusterBillingData
         record.appid = fieldSetFlags()[9] ? this.appid : (java.lang.CharSequence) defaultValue(fields()[9]);
         record.serviceid = fieldSetFlags()[10] ? this.serviceid : (java.lang.CharSequence) defaultValue(fields()[10]);
         record.envid = fieldSetFlags()[11] ? this.envid : (java.lang.CharSequence) defaultValue(fields()[11]);
+        record.appname = fieldSetFlags()[12] ? this.appname : (java.lang.CharSequence) defaultValue(fields()[12]);
+        record.servicename =
+            fieldSetFlags()[13] ? this.servicename : (java.lang.CharSequence) defaultValue(fields()[13]);
+        record.envname = fieldSetFlags()[14] ? this.envname : (java.lang.CharSequence) defaultValue(fields()[14]);
         record.cloudproviderid =
-            fieldSetFlags()[12] ? this.cloudproviderid : (java.lang.CharSequence) defaultValue(fields()[12]);
+            fieldSetFlags()[15] ? this.cloudproviderid : (java.lang.CharSequence) defaultValue(fields()[15]);
         record.parentinstanceid =
-            fieldSetFlags()[13] ? this.parentinstanceid : (java.lang.CharSequence) defaultValue(fields()[13]);
-        record.region = fieldSetFlags()[14] ? this.region : (java.lang.CharSequence) defaultValue(fields()[14]);
-        record.launchtype = fieldSetFlags()[15] ? this.launchtype : (java.lang.CharSequence) defaultValue(fields()[15]);
+            fieldSetFlags()[16] ? this.parentinstanceid : (java.lang.CharSequence) defaultValue(fields()[16]);
+        record.region = fieldSetFlags()[17] ? this.region : (java.lang.CharSequence) defaultValue(fields()[17]);
+        record.launchtype = fieldSetFlags()[18] ? this.launchtype : (java.lang.CharSequence) defaultValue(fields()[18]);
         record.clustertype =
-            fieldSetFlags()[16] ? this.clustertype : (java.lang.CharSequence) defaultValue(fields()[16]);
+            fieldSetFlags()[19] ? this.clustertype : (java.lang.CharSequence) defaultValue(fields()[19]);
         record.workloadname =
-            fieldSetFlags()[17] ? this.workloadname : (java.lang.CharSequence) defaultValue(fields()[17]);
+            fieldSetFlags()[20] ? this.workloadname : (java.lang.CharSequence) defaultValue(fields()[20]);
         record.workloadtype =
-            fieldSetFlags()[18] ? this.workloadtype : (java.lang.CharSequence) defaultValue(fields()[18]);
-        record.namespace = fieldSetFlags()[19] ? this.namespace : (java.lang.CharSequence) defaultValue(fields()[19]);
+            fieldSetFlags()[21] ? this.workloadtype : (java.lang.CharSequence) defaultValue(fields()[21]);
+        record.namespace = fieldSetFlags()[22] ? this.namespace : (java.lang.CharSequence) defaultValue(fields()[22]);
         record.cloudservicename =
-            fieldSetFlags()[20] ? this.cloudservicename : (java.lang.CharSequence) defaultValue(fields()[20]);
-        record.taskid = fieldSetFlags()[21] ? this.taskid : (java.lang.CharSequence) defaultValue(fields()[21]);
+            fieldSetFlags()[23] ? this.cloudservicename : (java.lang.CharSequence) defaultValue(fields()[23]);
+        record.taskid = fieldSetFlags()[24] ? this.taskid : (java.lang.CharSequence) defaultValue(fields()[24]);
         record.cloudprovider =
-            fieldSetFlags()[22] ? this.cloudprovider : (java.lang.CharSequence) defaultValue(fields()[22]);
-        record.billingamount = fieldSetFlags()[23] ? this.billingamount : (java.lang.Double) defaultValue(fields()[23]);
+            fieldSetFlags()[25] ? this.cloudprovider : (java.lang.CharSequence) defaultValue(fields()[25]);
+        record.billingamount = fieldSetFlags()[26] ? this.billingamount : (java.lang.Double) defaultValue(fields()[26]);
         record.cpubillingamount =
-            fieldSetFlags()[24] ? this.cpubillingamount : (java.lang.Double) defaultValue(fields()[24]);
+            fieldSetFlags()[27] ? this.cpubillingamount : (java.lang.Double) defaultValue(fields()[27]);
         record.memorybillingamount =
-            fieldSetFlags()[25] ? this.memorybillingamount : (java.lang.Double) defaultValue(fields()[25]);
-        record.idlecost = fieldSetFlags()[26] ? this.idlecost : (java.lang.Double) defaultValue(fields()[26]);
-        record.cpuidlecost = fieldSetFlags()[27] ? this.cpuidlecost : (java.lang.Double) defaultValue(fields()[27]);
+            fieldSetFlags()[28] ? this.memorybillingamount : (java.lang.Double) defaultValue(fields()[28]);
+        record.idlecost = fieldSetFlags()[29] ? this.idlecost : (java.lang.Double) defaultValue(fields()[29]);
+        record.cpuidlecost = fieldSetFlags()[30] ? this.cpuidlecost : (java.lang.Double) defaultValue(fields()[30]);
         record.memoryidlecost =
-            fieldSetFlags()[28] ? this.memoryidlecost : (java.lang.Double) defaultValue(fields()[28]);
+            fieldSetFlags()[31] ? this.memoryidlecost : (java.lang.Double) defaultValue(fields()[31]);
         record.usagedurationseconds =
-            fieldSetFlags()[29] ? this.usagedurationseconds : (java.lang.Double) defaultValue(fields()[29]);
+            fieldSetFlags()[32] ? this.usagedurationseconds : (java.lang.Double) defaultValue(fields()[32]);
         record.cpuunitseconds =
-            fieldSetFlags()[30] ? this.cpuunitseconds : (java.lang.Double) defaultValue(fields()[30]);
+            fieldSetFlags()[33] ? this.cpuunitseconds : (java.lang.Double) defaultValue(fields()[33]);
         record.memorymbseconds =
-            fieldSetFlags()[31] ? this.memorymbseconds : (java.lang.Double) defaultValue(fields()[31]);
+            fieldSetFlags()[34] ? this.memorymbseconds : (java.lang.Double) defaultValue(fields()[34]);
         record.maxcpuutilization =
-            fieldSetFlags()[32] ? this.maxcpuutilization : (java.lang.Double) defaultValue(fields()[32]);
+            fieldSetFlags()[35] ? this.maxcpuutilization : (java.lang.Double) defaultValue(fields()[35]);
         record.maxmemoryutilization =
-            fieldSetFlags()[33] ? this.maxmemoryutilization : (java.lang.Double) defaultValue(fields()[33]);
+            fieldSetFlags()[36] ? this.maxmemoryutilization : (java.lang.Double) defaultValue(fields()[36]);
         record.avgcpuutilization =
-            fieldSetFlags()[34] ? this.avgcpuutilization : (java.lang.Double) defaultValue(fields()[34]);
+            fieldSetFlags()[37] ? this.avgcpuutilization : (java.lang.Double) defaultValue(fields()[37]);
         record.avgmemoryutilization =
-            fieldSetFlags()[35] ? this.avgmemoryutilization : (java.lang.Double) defaultValue(fields()[35]);
-        record.systemcost = fieldSetFlags()[36] ? this.systemcost : (java.lang.Double) defaultValue(fields()[36]);
-        record.cpusystemcost = fieldSetFlags()[37] ? this.cpusystemcost : (java.lang.Double) defaultValue(fields()[37]);
+            fieldSetFlags()[38] ? this.avgmemoryutilization : (java.lang.Double) defaultValue(fields()[38]);
+        record.systemcost = fieldSetFlags()[39] ? this.systemcost : (java.lang.Double) defaultValue(fields()[39]);
+        record.cpusystemcost = fieldSetFlags()[40] ? this.cpusystemcost : (java.lang.Double) defaultValue(fields()[40]);
         record.memorysystemcost =
-            fieldSetFlags()[38] ? this.memorysystemcost : (java.lang.Double) defaultValue(fields()[38]);
+            fieldSetFlags()[41] ? this.memorysystemcost : (java.lang.Double) defaultValue(fields()[41]);
         record.actualidlecost =
-            fieldSetFlags()[39] ? this.actualidlecost : (java.lang.Double) defaultValue(fields()[39]);
+            fieldSetFlags()[42] ? this.actualidlecost : (java.lang.Double) defaultValue(fields()[42]);
         record.cpuactualidlecost =
-            fieldSetFlags()[40] ? this.cpuactualidlecost : (java.lang.Double) defaultValue(fields()[40]);
+            fieldSetFlags()[43] ? this.cpuactualidlecost : (java.lang.Double) defaultValue(fields()[43]);
         record.memoryactualidlecost =
-            fieldSetFlags()[41] ? this.memoryactualidlecost : (java.lang.Double) defaultValue(fields()[41]);
+            fieldSetFlags()[44] ? this.memoryactualidlecost : (java.lang.Double) defaultValue(fields()[44]);
         record.unallocatedcost =
-            fieldSetFlags()[42] ? this.unallocatedcost : (java.lang.Double) defaultValue(fields()[42]);
+            fieldSetFlags()[45] ? this.unallocatedcost : (java.lang.Double) defaultValue(fields()[45]);
         record.cpuunallocatedcost =
-            fieldSetFlags()[43] ? this.cpuunallocatedcost : (java.lang.Double) defaultValue(fields()[43]);
+            fieldSetFlags()[46] ? this.cpuunallocatedcost : (java.lang.Double) defaultValue(fields()[46]);
         record.memoryunallocatedcost =
-            fieldSetFlags()[44] ? this.memoryunallocatedcost : (java.lang.Double) defaultValue(fields()[44]);
+            fieldSetFlags()[47] ? this.memoryunallocatedcost : (java.lang.Double) defaultValue(fields()[47]);
         record.instancename =
-            fieldSetFlags()[45] ? this.instancename : (java.lang.CharSequence) defaultValue(fields()[45]);
-        record.cpurequest = fieldSetFlags()[46] ? this.cpurequest : (java.lang.Double) defaultValue(fields()[46]);
-        record.memoryrequest = fieldSetFlags()[47] ? this.memoryrequest : (java.lang.Double) defaultValue(fields()[47]);
-        record.cpulimit = fieldSetFlags()[48] ? this.cpulimit : (java.lang.Double) defaultValue(fields()[48]);
-        record.memorylimit = fieldSetFlags()[49] ? this.memorylimit : (java.lang.Double) defaultValue(fields()[49]);
+            fieldSetFlags()[48] ? this.instancename : (java.lang.CharSequence) defaultValue(fields()[48]);
+        record.cpurequest = fieldSetFlags()[49] ? this.cpurequest : (java.lang.Double) defaultValue(fields()[49]);
+        record.memoryrequest = fieldSetFlags()[50] ? this.memoryrequest : (java.lang.Double) defaultValue(fields()[50]);
+        record.cpulimit = fieldSetFlags()[51] ? this.cpulimit : (java.lang.Double) defaultValue(fields()[51]);
+        record.memorylimit = fieldSetFlags()[52] ? this.memorylimit : (java.lang.Double) defaultValue(fields()[52]);
         record.maxcpuutilizationvalue =
-            fieldSetFlags()[50] ? this.maxcpuutilizationvalue : (java.lang.Double) defaultValue(fields()[50]);
+            fieldSetFlags()[53] ? this.maxcpuutilizationvalue : (java.lang.Double) defaultValue(fields()[53]);
         record.maxmemoryutilizationvalue =
-            fieldSetFlags()[51] ? this.maxmemoryutilizationvalue : (java.lang.Double) defaultValue(fields()[51]);
+            fieldSetFlags()[54] ? this.maxmemoryutilizationvalue : (java.lang.Double) defaultValue(fields()[54]);
         record.avgcpuutilizationvalue =
-            fieldSetFlags()[52] ? this.avgcpuutilizationvalue : (java.lang.Double) defaultValue(fields()[52]);
+            fieldSetFlags()[55] ? this.avgcpuutilizationvalue : (java.lang.Double) defaultValue(fields()[55]);
         record.avgmemoryutilizationvalue =
-            fieldSetFlags()[53] ? this.avgmemoryutilizationvalue : (java.lang.Double) defaultValue(fields()[53]);
-        record.networkcost = fieldSetFlags()[54] ? this.networkcost : (java.lang.Double) defaultValue(fields()[54]);
+            fieldSetFlags()[56] ? this.avgmemoryutilizationvalue : (java.lang.Double) defaultValue(fields()[56]);
+        record.networkcost = fieldSetFlags()[57] ? this.networkcost : (java.lang.Double) defaultValue(fields()[57]);
         record.pricingsource =
-            fieldSetFlags()[55] ? this.pricingsource : (java.lang.CharSequence) defaultValue(fields()[55]);
+            fieldSetFlags()[58] ? this.pricingsource : (java.lang.CharSequence) defaultValue(fields()[58]);
         record.labels =
-            fieldSetFlags()[56] ? this.labels : (java.util.List<java.lang.Object>) defaultValue(fields()[56]);
+            fieldSetFlags()[59] ? this.labels : (java.util.List<java.lang.Object>) defaultValue(fields()[59]);
         return record;
       } catch (org.apache.avro.AvroMissingFieldException e) {
         throw e;
