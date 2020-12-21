@@ -21,6 +21,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -102,6 +103,13 @@ public class HttpServiceImpl implements HttpService {
         if (headerPair.size() == 2) {
           httpUriRequest.addHeader(headerPair.get(0), headerPair.get(1));
         }
+      }
+    }
+
+    // For NG Headers
+    if (httpInternalConfig.getRequestHeaders() != null) {
+      for (Map.Entry<String, String> entry : httpInternalConfig.getRequestHeaders().entrySet()) {
+        httpUriRequest.addHeader(entry.getKey(), entry.getValue());
       }
     }
 

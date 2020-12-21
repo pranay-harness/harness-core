@@ -66,5 +66,6 @@ public enum TaskGroup {
   CAPABILITY_VALIDATION,
   JIRA_NG,
   CVNG,
-  NOTIFICATION
+  NOTIFICATION,
+  HTTP_NG
 }
