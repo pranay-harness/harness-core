@@ -18,6 +18,10 @@ import io.harness.connector.mappers.gcpmappers.GcpDTOToEntity;
 import io.harness.connector.mappers.gcpmappers.GcpEntityToDTO;
 import io.harness.connector.mappers.gitconnectormapper.GitDTOToEntity;
 import io.harness.connector.mappers.gitconnectormapper.GitEntityToDTO;
+import io.harness.connector.mappers.githubconnector.GithubDTOToEntity;
+import io.harness.connector.mappers.githubconnector.GithubEntityToDTO;
+import io.harness.connector.mappers.gitlabconnector.GitlabDTOToEntity;
+import io.harness.connector.mappers.gitlabconnector.GitlabEntityToDTO;
 import io.harness.connector.mappers.jira.JiraDTOToEntity;
 import io.harness.connector.mappers.jira.JiraEntityToDTO;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesDTOToEntity;
@@ -93,6 +97,8 @@ public class ConnectorModule extends AbstractModule {
         .to(ArtifactoryDTOToEntity.class);
     connectorDTOToEntityMapBinder.addBinding(ConnectorType.JIRA.getDisplayName()).to(JiraDTOToEntity.class);
     connectorDTOToEntityMapBinder.addBinding(ConnectorType.NEXUS.getDisplayName()).to(NexusDTOToEntity.class);
+    connectorDTOToEntityMapBinder.addBinding(ConnectorType.GITHUB.getDisplayName()).to(GithubDTOToEntity.class);
+    connectorDTOToEntityMapBinder.addBinding(ConnectorType.GITLAB.getDisplayName()).to(GitlabDTOToEntity.class);
 
     MapBinder<String, ConnectorEntityToDTOMapper> connectorEntityToDTOMapper =
         MapBinder.newMapBinder(binder(), String.class, ConnectorEntityToDTOMapper.class);
@@ -110,6 +116,8 @@ public class ConnectorModule extends AbstractModule {
     connectorEntityToDTOMapper.addBinding(ConnectorType.ARTIFACTORY.getDisplayName()).to(ArtifactoryEntityToDTO.class);
     connectorEntityToDTOMapper.addBinding(ConnectorType.JIRA.getDisplayName()).to(JiraEntityToDTO.class);
     connectorEntityToDTOMapper.addBinding(ConnectorType.NEXUS.getDisplayName()).to(NexusEntityToDTO.class);
+    connectorEntityToDTOMapper.addBinding(ConnectorType.GITHUB.getDisplayName()).to(GithubEntityToDTO.class);
+    connectorEntityToDTOMapper.addBinding(ConnectorType.GITLAB.getDisplayName()).to(GitlabEntityToDTO.class);
 
     bind(ConnectorService.class)
         .annotatedWith(Names.named(DEFAULT_CONNECTOR_SERVICE))

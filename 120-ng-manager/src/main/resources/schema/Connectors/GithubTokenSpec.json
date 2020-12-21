@@ -1,0 +1,19 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/GithubApiAccessSpecDTO"
+    },
+    {
+      "type": "object",
+      "required": [
+        "tokenRef"
+      ],
+      "properties": {
+        "tokenRef": {
+          "type": "string"
+        }
+      }
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

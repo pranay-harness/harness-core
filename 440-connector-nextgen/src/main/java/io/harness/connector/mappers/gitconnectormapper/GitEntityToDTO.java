@@ -5,11 +5,11 @@ import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
 import io.harness.connector.entities.embedded.gitconnector.GitUserNamePasswordAuthentication;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
 import io.harness.connector.mappers.SecretRefHelper;
-import io.harness.delegate.beans.connector.gitconnector.GitAuthenticationDTO;
-import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
-import io.harness.delegate.beans.connector.gitconnector.GitSSHAuthenticationDTO;
-import io.harness.delegate.beans.connector.gitconnector.GitSyncConfig;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSyncConfig;
 import io.harness.exception.UnknownEnumTypeException;
 
 import com.google.inject.Singleton;

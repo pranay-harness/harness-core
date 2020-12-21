@@ -1,14 +1,14 @@
 package ci.pipeline.execution;
 
-import static io.harness.delegate.beans.connector.gitconnector.GitAuthType.HTTP;
-import static io.harness.delegate.beans.connector.gitconnector.GitAuthType.SSH;
+import static io.harness.delegate.beans.connector.scm.GitAuthType.HTTP;
+import static io.harness.delegate.beans.connector.scm.GitAuthType.SSH;
 import static io.harness.govern.Switch.unhandled;
 
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.stages.IntegrationStageStepParameters;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
-import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.task.ci.CIBuildStatusPushParameters;
 import io.harness.delegate.task.ci.GitSCMType;
 import io.harness.exception.InvalidRequestException;

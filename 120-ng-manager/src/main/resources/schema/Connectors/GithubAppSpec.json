@@ -1,0 +1,27 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/GithubApiAccessSpecDTO"
+    },
+    {
+      "type": "object",
+      "required": [
+        "applicationId",
+        "installationId",
+        "privateKeyRef"
+      ],
+      "properties": {
+        "applicationId": {
+          "type": "string"
+        },
+        "installationId": {
+          "type": "string"
+        },
+        "privateKeyRef": {
+          "type": "string"
+        }
+      }
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

@@ -24,7 +24,9 @@ public enum ConnectorType implements EntitySubtype {
   @JsonProperty("Aws") AWS("Aws"),
   @JsonProperty("Artifactory") ARTIFACTORY("Artifactory"),
   @JsonProperty("Jira") JIRA("Jira"),
-  @JsonProperty("Nexus") NEXUS("Nexus");
+  @JsonProperty("Nexus") NEXUS("Nexus"),
+  @JsonProperty("Github") GITHUB("Github"),
+  @JsonProperty("Gitlab") GITLAB("Gitlab");
 
   private final String displayName;
 

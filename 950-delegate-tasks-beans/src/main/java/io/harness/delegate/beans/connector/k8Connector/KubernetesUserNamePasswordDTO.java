@@ -9,13 +9,12 @@ import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.hibernate.validator.constraints.NotBlank;
 
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(KubernetesConfigConstants.USERNAME_PASSWORD)
 public class KubernetesUserNamePasswordDTO extends KubernetesAuthCredentialDTO {
-  @NotBlank String username;
+  @NotNull String username;
   @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData passwordRef;
 }

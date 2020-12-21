@@ -15,10 +15,10 @@ import static java.lang.String.format;
 
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
-import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
-import io.harness.delegate.beans.connector.gitconnector.GitSSHAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.GitAuthType;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
 import io.harness.delegate.task.citasks.cik8handler.SecretSpecBuilder;
 import io.harness.delegate.task.citasks.cik8handler.params.GitCloneContainerParams;
 import io.harness.delegate.task.citasks.cik8handler.params.GitCloneContainerParams.GitCloneContainerParamsBuilder;
