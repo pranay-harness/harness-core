@@ -8,6 +8,7 @@ import io.harness.ccm.setup.graphql.OverviewPageStatsDataFetcher;
 import io.harness.ccm.views.graphql.ViewEntityStatsDataFetcher;
 import io.harness.ccm.views.graphql.ViewFieldsDataFetcher;
 import io.harness.ccm.views.graphql.ViewFilterStatsDataFetcher;
+import io.harness.ccm.views.graphql.ViewOverviewStatsDataFetcher;
 import io.harness.ccm.views.graphql.ViewTimeSeriesStatsDataFetcher;
 import io.harness.ccm.views.graphql.ViewTrendStatsDataFetcher;
 import io.harness.ccm.views.graphql.ViewsDataFetcher;
@@ -390,6 +391,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(ViewTimeSeriesStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(ViewTrendStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(ViewFilterStatsDataFetcher.class);
+    bindDataFetcherWithAnnotation(ViewOverviewStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(PipelineResumeRuntimeDataFetcher.class);
     bindDataFetcherWithAnnotation(RuntimeExecutionInputsToResumePipelineDataFetcher.class);
 
