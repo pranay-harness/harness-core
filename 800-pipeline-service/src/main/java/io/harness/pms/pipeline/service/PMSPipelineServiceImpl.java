@@ -277,14 +277,6 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     return stepCategory;
   }
 
-  @Override
-  public OrchestrationGraphDTO getOrchestrationGraph(String stageIdentifier, String planExecutionId) {
-    if (stageIdentifier == null) {
-      return graphGenerationService.generateOrchestrationGraphV2(planExecutionId);
-    }
-    return graphGenerationService.generatePartialOrchestrationGraphFromIdentifier(stageIdentifier, planExecutionId);
-  }
-
   private StepCategory calculateStepsForCategory(String module, List<StepInfo> stepInfos) {
     StepCategory stepCategory = StepCategory.builder().name(module).build();
     for (StepInfo stepType : stepInfos) {

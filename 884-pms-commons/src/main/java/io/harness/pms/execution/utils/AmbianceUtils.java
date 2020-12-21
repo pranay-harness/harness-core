@@ -6,6 +6,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 import io.harness.logging.AutoLogContext;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.plan.execution.SetupAbstractionKeys;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -88,14 +89,14 @@ public class AmbianceUtils {
   }
 
   public static String getAccountId(Ambiance ambiance) {
-    return ambiance.getSetupAbstractionsMap().get("accountId");
+    return ambiance.getSetupAbstractionsMap().get(SetupAbstractionKeys.accountId);
   }
 
   public static String getProjectIdentifier(Ambiance ambiance) {
-    return ambiance.getSetupAbstractionsMap().get("projectIdentifier");
+    return ambiance.getSetupAbstractionsMap().get(SetupAbstractionKeys.projectIdentifier);
   }
 
   public static String getOrgIdentifier(Ambiance ambiance) {
-    return ambiance.getSetupAbstractionsMap().get("orgIdentifier");
+    return ambiance.getSetupAbstractionsMap().get(SetupAbstractionKeys.orgIdentifier);
   }
 }

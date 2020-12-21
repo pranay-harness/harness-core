@@ -50,11 +50,12 @@ public class ParallelFilterJsonCreator extends ChildrenFilterJsonCreator<YamlFie
     YamlField nextSibling =
         filterCreationContext.getCurrentField().getNode().nextSiblingFromParentArray("parallel", possibleSiblings);
 
-    String nextSiblingUuid = nextSibling == null ? null : nextSibling.getNode().getUuid();
-
     Map<String, YamlField> children = getDependencies(filterCreationContext);
     List<String> childrenUuids = new ArrayList<>(children.keySet());
     EdgeLayoutList.Builder stagesEdgesBuilder = EdgeLayoutList.newBuilder().addAllCurrentNodeChildren(childrenUuids);
+    if (nextSibling != null) {
+      stagesEdgesBuilder.addNextIds(nextSibling.getNode().getUuid());
+    }
     Map<String, GraphLayoutNode> layoutNodeMap = children.values().stream().collect(Collectors.toMap(stageField
         -> stageField.getNode().getUuid(),
         stageField
@@ -62,14 +63,12 @@ public class ParallelFilterJsonCreator extends ChildrenFilterJsonCreator<YamlFie
                .setNodeUUID(stageField.getNode().getUuid())
                .setNodeType("stage")
                .setNodeIdentifier(stageField.getNode().getIdentifier())
-               .setEdgeLayoutList(nextSiblingUuid != null
-                       ? EdgeLayoutList.newBuilder().addNextIds(nextSiblingUuid).build()
-                       : EdgeLayoutList.newBuilder().build())
+               .setEdgeLayoutList(EdgeLayoutList.newBuilder().build())
                .build()));
     GraphLayoutNode parallelNode = GraphLayoutNode.newBuilder()
                                        .setNodeUUID(yamlField.getNode().getUuid())
                                        .setNodeType("parallel")
-                                       .setNodeIdentifier("parallel")
+                                       .setNodeIdentifier("parallel" + yamlField.getNode().getUuid())
                                        .setEdgeLayoutList(stagesEdgesBuilder.build())
                                        .build();
     layoutNodeMap.put(yamlField.getNode().getUuid(), parallelNode);

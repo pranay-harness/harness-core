@@ -23,6 +23,4 @@ public interface PMSPipelineService {
   Page<PipelineEntity> list(Criteria criteria, Pageable pageable);
 
   StepCategory getSteps(String module, String category);
-
-  OrchestrationGraphDTO getOrchestrationGraph(String stageIdentifier, String planExecutionId);
 }

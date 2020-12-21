@@ -1,36 +1,39 @@
 package io.harness.pms.plan.execution;
 
+import io.harness.NGCommonEntityConstants;
+import io.harness.beans.EmbeddedUser;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
+import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.plan.Plan;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
-import io.harness.pms.pipeline.PipelineEntity;
-import io.harness.pms.pipeline.service.PMSPipelineService;
+import io.harness.pms.ngpipeline.inputset.beans.resource.MergeInputSetRequestDTOPMS;
 import io.harness.pms.plan.creation.PlanCreatorMergeService;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.*;
 import java.io.IOException;
 import java.util.HashMap;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Slf4j
 @Api("/pipeline/execute")
 @Path("/pipeline/execute")
-@Produces({"application/json"})
-@Consumes({"application/json"})
+@Produces({"application/json", "application/yaml"})
+@Consumes({"application/json", "application/yaml"})
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 public class PlanExecutionResource {
+  private static final EmbeddedUser EMBEDDED_USER =
+      EmbeddedUser.builder().uuid("lv0euRhKRCyiXWzS7pOg6g").email("admin@harness.io").name("Admin").build();
   private static final String pipelineYaml = "pipeline:\n"
       + "        identifier: p1\n"
       + "        name: pipeline1\n"
@@ -80,8 +83,9 @@ public class PlanExecutionResource {
       + "                          field31: value1\n"
       + "                          field32: value2\n";
 
-  @Inject private OrchestrationService orchestrationService;
-  @Inject private PlanCreatorMergeService planCreatorMergeService;
+  @Inject private final OrchestrationService orchestrationService;
+  @Inject private final PlanCreatorMergeService planCreatorMergeService;
+  @Inject private final PipelineExecuteHelper pipelineExecuteHelper;
 
   private static final String tempPipeline = "pipeline:\n"
       + "  name: \"Manager Service Deployment\"\n"
@@ -310,5 +314,41 @@ public class PlanExecutionResource {
         new HashMap<>(ImmutableMap.of(
             "accountId", "kmpySmUISimoRrJL6NL73w", "orgIdentifier", "Main", "projectIdentifier", "Sample")));
     return Response.ok(planExecution, MediaType.APPLICATION_JSON_TYPE).build();
+  }
+
+  @POST
+  @Path("/{identifier}")
+  @ApiOperation(
+      value = "Execute a pipeline with inputSet pipeline yaml", nickname = "postPipelineExecuteWithInputSetYaml")
+  public ResponseDTO<PlanExecutionResponseDto>
+  runPipelineWithInputSetPipelineYaml(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @PathParam("identifier") @NotEmpty String pipelineIdentifier,
+      @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
+      @ApiParam(hidden = true, type = "") String inputSetPipelineYaml) throws IOException {
+    PlanExecution planExecution = pipelineExecuteHelper.runPipelineWithInputSetPipelineYaml(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetPipelineYaml, null, EMBEDDED_USER);
+    PlanExecutionResponseDto planExecutionResponseDto =
+        PlanExecutionResponseDto.builder().planExecution(planExecution).build();
+    return ResponseDTO.newResponse(planExecutionResponseDto);
+  }
+
+  @POST
+  @Path("/{identifier}/inputSetList")
+  @ApiOperation(
+      value = "Execute a pipeline with input set references list", nickname = "postPipelineExecuteWithInputSetList")
+  public ResponseDTO<PlanExecutionResponseDto>
+  runPipelineWithInputSetIdentifierList(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @PathParam("identifier") @NotEmpty String pipelineIdentifier,
+      @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
+      @NotNull @Valid MergeInputSetRequestDTOPMS mergeInputSetRequestDTO) throws IOException {
+    PlanExecution planExecution = pipelineExecuteHelper.runPipelineWithInputSetReferencesList(accountId, orgIdentifier,
+        projectIdentifier, pipelineIdentifier, mergeInputSetRequestDTO.getInputSetReferences(), EMBEDDED_USER);
+    PlanExecutionResponseDto planExecutionResponseDto =
+        PlanExecutionResponseDto.builder().planExecution(planExecution).build();
+    return ResponseDTO.newResponse(planExecutionResponseDto);
   }
 }

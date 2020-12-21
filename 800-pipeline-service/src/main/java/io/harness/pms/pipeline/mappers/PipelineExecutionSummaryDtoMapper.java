@@ -21,6 +21,7 @@ public class PipelineExecutionSummaryDtoMapper {
         .endTs(pipelineExecutionSummaryEntity.getEndTs())
         .status(pipelineExecutionSummaryEntity.getStatus())
         .executionTriggerInfo(ExecutionTriggerInfo.builder().build())
+        .executionErrorInfo(ExecutionErrorInfo.newBuilder().build())
         .build();
   }
 }
