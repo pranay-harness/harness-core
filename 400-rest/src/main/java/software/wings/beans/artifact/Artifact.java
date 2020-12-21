@@ -108,6 +108,7 @@ public class Artifact extends Base {
   private String artifactStreamType;
   private String uiDisplayName;
   private String buildIdentity;
+  @Transient @JsonIgnore private boolean isDuplicate;
 
   /**
    * Gets buildNo.
