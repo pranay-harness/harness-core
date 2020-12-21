@@ -20,13 +20,20 @@ import lombok.NonNull;
 @OwnedBy(CDC)
 public interface PmsNodeExecutionService {
   void queueNodeExecution(NodeExecutionProto nodeExecution);
+
   String queueTask(String nodeExecutionId, Map<String, String> setupAbstractions, TaskRequest task);
+
   void addExecutableResponse(
       @NonNull String nodeExecutionId, Status status, ExecutableResponse executableResponse, List<String> callbackIds);
+
   void handleStepResponse(@NonNull String nodeExecutionId, @NonNull StepResponseProto stepResponse);
+
   void resumeNodeExecution(String nodeExecutionId, Map<String, ResponseData> response, boolean asyncError);
+
   Map<String, ResponseData> accumulateResponses(String planExecutionId, String notifyId);
+
   StepParameters extractResolvedStepParameters(NodeExecutionProto nodeExecution);
+
   void handleFacilitationResponse(
       @NonNull String nodeExecutionId, @NonNull String notifyId, FacilitatorResponseProto facilitatorResponseProto);
 
