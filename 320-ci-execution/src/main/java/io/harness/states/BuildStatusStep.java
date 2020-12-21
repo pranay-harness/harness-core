@@ -3,7 +3,7 @@ package io.harness.states;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.status.BuildStatusPushResponse;
-import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.task.ci.CIBuildStatusPushParameters;
 import io.harness.git.GitClientHelper;
 import io.harness.ng.core.NGAccess;

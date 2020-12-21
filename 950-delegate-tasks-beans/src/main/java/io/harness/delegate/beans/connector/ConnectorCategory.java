@@ -12,7 +12,7 @@ public enum ConnectorCategory {
           ConnectorType.AZURE_VAULT, ConnectorType.CYBERARK, ConnectorType.CUSTOM, ConnectorType.LOCAL))),
   CONNECTOR(new HashSet(Arrays.asList())),
   ARTIFACTORY(new HashSet(Arrays.asList(ConnectorType.DOCKER, ConnectorType.ARTIFACTORY, ConnectorType.NEXUS))),
-  CODE_REPO(new HashSet(Arrays.asList(ConnectorType.GIT))),
+  CODE_REPO(new HashSet(Arrays.asList(ConnectorType.GIT, ConnectorType.GITHUB, ConnectorType.GITLAB))),
   MONITORING(new HashSet(Arrays.asList(ConnectorType.SPLUNK, ConnectorType.APP_DYNAMICS))),
   TICKETING(new HashSet(Arrays.asList(ConnectorType.JIRA)));
 

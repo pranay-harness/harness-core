@@ -48,7 +48,9 @@
         "Aws",
         "Artifactory",
         "Jira",
-        "Nexus"
+        "Nexus",
+        "Github",
+        "Gitlab"
       ]
     }
   },
@@ -258,6 +260,38 @@
         "properties": {
           "spec": {
             "$ref": "#/definitions/LocalConnectorDTO"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "Github"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "spec": {
+            "$ref": "#/definitions/GithubConnector"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "Gitlab"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "spec": {
+            "$ref": "#/definitions/GitlabConnector"
           }
         }
       }

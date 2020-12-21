@@ -17,6 +17,19 @@ import io.harness.connector.entities.embedded.gcpkmsconnector.GcpKmsConnector;
 import io.harness.connector.entities.embedded.gitconnector.GitConfig;
 import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
 import io.harness.connector.entities.embedded.gitconnector.GitUserNamePasswordAuthentication;
+import io.harness.connector.entities.embedded.githubconnector.GithubApiAccess;
+import io.harness.connector.entities.embedded.githubconnector.GithubConnector;
+import io.harness.connector.entities.embedded.githubconnector.GithubHttpAuthentication;
+import io.harness.connector.entities.embedded.githubconnector.GithubSshAuthentication;
+import io.harness.connector.entities.embedded.githubconnector.GithubTokenApiAccess;
+import io.harness.connector.entities.embedded.githubconnector.GithubUsernamePassword;
+import io.harness.connector.entities.embedded.githubconnector.GithubUsernameToken;
+import io.harness.connector.entities.embedded.gitlabconnector.GitlabConnector;
+import io.harness.connector.entities.embedded.gitlabconnector.GitlabHttpAuthentication;
+import io.harness.connector.entities.embedded.gitlabconnector.GitlabSshAuthentication;
+import io.harness.connector.entities.embedded.gitlabconnector.GitlabTokenApiAccess;
+import io.harness.connector.entities.embedded.gitlabconnector.GitlabUsernamePassword;
+import io.harness.connector.entities.embedded.gitlabconnector.GitlabUsernameToken;
 import io.harness.connector.entities.embedded.jira.JiraConnector;
 import io.harness.connector.entities.embedded.kubernetescluster.K8sClientKeyCert;
 import io.harness.connector.entities.embedded.kubernetescluster.K8sOpenIdConnect;
@@ -53,6 +66,8 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(JiraConnector.class);
     set.add(NexusConnector.class);
     set.add(ConnectorFilter.class);
+    set.add(GithubConnector.class);
+    set.add(GitlabConnector.class);
   }
 
   @Override
@@ -76,5 +91,18 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
         ArtifactoryUserNamePasswordAuthentication.class);
     h.put("connector.entities.embedded.nexusconnector.NexusUserNamePasswordAuthentication",
         NexusUserNamePasswordAuthentication.class);
+
+    h.put("connector.entities.embedded.githubconnector.GithubAppApiAccess", GithubApiAccess.class);
+    h.put("connector.entities.embedded.githubconnector.GithubTokenApiAccess", GithubTokenApiAccess.class);
+    h.put("connector.entities.embedded.githubconnector.GithubSshAuthentication", GithubSshAuthentication.class);
+    h.put("connector.entities.embedded.githubconnector.GithubHttpAuthentication", GithubHttpAuthentication.class);
+    h.put("connector.entities.embedded.githubconnector.GithubUsernamePassword", GithubUsernamePassword.class);
+    h.put("connector.entities.embedded.githubconnector.GithubUsernameToken", GithubUsernameToken.class);
+
+    h.put("connector.entities.embedded.gitlabconnector.GitlabTokenApiAccess", GitlabTokenApiAccess.class);
+    h.put("connector.entities.embedded.gitlabconnector.GitlabSshAuthentication", GitlabSshAuthentication.class);
+    h.put("connector.entities.embedded.gitlabconnector.GitlabHttpAuthentication", GitlabHttpAuthentication.class);
+    h.put("connector.entities.embedded.gitlabconnector.GitlabUsernamePassword", GitlabUsernamePassword.class);
+    h.put("connector.entities.embedded.gitlabconnector.GitlabUsernameToken", GitlabUsernameToken.class);
   }
 }

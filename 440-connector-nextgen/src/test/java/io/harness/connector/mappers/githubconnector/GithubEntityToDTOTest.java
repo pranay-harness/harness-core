@@ -1,0 +1,104 @@
+package io.harness.connector.mappers.githubconnector;
+
+import static io.harness.delegate.beans.connector.scm.GitAuthType.HTTP;
+import static io.harness.delegate.beans.connector.scm.github.GithubApiAccessType.GITHUB_APP;
+import static io.harness.rule.OwnerRule.ABHINAV;
+
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+
+import io.harness.category.element.UnitTests;
+import io.harness.connector.entities.embedded.githubconnector.GithubAppApiAccess;
+import io.harness.connector.entities.embedded.githubconnector.GithubConnector;
+import io.harness.connector.entities.embedded.githubconnector.GithubHttpAuthentication;
+import io.harness.connector.entities.embedded.githubconnector.GithubUsernamePassword;
+import io.harness.connector.mappers.SecretRefHelper;
+import io.harness.delegate.beans.connector.scm.GitConnectionType;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubAppSpecDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
+import io.harness.rule.Owner;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.MockitoAnnotations;
+
+public class GithubEntityToDTOTest {
+  @InjectMocks GithubEntityToDTO githubEntityToDTO;
+
+  @Before
+  public void setUp() throws Exception {
+    MockitoAnnotations.initMocks(this);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testToConnectorEntity_0() throws IOException {
+    final String url = "url";
+    final String passwordRef = "passwordRef";
+    final String username = "username";
+    final String appId = "appId";
+    final String insId = "insId";
+    final String tokenRef = "tokenRef";
+    final String privateKeyRef = "privateKeyRef";
+
+    final GithubAuthenticationDTO githubAuthenticationDTO =
+        GithubAuthenticationDTO.builder()
+            .authType(HTTP)
+            .credentials(GithubHttpCredentialsDTO.builder()
+                             .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
+                             .httpCredentialsSpec(GithubUsernamePasswordDTO.builder()
+                                                      .passwordRef(SecretRefHelper.createSecretRef(passwordRef))
+                                                      .username(username)
+                                                      .build())
+                             .build())
+            .build();
+
+    final GithubApiAccessDTO githubApiAccessDTO =
+        GithubApiAccessDTO.builder()
+            .type(GITHUB_APP)
+            .spec(GithubAppSpecDTO.builder()
+                      .applicationId(appId)
+                      .installationId(insId)
+                      .privateKeyRef(SecretRefHelper.createSecretRef(privateKeyRef))
+                      .build())
+            .build();
+    final GithubConnectorDTO githubConnectorDTO = GithubConnectorDTO.builder()
+                                                      .url(url)
+                                                      .connectionType(GitConnectionType.REPO)
+                                                      .authentication(githubAuthenticationDTO)
+                                                      .apiAccess(githubApiAccessDTO)
+                                                      .build();
+
+    final GithubConnector githubConnector1 =
+        GithubConnector.builder()
+            .hasApiAccess(true)
+            .url(url)
+            .githubApiAccess(GithubAppApiAccess.builder()
+                                 .applicationId(appId)
+                                 .installationId(insId)
+                                 .privateKeyRef(privateKeyRef)
+                                 .build())
+            .apiAccessType(GITHUB_APP)
+            .connectionType(GitConnectionType.REPO)
+            .authType(HTTP)
+            .authenticationDetails(
+                GithubHttpAuthentication.builder()
+                    .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
+                    .auth(GithubUsernamePassword.builder().username(username).passwordRef(passwordRef).build())
+                    .build())
+            .build();
+    final GithubConnectorDTO githubConnector = githubEntityToDTO.createConnectorDTO(githubConnector1);
+    ObjectMapper objectMapper = new ObjectMapper();
+    assertThat(objectMapper.readTree(objectMapper.writeValueAsString(githubConnector)))
+        .isEqualTo(objectMapper.readTree(objectMapper.writeValueAsString(githubConnectorDTO)));
+  }
+}

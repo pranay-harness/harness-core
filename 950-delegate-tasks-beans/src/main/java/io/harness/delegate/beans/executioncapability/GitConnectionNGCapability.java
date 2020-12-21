@@ -1,6 +1,6 @@
 package io.harness.delegate.beans.executioncapability;
 
-import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import java.util.List;

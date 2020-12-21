@@ -2,10 +2,10 @@ package io.harness.delegate.git;
 
 import static io.harness.git.model.GitRepositoryType.YAML;
 
-import io.harness.delegate.beans.connector.gitconnector.CustomCommitAttributes;
-import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
-import io.harness.delegate.beans.connector.gitconnector.GitSyncConfig;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.CustomCommitAttributes;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSyncConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.GitClientV2;
