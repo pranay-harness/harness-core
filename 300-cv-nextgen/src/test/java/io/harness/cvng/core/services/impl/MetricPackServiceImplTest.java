@@ -56,7 +56,7 @@ public class MetricPackServiceImplTest extends CvNextGenTest {
   public void testMetricPackFilesAdded() {
     final URL metricPackUrl = MetricPackService.class.getResource("/appdynamics/metric-packs");
     final Collection<File> metricPackYamls = FileUtils.listFiles(new File(metricPackUrl.getFile()), null, false);
-    assertThat(metricPackYamls.size()).isEqualTo(MetricPackServiceImpl.APPDYNAMICS_METRICPACK_FILES.size());
+    assertThat(metricPackYamls.size()).isEqualTo(MetricPackServiceImpl.APPDYNAMICS_METRICPACK_FILES.size() + 1);
   }
 
   @Test
