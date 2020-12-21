@@ -70,4 +70,10 @@ public interface CloudToHarnessMappingService {
   List<UserGroup> listUserGroupsForAccount(String accountId);
 
   CEMetadataRecord upsertCEMetaDataRecord(CEMetadataRecord ceMetadataRecord);
+
+  String getApplicationName(String entityId);
+
+  String getServiceName(String entityId);
+
+  String getEnvironmentName(String entityId);
 }
