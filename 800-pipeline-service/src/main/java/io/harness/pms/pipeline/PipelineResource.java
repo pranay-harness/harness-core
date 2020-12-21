@@ -21,8 +21,10 @@ import io.harness.pms.execution.beans.ExecutionNode;
 import io.harness.pms.execution.beans.ExecutionNodeAdjacencyList;
 import io.harness.pms.filter.creation.PMSPipelineFilterRequestDTO;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
+import io.harness.pms.pipeline.mappers.ExecutionGraphMapper;
 import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
 import io.harness.pms.pipeline.mappers.PMSPipelineFilterHelper;
+import io.harness.pms.pipeline.mappers.PipelineExecutionSummaryDtoMapper;
 import io.harness.pms.pipeline.resource.PipelineExecutionDetailDTO;
 import io.harness.pms.pipeline.resource.PipelineExecutionSummaryDTO;
 import io.harness.pms.pipeline.service.PMSPipelineService;
@@ -220,12 +222,28 @@ public class PipelineResource {
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size,
       @QueryParam("sort") List<String> sort) {
     log.info("Get List of executions");
-    List<PipelineExecutionSummaryDTO> planExecutionSummaryDTOS = new ArrayList<>();
-    planExecutionSummaryDTOS.add(
-        JsonUtils.asObject(PMSPipelineServiceImpl.PIPELINE_EXECUTION_SUMMARY_JSON, PipelineExecutionSummaryDTO.class));
+    Criteria criteria = new Criteria();
+    if (EmptyPredicate.isNotEmpty(accountId)) {
+      criteria.and(PipelineEntityKeys.accountId).is(accountId);
+    }
+    if (EmptyPredicate.isNotEmpty(orgId)) {
+      criteria.and(PipelineEntityKeys.orgIdentifier).is(orgId);
+    }
+    if (EmptyPredicate.isNotEmpty(projectId)) {
+      criteria.and(PipelineEntityKeys.projectIdentifier).is(projectId);
+    }
+    Pageable pageRequest;
+    if (EmptyPredicate.isEmpty(sort)) {
+      pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.createdAt));
+    } else {
+      pageRequest = PageUtils.getPageRequest(page, size, sort);
+    }
 
-    return ResponseDTO.newResponse(new PageImpl<>(
-        planExecutionSummaryDTOS, PageUtils.getPageRequest(page, size, sort), planExecutionSummaryDTOS.size()));
+    Page<PipelineExecutionSummaryDTO> planExecutionSummaryDTOS =
+        pmsExecutionService.getPipelineExecutionSummaryEntity(criteria, pageRequest)
+            .map(PipelineExecutionSummaryDtoMapper::toDto);
+
+    return ResponseDTO.newResponse(planExecutionSummaryDTOS);
   }
 
   @GET
@@ -239,16 +257,12 @@ public class PipelineResource {
       @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
     log.info("Get Execution Detail");
 
-    ExecutionGraph executionGraph = null;
-    if (isNotEmpty(stageIdentifier)) {
-      executionGraph = generateExecutionGraph(stageIdentifier);
-    }
-
     PipelineExecutionDetailDTO pipelineExecutionDetailDTO =
         PipelineExecutionDetailDTO.builder()
-            .pipelineExecutionSummary(JsonUtils.asObject(
-                PMSPipelineServiceImpl.PIPELINE_EXECUTION_SUMMARY_JSON, PipelineExecutionSummaryDTO.class))
-            .executionGraph(executionGraph)
+            .pipelineExecutionSummary(PipelineExecutionSummaryDtoMapper.toDto(
+                pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId)))
+            .executionGraph(ExecutionGraphMapper.toExecutionGraph(
+                pmsExecutionService.getOrchestrationGraph(stageIdentifier, planExecutionId)))
             .build();
 
     return ResponseDTO.newResponse(pipelineExecutionDetailDTO);
@@ -257,84 +271,11 @@ public class PipelineResource {
   @GET
   @Path("/execution/{planExecutionId}/inputset")
   @ApiOperation(value = "Gets  inputsetYaml", nickname = "getInputsetYaml")
-  public String getInputsetYaml(@PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
-    return pmsExecutionService.getInputsetYaml(planExecutionId);
-  }
-
-  private ExecutionGraph generateExecutionGraph(String stageIdentifier) {
-    String serviceUuid = "serviceUuid";
-    String infraUuid = "infraUuid";
-    String k8sRollingUuid = "K8sRollingUuid";
-
-    Map<String, ExecutionNode> executionNodeMap = new HashMap<>();
-    Map<String, ExecutionNodeAdjacencyList> nodeAdjacencyListMap = new HashMap<>();
-
-    ExecutionNode qaStage = ExecutionNode.builder()
-                                .uuid(stageIdentifier)
-                                .name("qa stage")
-                                .startTs(System.currentTimeMillis())
-                                .status(ExecutionStatus.RUNNING)
-                                .stepType("SECTION")
-                                .build();
-    executionNodeMap.put(stageIdentifier, qaStage);
-    nodeAdjacencyListMap.put(
-        stageIdentifier, ExecutionNodeAdjacencyList.builder().children(Lists.newArrayList(serviceUuid)).build());
-
-    ExecutionNode service = ExecutionNode.builder()
-                                .uuid(serviceUuid)
-                                .name("Service")
-                                .startTs(System.currentTimeMillis())
-                                .endTs(System.currentTimeMillis())
-                                .status(ExecutionStatus.SUCCESS)
-                                .stepType("SERVICE")
-                                .taskIdToProgressDataMap(Maps.of(generateUuid(),
-                                    Arrays.asList(DummyProgressData.builder().data("50% done").build(),
-                                        DummyProgressData.builder().data("99% done").build())))
-                                .build();
-    executionNodeMap.put(serviceUuid, service);
-    nodeAdjacencyListMap.put(
-        serviceUuid, ExecutionNodeAdjacencyList.builder().nextIds(Lists.newArrayList(infraUuid)).build());
-
-    ExecutionNode infra = ExecutionNode.builder()
-                              .uuid(infraUuid)
-                              .name("Infrastructure")
-                              .startTs(System.currentTimeMillis())
-                              .endTs(System.currentTimeMillis())
-                              .status(ExecutionStatus.SUCCESS)
-                              .stepType("INFRASTRUCTURE")
-                              .taskIdToProgressDataMap(Maps.of(generateUuid(),
-                                  Arrays.asList(DummyProgressData.builder().data("33% done").build(),
-                                      DummyProgressData.builder().data("99% done").build())))
-                              .build();
-    executionNodeMap.put(infraUuid, infra);
-    nodeAdjacencyListMap.put(
-        infraUuid, ExecutionNodeAdjacencyList.builder().nextIds(Lists.newArrayList(k8sRollingUuid)).build());
-
-    org.bson.Document loggingMetadata =
-        new org.bson.Document()
-            .append("baseLoggingKey", "baseKey")
-            .append("commandUnits",
-                Arrays.asList("Fetch Files", "Initialize", "Prepare", "Apply", "Wait for Steady State", "Wrap Up"));
-
-    ExecutionNode k8sRolling = ExecutionNode.builder()
-                                   .uuid(k8sRollingUuid)
-                                   .name("Rollout Deployment")
-                                   .startTs(System.currentTimeMillis())
-                                   .status(ExecutionStatus.RUNNING)
-                                   .stepType("K8S_ROLLING")
-                                   .executableResponsesMetadata(Lists.newArrayList(loggingMetadata))
-                                   .taskIdToProgressDataMap(Maps.of(generateUuid(),
-                                       Arrays.asList(DummyProgressData.builder().data("33% done").build(),
-                                           DummyProgressData.builder().data("55% done").build())))
-                                   .build();
-    executionNodeMap.put(k8sRollingUuid, k8sRolling);
-    nodeAdjacencyListMap.put(k8sRollingUuid, ExecutionNodeAdjacencyList.builder().build());
-
-    return ExecutionGraph.builder()
-        .rootNodeId(stageIdentifier)
-        .nodeMap(executionNodeMap)
-        .nodeAdjacencyListMap(nodeAdjacencyListMap)
-        .build();
+  public String getInputsetYaml(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
+      @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
+    return pmsExecutionService.getInputsetYaml(accountId, orgId, projectId, planExecutionId);
   }
 
   @Value

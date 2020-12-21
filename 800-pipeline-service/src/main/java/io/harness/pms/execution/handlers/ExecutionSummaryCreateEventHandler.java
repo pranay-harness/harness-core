@@ -12,6 +12,7 @@ import io.harness.pms.pipeline.entity.PipelineExecutionSummaryEntity;
 import io.harness.pms.pipeline.mappers.GraphLayoutDtoMapper;
 import io.harness.pms.pipeline.resource.GraphLayoutNodeDTO;
 import io.harness.pms.pipeline.service.PMSPipelineService;
+import io.harness.pms.plan.execution.SetupAbstractionKeys;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.events.SyncOrchestrationEventHandler;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
@@ -35,16 +36,15 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
     Ambiance ambiance = event.getAmbiance();
     String accountId = AmbianceUtils.getAccountId(ambiance);
     String projectId = AmbianceUtils.getProjectIdentifier(ambiance);
-    String orgId = AmbianceUtils.getProjectIdentifier(ambiance);
+    String orgId = AmbianceUtils.getOrgIdentifier(ambiance);
     String planExecutionId = ambiance.getPlanExecutionId();
     PlanExecution planExecution = planExecutionService.get(planExecutionId);
-    String pipelineId = planExecution.getPlan().getNodes().get(0).getIdentifier();
-    Optional<PipelineEntity> pipelineEntity = pmsPipelineService.get("a", "o", "p", "p1", false);
+    String pipelineId = ambiance.getSetupAbstractionsOrDefault(SetupAbstractionKeys.pipelineIdentifier, null);
+    Optional<PipelineEntity> pipelineEntity = pmsPipelineService.get(accountId, orgId, projectId, pipelineId, false);
     if (!pipelineEntity.isPresent()) {
       return;
     }
-    Map<String, GraphLayoutNode> layoutNodeMap = pipelineEntity.get().getLayoutNodeMap().values().stream().collect(
-        Collectors.toMap(GraphLayoutNode::getNodeIdentifier, graphLayoutNode -> graphLayoutNode));
+    Map<String, GraphLayoutNode> layoutNodeMap = pipelineEntity.get().getLayoutNodeMap();
     String startingNodeId = pipelineEntity.get().getStartingNodeID();
     Map<String, GraphLayoutNodeDTO> layoutNodeDTOMap = new HashMap<>();
     for (Map.Entry<String, GraphLayoutNode> entry : layoutNodeMap.entrySet()) {
@@ -57,7 +57,7 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
             .startingNodeId(pipelineEntity.get().getStartingNodeID())
             .planExecutionId(planExecutionId)
             .name(pipelineEntity.get().getName())
-            .inputSetYaml(ambiance.getSetupAbstractionsMap().get("inputSetYaml"))
+            .inputSetYaml(ambiance.getSetupAbstractionsMap().get(SetupAbstractionKeys.inputSetYaml))
             .status(ExecutionStatus.NOT_STARTED)
             .startTs(planExecution.getStartTs())
             .startingNodeId(startingNodeId)

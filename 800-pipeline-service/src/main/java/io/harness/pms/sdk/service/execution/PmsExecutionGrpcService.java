@@ -108,7 +108,7 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
         }
       }
     }
-    if (Objects.equals(nodeExecution.getNode().getGroup(), "stage")) {
+    if (Objects.equals(nodeExecution.getNode().getGroup(), "STAGE")) {
       update.set(
           PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".status", status);
     }

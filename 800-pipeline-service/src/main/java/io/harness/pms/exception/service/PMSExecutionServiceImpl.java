@@ -1,13 +1,19 @@
 package io.harness.pms.exception.service;
 
+import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.pipeline.entity.PipelineExecutionSummaryEntity;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
+import io.harness.service.GraphGenerationService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 
 @Singleton
 @Slf4j
@@ -34,16 +40,41 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
       + "                          timeout: 60000\n"
       + "                          skipDryRun: false";
   @Inject private PmsExecutionSummaryRespository pmsExecutionSummaryRespository;
+  @Inject private GraphGenerationService graphGenerationService;
+
   @Override
-  public String getInputsetYaml(String planExecutionId) {
-    // Returning constant string for now
-    if (!inputSetYaml.isEmpty())
-      return inputSetYaml;
+  public String getInputsetYaml(String accountId, String orgId, String projectId, String planExecutionId) {
     Optional<PipelineExecutionSummaryEntity> pipelineExecutionSummaryEntityOptional =
-        pmsExecutionSummaryRespository.findByPlanExecutionId(planExecutionId);
+        pmsExecutionSummaryRespository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPlanExecutionId(
+            accountId, orgId, projectId, planExecutionId);
     if (pipelineExecutionSummaryEntityOptional.isPresent()) {
       return pipelineExecutionSummaryEntityOptional.get().getInputSetYaml();
     }
     throw InvalidRequestException.builder().message("Invalid request").build();
+  }
+
+  @Override
+  public PipelineExecutionSummaryEntity getPipelineExecutionSummaryEntity(
+      String accountId, String orgId, String projectId, String planExecutionId) {
+    Optional<PipelineExecutionSummaryEntity> pipelineExecutionSummaryEntityOptional =
+        pmsExecutionSummaryRespository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPlanExecutionId(
+            accountId, orgId, projectId, planExecutionId);
+    if (pipelineExecutionSummaryEntityOptional.isPresent()) {
+      return pipelineExecutionSummaryEntityOptional.get();
+    }
+    throw new InvalidRequestException("Plan Execution Summary does not exist with given planExecutionId");
+  }
+
+  @Override
+  public Page<PipelineExecutionSummaryEntity> getPipelineExecutionSummaryEntity(Criteria criteria, Pageable pageable) {
+    return pmsExecutionSummaryRespository.findAll(criteria, pageable);
+  }
+
+  @Override
+  public OrchestrationGraphDTO getOrchestrationGraph(String stageIdentifier, String planExecutionId) {
+    if (stageIdentifier == null) {
+      return graphGenerationService.generateOrchestrationGraphV2(planExecutionId);
+    }
+    return graphGenerationService.generatePartialOrchestrationGraphFromIdentifier(stageIdentifier, planExecutionId);
   }
 }
