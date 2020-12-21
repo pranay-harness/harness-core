@@ -82,6 +82,7 @@ public class AmbianceUtils {
       logContext.put("identifier", level.getIdentifier());
       logContext.put("runtimeId", level.getRuntimeId());
       logContext.put("setupId", level.getSetupId());
+      logContext.put("stepType", level.getStepType().getType());
     }
     return logContext;
   }

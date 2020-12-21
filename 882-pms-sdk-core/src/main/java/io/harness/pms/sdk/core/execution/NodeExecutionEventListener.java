@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.logging.AutoLogContext;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserResponse;
@@ -57,26 +58,32 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
 
   @Override
   public void onMessage(NodeExecutionEvent event) {
-    NodeExecutionEventType nodeExecutionEventType = event.getEventType();
-    switch (nodeExecutionEventType) {
-      case START:
-        startExecution(event);
-        break;
-      case FACILITATE:
-        facilitateExecution(event);
-        break;
-      case RESUME:
-        resumeExecution(event);
-        break;
-      case ADVISE:
-        adviseExecution(event);
-        break;
-      default:
-        throw new UnsupportedOperationException("NodeExecution Event Has no handler" + event.getEventType());
+    try (AutoLogContext autoLogContext = event.autoLogContext()) {
+      boolean handled;
+      NodeExecutionEventType nodeExecutionEventType = event.getEventType();
+      log.info("Starting to handle NodeExecutionEvent of type: {}", event.getEventType());
+      switch (nodeExecutionEventType) {
+        case START:
+          handled = startExecution(event);
+          break;
+        case FACILITATE:
+          handled = facilitateExecution(event);
+          break;
+        case RESUME:
+          handled = resumeExecution(event);
+          break;
+        case ADVISE:
+          handled = adviseExecution(event);
+          break;
+        default:
+          throw new UnsupportedOperationException("NodeExecution Event Has no handler" + event.getEventType());
+      }
+      log.info("Handled NodeExecutionEvent of type: {} {}", event.getEventType(),
+          handled ? "SUCCESSFULLY" : "UNSUCCESSFULLY");
     }
   }
 
-  private void facilitateExecution(NodeExecutionEvent event) {
+  private boolean facilitateExecution(NodeExecutionEvent event) {
     try {
       NodeExecutionProto nodeExecution = event.getNodeExecution();
       Ambiance ambiance = nodeExecution.getAmbiance();
@@ -95,17 +102,19 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
       if (currFacilitatorResponse == null) {
         pmsNodeExecutionService.handleFacilitationResponse(nodeExecution.getUuid(), event.getNotifyId(),
             FacilitatorResponseProto.newBuilder().setIsSuccessful(false).build());
-        return;
+        return true;
       }
       pmsNodeExecutionService.handleFacilitationResponse(nodeExecution.getUuid(), event.getNotifyId(),
           FacilitatorResponseMapper.toFacilitatorResponseProto(currFacilitatorResponse));
+      return true;
     } catch (Exception ex) {
       pmsNodeExecutionService.handleFacilitationResponse(event.getNodeExecution().getUuid(), event.getNotifyId(),
           FacilitatorResponseProto.newBuilder().setIsSuccessful(false).build());
+      return false;
     }
   }
 
-  private void startExecution(NodeExecutionEvent event) {
+  private boolean startExecution(NodeExecutionEvent event) {
     try {
       NodeExecutionProto nodeExecution = event.getNodeExecution();
       ExecutableProcessor processor = executableProcessorFactory.obtainProcessor(nodeExecution.getMode());
@@ -121,13 +130,15 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
               .passThroughData(facilitatorResponse == null ? null : facilitatorResponse.getPassThroughData())
               .nodeExecution(nodeExecution)
               .build());
-    } catch (Exception ignored) {
-      log.error("Error starting execution");
+      return true;
+    } catch (Exception ex) {
+      log.error("Error while starting execution: {}", ex.getMessage());
       // TODO: Send error to pipeline service for processing
+      return false;
     }
   }
 
-  private void resumeExecution(NodeExecutionEvent event) {
+  private boolean resumeExecution(NodeExecutionEvent event) {
     NodeExecutionProto nodeExecution = event.getNodeExecution();
     ExecutableProcessor processor = executableProcessorFactory.obtainProcessor(nodeExecution.getMode());
     ResumeNodeExecutionEventData eventData = (ResumeNodeExecutionEventData) event.getEventData();
@@ -148,7 +159,7 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
                                     .build())
                 .build();
         pmsNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), stepResponse);
-        return;
+        return true;
       }
 
       processor.handleResume(ResumePackage.builder()
@@ -156,9 +167,11 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
                                  .nodes(eventData.getNodes())
                                  .responseDataMap(response)
                                  .build());
+      return true;
     } catch (Exception ex) {
-      log.error("Error resuming execution");
+      log.error("Error while resuming execution : {}", ex.getMessage());
       // TODO: Send error to pipeline service for processing
+      return false;
     }
   }
 
@@ -167,32 +180,40 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
         nodeExecution.getAmbiance(), nodeExecution.getNode().getRebObjectsList());
   }
 
-  private void adviseExecution(NodeExecutionEvent event) {
-    NodeExecutionProto nodeExecutionProto = event.getNodeExecution();
-    PlanNodeProto planNodeProto = nodeExecutionProto.getNode();
-    AdviseNodeExecutionEventData data = (AdviseNodeExecutionEventData) event.getEventData();
-    AdviserResponse adviserResponse = null;
-    for (AdviserObtainment obtainment : planNodeProto.getAdviserObtainmentsList()) {
-      Adviser adviser = adviserRegistry.obtain(obtainment.getType());
-      AdvisingEvent advisingEvent = AdvisingEvent.builder()
-                                        .nodeExecution(nodeExecutionProto)
-                                        .toStatus(data.getToStatus())
-                                        .fromStatus(data.getFromStatus())
-                                        .adviserParameters(obtainment.getParameters().toByteArray())
-                                        .build();
-      if (adviser.canAdvise(advisingEvent)) {
-        adviserResponse = adviser.onAdviseEvent(advisingEvent);
-        if (adviserResponse != null) {
-          break;
+  private boolean adviseExecution(NodeExecutionEvent event) {
+    try {
+      NodeExecutionProto nodeExecutionProto = event.getNodeExecution();
+      PlanNodeProto planNodeProto = nodeExecutionProto.getNode();
+      AdviseNodeExecutionEventData data = (AdviseNodeExecutionEventData) event.getEventData();
+      AdviserResponse adviserResponse = null;
+      for (AdviserObtainment obtainment : planNodeProto.getAdviserObtainmentsList()) {
+        Adviser adviser = adviserRegistry.obtain(obtainment.getType());
+        AdvisingEvent advisingEvent = AdvisingEvent.builder()
+                                          .nodeExecution(nodeExecutionProto)
+                                          .toStatus(data.getToStatus())
+                                          .fromStatus(data.getFromStatus())
+                                          .adviserParameters(obtainment.getParameters().toByteArray())
+                                          .build();
+        if (adviser.canAdvise(advisingEvent)) {
+          adviserResponse = adviser.onAdviseEvent(advisingEvent);
+          if (adviserResponse != null) {
+            break;
+          }
         }
       }
-    }
 
-    if (adviserResponse != null) {
-      pmsNodeExecutionService.handleAdviserResponse(nodeExecutionProto.getUuid(), event.getNotifyId(), adviserResponse);
-    } else {
-      pmsNodeExecutionService.handleAdviserResponse(nodeExecutionProto.getUuid(), event.getNotifyId(),
-          AdviserResponse.newBuilder().setType(AdviseType.UNKNOWN).build());
+      if (adviserResponse != null) {
+        pmsNodeExecutionService.handleAdviserResponse(
+            nodeExecutionProto.getUuid(), event.getNotifyId(), adviserResponse);
+      } else {
+        pmsNodeExecutionService.handleAdviserResponse(nodeExecutionProto.getUuid(), event.getNotifyId(),
+            AdviserResponse.newBuilder().setType(AdviseType.UNKNOWN).build());
+      }
+      return true;
+    } catch (Exception ex) {
+      log.error("Error while advising Execution : {}", ex.getMessage());
+      // TODO: Send error to pipeline service for processing
+      return false;
     }
   }
 }
