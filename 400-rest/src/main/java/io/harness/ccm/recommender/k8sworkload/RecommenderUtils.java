@@ -39,13 +39,15 @@ public class RecommenderUtils {
   // Defines the growth rate of the histogram buckets. Each bucket is wider than the previous one by this fraction.
   public static final double HISTOGRAM_BUCKET_SIZE_GROWTH = 0.05;
 
+  public static final double CPU_HISTOGRAM_FIRST_BUCKET_SIZE = 0.01;
   // Options to be used by histograms that store CPU measures expressed in cores.
-  public static final HistogramOptions CPU_HISTOGRAM_OPTIONS =
-      new ExponentialHistogramOptions(1000.0, 0.01, 1 + HISTOGRAM_BUCKET_SIZE_GROWTH, EPSILON);
+  public static final HistogramOptions CPU_HISTOGRAM_OPTIONS = new ExponentialHistogramOptions(
+      1000.0, CPU_HISTOGRAM_FIRST_BUCKET_SIZE, 1 + HISTOGRAM_BUCKET_SIZE_GROWTH, EPSILON);
 
+  public static final double MEMORY_HISTOGRAM_FIRST_BUCKET_SIZE = 1e7;
   // Options to be used by histograms that store memory measures expressed in bytes.
-  public static final HistogramOptions MEMORY_HISTOGRAM_OPTIONS =
-      new ExponentialHistogramOptions(1e12, 1e7, 1 + HISTOGRAM_BUCKET_SIZE_GROWTH, EPSILON);
+  public static final HistogramOptions MEMORY_HISTOGRAM_OPTIONS = new ExponentialHistogramOptions(
+      1e12, MEMORY_HISTOGRAM_FIRST_BUCKET_SIZE, 1 + HISTOGRAM_BUCKET_SIZE_GROWTH, EPSILON);
 
   // The amount of time it takes a historical memory usage sample to lose half of its weight. In other words, a fresh
   // usage sample is twice as 'important' as one with age equal to the half life period.
@@ -68,6 +70,12 @@ public class RecommenderUtils {
 
   public static Histogram newMemoryHistogramV2() {
     return new HistogramImpl(MEMORY_HISTOGRAM_OPTIONS);
+  }
+
+  public static Histogram loadFromCheckpointV2(HistogramCheckpoint histogramCheckpoint) {
+    Histogram histogram = newCpuHistogramV2();
+    histogram.loadFromCheckPoint(histogramCheckpoint);
+    return histogram;
   }
 
   public static HistogramProto checkpointToProto(HistogramCheckpoint histogramCheckpoint) {

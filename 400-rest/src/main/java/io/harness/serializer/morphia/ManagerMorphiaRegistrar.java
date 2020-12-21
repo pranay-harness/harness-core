@@ -481,8 +481,6 @@ import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCap
 import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.SmtpCapability;
 import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
-import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
-import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecommendationHistogram;
 import software.wings.helpers.ext.cloudformation.CloudFormationCompletionFlag;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
@@ -973,7 +971,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(InstanceSyncPerpetualTaskInfo.class);
     set.add(JenkinsArtifactStream.class);
     set.add(K8sWorkload.class);
-    set.add(K8sWorkloadRecommendation.class);
     set.add(K8sYaml.class);
     set.add(KeywordsAware.class);
     set.add(KubernetesContainerTask.class);
@@ -1006,7 +1003,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(NotificationReceiverInfo.class);
     set.add(NotificationRulesStatus.class);
     set.add(OauthSettings.class);
-    set.add(PartialRecommendationHistogram.class);
     set.add(PcfInfrastructureMapping.class);
     set.add(PcfServiceSpecification.class);
     set.add(Permit.class);
