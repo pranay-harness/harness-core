@@ -5,6 +5,7 @@ import io.harness.ngtriggers.beans.source.NGTriggerType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
+import java.util.List;
 import java.util.Map;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -25,6 +26,7 @@ public class NGTriggerDetailsResponseDTO {
   LastTriggerExecutionDetails lastTriggerExecutionDetails;
   WebhookDetails webhookDetails;
   Map<String, String> tags;
+  List<Integer> executions;
   String yaml;
   boolean enabled;
 }

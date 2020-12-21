@@ -1,5 +1,7 @@
 package io.harness.ngtriggers.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.SCM_SERVICE_CONNECTION_FAILED;
 
@@ -12,6 +14,7 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceRequiredProvider;
 import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
+import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventProcessingResult;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventsKeys;
 import io.harness.ngtriggers.beans.response.WebhookEventResponse;
@@ -23,6 +26,8 @@ import io.harness.repositories.ng.core.spring.TriggerEventHistoryRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -69,14 +74,22 @@ public class TriggerWebhookServiceImpl
   public void handle(TriggerWebhookEvent event) {
     try {
       updateTriggerEventProcessingStatus(event, true); // start processing
-      WebhookEventResponse response = ngTriggerWebhookExecutionHelper.handleTriggerWebhookEvent(event);
-      if (response.getFinalStatus() == SCM_SERVICE_CONNECTION_FAILED) {
-        event.setAttemptCount(event.getAttemptCount() + 1);
-        updateTriggerEventProcessingStatus(event, false);
+      WebhookEventProcessingResult result = ngTriggerWebhookExecutionHelper.handleTriggerWebhookEvent(event);
+
+      List<WebhookEventResponse> responseList = result.getResponses();
+
+      // Remove any null values if present in list
+      if (isNotEmpty(responseList)) {
+        responseList.stream().filter(response -> response != null).collect(Collectors.toList());
+      }
+
+      if (isEmpty(responseList)) {
+        ngTriggerService.deleteTriggerWebhookEvent(event);
+      } else if (!result.isMappedToTriggers()) {
+        handleTriggerNotFoundCase(event, result);
       } else {
-        if (WebhookEventResponseHelper.isFinalStatusAnEvent(response.getFinalStatus())) {
-          triggerEventHistoryRepository.save(WebhookEventResponseHelper.toEntity(response));
-        }
+        responseList.forEach(
+            response -> triggerEventHistoryRepository.save(WebhookEventResponseHelper.toEntity(response)));
         ngTriggerService.deleteTriggerWebhookEvent(event);
       }
     } catch (Exception e) {
@@ -84,6 +97,21 @@ public class TriggerWebhookServiceImpl
       ngTriggerService.updateTriggerWebhookEvent(event);
       log.error("Exception while handling webhook event. Please check", e);
     }
+  }
+
+  private void handleTriggerNotFoundCase(TriggerWebhookEvent event, WebhookEventProcessingResult result) {
+    if (isScmConnectivityFailed(result)) {
+      event.setAttemptCount(event.getAttemptCount() + 1);
+      updateTriggerEventProcessingStatus(event, false);
+    } else {
+      triggerEventHistoryRepository.save(WebhookEventResponseHelper.toEntity(result.getResponses().get(0)));
+      ngTriggerService.deleteTriggerWebhookEvent(event);
+    }
+  }
+
+  private boolean isScmConnectivityFailed(WebhookEventProcessingResult result) {
+    return isNotEmpty(result.getResponses())
+        || result.getResponses().get(0).getFinalStatus() == SCM_SERVICE_CONNECTION_FAILED;
   }
 
   protected void updateTriggerEventProcessingStatus(TriggerWebhookEvent event, boolean status) {

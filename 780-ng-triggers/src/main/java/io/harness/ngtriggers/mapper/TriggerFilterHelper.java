@@ -8,11 +8,15 @@ import io.harness.NGResourceFilterConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
+import io.harness.ngtriggers.beans.entity.TriggerEventHistory;
+import io.harness.ngtriggers.beans.entity.TriggerEventHistory.TriggerEventHistoryKeys;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventsKeys;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
+import io.harness.ngtriggers.beans.target.TargetType;
 
 import com.google.inject.Singleton;
+import java.time.Duration;
 import lombok.NoArgsConstructor;
 import lombok.experimental.UtilityClass;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -102,5 +106,18 @@ public class TriggerFilterHelper {
     Update update = new Update();
     update.set(NGTriggerEntityKeys.deleted, true);
     return update;
+  }
+
+  public Criteria createCriteriaForTriggerEventCountLastNDays(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String triggerIdentifier, String targetIdentifier, long startTime) {
+    Criteria criteria = new Criteria();
+    criteria.and(TriggerEventHistoryKeys.accountId).is(accountIdentifier);
+    criteria.and(TriggerEventHistoryKeys.orgIdentifier).is(orgIdentifier);
+    criteria.and(TriggerEventHistoryKeys.projectIdentifier).is(projectIdentifier);
+    criteria.and(TriggerEventHistoryKeys.triggerIdentifier).is(triggerIdentifier);
+    criteria.and(TriggerEventHistoryKeys.targetIdentifier).is(targetIdentifier);
+    criteria.and(TriggerEventHistoryKeys.createdAt).gte(startTime);
+
+    return criteria;
   }
 }

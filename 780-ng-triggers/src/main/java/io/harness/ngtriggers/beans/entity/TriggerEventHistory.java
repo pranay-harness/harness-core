@@ -33,6 +33,7 @@ public class TriggerEventHistory implements PersistentEntity {
                  .field(TriggerEventHistoryKeys.orgIdentifier)
                  .field(TriggerEventHistoryKeys.projectIdentifier)
                  .field(TriggerEventHistoryKeys.triggerIdentifier)
+                 .field(TriggerEventHistoryKeys.targetIdentifier)
                  .descSortField(TriggerEventHistoryKeys.createdAt)
                  .build())
         .build();
@@ -42,6 +43,7 @@ public class TriggerEventHistory implements PersistentEntity {
   String accountId;
   String orgIdentifier;
   String projectIdentifier;
+  String targetIdentifier;
   String eventCorrelationId;
   String payload;
   Long eventCreatedAt;
