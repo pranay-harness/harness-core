@@ -12,10 +12,10 @@ import io.harness.delegate.configuration.InstallUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
+import io.harness.ssh.SshHelperUtils;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.WinRmConnectionAttributes;
-import software.wings.utils.SshHelperUtils;
 
 import com.jcraft.jsch.JSchException;
 import java.io.Writer;
@@ -31,7 +31,8 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({SshHelperUtils.class, WinRmSession.class, InstallUtils.class})
+@PrepareForTest({software.wings.utils.SshHelperUtils.class, io.harness.ssh.SshHelperUtils.class, WinRmSession.class,
+    InstallUtils.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
 public class WinRmSessionTest extends WingsBaseTest {
   @Mock private SshHelperUtils sshHelperUtils;
@@ -60,7 +61,7 @@ public class WinRmSessionTest extends WingsBaseTest {
 
     int status = winRmSession.executeCommandString("ls", writer, error, false);
 
-    PowerMockito.verifyStatic(SshHelperUtils.class);
+    PowerMockito.verifyStatic(io.harness.ssh.SshHelperUtils.class);
     ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
     SshHelperUtils.generateTGT(captor.capture(), anyString(), anyString(), eq(logCallback));
     assertThat(captor.getValue()).isEqualTo("TestUser@KRB.LOCAL");

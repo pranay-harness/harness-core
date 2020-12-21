@@ -12,7 +12,6 @@ import static io.harness.eraro.ErrorCode.SSH_SESSION_TIMEOUT;
 import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
 import static io.harness.eraro.ErrorCode.UNKNOWN_HOST;
 import static io.harness.eraro.ErrorCode.UNREACHABLE_HOST;
-import static io.harness.logging.LogLevel.ERROR;
 
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SUDO_APP_USER;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SU_APP_USER;
@@ -23,11 +22,7 @@ import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.KEY_
 import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.PASSWORD_AUTH;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 
-import static java.lang.String.format;
-
 import io.harness.eraro.ErrorCode;
-import io.harness.logging.LogCallback;
-import io.harness.logging.LogLevel;
 
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes;
@@ -44,20 +39,12 @@ import software.wings.core.ssh.executors.SshSessionConfig.Builder;
 import com.jcraft.jsch.JSchException;
 import com.sun.mail.iap.ConnectionException;
 import io.netty.channel.ConnectTimeoutException;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.Writer;
 import java.net.NoRouteToHostException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-import java.util.concurrent.TimeoutException;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.zeroturnaround.exec.ProcessExecutor;
-import org.zeroturnaround.exec.ProcessResult;
 
 /**
  * Created by anubhaw on 2/23/17.
@@ -215,78 +202,5 @@ public class SshHelperUtils {
 
       builder.withBastionHostConfig(sshSessionConfig.build());
     }
-  }
-
-  public static void generateTGT(String userPrincipal, String password, String keyTabFilePath, LogCallback logCallback)
-      throws JSchException {
-    if (!isValidKeyTabFile(keyTabFilePath)) {
-      logCallback.saveExecutionLog("Cannot proceed with Ticket Granting Ticket(TGT) generation.", ERROR);
-      log.error("Cannot proceed with Ticket Granting Ticket(TGT) generation");
-      throw new JSchException(
-          "Failure: Invalid keytab file path. Cannot proceed with Ticket Granting Ticket(TGT) generation");
-    }
-    log.info("Generating Ticket Granting Ticket(TGT)...");
-    logCallback.saveExecutionLog("Generating Ticket Granting Ticket(TGT) for principal: " + userPrincipal);
-    String commandString = !StringUtils.isEmpty(password) ? format("echo \"%s\" | kinit %s", password, userPrincipal)
-                                                          : format("kinit -k -t %s %s", keyTabFilePath, userPrincipal);
-    boolean ticketGenerated = executeLocalCommand(commandString, logCallback, null, false);
-    if (ticketGenerated) {
-      logCallback.saveExecutionLog("Ticket Granting Ticket(TGT) generated successfully for " + userPrincipal);
-      log.info("Ticket Granting Ticket(TGT) generated successfully for " + userPrincipal);
-    } else {
-      log.error("Failure: could not generate Ticket Granting Ticket(TGT)");
-      throw new JSchException("Failure: could not generate Ticket Granting Ticket(TGT)");
-    }
-  }
-  private static boolean isValidKeyTabFile(String keyTabFilePath) {
-    if (!StringUtils.isEmpty(keyTabFilePath)) {
-      if (new File(keyTabFilePath).exists()) {
-        log.info("Found keytab file at path: [{}]", keyTabFilePath);
-        return true;
-      } else {
-        log.error("Invalid keytab file path: [{}].", keyTabFilePath);
-        return false;
-      }
-    }
-    return true;
-  }
-
-  public static boolean executeLocalCommand(
-      String cmdString, LogCallback logCallback, Writer output, boolean isOutputWriter) {
-    String[] commandList = new String[] {"/bin/bash", "-c", cmdString};
-    try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-         ByteArrayOutputStream byteArrayErrorStream = new ByteArrayOutputStream()) {
-      ProcessExecutor processExecutor = new ProcessExecutor()
-                                            .command(commandList)
-                                            .directory(new File(System.getProperty("user.home")))
-                                            .readOutput(true)
-                                            .redirectOutput(byteArrayOutputStream)
-                                            .redirectError(byteArrayErrorStream);
-
-      ProcessResult processResult = null;
-      try {
-        processResult = processExecutor.execute();
-      } catch (IOException | InterruptedException | TimeoutException e) {
-        log.error("Failed to execute command ", e);
-      }
-      if (byteArrayOutputStream.toByteArray().length != 0) {
-        if (isOutputWriter) {
-          try {
-            output.write(byteArrayOutputStream.toString());
-          } catch (IOException e) {
-            log.error("Failed to store the output to writer ", e);
-          }
-        } else {
-          logCallback.saveExecutionLog(byteArrayOutputStream.toString(), LogLevel.INFO);
-        }
-      }
-      if (byteArrayErrorStream.toByteArray().length != 0) {
-        logCallback.saveExecutionLog(byteArrayErrorStream.toString(), ERROR);
-      }
-      return processResult != null && processResult.getExitValue() == 0;
-    } catch (IOException e) {
-      log.error("Failed to execute command ", e);
-    }
-    return false;
   }
 }
