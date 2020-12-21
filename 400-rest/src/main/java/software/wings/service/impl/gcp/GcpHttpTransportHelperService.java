@@ -25,8 +25,12 @@ import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 @Singleton
 @Slf4j
 public class GcpHttpTransportHelperService {
+  private static final String GOOGLE_APIS_HOST = "googleapis.com";
+
   public HttpTransport checkIfUseProxyAndGetHttpTransport() throws IOException, GeneralSecurityException {
-    return Http.getProxyHostName() != null ? getProxyConfiguredHttpTransport() : getDefaultTrustedHttpTransport();
+    return Http.getProxyHostName() != null && !Http.shouldUseNonProxy(GOOGLE_APIS_HOST)
+        ? getProxyConfiguredHttpTransport()
+        : getDefaultTrustedHttpTransport();
   }
 
   public HttpTransport getProxyConfiguredHttpTransport() {
