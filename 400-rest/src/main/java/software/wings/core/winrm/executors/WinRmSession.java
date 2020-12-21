@@ -8,9 +8,9 @@ import io.harness.delegate.configuration.InstallUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.LogCallback;
+import io.harness.ssh.SshHelperUtils;
 
 import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
-import software.wings.utils.SshHelperUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.jcraft.jsch.JSchException;

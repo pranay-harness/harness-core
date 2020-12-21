@@ -6,9 +6,9 @@ import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSes
 
 import io.harness.logging.LogCallback;
 import io.harness.security.EncryptionUtils;
+import io.harness.ssh.SshHelperUtils;
 
 import software.wings.beans.command.NoopExecutionCallback;
-import software.wings.utils.SshHelperUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
