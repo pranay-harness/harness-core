@@ -100,7 +100,7 @@ public class TriggerWebhookServiceImpl
   }
 
   private void handleTriggerNotFoundCase(TriggerWebhookEvent event, WebhookEventProcessingResult result) {
-    if (isScmConnectivityFailed(result)) {
+    if (isScmConnectivityFailed(result) && event.getAttemptCount() < 2) {
       event.setAttemptCount(event.getAttemptCount() + 1);
       updateTriggerEventProcessingStatus(event, false);
     } else {
@@ -111,7 +111,7 @@ public class TriggerWebhookServiceImpl
 
   private boolean isScmConnectivityFailed(WebhookEventProcessingResult result) {
     return isNotEmpty(result.getResponses())
-        || result.getResponses().get(0).getFinalStatus() == SCM_SERVICE_CONNECTION_FAILED;
+        && result.getResponses().get(0).getFinalStatus() == SCM_SERVICE_CONNECTION_FAILED;
   }
 
   protected void updateTriggerEventProcessingStatus(TriggerWebhookEvent event, boolean status) {
