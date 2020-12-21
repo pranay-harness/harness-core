@@ -25,6 +25,8 @@ import static software.wings.beans.LogColor.Yellow;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 
+import static org.apache.commons.lang3.BooleanUtils.isNotTrue;
+
 import io.harness.beans.FileData;
 import io.harness.delegate.k8s.K8sRollingBaseHandler;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
@@ -113,7 +115,8 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
     success = prepareForRolling(k8sDelegateTaskParams,
         k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, Prepare),
-        k8sRollingDeployTaskParameters.isInCanaryWorkflow());
+        k8sRollingDeployTaskParameters.isInCanaryWorkflow(),
+        k8sRollingDeployTaskParameters.getSkipVersioningForAllK8sObjects());
     if (!success) {
       return getFailureResponse();
     }
@@ -249,11 +252,11 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     }
   }
 
-  private boolean prepareForRolling(
-      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean inCanaryWorkflow) {
+  private boolean prepareForRolling(K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback,
+      boolean inCanaryWorkflow, Boolean skipVersioningForAllK8sObjects) {
     try {
       managedWorkloads = getWorkloads(resources);
-      if (isNotEmpty(managedWorkloads)) {
+      if (isNotEmpty(managedWorkloads) && isNotTrue(skipVersioningForAllK8sObjects)) {
         markVersionedResources(resources);
       }
 
@@ -283,7 +286,9 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
         k8sTaskHelperBase.checkSteadyStateCondition(customWorkloads);
 
         executionLogCallback.saveExecutionLog("\nVersioning resources.");
-        addRevisionNumber(resources, release.getNumber());
+        if (isNotTrue(skipVersioningForAllK8sObjects)) {
+          addRevisionNumber(resources, release.getNumber());
+        }
 
         k8sRollingBaseHandler.addLabelsInManagedWorkloadPodSpec(inCanaryWorkflow, managedWorkloads, releaseName);
         k8sRollingBaseHandler.addLabelsInDeploymentSelectorForCanary(inCanaryWorkflow, managedWorkloads);

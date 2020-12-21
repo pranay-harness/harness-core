@@ -110,6 +110,8 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
                 k8sStateHelper.createDelegateManifestConfig(context, appManifestMap.get(K8sValuesLocation.Service)))
             .valuesYamlList(k8sStateHelper.getRenderedValuesFiles(appManifestMap, context))
             .skipDryRun(skipDryRun)
+            .skipVersioningForAllK8sObjects(
+                appManifestMap.get(K8sValuesLocation.Service).getSkipVersioningForAllK8sObjects())
             .build();
 
     return k8sStateHelper.queueK8sDelegateTask(context, k8sTaskParameters);

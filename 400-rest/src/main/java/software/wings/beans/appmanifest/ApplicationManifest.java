@@ -49,6 +49,7 @@ public class ApplicationManifest extends Base implements AccountAccess {
   private ManifestCollectionStatus collectionStatus;
   private String perpetualTaskId;
   private int failedAttempts;
+  private Boolean skipVersioningForAllK8sObjects;
 
   public ApplicationManifest cloneInternal() {
     ApplicationManifest manifest = ApplicationManifest.builder()
@@ -61,6 +62,7 @@ public class ApplicationManifest extends Base implements AccountAccess {
                                        .helmChartConfig(helmChartConfig)
                                        .kustomizeConfig(KustomizeConfig.cloneFrom(this.kustomizeConfig))
                                        .pollForChanges(this.pollForChanges)
+                                       .skipVersioningForAllK8sObjects(this.skipVersioningForAllK8sObjects)
                                        .build();
     manifest.setAppId(this.appId);
     return manifest;
@@ -77,18 +79,20 @@ public class ApplicationManifest extends Base implements AccountAccess {
     private HelmChartConfig helmChartConfig;
     private KustomizeConfig kustomizeConfig;
     private Boolean pollForChanges;
+    private Boolean skipVersioningForAllK8sObjects;
     private HelmCommandFlag helmCommandFlag;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String storeType, GitFileConfig gitFileConfig,
         HelmChartConfig helmChartConfig, KustomizeConfig kustomizeConfig, Boolean pollForChanges,
-        HelmCommandFlag helmCommandFlag) {
+        HelmCommandFlag helmCommandFlag, Boolean skipVersioningForAllK8sObjects) {
       super(type, harnessApiVersion);
       this.storeType = storeType;
       this.gitFileConfig = gitFileConfig;
       this.helmChartConfig = helmChartConfig;
       this.kustomizeConfig = kustomizeConfig;
       this.pollForChanges = pollForChanges;
+      this.skipVersioningForAllK8sObjects = skipVersioningForAllK8sObjects;
       this.helmCommandFlag = helmCommandFlag;
     }
   }

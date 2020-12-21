@@ -13,6 +13,7 @@ import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 
@@ -1042,5 +1043,18 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
     List<Service> services = serviceResourceService.fetchServicesByUuidsByAccountId(ACCOUNT_ID, serviceUuids);
     assertThat(services).isNotEmpty();
     assertThat(services).hasSize(1);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testIsK8sV2Service() {
+    Service k8sService = Service.builder().isK8sV2(true).build();
+
+    doReturn(k8sService).when(spyServiceResourceService).get(APP_ID, SERVICE_ID, false);
+    assertThat(spyServiceResourceService.isK8sV2Service(APP_ID, SERVICE_ID)).isTrue();
+
+    k8sService.setK8sV2(false);
+    assertThat(spyServiceResourceService.isK8sV2Service(APP_ID, SERVICE_ID)).isFalse();
   }
 }

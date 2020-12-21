@@ -566,4 +566,6 @@ public interface ServiceResourceService extends OwnedByApplication {
       @NotBlank String accountId, @Nonnull List<String> deploymentTemplateIds, int limit);
 
   Set<HelmSubCommand> getHelmCommandFlags(HelmVersion version, String appId, String serviceId, StoreType storeType);
+
+  boolean isK8sV2Service(String appId, String serviceId);
 }

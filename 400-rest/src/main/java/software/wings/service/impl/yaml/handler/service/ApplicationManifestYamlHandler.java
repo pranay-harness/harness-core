@@ -52,6 +52,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
         .helmChartConfig(getHelmChartConfigForToYaml(applicationManifest))
         .kustomizeConfig(applicationManifest.getKustomizeConfig())
         .pollForChanges(applicationManifest.getPollForChanges())
+        .skipVersioningForAllK8sObjects(applicationManifest.getSkipVersioningForAllK8sObjects())
         .helmCommandFlag(applicationManifest.getHelmCommandFlag())
         .build();
   }
@@ -101,6 +102,12 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
     HelmChartConfig helmChartConfig = getHelmChartConfigFromYaml(accountId, appId, yaml, storeType);
     KustomizeConfig kustomizeConfig = getKustomizeConfigFromYaml(yaml, storeType);
 
+    boolean isNotK8sServiceManifest =
+        serviceId == null || envId != null || !serviceResourceService.isK8sV2Service(appId, serviceId);
+    if (isNotK8sServiceManifest && yaml.getSkipVersioningForAllK8sObjects() != null) {
+      throw new InvalidRequestException("SkipVersioning is only allowed for k8s services at the service level", USER);
+    }
+
     ApplicationManifest manifest = ApplicationManifest.builder()
                                        .serviceId(serviceId)
                                        .envId(envId)
@@ -110,6 +117,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
                                        .kind(kind)
                                        .kustomizeConfig(kustomizeConfig)
                                        .pollForChanges(yaml.getPollForChanges())
+                                       .skipVersioningForAllK8sObjects(yaml.getSkipVersioningForAllK8sObjects())
                                        .helmCommandFlag(yaml.getHelmCommandFlag())
                                        .build();
 

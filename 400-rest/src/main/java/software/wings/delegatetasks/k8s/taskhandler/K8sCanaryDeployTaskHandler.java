@@ -22,9 +22,8 @@ import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.BooleanUtils.isNotTrue;
 
-import io.harness.annotations.dev.Module;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.ExceptionUtils;
@@ -70,7 +69,6 @@ import org.apache.commons.lang3.tuple.Pair;
 
 @NoArgsConstructor
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
 public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
   @Inject private transient KubernetesContainerService kubernetesContainerService;
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
@@ -257,7 +255,9 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
   boolean prepareForCanary(K8sDelegateTaskParams k8sDelegateTaskParams,
       K8sCanaryDeployTaskParameters k8sCanaryDeployTaskParameters, ExecutionLogCallback executionLogCallback) {
     try {
-      markVersionedResources(resources);
+      if (isNotTrue(k8sCanaryDeployTaskParameters.getSkipVersioningForAllK8sObjects())) {
+        markVersionedResources(resources);
+      }
 
       executionLogCallback.saveExecutionLog("Manifests processed. Found following resources: \n"
           + k8sTaskHelperBase.getResourcesInTableFormat(resources));
@@ -285,7 +285,9 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
 
       executionLogCallback.saveExecutionLog("\nVersioning resources.");
 
-      addRevisionNumber(resources, currentRelease.getNumber());
+      if (isNotTrue(k8sCanaryDeployTaskParameters.getSkipVersioningForAllK8sObjects())) {
+        addRevisionNumber(resources, currentRelease.getNumber());
+      }
       canaryWorkload = workloads.get(0);
 
       k8sTaskHelperBase.cleanup(client, k8sDelegateTaskParams, releaseHistory, executionLogCallback);

@@ -79,7 +79,7 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
   }
 
   private void testK8sWorkflow(OrchestrationWorkflowType workflowType) {
-    Service savedService = serviceGenerator.ensurePredefined(seed, owners, Services.K8S_V2_TEST);
+    Service savedService = null;
     Environment savedEnvironment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
 
     InfrastructureDefinitions infrastructureDefinitionTestType = null;
@@ -88,16 +88,19 @@ public class K8sFunctionalTest extends AbstractFunctionalTest {
       case ROLLING:
         infrastructureDefinitionTestType = InfrastructureDefinitions.K8S_ROLLING_TEST;
         workflowName = "k8s-rolling";
+        savedService = serviceGenerator.ensurePredefined(seed, owners, Services.K8S_V2_TEST);
         break;
 
       case CANARY:
         infrastructureDefinitionTestType = InfrastructureDefinitions.K8S_CANARY_TEST;
         workflowName = "k8s-canary";
+        savedService = serviceGenerator.ensurePredefined(seed, owners, Services.K8_V2_SKIP_VERSIONING_TEST);
         break;
 
       case BLUE_GREEN:
         infrastructureDefinitionTestType = InfrastructureDefinitions.K8S_BLUE_GREEN_TEST;
         workflowName = "k8s-bg";
+        savedService = serviceGenerator.ensurePredefined(seed, owners, Services.K8S_V2_TEST);
         break;
 
       default:

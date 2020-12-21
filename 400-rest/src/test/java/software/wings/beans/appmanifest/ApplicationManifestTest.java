@@ -49,6 +49,7 @@ public class ApplicationManifestTest extends WingsBaseTest {
         .storeType(StoreType.KustomizeSourceRepo)
         .kind(AppManifestKind.K8S_MANIFEST)
         .serviceId("serviceId")
+        .skipVersioningForAllK8sObjects(true)
         .build();
   }
 }

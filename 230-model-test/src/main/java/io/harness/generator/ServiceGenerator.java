@@ -73,6 +73,7 @@ public class ServiceGenerator {
     WINDOWS_TEST,
     ECS_TEST,
     K8S_V2_TEST,
+    K8_V2_SKIP_VERSIONING_TEST,
     K8S_V2_LIST_TEST,
     MULTI_ARTIFACT_FUNCTIONAL_TEST,
     MULTI_ARTIFACT_K8S_V2_TEST,
@@ -98,6 +99,8 @@ public class ServiceGenerator {
         return ensureWindowsTest(seed, owners, "Test IIS APP Service");
       case K8S_V2_TEST:
         return ensureK8sTest(seed, owners, "Test K8sV2 Service");
+      case K8_V2_SKIP_VERSIONING_TEST:
+        return ensureK8sTestSkipVersioningAllObjects(seed, owners, "Test K8sV2 Service Skip Versioning");
       case K8S_V2_LIST_TEST:
         return ensureK8sListTest(seed, owners, "Test K8sV2 List Service");
       case MULTI_ARTIFACT_FUNCTIONAL_TEST:
@@ -283,6 +286,29 @@ public class ServiceGenerator {
     ArtifactStream artifactStream =
         artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_DOCKER);
     Service service = owners.obtainService();
+    service.setArtifactStreamIds(new ArrayList<>(Arrays.asList(artifactStream.getUuid())));
+    return service;
+  }
+
+  public Service ensureK8sTestSkipVersioningAllObjects(Randomizer.Seed seed, Owners owners, String name) {
+    owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
+    owners.add(ensureService(seed, owners,
+        builder()
+            .name(name)
+            .artifactType(ArtifactType.DOCKER)
+            .deploymentType(DeploymentType.KUBERNETES)
+            .isK8sV2(true)
+            .build()));
+    ArtifactStream artifactStream =
+        artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_DOCKER);
+    Service service = owners.obtainService();
+
+    ApplicationManifest applicationManifest =
+        applicationManifestService.getManifestByServiceId(service.getAppId(), service.getUuid());
+    applicationManifest.setAppId(service.getAppId());
+    applicationManifest.setSkipVersioningForAllK8sObjects(true);
+    upsertApplicationManifest(applicationManifest);
+
     service.setArtifactStreamIds(new ArrayList<>(Arrays.asList(artifactStream.getUuid())));
     return service;
   }
