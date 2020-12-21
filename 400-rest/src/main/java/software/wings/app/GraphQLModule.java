@@ -74,6 +74,7 @@ import software.wings.graphql.datafetcher.budget.BudgetTrendStatsDataFetcher;
 import software.wings.graphql.datafetcher.ce.CeHealthStatusDataFetcher;
 import software.wings.graphql.datafetcher.ce.activePods.CeActivePodCountDataFetcher;
 import software.wings.graphql.datafetcher.ce.exportData.CeClusterBillingDataDataFetcher;
+import software.wings.graphql.datafetcher.ce.recommendation.K8sWorkloadHistogramDataFetcher;
 import software.wings.graphql.datafetcher.ce.recommendation.K8sWorkloadRecommendationsDataFetcher;
 import software.wings.graphql.datafetcher.cloudProvider.CloudProviderConnectionDataFetcher;
 import software.wings.graphql.datafetcher.cloudProvider.CloudProviderDataFetcher;
@@ -316,6 +317,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(K8sEventYamlDiffDataFetcher.class);
     bindDataFetcherWithAnnotation(K8sLabelConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(K8sWorkloadRecommendationsDataFetcher.class);
+    bindDataFetcherWithAnnotation(K8sWorkloadHistogramDataFetcher.class);
     bindDataFetcherWithAnnotation(NodeAndPodDetailsDataFetcher.class);
     bindDataFetcherWithAnnotation(OutcomeConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(PipelineConnectionDataFetcher.class);

@@ -62,6 +62,7 @@ enum DataFetcherEnum {
   k8sEventYamlDiff
   k8sLabelConnection
   k8sWorkloadRecommendations
+  k8sWorkloadHistogram
   nodeAndPodDetails
   linkedAccountStats
   outcomeConnection
