@@ -93,6 +93,8 @@ public class RecentlyAddedAccountJobRunner {
         runBillingJobs(latestClusterInfo, BatchJobType.INSTANCE_BILLING, dailyBillingJobEndTime, dailyBillingStartTime);
         runBillingJobs(
             latestClusterInfo, BatchJobType.ACTUAL_IDLE_COST_BILLING, dailyBillingJobEndTime, dailyBillingStartTime);
+        runBillingJobs(
+            latestClusterInfo, BatchJobType.CLUSTER_DATA_TO_BIG_QUERY, dailyBillingJobEndTime, dailyBillingStartTime);
       }
     } catch (Exception ex) {
       log.error("Exception while running job for recently added account", ex);

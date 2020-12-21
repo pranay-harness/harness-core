@@ -1,5 +1,7 @@
 extend type Query {
   viewFields(filters: [CEViewFilterWrapper]): viewFieldData @dataFetcher(name: viewFields)
+  viewOverviewStats: viewOverviewStatsData @dataFetcher(name: viewOverviewStats)
+
   viewFilterStats(limit: Int, offset: Int, filters: [CEViewFilterWrapper]): viewFiterData
     @dataFetcher(name: viewFilterStats)
   views: ViewsData @dataFetcher(name: views)
@@ -24,6 +26,11 @@ extend type Query {
 
   viewTrendStats(filters: [CEViewFilterWrapper], aggregateFunction: [CEViewAggregation]): ViewTrendStatsData
     @dataFetcher(name: viewTrendStats)
+}
+
+type viewOverviewStatsData {
+  unifiedTableDataPresent: Boolean
+  isAwsOrGcpOrClusterConfigured: Boolean
 }
 
 type ViewTrendStatsData {
