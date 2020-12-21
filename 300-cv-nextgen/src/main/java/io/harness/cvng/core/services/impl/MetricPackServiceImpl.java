@@ -39,8 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MetricPackServiceImpl implements MetricPackService {
   static final List<String> APPDYNAMICS_METRICPACK_FILES =
-      Lists.newArrayList("/appdynamics/metric-packs/peformance-pack.yml", "/appdynamics/metric-packs/quality-pack.yml",
-          "/appdynamics/metric-packs/infrastructure-pack.yml");
+      Lists.newArrayList("/appdynamics/metric-packs/peformance-pack.yml", "/appdynamics/metric-packs/quality-pack.yml");
   static final List<String> STACKDRIVER_METRICPACK_FILES =
       Lists.newArrayList("/stackdriver/metric-packs/default-performance-pack.yaml",
           "/stackdriver/metric-packs/default-error-pack.yaml", "/stackdriver/metric-packs/default-infra-pack.yaml");
