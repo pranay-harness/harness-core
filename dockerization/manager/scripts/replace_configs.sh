@@ -121,10 +121,18 @@ fi
 yq write -i $CONFIG_FILE server.requestLog.appenders[0].threshold "TRACE"
 
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
+  yq delete -i $CONFIG_FILE logging.appenders[2]
   yq delete -i $CONFIG_FILE logging.appenders[0]
   yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
 else
-  yq delete -i $CONFIG_FILE logging.appenders[1]
+  if [[ "$ROLLING_FILE_LOGGING_ENABLED" == "true" ]]; then
+    yq delete -i $CONFIG_FILE logging.appenders[1]
+    yq write -i $CONFIG_FILE logging.appenders[1].currentLogFilename "/opt/harness/logs/portal.log"
+    yq write -i $CONFIG_FILE logging.appenders[1].archivedLogFilenamePattern "/opt/harness/logs/portal.%d.%i.log"
+  else
+    yq delete -i $CONFIG_FILE logging.appenders[2]
+    yq delete -i $CONFIG_FILE logging.appenders[1]
+  fi
 fi
 
 if [[ "" != "$WATCHER_METADATA_URL" ]]; then
