@@ -54,7 +54,7 @@ public class Transformer {
     addTransformer(new CharacterArrayRecastTransformer());
   }
 
-  private RecastTransformer addTransformer(RecastTransformer recastTransformer) {
+  public RecastTransformer addTransformer(RecastTransformer recastTransformer) {
     if (recastTransformer.getSupportedTypes() != null) {
       for (final Class c : recastTransformer.getSupportedTypes()) {
         addTypedConverter(c, recastTransformer);
