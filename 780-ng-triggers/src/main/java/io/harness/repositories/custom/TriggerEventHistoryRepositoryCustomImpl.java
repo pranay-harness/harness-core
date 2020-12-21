@@ -1,12 +1,14 @@
 package io.harness.repositories.ng.core.custom;
 
 import io.harness.ngtriggers.beans.entity.TriggerEventHistory;
+import io.harness.ngtriggers.beans.entity.TriggerEventHistory.TriggerEventHistoryKeys;
 
 import com.google.inject.Inject;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -19,14 +21,16 @@ public class TriggerEventHistoryRepositoryCustomImpl implements TriggerEventHist
   @Override
   public List<TriggerEventHistory> findAll(Criteria criteria) {
     Query query = new Query(criteria);
-    List<TriggerEventHistory> triggersList = mongoTemplate.find(query, TriggerEventHistory.class);
-    return triggersList;
+    return mongoTemplate.find(query, TriggerEventHistory.class);
   }
 
   @Override
-  public TriggerEventHistory findLatest(Criteria criteria) {
+  public List<TriggerEventHistory> findAllActivationTimestampsInRange(Criteria criteria) {
     Query query = new Query(criteria);
-    TriggerEventHistory latestTriggerExecution = mongoTemplate.findOne(query, TriggerEventHistory.class);
-    return latestTriggerExecution;
+    query.fields()
+        .include(TriggerEventHistoryKeys.uuid)
+        .include(TriggerEventHistoryKeys.createdAt)
+        .include(TriggerEventHistoryKeys.exceptionOccurred);
+    return mongoTemplate.find(query, TriggerEventHistory.class);
   }
 }

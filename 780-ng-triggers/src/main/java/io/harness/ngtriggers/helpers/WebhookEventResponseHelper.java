@@ -3,7 +3,7 @@ package io.harness.ngtriggers.helpers;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.INVALID_PAYLOAD;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.INVALID_RUNTIME_INPUT_YAML;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_ENABLED_TRIGGER_FOUND_FOR_REPO;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS;
+import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_CONDITIONS;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_REPO;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.SCM_SERVICE_CONNECTION_FAILED;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.TARGET_DID_NOT_EXECUTE;
@@ -35,6 +35,7 @@ public class WebhookEventResponseHelper {
             .accountId(triggerWebhookEvent.getAccountId())
             .orgIdentifier(ngTriggerEntity == null ? null : ngTriggerEntity.getOrgIdentifier())
             .projectIdentifier(ngTriggerEntity == null ? null : ngTriggerEntity.getProjectIdentifier())
+            .targetIdentifier(ngTriggerEntity == null ? null : ngTriggerEntity.getTargetIdentifier())
             .eventCorrelationId(triggerWebhookEvent.getUuid())
             .payload(triggerWebhookEvent.getPayload())
             .createdAt(triggerWebhookEvent.getCreatedAt())
@@ -52,9 +53,9 @@ public class WebhookEventResponseHelper {
   }
 
   public boolean isFinalStatusAnEvent(WebhookEventResponse.FinalStatus status) {
-    Set<FinalStatus> set = EnumSet.of(INVALID_PAYLOAD, INVALID_RUNTIME_INPUT_YAML, TARGET_DID_NOT_EXECUTE,
-        TARGET_EXECUTION_REQUESTED, NO_ENABLED_TRIGGER_FOUND_FOR_REPO, NO_MATCHING_TRIGGER_FOR_REPO,
-        NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS);
+    Set<FinalStatus> set =
+        EnumSet.of(INVALID_PAYLOAD, INVALID_RUNTIME_INPUT_YAML, TARGET_DID_NOT_EXECUTE, TARGET_EXECUTION_REQUESTED,
+            NO_ENABLED_TRIGGER_FOUND_FOR_REPO, NO_MATCHING_TRIGGER_FOR_REPO, NO_MATCHING_TRIGGER_FOR_CONDITIONS);
     return set.contains(status);
   }
 
@@ -63,6 +64,7 @@ public class WebhookEventResponseHelper {
         .accountId(response.getAccountId())
         .orgIdentifier(response.getOrgIdentifier())
         .projectIdentifier(response.getProjectIdentifier())
+        .targetIdentifier(response.getTargetIdentifier())
         .eventCorrelationId(response.getEventCorrelationId())
         .payload(response.getPayload())
         .eventCreatedAt(response.getCreatedAt())

@@ -10,7 +10,7 @@ public class WebhookEventResponse {
     SCM_SERVICE_CONNECTION_FAILED,
     INVALID_PAYLOAD,
     NO_MATCHING_TRIGGER_FOR_REPO,
-    NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS,
+    NO_MATCHING_TRIGGER_FOR_CONDITIONS,
     INVALID_RUNTIME_INPUT_YAML,
     TARGET_DID_NOT_EXECUTE,
     TARGET_EXECUTION_REQUESTED,
@@ -20,6 +20,7 @@ public class WebhookEventResponse {
   private String accountId;
   private String orgIdentifier;
   private String projectIdentifier;
+  private String targetIdentifier;
   private String eventCorrelationId;
   private String payload;
   private long createdAt;

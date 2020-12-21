@@ -7,5 +7,5 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 public interface TriggerEventHistoryRepositoryCustom {
   List<TriggerEventHistory> findAll(Criteria criteria);
-  TriggerEventHistory findLatest(Criteria criteria);
+  List<TriggerEventHistory> findAllActivationTimestampsInRange(Criteria criteria);
 }
