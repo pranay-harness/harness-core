@@ -31,10 +31,6 @@ def main(event, context):
     data = base64.b64decode(event['data']).decode('utf-8')
     jsonData = json.loads(data)
     print(jsonData)
-    enable_for_accounts = os.environ.get("enable_for_accounts", "").split(",")
-    if jsonData["accountId"] not in enable_for_accounts:
-        print("Execution is disabled for this account : %s" % jsonData["accountId"])
-        return
     # This is available only in runtime python 3.7, go 1.11
     jsonData["projectName"] = os.environ.get('GCP_PROJECT', 'ce-prod-274307')
 

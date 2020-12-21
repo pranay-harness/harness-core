@@ -231,7 +231,7 @@ resource "google_cloudfunctions_function" "ce-awsdata-function" {
   #}
   environment_variables = {
     disabled = "false"
-    enable_for_accounts = "kmpysmuisimorrjl6nl73w,wfhxhd0rrqwoo8tizt5yvw,6cv54zy5qhgfaetwjircsg,zeaak_fls425ieo7olzmug"
+    enable_for_accounts = ""
   }
   event_trigger {
     event_type = "google.pubsub.topic.publish"
