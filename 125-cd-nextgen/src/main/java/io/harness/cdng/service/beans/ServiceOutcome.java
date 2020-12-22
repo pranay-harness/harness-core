@@ -2,6 +2,7 @@ package io.harness.cdng.service.beans;
 
 import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
+import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.pms.sdk.core.data.Outcome;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -23,7 +24,8 @@ public class ServiceOutcome implements Outcome {
   String description;
   String deploymentType;
   ArtifactsOutcome artifacts;
-  List<ManifestAttributes> manifests;
+  List<ManifestAttributes> manifests1;
+  @Singular Map<String, ManifestOutcome> manifests;
 
   @Override
   public String getType() {
