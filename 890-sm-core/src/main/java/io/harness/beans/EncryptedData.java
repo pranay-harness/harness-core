@@ -11,7 +11,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedDataParent.EncryptedDataParentKeys;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.CdSparseIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
@@ -71,18 +70,15 @@ import org.mongodb.morphia.annotations.Transient;
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 
-@NgUniqueIndex(name = "acctNameIdx", fields = { @Field("accountId")
-                                                , @Field("name") })
-@CdIndex(name = "acctKmsIdx", fields = { @Field("accountId")
-                                         , @Field("kmsId") })
-@CdSparseIndex(name = "accountIdentifierEntityIdentifierIdx",
-    fields = { @Field("ngMetadata.accountIdentifier")
-               , @Field("ngMetadata.identifier") })
-@CdSparseIndex(name = "accountOrgProjectIdx",
+@NgUniqueIndex(name = "acctNameIdx",
     fields =
     {
-      @Field("ngMetadata.accountIdentifier"), @Field("ngMetadata.orgIdentifier"), @Field("ngMetadata.projectIdentifier")
+      @Field("accountId")
+      , @Field("name"), @Field("ngMetadata.accountIdentifier"), @Field("ngMetadata.orgIdentifier"),
+          @Field("ngMetadata.projectIdentifier"), @Field("ngMetadata.identifier")
     })
+@CdIndex(name = "acctKmsIdx", fields = { @Field("accountId")
+                                         , @Field("kmsId") })
 @FieldNameConstants(innerTypeName = "EncryptedDataKeys")
 public class EncryptedData
     implements EncryptedRecord, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
