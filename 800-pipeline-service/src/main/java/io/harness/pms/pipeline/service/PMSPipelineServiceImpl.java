@@ -158,7 +158,6 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       validatePresenceOfRequiredFields(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),
           pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier(), pipelineEntity.getIdentifier());
 
-      // Todo: Uncomment when we have the CD Service integration with NextGenApp.
       updatePipelineInfo(pipelineEntity);
 
       PipelineEntity createdEntity = pmsPipelineRepository.save(pipelineEntity);
@@ -254,6 +253,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       }
       pipelineEntity.setLayoutNodeMap(filtersAndStageCount.getLayoutNodeMap());
       pipelineEntity.setStartingNodeID(filtersAndStageCount.getStartingNodeId());
+      pipelineEntity.setProcessedYaml(filtersAndStageCount.getProcessedYaml());
     } catch (Exception ex) {
       throw new InvalidRequestException(
           format("Error happened while creating filters for pipeline: %s", ex.getMessage(), ex));

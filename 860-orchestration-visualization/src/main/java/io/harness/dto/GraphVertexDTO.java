@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
+import org.bson.Document;
 
 @Value
 @Builder
@@ -38,7 +39,7 @@ public class GraphVertexDTO {
 
   List<Map<String, Object>> executableResponsesMetadata;
   List<InterruptEffect> interruptHistories;
-  List<Outcome> outcomes;
+  List<Document> outcomes;
   List<String> retryIds;
 
   Map<String, List<ProgressData>> progressDataMap;

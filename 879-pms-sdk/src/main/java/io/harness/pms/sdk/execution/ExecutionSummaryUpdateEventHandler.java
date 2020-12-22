@@ -31,8 +31,8 @@ public class ExecutionSummaryUpdateEventHandler implements AsyncOrchestrationEve
             .setNodeModuleInfoJson(
                 executionSummaryModuleInfoProvider.getStageLevelModuleInfo(nodeExecutionProto).toJson())
             .setNodeExecutionId(nodeExecutionProto.getUuid());
-    if (Objects.equals(nodeExecutionProto.getNode().getGroup(), "STAGE")) {
-      executionSummaryUpdateRequest.setNodeUuid(nodeExecutionProto.getNode().getUuid());
+    if (orchestrationEvent.getAmbiance().getLevelsCount() >= 3) {
+      executionSummaryUpdateRequest.setNodeUuid(orchestrationEvent.getAmbiance().getLevels(2).getSetupId());
     }
     try {
       pmsClient.updateExecutionSummary(executionSummaryUpdateRequest.build());

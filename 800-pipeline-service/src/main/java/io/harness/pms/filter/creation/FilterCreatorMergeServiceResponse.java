@@ -13,4 +13,5 @@ public class FilterCreatorMergeServiceResponse {
   Map<String, GraphLayoutNode> layoutNodeMap;
   int stageCount;
   String startingNodeId;
+  String processedYaml;
 }

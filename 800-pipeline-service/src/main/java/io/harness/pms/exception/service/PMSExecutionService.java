@@ -16,5 +16,5 @@ public interface PMSExecutionService {
   PipelineExecutionSummaryEntity getPipelineExecutionSummaryEntity(
       String accountId, String orgId, String projectId, String planExecutionId);
 
-  OrchestrationGraphDTO getOrchestrationGraph(String stageIdentifier, String planExecutionId);
+  OrchestrationGraphDTO getOrchestrationGraph(String stageNodeId, String planExecutionId);
 }

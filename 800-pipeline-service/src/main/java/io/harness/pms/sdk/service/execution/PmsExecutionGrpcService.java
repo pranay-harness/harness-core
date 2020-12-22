@@ -7,6 +7,7 @@ import io.harness.pms.contracts.service.ExecutionSummaryResponse;
 import io.harness.pms.contracts.service.ExecutionSummaryUpdateRequest;
 import io.harness.pms.contracts.service.PmsExecutionServiceGrpc.PmsExecutionServiceImplBase;
 import io.harness.pms.execution.ExecutionStatus;
+import io.harness.pms.execution.beans.ExecutionErrorInfo;
 import io.harness.pms.pipeline.entity.PipelineExecutionSummaryEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
@@ -59,6 +60,9 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
         for (Object value : values) {
           update.addToSet(String.format(PIPELINE_MODULE_INFO_UPDATE_KEY, moduleName, entry.getKey()), value);
         }
+        if (values.isEmpty()) {
+          update.addToSet(String.format(PIPELINE_MODULE_INFO_UPDATE_KEY, moduleName, entry.getKey()), "");
+        }
       } else {
         if (entry.getValue() instanceof String) {
           update.set(
@@ -73,6 +77,10 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
       update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.status, status);
       if (ExecutionStatus.isTerminal(status)) {
         update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.endTs, nodeExecution.getEndTs());
+      }
+      if (status == ExecutionStatus.FAILED) {
+        update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.executionErrorInfo,
+            ExecutionErrorInfo.builder().message(nodeExecution.getFailureInfo().getErrorMessage()).build());
       }
     }
     Criteria criteria =
@@ -97,6 +105,9 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
         Collection<Object> values = (Collection<Object>) entry.getValue();
         for (Object value : values) {
           update.addToSet(String.format(STAGE_MODULE_INFO_UPDATE_KEY, stageUuid, moduleName, entry.getKey()), value);
+        }
+        if (values.isEmpty()) {
+          update.addToSet(String.format(STAGE_MODULE_INFO_UPDATE_KEY, stageUuid, moduleName, entry.getKey()), "");
         }
       } else {
         if (entry.getValue() instanceof String) {

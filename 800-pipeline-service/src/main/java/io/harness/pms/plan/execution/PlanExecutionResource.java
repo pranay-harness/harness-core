@@ -9,6 +9,7 @@ import io.harness.plan.Plan;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.ngpipeline.inputset.beans.resource.MergeInputSetRequestDTOPMS;
 import io.harness.pms.plan.creation.PlanCreatorMergeService;
+import io.harness.pms.yaml.YamlUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -32,7 +33,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Consumes({"application/json", "application/yaml"})
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 public class PlanExecutionResource {
-  private static final EmbeddedUser EMBEDDED_USER =
+  public static final EmbeddedUser EMBEDDED_USER =
       EmbeddedUser.builder().uuid("lv0euRhKRCyiXWzS7pOg6g").email("admin@harness.io").name("Admin").build();
   private static final String pipelineYaml = "pipeline:\n"
       + "        identifier: p1\n"
@@ -373,7 +374,8 @@ public class PlanExecutionResource {
   @GET
   @ApiOperation(value = "Execute A Pipeline", nickname = "executePipeline")
   public Response executePipeline() throws IOException {
-    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(manifestPipeline);
+    String processedYaml = YamlUtils.injectUuid(ngPipeline);
+    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(processedYaml);
     Plan plan = PlanExecutionUtils.extractPlan(resp);
     PlanExecution planExecution = orchestrationService.startExecution(plan,
         new HashMap<>(ImmutableMap.of(

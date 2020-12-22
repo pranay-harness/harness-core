@@ -1,27 +1,57 @@
 package io.harness.pms.pipeline.mappers;
 
 import io.harness.pms.contracts.execution.ExecutionErrorInfo;
+import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.pipeline.ExecutionTriggerInfo;
 import io.harness.pms.pipeline.entity.PipelineExecutionSummaryEntity;
+import io.harness.pms.pipeline.resource.GraphLayoutNodeDTO;
 import io.harness.pms.pipeline.resource.PipelineExecutionSummaryDTO;
 
+import java.util.Map;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class PipelineExecutionSummaryDtoMapper {
   public PipelineExecutionSummaryDTO toDto(PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity) {
+    Map<String, GraphLayoutNodeDTO> layoutNodeDTOMap = pipelineExecutionSummaryEntity.getLayoutNodeMap();
+    String startingNodeId = pipelineExecutionSummaryEntity.getStartingNodeId();
     return PipelineExecutionSummaryDTO.builder()
         .name(pipelineExecutionSummaryEntity.getName())
         .createdAt(pipelineExecutionSummaryEntity.getCreatedAt())
-        .layoutNodeMap(pipelineExecutionSummaryEntity.getLayoutNodeMap())
+        .layoutNodeMap(layoutNodeDTOMap)
         .moduleInfo(pipelineExecutionSummaryEntity.getModuleInfo())
-        .startingNodeId(pipelineExecutionSummaryEntity.getStartingNodeId())
+        .startingNodeId(startingNodeId)
         .planExecutionId(pipelineExecutionSummaryEntity.getPlanExecutionId())
         .startTs(pipelineExecutionSummaryEntity.getStartTs())
         .endTs(pipelineExecutionSummaryEntity.getEndTs())
         .status(pipelineExecutionSummaryEntity.getStatus())
-        .executionTriggerInfo(ExecutionTriggerInfo.builder().build())
-        .executionErrorInfo(ExecutionErrorInfo.newBuilder().build())
+        .executionTriggerInfo(pipelineExecutionSummaryEntity.getExecutionTriggerInfo())
+        .executionErrorInfo(pipelineExecutionSummaryEntity.getExecutionErrorInfo())
+        .successfulStagesCount(getStagesCount(layoutNodeDTOMap, startingNodeId, ExecutionStatus.SUCCESS))
+        .failedStagesCount(getStagesCount(layoutNodeDTOMap, startingNodeId, ExecutionStatus.FAILED))
+        .runningStagesCount(getStagesCount(layoutNodeDTOMap, startingNodeId, ExecutionStatus.RUNNING))
         .build();
+  }
+
+  public int getStagesCount(
+      Map<String, GraphLayoutNodeDTO> layoutNodeDTOMap, String startingNodeId, ExecutionStatus executionStatus) {
+    if (startingNodeId == null) {
+      return 0;
+    }
+    int count = 0;
+    GraphLayoutNodeDTO nodeDTO = layoutNodeDTOMap.get(startingNodeId);
+    if (!nodeDTO.getNodeType().equals("parallel") && nodeDTO.getStatus().equals(executionStatus)) {
+      count++;
+    } else if (nodeDTO.getNodeType().equals("parallel")) {
+      for (String child : nodeDTO.getEdgeLayoutList().getCurrentNodeChildren()) {
+        if (layoutNodeDTOMap.get(child).getStatus().equals(executionStatus)) {
+          count++;
+        }
+      }
+    }
+    if (nodeDTO.getEdgeLayoutList().getNextIds().isEmpty()) {
+      return count;
+    }
+    return count + getStagesCount(layoutNodeDTOMap, nodeDTO.getEdgeLayoutList().getNextIds().get(0), executionStatus);
   }
 }

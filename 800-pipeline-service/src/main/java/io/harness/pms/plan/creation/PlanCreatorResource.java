@@ -1,6 +1,7 @@
 package io.harness.pms.plan.creation;
 
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
+import io.harness.pms.yaml.YamlUtils;
 
 import com.google.inject.Inject;
 import com.google.protobuf.util.JsonFormat;
@@ -244,7 +245,8 @@ public class PlanCreatorResource {
   @GET
   @ApiOperation(value = "Get plan creation response for sample pipeline", nickname = "getPlanCreationResponse")
   public Response getPlanCreationResponse() throws IOException {
-    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(pipelineYaml);
+    String processedYaml = YamlUtils.injectUuid(pipelineYaml);
+    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(processedYaml);
     String json = JsonFormat.printer().print(resp);
     return Response.ok(json, MediaType.APPLICATION_JSON_TYPE).build();
   }

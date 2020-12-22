@@ -21,6 +21,7 @@ import io.harness.pms.filter.creation.FilterCreatorMergeService;
 import io.harness.pms.filter.creation.FilterCreatorMergeServiceResponse;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
 import io.harness.pms.sdk.PmsSdkInstanceService;
+import io.harness.pms.yaml.YamlUtils;
 import io.harness.rule.Owner;
 
 import java.io.IOException;
@@ -116,12 +117,6 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
     FilterCreatorMergeServiceResponse filterCreatorMergeServiceResponse =
         filterCreatorMergeService.getPipelineInfo(pipelineYaml);
 
-    assertThat(filterCreatorMergeServiceResponse)
-        .isEqualTo(FilterCreatorMergeServiceResponse.builder()
-                       .filters(new HashMap<>())
-                       .layoutNodeMap(new HashMap<>())
-                       .startingNodeId("")
-                       .build());
     verify(pmsSdkInstanceService).getInstanceNameToSupportedTypes();
   }
 
