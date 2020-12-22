@@ -6,9 +6,9 @@ import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
+import io.harness.ngpipeline.expressions.functors.EventPayloadFunctor;
 import io.harness.ngpipeline.expressions.functors.OrgFunctor;
 import io.harness.ngpipeline.expressions.functors.ProjectFunctor;
-import io.harness.ngtriggers.functor.EventPayloadFunctor;
 import io.harness.pms.contracts.ambiance.Ambiance;
 
 import com.google.inject.Inject;

@@ -30,7 +30,6 @@ public class NextGenConfiguration extends Configuration {
   public static final String GIT_SYNC_PACKAGE = "io.harness.gitsync";
   public static final String CDNG_RESOURCES_PACKAGE = "io.harness.cdng";
   public static final String OVERLAY_INPUT_SET_RESOURCE_PACKAGE = "io.harness.ngpipeline";
-  public static final String NG_TRIGGER_RESOURCE_PACKAGE = "io.harness.ngtriggers";
   public static final String YAML_PACKAGE = "io.harness.yaml";
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConfig;
@@ -49,7 +48,6 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("pmsGrpcClientConfig") private GrpcClientConfig pmsGrpcClientConfig;
   @JsonProperty("shouldConfigureWithPMS") private Boolean shouldConfigureWithPMS;
 
-  private ScmConnectionConfig scmConnectionConfig;
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;
 
@@ -69,7 +67,7 @@ public class NextGenConfiguration extends Configuration {
 
   public static Collection<Class<?>> getResourceClasses() {
     Reflections reflections = new Reflections(BASE_PACKAGE, CONNECTOR_PACKAGE, GIT_SYNC_PACKAGE, CDNG_RESOURCES_PACKAGE,
-        OVERLAY_INPUT_SET_RESOURCE_PACKAGE, NG_TRIGGER_RESOURCE_PACKAGE, YAML_PACKAGE);
+        OVERLAY_INPUT_SET_RESOURCE_PACKAGE, YAML_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 

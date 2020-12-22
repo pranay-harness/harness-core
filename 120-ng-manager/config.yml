@@ -31,9 +31,6 @@ nextGen:
   jwtAuthSecret: dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq
   identityServiceSecret: HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU=
 
-scmConnectionConfig:
-  url: localhost:8091
-
 allowedOrigins:
   - https://localhost:8181
   - https://127.0.0.1:8181

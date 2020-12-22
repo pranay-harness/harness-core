@@ -51,3 +51,6 @@ managerServiceSecret: "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwV
 
 allowedOrigins:
   - "*"
+
+scmConnectionConfig:
+  url: localhost:8091

@@ -77,11 +77,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>780-ng-triggers</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>900-yaml-sdk</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

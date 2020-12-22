@@ -8,8 +8,8 @@ directories:
   440-connector-nextgen
   450-ce-views
   490-ce-commons
-  780-ng-triggers
   800-pipeline-service
+  810-ng-triggers
   850-execution-plan
   850-ng-pipeline-commons
   860-orchestration-steps

@@ -6,6 +6,7 @@ import static java.util.stream.Collectors.toSet;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;
+import io.harness.pms.triggers.scm.ScmConnectionConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -38,6 +39,7 @@ import org.reflections.Reflections;
 @Singleton
 public class PipelineServiceConfiguration extends Configuration {
   public static final String RESOURCE_PACKAGE = "io.harness.pms";
+  public static final String NG_TRIGGER_RESOURCE_PACKAGE = "io.harness.ngtriggers";
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConfig;
@@ -48,6 +50,7 @@ public class PipelineServiceConfiguration extends Configuration {
   private String managerServiceSecret;
   private String managerTarget;
   private String managerAuthority;
+  private ScmConnectionConfig scmConnectionConfig;
 
   public PipelineServiceConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();
@@ -83,7 +86,7 @@ public class PipelineServiceConfiguration extends Configuration {
   }
 
   public static Collection<Class<?>> getResourceClasses() {
-    Reflections reflections = new Reflections(RESOURCE_PACKAGE);
+    Reflections reflections = new Reflections(RESOURCE_PACKAGE, NG_TRIGGER_RESOURCE_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 

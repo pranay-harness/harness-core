@@ -20,12 +20,14 @@ public class PipelineServiceModuleRegistrars {
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(OrchestrationRegistrars.kryoRegistrars)
           .add(OrchestrationVisualizationKryoRegistrar.class)
+          .addAll(NGTriggerRegistrars.kryoRegistrars)
           .build();
 
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(OrchestrationRegistrars.morphiaRegistrars)
           .add(PMSPipelineMorphiaRegistrar.class)
+          .addAll(NGTriggerRegistrars.morphiaRegistrars)
           .build();
 
   public final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

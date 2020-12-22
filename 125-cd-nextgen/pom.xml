@@ -36,11 +36,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>780-ng-triggers</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>850-execution-plan</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
