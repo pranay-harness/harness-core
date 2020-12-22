@@ -79,8 +79,8 @@ managerClientConfig:
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 ciExecutionServiceConfig:
-  addonImageTag: v1.5-alpha
-  liteEngineImageTag: v1.5-alpha
+  addonImageTag: valpha-1.21.1
+  liteEngineImageTag: valpha-1.21.1
   defaultMemoryLimit: 200
   defaultCPULimit: 200
   defaultInternalImageConnector: account.harnessimage

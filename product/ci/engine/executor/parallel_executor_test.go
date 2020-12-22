@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func testGetRunStep(id string, cmd []string) *pb.UnitStep {
+func testGetRunStep(id string, cmd string) *pb.UnitStep {
 	ctx := &pb.StepContext{
 		NumRetries: 2,
 	}
@@ -23,8 +23,8 @@ func testGetRunStep(id string, cmd []string) *pb.UnitStep {
 		DisplayName: fmt.Sprintf("step %s", id),
 		Step: &pb.UnitStep_Run{
 			Run: &pb.RunStep{
-				Context:  ctx,
-				Commands: cmd,
+				Context: ctx,
+				Command: cmd,
 			},
 		},
 	}
@@ -60,7 +60,7 @@ func TestParallelExecutorRun(t *testing.T) {
 			step: &pb.ParallelStep{
 				Id: "ptest1",
 				Steps: []*pb.UnitStep{
-					testGetRunStep("ptest1_1", []string{"ls"})},
+					testGetRunStep("ptest1_1", "ls")},
 			},
 			expectedErr: false,
 		},
@@ -69,9 +69,9 @@ func TestParallelExecutorRun(t *testing.T) {
 			step: &pb.ParallelStep{
 				Id: "ptest2",
 				Steps: []*pb.UnitStep{
-					testGetRunStep("ptest2_1", []string{"ls"}),
-					testGetRunStep("ptest2_2", []string{"ls -l"}),
-					testGetRunStep("ptest2_3", []string{"ls"})},
+					testGetRunStep("ptest2_1", "ls"),
+					testGetRunStep("ptest2_2", "ls -l"),
+					testGetRunStep("ptest2_3", "ls")},
 			},
 			expectedErr: false,
 		},
@@ -106,8 +106,8 @@ func TestParallelExecutorUnitStepErr(t *testing.T) {
 	step := &pb.ParallelStep{
 		Id: "ptest",
 		Steps: []*pb.UnitStep{
-			testGetRunStep("ptest3_1", []string{"la"}),
-			testGetRunStep("ptest3_3", []string{"l"})},
+			testGetRunStep("ptest3_1", "la"),
+			testGetRunStep("ptest3_3", "l")},
 	}
 
 	// Mock out unit Executor run step
@@ -133,8 +133,8 @@ func TestParallelCleanupSuccess(t *testing.T) {
 	step := &pb.ParallelStep{
 		Id: "ptest",
 		Steps: []*pb.UnitStep{
-			testGetRunStep("ptest4_1", []string{"pwd"}),
-			testGetRunStep("ptest4_2", []string{"ls"})},
+			testGetRunStep("ptest4_1", "pwd"),
+			testGetRunStep("ptest4_2", "ls")},
 	}
 
 	// Mock out unit Executor run step
@@ -161,8 +161,8 @@ func TestParallelCleanupErr(t *testing.T) {
 	step := &pb.ParallelStep{
 		Id: "ptest",
 		Steps: []*pb.UnitStep{
-			testGetRunStep("ptest4_1", []string{"pwd"}),
-			testGetRunStep("ptest4_2", []string{"ls"})},
+			testGetRunStep("ptest4_1", "pwd"),
+			testGetRunStep("ptest4_2", "ls")},
 	}
 
 	// Mock out unit Executor run step

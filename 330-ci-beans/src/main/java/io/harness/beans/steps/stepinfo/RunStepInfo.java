@@ -47,7 +47,7 @@ public class RunStepInfo implements CIStepInfo {
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
   @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
-  @NotNull private List<String> command;
+  @NotNull private String command;
   private List<String> output;
   private Map<String, String> environment;
   private String skipCondition;
@@ -60,7 +60,7 @@ public class RunStepInfo implements CIStepInfo {
   @ConstructorProperties({"callbackId", "port", "identifier", "name", "retry", "timeout", "command", "output",
       "skipCondition", "environment", "image", "connector", "resources"})
   public RunStepInfo(String callbackId, Integer port, String identifier, String name, Integer retry, Integer timeout,
-      List<String> command, List<String> output, String skipCondition, Map<String, String> environment, String image,
+      String command, List<String> output, String skipCondition, Map<String, String> environment, String image,
       String connector, ContainerResource resources) {
     this.callbackId = callbackId;
     this.port = port;

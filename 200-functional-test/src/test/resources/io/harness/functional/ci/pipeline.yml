@@ -34,9 +34,9 @@ pipeline:
                   identifier: ping
                   type: run
                   spec:
-                    command:
-                      - sleep 10
-                      - redis-cli -h cache ping
+                    command: |
+                      sleep 10
+                      redis-cli -h cache ping
                     image: "shubham149/redis"
                     resources:
                       limit:

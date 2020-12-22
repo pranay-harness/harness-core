@@ -110,7 +110,7 @@ public class CIPipelineYamlTest extends CiBeansTestBase {
                                                                                    .identifier("runLint")
                                                                                    .retry(2)
                                                                                    .timeout(30)
-                                                                                   .command(singletonList("./run lint"))
+                                                                                   .command("./run lint")
                                                                                    .build())
                                                                  .build(),
                                                 StepElement.builder()
@@ -121,8 +121,8 @@ public class CIPipelineYamlTest extends CiBeansTestBase {
                                                             .identifier("runAllUnitTests")
                                                             .retry(2)
                                                             .timeout(30)
-                                                            .command(singletonList(
-                                                                "mvn -U clean package -Dbuild.number=${BUILD_NUMBER} -DgitBranch=master -DforkMode=perthread -DthreadCount=3 -DargLine=\"-Xmx2048m\""))
+                                                            .command(
+                                                                "mvn -U clean package -Dbuild.number=${BUILD_NUMBER} -DgitBranch=master -DforkMode=perthread -DthreadCount=3 -DargLine=\"-Xmx2048m\"")
                                                             .build())
                                                     .build(),
                                                 StepElement.builder()
@@ -147,7 +147,7 @@ public class CIPipelineYamlTest extends CiBeansTestBase {
                                                               .identifier("generateReport")
                                                               .retry(2)
                                                               .timeout(30)
-                                                              .command(singletonList("./ci/generate_report.sh"))
+                                                              .command("./ci/generate_report.sh")
                                                               .build())
                                             .build(),
                                         StepElement.builder()
@@ -157,7 +157,7 @@ public class CIPipelineYamlTest extends CiBeansTestBase {
                                                               .identifier("buildMaster")
                                                               .retry(2)
                                                               .timeout(75)
-                                                              .command(singletonList("mvn clean install"))
+                                                              .command("mvn clean install")
                                                               .build())
                                             .build(),
                                         StepElement.builder()

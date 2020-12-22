@@ -19,4 +19,6 @@ require (
 	golang.org/x/net v0.0.0-20201031054903-ff519b6c9102
 	google.golang.org/grpc v1.32.0
 	k8s.io/api v0.17.4
+	mvdan.cc/sh v2.6.4+incompatible
+	mvdan.cc/sh/v3 v3.2.1
 )
