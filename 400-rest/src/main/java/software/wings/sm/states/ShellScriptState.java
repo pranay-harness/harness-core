@@ -120,6 +120,9 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
 
   @Getter @Setter @Attributes(title = "Execute on Delegate") private boolean executeOnDelegate;
 
+  // Added to support delegate profile startup script execution through the workflow
+  @Getter @Setter private String mustExecuteOnDelegateId;
+
   @NotEmpty @Getter @Setter @Attributes(title = "Target Host") private String host;
   // Please use delegateselectors instead, tags is not longer used but cannot be removed to support older workflows
   @Deprecated @NotEmpty @Getter @Setter @Attributes(title = "Tags") private List<String> tags;
@@ -276,6 +279,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
         : workflowStandardParams.getEnv().getUuid();
 
     String appId = workflowStandardParams == null ? null : workflowStandardParams.getAppId();
+
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infrastructureMappingId);
     String serviceTemplateId =
         infrastructureMapping == null ? null : serviceTemplateHelper.fetchServiceTemplateId(infrastructureMapping);
@@ -436,6 +440,11 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
 
     int expressionFunctorToken = HashGenerator.generateIntegerHash();
 
+    // Added to support delegate profile startup script execution through the workflow
+    String mustExecuteOnDelegateIdRendered = !"null".equals(context.renderExpression(mustExecuteOnDelegateId))
+        ? context.renderExpression(mustExecuteOnDelegateId)
+        : null;
+
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(executionContext.getApp().getAccountId())
@@ -458,6 +467,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
             .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, serviceId)
             .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, serviceTemplateId)
             .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .mustExecuteOnDelegateId(mustExecuteOnDelegateIdRendered)
             .build();
 
     String delegateTaskId = renderAndScheduleDelegateTask(context, delegateTask,

@@ -273,9 +273,75 @@ public class ShellScriptStateTest extends WingsBaseTest {
     assertThat(shellScriptParameters.getScriptType()).isEqualTo(BASH);
     assertThat(shellScriptParameters.isExecuteOnDelegate()).isTrue();
     assertThat(delegateTask.getTags()).contains("T1", "T2");
+    assertThat(delegateTask.getMustExecuteOnDelegateId()).isNull();
 
     verify(activityHelperService).createAndSaveActivity(any(), any(), any(), any(), any());
     verify(stateExecutionService).appendDelegateTaskDetails(anyString(), any(DelegateTaskDetails.class));
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldExecuteOnSpecificDelegate() throws IllegalAccessException {
+    Map<String, Object> variableMap = new HashMap<>();
+    variableMap.put("var1", "John Doe");
+    setFieldsInShellScriptState(true);
+    FieldUtils.writeField(shellScriptState, "executeOnDelegate", true, true);
+    FieldUtils.writeField(
+        shellScriptState, "mustExecuteOnDelegateId", "${workflow.variables.mustExecuteOnDelegateId}", true);
+
+    when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(aServiceTemplate().withUuid(TEMPLATE_ID).build());
+    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null, OBTAIN_VALUE))
+        .thenReturn(emptyList());
+
+    when(templateUtils.processTemplateVariables(any(), any())).thenReturn(variableMap);
+    when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
+    when(executionContext.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
+    when(executionContext.renderExpression(eq("echo ${var1}"), any(StateExecutionContext.class)))
+        .thenReturn("echo \"John Doe\"");
+
+    when(executionContext.renderExpression(eq("${workflow.variables.mustExecuteOnDelegateId}")))
+        .thenReturn("delegateId");
+
+    when(workflowStandardParams.getAppId()).thenReturn(APP_ID);
+    when(workflowStandardParams.getEnvId()).thenReturn(ENV_ID);
+    when(workflowStandardParams.getApp()).thenReturn(anApplication().uuid(APP_ID).name(APP_NAME).build());
+    when(workflowStandardParams.getEnv())
+        .thenReturn(anEnvironment().uuid(ENV_ID).name(ENV_NAME).environmentType(NON_PROD).build());
+
+    doReturn("TASKID").when(delegateService).queueTask(any());
+    ExecutionResponse response = shellScriptState.execute(executionContext);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).isEqualTo(true);
+    assertThat(response.getStateExecutionData())
+        .isNotNull()
+        .isInstanceOf(ScriptStateExecutionData.class)
+        .isEqualToComparingOnlyGivenFields(
+            ScriptStateExecutionData.builder().activityId(ACTIVITY_ID).build(), "activityId");
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(response.getDelegateTaskId()).isEqualTo("TASKID");
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+    ShellScriptParameters shellScriptParameters = (ShellScriptParameters) delegateTask.getData().getParameters()[0];
+    assertThat(shellScriptParameters.getScript()).isEqualTo("echo \"John Doe\"");
+    assertThat(shellScriptParameters.getOutputVars()).isEqualTo("var1");
+    assertThat(shellScriptParameters.getConnectionType()).isEqualTo(SSH);
+    assertThat(shellScriptParameters.getScriptType()).isEqualTo(BASH);
+    assertThat(shellScriptParameters.isExecuteOnDelegate()).isTrue();
+    assertThat(delegateTask.getTags()).contains("T1", "T2");
+    assertThat(delegateTask.getMustExecuteOnDelegateId()).isEqualTo("delegateId");
+
+    verify(activityHelperService).createAndSaveActivity(any(), any(), any(), any(), any());
+    verify(stateExecutionService).appendDelegateTaskDetails(anyString(), any(DelegateTaskDetails.class));
+
+    // Test when expression could not be evaluated
+
+    when(executionContext.renderExpression(eq("${workflow.variables.mustExecuteOnDelegateId}"))).thenReturn("null");
+    shellScriptState.execute(executionContext);
+    captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(2)).queueTask(captor.capture());
+    delegateTask = captor.getValue();
+    assertThat(delegateTask.getMustExecuteOnDelegateId()).isNull();
   }
 
   @Test
