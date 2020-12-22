@@ -1,6 +1,5 @@
 package io.harness.beans;
 
-import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureFlag.Scope;
 
 import lombok.Getter;
@@ -126,7 +125,8 @@ public enum FeatureName {
   ADDRESS_INEFFICIENT_QUERIES,
   RESOURCE_CONSTRAINT_MAX_QUEUE,
   HIDE_SCOPE_COMMAND_OPTION,
-  SHOW_TASK_SETUP_ABSTRACTIONS;
+  SHOW_TASK_SETUP_ABSTRACTIONS,
+  CLEAN_UP_OLD_MANAGER_VERSIONS(Scope.PER_ACCOUNT);
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;

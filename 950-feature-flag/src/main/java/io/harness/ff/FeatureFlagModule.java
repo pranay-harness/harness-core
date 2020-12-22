@@ -1,8 +1,5 @@
 package io.harness.ff;
 
-import io.harness.ff.FeatureFlagService;
-import io.harness.ff.FeatureFlagServiceImpl;
-
 import com.google.inject.AbstractModule;
 
 public class FeatureFlagModule extends AbstractModule {
