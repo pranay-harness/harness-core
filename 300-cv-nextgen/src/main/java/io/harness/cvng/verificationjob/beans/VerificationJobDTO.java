@@ -26,6 +26,8 @@ public abstract class VerificationJobDTO {
   private List<DataSourceType> dataSources;
   // TODO: make it Duration and write a custom serializer
   private String duration;
+  private boolean isDefaultJob;
+
   protected void populateCommonFields(VerificationJob verificationJob) {
     verificationJob.setIdentifier(this.identifier);
     verificationJob.setServiceIdentifier(serviceIdentifier, isRuntimeParam(serviceIdentifier));
@@ -36,6 +38,7 @@ public abstract class VerificationJobDTO {
     verificationJob.setProjectIdentifier(projectIdentifier);
     verificationJob.setOrgIdentifier(orgIdentifier);
     verificationJob.setType(getType());
+    verificationJob.setDefaultJob(isDefaultJob);
   }
 
   @JsonIgnore public abstract VerificationJob getVerificationJob();

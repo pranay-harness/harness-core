@@ -1,5 +1,6 @@
 package io.harness.cvng.verificationjob.services.impl;
 
+import static io.harness.cvng.CVConstants.DEFAULT_HEALTH_JOB_NAME;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.KAMAL;
@@ -208,5 +209,36 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     int numberOfServices = verificationJobService.getNumberOfServicesUndergoingHealthVerification(
         accountId, orgIdentifier, projectIdentifier);
     assertThat(numberOfServices).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetOrCreateDefaultHealthVerificationJob_firstTime() {
+    String orgIdentifier = "orgIdentifier";
+    String projectIdentifier = "projectIdentifier";
+    VerificationJob verificationJob =
+        verificationJobService.getOrCreateDefaultHealthVerificationJob(accountId, orgIdentifier, projectIdentifier);
+    assertThat(verificationJob).isNotNull();
+    assertThat(verificationJob.isDefaultJob()).isTrue();
+    assertThat(verificationJob.getIdentifier()).isEqualTo(projectIdentifier + DEFAULT_HEALTH_JOB_NAME);
+    assertThat(verificationJob.getServiceIdentifier()).isEqualTo("${service}");
+    assertThat(verificationJob.getEnvIdentifier()).isEqualTo("${environment}");
+    assertThat(verificationJob.getDuration().toMinutes()).isEqualTo(Duration.ofMinutes(15).toMinutes());
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetOrCreateDefaultHealthVerificationJob_secondTime() {
+    String orgIdentifier = "orgIdentifier";
+    String projectIdentifier = "projectIdentifier";
+    VerificationJob verificationJob =
+        verificationJobService.getOrCreateDefaultHealthVerificationJob(accountId, orgIdentifier, projectIdentifier);
+    VerificationJob verificationJobSecond =
+        verificationJobService.getOrCreateDefaultHealthVerificationJob(accountId, orgIdentifier, projectIdentifier);
+
+    assertThat(verificationJob.getCreatedAt()).isEqualTo(verificationJobSecond.getCreatedAt());
+    assertThat(verificationJob.getLastUpdatedAt()).isEqualTo(verificationJobSecond.getLastUpdatedAt());
   }
 }
