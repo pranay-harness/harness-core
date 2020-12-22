@@ -23,6 +23,7 @@ public class BatchDelegateSelectionLog {
                                               .findFirst();
     if (logs.isPresent()) {
       logs.get().getDelegateIds().addAll(delegateSelectionLog.getDelegateIds());
+      logs.get().getDelegateMetadata().putAll(delegateSelectionLog.getDelegateMetadata());
     } else {
       delegateSelectionLogs.add(delegateSelectionLog);
     }

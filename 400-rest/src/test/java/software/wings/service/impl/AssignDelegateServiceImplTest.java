@@ -37,6 +37,7 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
@@ -245,6 +246,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     DelegateTask task;
     List<DelegateProfileScopingRule> scopingRules;
     boolean assignable;
+    int numOfProfileScopeNotMatchedInvocations;
   }
 
   @Test
@@ -312,6 +314,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                                      .scopingEntities(scopingRulesWorkaroundMap5)
                                                      .build()))
                      .assignable(true)
+                     .numOfProfileScopeNotMatchedInvocations(0)
                      .build())
             .add(DelegateProfileScopeTestData.builder()
                      .delegate(Delegate.builder().accountId(accountId).uuid(generateUuid()).build())
@@ -326,6 +329,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                .build())
                      .scopingRules(null)
                      .assignable(true)
+                     .numOfProfileScopeNotMatchedInvocations(0)
                      .build())
             .add(DelegateProfileScopeTestData.builder()
                      .delegate(Delegate.builder()
@@ -345,6 +349,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                .build())
                      .scopingRules(null)
                      .assignable(true)
+                     .numOfProfileScopeNotMatchedInvocations(0)
                      .build())
             .add(DelegateProfileScopeTestData.builder()
                      .delegate(Delegate.builder()
@@ -366,6 +371,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                                      .scopingEntities(scopingRulesMap1)
                                                      .build()))
                      .assignable(false)
+                     .numOfProfileScopeNotMatchedInvocations(0)
                      .build())
             .add(DelegateProfileScopeTestData.builder()
                      .delegate(Delegate.builder()
@@ -388,6 +394,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                                      .scopingEntities(scopingRulesMap1)
                                                      .build()))
                      .assignable(false)
+                     .numOfProfileScopeNotMatchedInvocations(1)
                      .build())
             .add(DelegateProfileScopeTestData.builder()
                      .delegate(Delegate.builder()
@@ -411,6 +418,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                                      .scopingEntities(scopingRulesMap1)
                                                      .build()))
                      .assignable(false)
+                     .numOfProfileScopeNotMatchedInvocations(1)
                      .build())
             .add(DelegateProfileScopeTestData.builder()
                      .delegate(Delegate.builder()
@@ -433,6 +441,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                                      .scopingEntities(scopingRulesMap2)
                                                      .build()))
                      .assignable(false)
+                     .numOfProfileScopeNotMatchedInvocations(1)
                      .build())
             .add(DelegateProfileScopeTestData.builder()
                      .delegate(Delegate.builder()
@@ -460,6 +469,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                              .scopingEntities(scopingRulesMap3)
                              .build()))
                      .assignable(false)
+                     .numOfProfileScopeNotMatchedInvocations(1)
                      .build())
             .add(DelegateProfileScopeTestData.builder()
                      .delegate(Delegate.builder()
@@ -482,21 +492,28 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                                      .scopingEntities(scopingRulesMap4)
                                                      .build()))
                      .assignable(true)
+                     .numOfProfileScopeNotMatchedInvocations(0)
                      .build())
             .build();
 
     for (DelegateProfileScopeTestData test : tests) {
       when(delegateService.get(accountId, test.getDelegate().getUuid(), false)).thenReturn(test.getDelegate());
 
-      wingsPersistence.save(DelegateProfile.builder()
-                                .uuid(test.getDelegate().getDelegateProfileId())
-                                .accountId(accountId)
-                                .scopingRules(test.getScopingRules())
-                                .build());
+      DelegateProfile delegateProfile = DelegateProfile.builder()
+                                            .uuid(test.getDelegate().getDelegateProfileId())
+                                            .accountId(accountId)
+                                            .name(generateUuid())
+                                            .scopingRules(test.getScopingRules())
+                                            .build();
+
+      wingsPersistence.save(delegateProfile);
 
       BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(test.getTask().getUuid()).build();
       assertThat(assignDelegateService.canAssign(batch, test.getDelegate().getUuid(), test.getTask()))
           .isEqualTo(test.isAssignable());
+      verify(delegateSelectionLogsService, Mockito.times(test.getNumOfProfileScopeNotMatchedInvocations()))
+          .logProfileScopeRuleNotMatched(
+              eq(batch), eq(accountId), eq(test.getDelegate().getUuid()), eq(delegateProfile.getUuid()), anySet());
     }
 
     // Case to cover non-existing delegate profile

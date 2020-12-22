@@ -27,7 +27,9 @@ import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.selection.log.DelegateSelectionLog;
 import io.harness.selection.log.DelegateSelectionLog.DelegateSelectionLogBuilder;
 import io.harness.selection.log.DelegateSelectionLog.DelegateSelectionLogKeys;
+import io.harness.selection.log.DelegateSelectionLogMetadata;
 import io.harness.selection.log.DelegateSelectionLogTaskMetadata;
+import io.harness.selection.log.ProfileScopingRulesMetadata;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.threading.Concurrent;
 
@@ -38,6 +40,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -403,23 +406,31 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Owner(developers = SANJA)
   @Category(UnitTests.class)
   public void shouldNotLogProfileScopeRuleNotMatched() {
-    assertThatCode(() -> delegateSelectionLogsService.logProfileScopeRuleNotMatched(null, null, null, null))
+    assertThatCode(() -> delegateSelectionLogsService.logProfileScopeRuleNotMatched(null, null, null, null, null))
         .doesNotThrowAnyException();
   }
 
   @Test
   @Owner(developers = SANJA)
   @Category(UnitTests.class)
-  public void shouldLogProfileScopeMatched() {
+  public void shouldLogProfileScopeNotMatched() {
     String taskId = generateUuid();
     String accountId = generateUuid();
     String delegate1Id = generateUuid();
     String delegate2Id = generateUuid();
-    String scopingRuleDescription = "rule description";
+    Set<String> scopingRulesDescriptions = ImmutableSet.<String>builder()
+                                               .add("Application: Harness App; Services: service1, service2;")
+                                               .add("Application: Test App; Environment: env1;")
+                                               .build();
+
+    String profile1Id = generateUuid();
+    String profile2Id = generateUuid();
 
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(taskId).build();
 
-    delegateSelectionLogsService.logProfileScopeRuleNotMatched(batch, accountId, delegate1Id, scopingRuleDescription);
+    // Test adding first selection log to batch
+    delegateSelectionLogsService.logProfileScopeRuleNotMatched(
+        batch, accountId, delegate1Id, profile1Id, scopingRulesDescriptions);
 
     assertThat(batch.getDelegateSelectionLogs()).isNotEmpty();
     assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateIds().size()).isEqualTo(1);
@@ -427,11 +438,32 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
     assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
-        .isEqualTo("Delegate profile scoping rules not matched: rule description");
+        .isEqualTo("Delegate profile scoping rules not matched");
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
     assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateMetadata()).isNotEmpty();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateMetadata().get(delegate1Id)).isNotNull();
+    assertThat(
+        batch.getDelegateSelectionLogs().get(0).getDelegateMetadata().get(delegate1Id).getProfileScopingRulesMetadata())
+        .isNotNull();
+    assertThat(batch.getDelegateSelectionLogs()
+                   .get(0)
+                   .getDelegateMetadata()
+                   .get(delegate1Id)
+                   .getProfileScopingRulesMetadata()
+                   .getProfileId())
+        .isEqualTo(profile1Id);
+    assertThat(batch.getDelegateSelectionLogs()
+                   .get(0)
+                   .getDelegateMetadata()
+                   .get(delegate1Id)
+                   .getProfileScopingRulesMetadata()
+                   .getScopingRulesDescriptions())
+        .containsExactlyInAnyOrderElementsOf(scopingRulesDescriptions);
 
-    delegateSelectionLogsService.logProfileScopeRuleNotMatched(batch, accountId, delegate2Id, scopingRuleDescription);
+    // Test adding second selection log with same message
+    delegateSelectionLogsService.logProfileScopeRuleNotMatched(
+        batch, accountId, delegate2Id, profile2Id, scopingRulesDescriptions);
 
     assertThat(batch.getDelegateSelectionLogs()).isNotEmpty();
     assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateIds().size()).isEqualTo(2);
@@ -439,9 +471,56 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(batch.getDelegateSelectionLogs().get(0).getTaskId()).isEqualTo(taskId);
     assertThat(batch.getDelegateSelectionLogs().get(0).getConclusion()).isEqualTo(REJECTED);
     assertThat(batch.getDelegateSelectionLogs().get(0).getMessage())
-        .isEqualTo("Delegate profile scoping rules not matched: rule description");
+        .isEqualTo("Delegate profile scoping rules not matched");
     assertThat(batch.getDelegateSelectionLogs().get(0).getEventTimestamp()).isNotNull();
     assertThat(batch.getDelegateSelectionLogs().get(0).getGroupId()).isEqualTo(PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateMetadata()).isNotEmpty();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateMetadata().get(delegate1Id)).isNotNull();
+    assertThat(
+        batch.getDelegateSelectionLogs().get(0).getDelegateMetadata().get(delegate1Id).getProfileScopingRulesMetadata())
+        .isNotNull();
+    assertThat(batch.getDelegateSelectionLogs()
+                   .get(0)
+                   .getDelegateMetadata()
+                   .get(delegate1Id)
+                   .getProfileScopingRulesMetadata()
+                   .getProfileId())
+        .isEqualTo(profile1Id);
+    assertThat(batch.getDelegateSelectionLogs()
+                   .get(0)
+                   .getDelegateMetadata()
+                   .get(delegate1Id)
+                   .getProfileScopingRulesMetadata()
+                   .getScopingRulesDescriptions())
+        .containsExactlyInAnyOrderElementsOf(scopingRulesDescriptions);
+
+    assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateMetadata().get(delegate2Id)).isNotNull();
+    assertThat(
+        batch.getDelegateSelectionLogs().get(0).getDelegateMetadata().get(delegate2Id).getProfileScopingRulesMetadata())
+        .isNotNull();
+    assertThat(batch.getDelegateSelectionLogs()
+                   .get(0)
+                   .getDelegateMetadata()
+                   .get(delegate2Id)
+                   .getProfileScopingRulesMetadata()
+                   .getProfileId())
+        .isEqualTo(profile2Id);
+    assertThat(batch.getDelegateSelectionLogs()
+                   .get(0)
+                   .getDelegateMetadata()
+                   .get(delegate2Id)
+                   .getProfileScopingRulesMetadata()
+                   .getScopingRulesDescriptions())
+        .containsExactlyInAnyOrderElementsOf(scopingRulesDescriptions);
+
+    // Test adding duplicate
+    delegateSelectionLogsService.logProfileScopeRuleNotMatched(
+        batch, accountId, delegate2Id, profile2Id, scopingRulesDescriptions);
+
+    assertThat(batch.getDelegateSelectionLogs()).isNotEmpty();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateIds().size()).isEqualTo(2);
+    assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateMetadata()).isNotEmpty();
+    assertThat(batch.getDelegateSelectionLogs().get(0).getDelegateMetadata().size()).isEqualTo(2);
   }
 
   @Test
@@ -656,6 +735,17 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     Set<String> delegateIds = new HashSet<>();
     delegateIds.add(delegate.getUuid());
 
+    ImmutableSet<String> scopingRulesDescriptions = ImmutableSet.<String>builder().add("desc1").add("desc2").build();
+
+    Map<String, DelegateSelectionLogMetadata> metadataMap = new HashMap<>();
+    metadataMap.put(delegate.getUuid(),
+        DelegateSelectionLogMetadata.builder()
+            .profileScopingRulesMetadata(ProfileScopingRulesMetadata.builder()
+                                             .profileId(delegateProfile.getUuid())
+                                             .scopingRulesDescriptions(scopingRulesDescriptions)
+                                             .build())
+            .build());
+
     DelegateSelectionLog delegateSelectionLog = DelegateSelectionLog.builder()
                                                     .taskId(taskId)
                                                     .accountId(accountId)
@@ -663,6 +753,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
                                                     .conclusion(SELECTED)
                                                     .delegateIds(delegateIds)
                                                     .eventTimestamp(System.currentTimeMillis())
+                                                    .delegateMetadata(metadataMap)
                                                     .build();
 
     wingsPersistence.save(delegateProfile);
@@ -681,6 +772,13 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(delegateSelectionLogParams.get(0).getMessage()).isEqualTo(delegateSelectionLog.getMessage());
     assertThat(delegateSelectionLogParams.get(0).getEventTimestamp())
         .isEqualTo(delegateSelectionLog.getEventTimestamp());
+    assertThat(delegateSelectionLogParams.get(0).getProfileScopingRulesDetails()).isNotNull();
+    assertThat(delegateSelectionLogParams.get(0).getProfileScopingRulesDetails().getProfileId())
+        .isEqualTo(delegateProfile.getUuid());
+    assertThat(delegateSelectionLogParams.get(0).getProfileScopingRulesDetails().getProfileName())
+        .isEqualTo(delegateProfile.getName());
+    assertThat(delegateSelectionLogParams.get(0).getProfileScopingRulesDetails().getScopingRulesDescriptions())
+        .containsExactlyInAnyOrderElementsOf(scopingRulesDescriptions);
   }
 
   @Test
@@ -725,17 +823,29 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   public void shouldFetchTaskSelectionLogsForNonExistingDelegateProfile() {
     String taskId = generateUuid();
     String accountId = generateUuid();
+    String delegateProfileId = generateUuid();
 
     Delegate delegate = Delegate.builder()
                             .accountId(accountId)
                             .uuid(generateUuid())
                             .delegateName("name")
                             .hostName("hostname")
-                            .delegateProfileId(generateUuid())
+                            .delegateProfileId(delegateProfileId)
                             .build();
 
     Set<String> delegateIds = new HashSet<>();
     delegateIds.add(delegate.getUuid());
+
+    ImmutableSet<String> scopingRulesDescriptions = ImmutableSet.<String>builder().add("desc1").add("desc2").build();
+
+    Map<String, DelegateSelectionLogMetadata> metadataMap = new HashMap<>();
+    metadataMap.put(delegate.getUuid(),
+        DelegateSelectionLogMetadata.builder()
+            .profileScopingRulesMetadata(ProfileScopingRulesMetadata.builder()
+                                             .profileId(delegateProfileId)
+                                             .scopingRulesDescriptions(scopingRulesDescriptions)
+                                             .build())
+            .build());
 
     DelegateSelectionLog delegateSelectionLog = DelegateSelectionLog.builder()
                                                     .taskId(taskId)
@@ -744,6 +854,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
                                                     .conclusion(SELECTED)
                                                     .delegateIds(delegateIds)
                                                     .eventTimestamp(System.currentTimeMillis())
+                                                    .delegateMetadata(metadataMap)
                                                     .build();
 
     wingsPersistence.save(delegate);
@@ -761,6 +872,12 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
     assertThat(delegateSelectionLogParams.get(0).getMessage()).isEqualTo(delegateSelectionLog.getMessage());
     assertThat(delegateSelectionLogParams.get(0).getEventTimestamp())
         .isEqualTo(delegateSelectionLog.getEventTimestamp());
+    assertThat(delegateSelectionLogParams.get(0).getProfileScopingRulesDetails()).isNotNull();
+    assertThat(delegateSelectionLogParams.get(0).getProfileScopingRulesDetails().getProfileId())
+        .isEqualTo(delegateProfileId);
+    assertThat(delegateSelectionLogParams.get(0).getProfileScopingRulesDetails().getProfileName()).isNull();
+    assertThat(delegateSelectionLogParams.get(0).getProfileScopingRulesDetails().getScopingRulesDescriptions())
+        .containsExactlyInAnyOrderElementsOf(scopingRulesDescriptions);
   }
 
   @Test

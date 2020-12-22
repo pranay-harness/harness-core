@@ -15,4 +15,5 @@ public class DelegateSelectionLogParams {
   private String conclusion;
   private String message;
   private long eventTimestamp;
+  private ProfileScopingRulesDetails profileScopingRulesDetails;
 }
