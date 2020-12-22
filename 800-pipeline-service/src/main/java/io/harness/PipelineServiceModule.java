@@ -27,6 +27,7 @@ import io.harness.pms.sdk.StepTypeLookupServiceImpl;
 import io.harness.queue.QueueController;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
+import io.harness.service.PmsDelegateServiceDriverModule;
 import io.harness.springdata.SpringPersistenceModule;
 
 import com.google.common.base.Suppliers;
@@ -69,6 +70,7 @@ public class PipelineServiceModule extends AbstractModule {
     install(MongoModule.getInstance());
     install(PipelineServiceGrpcModule.getInstance());
     install(new SpringPersistenceModule());
+    install(PmsDelegateServiceDriverModule.getInstance());
     install(OrchestrationModule.getInstance());
     install(OrchestrationVisualizationModule.getInstance());
     install(new AbstractModule() {

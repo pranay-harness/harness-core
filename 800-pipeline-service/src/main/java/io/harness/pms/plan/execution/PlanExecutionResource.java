@@ -377,7 +377,7 @@ public class PlanExecutionResource {
     Plan plan = PlanExecutionUtils.extractPlan(resp);
     PlanExecution planExecution = orchestrationService.startExecution(plan,
         new HashMap<>(ImmutableMap.of(
-            "accountId", "kmpySmUISimoRrJL6NL73w", "orgIdentifier", "Main", "projectIdentifier", "Sample")));
+            "accountId", "kmpySmUISimoRrJL6NL73w", "orgIdentifier", "harness", "projectIdentifier", "pipeline")));
     return Response.ok(planExecution, MediaType.APPLICATION_JSON_TYPE).build();
   }
 

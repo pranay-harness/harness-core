@@ -10,7 +10,6 @@ import static java.util.Collections.singletonList;
 import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
-import io.harness.persistence.HPersistence;
 import io.harness.pms.exception.WingsExceptionMapper;
 import io.harness.pms.execution.registrar.PmsOrchestrationEventRegistrar;
 import io.harness.pms.sdk.PmsSdkConfiguration;
@@ -18,9 +17,9 @@ import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
-import io.harness.service.impl.DelegateAsyncServiceImpl;
-import io.harness.service.impl.DelegateProgressServiceImpl;
-import io.harness.service.impl.DelegateSyncServiceImpl;
+import io.harness.service.impl.PmsDelegateAsyncServiceImpl;
+import io.harness.service.impl.PmsDelegateProgressServiceImpl;
+import io.harness.service.impl.PmsDelegateSyncServiceImpl;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.OrchestrationNotifyEventListener;
@@ -106,7 +105,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
     getPmsSDKModules(modules);
     Injector injector = Guice.createInjector(modules);
-    injector.getInstance(HPersistence.class);
     registerEventListeners(injector);
     registerWaitEnginePublishers(injector);
     registerScheduledJobs(injector);
@@ -150,11 +148,11 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
   private void registerScheduledJobs(Injector injector) {
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
-        .scheduleWithFixedDelay(injector.getInstance(DelegateSyncServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(PmsDelegateSyncServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
-        .scheduleWithFixedDelay(injector.getInstance(DelegateAsyncServiceImpl.class), 0L, 5L, TimeUnit.SECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(PmsDelegateAsyncServiceImpl.class), 0L, 5L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
-        .scheduleWithFixedDelay(injector.getInstance(DelegateProgressServiceImpl.class), 0L, 5L, TimeUnit.SECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(PmsDelegateProgressServiceImpl.class), 0L, 5L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
         .scheduleWithFixedDelay(injector.getInstance(ProgressUpdateService.class), 0L, 5L, TimeUnit.SECONDS);
   }
