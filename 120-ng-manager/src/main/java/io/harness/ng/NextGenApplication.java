@@ -19,8 +19,6 @@ import io.harness.cdng.orchestration.NgStepRegistrar;
 import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.gitsync.core.runnable.GitChangeSetRunnable;
 import io.harness.maintenance.MaintenanceController;
-import io.harness.metrics.HarnessMetricRegistry;
-import io.harness.metrics.MetricRegistryModule;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.EtagFilter;
 import io.harness.ng.core.event.EntityCRUDStreamConsumer;
@@ -31,7 +29,6 @@ import io.harness.ng.core.exceptionmappers.OptimisticLockingFailureExceptionMapp
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.invites.ext.mail.EmailNotificationListener;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
-import io.harness.ngtriggers.service.TriggerWebhookService;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
@@ -66,7 +63,6 @@ import io.harness.yaml.YamlSdkModule;
 
 import software.wings.app.CharsetResponseFilter;
 
-import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
@@ -108,9 +104,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   private static final SecureRandom random = new SecureRandom();
   private static final String APPLICATION_NAME = "CD NextGen Application";
 
-  private final MetricRegistry metricRegistry = new MetricRegistry();
-  private HarnessMetricRegistry harnessMetricRegistry;
-
   public static void main(String[] args) throws Exception {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       log.info("Shutdown hook, entering maintenance...");
@@ -150,9 +143,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         20, 1000, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
     MaintenanceController.forceMaintenance(true);
     List<Module> modules = new ArrayList<>();
-    modules.add(new SCMGrpcClientModule(appConfig.getScmConnectionConfig()));
     modules.add(new NextGenModule(appConfig));
-    modules.add(new MetricRegistryModule(metricRegistry));
 
     getPmsSDKModules(modules, appConfig);
     Injector injector = Guice.createInjector(modules);
@@ -172,8 +163,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerQueueListeners(injector);
     registerExecutionPlanCreators(injector);
     registerAuthFilters(appConfig, environment, injector);
-    harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
-    injector.getInstance(TriggerWebhookService.class).registerIterators();
 
     registerPipelineSDK(injector, appConfig);
 

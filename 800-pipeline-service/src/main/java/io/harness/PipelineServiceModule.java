@@ -28,6 +28,8 @@ import io.harness.pms.ngpipeline.inputset.service.PMSInputSetServiceImpl;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
 import io.harness.pms.sdk.StepTypeLookupServiceImpl;
+import io.harness.pms.triggers.service.TriggerWebhookExecutionService;
+import io.harness.pms.triggers.service.impl.TriggerWebhookExecutionServiceImpl;
 import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
 import io.harness.serializer.KryoRegistrar;
@@ -98,6 +100,7 @@ public class PipelineServiceModule extends AbstractModule {
     install(OrchestrationVisualizationModule.getInstance());
     install(new DelegateServiceDriverGrpcClientModule(configuration.getManagerServiceSecret(),
         configuration.getManagerTarget(), configuration.getManagerAuthority()));
+    install(NGTriggersModule.getInstance());
     install(PersistentLockModule.getInstance());
     install(TimeModule.getInstance());
 
@@ -110,6 +113,7 @@ public class PipelineServiceModule extends AbstractModule {
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("taskPollExecutor"))
         .toInstance(new ManagedScheduledExecutorService("TaskPoll-Thread"));
+    bind(TriggerWebhookExecutionService.class).to(TriggerWebhookExecutionServiceImpl.class);
   }
 
   @Provides

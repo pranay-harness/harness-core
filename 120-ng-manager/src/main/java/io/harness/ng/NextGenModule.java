@@ -7,7 +7,6 @@ import static io.harness.EntityCRUDEventsConstants.ORGANIZATION_ENTITY;
 import static io.harness.EntityCRUDEventsConstants.PROJECT_ENTITY;
 import static io.harness.EntityCRUDEventsConstants.SETUP_USAGE_ENTITY;
 
-import io.harness.NGTriggersModule;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationStepsModule;
@@ -63,8 +62,6 @@ import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.eventsframework.EventsFrameworkModule;
 import io.harness.ng.gitsync.NgCoreGitChangeSetProcessorServiceImpl;
 import io.harness.ng.gitsync.handlers.ConnectorYamlHandler;
-import io.harness.ngtriggers.service.TriggerWebhookService;
-import io.harness.ngtriggers.service.impl.TriggerWebhookServiceImpl;
 import io.harness.queue.QueueController;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.redesign.services.CustomExecutionServiceImpl;
@@ -146,7 +143,6 @@ public class NextGenModule extends AbstractModule {
   protected void configure() {
     install(VersionModule.getInstance());
     install(DelegateServiceDriverModule.getInstance());
-    install(NGTriggersModule.getInstance());
     bind(NextGenConfiguration.class).toInstance(appConfig);
 
     install(new ProviderModule() {
@@ -263,7 +259,6 @@ public class NextGenModule extends AbstractModule {
     bind(GitChangeProcessorService.class).to(NgCoreGitChangeSetProcessorServiceImpl.class);
     bindYamlHandlers();
     bind(YamlBaseUrlService.class).to(YamlBaseUrlServiceImpl.class);
-    bind(TriggerWebhookService.class).to(TriggerWebhookServiceImpl.class);
 
     bind(ConsumerMessageProcessor.class)
         .annotatedWith(Names.named(ACCOUNT_ENTITY))

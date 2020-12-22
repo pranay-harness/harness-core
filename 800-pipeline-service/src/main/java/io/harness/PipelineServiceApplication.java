@@ -10,11 +10,16 @@ import static java.util.Collections.singletonList;
 import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
+import io.harness.metrics.HarnessMetricRegistry;
+import io.harness.metrics.MetricRegistryModule;
+import io.harness.persistence.HPersistence;
 import io.harness.pms.exception.WingsExceptionMapper;
 import io.harness.pms.execution.registrar.PmsOrchestrationEventRegistrar;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
+import io.harness.pms.triggers.scm.SCMGrpcClientModule;
+import io.harness.pms.triggers.service.TriggerWebhookExecutionService;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.service.impl.PmsDelegateAsyncServiceImpl;
@@ -27,6 +32,7 @@ import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 import io.harness.waiter.ProgressUpdateService;
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
@@ -61,6 +67,9 @@ import org.glassfish.jersey.server.model.Resource;
 @Slf4j
 public class PipelineServiceApplication extends Application<PipelineServiceConfiguration> {
   private static final String APPLICATION_NAME = "Pipeline Service Application";
+
+  private final MetricRegistry metricRegistry = new MetricRegistry();
+  private HarnessMetricRegistry harnessMetricRegistry;
 
   public static void main(String[] args) throws Exception {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -107,6 +116,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
       }
     });
     modules.add(PipelineServiceModule.getInstance(appConfig));
+    modules.add(new SCMGrpcClientModule(appConfig.getScmConnectionConfig()));
+    modules.add(new MetricRegistryModule(metricRegistry));
 
     getPmsSDKModules(modules);
     Injector injector = Guice.createInjector(modules);
@@ -117,6 +128,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerResources(environment, injector);
     registerJerseyProviders(environment, injector);
     registerManagedBeans(environment, injector);
+    harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
+    injector.getInstance(TriggerWebhookExecutionService.class).registerIterators();
 
     log.info("Initializing gRPC servers...");
     ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
