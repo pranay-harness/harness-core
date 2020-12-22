@@ -38,7 +38,7 @@ public class AzureWebAppSlotShiftTrafficTaskHandler extends AbstractAzureWebAppT
       throw new InvalidArgumentsException(WEB_APP_NAME_BLANK_ERROR_MSG);
     }
 
-    String shiftTrafficSlotName = slotShiftTrafficParameters.getShiftTrafficSlotName();
+    String shiftTrafficSlotName = slotShiftTrafficParameters.getDeploymentSlot();
     if (isBlank(shiftTrafficSlotName)) {
       throw new InvalidArgumentsException(SHIFT_TRAFFIC_SLOT_NAME_BLANK_ERROR_MSG);
     }
@@ -51,7 +51,7 @@ public class AzureWebAppSlotShiftTrafficTaskHandler extends AbstractAzureWebAppT
 
   private void updateSlotTrafficWeight(AzureWebAppSlotShiftTrafficParameters slotShiftTrafficParameters,
       AzureWebClientContext webClientContext, ILogStreamingTaskClient logStreamingTaskClient) {
-    String shiftTrafficSlotName = slotShiftTrafficParameters.getShiftTrafficSlotName();
+    String shiftTrafficSlotName = slotShiftTrafficParameters.getDeploymentSlot();
     double trafficWeightInPercentage = slotShiftTrafficParameters.getTrafficWeightInPercentage();
 
     azureAppServiceDeploymentService.rerouteProductionSlotTraffic(

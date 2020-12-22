@@ -27,6 +27,7 @@ import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploym
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotSetupResponse;
 import io.harness.exception.InvalidArgumentsException;
 
+import software.wings.delegatetasks.azure.appservice.AzureAppServiceConfigurationDTOMapper;
 import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServiceDockerDeploymentContext;
 import software.wings.delegatetasks.azure.appservice.webapp.AbstractAzureWebAppTaskHandler;
 
@@ -82,6 +83,14 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
       AzureConfig azureConfig, ILogStreamingTaskClient logStreamingTaskClient) {
     ConnectorConfigDTO connectorConfigDTO = azureWebAppSlotSetupParameters.getConnectorConfigDTO();
     AzureRegistryType azureRegistryType = azureWebAppSlotSetupParameters.getAzureRegistryType();
+
+    Map<String, AzureAppServiceApplicationSetting> appSettingsToAdd =
+        AzureAppServiceConfigurationDTOMapper.getAzureAppServiceAppSettings(
+            azureWebAppSlotSetupParameters.getAppSettings());
+    Map<String, AzureAppServiceConnectionString> connSettingsToAdd =
+        AzureAppServiceConfigurationDTOMapper.getAzureAppServiceConnStrings(
+            azureWebAppSlotSetupParameters.getConnSettings());
+
     Map<String, AzureAppServiceDockerSetting> dockerSettings =
         getAzureAppServiceDockerSettings(connectorConfigDTO, azureRegistryType, azureConfig);
 
@@ -90,8 +99,8 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
 
     return AzureAppServiceDockerDeploymentContext.builder()
         .logStreamingTaskClient(logStreamingTaskClient)
-        .appSettingsToAdd(azureWebAppSlotSetupParameters.getAppSettings())
-        .connSettingsToAdd(azureWebAppSlotSetupParameters.getConnSettings())
+        .appSettingsToAdd(appSettingsToAdd)
+        .connSettingsToAdd(connSettingsToAdd)
         .dockerSettings(dockerSettings)
         .imagePathAndTag(imagePathAndTag)
         .slotName(azureWebAppSlotSetupParameters.getSlotName())

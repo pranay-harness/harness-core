@@ -62,7 +62,8 @@ public class AzureAppServiceTask extends AbstractDelegateRunnableTask {
     AzureTaskExecutionResponse azureTaskExecutionResponse =
         azureAppServiceTask.executeTask(azureAppServiceTaskParameters, azureConfig, logStreamingTaskClient);
 
-    azureSecretHelper.encryptAzureTaskResponseParams(azureTaskExecutionResponse.getAzureTaskResponse());
+    azureSecretHelper.encryptAzureTaskResponseParams(
+        azureTaskExecutionResponse.getAzureTaskResponse(), azureAppServiceTaskParameters.getAccountId());
     return azureTaskExecutionResponse;
   }
 }

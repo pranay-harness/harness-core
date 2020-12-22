@@ -234,8 +234,9 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
       connectionStringMap = appServiceConnectionStrings.stream().collect(
           Collectors.toMap(AzureAppServiceConnectionString::getName, setting -> setting));
     }
-    slotSetupParametersBuilder.appSettings(applicationSettingMap);
-    slotSetupParametersBuilder.connSettings(connectionStringMap);
+
+    slotSetupParametersBuilder.appSettings(Collections.emptyMap());
+    slotSetupParametersBuilder.connSettings(Collections.emptyMap());
   }
 
   private void provideRegistryDetails(ExecutionContext context, AzureAppServiceStateData azureAppServiceStateData,

@@ -58,12 +58,17 @@ public class AzureWebAppRollbackTaskHandlerTest extends WingsBaseTest {
   public void testExecuteTaskInternal() {
     AzureWebAppRollbackParameters rollbackParameters = buildAzureWebAppRollbackParameters();
     AzureConfig azureConfig = buildAzureConfig();
+    mockDeployDockerImage();
     mockRerouteProductionSlotTraffic();
 
     AzureAppServiceTaskResponse azureAppServiceTaskResponse =
         azureWebAppRollbackTaskHandler.executeTaskInternal(rollbackParameters, azureConfig, mockLogStreamingTaskClient);
 
     assertThat(azureAppServiceTaskResponse).isNotNull();
+  }
+
+  private void mockDeployDockerImage() {
+    doNothing().when(azureAppServiceDeploymentService).deployDockerImage(any());
   }
 
   private void mockRerouteProductionSlotTraffic() {
@@ -89,8 +94,11 @@ public class AzureWebAppRollbackTaskHandlerTest extends WingsBaseTest {
   private AzureAppServicePreDeploymentData buildPreDeploymentData() {
     return AzureAppServicePreDeploymentData.builder()
         .trafficWeight(TRAFFIC_WEIGHT)
-        .connSettingsToAdd(Collections.emptyMap())
         .appSettingsToAdd(Collections.emptyMap())
+        .appSettingsToRemove(Collections.emptyMap())
+        .connSettingsToAdd(Collections.emptyMap())
+        .connSettingsToRemove(Collections.emptyMap())
+        .dockerSettingsToAdd(Collections.emptyMap())
         .appName(APP_NAME)
         .slotName(SLOT_NAME)
         .imageNameAndTag("imageNameAndTag")

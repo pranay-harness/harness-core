@@ -13,19 +13,16 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class AzureWebAppSlotShiftTrafficParameters extends AzureAppServiceTaskParameters {
-  private String shiftTrafficSlotName;
   private double trafficWeightInPercentage;
   private String deploymentSlot;
   private AzureAppServicePreDeploymentData preDeploymentData;
 
   @Builder
   public AzureWebAppSlotShiftTrafficParameters(String appId, String accountId, String activityId, String subscriptionId,
-      String resourceGroupName, String webAppName, String shiftTrafficSlotName, double trafficWeightInPercentage,
-      AzureAppServicePreDeploymentData preDeploymentData, String commandName, Integer timeoutIntervalInMin,
-      String deploymentSlot) {
+      String resourceGroupName, String webAppName, String deploymentSlot, double trafficWeightInPercentage,
+      AzureAppServicePreDeploymentData preDeploymentData, String commandName, Integer timeoutIntervalInMin) {
     super(appId, accountId, activityId, subscriptionId, resourceGroupName, webAppName, commandName,
         timeoutIntervalInMin, SLOT_SHIFT_TRAFFIC, WEB_APP);
-    this.shiftTrafficSlotName = shiftTrafficSlotName;
     this.trafficWeightInPercentage = trafficWeightInPercentage;
     this.deploymentSlot = deploymentSlot;
     this.preDeploymentData = preDeploymentData;
