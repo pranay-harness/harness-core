@@ -71,4 +71,47 @@ function checkIfFileExists(){
     fi
 }
 
+function checkMongoUpgrade(){
 
+        echo "checking if upgrade is possible..."
+
+        if [[ $(checkDockerImageRunning "mongoContainer") -eq 1 ]]; then
+                echo "Existing installation found but Mongo is not running. Please start harness using previous install bundle before retrying the upgrade."
+                exit 1
+        fi
+
+        INCOMING_MONGO=`echo $MONGO_VERSION | cut -c1-3`
+        RUNNING_MONGO=`docker exec mongoContainer mongo --port 7144 --quiet  --eval 'db.version()' |cut -c1-3`
+
+        echo Current mongo version is : $RUNNING_MONGO
+        echo Mongo version from this install bundle is : $INCOMING_MONGO
+
+        if [[ $RUNNING_MONGO != $INCOMING_MONGO ]]; then
+                if [[ $INCOMING_MONGO == "3.6" ]]; then
+                        echo "Mongo is running at higher version. Please use install bundle version 62704 or higher"
+                        exit 1
+                elif [[ $INCOMING_MONGO == "4.0" ]]; then
+                        if [[ $RUNNING_MONGO == "3.6" ]]; then
+                                echo "Running auth schema upgrade..."
+                                docker exec mongoContainer mongo "mongodb://$mongodbUserName:$mongodbPassword@$host1:$mongodb_port/?authSource=admin" --quiet --eval 'db.adminCommand({authSchemaUpgrade: 1});'
+                         elif [[ $RUNNING_MONGO == "4.2" ]]; then
+                                echo "Cannot downgrade mongo. Please use higher version of install bundle"
+                                exit 1
+                        fi
+                elif [[ $INCOMING_MONGO == "4.2" ]]; then
+                        if [[ $RUNNING_MONGO == "4.0" ]]; then
+                                echo "Setting Feature Compatibility Version to 4.0.."
+                                docker exec mongoContainer mongo "mongodb://$mongodbUserName:$mongodbPassword@$host1:$mongodb_port/?authSource=admin" --quiet --eval 'db.adminCommand({ setFeatureCompatibilityVersion: "4.0" });'
+                                upgrade42=true
+                        elif [[ $RUNNING_MONGO == "3.6" ]]; then
+                                echo "Cannot upgrade. Please use version 62704 before upgrading to this version"
+                                exit 1
+                        fi
+                fi
+        fi
+}
+
+function setCompatibility42() {
+  echo "Setting Feature Compatibility Version to 4.2.."
+  docker exec mongoContainer mongo "mongodb://$mongodbUserName:$mongodbPassword@$host1:$mongodb_port/?authSource=admin" --quiet --eval 'db.adminCommand({ setFeatureCompatibilityVersion: "4.2" });'
+}
