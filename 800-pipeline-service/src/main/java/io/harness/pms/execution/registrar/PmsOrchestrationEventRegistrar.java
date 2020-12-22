@@ -2,11 +2,12 @@ package io.harness.pms.execution.registrar;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.pms.contracts.execution.events.OrchestrationEventType.ORCHESTRATION_START;
+import static io.harness.pms.contracts.execution.events.OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.execution.handlers.ExecutionInfoUpdateEventHandler;
 import io.harness.pms.execution.handlers.ExecutionSummaryCreateEventHandler;
-import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.registrars.OrchestrationModuleEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationModuleRegistrarHelper;
@@ -26,6 +27,8 @@ public class PmsOrchestrationEventRegistrar {
     Map<OrchestrationEventType, Set<OrchestrationEventHandler>> engineEventHandlersMap = new HashMap<>();
     engineEventHandlersMap.put(
         ORCHESTRATION_START, Sets.newHashSet(injector.getInstance(ExecutionSummaryCreateEventHandler.class)));
+    engineEventHandlersMap.put(
+        PLAN_EXECUTION_STATUS_UPDATE, Sets.newHashSet(injector.getInstance(ExecutionInfoUpdateEventHandler.class)));
     OrchestrationModuleRegistrarHelper.mergeEventHandlers(
         engineEventHandlersMap, OrchestrationVisualizationModuleEventHandlerRegistrar.getEngineEventHandlers(injector));
     OrchestrationModuleRegistrarHelper.mergeEventHandlers(

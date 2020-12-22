@@ -12,11 +12,8 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.filter.creation.FilterCreatorMergeService;
 import io.harness.pms.filter.creation.FilterCreatorMergeServiceResponse;
-import io.harness.pms.pipeline.CommonStepInfo;
-import io.harness.pms.pipeline.PipelineEntity;
+import io.harness.pms.pipeline.*;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
-import io.harness.pms.pipeline.StepCategory;
-import io.harness.pms.pipeline.StepData;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.repositories.pipeline.PMSPipelineRepository;
 import io.harness.service.GraphGenerationService;
@@ -39,6 +36,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Update;
 
 @Singleton
 @Slf4j
@@ -260,6 +258,17 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       throw new InvalidRequestException(
           format("Error happened while creating filters for pipeline: %s", ex.getMessage(), ex));
     }
+  }
+
+  @Override
+  public void saveExecutionInfo(
+      String accountId, String orgId, String projectId, String pipelineId, ExecutionSummaryInfo executionSummaryInfo) {
+    Criteria criteria = getPipelineEqualityCriteria(accountId, orgId, projectId, null);
+    criteria.and(PipelineEntityKeys.identifier).is(pipelineId);
+
+    Update update = new Update();
+    update.set(PipelineEntityKeys.executionSummaryInfo, executionSummaryInfo);
+    pmsPipelineRepository.update(criteria, update);
   }
 
   @Override

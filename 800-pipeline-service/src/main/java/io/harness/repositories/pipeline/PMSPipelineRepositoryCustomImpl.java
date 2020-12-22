@@ -32,8 +32,11 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
 
   @Override
   public PipelineEntity update(Criteria criteria, PipelineEntity pipelineEntity) {
+    return update(criteria, PMSPipelineFilterHelper.getUpdateOperations(pipelineEntity));
+  }
+
+  public PipelineEntity update(Criteria criteria, Update update) {
     Query query = new Query(criteria);
-    Update update = PMSPipelineFilterHelper.getUpdateOperations(pipelineEntity);
     RetryPolicy<Object> retryPolicy = getRetryPolicy(
         "[Retrying]: Failed updating Pipeline; attempt: {}", "[Failed]: Failed updating Pipeline; attempt: {}");
     return Failsafe.with(retryPolicy)
@@ -41,7 +44,6 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
                  -> mongoTemplate.findAndModify(
                      query, update, new FindAndModifyOptions().returnNew(true), PipelineEntity.class));
   }
-
   private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {
     return new RetryPolicy<>()
         .handle(OptimisticLockingFailureException.class)

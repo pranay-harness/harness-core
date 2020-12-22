@@ -10,8 +10,12 @@ import io.harness.pms.yaml.YamlUtils;
 
 import java.io.IOException;
 import java.security.SecureRandom;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import lombok.Data;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -51,26 +55,44 @@ public class PMSPipelineDtoMapper {
         .deployments(getNumberOfDeployments(pipelineEntity))
         .numOfErrors(getNumberOfErrorsLast10Days(pipelineEntity))
         .numOfStages(pipelineEntity.getStageCount())
+        .lastExecutionStatus(pipelineEntity.getExecutionSummaryInfo() != null
+                ? pipelineEntity.getExecutionSummaryInfo().getLastExecutionStatus()
+                : null)
+        .lastExecutionTs(pipelineEntity.getExecutionSummaryInfo() != null
+                ? pipelineEntity.getExecutionSummaryInfo().getLastExecutionTs()
+                : null)
         .build();
   }
 
-  // TODO: Implement after implementation of executions
   private int getNumberOfErrorsLast10Days(PipelineEntity pipeline) {
-    int min = 0;
-    int maxPlusOne = 3;
-    SecureRandom r = new SecureRandom();
-    return r.ints(min, maxPlusOne).findFirst().getAsInt();
+    if (pipeline.getExecutionSummaryInfo() == null) {
+      return 0;
+    }
+    Calendar cal = Calendar.getInstance();
+    cal.add(Calendar.DAY_OF_YEAR, -10);
+    SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+    int numOfErrors = 0;
+    for (int i = 0; i < 10; i++) {
+      cal.add(Calendar.DAY_OF_YEAR, 1);
+      numOfErrors = pipeline.getExecutionSummaryInfo().getNumOfErrors().getOrDefault(sdf.format(cal.getTime()), 0);
+    }
+    return numOfErrors;
   }
 
   // TODO: Implement after implementation with Executions
   private List<Integer> getNumberOfDeployments(PipelineEntity pipeline) {
-    int min = 0;
-    int maxPlusOne = 6;
-    SecureRandom r = new SecureRandom();
-    List<Integer> deployments = new ArrayList<>();
-    for (int i = 0; i < 10; i++) {
-      deployments.add(r.ints(min, maxPlusOne).findFirst().getAsInt());
+    if (pipeline.getExecutionSummaryInfo() == null) {
+      return new ArrayList<>();
     }
-    return deployments;
+    Calendar cal = Calendar.getInstance();
+    cal.add(Calendar.DAY_OF_YEAR, -10);
+    SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+    List<Integer> numberOfDeployments = new ArrayList<>();
+    for (int i = 0; i < 10; i++) {
+      cal.add(Calendar.DAY_OF_YEAR, 1);
+      numberOfDeployments.add(
+          pipeline.getExecutionSummaryInfo().getNumOfErrors().getOrDefault(sdf.format(cal.getTime()), 0));
+    }
+    return numberOfDeployments;
   }
 }
