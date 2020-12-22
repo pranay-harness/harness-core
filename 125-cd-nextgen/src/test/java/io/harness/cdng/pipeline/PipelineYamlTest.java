@@ -152,8 +152,7 @@ public class PipelineYamlTest extends CategoryTest {
 
     // Sidecar Artifact
     SidecarArtifactWrapper sidecarArtifactWrapper = serviceSpec.getArtifacts().getSidecars().get(0);
-    assertThat(sidecarArtifactWrapper).isInstanceOf(SidecarArtifact.class);
-    SidecarArtifact sidecarArtifact = (SidecarArtifact) sidecarArtifactWrapper;
+    SidecarArtifact sidecarArtifact = sidecarArtifactWrapper.getSidecar();
     assertThat(sidecarArtifact.getArtifactConfig()).isInstanceOf(DockerHubArtifactConfig.class);
     dockerArtifact = (DockerHubArtifactConfig) sidecarArtifact.getArtifactConfig();
     assertThat(dockerArtifact.getTag()).isInstanceOf(ParameterField.class);
@@ -163,8 +162,7 @@ public class PipelineYamlTest extends CategoryTest {
 
     // Manifests
     ManifestConfigWrapper manifestConfigWrapper = serviceSpec.getManifests().get(0);
-    assertThat(manifestConfigWrapper).isInstanceOf(ManifestConfig.class);
-    ManifestConfig manifestConfig = (ManifestConfig) manifestConfigWrapper;
+    ManifestConfig manifestConfig = manifestConfigWrapper.getManifest();
     GitStore storeConfig = (GitStore) manifestConfig.getManifestAttributes().getStoreConfig();
     assertThat(storeConfig.getPaths()).isInstanceOf(ParameterField.class);
     assertThat(storeConfig.getPaths().isExpression()).isTrue();
@@ -177,7 +175,7 @@ public class PipelineYamlTest extends CategoryTest {
 
     // manifestOverrideSet
     manifestConfigWrapper = serviceSpec.getManifestOverrideSets().get(0).getManifests().get(0);
-    manifestConfig = (ManifestConfig) manifestConfigWrapper;
+    manifestConfig = manifestConfigWrapper.getManifest();
     storeConfig = (GitStore) manifestConfig.getManifestAttributes().getStoreConfig();
     assertThat(storeConfig.getConnectorRef()).isInstanceOf(ParameterField.class);
     assertThat(storeConfig.getConnectorRef().isExpression()).isTrue();
@@ -289,7 +287,8 @@ public class PipelineYamlTest extends CategoryTest {
     assertThat(service.getUseFromStage().getStage().getInputSetValidator().getValidatorType())
         .isEqualTo(InputSetValidatorType.REGEX);
     StageOverridesConfig stageOverrides = service.getStageOverrides();
-    storeConfig = (GitStore) stageOverrides.getManifests().get(0).getManifestAttributes().getStoreConfig();
+    storeConfig =
+        (GitStore) stageOverrides.getManifests().get(0).getManifest().getManifestAttributes().getStoreConfig();
     assertThat(storeConfig.getConnectorRef()).isInstanceOf(ParameterField.class);
     assertThat(storeConfig.getConnectorRef().isExpression()).isTrue();
     assertThat(storeConfig.getConnectorRef().getExpressionValue()).isEqualTo("${input}");

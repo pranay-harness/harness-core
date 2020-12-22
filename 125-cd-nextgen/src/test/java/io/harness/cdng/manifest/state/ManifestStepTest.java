@@ -9,7 +9,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.ManifestConfig;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
-import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.cdng.manifest.yaml.ManifestsOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
@@ -44,7 +44,9 @@ public class ManifestStepTest extends CategoryTest {
                     .build())
             .build();
     ManifestConfigWrapper manifestConfig1 =
-        ManifestConfig.builder().identifier("specsManifest").manifestAttributes(k8Manifest1).build();
+        ManifestConfigWrapper.builder()
+            .manifest(ManifestConfig.builder().identifier("specsManifest").manifestAttributes(k8Manifest1).build())
+            .build();
 
     K8sManifest k8Manifest2 =
         K8sManifest.builder()
@@ -61,7 +63,9 @@ public class ManifestStepTest extends CategoryTest {
             .build();
 
     ManifestConfigWrapper manifestConfig2 =
-        ManifestConfig.builder().identifier("spec1").manifestAttributes(k8Manifest2).build();
+        ManifestConfigWrapper.builder()
+            .manifest(ManifestConfig.builder().identifier("spec1").manifestAttributes(k8Manifest2).build())
+            .build();
 
     ValuesManifest valuesManifest1 =
         ValuesManifest.builder()
@@ -77,7 +81,10 @@ public class ManifestStepTest extends CategoryTest {
                                     .build())
             .build();
     ManifestConfigWrapper manifestConfig3 =
-        ManifestConfig.builder().identifier("valuesManifest1").manifestAttributes(valuesManifest1).build();
+        ManifestConfigWrapper.builder()
+            .manifest(
+                ManifestConfig.builder().identifier("valuesManifest1").manifestAttributes(valuesManifest1).build())
+            .build();
 
     K8sManifest k8Manifest3 =
         K8sManifest.builder()
@@ -94,7 +101,9 @@ public class ManifestStepTest extends CategoryTest {
             .build();
 
     ManifestConfigWrapper manifestConfig4 =
-        ManifestConfig.builder().identifier("spec1").manifestAttributes(k8Manifest3).build();
+        ManifestConfigWrapper.builder()
+            .manifest(ManifestConfig.builder().identifier("spec1").manifestAttributes(k8Manifest3).build())
+            .build();
 
     ValuesManifest valuesManifest2 =
         ValuesManifest.builder()
@@ -110,15 +119,18 @@ public class ManifestStepTest extends CategoryTest {
                                     .build())
             .build();
     ManifestConfigWrapper manifestConfig5 =
-        ManifestConfig.builder().identifier("valuesManifest1").manifestAttributes(valuesManifest2).build();
+        ManifestConfigWrapper.builder()
+            .manifest(
+                ManifestConfig.builder().identifier("valuesManifest1").manifestAttributes(valuesManifest2).build())
+            .build();
 
     StepResponse.StepOutcome stepOutcome =
         manifestStep.processManifests(Arrays.asList(manifestConfig1, manifestConfig2),
             Collections.singletonList(manifestConfig4), Arrays.asList(manifestConfig3, manifestConfig5));
 
-    ManifestOutcome manifestOutcome = (ManifestOutcome) stepOutcome.getOutcome();
-    assertThat(manifestOutcome.getManifestAttributes()).isNotEmpty();
-    assertThat(manifestOutcome.getManifestAttributes().size()).isEqualTo(3);
-    assertThat(manifestOutcome.getManifestAttributes()).containsOnly(k8Manifest1, k8Manifest3, valuesManifest2);
+    ManifestsOutcome manifestsOutcome = (ManifestsOutcome) stepOutcome.getOutcome();
+    assertThat(manifestsOutcome.getManifestAttributes()).isNotEmpty();
+    assertThat(manifestsOutcome.getManifestAttributes().size()).isEqualTo(3);
+    assertThat(manifestsOutcome.getManifestAttributes()).containsOnly(k8Manifest1, k8Manifest3, valuesManifest2);
   }
 }

@@ -62,8 +62,7 @@ public class ArtifactYamlTest extends CategoryTest {
             Arrays.asList(dockerArtifact.getConnectorRef().getValue(), dockerArtifact.getImagePath().getValue())));
 
     SidecarArtifactWrapper sidecarArtifactWrapper = serviceSpec.getArtifacts().getSidecars().get(0);
-    assertThat(sidecarArtifactWrapper).isInstanceOf(SidecarArtifact.class);
-    SidecarArtifact sidecarArtifact = (SidecarArtifact) sidecarArtifactWrapper;
+    SidecarArtifact sidecarArtifact = sidecarArtifactWrapper.getSidecar();
     assertThat(sidecarArtifact.getArtifactConfig()).isInstanceOf(DockerHubArtifactConfig.class);
     assertThat(sidecarArtifact.getIdentifier()).isEqualTo("sidecar1");
     dockerArtifact = (DockerHubArtifactConfig) sidecarArtifact.getArtifactConfig();

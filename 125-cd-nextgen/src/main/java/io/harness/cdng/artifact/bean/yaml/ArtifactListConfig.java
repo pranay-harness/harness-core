@@ -43,8 +43,8 @@ public class ArtifactListConfig implements Visitable {
     this.sidecars = sidecars;
     if (isNotEmpty(sidecars)) {
       for (SidecarArtifactWrapper sidecar : this.sidecars) {
-        sidecar.getArtifactConfig().setIdentifier(sidecar.getIdentifier());
-        sidecar.getArtifactConfig().setPrimaryArtifact(false);
+        sidecar.getSidecar().getArtifactConfig().setIdentifier(sidecar.getSidecar().getIdentifier());
+        sidecar.getSidecar().getArtifactConfig().setPrimaryArtifact(false);
       }
     }
   }
