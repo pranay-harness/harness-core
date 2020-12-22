@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.AccountLogContext;
@@ -82,7 +83,7 @@ public class StartExecutionDataFetcher extends BaseMutatorDataFetcher<QLStartExe
       throw new InvalidRequestException("Application Id cannot be empty", WingsException.USER);
     }
     String accountIdFromApp = appService.getAccountIdByAppId(appId);
-    if (!accountIdFromApp.equals(mutationContext.getAccountId())) {
+    if (EmptyPredicate.isEmpty(accountIdFromApp) || !accountIdFromApp.equals(mutationContext.getAccountId())) {
       throw new InvalidRequestException(APPLICATION_DOES_NOT_EXIST_MSG, WingsException.USER);
     }
   }
