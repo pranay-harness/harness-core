@@ -9,6 +9,7 @@ public final class InfrastructureConstants {
       "${host.azureVMInstance.privateDnsName.split('\\.')[0]}";
   public static final String PHASE_INFRA_MAPPING_KEY_NAME = "phaseInfraMappingKey_";
   public static final String INFRA_KUBERNETES_INFRAID_EXPRESSION = "${infra.kubernetes.infraId}";
+  public static final String CONFIG_FILE_EXPRESSIONS = "${configFile.";
 
   public static final String RC_INFRA_STEP_NAME = "Acquire Resource Lock";
 
