@@ -9,6 +9,9 @@ import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationStepsModule;
 import io.harness.OrchestrationVisualizationModule;
 import io.harness.SecretManagementCoreModule;
+import io.harness.annotations.retry.MethodExecutionHelper;
+import io.harness.annotations.retry.RetryOnException;
+import io.harness.annotations.retry.RetryOnExceptionInterceptor;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
@@ -153,6 +156,7 @@ import io.harness.service.DelegateServiceDriverModule;
 import io.harness.templatizedsm.RuntimeCredentialsInjector;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
+import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.version.VersionModule;
@@ -842,6 +846,12 @@ public class WingsModule extends AbstractModule implements ServersModule {
     });
 
     bind(MainConfiguration.class).toInstance(configuration);
+    // RetryOnException Binding start
+    bind(MethodExecutionHelper.class); // untargetted binding for eager loading
+    RetryOnExceptionInterceptor retryOnExceptionInterceptor = new RetryOnExceptionInterceptor();
+    requestInjection(retryOnExceptionInterceptor);
+    bindInterceptor(Matchers.any(), Matchers.annotatedWith(RetryOnException.class), retryOnExceptionInterceptor);
+    // Retry On Exception Binding ends
     bind(SchedulerConfig.class)
         .annotatedWith(Names.named("BackgroundSchedule"))
         .toInstance(configuration.getBackgroundSchedulerConfig());
@@ -1202,7 +1212,17 @@ public class WingsModule extends AbstractModule implements ServersModule {
 
     bind(DashboardSettingsService.class).to(DashboardSettingsServiceImpl.class);
     bind(NameService.class).to(NameServiceImpl.class);
-    bind(TimeScaleDBService.class).toInstance(new TimeScaleDBServiceImpl(configuration.getTimeScaleDBConfig()));
+    // bind(TimeScaleDBService.class).toInstance(new TimeScaleDBServiceImpl(configuration.getTimeScaleDBConfig()));
+    try {
+      bind(TimeScaleDBService.class)
+          .toConstructor(TimeScaleDBServiceImpl.class.getConstructor(TimeScaleDBConfig.class));
+    } catch (NoSuchMethodException e) {
+      log.error("TimeScaleDbServiceImpl Initialization Failed in due to missing constructor", e);
+    }
+    bind(TimeScaleDBConfig.class)
+        .annotatedWith(Names.named("TimeScaleDBConfig"))
+        .toInstance(configuration.getTimeScaleDBConfig() != null ? configuration.getTimeScaleDBConfig()
+                                                                 : TimeScaleDBConfig.builder().build());
     bind(BigQueryService.class).to(BigQueryServiceImpl.class);
     if (configuration.getExecutionLogsStorageMode() == null) {
       configuration.setExecutionLogsStorageMode(DataStorageMode.MONGO);

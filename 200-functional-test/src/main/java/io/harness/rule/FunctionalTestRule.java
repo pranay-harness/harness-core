@@ -50,6 +50,7 @@ import io.harness.testframework.framework.ManagerExecutor;
 import io.harness.testframework.framework.Setup;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
+import io.harness.timescaledb.TimeScaleDBConfig;
 
 import software.wings.app.AuthModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
@@ -329,6 +330,7 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
         EventsFrameworkConfiguration.builder()
             .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
             .build());
+    configuration.setTimeScaleDBConfig(TimeScaleDBConfig.builder().build());
     return configuration;
   }
 
