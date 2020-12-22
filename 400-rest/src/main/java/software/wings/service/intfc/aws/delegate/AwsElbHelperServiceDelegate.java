@@ -64,6 +64,8 @@ public interface AwsElbHelperServiceDelegate {
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String targetGroupName);
   Optional<LoadBalancer> getLoadBalancer(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String loadBalancerName);
+  void updateDefaultListenersForSpotInstBG(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String prodListenerArn, String stageListenerArn, String region);
   void updateListenersForEcsBG(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String prodListenerArn,
       String stageListenerArn, String region);
   List<Action> getMatchingTargetGroupForSpecificListenerRuleArn(AwsConfig awsConfig,
@@ -77,6 +79,9 @@ public interface AwsElbHelperServiceDelegate {
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String prodListenerArn, String region);
   String getTargetGroupForDefaultAction(Listener listener, ExecutionLogCallback executionLogCallback);
   void updateListenersForBGDeployment(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      List<LoadBalancerDetailsForBGDeployment> lbDetailsForBGDeployments, String region,
+      ExecutionLogCallback logCallback);
+  void updateListenersForSpotInstBGDeployment(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       List<LoadBalancerDetailsForBGDeployment> lbDetailsForBGDeployments, String region,
       ExecutionLogCallback logCallback);
   void modifyListenerRule(AmazonElasticLoadBalancing client, String listenerArn, String listenerRuleArn,

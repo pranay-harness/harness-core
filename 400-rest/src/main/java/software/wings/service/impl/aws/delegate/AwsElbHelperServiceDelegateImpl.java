@@ -859,6 +859,30 @@ public class AwsElbHelperServiceDelegateImpl
   }
 
   @Override
+  public void updateDefaultListenersForSpotInstBG(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String prodListenerArn, String stageListenerArn, String region) {
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+
+    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
+    tracker.trackELBCall("Describe Listeners");
+    DescribeListenersResult prodListenerResult =
+        client.describeListeners(new DescribeListenersRequest().withListenerArns(prodListenerArn));
+    tracker.trackELBCall("Describe Listeners");
+    DescribeListenersResult stageListenerResult =
+        client.describeListeners(new DescribeListenersRequest().withListenerArns(stageListenerArn));
+    Listener prodListener = prodListenerResult.getListeners().get(0);
+    Listener stageListener = stageListenerResult.getListeners().get(0);
+    tracker.trackELBCall("Modify Listeners");
+    client.modifyListener(new ModifyListenerRequest()
+                              .withListenerArn(prodListener.getListenerArn())
+                              .withDefaultActions(stageListener.getDefaultActions()));
+    tracker.trackELBCall("Modify Listeners");
+    client.modifyListener(new ModifyListenerRequest()
+                              .withListenerArn(stageListener.getListenerArn())
+                              .withDefaultActions(prodListener.getDefaultActions()));
+  }
+
+  @Override
   public void updateListenersForEcsBG(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String prodListenerArn, String stageListenerArn, String region) {
     encryptionService.decrypt(awsConfig, encryptionDetails, false);
@@ -920,6 +944,60 @@ public class AwsElbHelperServiceDelegateImpl
         client.modifyListener(new ModifyListenerRequest()
                                   .withListenerArn(stageListener.getListenerArn())
                                   .withDefaultActions(prodListener.getDefaultActions()));
+      }
+    });
+  }
+
+  private void swapListenerRulesWhenSpecificRulesCase(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      LoadBalancerDetailsForBGDeployment lbDetailsForBGDeployment, String region, AmazonElasticLoadBalancing client,
+      ExecutionLogCallback logCallback) {
+    List<Rule> prodRules = getListenerRuleFromListenerRuleArn(
+        awsConfig, encryptionDetails, region, lbDetailsForBGDeployment.getProdRuleArn(), logCallback);
+    List<Rule> stageRules = getListenerRuleFromListenerRuleArn(
+        awsConfig, encryptionDetails, region, lbDetailsForBGDeployment.getStageRuleArn(), logCallback);
+
+    String prodTargetGroup = prodRules.get(0).getActions().get(0).getTargetGroupArn();
+    String stageTargetGroup = stageRules.get(0).getActions().get(0).getTargetGroupArn();
+
+    modifyListenerRule(client, lbDetailsForBGDeployment.getProdListenerArn(), lbDetailsForBGDeployment.getProdRuleArn(),
+        stageTargetGroup, logCallback);
+    modifyListenerRule(client, lbDetailsForBGDeployment.getStageListenerArn(),
+        lbDetailsForBGDeployment.getStageRuleArn(), prodTargetGroup, logCallback);
+  }
+
+  private void swapListenerRulesWhenBothDefaultRulesCase(
+      AmazonElasticLoadBalancing client, LoadBalancerDetailsForBGDeployment lbDetailsForBGDeployment) {
+    tracker.trackELBCall("Describe Listeners");
+    DescribeListenersResult prodListenerResult = client.describeListeners(
+        new DescribeListenersRequest().withListenerArns(lbDetailsForBGDeployment.getProdListenerArn()));
+    tracker.trackELBCall("Describe Listeners");
+    DescribeListenersResult stageListenerResult = client.describeListeners(
+        new DescribeListenersRequest().withListenerArns(lbDetailsForBGDeployment.getStageListenerArn()));
+    Listener prodListener = prodListenerResult.getListeners().get(0);
+    Listener stageListener = stageListenerResult.getListeners().get(0);
+    tracker.trackELBCall("Modify Listeners");
+    client.modifyListener(new ModifyListenerRequest()
+                              .withListenerArn(prodListener.getListenerArn())
+                              .withDefaultActions(stageListener.getDefaultActions()));
+    tracker.trackELBCall("Modify Listeners");
+    client.modifyListener(new ModifyListenerRequest()
+                              .withListenerArn(stageListener.getListenerArn())
+                              .withDefaultActions(prodListener.getDefaultActions()));
+  }
+
+  @Override
+  public void updateListenersForSpotInstBGDeployment(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      List<LoadBalancerDetailsForBGDeployment> lbDetailsForBGDeployments, String region,
+      ExecutionLogCallback logCallback) {
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    AmazonElasticLoadBalancing client = getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
+
+    lbDetailsForBGDeployments.forEach(lbDetailsForBGDeployment -> {
+      if (lbDetailsForBGDeployment.isUseSpecificRules()) {
+        swapListenerRulesWhenSpecificRulesCase(
+            awsConfig, encryptionDetails, lbDetailsForBGDeployment, region, client, logCallback);
+      } else {
+        swapListenerRulesWhenBothDefaultRulesCase(client, lbDetailsForBGDeployment);
       }
     });
   }
@@ -1186,12 +1264,13 @@ public class AwsElbHelperServiceDelegateImpl
             oldServiceTrafficWeight, detail.getProdTargetGroupName()));
         oldTuple.setTargetGroupArn(detail.getProdTargetGroupArn());
         newTuple.setTargetGroupArn(detail.getStageTargetGroupArn());
-        if (detail.isUseSpecificRule()) {
+        logCallback.saveExecutionLog(format("Editing listener: [%s]", detail.getListenerArn()));
+        if (detail.isUseSpecificRule() && !checkIfIsDefaultRule(client, detail.getListenerArn(), detail.getRuleArn())) {
           logCallback.saveExecutionLog(format("Editing rule: [%s]", detail.getRuleArn()));
           modifyRuleRequest.setRuleArn(detail.getRuleArn());
           client.modifyRule(modifyRuleRequest);
         } else {
-          logCallback.saveExecutionLog(format("Editing listener: [%s]", detail.getListenerArn()));
+          logCallback.saveExecutionLog(format("Editing Default rule: [%s]", detail.getRuleArn()));
           modifyListenerRequest.setListenerArn(detail.getListenerArn());
           client.modifyListener(modifyListenerRequest);
         }
