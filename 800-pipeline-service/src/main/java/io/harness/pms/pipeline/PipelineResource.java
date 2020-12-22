@@ -233,7 +233,7 @@ public class PipelineResource {
       criteria.and(PipelineEntityKeys.projectIdentifier).is(projectId);
     }
     if (EmptyPredicate.isNotEmpty(pipelineIdentifier)) {
-      criteria.and(PipelineEntityKeys.projectIdentifier).is(pipelineIdentifier);
+      criteria.and(PipelineEntityKeys.identifier).is(pipelineIdentifier);
     }
     Pageable pageRequest;
     if (EmptyPredicate.isEmpty(sort)) {
