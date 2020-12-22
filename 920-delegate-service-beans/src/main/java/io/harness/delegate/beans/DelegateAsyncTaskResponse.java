@@ -17,7 +17,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "!!!custom_delegateAsyncTaskResponses", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "DelegateAsyncTaskResponseKeys")
 public class DelegateAsyncTaskResponse implements PersistentEntity {
-  @Id private String uuid;
+  @Id @org.springframework.data.annotation.Id private String uuid;
   private byte[] responseData;
   @FdIndex private long processAfter;
 

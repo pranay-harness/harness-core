@@ -1,50 +1,48 @@
 package io.harness.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static java.lang.System.currentTimeMillis;
-import static java.util.stream.Collectors.toList;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse.DelegateSyncTaskResponseKeys;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.persistence.HPersistence;
-import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateSyncService;
-import io.harness.tasks.ResponseData;
+import io.harness.tasks.BinaryResponseData;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
 
 @Singleton
 @Slf4j
-public class DelegateSyncServiceImpl implements DelegateSyncService {
-  @Inject private HPersistence persistence;
-  @Inject private KryoSerializer kryoSerializer;
+public class PmsDelegateSyncServiceImpl implements DelegateSyncService {
+  @Inject private MongoTemplate persistence;
+  @Inject @Named("morphiaClasses") Map<Class, String> morphiaCustomCollectionNames;
 
-  @VisibleForTesting public final ConcurrentMap<String, AtomicLong> syncTaskWaitMap = new ConcurrentHashMap<>();
+  public final ConcurrentMap<String, AtomicLong> syncTaskWaitMap = new ConcurrentHashMap<>();
 
   @Override
   @SuppressWarnings({"PMD", "SynchronizationOnLocalVariableOrMethodParameter"})
   public void run() {
     try {
       if (isNotEmpty(syncTaskWaitMap)) {
-        List<String> completedSyncTasks = persistence.createQuery(DelegateSyncTaskResponse.class, excludeAuthority)
-                                              .field(DelegateSyncTaskResponseKeys.uuid)
-                                              .in(syncTaskWaitMap.keySet())
-                                              .asKeyList()
-                                              .stream()
-                                              .map(key -> key.getId().toString())
-                                              .collect(toList());
+        Query query = query(where(DelegateSyncTaskResponseKeys.uuid).in(syncTaskWaitMap.keySet()));
+        query.fields().include(DelegateSyncTaskResponseKeys.uuid);
+        List<String> completedSyncTasks =
+            persistence.find(query, String.class, morphiaCustomCollectionNames.get(DelegateSyncTaskResponse.class));
         for (String taskId : completedSyncTasks) {
           AtomicLong endAt = syncTaskWaitMap.get(taskId);
           if (endAt != null) {
@@ -61,8 +59,10 @@ public class DelegateSyncServiceImpl implements DelegateSyncService {
   }
 
   @Override
-  public <T extends ResponseData> T waitForTask(String taskId, String description, Duration timeout) {
+  public BinaryResponseData waitForTask(String taskId, String description, Duration timeout) {
     DelegateSyncTaskResponse taskResponse;
+    Query query = query(where(DelegateSyncTaskResponseKeys.uuid).is(taskId));
+    String collectionName = morphiaCustomCollectionNames.get(DelegateSyncTaskResponse.class);
     try {
       log.info("Executing sync task");
       AtomicLong endAt =
@@ -72,12 +72,12 @@ public class DelegateSyncServiceImpl implements DelegateSyncService {
           endAt.wait(timeout.toMillis());
         }
       }
-      taskResponse = persistence.get(DelegateSyncTaskResponse.class, taskId);
+      taskResponse = persistence.findOne(query, DelegateSyncTaskResponse.class, collectionName);
     } catch (Exception e) {
       throw new InvalidArgumentsException(Pair.of("args", "Error while waiting for completion"), e);
     } finally {
       syncTaskWaitMap.remove(taskId);
-      persistence.delete(DelegateSyncTaskResponse.class, taskId);
+      persistence.remove(query, DelegateSyncTaskResponse.class, collectionName);
     }
 
     if (taskResponse == null) {
@@ -85,6 +85,6 @@ public class DelegateSyncServiceImpl implements DelegateSyncService {
           "Task has expired. It wasn't picked up by any delegate or delegate did not have enough time to finish the execution."));
     }
 
-    return (T) kryoSerializer.asInflatedObject(taskResponse.getResponseData());
+    return BinaryResponseData.builder().data(taskResponse.getResponseData()).build();
   }
 }

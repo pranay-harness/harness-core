@@ -33,7 +33,6 @@ import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.pms.sdk.registries.registrar.ResolverRegistrar;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.registrars.OrchestrationResolverRegistrar;
-import io.harness.service.DelegateServiceDriverModule;
 import io.harness.state.inspection.StateInspectionService;
 import io.harness.state.inspection.StateInspectionServiceImpl;
 import io.harness.threading.ThreadPool;
@@ -68,7 +67,6 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
   @Override
   protected void configure() {
     install(WaiterModule.getInstance());
-    install(DelegateServiceDriverModule.getInstance());
     install(OrchestrationBeansModule.getInstance());
     install(OrchestrationQueueModule.getInstance());
 

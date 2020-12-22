@@ -157,7 +157,7 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = PRASHANT, intermittent = true)
+  @Owner(developers = PRASHANT)
   @Category(FunctionalTests.class)
   public void shouldExecuteHttpRetryAbortPlan() {
     PlanExecution httpRetryResponse = testSetupHelper.executePlan(

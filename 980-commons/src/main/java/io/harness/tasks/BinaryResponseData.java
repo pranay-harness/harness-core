@@ -5,6 +5,6 @@ import lombok.Value;
 
 @Value
 @Builder
-public class BinaryResponseData implements ResponseData {
+public class BinaryResponseData implements ResponseData, ProgressData {
   byte[] data;
 }

@@ -61,6 +61,7 @@ BAZEL_MODULES="\
   //910-delegate-service-driver:module \
   //910-delegate-task-grpc-service/src/main/proto:all \
   //910-delegate-task-grpc-service:module \
+  //915-pms-delegate-service-driver:module \
   //920-delegate-agent-beans/src/main/proto:all \
   //920-delegate-agent-beans:module \
   //920-delegate-service-beans/src/main/proto:all \
@@ -258,6 +259,7 @@ build_bazel_module 890-sm-core
 #build_bazel_module 900-yaml-sdk
 build_bazel_module 910-delegate-service-driver
 build_bazel_module 910-delegate-task-grpc-service
+build_bazel_module 915-pms-delegate-service-driver
 build_bazel_module 920-delegate-agent-beans
 build_bazel_module 920-delegate-service-beans
 build_bazel_module 930-delegate-tasks
