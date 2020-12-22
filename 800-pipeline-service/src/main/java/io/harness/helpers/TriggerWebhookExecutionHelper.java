@@ -143,9 +143,6 @@ public class TriggerWebhookExecutionHelper {
       String finalPipelineYmlForTrigger =
           MergeHelper.mergeInputSetIntoPipeline(pipelineYaml, sanitizedRuntimeInputYaml);
 
-      PipelineEntity pipelineEntity = PMSPipelineDtoMapper.toPipelineEntity(ngTriggerEntity.getAccountId(),
-          ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(), finalPipelineYmlForTrigger);
-
       return pipelineExecuteHelper.startExecution(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),
           ngTriggerEntity.getProjectIdentifier(), finalPipelineYmlForTrigger, embeddedUser, contextAttributes);
     } catch (Exception e) {

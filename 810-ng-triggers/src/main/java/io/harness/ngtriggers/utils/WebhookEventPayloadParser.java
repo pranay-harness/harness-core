@@ -30,6 +30,8 @@ public class WebhookEventPayloadParser {
   private static final String X_GIT_HUB_EVENT = "X-GitHub-Event";
   private static final String X_GIT_LAB_EVENT = "X-Gitlab-Event";
   private static final String X_BIT_BUCKET_EVENT = "X-Event-Key";
+  public static final String BITBUCKET_SERVER_HEADER_KEY = "X-Request-Id";
+  public static final String BITBUCKET_CLOUD_HEADER_KEY = "X-Request-UUID";
 
   @Inject private SCMGrpc.SCMBlockingStub scmBlockingStub;
 
@@ -223,13 +225,27 @@ public class WebhookEventPayloadParser {
     } else if (containsHeaderKey(headerKeys, X_GIT_LAB_EVENT)) {
       return GitProvider.GITLAB;
     } else if (containsHeaderKey(headerKeys, X_BIT_BUCKET_EVENT)) {
-      return GitProvider.BITBUCKET;
+      return getBitbucketProvider(headerKeys);
     }
 
     throw new InvalidRequestException("Unable to resolve the Webhook Source. "
             + "One of " + X_GIT_HUB_EVENT + ", " + X_BIT_BUCKET_EVENT + ", " + X_GIT_LAB_EVENT
             + " must be present in Headers",
         USER);
+  }
+
+  private GitProvider getBitbucketProvider(Set<String> headerKeys) {
+    if (containsHeaderKey(headerKeys, BITBUCKET_SERVER_HEADER_KEY)) {
+      return GitProvider.STASH;
+    } else if (containsHeaderKey(headerKeys, BITBUCKET_CLOUD_HEADER_KEY)) {
+      return GitProvider.BITBUCKET;
+    } else {
+      StringBuilder stringBuilder = new StringBuilder(
+          "TRIGGER: Could not determine if source is Bitbucket Cloud or Server, defaulting to Cloud. Please verify header again. ");
+      headerKeys.forEach(key -> stringBuilder.append(key).append(','));
+      log.warn(stringBuilder.toString());
+      return GitProvider.BITBUCKET;
+    }
   }
 
   private boolean containsHeaderKey(Set<String> headerKeys, String key) {
