@@ -25,6 +25,7 @@ public class CESlackWebhook implements PersistentEntity, UuidAware, CreatedAtAwa
   @NotBlank String accountId;
   String webhookUrl;
   boolean sendCostReport;
+  boolean sendAnomalyAlerts;
   long createdAt;
   long lastUpdatedAt;
 }

@@ -20,14 +20,30 @@ public class CESlackWebhookDaoTest extends WingsBaseTest {
   private String accountId = "ACCOUNT_ID";
   private String slackWebhookUrl1 = "SLACK_WEBHOOK_URL_1";
   private String slackWebhookUrl2 = "SLACK_WEBHOOK_URL_2";
+  private boolean sendCostReports1 = true;
+  private boolean sendCostReports2 = false;
+  private boolean sendAnomalyAlerts1 = false;
+  private boolean sendAnomalyAlerts2 = true;
+
   private CESlackWebhook ceSlackWebhook1;
   private CESlackWebhook ceSlackWebhook2;
   @Inject private CESlackWebhookDao ceSlackWebhookDao;
 
   @Before
   public void setUp() {
-    ceSlackWebhook1 = CESlackWebhook.builder().accountId(accountId).webhookUrl(slackWebhookUrl1).build();
-    ceSlackWebhook2 = CESlackWebhook.builder().accountId(accountId).webhookUrl(slackWebhookUrl2).build();
+    ceSlackWebhook1 = CESlackWebhook.builder()
+                          .accountId(accountId)
+                          .webhookUrl(slackWebhookUrl1)
+                          .sendCostReport(sendCostReports1)
+                          .sendAnomalyAlerts(sendAnomalyAlerts1)
+
+                          .build();
+    ceSlackWebhook2 = CESlackWebhook.builder()
+                          .accountId(accountId)
+                          .webhookUrl(slackWebhookUrl2)
+                          .sendCostReport(sendCostReports2)
+                          .sendAnomalyAlerts(sendAnomalyAlerts2)
+                          .build();
   }
 
   @Test
