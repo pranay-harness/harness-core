@@ -228,7 +228,7 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
     doReturn(singletonList(new Service().withServiceName("foo__1").withDesiredCount(1)))
         .when(mockAwsClusterService)
         .getServices(anyString(), any(), anyList(), anyString());
-    ContainerServiceData instanceData = helper.getNewInstanceData(data);
+    ContainerServiceData instanceData = helper.getNewInstanceData(data, mock(ExecutionLogCallback.class));
     assertThat(instanceData).isNotNull();
     assertThat(instanceData.getDesiredCount()).isEqualTo(2);
   }

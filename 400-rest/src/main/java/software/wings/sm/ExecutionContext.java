@@ -128,4 +128,10 @@ public interface ExecutionContext {
   String appendStateExecutionId(String str);
 
   String getEnvType();
+
+  /*
+   * The below method assumes that the Workflow Phases are statically generated and
+   * hence should not be used in Rolling and similar workflows.
+   */
+  boolean isLastPhase(boolean rollback);
 }

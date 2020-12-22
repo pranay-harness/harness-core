@@ -16,6 +16,8 @@ public class EcsResizeParams extends ContainerResizeParams {
   private List<AwsAutoScalarConfig> previousAwsAutoScalarConfigs;
   private List<AwsAutoScalarConfig> awsAutoScalarConfigForNewService;
   private boolean previousEcsAutoScalarsAlreadyRemoved;
+  private boolean isLastDeployPhase;
+  private boolean ecsAutoscalarRedesignEnabled;
 
   public static final class EcsResizeParamsBuilder {
     private String region;
@@ -40,11 +42,23 @@ public class EcsResizeParams extends ContainerResizeParams {
     private List<AwsAutoScalarConfig> previousAwsAutoScalarConfigs;
     private List<AwsAutoScalarConfig> awsAutoScalarConfigForNewService;
     private boolean previousEcsAutoScalarsAlreadyRemoved;
+    private boolean isLastDeployPhase;
+    private boolean ecsAutoscalarRedesignEnabled;
 
     private EcsResizeParamsBuilder() {}
 
     public static EcsResizeParamsBuilder anEcsResizeParams() {
       return new EcsResizeParamsBuilder();
+    }
+
+    public EcsResizeParamsBuilder withIsLastDeployPhase(boolean isLastDeployPhase) {
+      this.isLastDeployPhase = isLastDeployPhase;
+      return this;
+    }
+
+    public EcsResizeParamsBuilder withEcsAutoscalarRedesignEnabled(boolean ecsAutoscalarRedesignEnabled) {
+      this.ecsAutoscalarRedesignEnabled = ecsAutoscalarRedesignEnabled;
+      return this;
     }
 
     public EcsResizeParamsBuilder withRegion(String region) {
@@ -183,7 +197,9 @@ public class EcsResizeParams extends ContainerResizeParams {
           .withOriginalTrafficWeights(originalTrafficWeights)
           .withPreviousAwsAutoScalarConfigs(previousAwsAutoScalarConfigs)
           .withAwsAutoScalarConfigForNewService(awsAutoScalarConfigForNewService)
-          .withPreviousEcsAutoScalarsAlreadyRemoved(previousEcsAutoScalarsAlreadyRemoved);
+          .withPreviousEcsAutoScalarsAlreadyRemoved(previousEcsAutoScalarsAlreadyRemoved)
+          .withIsLastDeployPhase(isLastDeployPhase)
+          .withEcsAutoscalarRedesignEnabled(ecsAutoscalarRedesignEnabled);
     }
 
     public EcsResizeParams build() {
@@ -210,6 +226,8 @@ public class EcsResizeParams extends ContainerResizeParams {
       ecsResizeParams.setPreviousAwsAutoScalarConfigs(previousAwsAutoScalarConfigs);
       ecsResizeParams.setAwsAutoScalarConfigForNewService(awsAutoScalarConfigForNewService);
       ecsResizeParams.setPreviousEcsAutoScalarsAlreadyRemoved(previousEcsAutoScalarsAlreadyRemoved);
+      ecsResizeParams.setLastDeployPhase(isLastDeployPhase);
+      ecsResizeParams.setEcsAutoscalarRedesignEnabled(ecsAutoscalarRedesignEnabled);
       return ecsResizeParams;
     }
   }

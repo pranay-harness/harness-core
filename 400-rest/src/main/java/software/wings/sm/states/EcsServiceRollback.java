@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.SKIPPED;
+import static io.harness.beans.FeatureName.ECS_AUTOSCALAR_REDESIGN;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
 
@@ -14,6 +15,7 @@ import static java.util.Collections.singletonList;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.CommandStateExecutionData;
@@ -56,6 +58,7 @@ public class EcsServiceRollback extends State {
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private ContainerDeploymentManagerHelper containerDeploymentHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   public EcsServiceRollback(String name) {
     super(name, StateType.ECS_SERVICE_ROLLBACK.name());
@@ -81,6 +84,13 @@ public class EcsServiceRollback extends State {
   public void handleAbortEvent(ExecutionContext context) {}
 
   private ExecutionResponse executeInternal(ExecutionContext context) {
+    if (ecsStateHelper.allPhaseRollbackDone(context)) {
+      return ExecutionResponse.builder()
+          .executionStatus(SKIPPED)
+          .stateExecutionData(aStateExecutionData().withErrorMsg("All phase Rollback already done. Skipping.").build())
+          .build();
+    }
+
     ContextElement rollbackElement = ecsStateHelper.getDeployElementFromSweepingOutput(context);
     if (rollbackElement == null) {
       return ExecutionResponse.builder()
@@ -124,10 +134,12 @@ public class EcsServiceRollback extends State {
             .withOldInstanceData(deployDataBag.getRollbackElement().getOldInstanceData())
             .withOriginalServiceCounts(deployDataBag.getContainerElement().getActiveServiceCounts())
             .withRollback(true)
-            .withRollbackAllPhases(
-                getRollbackAtOnce(deployDataBag.getContainerElement().getPreviousAwsAutoScalarConfigs()))
+            .withRollbackAllPhases(getRollbackAtOnce(deployDataBag))
             .withPreviousAwsAutoScalarConfigs(deployDataBag.getContainerElement().getPreviousAwsAutoScalarConfigs())
             .withContainerServiceName(deployDataBag.getContainerElement().getNewEcsServiceName())
+            .withEcsAutoscalarRedesignEnabled(
+                featureFlagService.isEnabled(ECS_AUTOSCALAR_REDESIGN, deployDataBag.getApp().getAccountId()))
+            .withIsLastDeployPhase(context.isLastPhase(true))
             .build();
 
     EcsServiceDeployRequest request = EcsServiceDeployRequest.builder()
@@ -155,8 +167,10 @@ public class EcsServiceRollback extends State {
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     try {
+      EcsDeployDataBag deployDataBag = ecsStateHelper.prepareBagForEcsDeploy(
+          context, serviceResourceService, infrastructureMappingService, settingsService, secretManager, true);
       return ecsStateHelper.handleDelegateResponseForEcsDeploy(
-          context, response, true, activityService, serviceTemplateService, containerDeploymentHelper);
+          context, response, true, activityService, getRollbackAtOnce(deployDataBag), containerDeploymentHelper);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -164,10 +178,16 @@ public class EcsServiceRollback extends State {
     }
   }
 
-  private boolean getRollbackAtOnce(List<AwsAutoScalarConfig> awsAutoScalarConfigs) {
-    if (isNotEmpty(awsAutoScalarConfigs)) {
-      rollbackAllPhases = true;
+  private boolean getRollbackAtOnce(EcsDeployDataBag deployDataBag) {
+    if (featureFlagService.isEnabled(ECS_AUTOSCALAR_REDESIGN, deployDataBag.getApp().getAccountId())) {
+      return rollbackAllPhases;
+    } else {
+      List<AwsAutoScalarConfig> awsAutoScalarConfigs =
+          deployDataBag.getContainerElement().getPreviousAwsAutoScalarConfigs();
+      if (isNotEmpty(awsAutoScalarConfigs)) {
+        rollbackAllPhases = true;
+      }
+      return rollbackAllPhases;
     }
-    return rollbackAllPhases;
   }
 }

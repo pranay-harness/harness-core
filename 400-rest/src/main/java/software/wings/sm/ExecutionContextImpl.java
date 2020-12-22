@@ -1522,4 +1522,15 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   private boolean isEligible(boolean instanceFromNewDeployment, boolean newInstancesOnly) {
     return !newInstancesOnly || instanceFromNewDeployment;
   }
+
+  @Override
+  public boolean isLastPhase(boolean rollback) {
+    WorkflowStandardParams workflowStandardParams = getContextElement(ContextElementType.STANDARD);
+    PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
+    if (rollback) {
+      return phaseElement.getUuid().equals(workflowStandardParams.getLastRollbackPhaseId());
+    } else {
+      return phaseElement.getUuid().equals(workflowStandardParams.getLastDeployPhaseId());
+    }
+  }
 }

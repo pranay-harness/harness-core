@@ -157,6 +157,47 @@ public class EcsDeployCommandTaskHelper {
     });
   }
 
+  void restoreAutoScalarConfigsRedesigned(ContextData contextData, ExecutionLogCallback executionLogCallback) {
+    EcsResizeParams resizeParams = contextData.getResizeParams();
+
+    // This is for services those are being upsized in Rollback
+    List<AwsAutoScalarConfig> awsAutoScalarConfigs = resizeParams.getPreviousAwsAutoScalarConfigs();
+
+    if (isEmpty(awsAutoScalarConfigs)) {
+      executionLogCallback.saveExecutionLog("No Auto-scalar configs to restore");
+      return;
+    }
+
+    AwsConfig awsConfig = contextData.getAwsConfig();
+
+    awsAutoScalarConfigs.forEach(awsAutoScalarConfig -> {
+      if (StringUtils.isNotBlank(awsAutoScalarConfig.getScalableTargetJson())) {
+        ScalableTarget scalableTarget =
+            awsAppAutoScalingService.getScalableTargetFromJson(awsAutoScalarConfig.getScalableTargetJson());
+
+        DescribeScalableTargetsResult result = awsAppAutoScalingService.listScalableTargets(resizeParams.getRegion(),
+            awsConfig, contextData.getEncryptedDataDetails(),
+            new DescribeScalableTargetsRequest()
+                .withResourceIds(Arrays.asList(scalableTarget.getResourceId()))
+                .withScalableDimension(scalableTarget.getScalableDimension())
+                .withServiceNamespace(ServiceNamespace.Ecs));
+
+        if (isEmpty(result.getScalableTargets())) {
+          ecsCommandTaskHelper.registerScalableTargetForEcsService(awsAppAutoScalingService, resizeParams.getRegion(),
+              awsConfig, contextData.getEncryptedDataDetails(), executionLogCallback, scalableTarget);
+
+          if (isNotEmpty(awsAutoScalarConfig.getScalingPolicyJson())) {
+            for (String policyJson : awsAutoScalarConfig.getScalingPolicyJson()) {
+              ecsCommandTaskHelper.upsertScalingPolicyIfRequired(policyJson, scalableTarget.getResourceId(),
+                  scalableTarget.getScalableDimension(), resizeParams.getRegion(), awsConfig, awsAppAutoScalingService,
+                  contextData.getEncryptedDataDetails(), executionLogCallback);
+            }
+          }
+        }
+      }
+    });
+  }
+
   public void restoreAutoScalarConfigs(
       ContextData contextData, ContainerServiceData containerServiceData, ExecutionLogCallback executionLogCallback) {
     EcsResizeParams resizeParams = contextData.getResizeParams();
@@ -201,6 +242,42 @@ public class EcsDeployCommandTaskHelper {
                   scalableTarget.getScalableDimension(), resizeParams.getRegion(), awsConfig, awsAppAutoScalingService,
                   contextData.getEncryptedDataDetails(), executionLogCallback);
             }
+          }
+        }
+      }
+    });
+  }
+
+  void createAutoScalarConfigIfServiceReachedMaxSizeRedesigned(
+      ContextData contextData, ContainerServiceData containerServiceData, ExecutionLogCallback executionLogCallback) {
+    EcsResizeParams resizeParams = contextData.getResizeParams();
+    if (resizeParams.getAwsAutoScalarConfigForNewService() == null
+        || isEmpty(resizeParams.getAwsAutoScalarConfigForNewService())) {
+      executionLogCallback.saveExecutionLog("No Autoscalar config provided.");
+      return;
+    }
+
+    String resourceId =
+        ecsCommandTaskHelper.getResourceIdForEcsService(containerServiceData.getName(), resizeParams.getClusterName());
+
+    AwsConfig awsConfig = contextData.getAwsConfig();
+    executionLogCallback.saveExecutionLog(
+        "\nRegistering Scalable Target for Service : " + containerServiceData.getName());
+    resizeParams.getAwsAutoScalarConfigForNewService().forEach(awsAutoScalarConfig -> {
+      if (StringUtils.isNotBlank(awsAutoScalarConfig.getScalableTargetJson())) {
+        ScalableTarget scalableTarget =
+            awsAppAutoScalingService.getScalableTargetFromJson(awsAutoScalarConfig.getScalableTargetJson());
+        scalableTarget.withResourceId(resourceId);
+        ecsCommandTaskHelper.registerScalableTargetForEcsService(awsAppAutoScalingService, resizeParams.getRegion(),
+            awsConfig, contextData.getEncryptedDataDetails(), executionLogCallback, scalableTarget);
+
+        if (isNotEmpty(awsAutoScalarConfig.getScalingPolicyJson())) {
+          executionLogCallback.saveExecutionLog(
+              "Creating Auto Scaling Policies for Service: " + containerServiceData.getName());
+          for (String policyJson : awsAutoScalarConfig.getScalingPolicyJson()) {
+            ecsCommandTaskHelper.upsertScalingPolicyIfRequired(policyJson, resourceId,
+                scalableTarget.getScalableDimension(), resizeParams.getRegion(), awsConfig, awsAppAutoScalingService,
+                contextData.getEncryptedDataDetails(), executionLogCallback);
           }
         }
       }
@@ -351,7 +428,7 @@ public class EcsDeployCommandTaskHelper {
     return deployingToHundredPercent;
   }
 
-  public ContainerServiceData getNewInstanceData(ContextData contextData) {
+  public ContainerServiceData getNewInstanceData(ContextData contextData, ExecutionLogCallback logCallback) {
     Optional<Integer> previousDesiredCount = getServiceDesiredCount(contextData);
 
     String containerServiceName = contextData.getResizeParams().getContainerServiceName();
@@ -363,10 +440,18 @@ public class EcsDeployCommandTaskHelper {
     int desiredCount = getNewInstancesDesiredCount(contextData);
 
     if (desiredCount < previousCount) {
-      String msg = "Desired instance count must be greater than or equal to the current instance count: {current: "
-          + previousCount + ", desired: " + desiredCount + "}";
-      log.error(msg);
-      throw new InvalidRequestException(msg);
+      if (contextData.getResizeParams().isEcsAutoscalarRedesignEnabled()) {
+        String message =
+            format("Desired count: [%d] is less than previous count: [%d]. Updating desired count to: [%d]",
+                desiredCount, previousCount, previousCount);
+        logCallback.saveExecutionLog(message);
+        desiredCount = previousCount;
+      } else {
+        String msg = "Desired instance count must be greater than or equal to the current instance count: {current: "
+            + previousCount + ", desired: " + desiredCount + "}";
+        log.error(msg);
+        throw new InvalidRequestException(msg);
+      }
     }
 
     return ContainerServiceData.builder()
