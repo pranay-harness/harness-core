@@ -6,7 +6,9 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.plan.GraphLayoutNode;
 import io.harness.pms.execution.ExecutionStatus;
+import io.harness.pms.execution.beans.ExecutionErrorInfo;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.entity.PipelineExecutionSummaryEntity;
 import io.harness.pms.pipeline.mappers.GraphLayoutDtoMapper;
@@ -20,6 +22,8 @@ import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 import com.google.cloud.Timestamp;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -44,6 +48,8 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
     if (!pipelineEntity.isPresent()) {
       return;
     }
+    updateExecutionInfoInPipelineEntity(
+        accountId, orgId, projectId, pipelineId, pipelineEntity.get().getExecutionSummaryInfo());
     Map<String, GraphLayoutNode> layoutNodeMap = pipelineEntity.get().getLayoutNodeMap();
     String startingNodeId = pipelineEntity.get().getStartingNodeID();
     Map<String, GraphLayoutNodeDTO> layoutNodeDTOMap = new HashMap<>();
@@ -66,5 +72,24 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
             .orgIdentifier(orgId)
             .build();
     pmsExecutionSummaryRespository.save(pipelineExecutionSummaryEntity);
+  }
+
+  public void updateExecutionInfoInPipelineEntity(
+      String accountId, String orgId, String projectId, String pipelineId, ExecutionSummaryInfo executionSummaryInfo) {
+    if (executionSummaryInfo == null) {
+      executionSummaryInfo = ExecutionSummaryInfo.builder().build();
+    }
+    executionSummaryInfo.setLastExecutionStatus(ExecutionStatus.RUNNING);
+    Map<String, Integer> deploymentsMap = executionSummaryInfo.getDeployments();
+    Date todaysDate = new Date();
+    SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+    String strDate = formatter.format(todaysDate);
+    if (deploymentsMap.containsKey(strDate)) {
+      deploymentsMap.put(strDate, deploymentsMap.get(strDate) + 1);
+    } else {
+      deploymentsMap.put(strDate, 1);
+    }
+    executionSummaryInfo.setLastExecutionTs(todaysDate.getTime());
+    pmsPipelineService.saveExecutionInfo(accountId, orgId, projectId, pipelineId, executionSummaryInfo);
   }
 }
