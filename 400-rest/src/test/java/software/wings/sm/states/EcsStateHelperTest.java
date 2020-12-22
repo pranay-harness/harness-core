@@ -537,7 +537,7 @@ public class EcsStateHelperTest extends WingsBaseTest {
                                     .build();
     doReturn(phaseElement).when(mockContext).getContextElement(any(), anyString());
     ExecutionResponse response = helper.handleDelegateResponseForEcsDeploy(
-        mockContext, ImmutableMap.of(ACTIVITY_ID, delegateResponse), false, mockService, null, mockHelper);
+        mockContext, ImmutableMap.of(ACTIVITY_ID, delegateResponse), false, mockService, false, mockHelper);
     assertThat(response).isNotNull();
     assertThat(response.getExecutionStatus()).isEqualTo(SUCCESS);
     List<ContextElement> contextElements = response.getContextElements();

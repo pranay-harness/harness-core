@@ -183,7 +183,9 @@ public class EcsDeployCommandHandlerTest extends WingsBaseTest {
                                               .build();
 
     doReturn(true).when(mockEcsDeployCommandTaskHelper).getDeployingToHundredPercent(any());
-    doReturn(ContainerServiceData.builder().build()).when(mockEcsDeployCommandTaskHelper).getNewInstanceData(any());
+    doReturn(ContainerServiceData.builder().build())
+        .when(mockEcsDeployCommandTaskHelper)
+        .getNewInstanceData(any(), any());
     doReturn(Collections.singletonList(ContainerServiceData.builder().build()))
         .when(mockEcsDeployCommandTaskHelper)
         .getOldInstanceData(any(), any());

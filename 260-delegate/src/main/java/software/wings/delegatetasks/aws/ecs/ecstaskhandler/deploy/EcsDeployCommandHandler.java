@@ -78,7 +78,8 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
 
       if (!resizeParams.isRollback()) {
         newInstanceDataList = new ArrayList<>();
-        ContainerServiceData newInstanceData = ecsDeployCommandTaskHelper.getNewInstanceData(contextData);
+        ContainerServiceData newInstanceData =
+            ecsDeployCommandTaskHelper.getNewInstanceData(contextData, executionLogCallback);
         newInstanceDataList.add(newInstanceData);
         oldInstanceDataList = ecsDeployCommandTaskHelper.getOldInstanceData(contextData, newInstanceData);
       } else {
@@ -118,8 +119,17 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
       List<ContainerServiceData> firstDataList = resizeNewFirst ? newInstanceDataList : oldInstanceDataList;
       List<ContainerServiceData> secondDataList = resizeNewFirst ? oldInstanceDataList : newInstanceDataList;
 
-      resizeInstances(contextData, firstDataList, executionDataBuilder, executionLogCallback, resizeNewFirst);
-      resizeInstances(contextData, secondDataList, executionDataBuilder, executionLogCallback, !resizeNewFirst);
+      if (contextData.getResizeParams().isEcsAutoscalarRedesignEnabled()) {
+        handleAutoScalarBeforeResize(contextData, executionLogCallback);
+        resizeInstancesRedesigned(
+            contextData, firstDataList, executionDataBuilder, executionLogCallback, resizeNewFirst);
+        resizeInstancesRedesigned(
+            contextData, secondDataList, executionDataBuilder, executionLogCallback, !resizeNewFirst);
+        handleAutoScalarAfterResize(contextData, executionLogCallback, newInstanceDataList);
+      } else {
+        resizeInstances(contextData, firstDataList, executionDataBuilder, executionLogCallback, resizeNewFirst);
+        resizeInstances(contextData, secondDataList, executionDataBuilder, executionLogCallback, !resizeNewFirst);
+      }
     } catch (TimeoutException ex) {
       log.error(ex.getMessage());
       log.error(ExceptionUtils.getMessage(ex), ex);
@@ -138,6 +148,28 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
     }
 
     return executionResponse;
+  }
+
+  private void handleAutoScalarBeforeResize(ContextData contextData, ExecutionLogCallback executionLogCallback) {
+    if (contextData.getResizeParams().isRollback()) {
+      ecsDeployCommandTaskHelper.deleteAutoScalarForNewService(contextData, executionLogCallback);
+    } else {
+      ecsDeployCommandTaskHelper.deregisterAutoScalarsIfExists(contextData, executionLogCallback);
+    }
+  }
+
+  private void handleAutoScalarAfterResize(ContextData contextData, ExecutionLogCallback executionLogCallback,
+      List<ContainerServiceData> newInstanceDataList) {
+    if (contextData.getResizeParams().isRollback()) {
+      if (contextData.getResizeParams().isRollbackAllPhases() || contextData.getResizeParams().isLastDeployPhase()) {
+        ecsDeployCommandTaskHelper.restoreAutoScalarConfigsRedesigned(contextData, executionLogCallback);
+      }
+    } else {
+      if (contextData.getResizeParams().isLastDeployPhase()) {
+        ecsDeployCommandTaskHelper.createAutoScalarConfigIfServiceReachedMaxSizeRedesigned(
+            contextData, newInstanceDataList.get(0), executionLogCallback);
+      }
+    }
   }
 
   private void copyExexcutionDataIntoResponse(
@@ -172,6 +204,36 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
       log.info("Successfully completed resize operation");
       executionLogCallback.saveExecutionLog(format("Completed operation%n%s%n", DASH_STRING));
     }
+  }
+
+  private void resizeInstancesRedesigned(ContextData contextData, List<ContainerServiceData> instanceData,
+      ResizeCommandUnitExecutionDataBuilder executionDataBuilder, ExecutionLogCallback executionLogCallback,
+      boolean isUpsize) {
+    if (isNotEmpty(instanceData)) {
+      List<ContainerInfo> containerInfos =
+          instanceData.stream()
+              .flatMap(data -> executeResizeRedesigned(contextData, data, executionLogCallback).stream())
+              .collect(toList());
+      if (isUpsize) {
+        executionDataBuilder.containerInfos(
+            containerInfos.stream().filter(ContainerInfo::isNewContainer).collect(toList()));
+      } else {
+        containerInfos.forEach(containerInfo -> containerInfo.setNewContainer(false));
+        executionDataBuilder.previousContainerInfos(containerInfos);
+      }
+      ecsDeployCommandTaskHelper.logContainerInfos(containerInfos, executionLogCallback);
+      log.info("Successfully completed resize operation");
+      executionLogCallback.saveExecutionLog(format("Completed operation%n%s%n", DASH_STRING));
+    }
+  }
+
+  private List<ContainerInfo> executeResizeRedesigned(
+      ContextData contextData, ContainerServiceData containerServiceData, ExecutionLogCallback executionLogCallback) {
+    EcsResizeParams resizeParams = contextData.getResizeParams();
+    return awsClusterService.resizeCluster(resizeParams.getRegion(), contextData.getSettingAttribute(),
+        contextData.getEncryptedDataDetails(), resizeParams.getClusterName(), containerServiceData.getName(),
+        containerServiceData.getPreviousCount(), containerServiceData.getDesiredCount(),
+        resizeParams.getServiceSteadyStateTimeout(), executionLogCallback);
   }
 
   public List<ContainerInfo> executeResize(

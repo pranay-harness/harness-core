@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.SKIPPED;
+import static io.harness.beans.FeatureName.ECS_AUTOSCALAR_REDESIGN;
 import static io.harness.exception.ExceptionUtils.getMessage;
 
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
@@ -14,6 +15,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.CommandStateExecutionData;
@@ -58,6 +60,7 @@ public class EcsServiceDeploy extends State {
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private ContainerDeploymentManagerHelper containerDeploymentHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   public EcsServiceDeploy(String name) {
     super(name, StateType.ECS_SERVICE_DEPLOY.name());
@@ -124,6 +127,9 @@ public class EcsServiceDeploy extends State {
             .withAwsAutoScalarConfigForNewService(deployDataBag.getContainerElement().getNewServiceAutoScalarConfig())
             .withPreviousEcsAutoScalarsAlreadyRemoved(
                 deployDataBag.getContainerElement().isPrevAutoscalarsAlreadyRemoved())
+            .withEcsAutoscalarRedesignEnabled(
+                featureFlagService.isEnabled(ECS_AUTOSCALAR_REDESIGN, deployDataBag.getApp().getAccountId()))
+            .withIsLastDeployPhase(context.isLastPhase(false))
             .withDownsizeInstanceCount(getDownsizeCount(context))
             .withDownsizeInstanceUnitType(getDownsizeInstanceUnitType())
             .build();
@@ -160,7 +166,7 @@ public class EcsServiceDeploy extends State {
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     try {
       return ecsStateHelper.handleDelegateResponseForEcsDeploy(
-          context, response, false, activityService, serviceTemplateService, containerDeploymentHelper);
+          context, response, false, activityService, false, containerDeploymentHelper);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {

@@ -23,12 +23,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -48,6 +50,7 @@ import org.mockito.Mock;
 
 public class EcsServiceRollbackTest extends WingsBaseTest {
   @Mock private EcsStateHelper mockEcsStateHelper;
+  @Mock private FeatureFlagService mockFeatureFlagService;
 
   @InjectMocks private final EcsServiceRollback ecsServiceRollback = new EcsServiceRollback("stateName");
 
@@ -111,7 +114,7 @@ public class EcsServiceRollbackTest extends WingsBaseTest {
     doReturn("TASKID")
         .when(mockEcsStateHelper)
         .createAndQueueDelegateTaskForEcsServiceDeploy(any(), any(), any(), any());
-
+    doReturn(false).when(mockFeatureFlagService).isEnabled(any(), anyString());
     ExecutionResponse response = ecsServiceRollback.execute(mockContext);
     assertThat(ecsServiceRollback.isRollbackAllPhases()).isFalse();
   }
@@ -121,8 +124,34 @@ public class EcsServiceRollbackTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    EcsDeployDataBag dataBag =
+        EcsDeployDataBag.builder()
+            .service(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build())
+            .app(anApplication().uuid(APP_ID).name(APP_NAME).build())
+            .env(anEnvironment().uuid(ENV_ID).name(ENV_NAME).build())
+            .region("us-east-1")
+            .ecsInfrastructureMapping(anEcsInfrastructureMapping()
+                                          .withUuid(INFRA_MAPPING_ID)
+                                          .withClusterName(CLUSTER_NAME)
+                                          .withRegion("us-east-1")
+                                          .withVpcId("vpc-id")
+                                          .withAssignPublicIp(true)
+                                          .withLaunchType("Ec2")
+                                          .build())
+            .rollbackElement(ContainerRollbackRequestElement.builder().build())
+            .awsConfig(AwsConfig.builder().build())
+            .encryptedDataDetails(emptyList())
+            .containerElement(ContainerServiceElement.builder()
+                                  .clusterName(CLUSTER_NAME)
+                                  .previousAwsAutoScalarConfigs(singletonList(AwsAutoScalarConfig.builder().build()))
+                                  .serviceSteadyStateTimeout(10)
+                                  .build())
+            .build();
+    doReturn(dataBag).when(mockEcsStateHelper).prepareBagForEcsDeploy(any(), any(), any(), any(), any(), anyBoolean());
+    doReturn(false).when(mockFeatureFlagService).isEnabled(any(), anyString());
     ecsServiceRollback.handleAsyncResponse(mockContext, null);
-    verify(mockEcsStateHelper).handleDelegateResponseForEcsDeploy(any(), any(), anyBoolean(), any(), any(), any());
+    verify(mockEcsStateHelper)
+        .handleDelegateResponseForEcsDeploy(any(), any(), anyBoolean(), any(), anyBoolean(), any());
   }
 
   @Test
@@ -161,6 +190,7 @@ public class EcsServiceRollbackTest extends WingsBaseTest {
     doReturn("TASKID")
         .when(mockEcsStateHelper)
         .createAndQueueDelegateTaskForEcsServiceDeploy(any(), any(), any(), any());
+    doReturn(false).when(mockFeatureFlagService).isEnabled(any(), anyString());
     ExecutionResponse response = ecsServiceRollback.execute(mockContext);
     assertThat(ecsServiceRollback.isRollbackAllPhases()).isTrue();
   }
