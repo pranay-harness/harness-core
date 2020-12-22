@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRANJAL;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.SAINATH;
 import static io.harness.rule.OwnerRule.TMACARI;
 import static io.harness.rule.OwnerRule.UTKARSH;
 
@@ -11,6 +12,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyListOf;
@@ -27,6 +29,7 @@ import static org.mockito.Mockito.when;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
@@ -36,6 +39,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.ElkConfig;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.HostConnectionAttributes.ConnectionType;
@@ -56,6 +60,7 @@ import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.APMDelegateService;
 import software.wings.service.impl.analysis.ElkConnector;
+import software.wings.service.impl.gcp.GcpHelperServiceManager;
 import software.wings.service.impl.newrelic.NewRelicApplicationsResponse;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
@@ -879,5 +884,43 @@ public class SettingValidationServiceTest extends WingsBaseTest {
 
     thrown = ExpectedException.none();
     settingValidationService.validate(attribute);
+  }
+
+  @Test
+  @Owner(developers = SAINATH)
+  @Category(UnitTests.class)
+  public void testGcpConfigSkipValidate() throws IllegalAccessException {
+    GcpConfig gcpConfig = GcpConfig.builder().build();
+    SettingAttribute attribute = new SettingAttribute();
+    attribute.setValue(gcpConfig);
+
+    GcpHelperServiceManager gcpHelperServiceManager = mock(GcpHelperServiceManager.class);
+
+    FieldUtils.writeField(settingValidationService, "gcpHelperServiceManager", gcpHelperServiceManager, true);
+
+    // useDelegate = true, skipValidation = true
+    gcpConfig.setUseDelegate(true);
+    gcpConfig.setSkipValidation(true);
+    settingValidationService.validate(attribute);
+    verify(gcpHelperServiceManager, times(0)).validateCredential(any(), any());
+
+    // useDelegate = true, skipValidation = false
+    gcpConfig.setUseDelegate(true);
+    gcpConfig.setSkipValidation(false);
+    settingValidationService.validate(attribute);
+    verify(gcpHelperServiceManager, times(1)).validateCredential(any(), any());
+
+    // useDelegate = false, skipValidation = true
+    gcpConfig.setUseDelegate(false);
+    gcpConfig.setSkipValidation(true);
+    assertThatExceptionOfType(InvalidArgumentsException.class).isThrownBy(() -> {
+      settingValidationService.validate(attribute);
+    });
+
+    // useDelegate = false, skipValidation = false
+    gcpConfig.setUseDelegate(false);
+    gcpConfig.setSkipValidation(false);
+    settingValidationService.validate(attribute);
+    verify(gcpHelperServiceManager, times(2)).validateCredential(any(), any());
   }
 }

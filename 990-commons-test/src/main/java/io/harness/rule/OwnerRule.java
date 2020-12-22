@@ -161,6 +161,7 @@ public class OwnerRule implements TestRule {
   public static final String DEEPAK_PUTHRAYA = "deepak.puthraya";
   public static final String LUCAS = "lucas.mari";
   public static final String NICOLAS = "nicolas.bantar";
+  public static final String SAINATH = "sainath.batthala";
   public static final String MOHIT_GARG = "mohit.garg";
 
   @Deprecated public static final String UNKNOWN = "unknown";
@@ -282,6 +283,12 @@ public class OwnerRule implements TestRule {
           .put(NAMAN, defaultUserInfo(NAMAN).slack("U0173M823CN").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
           .put(DEEPAK_PUTHRAYA,
               defaultUserInfo(DEEPAK_PUTHRAYA).slack("U018SBXS5M1").team(CONTINUOUS_DEPLOYMENT_CORE).build())
+          .put(SAINATH,
+              defaultUserInfo(SAINATH)
+                  .slack("U01FN5EH3PF")
+                  .jira("5fc3d0ed4a09640069512e40")
+                  .team(CONTINUOUS_DEPLOYMENT_PLATFORM)
+                  .build())
           .put(MOHIT_GARG, defaultUserInfo(MOHIT_GARG).slack("U01F9DBKYA3").team(DEVELOPER_EXPERIENCE).build())
           .build();
 
