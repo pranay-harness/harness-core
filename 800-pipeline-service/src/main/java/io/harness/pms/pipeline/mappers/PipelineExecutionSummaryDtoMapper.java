@@ -22,6 +22,7 @@ public class PipelineExecutionSummaryDtoMapper {
         .moduleInfo(pipelineExecutionSummaryEntity.getModuleInfo())
         .startingNodeId(startingNodeId)
         .planExecutionId(pipelineExecutionSummaryEntity.getPlanExecutionId())
+        .pipelineIdentifier(pipelineExecutionSummaryEntity.getPipelineIdentifier())
         .startTs(pipelineExecutionSummaryEntity.getStartTs())
         .endTs(pipelineExecutionSummaryEntity.getEndTs())
         .status(pipelineExecutionSummaryEntity.getStatus())
