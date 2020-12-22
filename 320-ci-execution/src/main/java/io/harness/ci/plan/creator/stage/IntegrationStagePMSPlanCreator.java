@@ -9,11 +9,10 @@ import static io.harness.pms.yaml.YAMLFieldNameConstants.STAGE;
 import static java.lang.Character.toLowerCase;
 import static org.apache.commons.lang3.CharUtils.isAsciiAlphanumeric;
 
-import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.stages.IntegrationStageStepParametersPMS;
+import io.harness.ci.integrationstage.CILiteEngineIntegrationStageModifier;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
-import io.harness.integrationstage.CILiteEngineIntegrationStageModifier;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
@@ -62,21 +61,26 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
   @Override
   public Map<String, PlanCreationResponse> createPlanForChildrenNodes(
       PlanCreationContext ctx, StageElementConfig stageElementConfig) {
+    // TODO REMOVE THIS AFTER PMS FIX
+    stageElementConfig.setType("ci");
     Map<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
     Map<String, YamlField> dependenciesNodeMap = new HashMap<>();
-
+    final String podName = generatePodName(stageElementConfig.getIdentifier());
     YamlField executionField = ctx.getCurrentField().getNode().getField(SPEC).getNode().getField(EXECUTION);
-    YamlNode parentNode = executionField.getNode().getParentNode();
+
     ExecutionElementConfig executionElementConfig;
+
     try {
       executionElementConfig = YamlUtils.read(executionField.getNode().toString(), ExecutionElementConfig.class);
     } catch (IOException e) {
       throw new InvalidRequestException("Invalid yaml", e);
     }
-    ExecutionElementConfig executionElementConfig1 = executionElementConfig;
+    YamlNode parentNode = executionField.getNode().getParentNode();
+    ExecutionElementConfig modifiedExecutionPlan = ciLiteEngineIntegrationStageModifier.modifyExecutionPlan(
+        executionElementConfig, stageElementConfig, ctx, podName);
 
     try {
-      String jsonString = JsonPipelineUtils.writeJsonString(executionElementConfig1);
+      String jsonString = JsonPipelineUtils.writeJsonString(modifiedExecutionPlan);
       JsonNode jsonNode = JsonPipelineUtils.getMapper().readTree(jsonString);
       YamlNode rootYamlNode = new YamlNode(jsonNode, parentNode);
       dependenciesNodeMap.put(executionField.getNode().getUuid(), new YamlField(EXECUTION, rootYamlNode));
@@ -140,8 +144,8 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
     return YamlUtils.getGivenYamlNodeFromParentPath(currentField.getNode(), PARALLEL) != null;
   }
 
-  private String generatePodName(IntegrationStage integrationStage) {
-    return POD_NAME_PREFIX + "-" + getK8PodIdentifier(integrationStage.getIdentifier()) + "-"
+  private String generatePodName(String identifier) {
+    return POD_NAME_PREFIX + "-" + getK8PodIdentifier(identifier) + "-"
         + generateRandomAlphaNumericString(RANDOM_LENGTH);
   }
 

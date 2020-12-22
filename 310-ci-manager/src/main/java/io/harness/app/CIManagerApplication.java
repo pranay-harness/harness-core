@@ -7,6 +7,7 @@ import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static java.util.Collections.singletonList;
 
 import io.harness.AuthorizationServiceHeader;
+import io.harness.ci.plan.creator.CIModuleInfoProvider;
 import io.harness.ci.plan.creator.CIPipelineServiceInfoProvider;
 import io.harness.ci.plan.creator.filter.CIFilterCreationResponseMerger;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
@@ -310,6 +311,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
               .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
               .filterCreationResponseMerger(new CIFilterCreationResponseMerger())
               .engineSteps(ExecutionRegistrar.getEngineSteps(injector))
+              .executionSummaryModuleInfoProvider(injector.getInstance(CIModuleInfoProvider.class))
               .kryoSerializer(injector.getInstance(KryoSerializer.class))
               .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers(injector))
               .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators(injector))

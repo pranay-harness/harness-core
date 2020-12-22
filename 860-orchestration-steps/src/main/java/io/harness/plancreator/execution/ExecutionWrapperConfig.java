@@ -10,6 +10,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("executionWrapperConfig")
 public class ExecutionWrapperConfig {
+  String uuid;
   @ApiModelProperty(dataType = "io.harness.plancreator.steps.StepElementConfig") JsonNode step;
   @ApiModelProperty(dataType = "io.harness.plancreator.steps.ParallelStepElementConfig") JsonNode parallel;
   @ApiModelProperty(dataType = "io.harness.plancreator.steps.StepGroupElementConfig") JsonNode stepGroup;

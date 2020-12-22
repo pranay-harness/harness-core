@@ -8,6 +8,7 @@ import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.ci.beans.entities.BuildNumberDetails;
+import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
@@ -17,7 +18,6 @@ import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.tasks.ResponseData;
-import io.harness.util.ExceptionUtility;
 
 import com.google.inject.Inject;
 import java.util.Map;
@@ -39,13 +39,11 @@ public class IntegrationStageStepPMS implements ChildExecutable<IntegrationStage
       IntegrationStageStepParametersPMS integrationStageStepParametersPMS, StepInputPackage inputPackage) {
     log.info("Executing integration stage with params [{}]", integrationStageStepParametersPMS);
 
-    if (integrationStageStepParametersPMS.getInfrastructure().isExpression()) {
-      ExceptionUtility.throwUnresolvedExpressionException(
-          integrationStageStepParametersPMS.getInfrastructure().getExpressionValue(), "infrastructure",
-          "stage with identifier: " + integrationStageStepParametersPMS.getIdentifier());
+    Infrastructure infrastructure = integrationStageStepParametersPMS.getInfrastructure();
+
+    if (infrastructure == null) {
+      throw new CIStageExecutionException("Input infrastructure can not be empty");
     }
-    Infrastructure infrastructure =
-        (Infrastructure) (integrationStageStepParametersPMS.getInfrastructure().fetchFinalValue());
     if (infrastructure.getType() == Infrastructure.Type.KUBERNETES_DIRECT) {
       K8sDirectInfraYaml k8sDirectInfraYaml = (K8sDirectInfraYaml) infrastructure;
 
@@ -73,6 +71,7 @@ public class IntegrationStageStepPMS implements ChildExecutable<IntegrationStage
   }
 
   private BuildNumberDetails getBuildNumberDetails(Ambiance ambiance) {
+    // Todo Add proper build number
     return BuildNumberDetails.builder()
         .accountIdentifier(AmbianceHelper.getAccountId(ambiance))
         .orgIdentifier(AmbianceHelper.getOrgIdentifier(ambiance))
