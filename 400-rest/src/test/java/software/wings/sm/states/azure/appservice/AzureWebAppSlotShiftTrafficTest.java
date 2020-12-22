@@ -4,7 +4,7 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ANIL;
 
-import static software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement.AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
+import static software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement.SWEEPING_OUTPUT_APP_SERVICE;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -135,32 +135,28 @@ public class AzureWebAppSlotShiftTrafficTest extends WingsBaseTest {
     AzureAppServiceSlotSetupContextElement setupContextElement = AzureAppServiceSlotSetupContextElement.builder()
                                                                      .preDeploymentData(preDeploymentData)
                                                                      .appServiceSlotSetupTimeOut(10)
+                                                                     .webApp("app-service")
+                                                                     .deploymentSlot("stage")
                                                                      .build();
 
     AzureConfig azureConfig = AzureConfig.builder().build();
     Artifact artifact = Artifact.Builder.anArtifact().build();
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
 
-    AzureWebAppInfrastructureMapping azureWebAppInfrastructureMapping = AzureWebAppInfrastructureMapping.builder()
-                                                                            .uuid("infraMappingId")
-                                                                            .resourceGroup("resourceGroup")
-                                                                            .subscriptionId("subId")
-                                                                            .webApp("app-service")
-                                                                            .deploymentSlot("stage")
-                                                                            .build();
+    AzureWebAppInfrastructureMapping azureWebAppInfrastructureMapping =
+        AzureWebAppInfrastructureMapping.builder().resourceGroup("resourceGroup").subscriptionId("subId").build();
+    azureWebAppInfrastructureMapping.setUuid("infraMappingId");
 
     AzureAppServiceStateData appServiceStateData = AzureAppServiceStateData.builder()
                                                        .application(app)
                                                        .environment(env)
                                                        .service(service)
                                                        .infrastructureMapping(azureWebAppInfrastructureMapping)
-                                                       .deploymentSlot("stage")
                                                        .resourceGroup("rg")
                                                        .subscriptionId("subId")
                                                        .azureConfig(azureConfig)
                                                        .artifact(artifact)
                                                        .azureEncryptedDataDetails(encryptedDataDetails)
-                                                       .appService("app-service")
                                                        .build();
 
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
@@ -175,7 +171,7 @@ public class AzureWebAppSlotShiftTrafficTest extends WingsBaseTest {
       doReturn(setupContextElement).when(mockContext).getContextElement(eq(ContextElementType.AZURE_WEBAPP_SETUP));
       doReturn(setupContextElement)
           .when(azureSweepingOutputServiceHelper)
-          .getSetupElementFromSweepingOutput(eq(mockContext), eq(AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME));
+          .getSetupElementFromSweepingOutput(eq(mockContext), eq(SWEEPING_OUTPUT_APP_SERVICE));
     }
 
     doReturn(appServiceStateData).when(azureVMSSStateHelper).populateAzureAppServiceData(eq(mockContext));

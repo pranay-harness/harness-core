@@ -118,18 +118,19 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     ManagerExecutionLogCallback managerExecutionLogCallback = mock(ManagerExecutionLogCallback.class);
 
+    doReturn("app-service").when(context).renderExpression("${webapp}");
+    doReturn("stage").when(context).renderExpression("${slot}");
+
     AzureAppServiceStateData appServiceStateData = AzureAppServiceStateData.builder()
                                                        .application(app)
                                                        .environment(env)
                                                        .service(service)
                                                        .infrastructureMapping(azureWebAppInfrastructureMapping)
-                                                       .deploymentSlot("stage")
                                                        .resourceGroup("rg")
                                                        .subscriptionId("subId")
                                                        .azureConfig(azureConfig)
                                                        .artifact(artifact)
                                                        .azureEncryptedDataDetails(encryptedDataDetails)
-                                                       .appService("app-service")
                                                        .artifact(Artifact.Builder.anArtifact().build())
                                                        .currentUser(EmbeddedUser.builder().build())
                                                        .serviceId("serviceId")
@@ -154,6 +155,9 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
                                       .sticky(true)
                                       .type(AzureAppServiceConnectionStringType.SQL_SERVER)
                                       .build()));
+    state.setAppService("${webapp}");
+    state.setDeploymentSlot("${slot}");
+
     ExecutionResponse result = state.execute(context);
 
     assertThat(result).isNotNull();
@@ -181,13 +185,12 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
   }
 
   private AzureWebAppInfrastructureMapping getAzureWebAppInfraMapping() {
-    return AzureWebAppInfrastructureMapping.builder()
-        .uuid(INFRA_ID)
-        .resourceGroup(RESOURCE_GROUP)
-        .subscriptionId(SUBSCRIPTION_ID)
-        .webApp(APP_NAME)
-        .deploymentSlot(DEPLOYMENT_SLOT)
-        .build();
+    AzureWebAppInfrastructureMapping azureWebAppInfrastructureMapping = AzureWebAppInfrastructureMapping.builder()
+                                                                            .resourceGroup(RESOURCE_GROUP)
+                                                                            .subscriptionId(SUBSCRIPTION_ID)
+                                                                            .build();
+    azureWebAppInfrastructureMapping.setUuid(INFRA_ID);
+    return azureWebAppInfrastructureMapping;
   }
 
   private void mockArtifactStreamMapper() {

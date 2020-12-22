@@ -27,12 +27,14 @@ public class AzureAppServiceSlotSetupContextElement implements ContextElement, S
   private String uuid;
   private String name;
   private String commandName;
+  private String subscriptionId;
+  private String resourceGroup;
   private String webApp;
   private String deploymentSlot;
   private Integer appServiceSlotSetupTimeOut;
   private String infraMappingId;
   private AzureAppServicePreDeploymentData preDeploymentData;
-  public static final String AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME = "setupSweepingOutputAppService";
+  public static final String SWEEPING_OUTPUT_APP_SERVICE = "setupSweepingOutputAppService";
 
   @Override
   public ContextElementType getElementType() {

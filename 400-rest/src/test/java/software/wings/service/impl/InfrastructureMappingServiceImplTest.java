@@ -378,12 +378,8 @@ public class InfrastructureMappingServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testValidateAzureWebAppInfraMapping() {
     doReturn(aSettingAttribute().build()).when(settingsService).get(anyString());
-    final AzureWebAppInfrastructureMapping infrastructureMapping = AzureWebAppInfrastructureMapping.builder()
-                                                                       .subscriptionId("SubsId")
-                                                                       .resourceGroup("ResName")
-                                                                       .deploymentSlot("Stage")
-                                                                       .webApp("Web App1")
-                                                                       .build();
+    final AzureWebAppInfrastructureMapping infrastructureMapping =
+        AzureWebAppInfrastructureMapping.builder().subscriptionId("SubsId").resourceGroup("ResName").build();
 
     infrastructureMappingService.validateAzureWebAppInfraMapping(infrastructureMapping);
 
@@ -396,16 +392,6 @@ public class InfrastructureMappingServiceImplTest extends WingsBaseTest {
     assertThatThrownBy(() -> infrastructureMappingService.validateAzureWebAppInfraMapping(infrastructureMapping))
         .isInstanceOf(InvalidRequestException.class);
     infrastructureMapping.setResourceGroup("ResName");
-
-    infrastructureMapping.setDeploymentSlot("");
-    assertThatThrownBy(() -> infrastructureMappingService.validateAzureWebAppInfraMapping(infrastructureMapping))
-        .isInstanceOf(InvalidRequestException.class);
-    infrastructureMapping.setDeploymentSlot("Stage");
-
-    infrastructureMapping.setWebApp("");
-    assertThatThrownBy(() -> infrastructureMappingService.validateAzureWebAppInfraMapping(infrastructureMapping))
-        .isInstanceOf(InvalidRequestException.class);
-    infrastructureMapping.setWebApp("Web App");
   }
 
   @Test

@@ -4,7 +4,7 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.exception.ExceptionUtils.getMessage;
 
-import static software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement.AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
+import static software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement.SWEEPING_OUTPUT_APP_SERVICE;
 
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -66,8 +66,8 @@ public abstract class AbstractAzureAppServiceState extends State {
   @SchemaIgnore
   public Integer getTimeoutMillis(ExecutionContext context) {
     int timeOut = AzureConstants.DEFAULT_AZURE_VMSS_TIMEOUT_MIN;
-    SweepingOutput setupElementFromSweepingOutput = azureSweepingOutputServiceHelper.getSetupElementFromSweepingOutput(
-        context, AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME);
+    SweepingOutput setupElementFromSweepingOutput =
+        azureSweepingOutputServiceHelper.getSetupElementFromSweepingOutput(context, SWEEPING_OUTPUT_APP_SERVICE);
     if (setupElementFromSweepingOutput != null) {
       AzureAppServiceSlotSetupContextElement setupContextElement =
           (AzureAppServiceSlotSetupContextElement) setupElementFromSweepingOutput;
@@ -184,8 +184,8 @@ public abstract class AbstractAzureAppServiceState extends State {
   }
 
   protected boolean verifyIfContextElementExist(ExecutionContext context) {
-    SweepingOutput setupElementFromSweepingOutput = azureSweepingOutputServiceHelper.getSetupElementFromSweepingOutput(
-        context, AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME);
+    SweepingOutput setupElementFromSweepingOutput =
+        azureSweepingOutputServiceHelper.getSetupElementFromSweepingOutput(context, SWEEPING_OUTPUT_APP_SERVICE);
     if (!(setupElementFromSweepingOutput instanceof AzureAppServiceSlotSetupContextElement)) {
       if (isRollback()) {
         return false;
@@ -197,7 +197,7 @@ public abstract class AbstractAzureAppServiceState extends State {
 
   protected AzureAppServiceSlotSetupContextElement readContextElement(ExecutionContext context) {
     return (AzureAppServiceSlotSetupContextElement) azureSweepingOutputServiceHelper.getSetupElementFromSweepingOutput(
-        context, AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME);
+        context, SWEEPING_OUTPUT_APP_SERVICE);
   }
 
   protected abstract AzureTaskExecutionRequest buildTaskExecutionRequest(

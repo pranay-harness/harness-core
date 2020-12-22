@@ -5,7 +5,5 @@ deploymentType: AZURE_WEBAPP
 infrastructure:
 - type: AZURE_WEBAPP
   cloudProviderName: TEST_CLOUD_PROVIDER
-  deploymentSlot: STAGE
   resourceGroup: devAppServiceAPIResourceGroup
-  subscriptionId: 12d2db62-5aa9-471d-84bb-faa489b3e319
-  webApp: WebApp
+  subscriptionId: 12d2db62-5aa9-471d-84bb-faa489b3e319"

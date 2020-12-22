@@ -961,11 +961,15 @@ public class WorkflowServiceHelper {
   }
 
   public void generateNewWorkflowPhaseStepsForAzureWebApp(String appId, String accountId, WorkflowPhase workflowPhase,
-      OrchestrationWorkflowType orchestrationWorkflowType) {
+      OrchestrationWorkflowType orchestrationWorkflowType, boolean isDynamicInfrastructure) {
     validateWebAppWorkflowCreation(accountId, orchestrationWorkflowType);
     Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
     List<PhaseStep> phaseSteps = workflowPhase.getPhaseSteps();
+
+    if (isDynamicInfrastructure) {
+      phaseSteps.add(aPhaseStep(PhaseStepType.PROVISION_INFRASTRUCTURE, PROVISION_INFRASTRUCTURE).build());
+    }
 
     phaseSteps.add(aPhaseStep(PhaseStepType.AZURE_WEBAPP_SLOT_SETUP, AZURE_WEBAPP_SLOT_SETUP)
                        .addStep(GraphNode.builder()
@@ -2760,7 +2764,8 @@ public class WorkflowServiceHelper {
       generateNewWorkflowPhaseStepsForAzureVMSS(
           appId, accountId, workflowPhase, orchestrationWorkflowType, !serviceRepeat);
     } else if (deploymentType == AZURE_WEBAPP) {
-      generateNewWorkflowPhaseStepsForAzureWebApp(appId, accountId, workflowPhase, orchestrationWorkflowType);
+      generateNewWorkflowPhaseStepsForAzureWebApp(
+          appId, accountId, workflowPhase, orchestrationWorkflowType, isDynamicInfrastructure);
     } else {
       generateNewWorkflowPhaseStepsForSSH(appId, workflowPhase, orchestrationWorkflowType);
     }

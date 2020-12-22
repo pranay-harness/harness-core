@@ -514,8 +514,6 @@ public class AzureVMSSStateHelper {
         .azureConfig(azureConfig)
         .resourceGroup(infrastructureMapping.getResourceGroup())
         .subscriptionId(infrastructureMapping.getSubscriptionId())
-        .appService(infrastructureMapping.getWebApp())
-        .deploymentSlot(infrastructureMapping.getDeploymentSlot())
         .infrastructureMapping(infrastructureMapping)
         .azureEncryptedDataDetails(encryptionDetails)
         .currentUser(workflowStandardParams.getCurrentUser())

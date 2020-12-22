@@ -4,7 +4,7 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ANIL;
 
-import static software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement.AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
+import static software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement.SWEEPING_OUTPUT_APP_SERVICE;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -87,8 +87,8 @@ public class AzureWebAppSlotSwapTest extends WingsBaseTest {
     ExecutionContextImpl mockContext = initializeMockSetup(true, true, false);
 
     assertThat(state.validateFields()).isNotEmpty();
-    assertThat(state.validateFields().size()).isEqualTo(4);
-    initializeStateFields();
+    assertThat(state.validateFields().size()).isEqualTo(1);
+    state.setTargetSlot(SWAP_TARGET_SLOT);
     assertThat(state.validateFields()).isEmpty();
 
     state.handleAbortEvent(mockContext);
@@ -181,6 +181,8 @@ public class AzureWebAppSlotSwapTest extends WingsBaseTest {
     AzureAppServicePreDeploymentData preDeploymentData = AzureAppServicePreDeploymentData.builder().build();
     AzureAppServiceSlotSetupContextElement setupContextElement = AzureAppServiceSlotSetupContextElement.builder()
                                                                      .preDeploymentData(preDeploymentData)
+                                                                     .resourceGroup(SWAP_RESOURCE_GROUP)
+                                                                     .webApp(SWAP_APP_NAME)
                                                                      .deploymentSlot(SWAP_DEPLOYMENT_SLOT)
                                                                      .appServiceSlotSetupTimeOut(10)
                                                                      .build();
@@ -189,36 +191,31 @@ public class AzureWebAppSlotSwapTest extends WingsBaseTest {
     Artifact artifact = Artifact.Builder.anArtifact().build();
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
 
-    AzureWebAppInfrastructureMapping azureWebAppInfrastructureMapping = AzureWebAppInfrastructureMapping.builder()
-                                                                            .uuid(INFRA_MAPPING_ID)
-                                                                            .resourceGroup(SWAP_RESOURCE_GROUP)
-                                                                            .subscriptionId("subId")
-                                                                            .webApp(SWAP_APP_NAME)
-                                                                            .deploymentSlot(SWAP_DEPLOYMENT_SLOT)
-                                                                            .build();
+    AzureWebAppInfrastructureMapping azureWebAppInfrastructureMapping =
+        AzureWebAppInfrastructureMapping.builder().resourceGroup(SWAP_RESOURCE_GROUP).subscriptionId("subId").build();
+    azureWebAppInfrastructureMapping.setUuid(INFRA_MAPPING_ID);
 
     AzureAppServiceStateData appServiceStateData = AzureAppServiceStateData.builder()
                                                        .application(app)
                                                        .environment(env)
                                                        .service(service)
                                                        .infrastructureMapping(azureWebAppInfrastructureMapping)
-                                                       .deploymentSlot(SWAP_DEPLOYMENT_SLOT)
                                                        .resourceGroup(SWAP_RESOURCE_GROUP)
                                                        .subscriptionId("subId")
                                                        .azureConfig(azureConfig)
                                                        .artifact(artifact)
                                                        .azureEncryptedDataDetails(encryptedDataDetails)
-                                                       .appService(SWAP_APP_NAME)
                                                        .build();
 
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    doReturn(SWAP_TARGET_SLOT).when(mockContext).renderExpression(eq(SWAP_TARGET_SLOT));
     ManagerExecutionLogCallback managerExecutionLogCallback = mock(ManagerExecutionLogCallback.class);
 
     if (contextElement) {
       doReturn(setupContextElement).when(mockContext).getContextElement(eq(ContextElementType.AZURE_WEBAPP_SETUP));
       doReturn(setupContextElement)
           .when(azureSweepingOutputServiceHelper)
-          .getSetupElementFromSweepingOutput(eq(mockContext), eq(AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME));
+          .getSetupElementFromSweepingOutput(eq(mockContext), eq(SWEEPING_OUTPUT_APP_SERVICE));
     }
 
     if (failActivityCreation) {
@@ -270,13 +267,6 @@ public class AzureWebAppSlotSwapTest extends WingsBaseTest {
     }
     doReturn(AzureAppServiceSlotSwapExecutionData.builder().build()).when(mockContext).getStateExecutionData();
     return taskExecutionResponse;
-  }
-
-  private void initializeStateFields() {
-    state.setSubscriptionId("swapSlotSubId");
-    state.setResourceGroup(SWAP_RESOURCE_GROUP);
-    state.setWebApp(SWAP_APP_NAME);
-    state.setTargetSlot(SWAP_TARGET_SLOT);
   }
 
   private void assertSuccessExecution(ExecutionResponse response) {

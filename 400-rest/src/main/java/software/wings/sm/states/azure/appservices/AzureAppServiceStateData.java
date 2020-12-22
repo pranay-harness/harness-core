@@ -28,6 +28,4 @@ public class AzureAppServiceStateData {
   private String resourceGroup;
   private String subscriptionId;
   private EmbeddedUser currentUser;
-  private String appService;
-  private String deploymentSlot;
 }
