@@ -17,7 +17,6 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.app.ManagerCacheRegistrar.AUTH_TOKEN_CACHE;
-import static software.wings.app.ManagerCacheRegistrar.USER_CACHE;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -64,6 +63,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
+import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.GenericDbCache;
 import software.wings.logcontext.UserLogContext;
 import software.wings.security.AccountPermissionSummary;
@@ -147,13 +147,13 @@ public class AuthServiceImpl implements AuthService {
   private HarnessCacheManager harnessCacheManager;
   private UsageRestrictionsService usageRestrictionsService;
   private Cache<String, AuthToken> authTokenCache;
-  private Cache<String, User> userCache;
   private MainConfiguration configuration;
   private VerificationServiceSecretManager verificationServiceSecretManager;
   private AuthHandler authHandler;
   private HarnessUserGroupService harnessUserGroupService;
   private SecretManager secretManager;
   private VersionInfoManager versionInfoManager;
+  private ConfigurationController configurationController;
   private static final String USER_PERMISSION_CACHE_NAME = "userPermissionCache".concat(":%s");
   private static final String USER_RESTRICTION_CACHE_NAME = "userRestrictionCache".concat(":%s");
   @Inject private ExecutorService executorService;
@@ -165,10 +165,9 @@ public class AuthServiceImpl implements AuthService {
   public AuthServiceImpl(GenericDbCache dbCache, HPersistence persistence, UserService userService,
       UserGroupService userGroupService, UsageRestrictionsService usageRestrictionsService,
       HarnessCacheManager harnessCacheManager, @Named(AUTH_TOKEN_CACHE) Cache<String, AuthToken> authTokenCache,
-      @Named(USER_CACHE) Cache<String, User> userCache, MainConfiguration configuration,
-      VerificationServiceSecretManager verificationServiceSecretManager, AuthHandler authHandler,
-      HarnessUserGroupService harnessUserGroupService, SecretManager secretManager,
-      VersionInfoManager versionInfoManager) {
+      MainConfiguration configuration, VerificationServiceSecretManager verificationServiceSecretManager,
+      AuthHandler authHandler, HarnessUserGroupService harnessUserGroupService, SecretManager secretManager,
+      VersionInfoManager versionInfoManager, ConfigurationController configurationController) {
     this.dbCache = dbCache;
     this.persistence = persistence;
     this.userService = userService;
@@ -176,13 +175,13 @@ public class AuthServiceImpl implements AuthService {
     this.usageRestrictionsService = usageRestrictionsService;
     this.harnessCacheManager = harnessCacheManager;
     this.authTokenCache = authTokenCache;
-    this.userCache = userCache;
     this.configuration = configuration;
     this.verificationServiceSecretManager = verificationServiceSecretManager;
     this.authHandler = authHandler;
     this.harnessUserGroupService = harnessUserGroupService;
     this.secretManager = secretManager;
     this.versionInfoManager = versionInfoManager;
+    this.configurationController = configurationController;
   }
 
   @UtilityClass
@@ -239,35 +238,13 @@ public class AuthServiceImpl implements AuthService {
   }
 
   private AuthToken getAuthTokenWithUser(AuthToken authToken) {
-    User user = getUserFromCacheOrDB(authToken.getUserId());
+    User user = userService.getUserFromCacheOrDB(authToken.getUserId());
     if (user == null) {
       throw new UnauthorizedException("User not found", USER);
     }
     authToken.setUser(user);
 
     return authToken;
-  }
-
-  private User getUserFromCacheOrDB(String userId) {
-    if (userCache == null) {
-      log.warn("userCache is null. Fetch from DB");
-      return userService.get(userId);
-    } else {
-      User user;
-      try {
-        user = userCache.get(userId);
-        if (user == null) {
-          user = userService.get(userId);
-          userCache.put(user.getUuid(), user);
-        }
-      } catch (Exception ex) {
-        // If there was any exception, remove that entry from cache
-        userCache.remove(userId);
-        user = userService.get(userId);
-        userCache.put(user.getUuid(), user);
-      }
-      return user;
-    }
   }
 
   private void authorize(String accountId, String appId, String envId, User user,
@@ -551,12 +528,20 @@ public class AuthServiceImpl implements AuthService {
   }
 
   private Cache<String, UserPermissionInfo> getUserPermissionCache(String accountId) {
+    if (configurationController.isPrimary()) {
+      return harnessCacheManager.getCache(String.format(USER_PERMISSION_CACHE_NAME, accountId), String.class,
+          UserPermissionInfo.class, AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR));
+    }
     return harnessCacheManager.getCache(String.format(USER_PERMISSION_CACHE_NAME, accountId), String.class,
         UserPermissionInfo.class, AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR),
         versionInfoManager.getVersionInfo().getBuildNo());
   }
 
   private Cache<String, UserRestrictionInfo> getUserRestrictionCache(String accountId) {
+    if (configurationController.isPrimary()) {
+      return harnessCacheManager.getCache(String.format(USER_RESTRICTION_CACHE_NAME, accountId), String.class,
+          UserRestrictionInfo.class, AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR));
+    }
     return harnessCacheManager.getCache(String.format(USER_RESTRICTION_CACHE_NAME, accountId), String.class,
         UserRestrictionInfo.class, AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR),
         versionInfoManager.getVersionInfo().getBuildNo());
@@ -617,8 +602,8 @@ public class AuthServiceImpl implements AuthService {
         userRestrictionInfoCache.put(key, value);
       }
       return value;
-    } catch (Exception ignored) {
-      log.warn("Error in fetching user UserPermissionInfo from Cache for key:" + key, ignored);
+    } catch (Exception e) {
+      log.warn("Error in fetching user UserPermissionInfo from Cache for key:" + key, e);
     }
 
     // not found in cache. cache write through failed as well. rebuild anyway
@@ -855,7 +840,7 @@ public class AuthServiceImpl implements AuthService {
   }
 
   private User getUserFromAuthToken(AuthToken authToken) {
-    User user = getUserFromCacheOrDB(authToken.getUserId());
+    User user = userService.getUserFromCacheOrDB(authToken.getUserId());
     if (user == null) {
       log.warn("No user found for userId:" + authToken.getUserId());
       throw new WingsException(USER_DOES_NOT_EXIST, USER);

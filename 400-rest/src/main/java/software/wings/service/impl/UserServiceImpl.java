@@ -46,6 +46,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
+import io.harness.cache.HarnessCacheManager;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.ccm.license.CeLicenseType;
 import io.harness.data.encoding.EncodingUtils;
@@ -69,6 +70,7 @@ import io.harness.marketplace.gcp.procurement.GcpProcurementService;
 import io.harness.persistence.UuidAware;
 import io.harness.security.dto.UserPrincipal;
 import io.harness.serializer.KryoSerializer;
+import io.harness.version.VersionInfoManager;
 
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
@@ -110,6 +112,7 @@ import software.wings.beans.security.UserGroup.UserGroupKeys;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SamlSettings;
+import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
@@ -167,7 +170,6 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSObject;
@@ -198,6 +200,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.cache.Cache;
+import javax.cache.expiry.AccessedExpiryPolicy;
+import javax.cache.expiry.Duration;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
@@ -253,7 +257,6 @@ public class UserServiceImpl implements UserService {
   @Inject private UserGroupService userGroupService;
   @Inject private HarnessUserGroupService harnessUserGroupService;
   @Inject private AppService appService;
-  @Inject @Named(USER_CACHE) private Cache<String, User> userCache;
   @Inject private AuthHandler authHandler;
   @Inject private SecretManager secretManager;
   @Inject private SSOSettingService ssoSettingService;
@@ -271,6 +274,18 @@ public class UserServiceImpl implements UserService {
   @Inject private TOTPAuthHandler totpAuthHandler;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private LicenseService licenseService;
+  @Inject private HarnessCacheManager harnessCacheManager;
+  @Inject private VersionInfoManager versionInfoManager;
+  @Inject private ConfigurationController configurationController;
+
+  private Cache<String, User> getUserCache() {
+    if (configurationController.isPrimary()) {
+      return harnessCacheManager.getCache(
+          USER_CACHE, String.class, User.class, AccessedExpiryPolicy.factoryOf(Duration.THIRTY_MINUTES));
+    }
+    return harnessCacheManager.getCache(USER_CACHE, String.class, User.class,
+        AccessedExpiryPolicy.factoryOf(Duration.THIRTY_MINUTES), versionInfoManager.getVersionInfo().getBuildNo());
+  }
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#register(software.wings.beans.User)
@@ -2254,6 +2269,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public User getUserFromCacheOrDB(String userId) {
+    Cache<String, User> userCache = getUserCache();
     User user = null;
     try {
       user = userCache.get(userId);
@@ -2275,8 +2291,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public void evictUserFromCache(String userId) {
-    Preconditions.checkNotNull(userCache, "User cache can't be null");
-    userCache.remove(userId);
+    getUserCache().remove(userId);
   }
 
   /* (non-Javadoc)
