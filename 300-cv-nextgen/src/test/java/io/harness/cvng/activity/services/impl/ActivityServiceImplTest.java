@@ -17,7 +17,9 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -47,7 +49,6 @@ import io.harness.cvng.beans.activity.DeploymentActivityDTO;
 import io.harness.cvng.beans.activity.InfrastructureActivityDTO;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
-import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.services.api.WebhookService;
@@ -132,6 +133,8 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     when(cvConfigService.list(
              anyString(), anyString(), anyString(), anyString(), anyString(), any(CVMonitoringCategory.class)))
         .thenReturn(Lists.newArrayList(new AppDynamicsCVConfig()));
+    when(verificationJobInstanceService.getCVConfigsForVerificationJob(any()))
+        .thenReturn(Lists.newArrayList(new AppDynamicsCVConfig()));
   }
 
   @Test
@@ -154,31 +157,12 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     VerificationJob verificationJob = createVerificationJob();
     when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
         .thenReturn(verificationJob);
-    when(cvConfigService.list(
-             anyString(), anyString(), anyString(), anyString(), anyString(), any(CVMonitoringCategory.class)))
-        .thenReturn(null);
+    when(verificationJobInstanceService.getCVConfigsForVerificationJob(any())).thenReturn(Lists.newArrayList());
     DeploymentActivityDTO deploymentActivity = getDeploymentActivity(verificationJob);
     assertThatThrownBy(() -> activityService.register(accountId, generateUuid(), deploymentActivity))
         .isInstanceOf(IllegalStateException.class)
-        .hasMessage("No data sources defined for environment " + envIdentifier + " and service "
-            + deploymentActivity.getServiceIdentifier());
-  }
-
-  @Test
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
-  public void testRegisterActivity_whenNoCvConfigTypeExists() {
-    VerificationJob verificationJob = createVerificationJob();
-    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
-        .thenReturn(verificationJob);
-    when(cvConfigService.list(
-             anyString(), anyString(), anyString(), anyString(), anyString(), any(CVMonitoringCategory.class)))
-        .thenReturn(Lists.newArrayList(new SplunkCVConfig()));
-    DeploymentActivityDTO deploymentActivity = getDeploymentActivity(verificationJob);
-    assertThatThrownBy(() -> activityService.register(accountId, generateUuid(), deploymentActivity))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("No data sources of type(s) [APP_DYNAMICS] defined for environment " + envIdentifier
-            + " and service " + deploymentActivity.getServiceIdentifier());
+        .hasMessage("No data sources of type(s) " + verificationJob.getDataSources() + " defined for environment "
+            + verificationJob.getEnvIdentifier() + " and service " + verificationJob.getServiceIdentifier());
   }
 
   @Test
@@ -705,6 +689,10 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testCreateVerificationJobInstancesForActivity_whenHealthJob() throws IllegalAccessException {
     FieldUtils.writeField(activityService, "verificationJobService", realVerificationJobService, true);
+    realVerificationJobInstanceService = spy(realVerificationJobInstanceService);
+    doReturn(Lists.newArrayList(new AppDynamicsCVConfig()))
+        .when(realVerificationJobInstanceService)
+        .getCVConfigsForVerificationJob(any());
     FieldUtils.writeField(activityService, "verificationJobInstanceService", realVerificationJobInstanceService, true);
     KubernetesActivity kubernetesActivity = getKubernetesActivity();
     realVerificationJobService.save(HealthVerificationJob.builder()
@@ -724,6 +712,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
                                         .type(VerificationJobType.HEALTH)
                                         .build());
     kubernetesActivity.setVerificationJobRuntimeDetails(null);
+
     assertThat(activityService.createVerificationJobInstancesForActivity(kubernetesActivity).size()).isEqualTo(1);
   }
 
@@ -766,6 +755,10 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testCreateVerificationJobInstancesForActivity_whenHealthJobSuccess() throws IllegalAccessException {
     FieldUtils.writeField(activityService, "verificationJobService", realVerificationJobService, true);
+    realVerificationJobInstanceService = spy(realVerificationJobInstanceService);
+    doReturn(Lists.newArrayList(new AppDynamicsCVConfig()))
+        .when(realVerificationJobInstanceService)
+        .getCVConfigsForVerificationJob(any());
     FieldUtils.writeField(activityService, "verificationJobInstanceService", realVerificationJobInstanceService, true);
     KubernetesActivity kubernetesActivity = getKubernetesActivity();
     HealthVerificationJob healthVerificationJob =

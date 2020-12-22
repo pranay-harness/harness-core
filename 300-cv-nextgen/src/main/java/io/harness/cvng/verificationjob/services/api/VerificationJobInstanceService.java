@@ -6,9 +6,11 @@ import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.core.beans.TimeRange;
+import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.verificationjob.beans.TestVerificationBaselineExecutionDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobType;
+import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ProgressLog;
 
@@ -44,4 +46,5 @@ public interface VerificationJobInstanceService {
   List<VerificationJobInstance> getRunningOrQueuedJobInstances(String accountI, String orgIdentifier,
       String projectIdentifier, String envIdentifier, String serviceIdentifier, VerificationJobType jobType,
       Instant endTimeBefore);
+  List<CVConfig> getCVConfigsForVerificationJob(VerificationJob verificationJob);
 }
