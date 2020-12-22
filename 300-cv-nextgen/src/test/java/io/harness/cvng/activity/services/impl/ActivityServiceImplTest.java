@@ -496,7 +496,93 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     assertThat(resultDTO).isNotNull();
     assertThat(resultDTO.getActivityId()).isEqualTo(id);
     assertThat(resultDTO.getActivityType().name()).isEqualTo(activity.getType().name());
-    assertThat(resultDTO.getOverallRisk()).isEqualTo(summary.getRiskScore().intValue() * 100);
+    assertThat(resultDTO.getOverallRisk()).isEqualTo(0);
+    assertThat(resultDTO.getProgressPercentage()).isEqualTo(summary.getProgressPercentage());
+
+    verify(healthVerificationHeatMapService).getAggregatedRisk(id, HealthVerificationPeriod.PRE_ACTIVITY);
+    verify(healthVerificationHeatMapService).getAggregatedRisk(id, HealthVerificationPeriod.POST_ACTIVITY);
+    verify(verificationJobInstanceService, times(1)).getActivityVerificationSummary(anyList());
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetActivityVerificationResult_validateOverallRisk() {
+    VerificationJob verificationJob = createVerificationJob();
+    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+        .thenReturn(verificationJob);
+    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
+
+    Activity activity = hPersistence.createQuery(Activity.class)
+                            .filter(ActivityKeys.projectIdentifier, projectIdentifier)
+                            .filter(ActivityKeys.orgIdentifier, orgIdentifier)
+                            .get();
+
+    String id = activity.getUuid();
+    ActivityVerificationSummary summary = createActivitySummary(Instant.now());
+    when(verificationJobInstanceService.getActivityVerificationSummary(anyList())).thenReturn(summary);
+    Set<CategoryRisk> preActivityRisks = new HashSet<>();
+    preActivityRisks.add(CategoryRisk.builder().category(CVMonitoringCategory.PERFORMANCE).risk(0.2).build());
+    preActivityRisks.add(CategoryRisk.builder().category(CVMonitoringCategory.ERRORS).risk(91.0).build());
+
+    Set<CategoryRisk> postActivityRisks = new HashSet<>();
+    postActivityRisks.add(CategoryRisk.builder().category(CVMonitoringCategory.PERFORMANCE).risk(23.0).build());
+    postActivityRisks.add(CategoryRisk.builder().category(CVMonitoringCategory.ERRORS).risk(34.0).build());
+
+    when(healthVerificationHeatMapService.getAggregatedRisk(id, HealthVerificationPeriod.PRE_ACTIVITY))
+        .thenReturn(preActivityRisks);
+
+    when(healthVerificationHeatMapService.getAggregatedRisk(id, HealthVerificationPeriod.POST_ACTIVITY))
+        .thenReturn(postActivityRisks);
+
+    ActivityVerificationResultDTO resultDTO = activityService.getActivityVerificationResult(accountId, id);
+    assertThat(resultDTO).isNotNull();
+    assertThat(resultDTO.getActivityId()).isEqualTo(id);
+    assertThat(resultDTO.getActivityType().name()).isEqualTo(activity.getType().name());
+
+    // overall risk should be max of post deployment risks
+    assertThat(resultDTO.getOverallRisk()).isEqualTo(34);
+    assertThat(resultDTO.getProgressPercentage()).isEqualTo(summary.getProgressPercentage());
+
+    verify(healthVerificationHeatMapService).getAggregatedRisk(id, HealthVerificationPeriod.PRE_ACTIVITY);
+    verify(healthVerificationHeatMapService).getAggregatedRisk(id, HealthVerificationPeriod.POST_ACTIVITY);
+    verify(verificationJobInstanceService, times(1)).getActivityVerificationSummary(anyList());
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetActivityVerificationResult_noRisks() {
+    VerificationJob verificationJob = createVerificationJob();
+    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+        .thenReturn(verificationJob);
+    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
+
+    Activity activity = hPersistence.createQuery(Activity.class)
+                            .filter(ActivityKeys.projectIdentifier, projectIdentifier)
+                            .filter(ActivityKeys.orgIdentifier, orgIdentifier)
+                            .get();
+
+    String id = activity.getUuid();
+    ActivityVerificationSummary summary = createActivitySummary(Instant.now());
+    when(verificationJobInstanceService.getActivityVerificationSummary(anyList())).thenReturn(summary);
+    Set<CategoryRisk> preActivityRisks = new HashSet<>();
+
+    Set<CategoryRisk> postActivityRisks = new HashSet<>();
+
+    when(healthVerificationHeatMapService.getAggregatedRisk(id, HealthVerificationPeriod.PRE_ACTIVITY))
+        .thenReturn(preActivityRisks);
+
+    when(healthVerificationHeatMapService.getAggregatedRisk(id, HealthVerificationPeriod.POST_ACTIVITY))
+        .thenReturn(postActivityRisks);
+
+    ActivityVerificationResultDTO resultDTO = activityService.getActivityVerificationResult(accountId, id);
+    assertThat(resultDTO).isNotNull();
+    assertThat(resultDTO.getActivityId()).isEqualTo(id);
+    assertThat(resultDTO.getActivityType().name()).isEqualTo(activity.getType().name());
+
+    // overall risk should be max of post deployment risks
+    assertThat(resultDTO.getOverallRisk()).isEqualTo(-1);
     assertThat(resultDTO.getProgressPercentage()).isEqualTo(summary.getProgressPercentage());
 
     verify(healthVerificationHeatMapService).getAggregatedRisk(id, HealthVerificationPeriod.PRE_ACTIVITY);
@@ -582,7 +668,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     resultDTO.forEach(result -> {
       assertThat(ids.contains(result.getActivityId())).isTrue();
       assertThat(result.getActivityType().name()).isEqualTo(ActivityType.INFRASTRUCTURE.name());
-      assertThat(result.getOverallRisk()).isEqualTo(summary.getRiskScore().intValue() * 100);
+      assertThat(result.getOverallRisk()).isEqualTo(0);
       assertThat(result.getProgressPercentage()).isEqualTo(summary.getProgressPercentage());
     });
 

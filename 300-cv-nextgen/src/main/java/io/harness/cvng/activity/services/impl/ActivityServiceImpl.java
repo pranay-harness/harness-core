@@ -387,8 +387,12 @@ public class ActivityServiceImpl implements ActivityService {
           healthVerificationHeatMapService.getAggregatedRisk(activity.getUuid(), HealthVerificationPeriod.PRE_ACTIVITY);
       Set<CategoryRisk> postActivityRisks = healthVerificationHeatMapService.getAggregatedRisk(
           activity.getUuid(), HealthVerificationPeriod.POST_ACTIVITY);
+      List<Double> postActivityValidRisks = new ArrayList<>();
+      postActivityRisks.stream()
+          .filter(risk -> risk.getRisk() != -1.0)
+          .forEach(categoryRisk -> postActivityValidRisks.add(categoryRisk.getRisk()));
 
-      Double overallRisk = summary.getRiskScore() == null ? -1 : 100 * summary.getRiskScore();
+      Double overallRisk = postActivityValidRisks.size() == 0 ? -1.0 : Collections.max(postActivityValidRisks);
       return ActivityVerificationResultDTO.builder()
           .preActivityRisks(preActivityRisks)
           .postActivityRisks(postActivityRisks)

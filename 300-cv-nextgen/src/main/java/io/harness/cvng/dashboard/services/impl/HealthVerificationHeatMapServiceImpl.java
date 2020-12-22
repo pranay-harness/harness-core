@@ -118,7 +118,8 @@ public class HealthVerificationHeatMapServiceImpl implements HealthVerificationH
 
     heatMaps.forEach(heatMap -> {
       Double risk = heatMap.getRiskScore() * 100;
-      categoryRisks.add(CategoryRisk.builder().category(heatMap.getCategory()).risk(risk).build());
+      categoryRisks.add(
+          CategoryRisk.builder().category(heatMap.getCategory()).risk(Double.valueOf(risk.intValue())).build());
       scoreMap.put(heatMap.getCategory(), heatMap.getRiskScore());
     });
 
