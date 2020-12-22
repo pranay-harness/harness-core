@@ -41,7 +41,7 @@ resource "google_monitoring_alert_policy" "ce_graphQL_alert_policy" {
   conditions {
     display_name = "ce_graphQL_errors"
     condition_threshold {
-      threshold_value = 0
+      threshold_value = 2
       filter          = "resource.type=\"k8s_container\" AND metric.type=\"logging.googleapis.com/user/${google_logging_metric.ce_graphQL_errors.id}\""
       duration        = "180s"
       comparison      = "COMPARISON_GT"
