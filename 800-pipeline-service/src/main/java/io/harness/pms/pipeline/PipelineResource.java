@@ -21,6 +21,7 @@ import io.harness.pms.execution.beans.ExecutionNode;
 import io.harness.pms.execution.beans.ExecutionNodeAdjacencyList;
 import io.harness.pms.filter.creation.PMSPipelineFilterRequestDTO;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
+import io.harness.pms.pipeline.entity.PipelineExecutionSummaryEntity;
 import io.harness.pms.pipeline.mappers.ExecutionGraphMapper;
 import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
 import io.harness.pms.pipeline.mappers.PMSPipelineFilterHelper;
@@ -233,7 +234,7 @@ public class PipelineResource {
       criteria.and(PipelineEntityKeys.projectIdentifier).is(projectId);
     }
     if (EmptyPredicate.isNotEmpty(pipelineIdentifier)) {
-      criteria.and(PipelineEntityKeys.identifier).is(pipelineIdentifier);
+      criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.pipelineIdentifier).is(pipelineIdentifier);
     }
     Pageable pageRequest;
     if (EmptyPredicate.isEmpty(sort)) {
