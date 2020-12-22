@@ -63,7 +63,7 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
   @Inject private CIDelegateTaskExecutor ciDelegateTaskExecutor;
 
   private static final String DEPENDENCY_OUTCOME = "dependencies";
-  public static final StepType STEP_TYPE = LiteEngineTaskStepInfo.typeInfo.getStepType();
+  public static final StepType STEP_TYPE = LiteEngineTaskStepInfo.STEP_TYPE;
 
   @Override
   public Class<LiteEngineTaskStepInfo> getStepParametersClass() {

@@ -1,4 +1,5 @@
 package graph;
+
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.beans.steps.CIStepInfo;

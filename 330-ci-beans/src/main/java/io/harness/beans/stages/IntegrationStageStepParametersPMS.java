@@ -1,11 +1,16 @@
 package io.harness.beans.stages;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import static java.util.stream.Collectors.toMap;
+
 import io.harness.beans.dependencies.DependencyElement;
+import io.harness.beans.yaml.extended.CustomTextVariable;
+import io.harness.beans.yaml.extended.CustomVariable;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.yaml.core.variables.NGVariable;
 
 import java.util.HashMap;
 import java.util.List;
@@ -23,8 +28,8 @@ public class IntegrationStageStepParametersPMS implements StepParameters {
   ParameterField<String> description;
   Map<String, Object> variables;
   String type;
-  ParameterField<Infrastructure> infrastructure;
-  ParameterField<List<DependencyElement>> dependencies;
+  Infrastructure infrastructure;
+  List<DependencyElement> dependencies;
   ParameterField<List<String>> sharedPaths;
   ParameterField<String> skipCondition;
   ParameterField<String> workingDirectory;
@@ -38,9 +43,14 @@ public class IntegrationStageStepParametersPMS implements StepParameters {
     }
     IntegrationStageConfig integrationStageConfig = (IntegrationStageConfig) stageElementConfig.getStageType();
     Map<String, Object> variablesMap = new HashMap<>();
-    for (NGVariable variable : integrationStageConfig.getVariables()) {
-      variablesMap.put(variable.getName(), variable.getValue());
+    if (isNotEmpty(integrationStageConfig.getVariables())) {
+      integrationStageConfig.getVariables()
+          .stream()
+          .filter(customVariables -> customVariables.getType().equals(CustomVariable.Type.TEXT))
+          .map(customVariable -> (CustomTextVariable) customVariable)
+          .collect(toMap(CustomTextVariable::getName, CustomTextVariable::getValue));
     }
+
     return IntegrationStageStepParametersPMS.builder()
         .identifier(stageElementConfig.getIdentifier())
         .name(stageElementConfig.getName())
@@ -53,7 +63,7 @@ public class IntegrationStageStepParametersPMS implements StepParameters {
         .variables(variablesMap)
         .childNodeID(childNodeID)
         .sharedPaths(integrationStageConfig.getSharedPaths())
-        .skipGitClone(integrationStageConfig.getSkipGitClone())
+        .skipGitClone(integrationStageConfig.getCloneRepository())
         .build();
   }
 }

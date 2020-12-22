@@ -10,11 +10,9 @@ import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 
-import software.wings.jersey.JsonViews;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.annotation.JsonView;
 import java.beans.ConstructorProperties;
 import java.util.Optional;
 import javax.validation.constraints.Max;
@@ -33,13 +31,11 @@ public class LiteEngineTaskStepInfo implements CIStepInfo {
   public static final int DEFAULT_TIMEOUT = 1200;
   public static final String CALLBACK_IDS = "callbackIds";
 
-  @JsonView(JsonViews.Internal.class)
-  @NotNull
-  public static final TypeInfo typeInfo =
-      TypeInfo.builder()
-          .stepInfoType(CIStepInfoType.LITE_ENGINE_TASK)
-          .stepType(StepType.newBuilder().setType(CIStepInfoType.LITE_ENGINE_TASK.name()).build())
-          .build();
+  @JsonIgnore
+  public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.LITE_ENGINE_TASK).build();
+  @JsonIgnore
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(CIStepInfoType.LITE_ENGINE_TASK.name()).build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;
@@ -50,6 +46,7 @@ public class LiteEngineTaskStepInfo implements CIStepInfo {
   @NotNull boolean usePVC;
   @NotNull String accountId;
   @NotNull ExecutionElement steps;
+  //@NotNull ExecutionElementConfig steps;
   CodeBase ciCodebase;
   @NotNull boolean skipGitClone;
 
@@ -83,7 +80,7 @@ public class LiteEngineTaskStepInfo implements CIStepInfo {
 
   @Override
   public StepType getStepType() {
-    return typeInfo.getStepType();
+    return STEP_TYPE;
   }
 
   @Override

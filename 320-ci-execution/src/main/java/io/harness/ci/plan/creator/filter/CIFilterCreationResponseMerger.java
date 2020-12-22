@@ -5,5 +5,9 @@ import io.harness.pms.sdk.core.pipeline.filters.FilterCreationResponseMerger;
 
 public class CIFilterCreationResponseMerger implements FilterCreationResponseMerger {
   @Override
-  public void mergeFilterCreationResponse(FilterCreationResponse finalResponse, FilterCreationResponse current) {}
+  public void mergeFilterCreationResponse(FilterCreationResponse finalResponse, FilterCreationResponse current) {
+    if (current == null || current.getPipelineFilter() == null) {
+      return;
+    }
+  }
 }

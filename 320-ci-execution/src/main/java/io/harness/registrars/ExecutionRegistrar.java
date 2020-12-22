@@ -59,7 +59,7 @@ public class ExecutionRegistrar {
     engineSteps.put(RestoreCacheGCSStep.STEP_TYPE, injector.getInstance(RestoreCacheGCSStep.class));
     engineSteps.put(TestIntelligenceStep.STEP_TYPE, injector.getInstance(TestIntelligenceStep.class));
     engineSteps.put(IntegrationStageStepPMS.STEP_TYPE, injector.getInstance(IntegrationStageStepPMS.class));
-
+    engineSteps.putAll(OrchestrationStepsModuleStepRegistrar.getEngineSteps(injector));
     return engineSteps;
   }
 }
