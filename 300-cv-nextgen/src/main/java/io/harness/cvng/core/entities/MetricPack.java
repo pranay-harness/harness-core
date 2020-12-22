@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -75,6 +76,13 @@ public class MetricPack implements PersistentEntity, UuidAware, CreatedAtAware, 
     return dataCollectionDsl;
   }
 
+  public void addToMetrics(MetricDefinition metricDefinition) {
+    if (this.metrics == null) {
+      this.metrics = new HashSet<>();
+    }
+    this.metrics.add(metricDefinition);
+  }
+
   public Set<MetricDefinition> getMetrics() {
     if (this.metrics == null) {
       return Collections.emptySet();
@@ -114,15 +122,11 @@ public class MetricPack implements PersistentEntity, UuidAware, CreatedAtAware, 
       return validationPath;
     }
 
-    @JsonIgnore
-    public TimeSeriesMetricType getType() {
-      return type;
-    }
-
     public MetricDefinitionDTO toDTO() {
       return MetricDefinitionDTO.builder()
           .name(name)
           .path(path)
+          .type(type)
           .validationPath(validationPath)
           .included(included)
           .thresholds(isEmpty(thresholds)

@@ -59,7 +59,7 @@ public class StackdriverServiceImplTest {
     when(onboardingService.getOnboardingResponse(eq(accountId), any()))
         .thenReturn(OnboardingResponseDTO.builder().result(getDashboardList(8)).build());
     PageResponse<StackdriverDashboardDTO> dashboardList = stackdriverService.listDashboards(
-        accountId, connectorIdentifier, orgIdentifier, projectIdentifier, 10, 0, null);
+        accountId, connectorIdentifier, orgIdentifier, projectIdentifier, 10, 0, null, generateUuid());
 
     verify(onboardingService).getOnboardingResponse(eq(accountId), requestCaptor.capture());
 
@@ -87,7 +87,7 @@ public class StackdriverServiceImplTest {
         .thenReturn(OnboardingResponseDTO.builder().result(JsonUtils.asObject(textLoad, Object.class)).build());
     List<StackdriverDashboardDetail> dashboardDetailList =
         stackdriverService.getDashboardDetails(accountId, connectorIdentifier, orgIdentifier, projectIdentifier,
-            "projects/674494598921/dashboards/dfd3572d-2aef-46d9-b4a2-f1d546f46110");
+            "projects/674494598921/dashboards/dfd3572d-2aef-46d9-b4a2-f1d546f46110", generateUuid());
 
     verify(onboardingService).getOnboardingResponse(eq(accountId), requestCaptor.capture());
 

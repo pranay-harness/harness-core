@@ -31,11 +31,8 @@ public class StackdriverDashboardDetailsRequest extends StackdriverRequest {
 
   @Override
   public Map<String, Object> fetchDslEnvVariables() {
-    Map<String, Object> envVariables = new HashMap<>();
     StackdriverCredential credential = StackdriverCredential.fromGcpConnector(getConnectorConfigDTO());
-    String jwtToken = StackdriverUtils.getJwtToken(credential);
-    envVariables.put("jwtToken", jwtToken);
-    envVariables.put("project", credential.getProjectId());
+    Map<String, Object> envVariables = StackdriverUtils.getCommonEnvVariables(credential);
     envVariables.put("path", path);
     return envVariables;
   }

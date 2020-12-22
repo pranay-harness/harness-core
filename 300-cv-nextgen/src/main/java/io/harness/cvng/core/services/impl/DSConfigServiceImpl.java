@@ -29,8 +29,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class DSConfigServiceImpl implements DSConfigService {
-  @Inject CVConfigService cvConfigService;
-  @Inject NextGenService nextGenService;
+  @Inject private CVConfigService cvConfigService;
+  @Inject private NextGenService nextGenService;
   @Inject private Injector injector;
 
   @Override
@@ -54,6 +54,7 @@ public class DSConfigServiceImpl implements DSConfigService {
     CVConfigUpdateResult cvConfigUpdateResult = dsConfig.getCVConfigUpdateResult(saved);
     cvConfigUpdateResult.getDeleted().forEach(cvConfig -> cvConfigService.delete(cvConfig.getUuid()));
     cvConfigService.update(cvConfigUpdateResult.getUpdated());
+
     cvConfigService.save(cvConfigUpdateResult.getAdded());
   }
 

@@ -20,7 +20,7 @@ public class AppDynamicsDataCollectionInfo extends TimeSeriesDataCollectionInfo<
   private String tierName;
   private MetricPackDTO metricPack;
   @Override
-  public Map<String, Object> getDslEnvVariables() {
+  public Map<String, Object> getDslEnvVariables(AppDynamicsConnectorDTO appDynamicsConnectorDTO) {
     Map<String, Object> dslEnvVariables = new HashMap<>();
     dslEnvVariables.put("applicationName", getApplicationName());
     dslEnvVariables.put("tierName", getTierName());

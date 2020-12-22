@@ -4,9 +4,12 @@ import static io.harness.cvng.utils.StackdriverUtils.checkForNullAndReturnValue;
 
 import io.harness.cvng.beans.stackdriver.StackDriverMetricDefinition.Aggregation.AggregationKeys;
 import io.harness.cvng.beans.stackdriver.StackDriverMetricDefinition.StackDriverMetricDefinitionKeys;
+import io.harness.cvng.utils.StackdriverUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -40,7 +43,7 @@ public class StackdriverSampleDataRequest extends StackdriverRequest {
   public Map<String, Object> fetchDslEnvVariables() {
     StackDriverMetricDefinition.Aggregation aggregation = metricDefinition.getAggregation();
     StackdriverCredential credential = StackdriverCredential.fromGcpConnector(getConnectorConfigDTO());
-    Map<String, Object> dslEnvVariables = getCommonEnvVariables(credential);
+    Map<String, Object> dslEnvVariables = StackdriverUtils.getCommonEnvVariables(credential);
     dslEnvVariables.put(
         AggregationKeys.alignmentPeriod, checkForNullAndReturnValue(aggregation.getAlignmentPeriod(), "60s"));
     dslEnvVariables.put(
@@ -48,6 +51,13 @@ public class StackdriverSampleDataRequest extends StackdriverRequest {
     dslEnvVariables.put(
         AggregationKeys.perSeriesAligner, checkForNullAndReturnValue(aggregation.getPerSeriesAligner(), ""));
 
+    dslEnvVariables.put(
+        AggregationKeys.groupByFields, checkForNullAndReturnValue(aggregation.getGroupByFields(), new ArrayList<>()));
+    List<String> groupByResponse = new ArrayList<>();
+    for (String field : aggregation.getGroupByFields()) {
+      groupByResponse.add(field.replace("\"", "").replace("label", "labels"));
+    }
+    dslEnvVariables.put("groupByResponses", groupByResponse);
     dslEnvVariables.put(StackDriverMetricDefinitionKeys.filter, metricDefinition.getFilter());
 
     dslEnvVariables.put(StackdriverSampleDataRequestKeys.startTime, startTime.toString());

@@ -19,10 +19,19 @@ import org.apache.commons.codec.binary.Base64;
 @Slf4j
 public class StackdriverUtils {
   private static final String SCOPE = "https://www.googleapis.com/auth/monitoring.read";
+  public static final String TIMESTAMP_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
 
   private StackdriverUtils() {}
 
-  public static String getJwtToken(StackdriverCredential credential) {
+  public static Map<String, Object> getCommonEnvVariables(StackdriverCredential credential) {
+    Map<String, Object> envVariables = new HashMap<>();
+    String jwtToken = StackdriverUtils.getJwtToken(credential);
+    envVariables.put("jwtToken", jwtToken);
+    envVariables.put("project", credential.getProjectId());
+    return envVariables;
+  }
+
+  private static String getJwtToken(StackdriverCredential credential) {
     Algorithm algorithm;
     try {
       algorithm = Algorithm.RSA256(getPrivateKeyFromString(credential.getPrivateKey()));

@@ -10,9 +10,9 @@ import java.util.List;
 
 public interface StackdriverService {
   PageResponse<StackdriverDashboardDTO> listDashboards(String accountId, String connectorIdentifier,
-      String orgIdentifier, String projectIdentifier, int pageSize, int offset, String filter);
-  List<StackdriverDashboardDetail> getDashboardDetails(
-      String accountId, String connectorIdentifier, String orgIdentifier, String projectIdentifier, String path);
+      String orgIdentifier, String projectIdentifier, int pageSize, int offset, String filter, String tracingId);
+  List<StackdriverDashboardDetail> getDashboardDetails(String accountId, String connectorIdentifier,
+      String orgIdentifier, String projectIdentifier, String path, String tracingId);
   ResponseDTO<StackdriverSampleDataDTO> getSampleData(String accountId, String connectorIdentifier,
-      String orgIdentifier, String projectIdentifier, Object metricDefinitionDTO);
+      String orgIdentifier, String projectIdentifier, Object metricDefinitionDTO, String tracingId);
 }

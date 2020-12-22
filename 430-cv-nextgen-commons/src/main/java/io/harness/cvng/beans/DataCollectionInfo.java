@@ -15,7 +15,7 @@ public abstract class DataCollectionInfo<T extends ConnectorConfigDTO> {
   private String dataCollectionDsl;
   private boolean collectHostData;
   public abstract VerificationType getVerificationType();
-  public abstract Map<String, Object> getDslEnvVariables();
+  public abstract Map<String, Object> getDslEnvVariables(T connectorConfigDTO);
   public abstract String getBaseUrl(T connectorConfigDTO);
   public abstract Map<String, String> collectionHeaders(T connectorConfigDTO);
   public abstract Map<String, String> collectionParams(T connectorConfigDTO);

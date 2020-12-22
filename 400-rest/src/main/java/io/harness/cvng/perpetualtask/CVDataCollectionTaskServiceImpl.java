@@ -4,7 +4,6 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import io.harness.beans.DecryptableEntity;
 import io.harness.cvng.beans.CVDataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionRequest;
@@ -156,8 +155,8 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
     switch (bundle.getDataCollectionType()) {
       case CV:
         return ngSecretService.getEncryptionDetails(basicNGAccessObject,
-            bundle.getConnectorDTO().getConnectorConfig() instanceof DecryptableEntity
-                ? (DecryptableEntity) bundle.getConnectorDTO().getConnectorConfig()
+            bundle.getConnectorDTO().getConnectorConfig().getDecryptableEntity() != null
+                ? bundle.getConnectorDTO().getConnectorConfig().getDecryptableEntity()
                 : null);
       case KUBERNETES:
         KubernetesClusterConfigDTO kubernetesClusterConfigDTO =

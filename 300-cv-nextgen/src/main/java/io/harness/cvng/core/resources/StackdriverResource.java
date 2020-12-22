@@ -39,9 +39,10 @@ public class StackdriverResource {
       @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @QueryParam("pageSize") @NotNull int pageSize,
-      @QueryParam("offset") @NotNull int offset, @QueryParam("filter") String filter) {
+      @QueryParam("offset") @NotNull int offset, @QueryParam("filter") String filter,
+      @QueryParam("tracingId") String tracingId) {
     return new RestResponse<>(stackdriverService.listDashboards(
-        accountId, connectorIdentifier, orgIdentifier, projectIdentifier, pageSize, offset, filter));
+        accountId, connectorIdentifier, orgIdentifier, projectIdentifier, pageSize, offset, filter, tracingId));
   }
 
   @GET
@@ -53,9 +54,10 @@ public class StackdriverResource {
       @NotNull @QueryParam("accountId") String accountId,
       @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @QueryParam("path") @NotNull String path) {
-    return new RestResponse<>(
-        stackdriverService.getDashboardDetails(accountId, connectorIdentifier, orgIdentifier, projectIdentifier, path));
+      @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @QueryParam("path") @NotNull String path,
+      @QueryParam("tracingId") String tracingId) {
+    return new RestResponse<>(stackdriverService.getDashboardDetails(
+        accountId, connectorIdentifier, orgIdentifier, projectIdentifier, path, tracingId));
   }
 
   @POST
@@ -67,8 +69,9 @@ public class StackdriverResource {
       @NotNull @QueryParam("accountId") String accountId,
       @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @NotNull Object metricDefinitionDTO) {
+      @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @QueryParam("tracingId") String tracingId,
+      @NotNull Object metricDefinitionDTO) {
     return stackdriverService.getSampleData(
-        accountId, connectorIdentifier, orgIdentifier, projectIdentifier, metricDefinitionDTO);
+        accountId, connectorIdentifier, orgIdentifier, projectIdentifier, metricDefinitionDTO, tracingId);
   }
 }

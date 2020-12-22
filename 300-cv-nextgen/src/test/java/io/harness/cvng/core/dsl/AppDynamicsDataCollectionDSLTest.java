@@ -79,7 +79,8 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
                             .get()
                             .toDTO())
             .build();
-    Map<String, Object> params = appDynamicsDataCollectionInfo.getDslEnvVariables();
+    Map<String, Object> params =
+        appDynamicsDataCollectionInfo.getDslEnvVariables(AppDynamicsConnectorDTO.builder().build());
 
     Map<String, String> headers = new HashMap<>();
     headers.put("Authorization", "Basic **"); // Replace this with the actual value when capturing the request.
@@ -122,7 +123,8 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
                             .toDTO())
             .build();
     appDynamicsDataCollectionInfo.setCollectHostData(true);
-    Map<String, Object> params = appDynamicsDataCollectionInfo.getDslEnvVariables();
+    Map<String, Object> params =
+        appDynamicsDataCollectionInfo.getDslEnvVariables(AppDynamicsConnectorDTO.builder().build());
 
     Map<String, String> headers = new HashMap<>();
     headers.put("Authorization", "Basic **"); // Replace this with the actual value when capturing the request.
@@ -166,7 +168,8 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
                     .get()
                     .toDTO())
             .build();
-    Map<String, Object> params = appDynamicsDataCollectionInfo.getDslEnvVariables();
+    Map<String, Object> params =
+        appDynamicsDataCollectionInfo.getDslEnvVariables(AppDynamicsConnectorDTO.builder().build());
 
     Map<String, String> headers = new HashMap<>();
     headers.put("Authorization", "Basic **"); // Replace this with the actual value when capturing the request.
@@ -211,7 +214,8 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
                     .toDTO())
             .build();
     appDynamicsDataCollectionInfo.setCollectHostData(true);
-    Map<String, Object> params = appDynamicsDataCollectionInfo.getDslEnvVariables();
+    Map<String, Object> params =
+        appDynamicsDataCollectionInfo.getDslEnvVariables(AppDynamicsConnectorDTO.builder().build());
 
     Map<String, String> headers = new HashMap<>();
     headers.put("Authorization", "Basic **"); // Replace this with the actual value when capturing the request.
