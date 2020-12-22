@@ -337,6 +337,18 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
+  public void testGetRecentHighestRiskScore_verificationTaskIdDoesNotExists() {
+    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    String verificationJobInstanceId =
+        verificationJobInstanceService.create(accountId, createVerificationJobInstanceDTO());
+    assertThatThrownBy(
+        () -> deploymentTimeSeriesAnalysisService.getRecentHighestRiskScore(accountId, verificationJobInstanceId))
+        .isInstanceOf(IllegalStateException.class);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
   public void testGetRecentHighestRiskScore_getLatest() {
     verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId =

@@ -23,7 +23,6 @@ import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap;
 import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap.AggregationLevel;
 import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap.HealthVerificationHeatMapKeys;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
-import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.persistence.HPersistence;
 
@@ -72,9 +71,8 @@ public class HealthVerificationHeatMapServiceImpl implements HealthVerificationH
   }
 
   @Override
-  public Optional<Double> getVerificationRisk(VerificationJobInstance verificationJobInstance) {
-    Set<String> taskIds = verificationTaskService.getVerificationTaskIds(
-        verificationJobInstance.getAccountId(), verificationJobInstance.getUuid());
+  public Optional<Double> getVerificationRisk(String accountId, String verificationJobInstanceId) {
+    Set<String> taskIds = verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId);
     List<Double> risks = new ArrayList<>();
     Query<HealthVerificationHeatMap> heatMapQuery =
         hPersistence.createQuery(HealthVerificationHeatMap.class)
@@ -99,15 +97,6 @@ public class HealthVerificationHeatMapServiceImpl implements HealthVerificationH
     } else {
       return Optional.empty();
     }
-  }
-
-  @Override
-  public List<Optional<Double>> getRisksOfVerification(List<VerificationJobInstance> verificationJobInstances) {
-    List<Optional<Double>> optionalRisks = new ArrayList<>();
-    verificationJobInstances.forEach(
-        verificationJobInstance -> { optionalRisks.add(getVerificationRisk(verificationJobInstance)); });
-
-    return optionalRisks;
   }
 
   @Override

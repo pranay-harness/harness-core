@@ -283,6 +283,15 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
+  public void testGetRecentHighestRiskScore_verificationTaskIdsDoesNotExists() {
+    assertThatThrownBy(
+        () -> deploymentLogAnalysisService.getRecentHighestRiskScore(accountId, verificationJobInstanceId))
+        .isInstanceOf(IllegalStateException.class);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
   public void testGetRecentHighestRiskScore_getLatestData() {
     String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
     DeploymentLogAnalysis deploymentLogAnalysis = createDeploymentLogAnalysis(verificationTaskId);

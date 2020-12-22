@@ -161,13 +161,11 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     }
     List<VerificationJobInstance> allInstances = get(verificationJobInstanceIds);
     List<VerificationJobInstance> nonDeploymentInstances = new ArrayList<>();
-    if (allInstances != null) {
-      allInstances.forEach(instance -> {
-        if (!VerificationJobType.getDeploymentJobTypes().contains(instance.getResolvedJob().getType())) {
-          nonDeploymentInstances.add(instance);
-        }
-      });
-    }
+    allInstances.forEach(instance -> {
+      if (!VerificationJobType.getDeploymentJobTypes().contains(instance.getResolvedJob().getType())) {
+        nonDeploymentInstances.add(instance);
+      }
+    });
     return nonDeploymentInstances;
   }
 
@@ -189,7 +187,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   private void createAndQueueHealthVerification(VerificationJobInstance verificationJobInstance) {
     // We dont do any data collection for health verification. So just queue the analysis.
     VerificationJob verificationJob = verificationJobInstance.getResolvedJob();
-    List<CVConfig> cvConfigs = getCVConfigsRelatedToVerificationJob(verificationJobInstance.getResolvedJob());
+    List<CVConfig> cvConfigs = getCVConfigsForVerificationJob(verificationJobInstance.getResolvedJob());
     cvConfigs.forEach(cvConfig -> {
       String verificationTaskId = verificationTaskService.create(
           cvConfig.getAccountId(), cvConfig.getUuid(), verificationJobInstance.getUuid());
@@ -203,7 +201,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     markRunning(verificationJobInstance.getUuid());
   }
 
-  private List<CVConfig> getCVConfigsRelatedToVerificationJob(VerificationJob verificationJob) {
+  public List<CVConfig> getCVConfigsForVerificationJob(VerificationJob verificationJob) {
     return cvConfigService.find(verificationJob.getAccountId(), verificationJob.getOrgIdentifier(),
         verificationJob.getProjectIdentifier(), verificationJob.getServiceIdentifier(),
         verificationJob.getEnvIdentifier(), verificationJob.getDataSources());
@@ -213,8 +211,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   public void createDataCollectionTasks(VerificationJobInstance verificationJobInstance) {
     VerificationJob verificationJob = verificationJobInstance.getResolvedJob();
     Preconditions.checkNotNull(verificationJob);
-    List<CVConfig> cvConfigs = getCVConfigsRelatedToVerificationJob(verificationJob);
-    // TODO: handle if we have zero cvConfigs matching this.
+    List<CVConfig> cvConfigs = getCVConfigsForVerificationJob(verificationJob);
+    Preconditions.checkState(isNotEmpty(cvConfigs), "No config is matching the criteria");
     Set<String> connectorIdentifiers =
         cvConfigs.stream().map(CVConfig::getConnectorIdentifier).collect(Collectors.toSet());
     List<String> perpetualTaskIds = new ArrayList<>();
@@ -433,12 +431,16 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   }
 
   private Optional<Double> getLatestRiskScore(VerificationJobInstance verificationJobInstance) {
+    if (verificationJobInstance.getExecutionStatus() == ExecutionStatus.QUEUED) {
+      return Optional.empty();
+    }
     if (verificationJobInstance != null
         && VerificationJobType.getDeploymentJobTypes().contains(verificationJobInstance.getResolvedJob().getType())) {
       return deploymentAnalysisService.getLatestRiskScore(
           verificationJobInstance.getAccountId(), verificationJobInstance.getUuid());
     } else {
-      return healthVerificationHeatMapService.getVerificationRisk(verificationJobInstance);
+      return healthVerificationHeatMapService.getVerificationRisk(
+          verificationJobInstance.getAccountId(), verificationJobInstance.getUuid());
     }
   }
 
@@ -448,9 +450,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     if (isEmpty(verificationJobInstances)) {
       return null;
     }
-    List<Optional<Double>> risks = new ArrayList<>();
-    verificationJobInstances.forEach(verificationJobInstance -> risks.add(getLatestRiskScore(verificationJobInstance)));
-    return summarizeVerificationJobInstances(verificationJobInstances, risks);
+    return summarizeVerificationJobInstances(verificationJobInstances);
   }
 
   @Nullable
@@ -458,13 +458,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     if (isEmpty(verificationJobInstances)) {
       return null;
     }
-    List<Optional<Double>> latestRiskScores =
-        verificationJobInstances.stream()
-            .map(verificationJobInstance
-                -> deploymentAnalysisService.getLatestRiskScore(
-                    verificationJobInstance.getAccountId(), verificationJobInstance.getUuid()))
-            .collect(Collectors.toList());
-    return summarizeVerificationJobInstances(verificationJobInstances, latestRiskScores);
+    return summarizeVerificationJobInstances(verificationJobInstances);
   }
 
   private DeploymentVerificationJobInstanceSummary getDeploymentVerificationJobInstanceSummary(
@@ -492,8 +486,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   }
 
   private ActivityVerificationSummary summarizeVerificationJobInstances(
-      List<VerificationJobInstance> verificationJobInstances, List<Optional<Double>> latestRiskScores) {
-    if (isEmpty(verificationJobInstances) || isEmpty(latestRiskScores)) {
+      List<VerificationJobInstance> verificationJobInstances) {
+    if (isEmpty(verificationJobInstances)) {
       return null;
     }
     VerificationJobInstance minVerificationInstanceJob =
@@ -517,6 +511,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     int failed = 0;
     int notStarted = 0;
     int errors = 0;
+    List<Optional<Double>> latestRiskScores = new ArrayList<>();
     for (int i = 0; i < verificationJobInstances.size(); i++) {
       VerificationJobInstance verificationJobInstance = verificationJobInstances.get(i);
       switch (verificationJobInstance.getExecutionStatus()) {
@@ -528,7 +523,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
           errors++;
           break;
         case SUCCESS:
-          Optional<Double> riskScore = latestRiskScores.get(i);
+          Optional<Double> riskScore = getLatestRiskScore(verificationJobInstance);
+          latestRiskScores.add(riskScore);
           if (riskScore.isPresent()) {
             if (riskScore.get() < DEPLOYMENT_RISK_SCORE_FAILURE_THRESHOLD) {
               passed++;
@@ -538,6 +534,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
           }
           break;
         case RUNNING:
+          latestRiskScores.add(getLatestRiskScore(verificationJobInstance));
           progress++;
           break;
         default:

@@ -501,7 +501,7 @@ public class ActivityServiceImpl implements ActivityService {
       }
       VerificationJobInstance verificationJobInstance = fillOutCommonJobInstanceProperties(
           activity, verificationJob.resolveAdditionsFields(verificationJobInstanceService));
-      validateJob(activity, verificationJob);
+      validateJob(verificationJob);
       activity.fillInVerificationJobInstanceDetails(verificationJobInstance);
 
       jobInstancesToCreate.add(verificationJobInstance);
@@ -509,18 +509,11 @@ public class ActivityServiceImpl implements ActivityService {
     return verificationJobInstanceService.create(jobInstancesToCreate);
   }
 
-  private void validateJob(Activity activity, VerificationJob verificationJob) {
-    List<CVConfig> cvConfigs = cvConfigService.list(activity.getAccountIdentifier(), activity.getOrgIdentifier(),
-        activity.getProjectIdentifier(), activity.getEnvironmentIdentifier(), activity.getServiceIdentifier(), null);
-    Preconditions.checkState(isNotEmpty(cvConfigs), "No data sources defined for environment %s and service %s",
-        activity.getEnvironmentIdentifier(), activity.getServiceIdentifier());
-    List<CVConfig> dataSources =
-        cvConfigs.stream()
-            .filter(cvConfig -> new HashSet<>(verificationJob.getDataSources()).contains(cvConfig.getType()))
-            .collect(Collectors.toList());
-    Preconditions.checkState(isNotEmpty(dataSources),
+  private void validateJob(VerificationJob verificationJob) {
+    List<CVConfig> cvConfigs = verificationJobInstanceService.getCVConfigsForVerificationJob(verificationJob);
+    Preconditions.checkState(isNotEmpty(cvConfigs),
         "No data sources of type(s) %s defined for environment %s and service %s", verificationJob.getDataSources(),
-        activity.getEnvironmentIdentifier(), activity.getServiceIdentifier());
+        verificationJob.getEnvIdentifier(), verificationJob.getServiceIdentifier());
   }
 
   private VerificationJobInstance fillOutCommonJobInstanceProperties(
