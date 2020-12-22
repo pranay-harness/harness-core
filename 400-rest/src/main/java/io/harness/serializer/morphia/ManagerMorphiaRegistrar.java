@@ -169,7 +169,6 @@ import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
-import software.wings.beans.AzureAppServiceInfrastructureMapping;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureInfrastructureMapping;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
@@ -850,7 +849,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(AuthToken.class);
     set.add(AwsAmiInfrastructureMapping.class);
     set.add(AzureVMSSInfrastructureMapping.class);
-    set.add(AzureAppServiceInfrastructureMapping.class);
     set.add(AzureWebAppInfrastructureMapping.class);
     set.add(AwsInfrastructureMapping.class);
     set.add(AwsLambdaInfraStructureMapping.class);

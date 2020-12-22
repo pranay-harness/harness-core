@@ -132,6 +132,7 @@ import software.wings.infra.AwsLambdaInfrastructure;
 import software.wings.infra.AwsLambdaInfrastructure.AwsLambdaInfrastructureKeys;
 import software.wings.infra.AzureInstanceInfrastructure;
 import software.wings.infra.AzureVMSSInfra;
+import software.wings.infra.AzureWebAppInfra;
 import software.wings.infra.CloudProviderInfrastructure;
 import software.wings.infra.CustomInfrastructure;
 import software.wings.infra.DirectKubernetesInfrastructure;
@@ -1999,6 +2000,29 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   }
 
   @Override
+  public List<String> getAppServiceNames(String appId, String infraDefinitionId, String appType) {
+    InfrastructureDefinition infrastructureDefinition = get(appId, infraDefinitionId);
+    notNullCheck("Infrastructure Definition", infrastructureDefinition);
+    if (!(infrastructureDefinition.getInfrastructure() instanceof AzureWebAppInfra)) {
+      throw new InvalidRequestException(
+          String.format("Infra definition with id - [%s] is not of Azure Web app infra type ", infraDefinitionId),
+          USER);
+    }
+
+    try {
+      AzureWebAppInfra infrastructure = (AzureWebAppInfra) infrastructureDefinition.getInfrastructure();
+      AzureConfig azureConfig = validateAndGetAzureConfig(infrastructure.getCloudProviderId());
+      List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, appId, null);
+
+      return azureAppServiceManager.getAppServiceNamesByResourceGroup(azureConfig, encryptionDetails, appId,
+          infrastructure.getSubscriptionId(), infrastructure.getResourceGroup(), appType);
+    } catch (Exception exception) {
+      log.warn(ExceptionUtils.getMessage(exception), exception);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(exception), USER);
+    }
+  }
+
+  @Override
   public List<String> getAppServiceDeploymentSlotNames(String appId, String computeProviderId, String subscriptionId,
       String resourceGroupName, String appType, String appName) {
     AzureConfig azureConfig = validateAndGetAzureConfig(computeProviderId);
@@ -2006,6 +2030,28 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     try {
       return azureAppServiceManager.getAppServiceDeploymentSlotNames(
           azureConfig, encryptionDetails, appId, subscriptionId, resourceGroupName, appType, appName);
+    } catch (Exception exception) {
+      log.warn(ExceptionUtils.getMessage(exception), exception);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(exception), USER);
+    }
+  }
+
+  @Override
+  public List<String> getDeploymentSlotNames(String appId, String infraDefinitionId, String appType, String appName) {
+    InfrastructureDefinition infrastructureDefinition = get(appId, infraDefinitionId);
+    notNullCheck("Infrastructure Definition", infrastructureDefinition);
+    if (!(infrastructureDefinition.getInfrastructure() instanceof AzureWebAppInfra)) {
+      throw new InvalidRequestException(
+          String.format("Infra definition with id - [%s] is not of Azure Web app infra type ", infraDefinitionId),
+          USER);
+    }
+
+    try {
+      AzureWebAppInfra infrastructure = (AzureWebAppInfra) infrastructureDefinition.getInfrastructure();
+      AzureConfig azureConfig = validateAndGetAzureConfig(infrastructure.getCloudProviderId());
+      List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, appId, null);
+      return azureAppServiceManager.getAppServiceDeploymentSlotNames(azureConfig, encryptionDetails, appId,
+          infrastructure.getSubscriptionId(), infrastructure.getResourceGroup(), appType, appName);
     } catch (Exception exception) {
       log.warn(ExceptionUtils.getMessage(exception), exception);
       throw new InvalidRequestException(ExceptionUtils.getMessage(exception), USER);

@@ -161,8 +161,12 @@ public interface InfrastructureDefinitionService extends OwnedByEnvironment {
   List<String> getAppServiceNamesByResourceGroup(
       String appId, String computeProviderId, String subscriptionId, String resourceGroupName, String appType);
 
+  List<String> getAppServiceNames(String appId, String infraDefinitionId, String appType);
+
   List<String> getAppServiceDeploymentSlotNames(String appId, String computeProviderId, String subscriptionId,
       String resourceGroupName, String appType, String appName);
+
+  List<String> getDeploymentSlotNames(String appId, String infraDefinitionId, String appType, String appName);
 
   List<String> listAzureLoadBalancers(String appId, String infraDefinitionId);
 

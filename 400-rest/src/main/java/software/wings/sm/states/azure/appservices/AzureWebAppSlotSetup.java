@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.AZURE_APP_SERVICE_SLOT_SETUP;
 import static software.wings.sm.StateType.AZURE_WEBAPP_SLOT_SETUP;
-import static software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement.AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
+import static software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement.SWEEPING_OUTPUT_APP_SERVICE;
 
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
 import io.harness.azure.model.AzureAppServiceConnectionString;
@@ -53,6 +53,8 @@ import org.jetbrains.annotations.NotNull;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Slf4j
 public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
+  @Getter @Setter private String appService;
+  @Getter @Setter private String deploymentSlot;
   @Getter @Setter private String slotSteadyStateTimeout;
   @Getter @Setter private List<AzureAppServiceApplicationSetting> applicationSettings;
   @Getter @Setter private List<AzureAppServiceConnectionString> appServiceConnectionStrings;
@@ -102,8 +104,10 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
       Activity activity, ExecutionContext context, AzureAppServiceStateData azureAppServiceStateData) {
     return AzureAppServiceSlotSetupExecutionData.builder()
         .activityId(activity.getUuid())
-        .appServiceName(azureAppServiceStateData.getAppService())
-        .deploySlotName(azureAppServiceStateData.getDeploymentSlot())
+        .resourceGroup(azureAppServiceStateData.getResourceGroup())
+        .subscriptionId(azureAppServiceStateData.getSubscriptionId())
+        .appServiceName(context.renderExpression(appService))
+        .deploySlotName(context.renderExpression(deploymentSlot))
         .infrastructureMappingId(azureAppServiceStateData.getInfrastructureMapping().getUuid())
         .appServiceSlotSetupTimeOut(getTimeOut(context))
         .build();
@@ -154,13 +158,14 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
             .infraMappingId(stateExecutionData.getInfrastructureMappingId())
             .appServiceSlotSetupTimeOut(getTimeOut(context))
             .commandName(APP_SERVICE_SLOT_SETUP)
+            .subscriptionId(stateExecutionData.getSubscriptionId())
+            .resourceGroup(stateExecutionData.getResourceGroup())
             .webApp(preDeploymentData.getAppName())
             .deploymentSlot(preDeploymentData.getSlotName())
             .preDeploymentData(preDeploymentData)
             .build();
 
-    azureSweepingOutputServiceHelper.saveToSweepingOutPut(
-        setupContextElement, AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME, context);
+    azureSweepingOutputServiceHelper.saveToSweepingOutPut(setupContextElement, SWEEPING_OUTPUT_APP_SERVICE, context);
   }
 
   @Override
@@ -211,8 +216,8 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
         .activityId(activity.getUuid())
         .subscriptionId(azureAppServiceStateData.getSubscriptionId())
         .resourceGroupName(azureAppServiceStateData.getResourceGroup())
-        .slotName(azureAppServiceStateData.getDeploymentSlot())
-        .webAppName(azureAppServiceStateData.getAppService())
+        .slotName(context.renderExpression(deploymentSlot))
+        .webAppName(context.renderExpression(appService))
         .timeoutIntervalInMin(getTimeOut(context))
         .build();
   }

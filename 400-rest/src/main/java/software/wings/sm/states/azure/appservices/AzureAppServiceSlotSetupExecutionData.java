@@ -27,6 +27,8 @@ public class AzureAppServiceSlotSetupExecutionData
   private String activityId;
   private String infrastructureMappingId;
   private Integer appServiceSlotSetupTimeOut;
+  private String subscriptionId;
+  private String resourceGroup;
   private String appServiceName;
   private String deploySlotName;
   @Builder.Default private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
@@ -43,6 +45,8 @@ public class AzureAppServiceSlotSetupExecutionData
 
   private Map<String, ExecutionDataValue> getInternalExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
+    putNotNull(executionDetails, "resourceGroup",
+        ExecutionDataValue.builder().displayName("Resource Group").value(resourceGroup).build());
     putNotNull(executionDetails, "appServiceName",
         ExecutionDataValue.builder().displayName("Web App Name").value(appServiceName).build());
     putNotNull(executionDetails, "deploySlotName",

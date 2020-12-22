@@ -73,7 +73,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.ClusterRecordHandler;
 import io.harness.ccm.cluster.ClusterRecordServiceImpl;
 import io.harness.exception.ExceptionUtils;
-import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
@@ -1142,8 +1141,6 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     infraStructureMapping.setProvisionerId("terraform");
     infraStructureMapping.setSubscriptionId("Id");
     infraStructureMapping.setResourceGroup("Resource Group");
-    infraStructureMapping.setDeploymentSlot("deploymentSlot");
-    infraStructureMapping.setWebApp("WebApp");
     infrastructureMappingServiceImpl.validateAzureWebAppInfraMapping(infraStructureMapping);
 
     AzureWebAppInfrastructureMapping infraStructureMapping1 = AzureWebAppInfrastructureMapping.builder().build();
@@ -1165,24 +1162,11 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     assertThatThrownBy(() -> infraStructureMapping1.applyProvisionerVariables(variables, null, true))
         .isInstanceOf(InvalidRequestException.class);
     variables.put(resourceGroup, "TestGroup");
-
-    resetAllFields(infraStructureMapping1);
-    variables.remove(deploymentSlot);
-    assertThatThrownBy(() -> infraStructureMapping1.applyProvisionerVariables(variables, null, true))
-        .isInstanceOf(InvalidRequestException.class);
-    variables.put(deploymentSlot, "devSlot");
-
-    resetAllFields(infraStructureMapping1);
-    variables.remove(webApp);
-    assertThatThrownBy(() -> infraStructureMapping1.applyProvisionerVariables(variables, null, true))
-        .isInstanceOf(GeneralException.class);
   }
 
   private void resetAllFields(AzureWebAppInfrastructureMapping infraStructureMapping) {
     infraStructureMapping.setSubscriptionId(null);
     infraStructureMapping.setResourceGroup(null);
-    infraStructureMapping.setDeploymentSlot(null);
-    infraStructureMapping.setWebApp(null);
   }
 
   @Test

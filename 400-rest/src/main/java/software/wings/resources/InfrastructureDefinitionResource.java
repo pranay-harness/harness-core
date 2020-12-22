@@ -458,6 +458,16 @@ public class InfrastructureDefinitionResource {
   }
 
   @GET
+  @Path("{infraDefinitionId}/azure-app-services")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<List<String>> getAppServiceNames(@QueryParam("appId") String appId,
+      @QueryParam("appType") String appType, @PathParam("infraDefinitionId") String infraDefinitionId) {
+    return new RestResponse<>(infrastructureDefinitionService.getAppServiceNames(appId, infraDefinitionId, appType));
+  }
+
+  @GET
   @Path("compute-providers/{computeProviderId}/azure-app-services/{appName}/slots")
   @Timed
   @ExceptionMetered
@@ -468,5 +478,17 @@ public class InfrastructureDefinitionResource {
       @PathParam("appName") String appName) {
     return new RestResponse<>(infrastructureDefinitionService.getAppServiceDeploymentSlotNames(
         appId, computeProviderId, subscriptionId, resourceGroupName, appType, appName));
+  }
+
+  @GET
+  @Path("{infraDefinitionId}/azure-app-services/{appName}/slots")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<List<String>> getDeploymentSlotNames(@QueryParam("appId") String appId,
+      @QueryParam("appType") String appType, @PathParam("infraDefinitionId") String infraDefinitionId,
+      @PathParam("appName") String appName) {
+    return new RestResponse<>(
+        infrastructureDefinitionService.getDeploymentSlotNames(appId, infraDefinitionId, appType, appName));
   }
 }

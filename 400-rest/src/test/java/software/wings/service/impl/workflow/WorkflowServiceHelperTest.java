@@ -36,6 +36,7 @@ import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
 import static software.wings.beans.PhaseStepType.ECS_UPDATE_LISTENER_BG;
 import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
+import static software.wings.beans.PhaseStepType.PROVISION_INFRASTRUCTURE;
 import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
@@ -377,8 +378,8 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     List<PhaseStepType> phaseStepTypes =
         workflowPhase.getPhaseSteps().stream().map(PhaseStep::getPhaseStepType).collect(Collectors.toList());
     assertThat(phaseStepTypes)
-        .containsExactly(PhaseStepType.PROVISION_INFRASTRUCTURE, PhaseStepType.CONTAINER_SETUP,
-            PhaseStepType.CONTAINER_DEPLOY, VERIFY_SERVICE, ECS_UPDATE_LISTENER_BG, WRAP_UP);
+        .containsExactly(PROVISION_INFRASTRUCTURE, PhaseStepType.CONTAINER_SETUP, PhaseStepType.CONTAINER_DEPLOY,
+            VERIFY_SERVICE, ECS_UPDATE_LISTENER_BG, WRAP_UP);
   }
 
   @Test
@@ -1059,7 +1060,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     phaseStepTypes =
         workflowPhase.getPhaseSteps().stream().map(PhaseStep::getPhaseStepType).collect(Collectors.toList());
     assertThat(phaseStepTypes)
-        .containsExactly(PhaseStepType.PROVISION_INFRASTRUCTURE, PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP,
+        .containsExactly(PROVISION_INFRASTRUCTURE, PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP,
             PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP, VERIFY_SERVICE,
             PhaseStepType.AMI_SWITCH_AUTOSCALING_GROUP_ROUTES, WRAP_UP);
 
@@ -1089,7 +1090,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     phaseStepTypes =
         workflowPhase.getPhaseSteps().stream().map(PhaseStep::getPhaseStepType).collect(Collectors.toList());
     assertThat(phaseStepTypes)
-        .containsExactly(PhaseStepType.PROVISION_INFRASTRUCTURE, PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP,
+        .containsExactly(PROVISION_INFRASTRUCTURE, PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP,
             PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP, VERIFY_SERVICE, WRAP_UP);
   }
 
@@ -1205,7 +1206,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
 
     // canary deployment test
     workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
-        APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.CANARY);
+        APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.CANARY, false);
     List<PhaseStepType> phaseStepTypes =
         workflowPhase.getPhaseSteps().stream().map(PhaseStep::getPhaseStepType).collect(Collectors.toList());
     assertThat(phaseStepTypes)
@@ -1213,33 +1214,43 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
             AZURE_WEBAPP_SLOT_SETUP, VERIFY_SERVICE, AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, AZURE_WEBAPP_SLOT_SWAP, WRAP_UP);
     workflowPhase.getPhaseSteps().clear();
 
+    // dynamic provisioner test
+    workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
+        APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.CANARY, true);
+    phaseStepTypes =
+        workflowPhase.getPhaseSteps().stream().map(PhaseStep::getPhaseStepType).collect(Collectors.toList());
+    assertThat(phaseStepTypes)
+        .containsExactly(PROVISION_INFRASTRUCTURE, AZURE_WEBAPP_SLOT_SETUP, VERIFY_SERVICE,
+            AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, AZURE_WEBAPP_SLOT_SWAP, WRAP_UP);
+    workflowPhase.getPhaseSteps().clear();
+
     // unsupported deployment type test
     assertThatThrownBy(()
                            -> workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
-                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.BASIC))
+                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.BASIC, false))
         .isInstanceOf(InvalidRequestException.class);
     assertThatThrownBy(()
                            -> workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
-                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.BUILD))
+                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.BUILD, false))
         .isInstanceOf(InvalidRequestException.class);
     assertThatThrownBy(()
                            -> workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
-                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.MULTI_SERVICE))
+                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.MULTI_SERVICE, false))
         .isInstanceOf(InvalidRequestException.class);
     assertThatThrownBy(()
                            -> workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
-                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.ROLLING))
+                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.ROLLING, false))
         .isInstanceOf(InvalidRequestException.class);
     assertThatThrownBy(()
                            -> workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
-                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.CUSTOM))
+                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.CUSTOM, false))
         .isInstanceOf(InvalidRequestException.class);
 
     // feature flag test
     when(mockFeatureFlagService.isEnabled(FeatureName.AZURE_WEBAPP, ACCOUNT_ID)).thenReturn(false);
     assertThatThrownBy(()
                            -> workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
-                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.CANARY))
+                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.CANARY, false))
         .isInstanceOf(InvalidRequestException.class);
   }
 

@@ -27,8 +27,6 @@ public class AzureWebAppInfraYamlHandler extends CloudProviderInfrastructureYaml
         .cloudProviderName(cloudProvider.getName())
         .subscriptionId(bean.getSubscriptionId())
         .resourceGroup(bean.getResourceGroup())
-        .deploymentSlot(bean.getDeploymentSlot())
-        .webApp(bean.getWebApp())
         .build();
   }
 
@@ -43,8 +41,6 @@ public class AzureWebAppInfraYamlHandler extends CloudProviderInfrastructureYaml
     bean.setCloudProviderId(cloudProvider.getUuid());
     bean.setSubscriptionId(yaml.getSubscriptionId());
     bean.setResourceGroup(yaml.getResourceGroup());
-    bean.setDeploymentSlot(yaml.getDeploymentSlot());
-    bean.setWebApp(yaml.getWebApp());
     return bean;
   }
 

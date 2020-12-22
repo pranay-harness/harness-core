@@ -3,7 +3,7 @@ package software.wings.sm.states.azure.appservice;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.rule.OwnerRule.ANIL;
 
-import static software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement.AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
+import static software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement.SWEEPING_OUTPUT_APP_SERVICE;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -99,26 +99,19 @@ public class AzureWebAppSlotRollbackTest extends WingsBaseTest {
     Artifact artifact = Artifact.Builder.anArtifact().build();
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
 
-    String SWAP_DEPLOYMENT_SLOT = "swapDeploymentSlot";
-    AzureWebAppInfrastructureMapping azureWebAppInfrastructureMapping = AzureWebAppInfrastructureMapping.builder()
-                                                                            .resourceGroup("resourceGroup")
-                                                                            .subscriptionId("subId")
-                                                                            .webApp("app-service")
-                                                                            .deploymentSlot(SWAP_DEPLOYMENT_SLOT)
-                                                                            .build();
+    AzureWebAppInfrastructureMapping azureWebAppInfrastructureMapping =
+        AzureWebAppInfrastructureMapping.builder().resourceGroup("resourceGroup").subscriptionId("subId").build();
 
     AzureAppServiceStateData appServiceStateData = AzureAppServiceStateData.builder()
                                                        .application(app)
                                                        .environment(env)
                                                        .service(service)
                                                        .infrastructureMapping(azureWebAppInfrastructureMapping)
-                                                       .deploymentSlot(SWAP_DEPLOYMENT_SLOT)
                                                        .resourceGroup("rg")
                                                        .subscriptionId("subId")
                                                        .azureConfig(azureConfig)
                                                        .artifact(artifact)
                                                        .azureEncryptedDataDetails(encryptedDataDetails)
-                                                       .appService("app-service")
                                                        .build();
 
     ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
@@ -128,7 +121,7 @@ public class AzureWebAppSlotRollbackTest extends WingsBaseTest {
       doReturn(setupContextElement).when(mockContext).getContextElement(eq(ContextElementType.AZURE_WEBAPP_SETUP));
       doReturn(setupContextElement)
           .when(azureSweepingOutputServiceHelper)
-          .getSetupElementFromSweepingOutput(eq(mockContext), eq(AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME));
+          .getSetupElementFromSweepingOutput(eq(mockContext), eq(SWEEPING_OUTPUT_APP_SERVICE));
     }
     doReturn(activity)
         .when(azureVMSSStateHelper)

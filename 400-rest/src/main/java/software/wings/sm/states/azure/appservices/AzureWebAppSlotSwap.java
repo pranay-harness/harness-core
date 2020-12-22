@@ -5,12 +5,14 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.AZURE_APP_SERVICE_SLOT_SWAP;
 import static software.wings.sm.StateType.AZURE_WEBAPP_SLOT_SWAP;
 
+import io.harness.azure.model.AzureConstants;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppSwapSlotsParameters;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSwapSlotsResponse;
 
 import software.wings.beans.Activity;
+import software.wings.beans.command.AzureVMSSDummyCommandUnit;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.service.impl.azure.manager.AzureTaskExecutionRequest;
@@ -30,9 +32,6 @@ import org.jetbrains.annotations.NotNull;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Slf4j
 public class AzureWebAppSlotSwap extends AbstractAzureAppServiceState {
-  @Getter @Setter private String subscriptionId;
-  @Getter @Setter private String resourceGroup;
-  @Getter @Setter private String webApp;
   @Getter @Setter private String targetSlot;
   public static final String APP_SERVICE_SLOT_SWAP = "App Service Slot Swap";
 
@@ -56,13 +55,14 @@ public class AzureWebAppSlotSwap extends AbstractAzureAppServiceState {
   @Override
   protected StateExecutionData buildPreStateExecutionData(
       Activity activity, ExecutionContext context, AzureAppServiceStateData azureAppServiceStateData) {
+    AzureAppServiceSlotSetupContextElement contextElement = readContextElement(context);
     return AzureAppServiceSlotSwapExecutionData.builder()
         .activityId(activity.getUuid())
         .infrastructureMappingId(azureAppServiceStateData.getInfrastructureMapping().getUuid())
-        .resourceGroup(resourceGroup)
-        .appServiceName(webApp)
-        .deploymentSlot(azureAppServiceStateData.getDeploymentSlot())
-        .targetSlot(targetSlot)
+        .resourceGroup(contextElement.getResourceGroup())
+        .appServiceName(contextElement.getWebApp())
+        .deploymentSlot(contextElement.getDeploymentSlot())
+        .targetSlot(context.renderExpression(targetSlot))
         .build();
   }
 
@@ -94,7 +94,7 @@ public class AzureWebAppSlotSwap extends AbstractAzureAppServiceState {
 
   @Override
   protected List<CommandUnit> commandUnits() {
-    return ImmutableList.of();
+    return ImmutableList.of(new AzureVMSSDummyCommandUnit(AzureConstants.SLOT_SWAP));
   }
 
   @NotNull
@@ -113,11 +113,11 @@ public class AzureWebAppSlotSwap extends AbstractAzureAppServiceState {
         .activityId(activity.getUuid())
         .commandName(APP_SERVICE_SLOT_SWAP)
         .timeoutIntervalInMin(contextElement.getAppServiceSlotSetupTimeOut())
-        .subscriptionId(subscriptionId)
-        .resourceGroupName(resourceGroup)
-        .webAppName(webApp)
+        .subscriptionId(contextElement.getSubscriptionId())
+        .resourceGroupName(contextElement.getResourceGroup())
+        .webAppName(contextElement.getWebApp())
         .sourceSlotName(contextElement.getDeploymentSlot())
-        .targetSlotName(targetSlot)
+        .targetSlotName(context.renderExpression(targetSlot))
         .preDeploymentData(contextElement.getPreDeploymentData())
         .build();
   }
@@ -125,15 +125,6 @@ public class AzureWebAppSlotSwap extends AbstractAzureAppServiceState {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> invalidFields = new HashMap<>();
-    if (isEmpty(subscriptionId)) {
-      invalidFields.put("Subscription Id", "Subscription Id must be specified");
-    }
-    if (isEmpty(resourceGroup)) {
-      invalidFields.put("Resource Group", "Resource Group name must be specified");
-    }
-    if (isEmpty(webApp)) {
-      invalidFields.put("Web App", "Web App name must be specified");
-    }
     if (isEmpty(targetSlot)) {
       invalidFields.put("Target Slot", "Target Slot name must be specified");
     }

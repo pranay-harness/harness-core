@@ -519,19 +519,12 @@ public class AzureVMSSStateHelperTest extends WingsBaseTest {
     String infraMappingId = "infraMappingId";
     String subscriptionId = "subscriptionId";
     String resourceGroup = "resourceGroup";
-    String webApp = "webApp";
-    String deploymentSlot = "slot";
     String harnessUser = "harnessUser";
 
     Service service = Service.builder().uuid(serviceId).build();
     AzureWebAppInfrastructureMapping webAppInfrastructureMapping =
-        AzureWebAppInfrastructureMapping.builder()
-            .computeProviderSettingId(computeProviderSettingId)
-            .subscriptionId(subscriptionId)
-            .resourceGroup(resourceGroup)
-            .webApp(webApp)
-            .deploymentSlot(deploymentSlot)
-            .build();
+        AzureWebAppInfrastructureMapping.builder().subscriptionId(subscriptionId).resourceGroup(resourceGroup).build();
+    webAppInfrastructureMapping.setComputeProviderSettingId(computeProviderSettingId);
 
     ExecutionContextImpl context = Mockito.mock(ExecutionContextImpl.class);
     WorkflowStandardParams workflowStandardParams = Mockito.mock(WorkflowStandardParams.class);
@@ -564,7 +557,5 @@ public class AzureVMSSStateHelperTest extends WingsBaseTest {
     assertThat(azureAppServiceStateData.getServiceId()).isEqualTo(serviceId);
     assertThat(azureAppServiceStateData.getResourceGroup()).isEqualTo(resourceGroup);
     assertThat(azureAppServiceStateData.getSubscriptionId()).isEqualTo(subscriptionId);
-    assertThat(azureAppServiceStateData.getAppService()).isEqualTo(webApp);
-    assertThat(azureAppServiceStateData.getDeploymentSlot()).isEqualTo(deploymentSlot);
   }
 }

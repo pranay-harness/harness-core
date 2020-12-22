@@ -1252,14 +1252,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (isEmpty(infrastructureMapping.getResourceGroup())) {
       throw new InvalidRequestException("Subscription Id should not be empty");
     }
-
-    if (isEmpty(infrastructureMapping.getDeploymentSlot())) {
-      throw new InvalidRequestException("Deployment slot should not be empty");
-    }
-
-    if (isEmpty(infrastructureMapping.getWebApp())) {
-      throw new InvalidRequestException("Web app name should not be empty");
-    }
   }
 
   @Override
