@@ -38,7 +38,7 @@ public class RunStepProtobufSerializerTest extends CiBeansTestBase {
                                   .identifier(RUN_STEP_ID)
                                   .retry(RETRY)
                                   .timeout(TIMEOUT)
-                                  .command(Arrays.asList(MVN_CLEAN_INSTALL))
+                                  .command(MVN_CLEAN_INSTALL)
                                   .output(Arrays.asList(OUTPUT))
                                   .build();
     StepElement stepElement = StepElement.builder().type("run").stepSpecType(runStepInfo).build();
@@ -51,7 +51,7 @@ public class RunStepProtobufSerializerTest extends CiBeansTestBase {
     assertThat(runStep.getDisplayName()).isEqualTo(RUN_STEP);
     assertThat(runStep.getRun().getContext().getNumRetries()).isEqualTo(RETRY);
     assertThat(runStep.getRun().getContext().getExecutionTimeoutSecs()).isEqualTo(TIMEOUT);
-    assertThat(runStep.getRun().getCommands(0)).isEqualTo(MVN_CLEAN_INSTALL);
+    assertThat(runStep.getRun().getCommand()).isEqualTo(MVN_CLEAN_INSTALL);
     assertThat(runStep.getRun().getContainerPort()).isEqualTo(PORT);
   }
 }

@@ -44,7 +44,7 @@ func getEncodedStageProto(t *testing.T, execution *pb.Execution) string {
 	return base64.StdEncoding.EncodeToString(data)
 }
 
-func getTestRunStep(id string, cmd []string, envs []string, port uint32) *pb.UnitStep {
+func getTestRunStep(id string, cmd string, envs []string, port uint32) *pb.UnitStep {
 	ctx := &pb.StepContext{
 		NumRetries: 2,
 	}
@@ -55,7 +55,7 @@ func getTestRunStep(id string, cmd []string, envs []string, port uint32) *pb.Uni
 		Step: &pb.UnitStep_Run{
 			Run: &pb.RunStep{
 				Context:       ctx,
-				Commands:      cmd,
+				Command:       cmd,
 				EnvVarOutputs: envs,
 				ContainerPort: port,
 			},
@@ -184,9 +184,9 @@ func TestStageSuccess(t *testing.T) {
 	stepOutput3 := &output.StepOutput{Output: map[string]string{outputKey: outputVal3}}
 	psOutput := map[string]*output.StepOutput{"step1": stepOutput1, "step2": stepOutput2}
 
-	step1 := getTestRunStep("step1", []string{`echo step1`}, []string{}, uint32(8000))
-	step2 := getTestRunStep("step2", []string{`echo step2`}, []string{}, uint32(8001))
-	step3 := getTestRunStep("step3", []string{`echo step3`}, []string{}, uint32(8001))
+	step1 := getTestRunStep("step1", `echo step1`, []string{}, uint32(8000))
+	step2 := getTestRunStep("step2", `echo step2`, []string{}, uint32(8001))
+	step3 := getTestRunStep("step3", `echo step3`, []string{}, uint32(8001))
 	pstep := &pb.ParallelStep{
 		Id:    "parallel",
 		Steps: []*pb.UnitStep{step1, step2},

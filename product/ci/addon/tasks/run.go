@@ -2,17 +2,20 @@ package tasks
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
+	"mvdan.cc/sh/v3/syntax"
 )
 
 //go:generate mockgen -source run.go -package=tasks -destination mocks/run_mock.go RunTask
@@ -20,7 +23,7 @@ import (
 const (
 	defaultTimeoutSecs int64         = 14400 // 4 hour
 	defaultNumRetries  int32         = 1
-	outputEnvSuffix    string        = "output"
+	outputEnvSuffix    string        = ".out"
 	cmdExitWaitTime    time.Duration = time.Duration(0)
 )
 
@@ -32,7 +35,7 @@ type RunTask interface {
 type runTask struct {
 	id                string
 	displayName       string
-	commands          []string
+	command           string
 	envVarOutputs     []string
 	timeoutSecs       int64
 	numRetries        int32
@@ -59,7 +62,7 @@ func NewRunTask(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogger, w
 	return &runTask{
 		id:                step.GetId(),
 		displayName:       step.GetDisplayName(),
-		commands:          r.GetCommands(),
+		command:           r.GetCommand(),
 		tmpFilePath:       tmpFilePath,
 		envVarOutputs:     r.GetEnvVarOutputs(),
 		timeoutSecs:       timeoutSecs,
@@ -71,7 +74,7 @@ func NewRunTask(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogger, w
 	}
 }
 
-// Executes customer provided run step commands with retries and timeout handling
+// Executes customer provided run step command with retries and timeout handling
 func (e *runTask) Run(ctx context.Context) (map[string]string, int32, error) {
 	var err error
 	var o map[string]string
@@ -119,25 +122,19 @@ func (e *runTask) execute(ctx context.Context, retryCount int32) (map[string]str
 	defer cancel()
 
 	outputFile := fmt.Sprintf("%s/%s%s", e.tmpFilePath, e.id, outputEnvSuffix)
-	inputCommands := e.commands
-	for _, o := range e.envVarOutputs {
-		inputCommands = append(inputCommands, fmt.Sprintf("echo %s $%s >> %s", o, o, outputFile))
-	}
+	cmdToExecute := e.getScript(outputFile)
+	cmdArgs := []string{"-c", cmdToExecute}
 
-	commands := fmt.Sprintf("set -e\n %s", strings.Join(inputCommands[:], "\n"))
-	cmdArgs := []string{"-c", commands}
-
-	e.log.Infow(fmt.Sprintf("Executing %s", commands))
 	cmd := e.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, "sh", cmdArgs...).
 		WithStdout(e.procWriter).WithStderr(e.procWriter).WithEnvVarsMap(nil)
 	err := cmd.Run()
 	if ctxErr := ctx.Err(); ctxErr == context.DeadlineExceeded {
-		logCommandExecErr(e.log, "timeout while executing run step", e.id, commands, retryCount, start, ctxErr)
+		logCommandExecErr(e.log, "timeout while executing run step", e.id, cmdToExecute, retryCount, start, ctxErr)
 		return nil, ctxErr
 	}
 
 	if err != nil {
-		logCommandExecErr(e.log, "error encountered while executing run step", e.id, commands, retryCount, start, err)
+		logCommandExecErr(e.log, "error encountered while executing run step", e.id, cmdToExecute, retryCount, start, err)
 		return nil, err
 	}
 
@@ -146,7 +143,7 @@ func (e *runTask) execute(ctx context.Context, retryCount int32) (map[string]str
 		var err error
 		outputVars, err := e.fetchOutputVariables(outputFile)
 		if err != nil {
-			logCommandExecErr(e.log, "error encountered while fetching output of run step", e.id, commands, retryCount, start, err)
+			logCommandExecErr(e.log, "error encountered while fetching output of run step", e.id, cmdToExecute, retryCount, start, err)
 			return nil, err
 		}
 
@@ -155,11 +152,79 @@ func (e *runTask) execute(ctx context.Context, retryCount int32) (map[string]str
 
 	e.log.Infow(
 		"Successfully executed step",
-		"arguments", commands,
+		"arguments", cmdToExecute,
 		"output", stepOutput,
 		"elapsed_time_ms", utils.TimeSince(start),
 	)
 	return stepOutput, nil
+}
+
+func (e *runTask) getScript(outputVarFile string) string {
+	outputVarCmd := ""
+	for _, o := range e.envVarOutputs {
+		outputVarCmd += fmt.Sprintf("\necho %s $%s >> %s", o, o, outputVarFile)
+	}
+
+	command := fmt.Sprintf("set -e\n %s %s", e.command, outputVarCmd)
+	logCmd, err := getLoggableCmd(command)
+	if err != nil {
+		e.log.Warn("failed to parse command using mvdan/sh. ", "command", command, zap.Error(err))
+		return fmt.Sprintf("echo '---%s'\n%s", command, command)
+	}
+	return logCmd
+}
+
+func getLoggableCmd(cmd string) (string, error) {
+	parser := syntax.NewParser(syntax.KeepComments(false))
+	printer := syntax.NewPrinter(syntax.Minify(false))
+
+	r := strings.NewReader(cmd)
+	prog, err := parser.Parse(r, "")
+	if err != nil {
+		return "", errors.Wrap(err, "failed to parse command")
+	}
+
+	var stmts []*syntax.Stmt
+	for _, stmt := range prog.Stmts {
+		// convert the statement to a string and then encode special characters.
+		var buf bytes.Buffer
+		if printer.Print(&buf, stmt); err != nil {
+			return "", errors.Wrap(err, "failed to parse statement")
+		}
+
+		// create a new statement that echos the
+		// original shell statement.
+		echo := &syntax.Stmt{
+			Cmd: &syntax.CallExpr{
+				Args: []*syntax.Word{
+					&syntax.Word{
+						Parts: []syntax.WordPart{
+							&syntax.Lit{
+								Value: "echo",
+							},
+						},
+					},
+					&syntax.Word{
+						Parts: []syntax.WordPart{
+							&syntax.SglQuoted{
+								Dollar: false,
+								Value:  "--- " + buf.String(),
+							},
+						},
+					},
+				},
+			},
+		}
+		// append the echo statement and the statement
+		stmts = append(stmts, echo)
+		stmts = append(stmts, stmt)
+	}
+	// replace original statements with new statements
+	prog.Stmts = stmts
+
+	buf := new(bytes.Buffer)
+	printer.Print(buf, prog)
+	return buf.String(), nil
 }
 
 func logCommandExecErr(log *zap.SugaredLogger, errMsg, stepID, args string, retryCount int32, startTime time.Time, err error) {

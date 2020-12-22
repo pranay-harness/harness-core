@@ -421,7 +421,7 @@ public class CIExecutionPlanTestHelper {
         .stepSpecType(RunStepInfo.builder()
                           .identifier(RUN_STEP_ID)
                           .name(RUN_STEP_NAME)
-                          .command(singletonList("./test-script1.sh"))
+                          .command("./test-script1.sh")
                           .callbackId("test-p1-callbackId")
                           .image(RUN_STEP_IMAGE)
                           .connector(RUN_STEP_CONNECTOR)

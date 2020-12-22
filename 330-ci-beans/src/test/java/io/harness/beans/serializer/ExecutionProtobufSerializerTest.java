@@ -34,7 +34,7 @@ public class ExecutionProtobufSerializerTest extends CiBeansTestBase {
                                              .name("run1")
                                              .callbackId("callbackId")
                                              .identifier("runId1")
-                                             .command(Arrays.asList("run1c1", "run1c2"))
+                                             .command("run1c1")
                                              .port(8000)
                                              .build())
                            .build();
@@ -43,7 +43,7 @@ public class ExecutionProtobufSerializerTest extends CiBeansTestBase {
                                              .name("run2")
                                              .callbackId("callbackId")
                                              .identifier("runId2")
-                                             .command(Arrays.asList("run2c1", "run2c2"))
+                                             .command("run2c1")
                                              .port(8001)
                                              .build())
                            .build();
@@ -65,11 +65,9 @@ public class ExecutionProtobufSerializerTest extends CiBeansTestBase {
 
     assertThat(parsedExecution.getStepsList()).hasSize(3);
 
-    assertThat(parsedExecution.getStepsList().get(0).getUnit().getRun().getCommands(0)).isEqualTo("run1c1");
-    assertThat(parsedExecution.getStepsList().get(0).getUnit().getRun().getCommands(1)).isEqualTo("run1c2");
+    assertThat(parsedExecution.getStepsList().get(0).getUnit().getRun().getCommand()).isEqualTo("run1c1");
 
-    assertThat(parsedExecution.getStepsList().get(1).getUnit().getRun().getCommands(0)).isEqualTo("run2c1");
-    assertThat(parsedExecution.getStepsList().get(1).getUnit().getRun().getCommands(1)).isEqualTo("run2c2");
+    assertThat(parsedExecution.getStepsList().get(1).getUnit().getRun().getCommand()).isEqualTo("run2c1");
 
     assertThat(parsedExecution.getStepsList().get(2).getUnit().getPlugin().getImage()).isEqualTo("git");
   }

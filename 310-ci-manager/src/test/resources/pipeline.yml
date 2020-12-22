@@ -48,32 +48,28 @@ pipeline:
                     spec:
                       retry: 2
                       timeout: 30
-                      command:
-                        - ./run lint
+                      command: ./run lint
                 - step:
                     identifier: runUnitTests
                     type: run
                     spec:
                       retry: 2
                       timeout: 30
-                      command:
-                        - mvn -U clean package -Dbuild.number=${BUILD_NUMBER} -DgitBranch=master -DforkMode=perthread -DthreadCount=3 -DargLine="-Xmx2048m"
+                      command: mvn -U clean package -Dbuild.number=${BUILD_NUMBER} -DgitBranch=master -DforkMode=perthread -DthreadCount=3 -DargLine="-Xmx2048m"
             - step:
                 identifier: generateReport
                 type: run
                 spec:
                   timeout: 30
                   retry: 2
-                  command:
-                    - ./ci/generate_report.sh
+                  command: ./ci/generate_report.sh
             - step:
                 identifier: buildMaster
                 type: run
                 spec:
                   retry: 2
                   timeout: 75
-                  command:
-                    - mvn clean install
+                  command: mvn clean install
             - step:
                 identifier: runUnitTestsIntelligently
                 type: testIntelligence

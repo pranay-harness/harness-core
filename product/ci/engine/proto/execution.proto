@@ -26,7 +26,7 @@ message TestIntelligenceStep {
 }
 
 message RunStep {
-  repeated string commands = 1;
+  string command = 1;
   StepContext context = 2;
   repeated string envVarOutputs = 3;  // produced output variables
   uint32 container_port = 4;          // Port of the container on which run step needs to be executed

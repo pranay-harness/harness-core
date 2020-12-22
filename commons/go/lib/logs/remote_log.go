@@ -32,7 +32,7 @@ func NewRemoteLogger(writer StreamWriter) (*RemoteLogger, error) {
 		EncodeTime:     zapcore.ISO8601TimeEncoder,
 		EncodeDuration: zapcore.StringDurationEncoder,
 	}
-	core := zapcore.NewCore(zapcore.NewJSONEncoder(encoderCfg), ws, zap.DebugLevel)
+	core := zapcore.NewCore(zapcore.NewJSONEncoder(encoderCfg), ws, zap.InfoLevel)
 	logger := zap.New(core)
 	log := logger.Sugar()
 	rl := &RemoteLogger{log, writer}

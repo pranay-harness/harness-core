@@ -138,7 +138,7 @@ func TestStepRunError(t *testing.T) {
 		Id: "test2",
 		Step: &pb.UnitStep_Run{
 			Run: &pb.RunStep{
-				Commands:      []string{"ls"},
+				Command:       "ls",
 				ContainerPort: uint32(8000),
 			},
 		},
@@ -183,7 +183,7 @@ func TestStepRunSuccess(t *testing.T) {
 		Id: "test2",
 		Step: &pb.UnitStep_Run{
 			Run: &pb.RunStep{
-				Commands:      []string{"ls"},
+				Command:       "ls",
 				ContainerPort: uint32(8000),
 			},
 		},
@@ -578,7 +578,7 @@ func TestCleanupClientErr(t *testing.T) {
 		Id: "test",
 		Step: &pb.UnitStep_Run{
 			Run: &pb.RunStep{
-				Commands:      []string{"cd .", "ls"},
+				Command:       "cd . ; ls",
 				ContainerPort: port,
 			},
 		},
@@ -606,7 +606,7 @@ func TestCleanupServerErr(t *testing.T) {
 		Id: "test",
 		Step: &pb.UnitStep_Run{
 			Run: &pb.RunStep{
-				Commands:      []string{"cd .", "ls"},
+				Command:       "cd . ; ls",
 				ContainerPort: port,
 			},
 		},
@@ -642,7 +642,7 @@ func TestCleanupRunStepSuccess(t *testing.T) {
 		Id: "test",
 		Step: &pb.UnitStep_Run{
 			Run: &pb.RunStep{
-				Commands:      []string{"cd .", "ls"},
+				Command:       "cd . ; ls",
 				ContainerPort: port,
 			},
 		},
@@ -731,7 +731,7 @@ func TestStepSkipSuccess(t *testing.T) {
 		Id: "test2",
 		Step: &pb.UnitStep_Run{
 			Run: &pb.RunStep{
-				Commands:      []string{"ls"},
+				Command:       "ls",
 				ContainerPort: uint32(8000),
 			},
 		},
@@ -771,7 +771,7 @@ func TestStepInvalidSkipCondition(t *testing.T) {
 		Id: "test2",
 		Step: &pb.UnitStep_Run{
 			Run: &pb.RunStep{
-				Commands:      []string{"ls"},
+				Command:       "ls",
 				ContainerPort: uint32(8000),
 			},
 		},
@@ -811,7 +811,7 @@ func TestStepInvalidJEXLSkipCondition(t *testing.T) {
 		Id: "test2",
 		Step: &pb.UnitStep_Run{
 			Run: &pb.RunStep{
-				Commands:      []string{"ls"},
+				Command:       "ls",
 				ContainerPort: uint32(8000),
 			},
 		},
@@ -851,7 +851,7 @@ func TestStepJEXLSkipCondition(t *testing.T) {
 		Id: "test2",
 		Step: &pb.UnitStep_Run{
 			Run: &pb.RunStep{
-				Commands:      []string{"ls"},
+				Command:       "ls",
 				ContainerPort: uint32(8000),
 			},
 		},
