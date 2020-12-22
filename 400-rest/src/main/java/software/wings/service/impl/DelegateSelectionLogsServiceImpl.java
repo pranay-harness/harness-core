@@ -7,14 +7,18 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
+import io.harness.delegate.beans.DelegateSelectionLogParams.DelegateSelectionLogParamsBuilder;
 import io.harness.delegate.beans.DelegateSelectionLogResponse;
+import io.harness.delegate.beans.ProfileScopingRulesDetails;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.selection.log.DelegateSelectionLog;
 import io.harness.selection.log.DelegateSelectionLog.DelegateSelectionLogBuilder;
 import io.harness.selection.log.DelegateSelectionLog.DelegateSelectionLogKeys;
+import io.harness.selection.log.DelegateSelectionLogMetadata;
 import io.harness.selection.log.DelegateSelectionLogTaskMetadata;
+import io.harness.selection.log.ProfileScopingRulesMetadata;
 import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.beans.Application;
@@ -251,8 +255,8 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   }
 
   @Override
-  public void logProfileScopeRuleNotMatched(
-      BatchDelegateSelectionLog batch, String accountId, String delegateId, String scopingRulesDescription) {
+  public void logProfileScopeRuleNotMatched(BatchDelegateSelectionLog batch, String accountId, String delegateId,
+      String delegateProfileId, Set<String> scopingRulesDescriptions) {
     if (batch == null) {
       return;
     }
@@ -262,10 +266,20 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
     DelegateSelectionLogBuilder delegateSelectionLogBuilder =
         retrieveDelegateSelectionLogBuilder(accountId, batch.getTaskId(), delegateIds);
 
+    Map<String, DelegateSelectionLogMetadata> metadataMap = new HashMap<>();
+    metadataMap.put(delegateId,
+        DelegateSelectionLogMetadata.builder()
+            .profileScopingRulesMetadata(io.harness.selection.log.ProfileScopingRulesMetadata.builder()
+                                             .profileId(delegateProfileId)
+                                             .scopingRulesDescriptions(scopingRulesDescriptions)
+                                             .build())
+            .build());
+
     batch.append(delegateSelectionLogBuilder.conclusion(REJECTED)
-                     .message("Delegate profile scoping rules not matched: " + scopingRulesDescription)
+                     .message("Delegate profile scoping rules not matched")
                      .eventTimestamp(System.currentTimeMillis())
                      .groupId(PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID)
+                     .delegateMetadata(metadataMap)
                      .build());
   }
 
@@ -365,15 +379,33 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
         delegateProfileName = Optional.ofNullable(delegateProfile).map(DelegateProfile::getName).orElse("");
       }
 
-      delegateSelectionLogParamsList.add(DelegateSelectionLogParams.builder()
-                                             .delegateId(delegateId)
-                                             .delegateName(delegateName)
-                                             .delegateHostName(delegateHostName)
-                                             .delegateProfileName(delegateProfileName)
-                                             .conclusion(selectionLog.getConclusion())
-                                             .message(selectionLog.getMessage())
-                                             .eventTimestamp(selectionLog.getEventTimestamp())
-                                             .build());
+      DelegateSelectionLogParamsBuilder delegateSelectionLogParamsBuilder =
+          DelegateSelectionLogParams.builder()
+              .delegateId(delegateId)
+              .delegateName(delegateName)
+              .delegateHostName(delegateHostName)
+              .delegateProfileName(delegateProfileName)
+              .conclusion(selectionLog.getConclusion())
+              .message(selectionLog.getMessage())
+              .eventTimestamp(selectionLog.getEventTimestamp());
+
+      if (selectionLog.getDelegateMetadata() != null && selectionLog.getDelegateMetadata().get(delegateId) != null
+          && selectionLog.getDelegateMetadata().get(delegateId).getProfileScopingRulesMetadata() != null) {
+        ProfileScopingRulesMetadata profileScopingRulesMetadata =
+            selectionLog.getDelegateMetadata().get(delegateId).getProfileScopingRulesMetadata();
+
+        DelegateProfile scopingRulesProfile =
+            persistence.get(DelegateProfile.class, profileScopingRulesMetadata.getProfileId());
+
+        delegateSelectionLogParamsBuilder.profileScopingRulesDetails(
+            ProfileScopingRulesDetails.builder()
+                .profileId(profileScopingRulesMetadata.getProfileId())
+                .profileName(scopingRulesProfile != null ? scopingRulesProfile.getName() : null)
+                .scopingRulesDescriptions(profileScopingRulesMetadata.getScopingRulesDescriptions())
+                .build());
+      }
+
+      delegateSelectionLogParamsList.add(delegateSelectionLogParamsBuilder.build());
     }
 
     return delegateSelectionLogParamsList;

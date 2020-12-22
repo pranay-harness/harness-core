@@ -14,6 +14,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import java.time.OffsetDateTime;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -49,6 +51,9 @@ public class DelegateSelectionLog implements PersistentEntity, UuidAware, Accoun
    * Used for deduplication of logs. Standalone logs will have a unique value and groups will have fixed.
    * */
   @NotEmpty private String groupId;
+
+  // Map key is delegateId
+  @Builder.Default private Map<String, DelegateSelectionLogMetadata> delegateMetadata = new HashMap<>();
 
   @Builder.Default @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
 }

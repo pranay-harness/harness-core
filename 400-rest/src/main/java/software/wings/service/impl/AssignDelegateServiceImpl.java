@@ -226,7 +226,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     log.info(logSequence + " - Starting profile scoping rules match with task abstractions {}.",
         taskSetupAbstractionsPrintable.toString());
 
-    StringBuilder failedRulesDescription = new StringBuilder();
+    Set<String> failedRulesDescriptions = new HashSet<>();
     for (DelegateProfileScopingRule scopingRule : delegateProfileScopingRules) {
       boolean scopingRuleMatched = true;
 
@@ -243,7 +243,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
             log.info(
                 logSequence + " - Scoping rule with description: {}, did not match with task abstractions for key {}.",
                 scopingRule.getDescription(), entity.getKey());
-            failedRulesDescription.append("Scoping Rule: " + scopingRule.getDescription() + "; ");
+            failedRulesDescriptions.add(scopingRule.getDescription());
             scopingRuleMatched = false;
             break;
           }
@@ -256,7 +256,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     }
 
     delegateSelectionLogsService.logProfileScopeRuleNotMatched(
-        batch, delegate.getAccountId(), delegate.getUuid(), failedRulesDescription.toString());
+        batch, delegate.getAccountId(), delegate.getUuid(), delegateProfile.getUuid(), failedRulesDescriptions);
 
     return false;
   }

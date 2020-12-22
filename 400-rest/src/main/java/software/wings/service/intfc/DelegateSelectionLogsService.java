@@ -27,8 +27,8 @@ public interface DelegateSelectionLogsService {
 
   void logNoIncludeScopeMatched(BatchDelegateSelectionLog batch, String accountId, String delegateId);
 
-  void logProfileScopeRuleNotMatched(
-      BatchDelegateSelectionLog batch, String accountId, String delegateId, String scopingRuleDescription);
+  void logProfileScopeRuleNotMatched(BatchDelegateSelectionLog batch, String accountId, String delegateId,
+      String delegateProfileId, Set<String> scopingRulesDescriptions);
 
   List<DelegateSelectionLogParams> fetchTaskSelectionLogs(String accountId, String taskId);
 
