@@ -1,11 +1,13 @@
 package software.wings.service.impl.aws.delegate;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.SATYAM;
 
 import static software.wings.service.impl.aws.model.AwsConstants.MAX_TRAFFIC_SHIFT_WEIGHT;
 import static software.wings.service.impl.aws.model.AwsConstants.MIN_TRAFFIC_SHIFT_WEIGHT;
 
+import static com.amazonaws.services.elasticloadbalancingv2.model.ActionTypeEnum.Forward;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -54,6 +56,7 @@ import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetHealthR
 import com.amazonaws.services.elasticloadbalancingv2.model.ForwardActionConfig;
 import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
 import com.amazonaws.services.elasticloadbalancingv2.model.LoadBalancer;
+import com.amazonaws.services.elasticloadbalancingv2.model.ModifyListenerRequest;
 import com.amazonaws.services.elasticloadbalancingv2.model.ModifyRuleRequest;
 import com.amazonaws.services.elasticloadbalancingv2.model.Rule;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetDescription;
@@ -525,10 +528,14 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
   public void testUpdateRulesForAlbTrafficShift() {
     AwsElbHelperServiceDelegateImpl service = spy(AwsElbHelperServiceDelegateImpl.class);
     EncryptionService mockEncryptionService = mock(EncryptionService.class);
+    AwsCallTracker mockAwsCallTracker = mock(AwsCallTracker.class);
     on(service).set("encryptionService", mockEncryptionService);
+    on(service).set("tracker", mockAwsCallTracker);
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     AmazonElasticLoadBalancingClient mockClient = mock(AmazonElasticLoadBalancingClient.class);
     doReturn(mockClient).when(service).getAmazonElasticLoadBalancingClientV2(any(), any());
+    DescribeRulesResult describeRulesResult = new DescribeRulesResult();
+    doReturn(describeRulesResult).when(mockClient).describeRules(any());
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString(), any());
     doNothing().when(mockCallback).saveExecutionLog(anyString());
@@ -547,5 +554,47 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
         10, SpotInstConstants.ELASTI_GROUP);
     verify(mockClient).modifyRule(any());
     verify(mockClient).modifyListener(any());
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testUpdateRulesForAlbTrafficShiftMixedRulesCase() {
+    AwsElbHelperServiceDelegateImpl service = spy(AwsElbHelperServiceDelegateImpl.class);
+    EncryptionService mockEncryptionService = mock(EncryptionService.class);
+    AwsCallTracker mockAwsCallTracker = mock(AwsCallTracker.class);
+    on(service).set("encryptionService", mockEncryptionService);
+    on(service).set("tracker", mockAwsCallTracker);
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
+    AmazonElasticLoadBalancingClient mockClient = mock(AmazonElasticLoadBalancingClient.class);
+    doReturn(mockClient).when(service).getAmazonElasticLoadBalancingClientV2(any(), any());
+    DescribeRulesResult describeRulesResult = new DescribeRulesResult();
+    Rule defaultRule = new Rule();
+    TargetGroupTuple newTuple = new TargetGroupTuple().withWeight(10);
+    TargetGroupTuple oldTuple = new TargetGroupTuple().withWeight(90);
+    Action forwardAction = new Action().withType(Forward).withForwardConfig(
+        new ForwardActionConfig().withTargetGroups(newTuple, oldTuple));
+    defaultRule.withActions(forwardAction);
+    defaultRule.setIsDefault(true);
+    defaultRule.setRuleArn("ruleArnDefault");
+    describeRulesResult.setRules(singletonList(defaultRule));
+    doReturn(describeRulesResult).when(mockClient).describeRules(any());
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString(), any());
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    List<LbDetailsForAlbTrafficShift> details = asList(LbDetailsForAlbTrafficShift.builder()
+                                                           .useSpecificRule(true)
+                                                           .ruleArn("ruleArnDefault")
+                                                           .prodTargetGroupArn("prodTg1")
+                                                           .stageTargetGroupArn("stageTg1")
+                                                           .listenerArn("listenerArn")
+                                                           .build());
+    oldTuple.setTargetGroupArn(details.get(0).getProdTargetGroupArn());
+    newTuple.setTargetGroupArn(details.get(0).getStageTargetGroupArn());
+    service.updateRulesForAlbTrafficShift(AwsConfig.builder().build(), "us-east-1", emptyList(), details, mockCallback,
+        10, SpotInstConstants.ELASTI_GROUP);
+    ModifyListenerRequest modifyListenerRequest = new ModifyListenerRequest();
+    modifyListenerRequest.withDefaultActions(forwardAction).withListenerArn("listenerArn");
+    verify(mockClient).modifyListener(modifyListenerRequest);
   }
 }

@@ -96,7 +96,7 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
     }
 
     logCallback.saveExecutionLog("Updating Listener Rules for Load Balancer");
-    awsElbHelperServiceDelegate.updateListenersForBGDeployment(awsConfig, emptyList(),
+    awsElbHelperServiceDelegate.updateListenersForSpotInstBGDeployment(awsConfig, emptyList(),
         swapRoutesParameters.getLBdetailsForBGDeploymentList(), swapRoutesParameters.getAwsRegion(), logCallback);
     logCallback.saveExecutionLog("Route Updated Successfully", INFO, SUCCESS);
 
@@ -191,22 +191,47 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
         prodListener, details.getProdRuleArn(), logCallback, awsConfig, region, emptyList());
     if (details.getStageTargetGroupArn().equals(currentProdTargetGroup.getTargetGroupArn())) {
       logCallback.saveExecutionLog("Routes were updated. Swapping routes in Rollback");
+      resetRoutesInRollbackSpecificRulesCase(details, logCallback, awsConfig, region);
+    }
+  }
 
-      List<Rule> prodRules = awsElbHelperServiceDelegate.getListenerRuleFromListenerRuleArn(
-          awsConfig, emptyList(), region, details.getProdRuleArn(), logCallback);
-      List<Rule> stageRules = awsElbHelperServiceDelegate.getListenerRuleFromListenerRuleArn(
-          awsConfig, emptyList(), region, details.getStageRuleArn(), logCallback);
+  private void resetRoutesInRollbackSpecificRulesCase(LoadBalancerDetailsForBGDeployment details,
+      ExecutionLogCallback logCallback, AwsConfig awsConfig, String region) {
+    List<Rule> prodRules = awsElbHelperServiceDelegate.getListenerRuleFromListenerRuleArn(
+        awsConfig, emptyList(), region, details.getProdRuleArn(), logCallback);
+    List<Rule> stageRules = awsElbHelperServiceDelegate.getListenerRuleFromListenerRuleArn(
+        awsConfig, emptyList(), region, details.getStageRuleArn(), logCallback);
 
-      String prodTargetGroup = prodRules.get(0).getActions().get(0).getTargetGroupArn();
-      String stageTargetGroup = stageRules.get(0).getActions().get(0).getTargetGroupArn();
+    String prodTargetGroup = prodRules.get(0).getActions().get(0).getTargetGroupArn();
+    String stageTargetGroup = stageRules.get(0).getActions().get(0).getTargetGroupArn();
 
-      AmazonElasticLoadBalancing client =
-          awsElbHelperServiceDelegate.getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
+    AmazonElasticLoadBalancing client =
+        awsElbHelperServiceDelegate.getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
 
-      awsElbHelperServiceDelegate.modifyListenerRule(
-          client, details.getProdListenerArn(), details.getProdRuleArn(), prodTargetGroup, logCallback);
-      awsElbHelperServiceDelegate.modifyListenerRule(
-          client, details.getStageListenerArn(), details.getStageRuleArn(), stageTargetGroup, logCallback);
+    awsElbHelperServiceDelegate.modifyListenerRule(
+        client, details.getProdListenerArn(), details.getProdRuleArn(), prodTargetGroup, logCallback);
+    awsElbHelperServiceDelegate.modifyListenerRule(
+        client, details.getStageListenerArn(), details.getStageRuleArn(), stageTargetGroup, logCallback);
+  }
+
+  private void restoreDefaultRulesRoutesIfChanged(LoadBalancerDetailsForBGDeployment lbDetail,
+      ExecutionLogCallback logCallback, AwsConfig awsConfig, SpotInstSwapRoutesTaskParameters swapRoutesParameters) {
+    DescribeListenersResult result = awsElbHelperServiceDelegate.describeListenerResult(
+        awsConfig, emptyList(), lbDetail.getProdListenerArn(), swapRoutesParameters.getAwsRegion());
+    Optional<Action> optionalAction =
+        result.getListeners()
+            .get(0)
+            .getDefaultActions()
+            .stream()
+            .filter(action -> "forward".equalsIgnoreCase(action.getType()) && isNotEmpty(action.getTargetGroupArn()))
+            .findFirst();
+
+    if (optionalAction.isPresent()
+        && optionalAction.get().getTargetGroupArn().equals(lbDetail.getStageTargetGroupArn())) {
+      logCallback.saveExecutionLog(format("Listener: [%s] is forwarding traffic to: [%s]. Swap routes in rollback",
+          lbDetail.getProdListenerArn(), lbDetail.getStageTargetGroupArn()));
+      awsElbHelperServiceDelegate.updateDefaultListenersForSpotInstBG(awsConfig, emptyList(),
+          lbDetail.getProdListenerArn(), lbDetail.getStageListenerArn(), swapRoutesParameters.getAwsRegion());
     }
   }
 
@@ -222,24 +247,7 @@ public class SpotInstSwapRoutesTaskHandler extends SpotInstTaskHandler {
       if (lbDetail.isUseSpecificRules()) {
         restoreSpecificRulesRoutesIfChanged(lbDetail, logCallback, awsConfig, swapRoutesParameters.getAwsRegion());
       } else {
-        DescribeListenersResult result = awsElbHelperServiceDelegate.describeListenerResult(
-            awsConfig, emptyList(), lbDetail.getProdListenerArn(), swapRoutesParameters.getAwsRegion());
-        Optional<Action> optionalAction =
-            result.getListeners()
-                .get(0)
-                .getDefaultActions()
-                .stream()
-                .filter(
-                    action -> "forward".equalsIgnoreCase(action.getType()) && isNotEmpty(action.getTargetGroupArn()))
-                .findFirst();
-
-        if (optionalAction.isPresent()
-            && optionalAction.get().getTargetGroupArn().equals(lbDetail.getStageTargetGroupArn())) {
-          logCallback.saveExecutionLog(format("Listener: [%s] is forwarding traffic to: [%s]. Swap routes in rollback",
-              lbDetail.getProdListenerArn(), lbDetail.getStageTargetGroupArn()));
-          awsElbHelperServiceDelegate.updateListenersForEcsBG(awsConfig, emptyList(), lbDetail.getProdListenerArn(),
-              lbDetail.getStageListenerArn(), swapRoutesParameters.getAwsRegion());
-        }
+        restoreDefaultRulesRoutesIfChanged(lbDetail, logCallback, awsConfig, swapRoutesParameters);
       }
     }
     logCallback.saveExecutionLog("Prod Elastigroup is UP with correct traffic", INFO, SUCCESS);

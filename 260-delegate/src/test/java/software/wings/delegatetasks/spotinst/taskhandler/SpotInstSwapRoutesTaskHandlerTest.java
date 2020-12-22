@@ -81,7 +81,7 @@ public class SpotInstSwapRoutesTaskHandlerTest extends WingsBaseTest {
         SpotInstConfig.builder().spotInstAccountId("SPOTINST_ACCOUNT_ID").spotInstToken(new char[] {'a', 'b'}).build(),
         AwsConfig.builder().build());
     verify(mockAwsElbHelperServiceDelegate)
-        .updateListenersForBGDeployment(any(), anyList(), anyList(), anyString(), any());
+        .updateListenersForSpotInstBGDeployment(any(), anyList(), anyList(), anyString(), any());
     verify(mockSpotInstHelperServiceDelegate).updateElastiGroupCapacity(anyString(), anyString(), anyString(), any());
   }
 
@@ -117,7 +117,7 @@ public class SpotInstSwapRoutesTaskHandlerTest extends WingsBaseTest {
         SpotInstConfig.builder().spotInstAccountId("SPOTINST_ACCOUNT_ID").spotInstToken(new char[] {'a', 'b'}).build(),
         AwsConfig.builder().build());
     verify(mockAwsElbHelperServiceDelegate)
-        .updateListenersForEcsBG(any(), anyList(), anyString(), anyString(), anyString());
+        .updateDefaultListenersForSpotInstBG(any(), anyList(), anyString(), anyString(), anyString());
     verify(spotInstSwapRoutesTaskHandler, times(2))
         .updateElastiGroupAndWait(anyString(), anyString(), any(), anyInt(), any(), anyString(), anyString());
   }
