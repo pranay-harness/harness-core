@@ -2,45 +2,61 @@ package io.harness.pms.sdk;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
 import io.harness.pms.contracts.plan.InitializeSdkRequest;
 import io.harness.pms.contracts.plan.InitializeSdkResponse;
 import io.harness.pms.contracts.plan.PmsServiceGrpc.PmsServiceImplBase;
 import io.harness.pms.contracts.plan.Types;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.exception.InitializeSdkException;
 import io.harness.repositories.sdk.PmsSdkInstanceRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.grpc.stub.StreamObserver;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Singleton
 public class PmsSdkInstanceService extends PmsServiceImplBase {
+  private final static String LOCK_NAME_PREFIX = "PmsSdkInstanceService-";
+
   private final PmsSdkInstanceRepository pmsSdkInstanceRepository;
+  private final PersistentLocker persistentLocker;
 
   @Inject
-  public PmsSdkInstanceService(PmsSdkInstanceRepository pmsSdkInstanceRepository) {
+  public PmsSdkInstanceService(PmsSdkInstanceRepository pmsSdkInstanceRepository, PersistentLocker persistentLocker) {
     this.pmsSdkInstanceRepository = pmsSdkInstanceRepository;
+    this.persistentLocker = persistentLocker;
   }
 
   @Override
   public void initializeSdk(InitializeSdkRequest request, StreamObserver<InitializeSdkResponse> responseObserver) {
-    saveSdkInstance(request);
+    if (EmptyPredicate.isEmpty(request.getName())) {
+      throw new InvalidRequestException("Name is empty");
+    }
+
+    try (AcquiredLock<?> lock =
+             persistentLocker.tryToAcquireLock(LOCK_NAME_PREFIX + request.getName(), Duration.ofMinutes(2))) {
+      if (lock == null) {
+        throw new InitializeSdkException("Could not acquire lock");
+      }
+      saveSdkInstance(request);
+    }
     responseObserver.onNext(InitializeSdkResponse.newBuilder().build());
     responseObserver.onCompleted();
   }
 
   private void saveSdkInstance(InitializeSdkRequest request) {
-    if (EmptyPredicate.isEmpty(request.getName())) {
-      throw new InvalidRequestException("Name is empty");
-    }
-
     Map<String, Set<String>> supportedTypes = new HashMap<>();
     if (EmptyPredicate.isNotEmpty(request.getSupportedTypesMap())) {
       for (Map.Entry<String, Types> entry : request.getSupportedTypesMap().entrySet()) {

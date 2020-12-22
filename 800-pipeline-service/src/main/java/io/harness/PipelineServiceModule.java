@@ -1,5 +1,7 @@
 package io.harness;
 
+import static io.harness.lock.DistributedLockImplementation.MONGO;
+
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
@@ -11,6 +13,8 @@ import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.grpc.server.PipelineServiceGrpcModule;
+import io.harness.lock.DistributedLockImplementation;
+import io.harness.lock.PersistentLockModule;
 import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
@@ -25,10 +29,12 @@ import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
 import io.harness.pms.sdk.StepTypeLookupServiceImpl;
 import io.harness.queue.QueueController;
+import io.harness.redis.RedisConfig;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
 import io.harness.service.PmsDelegateServiceDriverModule;
 import io.harness.springdata.SpringPersistenceModule;
+import io.harness.time.TimeModule;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -92,6 +98,8 @@ public class PipelineServiceModule extends AbstractModule {
     install(OrchestrationVisualizationModule.getInstance());
     install(new DelegateServiceDriverGrpcClientModule(configuration.getManagerServiceSecret(),
         configuration.getManagerTarget(), configuration.getManagerAuthority()));
+    install(PersistentLockModule.getInstance());
+    install(TimeModule.getInstance());
 
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);
@@ -182,5 +190,18 @@ public class PipelineServiceModule extends AbstractModule {
             .build());
     log.info("delegate callback token generated =[{}]", delegateCallbackToken.getToken());
     return delegateCallbackToken;
+  }
+
+  @Provides
+  @Singleton
+  DistributedLockImplementation distributedLockImplementation() {
+    return MONGO;
+  }
+
+  @Provides
+  @Named("lock")
+  @Singleton
+  RedisConfig redisConfig() {
+    return RedisConfig.builder().build();
   }
 }
