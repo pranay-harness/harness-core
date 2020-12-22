@@ -17,7 +17,6 @@ import io.harness.beans.FeatureFlag.Scope;
 import io.harness.beans.FeatureName;
 import io.harness.configuration.DeployMode;
 import io.harness.exception.InvalidRequestException;
-import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 
 import com.google.common.base.Splitter;

@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.delegate.beans.DelegateConfiguration.DelegateConfigurationKeys;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.VerificationConstants.SERVICE_GUAARD_LIMIT;
@@ -713,5 +714,7 @@ public class Account extends Base implements PersistentRegularIterable {
     public static final String ceLicenseExpiryIteration = "ceLicenseExpiryIteration";
     public static final String ceLicenseInfo = "ceLicenseInfo";
     public static final String isHarnessSupportAccessAllowed = "isHarnessSupportAccessAllowed";
+    public static final String DELEGATE_CONFIGURATION_DELEGATE_VERSIONS =
+        delegateConfiguration + "." + DelegateConfigurationKeys.delegateVersions;
   }
 }

@@ -1,7 +1,5 @@
 package io.harness.rule;
 
-import static java.time.Duration.ofSeconds;
-
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.ff.FeatureFlagModule;

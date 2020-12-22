@@ -165,6 +165,7 @@ import software.wings.resources.AppResource;
 import software.wings.scheduler.AccountPasswordExpirationJob;
 import software.wings.scheduler.DeletedEntityHandler;
 import software.wings.scheduler.InstancesPurgeJob;
+import software.wings.scheduler.ManagerVersionsCleanUpJob;
 import software.wings.scheduler.UsageMetricsHandler;
 import software.wings.scheduler.VaultSecretManagerRenewalHandler;
 import software.wings.scheduler.YamlChangeSetPruneJob;
@@ -877,6 +878,11 @@ public class WingsApplication extends Application<MainConfiguration> {
       Map<String, Long> dataRetentionMap = injector.getInstance(AccountService.class).obtainAccountDataRetentionMap();
       injector.getInstance(DataStoreService.class).purgeDataRetentionOlderRecords(dataRetentionMap);
     }), 0, 60L, TimeUnit.MINUTES);
+
+    // Cleanup delegate versions from global account
+    taskPollExecutor.scheduleWithFixedDelay(
+        new Schedulable("Failed cleaning up manager versions.", injector.getInstance(ManagerVersionsCleanUpJob.class)),
+        0L, 5L, TimeUnit.MINUTES);
   }
 
   public static void registerObservers(Injector injector) {
