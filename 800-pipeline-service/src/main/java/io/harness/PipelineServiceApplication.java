@@ -20,12 +20,15 @@ import io.harness.queue.QueuePublisher;
 import io.harness.service.impl.PmsDelegateAsyncServiceImpl;
 import io.harness.service.impl.PmsDelegateProgressServiceImpl;
 import io.harness.service.impl.PmsDelegateSyncServiceImpl;
+import io.harness.threading.ExecutorModule;
+import io.harness.threading.ThreadPool;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 import io.harness.waiter.ProgressUpdateService;
 
 import com.google.common.util.concurrent.ServiceManager;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -93,6 +96,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     log.info("Starting Pipeline Service Application ...");
     MaintenanceController.forceMaintenance(true);
 
+    ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
+        10, 100, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
     List<Module> modules = new ArrayList<>();
     modules.add(new ProviderModule() {
       @Provides

@@ -471,7 +471,9 @@ public enum ErrorCode {
 
   NG_PIPELINE_CREATE_EXCEPTION,
 
-  RESOURCE_NOT_FOUND_EXCEPTION;
+  RESOURCE_NOT_FOUND_EXCEPTION,
+
+  PMS_INITIALIZE_SDK_EXCEPTION;
 
   private Status status = BAD_REQUEST;
   private String description;
