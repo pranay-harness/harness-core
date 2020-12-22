@@ -4,13 +4,12 @@ import static io.harness.cdng.manifest.ManifestConstants.MANIFESTS;
 
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
-import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.cdng.manifest.yaml.ManifestsOutcome;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.yaml.core.intfc.WithIdentifier;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
@@ -70,8 +69,9 @@ public class ManifestStep {
 
     // 1. Get Manifests belonging to KubernetesServiceSpec
     if (EmptyPredicate.isNotEmpty(serviceSpecManifests)) {
-      identifierToManifestMap = serviceSpecManifests.stream().collect(
-          Collectors.toMap(WithIdentifier::getIdentifier, ManifestConfigWrapper::getManifestAttributes, (a, b) -> b));
+      identifierToManifestMap = serviceSpecManifests.stream().collect(Collectors.toMap(serviceSpecManifest
+          -> serviceSpecManifest.getManifest().getIdentifier(),
+          serviceSpecManifest -> serviceSpecManifest.getManifest().getManifestAttributes(), (a, b) -> b));
     }
 
     // 2. Apply Override Sets
@@ -83,7 +83,7 @@ public class ManifestStep {
     return StepOutcome.builder()
         .name(MANIFESTS.toLowerCase())
         .outcome(
-            ManifestOutcome.builder().manifestAttributes(new ArrayList<>(identifierToManifestMap.values())).build())
+            ManifestsOutcome.builder().manifestAttributes(new ArrayList<>(identifierToManifestMap.values())).build())
         .build();
   }
 
@@ -91,13 +91,13 @@ public class ManifestStep {
       Map<String, ManifestAttributes> identifierToManifestMap, List<ManifestConfigWrapper> stageOverrideManifests) {
     if (EmptyPredicate.isNotEmpty(stageOverrideManifests)) {
       stageOverrideManifests.forEach(stageOverrideManifest -> {
-        if (identifierToManifestMap.containsKey(stageOverrideManifest.getIdentifier())) {
-          identifierToManifestMap.put(stageOverrideManifest.getIdentifier(),
-              identifierToManifestMap.get(stageOverrideManifest.getIdentifier())
-                  .applyOverrides(stageOverrideManifest.getManifestAttributes()));
+        if (identifierToManifestMap.containsKey(stageOverrideManifest.getManifest().getIdentifier())) {
+          identifierToManifestMap.put(stageOverrideManifest.getManifest().getIdentifier(),
+              identifierToManifestMap.get(stageOverrideManifest.getManifest().getIdentifier())
+                  .applyOverrides(stageOverrideManifest.getManifest().getManifestAttributes()));
         } else {
-          identifierToManifestMap.put(
-              stageOverrideManifest.getIdentifier(), stageOverrideManifest.getManifestAttributes());
+          identifierToManifestMap.put(stageOverrideManifest.getManifest().getIdentifier(),
+              stageOverrideManifest.getManifest().getManifestAttributes());
         }
       });
     }

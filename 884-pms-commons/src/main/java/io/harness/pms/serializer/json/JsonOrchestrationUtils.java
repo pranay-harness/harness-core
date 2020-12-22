@@ -1,5 +1,6 @@
 package io.harness.pms.serializer.json;
 
+import io.harness.pms.serializer.jackson.NGHarnessJacksonModule;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -33,6 +34,7 @@ public class JsonOrchestrationUtils {
     mapper.registerModule(new Jdk8Module());
     mapper.registerModule(new GuavaModule());
     mapper.registerModule(new JavaTimeModule());
+    mapper.registerModule(new NGHarnessJacksonModule());
     mapper.setPropertyNamingStrategy(PropertyNamingStrategy.LOWER_CAMEL_CASE);
 
     nonIgnoringMapper = new ObjectMapper();
@@ -45,6 +47,7 @@ public class JsonOrchestrationUtils {
     nonIgnoringMapper.registerModule(new Jdk8Module());
     nonIgnoringMapper.registerModule(new GuavaModule());
     nonIgnoringMapper.registerModule(new JavaTimeModule());
+    nonIgnoringMapper.registerModule(new NGHarnessJacksonModule());
     nonIgnoringMapper.setPropertyNamingStrategy(PropertyNamingStrategy.LOWER_CAMEL_CASE);
   }
 

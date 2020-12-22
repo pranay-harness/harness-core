@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.NGConstants;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
-import io.harness.cdng.artifact.bean.SidecarArtifactWrapper;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
@@ -38,7 +37,7 @@ public class ArtifactUtils {
     if (EmptyPredicate.isNotEmpty(artifactListConfig.getSidecars())) {
       artifacts.addAll(artifactListConfig.getSidecars()
                            .stream()
-                           .map(SidecarArtifactWrapper::getArtifactConfig)
+                           .map(s -> s.getSidecar().getArtifactConfig())
                            .collect(Collectors.toList()));
     }
     return artifacts;

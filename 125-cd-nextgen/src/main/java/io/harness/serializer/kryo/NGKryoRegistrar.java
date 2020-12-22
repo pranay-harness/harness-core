@@ -25,8 +25,8 @@ import io.harness.cdng.k8s.K8sRollingStepParameters;
 import io.harness.cdng.k8s.K8sStepPassThroughData;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.ManifestConfig;
-import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOverrideSets;
+import io.harness.cdng.manifest.yaml.ManifestsOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
@@ -78,7 +78,7 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(ManifestFetchOutcome.class, 8027);
     kryo.register(K8SDirectInfrastructure.class, 8028);
     kryo.register(EnvironmentYaml.class, 8029);
-    kryo.register(ManifestOutcome.class, 8031);
+    kryo.register(ManifestsOutcome.class, 8031);
     kryo.register(K8sRollingOutcome.class, 8034);
     kryo.register(ServiceUseFromStage.class, 8036);
     kryo.register(ValuesManifest.class, 8037);

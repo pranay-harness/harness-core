@@ -11,6 +11,7 @@ import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.artifact.bean.ArtifactSpecWrapper;
 import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
+import io.harness.cdng.artifact.bean.SidecarArtifactWrapper;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
@@ -111,7 +112,9 @@ public class ArtifactUtilsTest extends CategoryTest {
     ArtifactListConfig artifactListConfig =
         ArtifactListConfig.builder()
             .primary(ArtifactSpecWrapper.builder().artifactConfig(primaryArtifact).build())
-            .sidecar(SidecarArtifact.builder().artifactConfig(sidecarArtifact).build())
+            .sidecar(SidecarArtifactWrapper.builder()
+                         .sidecar(SidecarArtifact.builder().artifactConfig(sidecarArtifact).build())
+                         .build())
             .build();
     List<ArtifactConfig> artifactsList = ArtifactUtils.convertArtifactListIntoArtifacts(artifactListConfig);
     assertThat(artifactsList).containsOnly(primaryArtifact, sidecarArtifact);

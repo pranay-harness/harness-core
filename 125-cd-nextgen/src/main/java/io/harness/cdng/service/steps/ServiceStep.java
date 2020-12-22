@@ -12,7 +12,7 @@ import io.harness.cdng.artifact.steps.ArtifactStep;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
 import io.harness.cdng.manifest.state.ManifestStep;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
-import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.cdng.manifest.yaml.ManifestsOutcome;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome.ArtifactsOutcomeBuilder;
@@ -171,16 +171,16 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
 
       // Handle ManifestOutcome
       Optional<Outcome> manifestOutcome =
-          outcomes.stream().filter(outcome -> outcome instanceof ManifestOutcome).findFirst();
-      handleManifestOutcome((ManifestOutcome) manifestOutcome.orElse(
-                                ManifestOutcome.builder().manifestAttributes(Collections.emptyList()).build()),
+          outcomes.stream().filter(outcome -> outcome instanceof ManifestsOutcome).findFirst();
+      handleManifestOutcome((ManifestsOutcome) manifestOutcome.orElse(
+                                ManifestsOutcome.builder().manifestAttributes(Collections.emptyList()).build()),
           outcomeBuilder);
     }
 
     return outcomeBuilder.build();
   }
 
-  private void handleManifestOutcome(ManifestOutcome outcome, ServiceOutcomeBuilder outcomeBuilder) {
+  private void handleManifestOutcome(ManifestsOutcome outcome, ServiceOutcomeBuilder outcomeBuilder) {
     List<ManifestAttributes> manifestAttributesList =
         isNotEmpty(outcome.getManifestAttributes()) ? outcome.getManifestAttributes() : Collections.emptyList();
 

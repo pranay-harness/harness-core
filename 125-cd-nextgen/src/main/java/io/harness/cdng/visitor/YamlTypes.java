@@ -9,6 +9,7 @@ public interface YamlTypes {
   String ARTIFACT_LIST_CONFIG = "artifacts";
   String ARTIFACT_OVERRIDE_SETS = "artifactOverrideSets";
   String SIDECAR_ARTIFACT_CONFIG = "sidecar";
+  String SIDECARS_ARTIFACT_CONFIG = "sidecars";
   String ENVIRONMENT_YAML = "environment";
   String INFRASTRUCTURE_DEF = "infrastructureDefinition";
   String INFRA_USE_FROM_STAGE = "useFromStage";

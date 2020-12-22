@@ -1,20 +1,36 @@
 package io.harness.cdng.artifact.bean;
 
-import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.WRAPPER_OBJECT;
-import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
+import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
+import io.harness.cdng.visitor.YamlTypes;
+import io.harness.cdng.visitor.helpers.artifact.SidecarWrapperArtifactVisitorHelper;
+import io.harness.walktree.beans.LevelNode;
+import io.harness.walktree.beans.VisitableChildren;
+import io.harness.walktree.visitor.SimpleVisitorHelper;
+import io.harness.walktree.visitor.Visitable;
 
-import io.harness.yaml.core.intfc.WithIdentifier;
+import lombok.Builder;
+import lombok.Value;
+import org.springframework.data.annotation.TypeAlias;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+@Value
+@Builder
+@SimpleVisitorHelper(helperClass = SidecarWrapperArtifactVisitorHelper.class)
+@TypeAlias("sidecarArtifactWrapper")
+public class SidecarArtifactWrapper implements Visitable {
+  SidecarArtifact sidecar;
 
-/**
- * wrapper object for sidecar element.
- * sidecars:
- *      - sidecar:
- *              identifier:
- */
-@JsonTypeInfo(use = NAME, include = WRAPPER_OBJECT)
-public interface SidecarArtifactWrapper extends WithIdentifier {
-  @JsonIgnore ArtifactConfig getArtifactConfig();
+  // For Visitor Framework Impl
+  String metadata;
+
+  @Override
+  public LevelNode getLevelNode() {
+    return LevelNode.builder().qualifierName(YamlTypes.SIDECARS_ARTIFACT_CONFIG).build();
+  }
+
+  @Override
+  public VisitableChildren getChildrenToWalk() {
+    VisitableChildren children = VisitableChildren.builder().build();
+    children.add("sidecar", sidecar);
+    return children;
+  }
 }

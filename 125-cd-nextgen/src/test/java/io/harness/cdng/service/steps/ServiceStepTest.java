@@ -8,7 +8,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.manifest.ManifestConstants;
 import io.harness.cdng.manifest.yaml.GitStore;
-import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.cdng.manifest.yaml.ManifestsOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.service.beans.KubernetesServiceSpec;
@@ -66,9 +66,9 @@ public class ServiceStepTest extends CategoryTest {
                     .build())
             .build();
 
-    ManifestOutcome manifestOutcome =
-        ManifestOutcome.builder().manifestAttributes(Arrays.asList(k8Manifest, k8Manifest1)).build();
-    StepOutcome stepOutcome = StepOutcome.builder().outcome(manifestOutcome).name(ManifestConstants.MANIFESTS).build();
+    ManifestsOutcome manifestsOutcome =
+        ManifestsOutcome.builder().manifestAttributes(Arrays.asList(k8Manifest, k8Manifest1)).build();
+    StepOutcome stepOutcome = StepOutcome.builder().outcome(manifestsOutcome).name(ManifestConstants.MANIFESTS).build();
 
     ServiceOutcome serviceOutcome = serviceStep.createServiceOutcome(
         ServiceConfig.builder()

@@ -11,9 +11,9 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
-@TypeAlias("manifestOutcome")
-@JsonTypeName("manifestOutcome")
-public class ManifestOutcome implements Outcome {
+@TypeAlias("manifestsOutcome")
+@JsonTypeName("manifestsOutcome")
+public class ManifestsOutcome implements Outcome {
   @NonNull List<ManifestAttributes> manifestAttributes;
 
   @Override

@@ -42,7 +42,7 @@ public class ArtifactStepHelper {
         DockerHubArtifactConfig dockerConfig = (DockerHubArtifactConfig) artifactConfig;
         connectorDTO = getConnector(dockerConfig.getConnectorRef().getValue(), ambiance);
         DockerConnectorDTO connectorConfig = (DockerConnectorDTO) connectorDTO.getConnectorConfig();
-        if (connectorConfig.getAuth() != null) {
+        if (connectorConfig.getAuth() != null && connectorConfig.getAuth().getCredentials() != null) {
           encryptedDataDetails =
               secretManagerClientService.getEncryptionDetails(ngAccess, connectorConfig.getAuth().getCredentials());
         }
