@@ -18,6 +18,7 @@ import io.harness.cvng.beans.MetricPackDTO.MetricDefinitionDTO;
 import io.harness.cvng.beans.SplunkSavedSearch;
 import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.cvng.beans.SplunkValidationResponse.SplunkSampleResponse;
+import io.harness.cvng.beans.StackdriverDataCollectionInfo;
 import io.harness.cvng.beans.ThirdPartyApiResponseStatus;
 import io.harness.cvng.beans.TimeSeriesCustomThresholdActions;
 import io.harness.cvng.beans.TimeSeriesMetricType;
@@ -88,5 +89,6 @@ public class CvNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(StackdriverSampleDataRequest.class, 9041);
     kryo.register(StackDriverMetricDefinition.class, 9042);
     kryo.register(StackDriverMetricDefinition.Aggregation.class, 9043);
+    kryo.register(StackdriverDataCollectionInfo.class, 9044);
   }
 }

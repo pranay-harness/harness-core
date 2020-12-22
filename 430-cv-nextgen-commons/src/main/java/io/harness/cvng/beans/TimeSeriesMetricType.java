@@ -44,6 +44,14 @@ public enum TimeSeriesMetricType {
           TimeSeriesThresholdCriteria.builder()
               .criteria("> 0.01")
               .type(TimeSeriesThresholdComparisonType.DELTA)
+              .build())),
+
+  OTHER("OTHER",
+      Lists.newArrayList(
+          TimeSeriesThresholdCriteria.builder().criteria("> 0.2").type(TimeSeriesThresholdComparisonType.RATIO).build(),
+          TimeSeriesThresholdCriteria.builder()
+              .criteria("> 0.01")
+              .type(TimeSeriesThresholdComparisonType.DELTA)
               .build()));
 
   private String name;

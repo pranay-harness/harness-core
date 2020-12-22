@@ -209,7 +209,7 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
         .baseUrl(dataCollectionInfo.getBaseUrl(splunkConnectorDTO))
         .commonHeaders(dataCollectionInfo.collectionHeaders(splunkConnectorDTO))
         .commonOptions(dataCollectionInfo.collectionParams(splunkConnectorDTO))
-        .otherEnvVariables(dataCollectionInfo.getDslEnvVariables())
+        .otherEnvVariables(dataCollectionInfo.getDslEnvVariables(SplunkConnectorDTO.builder().build()))
         .endTime(instant)
         .startTime(instant.minus(Duration.ofMinutes(1)))
         .build();

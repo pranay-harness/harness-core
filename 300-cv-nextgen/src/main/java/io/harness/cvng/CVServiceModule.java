@@ -66,6 +66,8 @@ import io.harness.cvng.core.services.impl.OnboardingServiceImpl;
 import io.harness.cvng.core.services.impl.SplunkCVConfigTransformer;
 import io.harness.cvng.core.services.impl.SplunkDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.SplunkServiceImpl;
+import io.harness.cvng.core.services.impl.StackdriverCVConfigTransformer;
+import io.harness.cvng.core.services.impl.StackdriverDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.StackdriverServiceImpl;
 import io.harness.cvng.core.services.impl.TimeSeriesServiceImpl;
 import io.harness.cvng.core.services.impl.VerificationTaskServiceImpl;
@@ -173,12 +175,19 @@ public class CVServiceModule extends AbstractModule {
       bind(CVConfigTransformer.class)
           .annotatedWith(Names.named(DataSourceType.SPLUNK.name()))
           .to(SplunkCVConfigTransformer.class);
+      bind(CVConfigTransformer.class)
+          .annotatedWith(Names.named(DataSourceType.STACKDRIVER.name()))
+          .to(StackdriverCVConfigTransformer.class);
       bind(DataCollectionInfoMapper.class)
           .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
           .to(AppDynamicsDataCollectionInfoMapper.class);
       bind(DataCollectionInfoMapper.class)
           .annotatedWith(Names.named(DataSourceType.SPLUNK.name()))
           .to(SplunkDataCollectionInfoMapper.class);
+      bind(DataCollectionInfoMapper.class)
+          .annotatedWith(Names.named(DataSourceType.STACKDRIVER.name()))
+          .to(StackdriverDataCollectionInfoMapper.class);
+
       bind(MetricPackService.class).to(MetricPackServiceImpl.class);
       bind(AppDynamicsService.class).to(AppDynamicsServiceImpl.class);
       bind(VerificationJobService.class).to(VerificationJobServiceImpl.class);

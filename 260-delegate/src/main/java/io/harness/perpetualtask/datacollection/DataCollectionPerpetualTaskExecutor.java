@@ -4,7 +4,6 @@ import static io.harness.cvng.beans.DataCollectionExecutionStatus.FAILED;
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.SUCCESS;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
-import io.harness.beans.DecryptableEntity;
 import io.harness.cvng.beans.CVDataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionTaskDTO;
@@ -67,8 +66,8 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
     try (DataCollectionLogContext ignored = new DataCollectionLogContext(
              taskParams.getDataCollectionWorkerId(), dataCollectionInfo.getDataCollectionType(), OVERRIDE_ERROR)) {
       DataCollectionTaskDTO dataCollectionTask;
-      secretDecryptionService.decrypt(dataCollectionInfo.getConnectorConfigDTO() instanceof DecryptableEntity
-              ? (DecryptableEntity) dataCollectionInfo.getConnectorConfigDTO()
+      secretDecryptionService.decrypt(dataCollectionInfo.getConnectorConfigDTO().getDecryptableEntity() != null
+              ? dataCollectionInfo.getConnectorConfigDTO().getDecryptableEntity()
               : null,
           dataCollectionInfo.getEncryptedDataDetails());
       dataCollectionDSLService.registerDatacollectionExecutorService(dataCollectionService);
@@ -111,7 +110,7 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
               .baseUrl(dataCollectionTask.getDataCollectionInfo().getBaseUrl(connectorConfigDTO))
               .commonHeaders(dataCollectionTask.getDataCollectionInfo().collectionHeaders(connectorConfigDTO))
               .commonOptions(dataCollectionTask.getDataCollectionInfo().collectionParams(connectorConfigDTO))
-              .otherEnvVariables(dataCollectionInfo.getDslEnvVariables())
+              .otherEnvVariables(dataCollectionInfo.getDslEnvVariables(connectorConfigDTO))
               .endTime(dataCollectionTask.getEndTime())
               .startTime(dataCollectionTask.getStartTime())
               .build();

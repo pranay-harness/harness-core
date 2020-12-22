@@ -41,7 +41,7 @@ public class StackdriverServiceImpl implements StackdriverService {
   @Inject private OnboardingService onboardingService;
   @Override
   public PageResponse<StackdriverDashboardDTO> listDashboards(String accountId, String connectorIdentifier,
-      String orgIdentifier, String projectIdentifier, int pageSize, int offset, String filter) {
+      String orgIdentifier, String projectIdentifier, int pageSize, int offset, String filter, String tracingId) {
     DataCollectionRequest request =
         StackdriverDashboardRequest.builder().type(DataCollectionRequestType.STACKDRIVER_DASHBOARD_LIST).build();
 
@@ -50,6 +50,7 @@ public class StackdriverServiceImpl implements StackdriverService {
                                                     .connectorIdentifier(connectorIdentifier)
                                                     .accountId(accountId)
                                                     .orgIdentifier(orgIdentifier)
+                                                    .tracingId(tracingId)
                                                     .projectIdentifier(projectIdentifier)
                                                     .build();
 
@@ -70,8 +71,8 @@ public class StackdriverServiceImpl implements StackdriverService {
   }
 
   @Override
-  public List<StackdriverDashboardDetail> getDashboardDetails(
-      String accountId, String connectorIdentifier, String orgIdentifier, String projectIdentifier, String path) {
+  public List<StackdriverDashboardDetail> getDashboardDetails(String accountId, String connectorIdentifier,
+      String orgIdentifier, String projectIdentifier, String path, String tracingId) {
     DataCollectionRequest request = StackdriverDashboardDetailsRequest.builder()
                                         .type(DataCollectionRequestType.STACKDRIVER_DASHBOARD_GET)
                                         .path(path)
@@ -81,6 +82,7 @@ public class StackdriverServiceImpl implements StackdriverService {
                                                     .dataCollectionRequest(request)
                                                     .connectorIdentifier(connectorIdentifier)
                                                     .accountId(accountId)
+                                                    .tracingId(tracingId)
                                                     .orgIdentifier(orgIdentifier)
                                                     .projectIdentifier(projectIdentifier)
                                                     .build();
@@ -96,45 +98,39 @@ public class StackdriverServiceImpl implements StackdriverService {
 
   @Override
   public ResponseDTO<StackdriverSampleDataDTO> getSampleData(String accountId, String connectorIdentifier,
-      String orgIdentifier, String projectIdentifier, Object metricDefinitionDTO) {
+      String orgIdentifier, String projectIdentifier, Object metricDefinitionDTO, String tracingId) {
     ResponseDTO responseDTO = ResponseDTO.newResponse();
     try {
       StackDriverMetricDefinition metricDefinition =
           StackDriverMetricDefinition.extractFromJson(JsonUtils.asJson(metricDefinitionDTO));
-      if (isNotEmpty(metricDefinition.getAggregation().getGroupByFields())) {
-        responseDTO.setStatus(Status.ERROR);
-        responseDTO.setData(
-            StackdriverSampleDataDTO.builder()
-                .errorMessage(
-                    "Group By clauses in the query are not supported. Please remove or replace the query. The query should map to one timeseries")
-                .build());
-      } else {
-        Instant now = DateTimeUtils.roundDownTo1MinBoundary(Instant.now());
 
-        DataCollectionRequest request = StackdriverSampleDataRequest.builder()
-                                            .metricDefinition(metricDefinition)
-                                            .startTime(now.minus(Duration.ofMinutes(60)))
-                                            .endTime(now)
-                                            .type(DataCollectionRequestType.STACKDRIVER_SAMPLE_DATA)
-                                            .build();
+      Instant now = DateTimeUtils.roundDownTo1MinBoundary(Instant.now());
 
-        OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
-                                                        .dataCollectionRequest(request)
-                                                        .connectorIdentifier(connectorIdentifier)
-                                                        .accountId(accountId)
-                                                        .orgIdentifier(orgIdentifier)
-                                                        .projectIdentifier(projectIdentifier)
-                                                        .build();
+      DataCollectionRequest request = StackdriverSampleDataRequest.builder()
+                                          .metricDefinition(metricDefinition)
+                                          .startTime(now.minus(Duration.ofMinutes(60)))
+                                          .endTime(now)
+                                          .type(DataCollectionRequestType.STACKDRIVER_SAMPLE_DATA)
+                                          .build();
 
-        OnboardingResponseDTO response = onboardingService.getOnboardingResponse(accountId, onboardingRequestDTO);
+      OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
+                                                      .dataCollectionRequest(request)
+                                                      .connectorIdentifier(connectorIdentifier)
+                                                      .accountId(accountId)
+                                                      .tracingId(tracingId)
+                                                      .orgIdentifier(orgIdentifier)
+                                                      .projectIdentifier(projectIdentifier)
+                                                      .build();
 
-        final Gson gson = new Gson();
-        Type type = new TypeToken<List<TimeSeriesSampleDTO>>() {}.getType();
-        List<TimeSeriesSampleDTO> dataPoints = gson.fromJson(JsonUtils.asJson(response.getResult()), type);
-        SortedSet<TimeSeriesSampleDTO> sortedSet = new TreeSet<>(dataPoints);
-        responseDTO.setStatus(Status.SUCCESS);
-        responseDTO.setData(StackdriverSampleDataDTO.builder().sampleData(sortedSet).build());
-      }
+      OnboardingResponseDTO response = onboardingService.getOnboardingResponse(accountId, onboardingRequestDTO);
+
+      final Gson gson = new Gson();
+      Type type = new TypeToken<List<TimeSeriesSampleDTO>>() {}.getType();
+      List<TimeSeriesSampleDTO> dataPoints = gson.fromJson(JsonUtils.asJson(response.getResult()), type);
+      SortedSet<TimeSeriesSampleDTO> sortedSet = new TreeSet<>(dataPoints);
+      responseDTO.setStatus(Status.SUCCESS);
+      responseDTO.setData(StackdriverSampleDataDTO.builder().sampleData(sortedSet).build());
+
     } catch (Exception ex) {
       responseDTO.setStatus(Status.ERROR);
       responseDTO.setData(StackdriverSampleDataDTO.builder().errorMessage(ex.getMessage()).build());

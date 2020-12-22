@@ -24,6 +24,9 @@ public class StackDriverMetricDefinition {
   public static final String crossSeriesReducerKey = "crossSeriesReducer";
   public static final String groupByKey = "groupByFields";
 
+  private static final String metricTypeField = "metric.type";
+
+  String metricName;
   String filter;
   Aggregation aggregation;
 
@@ -34,7 +37,8 @@ public class StackDriverMetricDefinition {
     @Builder.Default String alignmentPeriod = "60s";
     String perSeriesAligner;
     String crossSeriesReducer;
-    List<String> groupByFields;
+
+    @Builder.Default List<String> groupByFields = new ArrayList<>();
   }
 
   public static StackDriverMetricDefinition extractFromJson(String jsonDefinition) {
@@ -71,6 +75,16 @@ public class StackDriverMetricDefinition {
     return null;
   }
 
+  private static String extractMetric(String filter) {
+    String[] filters = filter.split(" ");
+    for (String innerFilter : filters) {
+      if (innerFilter.contains(metricTypeField)) {
+        return innerFilter.substring(innerFilter.indexOf("=") + 1).replaceAll("\"", "");
+      }
+    }
+    return null;
+  }
+
   private static StackDriverMetricDefinition getDefinitionFromTimeSeriesObject(JSONObject timeSeriesFilterObj) {
     JSONObject timesersFilter = (JSONObject) timeSeriesFilterObj.get(timeSeriesFilterKey);
     String filter = timesersFilter.getString("filter");
@@ -96,6 +110,11 @@ public class StackDriverMetricDefinition {
         aggregationObj.getGroupByFields().add(groupArray.getString(counter++));
       }
     }
-    return StackDriverMetricDefinition.builder().filter(filter).aggregation(aggregationObj).build();
+
+    return StackDriverMetricDefinition.builder()
+        .filter(filter)
+        .metricName(extractMetric(filter))
+        .aggregation(aggregationObj)
+        .build();
   }
 }

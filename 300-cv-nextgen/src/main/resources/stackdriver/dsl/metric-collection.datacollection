@@ -1,0 +1,81 @@
+Var authTokenUrl = "https://www.googleapis.com/oauth2/v4/token"
+Var authBodyMap = {}
+Var:authBodyMap.put("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer")
+Var:authBodyMap.put("assertion",Env:jwtToken)
+
+Var bearerTokenResponse = sync-call(url=Var:authTokenUrl,body=Var:authBodyMap, bodyType=FORM_URL_ENCODED)
+Var token = extract(Var:bearerTokenResponse, $.access_token)
+
+Var header = {}
+Var headerVal = concat("Bearer ", Var:token)
+Var:header.put("Authorization", Var:headerVal)
+
+Var myEndTime = time-to-string(Env:endTimeMillis)
+Var myStartTime = time-to-string(Env:startTimeMillis)
+Var alignmentPeriod = "60s"
+Var index = 0
+Var tempList = []
+Var one = 1
+Var lengthOfItems = Env:filterList.length()
+Var requests = []
+Var emptySpace = ""
+while Var:index !=  Var:lengthOfItems {
+  Var params = {}
+  Var:params.put("interval.startTime", Var:myStartTime)
+  Var:params.put("interval.endTime", Var:myEndTime)
+  Var:params.put("aggregation.alignmentPeriod", Var:alignmentPeriod)
+
+  Var crossSeriesReducer = Env:crossSeriesReducerList[Var:index]
+  Var perSeriesAligner = Env:perSeriesAlignerList[Var:index]
+  Var filter = Env:filterList[Var:index]
+  if Var:crossSeriesReducer != Var:emptySpace {
+    Var:params.put("aggregation.crossSeriesReducer", Var:crossSeriesReducer)
+  }
+  if Var:perSeriesAligner != Var:emptySpace {
+    Var:params.put("aggregation.perSeriesAligner", Var:perSeriesAligner)
+  }
+  Var:params.put("filter", Var:filter)
+
+  Var url = concat(Env:baseUrl, Env:project, "/timeSeries")
+  Var groupBys = Env:groupByFieldsList[Var:index]
+  if Var:groupBys != Var:tempList {
+    Var:params.put("aggregation.groupByFields", Var:groupBys)
+  }
+
+  Request metricRequest = new Request(url=Var:url, header=Var:header, options=Var:params)
+  Var:requests.append(Var:metricRequest)
+  index = Var:index + Var:one
+}
+
+
+Var metricResponses = execute-parallel(Var:requests)
+Var returnList = []
+foreach metricResponse in Var:metricResponses {
+  Var timeseriesList = extract(Var:metricResponse, $.timeSeries)
+  foreach timeseries in Var:timeseriesList {
+      Var metricName = extract(Var:timeseries, $.metric.type)
+      Var txnName =  ""
+      Var groupByResponses = Env:groupByResponseList.get(Var:metricName)
+      if Var:groupByResponses != Var:tempList {
+        foreach field in Var:groupByResponses {
+          Var path = concat("$.", Var:field)
+          Var extracted = extract(Var:timeseries, Var:path)
+          txnName = concat(Var:txnName, Var:extracted)
+        }
+      }
+
+      if Var:txnName == Var:emptySpace {
+        txnName = concat(Var:metricName, "")
+      }
+
+      Var points = extract(Var:timeseries, $.points)
+      foreach point in Var:points {
+          Var val = extract(Var:point, $.value.doubleValue)
+          Var timestamp = extract(Var:point, $.interval.endTime)
+          Var timeStampVal = string-to-time(Var:timestamp)
+          Var tsRecord = new TimeseriesRecord(txnName=Var:txnName, metricName=Var:metricName, metricValue=Var:val, timestamp=Var:timeStampVal)
+          Var:returnList.append(Var:tsRecord)
+      }
+  }
+}
+return Var:returnList

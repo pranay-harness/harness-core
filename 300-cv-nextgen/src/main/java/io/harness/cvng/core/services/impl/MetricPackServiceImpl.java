@@ -40,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MetricPackServiceImpl implements MetricPackService {
   static final List<String> APPDYNAMICS_METRICPACK_FILES =
       Lists.newArrayList("/appdynamics/metric-packs/peformance-pack.yml", "/appdynamics/metric-packs/quality-pack.yml");
+
   static final List<String> STACKDRIVER_METRICPACK_FILES =
       Lists.newArrayList("/stackdriver/metric-packs/default-performance-pack.yaml",
           "/stackdriver/metric-packs/default-error-pack.yaml", "/stackdriver/metric-packs/default-infra-pack.yaml");
@@ -53,22 +54,29 @@ public class MetricPackServiceImpl implements MetricPackService {
   private static final URL APPDYNAMICS_INFRASTRUCTURE_PACK_DSL_PATH =
       MetricPackServiceImpl.class.getResource("/appdynamics/dsl/infrastructure-pack.datacollection");
   public static final String APPDYNAMICS_INFRASTRUCTURE_PACK_DSL;
+
+  private static final URL STACKDRIVER_DSL_PATH =
+      MetricPackServiceImpl.class.getResource("/stackdriver/dsl/metric-collection.datacollection");
+  public static final String STACKDRIVER_DSL;
   static {
-    String peformancePackDsl = null;
-    String qualityPackDsl = null;
-    String resourcePackDsl = null;
+    String appDPeformancePackDsl = null;
+    String appDqualityPackDsl = null;
+    String appDInfrastructurePackDsl = null;
+    String stackDriverDsl = null;
     try {
-      peformancePackDsl = Resources.toString(APPDYNAMICS_PERFORMANCE_PACK_DSL_PATH, Charsets.UTF_8);
-      qualityPackDsl = Resources.toString(APPDYNAMICS_QUALITY_PACK_DSL_PATH, Charsets.UTF_8);
-      resourcePackDsl = Resources.toString(APPDYNAMICS_INFRASTRUCTURE_PACK_DSL_PATH, Charsets.UTF_8);
+      appDPeformancePackDsl = Resources.toString(APPDYNAMICS_PERFORMANCE_PACK_DSL_PATH, Charsets.UTF_8);
+      appDqualityPackDsl = Resources.toString(APPDYNAMICS_QUALITY_PACK_DSL_PATH, Charsets.UTF_8);
+      appDInfrastructurePackDsl = Resources.toString(APPDYNAMICS_INFRASTRUCTURE_PACK_DSL_PATH, Charsets.UTF_8);
+      stackDriverDsl = Resources.toString(STACKDRIVER_DSL_PATH, Charsets.UTF_8);
     } catch (Exception e) {
       // TODO: this should throw an exception but we risk delegate not starting up. We can remove this log term and
       // throw and exception once things stabilize
       log.error("Invalid metric pack dsl path", e);
     }
-    APPDYNAMICS_PERFORMANCE_PACK_DSL = peformancePackDsl;
-    APPDYNAMICS_QUALITY_PACK_DSL = qualityPackDsl;
-    APPDYNAMICS_INFRASTRUCTURE_PACK_DSL = resourcePackDsl;
+    APPDYNAMICS_PERFORMANCE_PACK_DSL = appDPeformancePackDsl;
+    APPDYNAMICS_QUALITY_PACK_DSL = appDqualityPackDsl;
+    APPDYNAMICS_INFRASTRUCTURE_PACK_DSL = appDInfrastructurePackDsl;
+    STACKDRIVER_DSL = stackDriverDsl;
   }
 
   @Inject private HPersistence hPersistence;
@@ -279,6 +287,9 @@ public class MetricPackServiceImpl implements MetricPackService {
     switch (dataSourceType) {
       case APP_DYNAMICS:
         metricPack.setDataCollectionDsl(getAppdynamicsMetricPackDsl(metricPack));
+        break;
+      case STACKDRIVER:
+        metricPack.setDataCollectionDsl(STACKDRIVER_DSL);
         break;
       default:
         throw new IllegalArgumentException("Invalid type " + dataSourceType);
