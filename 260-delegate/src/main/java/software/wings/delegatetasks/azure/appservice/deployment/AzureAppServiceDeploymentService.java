@@ -12,6 +12,7 @@ import static io.harness.azure.model.AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONFI
 import static io.harness.azure.model.AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONTAINER_SETTINGS;
 import static io.harness.azure.model.AzureConstants.WEB_APP_INSTANCE_STATUS_RUNNING;
 import static io.harness.azure.model.AzureConstants.WEB_APP_NAME_BLANK_ERROR_MSG;
+import static io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceSettingValueType.AZURE_SETTING;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.INFO;
 
@@ -43,6 +44,7 @@ import io.harness.logging.LogCallback;
 
 import software.wings.delegatetasks.azure.AzureTimeLimiter;
 import software.wings.delegatetasks.azure.DefaultCompletableSubscriber;
+import software.wings.delegatetasks.azure.appservice.AzureAppServiceConfigurationDTOMapper;
 import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServiceDeploymentContext;
 import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServiceDockerDeploymentContext;
 
@@ -368,11 +370,16 @@ public class AzureAppServiceDeploymentService {
     double slotTrafficWeight = azureWebClient.getDeploymentSlotTrafficWeight(azureWebClientContext, slotName);
 
     return AzureAppServicePreDeploymentData.builder()
-        .appSettingsToRemove(appSettingsNeedBeDeletedInRollback)
-        .appSettingsToAdd(appSettingsNeedBeUpdatedInRollback)
-        .connSettingsToRemove(connSettingsNeedBeDeletedInRollback)
-        .connSettingsToAdd(connSettingsNeedBeUpdatedInRollback)
-        .dockerSettingsToAdd(dockerSettingsNeedBeUpdatedInRollback)
+        .appSettingsToRemove(AzureAppServiceConfigurationDTOMapper.getAzureAppServiceAppSettingDTOs(
+            appSettingsNeedBeDeletedInRollback, AZURE_SETTING))
+        .appSettingsToAdd(AzureAppServiceConfigurationDTOMapper.getAzureAppServiceAppSettingDTOs(
+            appSettingsNeedBeUpdatedInRollback, AZURE_SETTING))
+        .connSettingsToRemove(AzureAppServiceConfigurationDTOMapper.getAzureAppServiceConnStringDTOs(
+            connSettingsNeedBeDeletedInRollback, AZURE_SETTING))
+        .connSettingsToAdd(AzureAppServiceConfigurationDTOMapper.getAzureAppServiceConnStringDTOs(
+            connSettingsNeedBeUpdatedInRollback, AZURE_SETTING))
+        .dockerSettingsToAdd(AzureAppServiceConfigurationDTOMapper.getAzureAppServiceDockerSettingDTOs(
+            dockerSettingsNeedBeUpdatedInRollback, AZURE_SETTING))
         .slotName(slotName)
         .appName(azureWebClientContext.getAppName())
         .imageNameAndTag(dockerImageNameAndTag)

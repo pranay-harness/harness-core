@@ -93,7 +93,7 @@ public class AzureWebAppSlotShiftTrafficTaskHandlerTest extends WingsBaseTest {
     AzureWebAppSlotShiftTrafficParameters azureAppServiceTaskParameters = buildAzureWebAppSlotShiftTrafficParameters();
     AzureConfig azureConfig = buildAzureConfig();
 
-    azureAppServiceTaskParameters.setShiftTrafficSlotName(EMPTY);
+    azureAppServiceTaskParameters.setDeploymentSlot(EMPTY);
 
     assertThatExceptionOfType(InvalidArgumentsException.class)
         .isThrownBy(()
@@ -134,7 +134,7 @@ public class AzureWebAppSlotShiftTrafficTaskHandlerTest extends WingsBaseTest {
         .timeoutIntervalInMin(15)
         .commandName(SLOT_TRAFFIC_WEIGHT)
         .webAppName("webAppName")
-        .shiftTrafficSlotName(SHIFT_TRAFFIC_SLOT_NAME)
+        .deploymentSlot(SHIFT_TRAFFIC_SLOT_NAME)
         .trafficWeightInPercentage(TRAFFIC_WEIGHT_IN_PERCENTAGE)
         .build();
   }

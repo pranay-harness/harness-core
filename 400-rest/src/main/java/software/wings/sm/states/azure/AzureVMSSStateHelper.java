@@ -28,6 +28,11 @@ import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthType;
 import io.harness.delegate.beans.azure.GalleryImageDefinitionDTO;
+import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceSettingDTO;
+import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceAzureSettingValue;
+import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceHarnessSettingSecretRef;
+import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceHarnessSettingSecretValue;
+import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceSettingValue;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploymentData;
 import io.harness.delegate.task.azure.response.AzureVMInstanceData;
@@ -86,6 +91,7 @@ import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
@@ -534,5 +540,31 @@ public class AzureVMSSStateHelper {
 
   private NGAccess buildNgAccess(final String accountId) {
     return BaseNGAccess.builder().accountIdentifier(accountId).build();
+  }
+
+  public <T extends AzureAppServiceSettingDTO> void encryptAzureAppServiceSettingDTOs(
+      @NotNull Map<String, T> settings, final String accountId) {
+    settings.values().forEach(appServiceSetting -> {
+      log.info("Checking for encryption Harness setting: {}", appServiceSetting.getName());
+      AzureAppServiceSettingValue setting = appServiceSetting.getValue();
+      if (setting instanceof AzureAppServiceAzureSettingValue) {
+        throw new InvalidRequestException(format(
+            "Unsupported encryption on manager for Azure App Service setting value type: [%s]", setting.getClass()));
+      }
+
+      if (setting instanceof AzureAppServiceHarnessSettingSecretValue) {
+        log.info("Encrypting Harness setting: {}", appServiceSetting.getName());
+        AzureAppServiceHarnessSettingSecretValue harnessSettingSecretValue =
+            (AzureAppServiceHarnessSettingSecretValue) setting;
+        encryptSettingByNGSecretService(accountId, harnessSettingSecretValue);
+      }
+    });
+  }
+
+  private void encryptSettingByNGSecretService(
+      String accountId, AzureAppServiceHarnessSettingSecretValue harnessSettingSecretValue) {
+    AzureAppServiceHarnessSettingSecretRef settingSecretRef = harnessSettingSecretValue.getSettingSecretRef();
+    List<EncryptedDataDetail> encryptedDataDetails = getConnectorAuthEncryptedDataDetails(accountId, settingSecretRef);
+    harnessSettingSecretValue.setEncryptedDataDetails(encryptedDataDetails);
   }
 }

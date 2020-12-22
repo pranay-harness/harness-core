@@ -1,12 +1,17 @@
 package software.wings.delegatetasks.azure;
 
-import io.harness.azure.model.AzureAppServiceApplicationSetting;
-import io.harness.azure.model.AzureAppServiceConnectionString;
-import io.harness.azure.model.AzureAppServiceDockerSetting;
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+
 import io.harness.azure.model.AzureConfig;
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.azure.AzureConfigDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthDTO;
+import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceSettingDTO;
+import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceAzureSettingValue;
+import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceHarnessSettingSecretRef;
+import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceHarnessSettingSecretValue;
+import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceSettingValue;
 import io.harness.delegate.beans.azure.registry.AzureRegistry;
 import io.harness.delegate.beans.azure.registry.AzureRegistryFactory;
 import io.harness.delegate.beans.azure.registry.AzureRegistryType;
@@ -18,8 +23,14 @@ import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppSlotS
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotSetupResponse;
 import io.harness.delegate.task.azure.request.AzureVMSSSetupTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
+import io.harness.encryptors.clients.LocalEncryptor;
+import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.SecretDecryptionService;
+
+import software.wings.beans.LocalEncryptionConfig;
+import software.wings.service.intfc.security.LocalSecretManagerService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -34,6 +45,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AzureSecretHelper {
   @Inject private SecretDecryptionService secretDecryptionService;
+  @Inject private LocalEncryptor localEncryptor;
+  @Inject private LocalSecretManagerService localSecretManagerService;
 
   public AzureConfig decryptAndGetAzureConfig(
       AzureConfigDTO azureConfigDTO, List<EncryptedDataDetail> azureConfigEncryptionDetails) {
@@ -56,12 +69,14 @@ public class AzureSecretHelper {
 
   public void decryptAzureAppServiceTaskParameters(AzureAppServiceTaskParameters azureAppServiceTaskParameters) {
     if (AzureAppServiceTaskParameters.AzureAppServiceTaskType.SLOT_SETUP
-        == azureAppServiceTaskParameters.getCommandType()) {
+            == azureAppServiceTaskParameters.getCommandType()
+        && azureAppServiceTaskParameters instanceof AzureWebAppSlotSetupParameters) {
       decryptAzureWebAppSlotSetupParameters((AzureWebAppSlotSetupParameters) azureAppServiceTaskParameters);
     }
 
     if (AzureAppServiceTaskParameters.AzureAppServiceTaskType.SLOT_ROLLBACK
-        == azureAppServiceTaskParameters.getCommandType()) {
+            == azureAppServiceTaskParameters.getCommandType()
+        && azureAppServiceTaskParameters instanceof AzureWebAppRollbackParameters) {
       decryptAzureWebAppRollbackParameters((AzureWebAppRollbackParameters) azureAppServiceTaskParameters);
     }
   }
@@ -73,55 +88,94 @@ public class AzureSecretHelper {
         azureRegistry.getAuthCredentialsDTO(azureAppServiceTaskParameters.getConnectorConfigDTO());
     authCredentialsDTO.ifPresent(decryptedEntity
         -> secretDecryptionService.decrypt(decryptedEntity, azureAppServiceTaskParameters.getEncryptedDataDetails()));
-    azureAppServiceTaskParameters.setAppSettings(decryptAppSettings(azureAppServiceTaskParameters.getAppSettings()));
-    azureAppServiceTaskParameters.setConnSettings(decryptConnSettings(azureAppServiceTaskParameters.getConnSettings()));
+    decryptSettings(azureAppServiceTaskParameters.getAppSettings());
+    decryptSettings(azureAppServiceTaskParameters.getConnSettings());
   }
 
-  private void decryptAzureWebAppRollbackParameters(AzureWebAppRollbackParameters azureAppServiceTaskParameters) {
-    AzureAppServicePreDeploymentData preDeploymentData = azureAppServiceTaskParameters.getPreDeploymentData();
-    preDeploymentData.setAppSettingsToAdd(decryptAppSettings(preDeploymentData.getAppSettingsToAdd()));
-    preDeploymentData.setAppSettingsToRemove(decryptAppSettings(preDeploymentData.getAppSettingsToRemove()));
-    preDeploymentData.setConnSettingsToAdd(decryptConnSettings(preDeploymentData.getConnSettingsToAdd()));
-    preDeploymentData.setConnSettingsToRemove(decryptConnSettings(preDeploymentData.getConnSettingsToRemove()));
+  private void decryptAzureWebAppRollbackParameters(AzureWebAppRollbackParameters azureWebAppRollbackParameters) {
+    AzureAppServicePreDeploymentData preDeploymentData = azureWebAppRollbackParameters.getPreDeploymentData();
+    decryptSettings(preDeploymentData.getAppSettingsToAdd());
+    decryptSettings(preDeploymentData.getAppSettingsToRemove());
+    decryptSettings(preDeploymentData.getConnSettingsToAdd());
+    decryptSettings(preDeploymentData.getConnSettingsToRemove());
+    decryptSettings(preDeploymentData.getDockerSettingsToAdd());
   }
 
-  public Map<String, AzureAppServiceApplicationSetting> decryptAppSettings(
-      Map<String, AzureAppServiceApplicationSetting> appSettings) {
-    return appSettings;
+  private <T extends AzureAppServiceSettingDTO> void decryptSettings(Map<String, T> settings) {
+    settings.values().forEach(
+        appServiceSetting -> decryptSettingValue(appServiceSetting.getName(), appServiceSetting.getValue()));
   }
 
-  public Map<String, AzureAppServiceConnectionString> decryptConnSettings(
-      Map<String, AzureAppServiceConnectionString> connSettings) {
-    return connSettings;
-  }
+  private void decryptSettingValue(String settingName, AzureAppServiceSettingValue settingValue) {
+    log.info("Checking for decryption setting: {}", settingName);
+    if (settingValue instanceof AzureAppServiceHarnessSettingSecretValue) {
+      decryptEncryptedRecordWithEncryptedDataDetails(
+          settingName, (AzureAppServiceHarnessSettingSecretValue) settingValue);
+    }
 
-  public void encryptAzureTaskResponseParams(AzureTaskResponse azureTaskResponse) {
-    if (azureTaskResponse instanceof AzureWebAppSlotSetupResponse) {
-      encryptAzureWebAppSlotSetupResponseParams((AzureWebAppSlotSetupResponse) azureTaskResponse);
+    if (settingValue instanceof AzureAppServiceAzureSettingValue) {
+      decryptEncryptedRecordByLocalEncryptor(settingName, (AzureAppServiceAzureSettingValue) settingValue);
     }
   }
 
-  private void encryptAzureWebAppSlotSetupResponseParams(AzureWebAppSlotSetupResponse azureTaskResponse) {
+  private void decryptEncryptedRecordWithEncryptedDataDetails(
+      String settingName, AzureAppServiceHarnessSettingSecretValue userSettingSecret) {
+    log.info("Decrypting setting by encrypted details : {}", settingName);
+    List<EncryptedDataDetail> encryptedDataDetails = userSettingSecret.getEncryptedDataDetails();
+    AzureAppServiceHarnessSettingSecretRef settingSecretRef = userSettingSecret.getSettingSecretRef();
+    secretDecryptionService.decrypt(settingSecretRef, encryptedDataDetails);
+  }
+
+  private void decryptEncryptedRecordByLocalEncryptor(
+      String settingName, AzureAppServiceAzureSettingValue configurationSetting) {
+    log.info("Decrypting setting by local encryptor : {}", settingName);
+    String accountId = configurationSetting.getAccountId();
+    EncryptedRecord encryptedRecord = configurationSetting.getEncryptedRecord();
+
+    LocalEncryptionConfig encryptionConfig = localSecretManagerService.getEncryptionConfig(accountId);
+    char[] secretValue = localEncryptor.fetchSecretValue(accountId, encryptedRecord, encryptionConfig);
+    configurationSetting.setDecryptedValue(new String(secretValue));
+  }
+
+  public void encryptAzureTaskResponseParams(AzureTaskResponse azureTaskResponse, final String accountId) {
+    if (azureTaskResponse instanceof AzureWebAppSlotSetupResponse) {
+      encryptAzureWebAppSlotSetupResponseParams((AzureWebAppSlotSetupResponse) azureTaskResponse, accountId);
+    }
+  }
+
+  private void encryptAzureWebAppSlotSetupResponseParams(
+      AzureWebAppSlotSetupResponse azureTaskResponse, final String accountId) {
     AzureAppServicePreDeploymentData preDeploymentData = azureTaskResponse.getPreDeploymentData();
-    preDeploymentData.setAppSettingsToRemove(encryptAppSettings(preDeploymentData.getAppSettingsToRemove()));
-    preDeploymentData.setAppSettingsToAdd(encryptAppSettings(preDeploymentData.getAppSettingsToAdd()));
-    preDeploymentData.setConnSettingsToRemove(encryptConnSettings(preDeploymentData.getConnSettingsToRemove()));
-    preDeploymentData.setConnSettingsToAdd(encryptConnSettings(preDeploymentData.getConnSettingsToAdd()));
-    preDeploymentData.setDockerSettingsToAdd(encryptDockerSettings(preDeploymentData.getDockerSettingsToAdd()));
+    encryptSettings(preDeploymentData.getAppSettingsToRemove(), accountId);
+    encryptSettings(preDeploymentData.getAppSettingsToAdd(), accountId);
+    encryptSettings(preDeploymentData.getConnSettingsToRemove(), accountId);
+    encryptSettings(preDeploymentData.getConnSettingsToAdd(), accountId);
+    encryptSettings(preDeploymentData.getDockerSettingsToAdd(), accountId);
   }
 
-  public Map<String, AzureAppServiceApplicationSetting> encryptAppSettings(
-      Map<String, AzureAppServiceApplicationSetting> appSettings) {
-    return appSettings;
+  private <T extends AzureAppServiceSettingDTO> void encryptSettings(Map<String, T> settings, final String accountId) {
+    settings.values().forEach(appServiceSetting -> {
+      log.info("Checking for encryption Azure setting: {}", appServiceSetting.getName());
+      AzureAppServiceSettingValue value = appServiceSetting.getValue();
+      if (value instanceof AzureAppServiceAzureSettingValue) {
+        log.info("Encrypting Azure setting: {}", appServiceSetting.getName());
+        encryptRecordByLocalEncryptor((AzureAppServiceAzureSettingValue) value, accountId);
+      } else {
+        throw new InvalidRequestException(
+            format("Unsupported encryption on delegate for Azure App Service setting value type: [%s]",
+                value != null ? value.getClass() : null));
+      }
+    });
   }
 
-  public Map<String, AzureAppServiceConnectionString> encryptConnSettings(
-      Map<String, AzureAppServiceConnectionString> connSettings) {
-    return connSettings;
-  }
+  private void encryptRecordByLocalEncryptor(
+      AzureAppServiceAzureSettingValue configurationSetting, final String accountId) {
+    String value = configurationSetting.getDecryptedValue();
 
-  public Map<String, AzureAppServiceDockerSetting> encryptDockerSettings(
-      Map<String, AzureAppServiceDockerSetting> dockerSettings) {
-    return dockerSettings;
+    LocalEncryptionConfig encryptionConfig = localSecretManagerService.getEncryptionConfig(accountId);
+    EncryptedRecord encryptedRecord = localEncryptor.encryptSecret(accountId, value, encryptionConfig);
+    configurationSetting.setEncryptedRecord(encryptedRecord);
+    configurationSetting.setDecryptedValue(EMPTY);
+    configurationSetting.setAccountId(accountId);
   }
 }

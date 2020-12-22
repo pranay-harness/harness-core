@@ -10,6 +10,7 @@ import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskResponse;
 import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppRollbackParameters;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppRollbackResponse;
 
+import software.wings.delegatetasks.azure.appservice.AzureAppServiceConfigurationDTOMapper;
 import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServiceDockerDeploymentContext;
 import software.wings.delegatetasks.azure.appservice.webapp.AbstractAzureWebAppTaskHandler;
 
@@ -53,11 +54,16 @@ public class AzureWebAppRollbackTaskHandler extends AbstractAzureWebAppTaskHandl
       Integer steadyTimeoutIntervalInMin, ILogStreamingTaskClient logStreamingTaskClient) {
     return AzureAppServiceDockerDeploymentContext.builder()
         .logStreamingTaskClient(logStreamingTaskClient)
-        .appSettingsToAdd(preDeploymentData.getAppSettingsToAdd())
-        .appSettingsToRemove(preDeploymentData.getAppSettingsToRemove())
-        .connSettingsToAdd(preDeploymentData.getConnSettingsToAdd())
-        .connSettingsToRemove(preDeploymentData.getConnSettingsToRemove())
-        .dockerSettings(preDeploymentData.getDockerSettingsToAdd())
+        .appSettingsToAdd(AzureAppServiceConfigurationDTOMapper.getAzureAppServiceAppSettings(
+            preDeploymentData.getAppSettingsToAdd()))
+        .appSettingsToRemove(AzureAppServiceConfigurationDTOMapper.getAzureAppServiceAppSettings(
+            preDeploymentData.getAppSettingsToRemove()))
+        .connSettingsToAdd(AzureAppServiceConfigurationDTOMapper.getAzureAppServiceConnStrings(
+            preDeploymentData.getConnSettingsToAdd()))
+        .connSettingsToRemove(AzureAppServiceConfigurationDTOMapper.getAzureAppServiceConnStrings(
+            preDeploymentData.getConnSettingsToRemove()))
+        .dockerSettings(AzureAppServiceConfigurationDTOMapper.getAzureAppServiceDockerSettings(
+            preDeploymentData.getDockerSettingsToAdd()))
         .imagePathAndTag(preDeploymentData.getImageNameAndTag())
         .slotName(preDeploymentData.getSlotName())
         .azureWebClientContext(azureWebClientContext)
