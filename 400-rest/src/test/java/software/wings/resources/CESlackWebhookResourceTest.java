@@ -27,6 +27,8 @@ import org.junit.experimental.categories.Category;
 public class CESlackWebhookResourceTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";
   private CESlackWebhook ceSlackWebhook;
+  private boolean sendCostReport = true;
+  private boolean sendAnomalyAlerts = true;
 
   private static CESlackWebhookService ceSlackWebhookService = mock(CESlackWebhookService.class);
 
@@ -35,7 +37,12 @@ public class CESlackWebhookResourceTest extends CategoryTest {
       ResourceTestRule.builder().instance(new CESlackWebhookResource(ceSlackWebhookService)).build();
   @Before
   public void setUp() {
-    ceSlackWebhook = CESlackWebhook.builder().accountId(accountId).webhookUrl("WEBHOOK_URL").build();
+    ceSlackWebhook = CESlackWebhook.builder()
+                         .accountId(accountId)
+                         .webhookUrl("WEBHOOK_URL")
+                         .sendCostReport(sendCostReport)
+                         .sendAnomalyAlerts(sendAnomalyAlerts)
+                         .build();
   }
 
   @Test
