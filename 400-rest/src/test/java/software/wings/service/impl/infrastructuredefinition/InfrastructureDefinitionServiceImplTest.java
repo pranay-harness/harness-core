@@ -11,6 +11,7 @@ import static io.harness.rule.OwnerRule.DINESH;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.PRASHANT;
+import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.RAUNAK;
 import static io.harness.rule.OwnerRule.RIHAZ;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
@@ -268,6 +269,24 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldIgnoreReleaseNameWithSomeConstantResolutionFailure() {
     String releaseName = "release-" + INFRA_KUBERNETES_INFRAID_EXPRESSION;
+    InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder()
+            .infrastructure(GoogleKubernetesEngine.builder().releaseName(releaseName).build())
+            .build();
+    when(executionContext.renderExpression(releaseName)).thenReturn(releaseName);
+
+    infrastructureDefinitionService.renderExpression(infrastructureDefinition, executionContext);
+
+    assertThat(((GoogleKubernetesEngine) infrastructureDefinition.getInfrastructure()).getReleaseName())
+        .isEqualTo(releaseName);
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void shouldIgnoreConfigFileExpressionConstantFailure() {
+    String releaseName = "release"
+        + "${configFile.getAsString(\"Service_config_file\")}";
     InfrastructureDefinition infrastructureDefinition =
         InfrastructureDefinition.builder()
             .infrastructure(GoogleKubernetesEngine.builder().releaseName(releaseName).build())

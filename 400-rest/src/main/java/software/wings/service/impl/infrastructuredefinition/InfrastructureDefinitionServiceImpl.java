@@ -920,7 +920,8 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   private ExpressionReflectionUtils.Functor buildSecretSafeFunctor(
       ExecutionContext context, ManagerPreviewExpressionEvaluator expressionEvaluator) {
     return (secretMode, value) -> {
-      Set<String> ignoredExpressions = ImmutableSet.of(InfrastructureConstants.INFRA_KUBERNETES_INFRAID_EXPRESSION);
+      Set<String> ignoredExpressions = ImmutableSet.of(
+          InfrastructureConstants.INFRA_KUBERNETES_INFRAID_EXPRESSION, InfrastructureConstants.CONFIG_FILE_EXPRESSIONS);
       context.resetPreparedCache();
 
       if (value instanceof String && ExpressionEvaluator.containsVariablePattern(value)) {
