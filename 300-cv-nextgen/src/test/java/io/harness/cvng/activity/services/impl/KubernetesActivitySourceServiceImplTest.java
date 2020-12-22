@@ -18,6 +18,7 @@ import io.harness.cvng.activity.entities.KubernetesActivity;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.activity.entities.KubernetesActivitySource.KubernetesActivitySourceKeys;
 import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
+import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO;
@@ -25,6 +26,11 @@ import io.harness.cvng.beans.activity.KubernetesActivityDTO.KubernetesEventType;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO.KubernetesActivitySourceConfig;
 import io.harness.cvng.client.VerificationManagerService;
+import io.harness.cvng.core.entities.AppDynamicsCVConfig;
+import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.entities.MetricPack;
+import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.models.VerificationType;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
@@ -46,10 +52,13 @@ import org.mongodb.morphia.query.UpdateOperations;
 public class KubernetesActivitySourceServiceImplTest extends CvNextGenTest {
   @Inject private HPersistence hPersistence;
   @Inject private KubernetesActivitySourceService kubernetesActivitySourceService;
+  @Inject private CVConfigService cvConfigService;
   @Mock private VerificationManagerService verificationManagerService;
   private String accountId;
   private String orgIdentifier;
   private String projectIdentifier;
+  private String serviceIdentifier;
+  private String envIdentifier;
   private String perpetualTaskId;
 
   @Before
@@ -58,6 +67,8 @@ public class KubernetesActivitySourceServiceImplTest extends CvNextGenTest {
     orgIdentifier = generateUuid();
     projectIdentifier = generateUuid();
     perpetualTaskId = generateUuid();
+    serviceIdentifier = generateUuid();
+    envIdentifier = generateUuid();
     when(verificationManagerService.createDataCollectionTask(
              eq(accountId), eq(orgIdentifier), eq(projectIdentifier), any(DataCollectionConnectorBundle.class)))
         .thenReturn(perpetualTaskId);
@@ -167,6 +178,8 @@ public class KubernetesActivitySourceServiceImplTest extends CvNextGenTest {
   @Owner(developers = RAGHU)
   @Category({UnitTests.class})
   public void testSaveKubernetesActivities() {
+    createCVConfig();
+
     KubernetesActivitySourceDTO kubernetesActivitySourceDTO =
         KubernetesActivitySourceDTO.builder()
             .identifier(generateUuid())
@@ -200,8 +213,8 @@ public class KubernetesActivitySourceServiceImplTest extends CvNextGenTest {
                              .kubernetesActivityType(activityType)
                              .activityStartTime(activityStartTime.toEpochMilli())
                              .activityEndTime(activityEndTime.toEpochMilli())
-                             .serviceIdentifier(generateUuid())
-                             .environmentIdentifier(generateUuid())
+                             .serviceIdentifier(serviceIdentifier)
+                             .environmentIdentifier(envIdentifier)
                              .build());
       }
     }));
@@ -357,5 +370,23 @@ public class KubernetesActivitySourceServiceImplTest extends CvNextGenTest {
     int numberOfServicesInActivity =
         kubernetesActivitySourceService.getNumberOfServicesSetup(accountId, orgIdentifier, projectIdentifier);
     assertThat(numberOfServicesInActivity).isEqualTo(4);
+  }
+
+  private CVConfig createCVConfig() {
+    AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
+    cvConfig.setVerificationType(VerificationType.TIME_SERIES);
+    cvConfig.setAccountId(accountId);
+    cvConfig.setConnectorIdentifier("AppDynamics Connector");
+    cvConfig.setServiceIdentifier(serviceIdentifier);
+    cvConfig.setEnvIdentifier(envIdentifier);
+    cvConfig.setOrgIdentifier(orgIdentifier);
+    cvConfig.setProjectIdentifier(projectIdentifier);
+    cvConfig.setGroupId(generateUuid());
+    cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
+    cvConfig.setProductName(generateUuid());
+    cvConfig.setApplicationName("appName");
+    cvConfig.setTierName("tierName");
+    cvConfig.setMetricPack(MetricPack.builder().build());
+    return cvConfigService.save(cvConfig);
   }
 }

@@ -18,4 +18,9 @@ public interface VerificationJobService {
   int getNumberOfServicesUndergoingHealthVerification(String accountId, String orgIdentifier, String projectIdentifier);
   List<VerificationJob> getHealthVerificationJobs(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String envIdentifier, String serviceIdentifier);
+  void createDefaultHealthVerificationJob(String accountId, String orgIdentifier, String projectIdentifier);
+  VerificationJob getOrCreateDefaultHealthVerificationJob(
+      String accountId, String orgIdentifier, String projectIdentifier);
+  VerificationJobDTO getDefaultHealthVerificationJobDTO(
+      String accountId, String orgIdentifier, String projectIdentifier);
 }

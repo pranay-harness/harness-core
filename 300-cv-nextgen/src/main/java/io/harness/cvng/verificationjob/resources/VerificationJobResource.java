@@ -13,6 +13,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import java.util.List;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
@@ -63,5 +64,19 @@ public class VerificationJobResource {
   public RestResponse<List<VerificationJobDTO>> list(@QueryParam("accountId") @Valid final String accountId,
       @QueryParam("projectIdentifier") String projectIdentifier, @QueryParam("orgIdentifier") String orgIdentifier) {
     return new RestResponse<>(verificationJobService.list(accountId, projectIdentifier, orgIdentifier));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("/default-health-job")
+  @ApiOperation(
+      value = "gets the default health verification job for a project", nickname = "getDefaultHealthVerificationJob")
+  public RestResponse<VerificationJobDTO>
+  getDefaultHealthVerificationJob(@QueryParam("accountId") @NotNull @Valid final String accountId,
+      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+      @QueryParam("orgIdentifier") @NotNull String orgIdentifier) {
+    return new RestResponse<>(
+        verificationJobService.getDefaultHealthVerificationJobDTO(accountId, orgIdentifier, projectIdentifier));
   }
 }

@@ -77,6 +77,7 @@ public abstract class VerificationJob
   private List<DataSourceType> dataSources;
 
   private RuntimeParameter duration;
+  private boolean isDefaultJob;
 
   public abstract VerificationJobType getType();
   public abstract VerificationJobDTO getVerificationJobDTO();
@@ -118,6 +119,7 @@ public abstract class VerificationJob
     verificationJobDTO.setDataSources(this.dataSources);
     verificationJobDTO.setProjectIdentifier(this.getProjectIdentifier());
     verificationJobDTO.setOrgIdentifier(this.getOrgIdentifier());
+    verificationJobDTO.setDefaultJob(isDefaultJob);
   }
 
   protected List<TimeRange> getTimeRangesForDuration(Instant startTime) {
