@@ -36,6 +36,7 @@ import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
+import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.version.VersionModule;
 
 import software.wings.app.AuthModule;
@@ -140,6 +141,7 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
         EventsFrameworkConfiguration.builder()
             .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
             .build());
+    configuration.setTimeScaleDBConfig(TimeScaleDBConfig.builder().build());
     return configuration;
   }
 

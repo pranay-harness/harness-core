@@ -240,3 +240,13 @@ eventsFramework:
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
+
+timescaledb:
+  timescaledbUrl: ""
+  timescaledbUsername: ""
+  timescaledbPassword: ""
+  connectTimeout: 10
+  socketTimeout: 30
+  logUnclosedConnections: false
+  loggerLevel: OFF
+  instanceDataRetentionDays: 210

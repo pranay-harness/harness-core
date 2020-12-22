@@ -1,10 +1,13 @@
 package io.harness.timescaledb;
 
+import io.harness.annotations.retry.RetryOnException;
 import io.harness.timescaledb.TimeScaleDBConfig.TimeScaleDBConfigFields;
 
 import com.google.common.base.Strings;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.jayway.jsonpath.internal.Utils;
+import java.net.SocketException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -16,16 +19,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.dbcp.BasicDataSource;
 
 @Singleton
-@NoArgsConstructor
 @Slf4j
 public class TimeScaleDBServiceImpl implements TimeScaleDBService {
   private TimeScaleDBConfig timeScaleDBConfig;
   private boolean validDB;
   private BasicDataSource ds = new BasicDataSource();
 
-  public TimeScaleDBServiceImpl(TimeScaleDBConfig timeScaleDBConfig) {
+  public TimeScaleDBServiceImpl(@Named("TimeScaleDBConfig") TimeScaleDBConfig timeScaleDBConfig) {
     this.timeScaleDBConfig = timeScaleDBConfig;
-    initializeDB();
+    initializeDB(); // Testing aop annotation
   }
 
   private void initializeDB() {
@@ -47,6 +49,15 @@ public class TimeScaleDBServiceImpl implements TimeScaleDBService {
       dbProperties.put("password", timeScaleDBConfig.getTimescaledbPassword());
     }
 
+    try {
+      createConnection(dbProperties);
+    } catch (SQLException ex) {
+      log.error("No Valid TimeScaleDB found", ex);
+    }
+  }
+
+  @RetryOnException(retryCount = 4, sleepDurationInMilliseconds = 200)
+  public void createConnection(Properties dbProperties) throws SQLException {
     try (Connection connection = DriverManager.getConnection(timeScaleDBConfig.getTimescaledbUrl(), dbProperties);
          Statement st = connection.createStatement(); ResultSet rs = st.executeQuery("SELECT VERSION()")) {
       if (rs.next()) {
@@ -54,9 +65,6 @@ public class TimeScaleDBServiceImpl implements TimeScaleDBService {
         initializeTimeScaleDB(timeScaleDBConfig);
         validDB = true;
       }
-
-    } catch (SQLException ex) {
-      log.info("No Valid TimeScaleDB found", ex);
     }
   }
 
