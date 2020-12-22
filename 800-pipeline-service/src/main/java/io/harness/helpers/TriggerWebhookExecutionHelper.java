@@ -147,7 +147,7 @@ public class TriggerWebhookExecutionHelper {
           ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(), finalPipelineYmlForTrigger);
 
       return pipelineExecuteHelper.startExecution(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),
-          ngTriggerEntity.getProjectIdentifier(), pipelineEntity, embeddedUser, contextAttributes);
+          ngTriggerEntity.getProjectIdentifier(), finalPipelineYmlForTrigger, embeddedUser, contextAttributes);
     } catch (Exception e) {
       throw new TriggerException("Failed while requesting Pipeline Execution" + e.getMessage(), USER);
     }
