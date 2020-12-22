@@ -1,8 +1,8 @@
 package io.harness.cdng.k8s;
 
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfig;
-import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.delegate.task.k8s.K8sApplyRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
@@ -48,9 +48,9 @@ public class K8sApplyStep implements TaskChainExecutable<K8sApplyStepParameters>
     return k8sStepHelper.executeNextLink(this, ambiance, k8sApplyStepParameters, passThroughData, responseDataMap);
   }
 
-  public TaskChainResponse executeK8sTask(K8sManifest k8sManifest, Ambiance ambiance, K8sStepParameters stepParameters,
-      List<String> valuesFileContents, InfrastructureOutcome infrastructure) {
-    StoreConfig storeConfig = k8sManifest.getStoreConfigWrapper().getStoreConfig();
+  public TaskChainResponse executeK8sTask(K8sManifestOutcome k8sManifestOutcome, Ambiance ambiance,
+      K8sStepParameters stepParameters, List<String> valuesFileContents, InfrastructureOutcome infrastructure) {
+    StoreConfig storeConfig = k8sManifestOutcome.getStore().getStoreConfig();
     String releaseName = k8sStepHelper.getReleaseName(infrastructure);
     K8sApplyStepParameters k8sApplyStepParameters = (K8sApplyStepParameters) stepParameters;
 

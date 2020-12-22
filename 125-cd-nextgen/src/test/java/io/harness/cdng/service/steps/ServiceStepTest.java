@@ -8,6 +8,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.manifest.ManifestConstants;
 import io.harness.cdng.manifest.yaml.GitStore;
+import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestsOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
@@ -52,6 +53,11 @@ public class ServiceStepTest extends CategoryTest {
                     .build())
             .build();
 
+    K8sManifestOutcome k8sManifestOutcome = K8sManifestOutcome.builder()
+                                                .identifier(k8Manifest.getIdentifier())
+                                                .store(k8Manifest.getStoreConfigWrapper())
+                                                .build();
+
     K8sManifest k8Manifest1 =
         K8sManifest.builder()
             .identifier("m2")
@@ -66,8 +72,13 @@ public class ServiceStepTest extends CategoryTest {
                     .build())
             .build();
 
+    K8sManifestOutcome k8sManifestOutcome1 = K8sManifestOutcome.builder()
+                                                 .identifier(k8Manifest1.getIdentifier())
+                                                 .store(k8Manifest1.getStoreConfigWrapper())
+                                                 .build();
+
     ManifestsOutcome manifestsOutcome =
-        ManifestsOutcome.builder().manifestAttributes(Arrays.asList(k8Manifest, k8Manifest1)).build();
+        ManifestsOutcome.builder().manifestOutcomeList(Arrays.asList(k8sManifestOutcome, k8sManifestOutcome1)).build();
     StepOutcome stepOutcome = StepOutcome.builder().outcome(manifestsOutcome).name(ManifestConstants.MANIFESTS).build();
 
     ServiceOutcome serviceOutcome = serviceStep.createServiceOutcome(
@@ -79,8 +90,8 @@ public class ServiceStepTest extends CategoryTest {
         Collections.singletonList(stepOutcome));
 
     assertThat(serviceOutcome.getManifests()).isNotEmpty();
-    assertThat(serviceOutcome.getManifests().size()).isEqualTo(2);
-    assertThat(serviceOutcome.getManifests().get(0)).isEqualTo(k8Manifest);
-    assertThat(serviceOutcome.getManifests().get(1)).isEqualTo(k8Manifest1);
+    assertThat(serviceOutcome.getManifests().keySet().size()).isEqualTo(2);
+    assertThat(serviceOutcome.getManifests().get(k8Manifest.getIdentifier())).isEqualTo(k8sManifestOutcome);
+    assertThat(serviceOutcome.getManifests().get(k8Manifest1.getIdentifier())).isEqualTo(k8sManifestOutcome1);
   }
 }

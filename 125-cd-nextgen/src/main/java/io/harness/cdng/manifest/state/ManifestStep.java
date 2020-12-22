@@ -2,6 +2,7 @@ package io.harness.cdng.manifest.state;
 
 import static io.harness.cdng.manifest.ManifestConstants.MANIFESTS;
 
+import io.harness.cdng.manifest.mappers.ManifestOutcomeMapper;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
 import io.harness.cdng.manifest.yaml.ManifestsOutcome;
@@ -82,8 +83,10 @@ public class ManifestStep {
 
     return StepOutcome.builder()
         .name(MANIFESTS.toLowerCase())
-        .outcome(
-            ManifestsOutcome.builder().manifestAttributes(new ArrayList<>(identifierToManifestMap.values())).build())
+        .outcome(ManifestsOutcome.builder()
+                     .manifestOutcomeList(
+                         ManifestOutcomeMapper.toManifestOutcome(new ArrayList<>(identifierToManifestMap.values())))
+                     .build())
         .build();
   }
 

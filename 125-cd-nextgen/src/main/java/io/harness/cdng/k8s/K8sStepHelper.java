@@ -16,11 +16,11 @@ import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.GitStore;
-import io.harness.cdng.manifest.yaml.ManifestAttributes;
+import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
+import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
-import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
-import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
+import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
 import io.harness.common.NGTaskType;
@@ -89,6 +89,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -299,12 +300,13 @@ public class K8sStepHelper {
   }
 
   public TaskChainResponse executeValuesFetchTask(Ambiance ambiance, K8sStepParameters k8sStepParameters,
-      InfrastructureOutcome infrastructure, K8sManifest k8sManifest, List<ValuesManifest> aggregatedValuesManifests) {
+      InfrastructureOutcome infrastructure, K8sManifestOutcome k8sManifestOutcome,
+      List<ValuesManifestOutcome> aggregatedValuesManifests) {
     List<GitFetchFilesConfig> gitFetchFilesConfigs = new ArrayList<>();
 
-    for (ValuesManifest valuesManifest : aggregatedValuesManifests) {
-      if (ManifestStoreType.GIT.equals(valuesManifest.getStoreConfigWrapper().getStoreConfig().getKind())) {
-        GitStore gitStore = (GitStore) valuesManifest.getStoreConfigWrapper().getStoreConfig();
+    for (ValuesManifestOutcome valuesManifest : aggregatedValuesManifests) {
+      if (ManifestStoreType.GIT.equals(valuesManifest.getStore().getStoreConfig().getKind())) {
+        GitStore gitStore = (GitStore) valuesManifest.getStore().getStoreConfig();
         String connectorId = gitStore.getConnectorRef().getValue();
         ConnectorInfoDTO connectorDTO = getConnector(connectorId, ambiance);
         List<EncryptedDataDetail> encryptedDataDetails =
@@ -347,8 +349,8 @@ public class K8sStepHelper {
         prepareTaskRequest(ambiance, taskData, kryoSerializer, logAbstractions, TaskCategory.DELEGATE_TASK_V2);
 
     K8sStepPassThroughData k8sStepPassThroughData = K8sStepPassThroughData.builder()
-                                                        .k8sManifest(k8sManifest)
-                                                        .valuesManifests(aggregatedValuesManifests)
+                                                        .k8sManifestOutcome(k8sManifestOutcome)
+                                                        .valuesManifestOutcomes(aggregatedValuesManifests)
                                                         .infrastructure(infrastructure)
                                                         .build();
     return TaskChainResponse.builder()
@@ -371,35 +373,35 @@ public class K8sStepHelper {
     InfrastructureOutcome infrastructureOutcome = CDStepDependencyUtils.getInfrastructure(
         stepDependencyService, infraSpec, inputPackage, k8sStepParameters, ambiance);
 
-    List<ManifestAttributes> manifests = serviceOutcome.getManifests();
-    Validator.notEmptyCheck("Manifests can't be empty", manifests);
+    Map<String, ManifestOutcome> manifestOutcomeMap = serviceOutcome.getManifests();
+    Validator.notEmptyCheck("Manifests can't be empty", manifestOutcomeMap.keySet());
     Validator.notEmptyCheck("Timeout cannot be empty", k8sStepParameters.getTimeout().getValue());
 
-    K8sManifest k8sManifest = getK8sManifest(manifests);
-    List<ValuesManifest> aggregatedValuesManifests = getAggregatedValuesManifests(manifests);
+    K8sManifestOutcome k8sManifestOutcome = getK8sManifestOutcome(new LinkedList<>(manifestOutcomeMap.values()));
+    List<ValuesManifestOutcome> aggregatedValuesManifests =
+        getAggregatedValuesManifests(new LinkedList<>(manifestOutcomeMap.values()));
 
     if (isEmpty(aggregatedValuesManifests)) {
       return k8sStepExecutor.executeK8sTask(
-          k8sManifest, ambiance, k8sStepParameters, Collections.emptyList(), infrastructureOutcome);
+          k8sManifestOutcome, ambiance, k8sStepParameters, Collections.emptyList(), infrastructureOutcome);
     }
 
     if (!isAnyRemoteStore(aggregatedValuesManifests)) {
       List<String> valuesFileContentsForLocalStore = getValuesFileContentsForLocalStore(aggregatedValuesManifests);
       return k8sStepExecutor.executeK8sTask(
-          k8sManifest, ambiance, k8sStepParameters, valuesFileContentsForLocalStore, infrastructureOutcome);
+          k8sManifestOutcome, ambiance, k8sStepParameters, valuesFileContentsForLocalStore, infrastructureOutcome);
     }
 
     return executeValuesFetchTask(
-        ambiance, k8sStepParameters, infrastructureOutcome, k8sManifest, aggregatedValuesManifests);
+        ambiance, k8sStepParameters, infrastructureOutcome, k8sManifestOutcome, aggregatedValuesManifests);
   }
 
   @VisibleForTesting
-  public K8sManifest getK8sManifest(@NotEmpty List<ManifestAttributes> manifestAttributes) {
-    List<ManifestAttributes> k8sManifests =
-        manifestAttributes.stream()
-            .filter(manifestAttribute -> ManifestType.K8Manifest.equals(manifestAttribute.getKind()))
+  public K8sManifestOutcome getK8sManifestOutcome(@NotEmpty List<ManifestOutcome> manifestOutcomes) {
+    List<ManifestOutcome> k8sManifests =
+        manifestOutcomes.stream()
+            .filter(manifestOutcome -> ManifestType.K8Manifest.equals(manifestOutcome.getType()))
             .collect(Collectors.toList());
-
     if (isEmpty(k8sManifests)) {
       throw new InvalidRequestException("K8s Manifests are mandatory for k8s Rolling step", WingsException.USER);
     }
@@ -407,19 +409,19 @@ public class K8sStepHelper {
     if (k8sManifests.size() > 1) {
       throw new InvalidRequestException("There can be only a single K8s manifest", WingsException.USER);
     }
-    return (K8sManifest) k8sManifests.get(0);
+    return (K8sManifestOutcome) k8sManifests.get(0);
   }
 
   @VisibleForTesting
-  public List<ValuesManifest> getAggregatedValuesManifests(@NotEmpty List<ManifestAttributes> manifestAttributesList) {
-    List<ValuesManifest> aggregateValuesManifests = new ArrayList<>();
+  public List<ValuesManifestOutcome> getAggregatedValuesManifests(@NotEmpty List<ManifestOutcome> manifestOutcomeList) {
+    List<ValuesManifestOutcome> aggregateValuesManifests = new ArrayList<>();
 
-    addValuesEntryForK8ManifestIfNeeded(manifestAttributesList, aggregateValuesManifests);
+    addValuesEntryForK8ManifestIfNeeded(manifestOutcomeList, aggregateValuesManifests);
 
-    List<ValuesManifest> serviceValuesManifests =
-        manifestAttributesList.stream()
-            .filter(manifestAttribute -> ManifestType.VALUES.equals(manifestAttribute.getKind()))
-            .map(manifestAttribute -> (ValuesManifest) manifestAttribute)
+    List<ValuesManifestOutcome> serviceValuesManifests =
+        manifestOutcomeList.stream()
+            .filter(manifestOutcome -> ManifestType.VALUES.equals(manifestOutcome.getType()))
+            .map(manifestOutcome -> (ValuesManifestOutcome) manifestOutcome)
             .collect(Collectors.toList());
 
     if (isNotEmpty(serviceValuesManifests)) {
@@ -429,37 +431,34 @@ public class K8sStepHelper {
   }
 
   private void addValuesEntryForK8ManifestIfNeeded(
-      List<ManifestAttributes> serviceManifests, List<ValuesManifest> aggregateValuesManifests) {
-    K8sManifest k8sManifest =
-        (K8sManifest) serviceManifests.stream()
-            .filter(manifestAttribute -> ManifestType.K8Manifest.equals(manifestAttribute.getKind()))
+      List<ManifestOutcome> serviceManifests, List<ValuesManifestOutcome> aggregateValuesManifests) {
+    K8sManifestOutcome k8sManifestOutcome =
+        (K8sManifestOutcome) serviceManifests.stream()
+            .filter(manifestOutcome -> ManifestType.K8Manifest.equals(manifestOutcome.getType()))
             .findFirst()
             .orElse(null);
 
-    if (k8sManifest != null && k8sManifest.getValuesFilePaths() != null
-        && isNotEmpty(k8sManifest.getValuesFilePaths().getValue())
-        && ManifestStoreType.GIT.equals(k8sManifest.getStoreConfigWrapper().getStoreConfig().getKind())) {
-      GitStore gitStore = (GitStore) k8sManifest.getStoreConfigWrapper().getStoreConfig();
-      ValuesManifest valuesManifest =
-          ValuesManifest.builder()
-              .identifier(k8sManifest.getIdentifier())
-              .storeConfigWrapper(StoreConfigWrapper.builder().storeConfig(gitStore.cloneInternal()).build())
+    if (k8sManifestOutcome != null && k8sManifestOutcome.getStore() != null
+        && ManifestStoreType.GIT.equals(k8sManifestOutcome.getStore().getStoreConfig().getKind())) {
+      GitStore gitStore = (GitStore) k8sManifestOutcome.getStore().getStoreConfig();
+      ValuesManifestOutcome valuesManifest =
+          ValuesManifestOutcome.builder()
+              .identifier(k8sManifestOutcome.getIdentifier())
+              .store(StoreConfigWrapper.builder().storeConfig(gitStore.cloneInternal()).build())
               .build();
-
-      ((GitStore) valuesManifest.getStoreConfigWrapper().getStoreConfig()).setPaths(k8sManifest.getValuesFilePaths());
 
       aggregateValuesManifests.add(valuesManifest);
     }
   }
 
-  private List<String> getValuesFileContentsForLocalStore(List<ValuesManifest> aggregatedValuesManifests) {
+  private List<String> getValuesFileContentsForLocalStore(List<ValuesManifestOutcome> aggregatedValuesManifests) {
     // TODO: implement when local store is available
     return Collections.emptyList();
   }
 
-  private boolean isAnyRemoteStore(@NotEmpty List<ValuesManifest> aggregatedValuesManifests) {
-    return aggregatedValuesManifests.stream().anyMatch(valuesManifest
-        -> ManifestStoreType.GIT.equals(valuesManifest.getStoreConfigWrapper().getStoreConfig().getKind()));
+  private boolean isAnyRemoteStore(@NotEmpty List<ValuesManifestOutcome> aggregatedValuesManifests) {
+    return aggregatedValuesManifests.stream().anyMatch(
+        valuesManifest -> ManifestStoreType.GIT.equals(valuesManifest.getStore().getStoreConfig().getKind()));
   }
 
   public TaskChainResponse executeNextLink(K8sStepExecutor k8sStepExecutor, Ambiance ambiance,
@@ -473,8 +472,8 @@ public class K8sStepHelper {
 
     K8sStepPassThroughData k8sStepPassThroughData = (K8sStepPassThroughData) passThroughData;
 
-    K8sManifest k8sManifest = k8sStepPassThroughData.getK8sManifest();
-    List<ValuesManifest> valuesManifests = k8sStepPassThroughData.getValuesManifests();
+    K8sManifestOutcome k8sManifest = k8sStepPassThroughData.getK8sManifestOutcome();
+    List<ValuesManifestOutcome> valuesManifests = k8sStepPassThroughData.getValuesManifestOutcomes();
 
     List<String> valuesFileContents = getFileContents(gitFetchFilesResultMap, valuesManifests);
 
@@ -483,11 +482,11 @@ public class K8sStepHelper {
   }
 
   private List<String> getFileContents(
-      Map<String, FetchFilesResult> gitFetchFilesResultMap, List<ValuesManifest> valuesManifests) {
+      Map<String, FetchFilesResult> gitFetchFilesResultMap, List<ValuesManifestOutcome> valuesManifests) {
     List<String> valuesFileContents = new ArrayList<>();
 
-    for (ValuesManifest valuesManifest : valuesManifests) {
-      if (ManifestStoreType.GIT.equals(valuesManifest.getStoreConfigWrapper().getStoreConfig().getKind())) {
+    for (ValuesManifestOutcome valuesManifest : valuesManifests) {
+      if (ManifestStoreType.GIT.equals(valuesManifest.getStore().getStoreConfig().getKind())) {
         FetchFilesResult gitFetchFilesResult = gitFetchFilesResultMap.get(valuesManifest.getIdentifier());
         valuesFileContents.addAll(
             gitFetchFilesResult.getFiles().stream().map(GitFile::getFileContent).collect(Collectors.toList()));

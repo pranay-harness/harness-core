@@ -7,10 +7,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.manifest.yaml.GitStore;
+import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestConfig;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
 import io.harness.cdng.manifest.yaml.ManifestsOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
+import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
 import io.harness.delegate.beans.storeconfig.FetchType;
@@ -47,6 +49,11 @@ public class ManifestStepTest extends CategoryTest {
         ManifestConfigWrapper.builder()
             .manifest(ManifestConfig.builder().identifier("specsManifest").manifestAttributes(k8Manifest1).build())
             .build();
+
+    K8sManifestOutcome k8sManifestOutcome1 = K8sManifestOutcome.builder()
+                                                 .identifier(k8Manifest1.getIdentifier())
+                                                 .store(k8Manifest1.getStoreConfigWrapper())
+                                                 .build();
 
     K8sManifest k8Manifest2 =
         K8sManifest.builder()
@@ -105,6 +112,11 @@ public class ManifestStepTest extends CategoryTest {
             .manifest(ManifestConfig.builder().identifier("spec1").manifestAttributes(k8Manifest3).build())
             .build();
 
+    K8sManifestOutcome k8sManifestOutcome3 = K8sManifestOutcome.builder()
+                                                 .identifier(k8Manifest3.getIdentifier())
+                                                 .store(k8Manifest3.getStoreConfigWrapper())
+                                                 .build();
+
     ValuesManifest valuesManifest2 =
         ValuesManifest.builder()
             .identifier("valuesManifest1")
@@ -124,13 +136,19 @@ public class ManifestStepTest extends CategoryTest {
                 ManifestConfig.builder().identifier("valuesManifest1").manifestAttributes(valuesManifest2).build())
             .build();
 
+    ValuesManifestOutcome valuesManifestOutcome2 = ValuesManifestOutcome.builder()
+                                                       .identifier(valuesManifest2.getIdentifier())
+                                                       .store(valuesManifest2.getStoreConfigWrapper())
+                                                       .build();
+
     StepResponse.StepOutcome stepOutcome =
         manifestStep.processManifests(Arrays.asList(manifestConfig1, manifestConfig2),
             Collections.singletonList(manifestConfig4), Arrays.asList(manifestConfig3, manifestConfig5));
 
     ManifestsOutcome manifestsOutcome = (ManifestsOutcome) stepOutcome.getOutcome();
-    assertThat(manifestsOutcome.getManifestAttributes()).isNotEmpty();
-    assertThat(manifestsOutcome.getManifestAttributes().size()).isEqualTo(3);
-    assertThat(manifestsOutcome.getManifestAttributes()).containsOnly(k8Manifest1, k8Manifest3, valuesManifest2);
+    assertThat(manifestsOutcome.getManifestOutcomeList()).isNotEmpty();
+    assertThat(manifestsOutcome.getManifestOutcomeList().size()).isEqualTo(3);
+    assertThat(manifestsOutcome.getManifestOutcomeList())
+        .containsOnly(k8sManifestOutcome1, k8sManifestOutcome3, valuesManifestOutcome2);
   }
 }

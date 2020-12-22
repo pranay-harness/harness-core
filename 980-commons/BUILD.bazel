@@ -125,7 +125,6 @@ sonarqube_test(
     name = "sq_mycomponent",
     srcs = ["sources"],
     targets = [
-        ":maven_deps",
         ":module",
     ],
 )
