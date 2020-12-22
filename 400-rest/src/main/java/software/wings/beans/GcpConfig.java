@@ -48,13 +48,15 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
 
   private boolean useDelegate;
   private String delegateSelector;
+  private boolean skipValidation;
 
   public GcpConfig() {
     super(GCP.name());
   }
 
   public GcpConfig(char[] serviceAccountKeyFileContent, String accountId, CCMConfig ccmConfig,
-      String encryptedServiceAccountKeyFileContent, boolean useDelegate, String delegateSelector) {
+      String encryptedServiceAccountKeyFileContent, boolean useDelegate, String delegateSelector,
+      boolean skipValidation) {
     this();
     this.serviceAccountKeyFileContent =
         serviceAccountKeyFileContent == null ? null : serviceAccountKeyFileContent.clone();
@@ -63,6 +65,7 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
     this.encryptedServiceAccountKeyFileContent = encryptedServiceAccountKeyFileContent;
     this.delegateSelector = delegateSelector;
     this.useDelegate = useDelegate;
+    this.skipValidation = skipValidation;
   }
 
   @Override
@@ -82,14 +85,17 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
     private String serviceAccountKeyFileContent;
     private boolean useDelegate;
     private String delegateSelector;
+    private boolean skipValidation;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String serviceAccountKeyFileContent,
-        UsageRestrictions.Yaml usageRestrictions, boolean useDelegate, String delegateSelector) {
+        UsageRestrictions.Yaml usageRestrictions, boolean useDelegate, String delegateSelector,
+        boolean skipValidation) {
       super(type, harnessApiVersion, usageRestrictions);
       this.serviceAccountKeyFileContent = serviceAccountKeyFileContent;
       this.delegateSelector = delegateSelector;
       this.useDelegate = useDelegate;
+      this.skipValidation = skipValidation;
     }
   }
 }

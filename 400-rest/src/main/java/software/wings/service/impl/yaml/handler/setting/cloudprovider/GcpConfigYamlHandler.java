@@ -24,13 +24,14 @@ public class GcpConfigYamlHandler extends CloudProviderYamlHandler<Yaml, GcpConf
                         gcpConfig.getAccountId(), gcpConfig.getEncryptedServiceAccountKeyFileContent()))
                     .useDelegate(gcpConfig.isUseDelegate())
                     .delegateSelector(gcpConfig.getDelegateSelector())
+                    .skipValidation(gcpConfig.isSkipValidation())
                     .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
   }
 
   @Override
-  protected SettingAttribute toBean(
+  public SettingAttribute toBean(
       SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
     Yaml yaml = changeContext.getYaml();
@@ -39,8 +40,9 @@ public class GcpConfigYamlHandler extends CloudProviderYamlHandler<Yaml, GcpConf
     GcpConfig config = GcpConfig.builder()
                            .accountId(accountId)
                            .encryptedServiceAccountKeyFileContent(yaml.getServiceAccountKeyFileContent())
+                           .useDelegate(yaml.isUseDelegate())
                            .delegateSelector(yaml.getDelegateSelector())
-                           .delegateSelector(yaml.getDelegateSelector())
+                           .skipValidation(yaml.isSkipValidation())
                            .build();
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);
   }

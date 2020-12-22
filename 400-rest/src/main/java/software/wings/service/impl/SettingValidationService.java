@@ -227,7 +227,14 @@ public class SettingValidationService {
     List<EncryptedDataDetail> encryptedDataDetails = fetchEncryptionDetails(settingValue);
 
     if (settingValue instanceof GcpConfig) {
-      gcpHelperServiceManager.validateCredential((GcpConfig) settingValue, encryptedDataDetails);
+      GcpConfig gcpConfig = (GcpConfig) settingValue;
+      if (!gcpConfig.isUseDelegate() && gcpConfig.isSkipValidation()) {
+        throw new InvalidArgumentsException(
+            "Validation can be skipped only if inherit from delegate option is selected.", USER);
+      }
+      if (!gcpConfig.isSkipValidation()) {
+        gcpHelperServiceManager.validateCredential((GcpConfig) settingValue, encryptedDataDetails);
+      }
     } else if (settingValue instanceof AzureConfig) {
       azureHelperService.validateAzureAccountCredential((AzureConfig) settingValue, encryptedDataDetails);
     } else if (settingValue instanceof PcfConfig) {

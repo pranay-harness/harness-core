@@ -759,8 +759,8 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   }
 
   @Test
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
+  @Owner(developers = RAGHU, intermittent = true)
+  @Category({UnitTests.class})
   public void testCreateVerificationJobInstancesForActivity_defaultJob() throws IllegalAccessException {
     FieldUtils.writeField(activityService, "verificationJobService", realVerificationJobService, true);
     FieldUtils.writeField(activityService, "verificationJobInstanceService", realVerificationJobInstanceService, true);
