@@ -50,18 +50,21 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters.BuildSourceRequestType;
+import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.SettingsService;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
@@ -333,6 +336,26 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void shouldVerifyArtifactFileNameForS3() {
+    when(settingsService.get(SETTING_ID))
+        .thenReturn(SettingAttribute.Builder.aSettingAttribute()
+                        .withValue(AwsConfig.builder()
+                                       .accessKey("accessKey".toCharArray())
+                                       .secretKey("secretKey".toCharArray())
+                                       .build())
+                        .build());
+    BuildDetails buildDetails = BuildDetails.Builder.aBuildDetails()
+                                    .withNumber("testfolder/todolist-1.war")
+                                    .withRevision("testfolder/todolist-1.war")
+                                    .withArtifactPath("testfolder/todolist-1.war")
+                                    .build();
+    Artifact artifact = artifactCollectionUtils.getArtifact(constructS3ArtifactStream(), buildDetails);
+    assertThat(artifact.getMetadata().get(ArtifactMetadataKeys.artifactFileName)).isEqualTo("todolist-1.war");
+  }
+
+  @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testSupportsCleanup() {
@@ -356,6 +379,17 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
         .imageName("wingsplugins/todolist")
         .autoPopulate(true)
         .serviceId(SERVICE_ID)
+        .build();
+  }
+
+  private AmazonS3ArtifactStream constructS3ArtifactStream() {
+    return AmazonS3ArtifactStream.builder()
+        .appId(APP_ID)
+        .uuid(ARTIFACT_STREAM_ID)
+        .accountId(ACCOUNT_ID)
+        .appId(APP_ID)
+        .settingId(SETTING_ID)
+        .artifactPaths(Lists.newArrayList("testfolder/"))
         .build();
   }
 }
