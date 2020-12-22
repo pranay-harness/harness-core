@@ -11,11 +11,9 @@ import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ngpipeline.pipeline.executions.beans.ServiceExecutionSummary;
-import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
-import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.execution.beans.PipelineModuleInfo;
@@ -52,16 +50,24 @@ public class CDNGModuleInfoProvider implements ExecutionSummaryModuleInfoProvide
     return artifactsSummaryBuilder.build();
   }
 
-  private Optional<ServiceOutcome> getServiceOutcome(String planNodeId, String planExecutionId) {
-    return outcomeService.findAllByRuntimeId(planExecutionId, planNodeId)
+  private Optional<ServiceOutcome> getServiceOutcome(NodeExecutionProto nodeExecutionProto) {
+    return outcomeService
+        .fetchOutcomes(nodeExecutionProto.getOutcomeRefsList()
+                           .stream()
+                           .map(ref -> ref.getInstanceId())
+                           .collect(Collectors.toList()))
         .stream()
         .filter(outcome -> outcome instanceof ServiceOutcome)
         .map(outcome -> (ServiceOutcome) outcome)
         .findFirst();
   }
 
-  private Optional<EnvironmentOutcome> getEnvironmentOutcome(String planNodeId, String planExecutionId) {
-    return outcomeService.findAllByRuntimeId(planExecutionId, planNodeId)
+  private Optional<EnvironmentOutcome> getEnvironmentOutcome(NodeExecutionProto nodeExecutionProto) {
+    return outcomeService
+        .fetchOutcomes(nodeExecutionProto.getOutcomeRefsList()
+                           .stream()
+                           .map(ref -> ref.getInstanceId())
+                           .collect(Collectors.toList()))
         .stream()
         .filter(outcome -> outcome instanceof EnvironmentOutcome)
         .map(outcome -> (EnvironmentOutcome) outcome)
@@ -78,18 +84,15 @@ public class CDNGModuleInfoProvider implements ExecutionSummaryModuleInfoProvide
 
   @Override
   public PipelineModuleInfo getPipelineLevelModuleInfo(NodeExecutionProto nodeExecutionProto) {
-    Ambiance ambiance = nodeExecutionProto.getAmbiance();
-    String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
-    String planExecutionId = ambiance.getPlanExecutionId();
     CDPipelineModuleInfoBuilder cdPipelineModuleInfoBuilder = CDPipelineModuleInfo.builder();
     if (isServiceNodeAndCompleted(nodeExecutionProto.getNode(), nodeExecutionProto.getStatus())) {
-      Optional<ServiceOutcome> serviceOutcome = getServiceOutcome(nodeExecutionId, planExecutionId);
+      Optional<ServiceOutcome> serviceOutcome = getServiceOutcome(nodeExecutionProto);
       serviceOutcome.ifPresent(outcome
           -> cdPipelineModuleInfoBuilder.serviceDefinitionType(outcome.getDeploymentType())
                  .serviceIdentifier(outcome.getIdentifier()));
     }
     if (isInfrastructureNodeAndCompleted(nodeExecutionProto.getNode(), nodeExecutionProto.getStatus())) {
-      Optional<EnvironmentOutcome> environmentOutcome = getEnvironmentOutcome(nodeExecutionId, planExecutionId);
+      Optional<EnvironmentOutcome> environmentOutcome = getEnvironmentOutcome(nodeExecutionProto);
       environmentOutcome.ifPresent(outcome
           -> cdPipelineModuleInfoBuilder.envIdentifier(outcome.getIdentifier())
                  .environmentType(outcome.getEnvironmentType()));
@@ -99,12 +102,9 @@ public class CDNGModuleInfoProvider implements ExecutionSummaryModuleInfoProvide
 
   @Override
   public StageModuleInfo getStageLevelModuleInfo(NodeExecutionProto nodeExecutionProto) {
-    Ambiance ambiance = nodeExecutionProto.getAmbiance();
-    String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
-    String planExecutionId = ambiance.getPlanExecutionId();
     CDStageModuleInfoBuilder cdStageModuleInfoBuilder = CDStageModuleInfo.builder();
     if (isServiceNodeAndCompleted(nodeExecutionProto.getNode(), nodeExecutionProto.getStatus())) {
-      Optional<ServiceOutcome> serviceOutcome = getServiceOutcome(nodeExecutionId, planExecutionId);
+      Optional<ServiceOutcome> serviceOutcome = getServiceOutcome(nodeExecutionProto);
       serviceOutcome.ifPresent(outcome
           -> cdStageModuleInfoBuilder.serviceInfoList(ServiceExecutionSummary.builder()
                                                           .identifier(outcome.getIdentifier())
@@ -114,7 +114,7 @@ public class CDNGModuleInfoProvider implements ExecutionSummaryModuleInfoProvide
                                                           .build()));
     }
     if (isInfrastructureNodeAndCompleted(nodeExecutionProto.getNode(), nodeExecutionProto.getStatus())) {
-      Optional<EnvironmentOutcome> environmentOutcome = getEnvironmentOutcome(nodeExecutionId, planExecutionId);
+      Optional<EnvironmentOutcome> environmentOutcome = getEnvironmentOutcome(nodeExecutionProto);
       environmentOutcome.ifPresent(
           outcome -> cdStageModuleInfoBuilder.infrastructureIdentifiers(outcome.getIdentifier()));
     }

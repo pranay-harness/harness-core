@@ -73,6 +73,7 @@ public class FilterCreatorMergeService {
         .layoutNodeMap(response.getLayoutNodesMap())
         .stageCount(response.getStageCount())
         .startingNodeId(response.getStartingNodeId())
+        .processedYaml(processedYaml)
         .build();
   }
 

@@ -62,6 +62,7 @@ public class PipelineEntity implements PersistentEntity, AccountAccess, UuidAwar
 
   @Id @org.mongodb.morphia.annotations.Id String uuid;
   @NotEmpty String yaml;
+  @NotEmpty String processedYaml;
   @NotEmpty String accountId;
   @NotEmpty String orgIdentifier;
   @NotEmpty String identifier;

@@ -219,8 +219,8 @@ public class PipelineResource {
   public ResponseDTO<Page<PipelineExecutionSummaryDTO>> getListOfExecutions(
       @NotNull @QueryParam("accountIdentifier") String accountId, @QueryParam("orgIdentifier") String orgId,
       @NotNull @QueryParam("projectIdentifier") String projectId, @QueryParam("filter") String filter,
-      @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size,
-      @QueryParam("sort") List<String> sort) {
+      @QueryParam("pipelineIdentifier") String pipelineIdentifier, @QueryParam("page") @DefaultValue("0") int page,
+      @QueryParam("size") @DefaultValue("10") int size, @QueryParam("sort") List<String> sort) {
     log.info("Get List of executions");
     Criteria criteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(accountId)) {
@@ -231,6 +231,9 @@ public class PipelineResource {
     }
     if (EmptyPredicate.isNotEmpty(projectId)) {
       criteria.and(PipelineEntityKeys.projectIdentifier).is(projectId);
+    }
+    if (EmptyPredicate.isNotEmpty(pipelineIdentifier)) {
+      criteria.and(PipelineEntityKeys.projectIdentifier).is(pipelineIdentifier);
     }
     Pageable pageRequest;
     if (EmptyPredicate.isEmpty(sort)) {
@@ -253,7 +256,7 @@ public class PipelineResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId, @QueryParam("filter") String filter,
-      @QueryParam("stageIdentifier") String stageIdentifier,
+      @QueryParam("stageNodeId") String stageNodeId,
       @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
     log.info("Get Execution Detail");
 
@@ -262,7 +265,7 @@ public class PipelineResource {
             .pipelineExecutionSummary(PipelineExecutionSummaryDtoMapper.toDto(
                 pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId)))
             .executionGraph(ExecutionGraphMapper.toExecutionGraph(
-                pmsExecutionService.getOrchestrationGraph(stageIdentifier, planExecutionId)))
+                pmsExecutionService.getOrchestrationGraph(stageNodeId, planExecutionId)))
             .build();
 
     return ResponseDTO.newResponse(pipelineExecutionDetailDTO);

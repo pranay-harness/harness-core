@@ -1,5 +1,7 @@
 package io.harness.pms.execution.handlers;
 
+import static io.harness.pms.plan.execution.PlanExecutionResource.EMBEDDED_USER;
+
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -9,7 +11,9 @@ import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.beans.ExecutionErrorInfo;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
+import io.harness.pms.pipeline.ExecutionTriggerInfo;
 import io.harness.pms.pipeline.PipelineEntity;
+import io.harness.pms.pipeline.TriggerType;
 import io.harness.pms.pipeline.entity.PipelineExecutionSummaryEntity;
 import io.harness.pms.pipeline.mappers.GraphLayoutDtoMapper;
 import io.harness.pms.pipeline.resource.GraphLayoutNodeDTO;
@@ -70,6 +74,8 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
             .accountId(accountId)
             .projectIdentifier(projectId)
             .orgIdentifier(orgId)
+            .executionTriggerInfo(
+                ExecutionTriggerInfo.builder().triggerType(TriggerType.MANUAL).triggeredBy(EMBEDDED_USER).build())
             .build();
     pmsExecutionSummaryRespository.save(pipelineExecutionSummaryEntity);
   }

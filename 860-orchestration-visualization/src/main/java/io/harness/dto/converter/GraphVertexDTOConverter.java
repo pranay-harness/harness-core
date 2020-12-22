@@ -2,7 +2,6 @@ package io.harness.dto.converter;
 
 import io.harness.beans.GraphVertex;
 import io.harness.dto.GraphVertexDTO;
-import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
 
 import java.util.function.Function;
 import lombok.experimental.UtilityClass;
@@ -29,7 +28,7 @@ public class GraphVertexDTOConverter {
              .interruptHistories(graphVertex.getInterruptHistories())
              .retryIds(graphVertex.getRetryIds())
              .skipType(graphVertex.getSkipType())
-             .outcomes(PmsOutcomeMapper.convertFromDocumentToOutcome(graphVertex.getOutcomeDocuments()))
+             .outcomes(graphVertex.getOutcomeDocuments())
              .progressDataMap(graphVertex.getProgressDataMap())
              .build();
 }

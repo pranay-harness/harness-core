@@ -1,5 +1,6 @@
 package io.harness.pms.exception.service;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.pipeline.entity.PipelineExecutionSummaryEntity;
@@ -71,10 +72,10 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
   }
 
   @Override
-  public OrchestrationGraphDTO getOrchestrationGraph(String stageIdentifier, String planExecutionId) {
-    if (stageIdentifier == null) {
+  public OrchestrationGraphDTO getOrchestrationGraph(String stageNodeId, String planExecutionId) {
+    if (EmptyPredicate.isEmpty(stageNodeId)) {
       return graphGenerationService.generateOrchestrationGraphV2(planExecutionId);
     }
-    return graphGenerationService.generatePartialOrchestrationGraphFromIdentifier(stageIdentifier, planExecutionId);
+    return graphGenerationService.generatePartialOrchestrationGraphFromSetupNodeId(stageNodeId, planExecutionId);
   }
 }

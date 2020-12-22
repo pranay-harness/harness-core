@@ -57,8 +57,7 @@ public class PlanCreatorMergeService {
       });
     }
 
-    String finalContent = preprocessYaml(content);
-    YamlField pipelineField = YamlUtils.extractPipelineField(finalContent);
+    YamlField pipelineField = YamlUtils.extractPipelineField(content);
     Map<String, YamlFieldBlob> dependencies = new HashMap<>();
     dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
     PlanCreationBlobResponse finalResponse = createPlanForDependenciesRecursive(services, dependencies);
@@ -146,9 +145,5 @@ public class PlanCreatorMergeService {
     if (EmptyPredicate.isEmpty(finalResponse.getStartingNodeId())) {
       throw new InvalidRequestException("Unable to find out starting node");
     }
-  }
-
-  private String preprocessYaml(@NotNull String content) throws IOException {
-    return YamlUtils.injectUuid(content);
   }
 }

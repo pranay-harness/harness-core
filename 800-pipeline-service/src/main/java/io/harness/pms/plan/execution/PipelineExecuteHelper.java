@@ -15,6 +15,7 @@ import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.plan.creation.PlanCreatorMergeService;
+import io.harness.pms.yaml.YamlUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -49,15 +50,13 @@ public class PipelineExecuteHelper {
     contextAttributes.put(SetupAbstractionKeys.eventPayload, eventPayload);
     String pipelineYaml;
     if (EmptyPredicate.isEmpty(inputSetPipelineYaml)) {
-      pipelineYaml = pipelineEntity.get().getYaml();
+      pipelineYaml = pipelineEntity.get().getProcessedYaml();
     } else {
       pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), inputSetPipelineYaml);
       contextAttributes.put(SetupAbstractionKeys.inputSetYaml, inputSetPipelineYaml);
     }
-
-    PipelineEntity finalEntity =
-        PMSPipelineDtoMapper.toPipelineEntity(accountId, orgIdentifier, projectIdentifier, pipelineYaml);
-    return startExecution(accountId, orgIdentifier, projectIdentifier, finalEntity, user, contextAttributes);
+    contextAttributes.put(SetupAbstractionKeys.pipelineIdentifier, pipelineIdentifier);
+    return startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml, user, contextAttributes);
   }
 
   public PlanExecution runPipelineWithInputSetReferencesList(String accountId, String orgIdentifier,
@@ -71,24 +70,24 @@ public class PipelineExecuteHelper {
 
     String mergedRuntimeInputYaml = validateAndMergeHelper.getMergeInputSetFromPipelineTemplate(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetReferences);
-    String pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), mergedRuntimeInputYaml);
-    PipelineEntity finalEntity =
-        PMSPipelineDtoMapper.toPipelineEntity(accountId, orgIdentifier, projectIdentifier, pipelineYaml);
+    String pipelineYaml = YamlUtils.injectUuid(
+        MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getProcessedYaml(), mergedRuntimeInputYaml));
     Map<String, Object> contextAttributes = new HashMap<>();
     contextAttributes.put(SetupAbstractionKeys.inputSetYaml, mergedRuntimeInputYaml);
-    return startExecution(accountId, orgIdentifier, projectIdentifier, finalEntity, user, contextAttributes);
+    contextAttributes.put(SetupAbstractionKeys.pipelineIdentifier, pipelineIdentifier);
+
+    return startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml, user, contextAttributes);
   }
 
   public PlanExecution startExecution(String accountId, String orgIdentifier, String projectIdentifier,
-      PipelineEntity pipelineEntity, EmbeddedUser user, Map<String, Object> contextAttributes) throws IOException {
-    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(pipelineEntity.getYaml());
+      String processedYaml, EmbeddedUser user, Map<String, Object> contextAttributes) throws IOException {
+    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(processedYaml);
     Plan plan = PlanExecutionUtils.extractPlan(resp);
     ImmutableMap.Builder<String, String> abstractionsBuilder =
         ImmutableMap.<String, String>builder()
             .put(SetupAbstractionKeys.accountId, accountId)
             .put(SetupAbstractionKeys.orgIdentifier, orgIdentifier)
-            .put(SetupAbstractionKeys.projectIdentifier, projectIdentifier)
-            .put(SetupAbstractionKeys.pipelineIdentifier, pipelineEntity.getIdentifier());
+            .put(SetupAbstractionKeys.projectIdentifier, projectIdentifier);
 
     if (isNotEmpty(contextAttributes)) {
       contextAttributes.forEach((key, val) -> {
