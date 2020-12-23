@@ -2,7 +2,6 @@ package software.wings.helpers.ext.amazons3;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.eraro.ErrorCode.AWS_ACCESS_DENIED;
-import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.EVERYBODY;
 import static io.harness.exception.WingsException.USER;
 
@@ -15,6 +14,8 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidArtifactServerException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -106,12 +107,11 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
         buildDetailsList.addAll(buildDetailsListForArtifactPath);
       }
       return buildDetailsList;
+    } catch (WingsException e) {
+      e.excludeReportTarget(AWS_ACCESS_DENIED, EVERYBODY);
+      throw new InvalidArtifactServerException(ExceptionUtils.getMessage(e), USER);
     } catch (RuntimeException e) {
-      if (e instanceof WingsException) {
-        ((WingsException) e).excludeReportTarget(AWS_ACCESS_DENIED, EVERYBODY);
-      }
-
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER, e).addParam("message", ExceptionUtils.getMessage(e));
+      throw new InvalidArtifactServerException(ExceptionUtils.getMessage(e), USER);
     }
   }
 
@@ -295,7 +295,9 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
     ObjectMetadata objectMetadata =
         awsHelperService.getObjectMetadataFromS3(awsConfig, encryptionDetails, bucketName, key);
     if (objectMetadata == null) {
-      throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR);
+      throw new InvalidRequestException(
+          String.format("No object metadata found for key %s in bucket %s", key, bucketName),
+          ErrorCode.ARTIFACT_SERVER_ERROR, null);
     }
     return objectMetadata.getContentLength();
   }

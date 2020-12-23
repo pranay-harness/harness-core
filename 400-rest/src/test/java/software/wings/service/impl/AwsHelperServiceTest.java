@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.RUSHABH;
@@ -41,9 +42,11 @@ import software.wings.WingsBaseTest;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AWSTemporaryCredentials;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.model.Activity;
 import com.amazonaws.services.autoscaling.model.AmazonAutoScalingException;
@@ -60,9 +63,16 @@ import com.amazonaws.services.cloudformation.model.DescribeStacksResult;
 import com.amazonaws.services.cloudformation.model.Stack;
 import com.amazonaws.services.cloudformation.model.StackEvent;
 import com.amazonaws.services.cloudformation.model.UpdateStackRequest;
+import com.amazonaws.services.ecr.AmazonECRClient;
+import com.amazonaws.services.ecr.model.BatchGetImageRequest;
+import com.amazonaws.services.ecr.model.BatchGetImageResult;
+import com.amazonaws.services.ecr.model.Image;
+import com.amazonaws.services.ecr.model.ImageIdentifier;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -469,5 +479,33 @@ public class AwsHelperServiceTest extends WingsBaseTest {
 
     AWSTemporaryCredentials cred = service.getCredentialsForIAMROleOnDelegate(url, awsConfig);
     assertThat(cred).isEqualTo(credentials);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldFetchLabels() {
+    wireMockRule.stubFor(get(urlEqualTo("/latest/meta-data/iam/security-credentials/"))
+                             .willReturn(aResponse().withBody("role").withStatus(200)));
+    AmazonECRClient ecrClient = mock(AmazonECRClient.class);
+    AwsHelperService service = spy(new AwsHelperService());
+    doReturn(ecrClient).when(service).getAmazonEcrClient(any(), any(String.class));
+
+    Image image = new Image();
+    image.setImageManifest(
+        "{\"history\":[{\"v1Compatibility\": \"{\\\"config\\\":{\\\"Labels\\\":{\\\"key1\\\":\\\"val1\\\"}}}\"}]}");
+    BatchGetImageResult result = new BatchGetImageResult();
+    result.setImages(Collections.singletonList(image));
+    when(ecrClient.batchGetImage(new BatchGetImageRequest()
+                                     .withRepositoryName("imageName")
+                                     .withImageIds(new ImageIdentifier().withImageTag("latest"))
+                                     .withAcceptedMediaTypes("application/vnd.docker.distribution.manifest.v1+json")))
+        .thenReturn(result);
+
+    assertThat(
+        service.fetchLabels(AwsConfig.builder().accessKey("qwer".toCharArray()).secretKey("qwer".toCharArray()).build(),
+            ArtifactStreamAttributes.builder().region(Regions.US_EAST_1.getName()).imageName("imageName").build(),
+            Lists.newArrayList("latest")))
+        .isEqualTo(ImmutableMap.<String, String>builder().put("key1", "val1").build());
   }
 }

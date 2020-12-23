@@ -1,12 +1,11 @@
 package software.wings.helpers.ext.sftp;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExceptionUtils;
-import io.harness.exception.WingsException;
+import io.harness.exception.InvalidArtifactServerException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.SftpConfig;
@@ -15,7 +14,6 @@ import software.wings.service.impl.SftpHelperService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,14 +25,11 @@ public class SftpServiceImpl implements SftpService {
 
   @Override
   public List<String> getArtifactPaths(SftpConfig sftpConfig, List<EncryptedDataDetail> encryptionDetails) {
-    List<String> pathList = Collections.EMPTY_LIST;
     try {
-      pathList = sftpHelperService.getSftpPaths(sftpConfig, encryptionDetails);
+      return sftpHelperService.getSftpPaths(sftpConfig, encryptionDetails);
     } catch (Exception ex) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", "Could not get Artifact paths from SFTP Storage.");
+      throw new InvalidArtifactServerException("Could not get Artifact paths from SFTP Storage.", USER);
     }
-    return pathList;
   }
 
   @Override
@@ -50,7 +45,7 @@ public class SftpServiceImpl implements SftpService {
       buildDetailsList = sftpHelperService.getArtifactDetails(sftpConfig, encryptionDetails, artifactPaths);
     } catch (Exception e) {
       log.error("Error while retrieving artifacts build details from SFTP Server : {}", sftpConfig.getSftpUrl());
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
+      throw new InvalidArtifactServerException(ExceptionUtils.getMessage(e), USER);
     }
     return buildDetailsList;
   }

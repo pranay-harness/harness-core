@@ -3,9 +3,7 @@ package software.wings.helpers.ext.bamboo;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.ARTIFACT_SERVER_ERROR;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
-import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.USER;
 
@@ -19,6 +17,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.exception.ArtifactServerException;
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
@@ -249,7 +248,7 @@ public class BambooServiceImpl implements BambooService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(GENERAL_ERROR, USER, e).addParam("message", ExceptionUtils.getMessage(e));
+      throw new GeneralException(ExceptionUtils.getMessage(e), e, USER);
     }
   }
 
@@ -346,14 +345,14 @@ public class BambooServiceImpl implements BambooService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      throw new WingsException(GENERAL_ERROR, USER, e).addParam("message", ExceptionUtils.getMessage(e));
+      throw new GeneralException(ExceptionUtils.getMessage(e), e, USER);
     }
   }
 
   @Override
   public String triggerPlan(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String planKey,
       Map<String, String> parameters) {
-    log.info("Trigger bamboo plan for Plan Key {} with parameters {}", planKey, String.valueOf(parameters));
+    log.info("Trigger bamboo plan for Plan Key {} with parameters {}", planKey, parameters);
     Response<JsonNode> response = null;
     String buildResultKey = null;
     try {
@@ -371,20 +370,18 @@ public class BambooServiceImpl implements BambooService {
         }
       }
       if (buildResultKey == null) {
-        throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-            .addParam("message",
-                "Failed to trigger bamboo plan [" + planKey + "]. Reason: buildResultKey does not exist in response");
+        throw new InvalidArtifactServerException(
+            "Failed to trigger bamboo plan [" + planKey + "]. Reason: buildResultKey does not exist in response", USER);
       }
     } catch (Exception e) {
       if (response != null && !response.isSuccessful()) {
         IOUtils.closeQuietly(response.errorBody());
       }
       log.error("Failed to trigger bamboo plan [" + planKey + "]", e);
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message",
-              "Failed to trigger bamboo plan [" + planKey + "]. Reason:" + ExceptionUtils.getRootCauseMessage(e));
+      throw new InvalidArtifactServerException(
+          "Failed to trigger bamboo plan [" + planKey + "]. Reason:" + ExceptionUtils.getRootCauseMessage(e), USER);
     }
-    log.info("Bamboo plan execution success for Plan Key {} with parameters {}", planKey, String.valueOf(parameters));
+    log.info("Bamboo plan execution success for Plan Key {} with parameters {}", planKey, parameters);
     return buildResultKey;
   }
 
@@ -414,10 +411,9 @@ public class BambooServiceImpl implements BambooService {
         IOUtils.closeQuietly(response.errorBody());
       }
       log.error("BambooService job keys fetch failed with exception", e);
-      throw new WingsException(ARTIFACT_SERVER_ERROR, USER)
-          .addParam("message",
-              "Failed to retrieve build status for [ " + buildResultKey
-                  + "]. Reason:" + ExceptionUtils.getRootCauseMessage(e));
+      throw new ArtifactServerException("Failed to retrieve build status for [ " + buildResultKey
+              + "]. Reason:" + ExceptionUtils.getRootCauseMessage(e),
+          USER);
     }
     return Result.builder().build();
   }
@@ -442,8 +438,7 @@ public class BambooServiceImpl implements BambooService {
         IOUtils.closeQuietly(response.errorBody());
       }
       log.error("BambooService job keys fetch failed with exception", e);
-      throw new WingsException(ARTIFACT_SERVER_ERROR, USER, e)
-          .addParam("message", "Failed to trigger bamboo plan " + buildResultKey);
+      throw new ArtifactServerException("Failed to trigger bamboo plan " + buildResultKey, e, USER);
     }
   }
 
@@ -641,7 +636,7 @@ public class BambooServiceImpl implements BambooService {
       planStages.elements().forEachRemaining(planStage -> {
         JsonNode stagePlans = planStage.at("/plans/plan");
         if (stagePlans != null) {
-          stagePlans.elements().forEachRemaining(stagePlan -> { jobKeys.add(stagePlan.get("key").asText()); });
+          stagePlans.elements().forEachRemaining(stagePlan -> jobKeys.add(stagePlan.get("key").asText()));
         }
       });
     }

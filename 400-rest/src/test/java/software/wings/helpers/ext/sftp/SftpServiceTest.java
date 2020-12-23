@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.sftp;
 
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 
@@ -7,9 +8,11 @@ import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDeta
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidArtifactServerException;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -79,5 +82,28 @@ public class SftpServiceTest extends WingsBaseTest {
 
     when(sftpService.getBuildDetails(sftpConfig, null, artifactPaths, false)).thenReturn(buildDetailsList);
     assertThat(sftpService.getBuildDetails(sftpConfig, null, artifactPaths, false)).isNotNull().hasSize(1);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorWhenGetBuildDetails() throws IOException {
+    when(sftpHelperService.getArtifactDetails(sftpConfig, null, new ArrayList<>()))
+        .thenThrow(new RuntimeException("Some Error"));
+    assertThatThrownBy(() -> sftpService.getBuildDetails(sftpConfig, null, new ArrayList<>(), false))
+        .isInstanceOf(InvalidArtifactServerException.class)
+        .extracting("message")
+        .isEqualTo("INVALID_ARTIFACT_SERVER");
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorWhenGetArtifactPaths() throws IOException {
+    when(sftpHelperService.getSftpPaths(sftpConfig, null)).thenThrow(new RuntimeException("Some Error"));
+    assertThatThrownBy(() -> sftpService.getArtifactPaths(sftpConfig, null))
+        .isInstanceOf(InvalidArtifactServerException.class)
+        .extracting("message")
+        .isEqualTo("INVALID_ARTIFACT_SERVER");
   }
 }

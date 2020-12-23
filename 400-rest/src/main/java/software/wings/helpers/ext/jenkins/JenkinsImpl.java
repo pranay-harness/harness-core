@@ -110,7 +110,7 @@ public class JenkinsImpl implements Jenkins {
    */
   @AssistedInject
   public JenkinsImpl(@Assisted(value = "url") String jenkinsUrl) throws URISyntaxException {
-    jenkinsHttpClient = new CustomJenkinsHttpClient(new URI(jenkinsUrl), getUnSafeBuilder(jenkinsUrl));
+    jenkinsHttpClient = new CustomJenkinsHttpClient(new URI(jenkinsUrl), getUnSafeBuilder());
     jenkinsServer = new CustomJenkinsServer(jenkinsHttpClient);
   }
 
@@ -126,7 +126,7 @@ public class JenkinsImpl implements Jenkins {
   public JenkinsImpl(@Assisted(value = "url") String jenkinsUrl, @Assisted(value = "username") String username,
       @Assisted(value = "password") char[] password) throws URISyntaxException {
     jenkinsHttpClient =
-        new CustomJenkinsHttpClient(new URI(jenkinsUrl), username, new String(password), getUnSafeBuilder(jenkinsUrl));
+        new CustomJenkinsHttpClient(new URI(jenkinsUrl), username, new String(password), getUnSafeBuilder());
     jenkinsServer = new CustomJenkinsServer(jenkinsHttpClient);
   }
 
@@ -137,8 +137,7 @@ public class JenkinsImpl implements Jenkins {
   @AssistedInject
   public JenkinsImpl(@Assisted(value = "url") String jenkinsUrl, @Assisted(value = "token") char[] token)
       throws URISyntaxException {
-    jenkinsHttpClient =
-        new CustomJenkinsHttpClient(new URI(jenkinsUrl), new String(token), getUnSafeBuilder(jenkinsUrl));
+    jenkinsHttpClient = new CustomJenkinsHttpClient(new URI(jenkinsUrl), new String(token), getUnSafeBuilder());
     jenkinsServer = new CustomJenkinsServer(jenkinsHttpClient);
   }
 
@@ -703,7 +702,7 @@ public class JenkinsImpl implements Jenkins {
     }
   }
 
-  private HttpClientBuilder getUnSafeBuilder(String jenkinsUrl) {
+  private HttpClientBuilder getUnSafeBuilder() {
     RequestConfig.Builder requestBuilder = RequestConfig.custom();
     requestBuilder.setConnectTimeout(150 * 1000);
     requestBuilder.setConnectionRequestTimeout(150 * 1000);

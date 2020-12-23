@@ -9,7 +9,6 @@ import static software.wings.utils.WingsTestConstants.PARENT;
 import static software.wings.utils.WingsTestConstants.PATH;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.category.element.UnitTests;
@@ -74,9 +73,9 @@ public class SftpHelperServiceTest extends WingsBaseTest {
     doReturn(remoteResourceInfoList).when(sftpClient).ls(A_DIR);
 
     assertThat(remoteResourceInfoList).isNotNull().hasSize(1);
-    assertThat(remoteResourceInfoList.get(0).getName().equals(A_PATH));
-    assertThat(remoteResourceInfoList.get(0).getParent().equals(A_DIR));
-    assertThat(remoteResourceInfoList.get(0).getPath().equals(A_DIR + "\\" + A_PATH));
+    assertThat(remoteResourceInfoList.get(0).getName()).isEqualTo(A_PATH);
+    assertThat(remoteResourceInfoList.get(0).getParent()).isEqualTo(A_DIR);
+    assertThat(remoteResourceInfoList.get(0).getPath()).isEqualTo(A_DIR + "\\" + A_PATH);
   }
 
   @Test
@@ -90,16 +89,6 @@ public class SftpHelperServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = GARVIT)
-  @Category(UnitTests.class)
-  public void shouldCheckConnectionSFTPServer() throws IOException {
-    doNothing().when(sshClient).connect(sftpHelperService.getSFTPConnectionHost(SFTP_WIN_URL));
-    doReturn(true)
-        .when(mockSftpHelperService)
-        .isConnectibleSFTPServer(sftpHelperService.getSFTPConnectionHost(SFTP_WIN_URL));
-  }
-
-  @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldGetArtifactBuildDetails() throws IOException {
@@ -110,9 +99,9 @@ public class SftpHelperServiceTest extends WingsBaseTest {
     doReturn(remoteResourceInfoList).when(sftpClient).ls(A_DIR);
 
     assertThat(remoteResourceInfoList).isNotNull().hasSize(1);
-    assertThat(remoteResourceInfoList.get(0).getName().equals(A_PATH));
-    assertThat(remoteResourceInfoList.get(0).getParent().equals(A_DIR));
-    assertThat(remoteResourceInfoList.get(0).getPath().equals(A_DIR + "\\" + A_PATH));
+    assertThat(remoteResourceInfoList.get(0).getName()).isEqualTo(A_PATH);
+    assertThat(remoteResourceInfoList.get(0).getParent()).isEqualTo(A_DIR);
+    assertThat(remoteResourceInfoList.get(0).getPath()).isEqualTo(A_DIR + "\\" + A_PATH);
 
     List<BuildDetails> buildDetailsListForArtifactPath = Lists.newArrayList();
     Map<String, String> map = new HashMap<>();

@@ -2,7 +2,6 @@ package software.wings.helpers.ext.ecr;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -11,7 +10,7 @@ import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExceptionUtils;
-import io.harness.exception.WingsException;
+import io.harness.exception.GeneralException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
@@ -73,7 +72,7 @@ public class EcrServiceImpl implements EcrService {
         listImagesRequest.setNextToken(listImagesResult.getNextToken());
       } while (listImagesRequest.getNextToken() != null);
     } catch (Exception e) {
-      throw new WingsException(GENERAL_ERROR, USER).addParam("message", ExceptionUtils.getMessage(e));
+      throw new GeneralException(ExceptionUtils.getMessage(e), USER);
     }
     // Sorting at build tag for docker artifacts.
     return buildDetails.stream().sorted(new BuildDetailsComparatorAscending()).collect(toList());

@@ -272,7 +272,7 @@ public class AwsHelperService {
         .build();
   }
 
-  private AmazonECRClient getAmazonEcrClient(AwsConfig awsConfig, String region) {
+  public AmazonECRClient getAmazonEcrClient(AwsConfig awsConfig, String region) {
     AmazonECRClientBuilder builder = AmazonECRClientBuilder.standard().withRegion(region);
     attachCredentials(builder, awsConfig);
     return (AmazonECRClient) builder.build();

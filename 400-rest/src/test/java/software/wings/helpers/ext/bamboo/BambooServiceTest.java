@@ -2,14 +2,18 @@ package software.wings.helpers.ext.bamboo;
 
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 
 import static software.wings.utils.WingsTestConstants.ARTIFACT_PATH;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.matching;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.data.MapEntry.entry;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -23,6 +27,7 @@ import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.exception.ArtifactServerException;
+import io.harness.exception.InvalidArtifactServerException;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -32,15 +37,16 @@ import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.utils.JsonUtils;
 
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.inject.Inject;
 import java.io.FileNotFoundException;
 import java.util.List;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -59,7 +65,7 @@ public class BambooServiceTest extends WingsBaseTest {
   @InjectMocks private BambooService bambooService = new BambooServiceImpl();
 
   private BambooConfig bambooConfig = BambooConfig.builder()
-                                          .bambooUrl("http://localhost:9095/")
+                                          .bambooUrl("http://localhost:9095")
                                           .username("admin")
                                           .password("admin".toCharArray())
                                           .build();
@@ -69,12 +75,6 @@ public class BambooServiceTest extends WingsBaseTest {
     on(bambooService).set("encryptionService", encryptionService);
     on(bambooService).set("artifactCollectionTaskHelper", artifactCollectionTaskHelper);
   }
-
-  @Test
-  @Owner(developers = ANUBHAW)
-  @Category(UnitTests.class)
-  @Ignore("TODO: please provide clear motivation why this test is ignored")
-  public void shouldGetJobKeys() {}
 
   @Test
   @Owner(developers = AADITI)
@@ -218,5 +218,113 @@ public class BambooServiceTest extends WingsBaseTest {
     long size = bambooService.getFileSize(bambooConfig, null, "todolist.tar",
         "http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.tar");
     assertThat(size).isEqualTo(4);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldGetJobKeys() {
+    List<String> actual = bambooService.getJobKeys(bambooConfig, null, "planKey");
+    assertThat(actual).hasSize(1).isEqualTo(Lists.newArrayList("TP-PLAN2"));
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldGetJobKeysFails() {
+    wireMockRule.stubFor(
+        get(urlEqualTo(
+                "/rest/api/latest/plan/randomKey.json?authType=basic&expand=stages.stage.plans.plan&max-results=10000"))
+            .willReturn(aResponse().withStatus(400)));
+    assertThatThrownBy(() -> bambooService.getJobKeys(bambooConfig, null, "randomKey"))
+        .isInstanceOf(ArtifactServerException.class);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldGetTriggerPlan() {
+    wireMockRule.stubFor(
+        post(urlEqualTo("/rest/api/latest/queue/planKey?authtype=basic&stage&executeAllStages"))
+            .withRequestBody(matching(".*"))
+            .willReturn(aResponse().withStatus(200).withBody("{\"buildResultKey\" : \"someBuildResultKey\"}")));
+    assertThat(bambooService.triggerPlan(bambooConfig, null, "planKey", null)).isEqualTo("someBuildResultKey");
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldFailGetTriggerPlan() {
+    wireMockRule.stubFor(post(urlEqualTo("/rest/api/latest/queue/planKey?authtype=basic&stage&executeAllStages"))
+                             .withRequestBody(matching(".*"))
+                             .willReturn(aResponse().withStatus(401)));
+
+    assertThatThrownBy(() -> bambooService.triggerPlan(bambooConfig, null, "planKey", null))
+        .isInstanceOf(InvalidArtifactServerException.class);
+
+    wireMockRule.stubFor(post(urlEqualTo("/rest/api/latest/queue/planKey?authtype=basic&stage&executeAllStages"))
+                             .withRequestBody(matching(".*"))
+                             .willReturn(aResponse().withStatus(400)));
+
+    assertThatThrownBy(() -> bambooService.triggerPlan(bambooConfig, null, "planKey", null))
+        .isInstanceOf(InvalidArtifactServerException.class);
+
+    wireMockRule.stubFor(post(urlEqualTo("/rest/api/latest/queue/planKey?authtype=basic&stage&executeAllStages"))
+                             .withRequestBody(matching(".*"))
+                             .willReturn(aResponse().withStatus(200)));
+
+    assertThatThrownBy(() -> bambooService.triggerPlan(bambooConfig, null, "planKey", null))
+        .isInstanceOf(InvalidArtifactServerException.class);
+
+    wireMockRule.stubFor(post(urlEqualTo("/rest/api/latest/queue/planKey?authtype=basic&stage&executeAllStages"))
+                             .withRequestBody(matching(".*"))
+                             .willReturn(aResponse().withStatus(200).withBody("{}")));
+
+    assertThatThrownBy(() -> bambooService.triggerPlan(bambooConfig, null, "planKey", null))
+        .isInstanceOf(InvalidArtifactServerException.class);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldGetBuildResult() {
+    Result actual = bambooService.getBuildResult(bambooConfig, null, "TOD-TODIR");
+    Result expected =
+        JsonUtils.readResourceFile("__files/bamboo/expected-body-get-build-result-details.json", Result.class);
+    assertThat(actual).isEqualTo(expected);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldFailGetBuildResult() {
+    wireMockRule.stubFor(get(urlEqualTo("/rest/api/latest/result/TOD-TODIR.json?authType=basic"))
+                             .willReturn(aResponse().withStatus(401)));
+
+    assertThatThrownBy(() -> bambooService.getBuildResult(bambooConfig, null, "TOD-TODIR"))
+        .isInstanceOf(ArtifactServerException.class);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldGetBuildResultStatus() {
+    wireMockRule.stubFor(get(urlEqualTo("/rest/api/latest/result/status/TOD-TODIR.json?authType=basic"))
+                             .willReturn(aResponse().withStatus(200).withBody(
+                                 "{\"finished\" : true, \"prettyQueuedTime\" : \"Thu, 1 Aug, 05:41 PM\"}")));
+    Status actual = bambooService.getBuildResultStatus(bambooConfig, null, "TOD-TODIR");
+    assertThat(actual.isFinished()).isTrue();
+    assertThat(actual.getPrettyQueuedTime()).isEqualTo("Thu, 1 Aug, 05:41 PM");
+
+    actual = bambooService.getBuildResultStatus(bambooConfig, null, "doesNotExist");
+    assertThat(actual.isFinished()).isTrue();
+    assertThat(actual.getPrettyQueuedTime()).isNull();
+
+    // Please note: This is the existing behaviour where for any response code we are not throwing any error
+    // We simply return status as NULL. Fix if this assumption is not true
+    wireMockRule.stubFor(get(urlEqualTo("/rest/api/latest/result/status/failingBuild.json?authType=basic"))
+                             .willReturn(aResponse().withStatus(400).withBody("{\"message\" : \"Bad Request\"}")));
+    actual = bambooService.getBuildResultStatus(bambooConfig, null, "failingBuild");
+    assertThat(actual).isNull();
   }
 }

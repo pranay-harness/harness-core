@@ -2,7 +2,6 @@ package software.wings.helpers.ext.azure;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
-import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -11,6 +10,7 @@ import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -45,7 +45,7 @@ public class AcrServiceImpl implements AcrService {
     try {
       return azureHelperService.listContainerRegistryNames(config, encryptionDetails, subscriptionId);
     } catch (Exception e) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
+      throw new InvalidArtifactServerException(ExceptionUtils.getMessage(e), USER);
     }
   }
 
@@ -75,7 +75,7 @@ public class AcrServiceImpl implements AcrService {
       Collections.reverse(buildDetails);
       return buildDetails;
     } catch (Exception e) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
+      throw new InvalidArtifactServerException(ExceptionUtils.getMessage(e), USER);
     }
   }
 

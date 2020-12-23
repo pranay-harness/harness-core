@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/rest/api/latest/result/TOD-TODIR.json?authType=basic"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName" : "/bamboo/body-get-build-result-details.json",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}
