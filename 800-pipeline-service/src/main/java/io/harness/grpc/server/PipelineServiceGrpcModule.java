@@ -5,6 +5,7 @@ import io.harness.engine.executions.node.PmsNodeExecutionGrpcSevice;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc.PlanCreationServiceBlockingStub;
+import io.harness.pms.plan.execution.data.service.expressions.EngineExpressionGrpcServiceImpl;
 import io.harness.pms.plan.execution.data.service.outcome.OutcomeServiceGrpcServerImpl;
 import io.harness.pms.plan.execution.data.service.outputs.SweepingOutputServiceImpl;
 import io.harness.pms.sdk.PmsSdkInstanceService;
@@ -71,15 +72,17 @@ public class PipelineServiceGrpcModule extends AbstractModule {
   public Service pmsGrpcService(PipelineServiceConfiguration configuration, HealthStatusManager healthStatusManager,
       PmsSdkInstanceService pmsSdkInstanceService, PmsNodeExecutionGrpcSevice pmsNodeExecutionGrpcSevice,
       PmsExecutionGrpcService pmsExecutionGrpcService, SweepingOutputServiceImpl sweepingOutputService,
-      OutcomeServiceGrpcServerImpl outcomeServiceGrpcServer) {
-    Set<BindableService> cdServices = new HashSet<>();
-    cdServices.add(healthStatusManager.getHealthService());
-    cdServices.add(pmsSdkInstanceService);
-    cdServices.add(pmsNodeExecutionGrpcSevice);
-    cdServices.add(pmsExecutionGrpcService);
-    cdServices.add(sweepingOutputService);
-    cdServices.add(outcomeServiceGrpcServer);
-    return new GrpcServer(configuration.getGrpcServerConfig().getConnectors().get(0), cdServices,
-        Collections.emptySet(), healthStatusManager);
+      OutcomeServiceGrpcServerImpl outcomeServiceGrpcServer,
+      EngineExpressionGrpcServiceImpl engineExpressionGrpcService) {
+    Set<BindableService> services = new HashSet<>();
+    services.add(healthStatusManager.getHealthService());
+    services.add(pmsSdkInstanceService);
+    services.add(pmsNodeExecutionGrpcSevice);
+    services.add(pmsExecutionGrpcService);
+    services.add(sweepingOutputService);
+    services.add(outcomeServiceGrpcServer);
+    services.add(engineExpressionGrpcService);
+    return new GrpcServer(configuration.getGrpcServerConfig().getConnectors().get(0), services, Collections.emptySet(),
+        healthStatusManager);
   }
 }

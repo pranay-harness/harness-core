@@ -22,7 +22,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
-import io.harness.pms.expression.EngineExpressionService;
+import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.rule.Owner;
@@ -51,7 +51,7 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
 
   @Mock private ResourceRestraintService resourceRestraintService;
   @Mock private RestraintService restraintService;
-  @Mock private EngineExpressionService engineExpressionService;
+  @Mock private PmsEngineExpressionService pmsEngineExpressionService;
   @Inject @InjectMocks private ResourceRestraintRegistry resourceRestraintRegistry;
   @Inject @InjectMocks private ResourceRestraintStep resourceRestraintStep;
 
@@ -72,7 +72,7 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
         .when(resourceRestraintService)
         .createAbstraction(any());
     doReturn(ResourceRestraintInstance.builder().build()).when(resourceRestraintService).save(any());
-    when(engineExpressionService.renderExpression(any(), any())).thenReturn(RESOURCE_UNIT);
+    when(pmsEngineExpressionService.renderExpression(any(), any())).thenReturn(RESOURCE_UNIT);
   }
 
   @Test

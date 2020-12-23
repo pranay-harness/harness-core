@@ -10,7 +10,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.executionplan.stepsdependency.StepDependencyResolverContext;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.expression.EngineExpressionService;
+import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.rule.Owner;
 
 import java.util.Optional;
@@ -25,7 +25,7 @@ import org.mockito.junit.MockitoRule;
 public class ExpressionStepDependencyResolverTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
-  @Mock EngineExpressionService engineExpressionService;
+  @Mock PmsEngineExpressionService pmsEngineExpressionService;
   @InjectMocks ExpressionStepDependencyResolver resolver;
 
   @Test
@@ -37,7 +37,7 @@ public class ExpressionStepDependencyResolverTest extends CategoryTest {
     StepDependencyResolverContext resolverContext =
         StepDependencyResolverContext.defaultBuilder().ambiance(ambiance).build();
 
-    doReturn("RESULT").when(engineExpressionService).evaluateExpression(ambiance, "TEST");
+    doReturn("RESULT").when(pmsEngineExpressionService).evaluateExpression(ambiance, "TEST");
 
     Optional<String> resolve = resolver.resolve(spec, resolverContext);
     assertThat(resolve.isPresent()).isEqualTo(true);

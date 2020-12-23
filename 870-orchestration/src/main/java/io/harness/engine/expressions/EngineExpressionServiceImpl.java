@@ -3,40 +3,36 @@ package io.harness.engine.expressions;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.expression.EngineExpressionService;
+import io.harness.pms.expression.PmsEngineExpressionService;
+import io.harness.pms.serializer.persistence.DocumentOrchestrationUtils;
 
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 @OwnedBy(CDC)
 public class EngineExpressionServiceImpl implements EngineExpressionService {
-  @Inject private ExpressionEvaluatorProvider expressionEvaluatorProvider;
-  @Inject private Injector injector;
+  @Inject PmsEngineExpressionService pmsEngineExpressionService;
 
   @Override
   public String renderExpression(Ambiance ambiance, String expression) {
-    EngineExpressionEvaluator evaluator = prepareExpressionEvaluator(ambiance);
-    injector.injectMembers(evaluator);
-    return evaluator.renderExpression(expression);
+    return pmsEngineExpressionService.renderExpression(ambiance, expression);
   }
 
   @Override
   public Object evaluateExpression(Ambiance ambiance, String expression) {
-    EngineExpressionEvaluator evaluator = prepareExpressionEvaluator(ambiance);
-    injector.injectMembers(evaluator);
-    return evaluator.evaluateExpression(expression);
+    String json = pmsEngineExpressionService.evaluateExpression(ambiance, expression);
+    Object result;
+    try {
+      result = DocumentOrchestrationUtils.convertFromDocumentJson(json);
+    } catch (Exception e) {
+      result = json;
+    }
+    return result;
   }
 
   @Override
   public Object resolve(Ambiance ambiance, Object o) {
-    EngineExpressionEvaluator evaluator = prepareExpressionEvaluator(ambiance);
-    injector.injectMembers(evaluator);
-    return evaluator.resolve(o);
-  }
-
-  private EngineExpressionEvaluator prepareExpressionEvaluator(Ambiance ambiance) {
-    return expressionEvaluatorProvider.get(null, ambiance, null, false);
+    return pmsEngineExpressionService.resolve(ambiance, o);
   }
 }

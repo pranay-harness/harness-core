@@ -22,7 +22,7 @@ import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.expression.EngineExpressionService;
+import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.rule.Owner;
 
@@ -38,7 +38,7 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
   @Inject private K8BuildSetupUtils k8BuildSetupUtils;
   @Mock private ConnectorUtils connectorUtils;
   @Mock private SecretVariableUtils secretVariableUtils;
-  @Mock private EngineExpressionService engineExpressionService;
+  @Mock private PmsEngineExpressionService pmsEngineExpressionService;
   @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Mock CILogServiceUtils logServiceUtils;
 
@@ -68,7 +68,7 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
     LogServiceConfig logServiceConfig = LogServiceConfig.builder().baseUrl("endpoint").globalToken("token").build();
     when(logServiceUtils.getLogServiceConfig()).thenReturn(logServiceConfig);
     when(logServiceUtils.getLogServiceToken(any())).thenReturn("token");
-    when(engineExpressionService.renderExpression(any(), any())).thenReturn(CLUSTER_NAME);
+    when(pmsEngineExpressionService.renderExpression(any(), any())).thenReturn(CLUSTER_NAME);
     when(executionSweepingOutputResolver.resolve(any(), any()))
         .thenReturn(K8PodDetails.builder()
                         .clusterName("cluster")

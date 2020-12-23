@@ -14,14 +14,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@Builder
-@AllArgsConstructor
+@NoArgsConstructor
 @TypeAlias("stepElementConfig")
 public class StepElementConfig {
   String uuid;
@@ -35,4 +34,16 @@ public class StepElementConfig {
   StepSpecType stepSpecType;
 
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
+
+  @Builder
+  public StepElementConfig(String uuid, String identifier, String name, List<FailureStrategyConfig> failureStrategies,
+      String type, StepSpecType stepSpecType, ParameterField<String> skipCondition) {
+    this.uuid = uuid;
+    this.identifier = identifier;
+    this.name = name;
+    this.failureStrategies = failureStrategies;
+    this.type = type;
+    this.stepSpecType = stepSpecType;
+    this.skipCondition = skipCondition;
+  }
 }
