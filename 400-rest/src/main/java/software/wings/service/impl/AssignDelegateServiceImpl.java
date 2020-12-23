@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
 
+import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -51,7 +52,6 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
 import java.security.SecureRandom;
-import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -84,15 +84,14 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   public static final String ERROR_MESSAGE =
       "Delegate selection log: Delegate id: %s, Name: %s, Host name: %s, Profile name: %s, %s with note: %s at: %s";
 
-  private static final long WHITELIST_TTL = TimeUnit.HOURS.toMillis(6);
-  private static final long BLACKLIST_TTL = TimeUnit.MINUTES.toMillis(5);
+  public static final long WHITELIST_TTL = TimeUnit.HOURS.toMillis(6);
+  public static final long BLACKLIST_TTL = TimeUnit.MINUTES.toMillis(5);
   private static final long WHITELIST_REFRESH_INTERVAL = TimeUnit.MINUTES.toMillis(10);
 
   @Inject private DelegateSelectionLogsService delegateSelectionLogsService;
   @Inject private DelegateService delegateService;
   @Inject private EnvironmentService environmentService;
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private Clock clock;
   @Inject private Injector injector;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
@@ -425,7 +424,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
         if (isNotBlank(criteria)) {
           Optional<DelegateConnectionResult> result =
               delegateConnectionResultCache.get(ImmutablePair.of(delegateId, criteria));
-          if (!result.isPresent() || result.get().getLastUpdatedAt() < clock.millis() - WHITELIST_TTL
+          if (!result.isPresent() || result.get().getLastUpdatedAt() < currentTimeMillis() - WHITELIST_TTL
               || !result.get().isValidated()) {
             matching = false;
             break;
@@ -439,6 +438,23 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     return false;
   }
 
+  public static boolean shouldValidateCriteria(Optional<DelegateConnectionResult> result, long now) {
+    if (!result.isPresent()) {
+      return true;
+    }
+
+    long delay = now - result.get().getLastUpdatedAt();
+    if (result.get().isValidated() && delay > WHITELIST_TTL) {
+      return true;
+    }
+
+    if (!result.get().isValidated() && delay > BLACKLIST_TTL) {
+      return true;
+    }
+
+    return false;
+  }
+
   @Override
   public boolean shouldValidate(DelegateTask task, String delegateId) {
     try {
@@ -446,18 +462,18 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
         if (isNotBlank(criteria)) {
           Optional<DelegateConnectionResult> result =
               delegateConnectionResultCache.get(ImmutablePair.of(delegateId, criteria));
-          if (!result.isPresent() || !result.get().isValidated()
-              || clock.millis() - result.get().getLastUpdatedAt() > BLACKLIST_TTL
+          if (shouldValidateCriteria(result, currentTimeMillis())
               || (!retrieveActiveDelegates(task.getAccountId(), null).contains(delegateId)
                   && isEmpty(connectedWhitelistedDelegates(task)))) {
             return true;
           }
         } else {
+          log.error("We should not have bank criteria");
           return true;
         }
       }
     } catch (Exception e) {
-      log.error("Error checking whether delegate should validate task {}", task.getUuid(), e);
+      log.error("Error checking whether delegate should validate task", e);
     }
     return false;
   }
@@ -532,7 +548,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
           Optional<DelegateConnectionResult> cachedResult =
               delegateConnectionResultCache.get(ImmutablePair.of(delegateId, criteria));
           if (cachedResult.isPresent()
-              && cachedResult.get().getLastUpdatedAt() < clock.millis() - WHITELIST_REFRESH_INTERVAL) {
+              && cachedResult.get().getLastUpdatedAt() < currentTimeMillis() - WHITELIST_REFRESH_INTERVAL) {
             Query<DelegateConnectionResult> query =
                 wingsPersistence.createQuery(DelegateConnectionResult.class)
                     .filter(DelegateConnectionResultKeys.accountId, task.getAccountId())
@@ -540,7 +556,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
                     .filter(DelegateConnectionResultKeys.criteria, criteria);
             UpdateOperations<DelegateConnectionResult> updateOperations =
                 wingsPersistence.createUpdateOperations(DelegateConnectionResult.class)
-                    .set(DelegateConnectionResultKeys.lastUpdatedAt, clock.millis())
+                    .set(DelegateConnectionResultKeys.lastUpdatedAt, currentTimeMillis())
                     .set(DelegateConnectionResultKeys.validUntil, DelegateConnectionResult.getValidUntilTime());
             DelegateConnectionResult result =
                 wingsPersistence.findAndModify(query, updateOperations, findAndModifyOptions);
@@ -694,7 +710,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
   private List<String> identifyActiveDelegateIds(
       List<Delegate> accountDelegates, String accountId, BatchDelegateSelectionLog batch) {
-    long oldestAcceptableHeartBeat = clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT;
+    long oldestAcceptableHeartBeat = currentTimeMillis() - MAX_DELEGATE_LAST_HEARTBEAT;
 
     Map<DelegateActivity, List<Delegate>> delegatesMap =
         accountDelegates.stream().collect(Collectors.groupingBy(delegate -> {
