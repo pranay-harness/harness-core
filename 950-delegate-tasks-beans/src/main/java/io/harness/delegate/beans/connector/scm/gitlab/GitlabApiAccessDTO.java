@@ -9,10 +9,11 @@ import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @Data
-@Builder
+@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("GitlabApiAccess")
@@ -23,4 +24,10 @@ public class GitlabApiAccessDTO {
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
   @Valid
   GitlabApiAccessSpecDTO spec;
+
+  @Builder
+  public GitlabApiAccessDTO(GitlabApiAccessType type, GitlabApiAccessSpecDTO spec) {
+    this.type = type;
+    this.spec = spec;
+  }
 }

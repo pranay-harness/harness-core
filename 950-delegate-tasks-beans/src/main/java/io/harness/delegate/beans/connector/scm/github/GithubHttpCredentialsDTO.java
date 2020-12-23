@@ -9,18 +9,26 @@ import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @Data
-@Builder
+@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("GithubHttpCredentials")
 public class GithubHttpCredentialsDTO implements GithubCredentialsDTO {
   @NotNull GithubHttpAuthenticationType type;
+
   @JsonProperty("spec")
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
   @Valid
   GithubHttpCredentialsSpecDTO httpCredentialsSpec;
+
+  @Builder
+  public GithubHttpCredentialsDTO(GithubHttpAuthenticationType type, GithubHttpCredentialsSpecDTO httpCredentialsSpec) {
+    this.type = type;
+    this.httpCredentialsSpec = httpCredentialsSpec;
+  }
 }

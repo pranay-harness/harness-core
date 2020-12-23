@@ -9,10 +9,11 @@ import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @Data
-@Builder
+@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("GitlabHttpCredentials")
@@ -23,4 +24,10 @@ public class GitlabHttpCredentialsDTO implements GitlabCredentialsDTO {
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
   @Valid
   GitlabHttpCredentialsSpecDTO httpCredentialsSpec;
+
+  @Builder
+  public GitlabHttpCredentialsDTO(GitlabHttpAuthenticationType type, GitlabHttpCredentialsSpecDTO httpCredentialsSpec) {
+    this.type = type;
+    this.httpCredentialsSpec = httpCredentialsSpec;
+  }
 }

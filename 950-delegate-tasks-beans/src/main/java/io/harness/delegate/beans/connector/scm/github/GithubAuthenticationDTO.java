@@ -11,10 +11,11 @@ import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @Data
-@Builder
+@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("GithubAuthentication")
@@ -25,4 +26,10 @@ public class GithubAuthenticationDTO {
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
   @Valid
   GithubCredentialsDTO credentials;
+
+  @Builder
+  public GithubAuthenticationDTO(GitAuthType authType, GithubCredentialsDTO credentials) {
+    this.authType = authType;
+    this.credentials = credentials;
+  }
 }
