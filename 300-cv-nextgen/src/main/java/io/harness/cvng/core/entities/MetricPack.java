@@ -92,6 +92,7 @@ public class MetricPack implements PersistentEntity, UuidAware, CreatedAtAware, 
 
   public MetricPackDTO toDTO() {
     return MetricPackDTO.builder()
+        .uuid(getUuid())
         .accountId(getAccountId())
         .projectIdentifier(getProjectIdentifier())
         .dataSourceType(getDataSourceType())

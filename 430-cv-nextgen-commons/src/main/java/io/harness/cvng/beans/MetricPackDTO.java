@@ -8,6 +8,7 @@ import lombok.Value;
 @Value
 @Builder
 public class MetricPackDTO {
+  String uuid;
   String accountId;
   String projectIdentifier;
   DataSourceType dataSourceType;

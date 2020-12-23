@@ -12,6 +12,7 @@ import io.harness.CvNextGenTest;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.TimeSeriesCustomThresholdActions;
 import io.harness.cvng.beans.TimeSeriesThresholdActionType;
 import io.harness.cvng.beans.TimeSeriesThresholdComparisonType;
@@ -65,6 +66,28 @@ public class MetricPackServiceImplTest extends CvNextGenTest {
   public void testGetMetricPacks() {
     final Collection<MetricPack> metricPacks =
         metricPackService.getMetricPacks(accountId, projectIdentifier, DataSourceType.APP_DYNAMICS);
+    assertThat(metricPacks.size()).isGreaterThan(0);
+    metricPacks.forEach(metricPack -> {
+      assertThat(metricPack.getUuid()).isNotEmpty();
+      assertThat(metricPack.getAccountId()).isEqualTo(accountId);
+      assertThat(metricPack.getProjectIdentifier()).isEqualTo(projectIdentifier);
+      assertThat(metricPack.getIdentifier()).isNotEmpty();
+      assertThat(metricPack.getDataSourceType()).isEqualTo(DataSourceType.APP_DYNAMICS);
+      assertThat(metricPack.getMetrics().size()).isGreaterThan(0);
+      assertThat(metricPack.getCategory()).isNotNull();
+      metricPack.getMetrics().forEach(metricDefinition -> {
+        assertThat(metricDefinition.getName()).isNotEmpty();
+        assertThat(metricDefinition.getPath()).isNotEmpty();
+      });
+    });
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testGetMetricPacksDTO() {
+    final List<MetricPackDTO> metricPacks =
+        metricPackService.getMetricPacks(DataSourceType.APP_DYNAMICS, accountId, projectIdentifier);
     assertThat(metricPacks.size()).isGreaterThan(0);
     metricPacks.forEach(metricPack -> {
       assertThat(metricPack.getUuid()).isNotEmpty();
