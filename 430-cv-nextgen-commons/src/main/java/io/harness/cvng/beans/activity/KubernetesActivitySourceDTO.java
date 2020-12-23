@@ -1,24 +1,29 @@
 package io.harness.cvng.beans.activity;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.validator.constraints.NotEmpty;
 
-@Value
-@Builder
-public class KubernetesActivitySourceDTO {
-  String uuid;
-  @NotNull String identifier;
-  @NotNull String name;
+@Data
+@SuperBuilder
+@NoArgsConstructor
+@JsonTypeName("KUBERNETES")
+public class KubernetesActivitySourceDTO extends ActivitySourceDTO {
   @NotNull String connectorIdentifier;
-  long createdAt;
-  long lastUpdatedAt;
   @NotNull @NotEmpty Set<KubernetesActivitySourceConfig> activitySourceConfigs;
 
-  @Value
+  @Override
+  public ActivitySourceType getType() {
+    return ActivitySourceType.KUBERNETES;
+  }
+
+  @Data
   @Builder
   @FieldNameConstants(innerTypeName = "KubernetesActivitySourceConfigKeys")
   public static class KubernetesActivitySourceConfig {

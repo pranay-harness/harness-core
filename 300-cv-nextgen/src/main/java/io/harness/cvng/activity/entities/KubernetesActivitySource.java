@@ -1,99 +1,67 @@
 package io.harness.cvng.activity.entities;
 
-import io.harness.annotation.HarnessEntity;
+import io.harness.cvng.beans.activity.ActivitySourceDTO;
+import io.harness.cvng.beans.activity.ActivitySourceType;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO.KubernetesActivitySourceConfig;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO.KubernetesActivitySourceConfig.KubernetesActivitySourceConfigKeys;
-import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
-import io.harness.iterator.PersistentRegularIterable;
-import io.harness.mongo.index.CompoundMongoIndex;
-import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.FdUniqueIndex;
-import io.harness.mongo.index.MongoIndex;
-import io.harness.persistence.CreatedAtAware;
-import io.harness.persistence.PersistentEntity;
-import io.harness.persistence.UpdatedAtAware;
-import io.harness.persistence.UuidAware;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.google.common.collect.ImmutableList;
-import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Data
-@Builder
+@NoArgsConstructor
+@SuperBuilder
 @FieldNameConstants(innerTypeName = "KubernetesActivitySourceKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@EqualsAndHashCode(callSuper = false)
-@JsonIgnoreProperties(ignoreUnknown = true)
-@Entity(value = "kubernetesActivitySources", noClassnameStored = true)
-@HarnessEntity(exportable = true)
-public class KubernetesActivitySource
-    implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, PersistentRegularIterable {
-  public static List<MongoIndex> mongoIndexes() {
-    return ImmutableList.<MongoIndex>builder()
-        .add(CompoundMongoIndex.builder()
-                 .name("query_idx")
-                 .field(KubernetesActivitySourceKeys.accountId)
-                 .field(KubernetesActivitySourceKeys.orgIdentifier)
-                 .field(KubernetesActivitySourceKeys.projectIdentifier)
-                 .build())
-        .build();
-  }
-
+@EqualsAndHashCode(callSuper = true)
+public class KubernetesActivitySource extends ActivitySource {
   public static final String SERVICE_IDENTIFIER_KEY =
       KubernetesActivitySourceKeys.activitySourceConfigs + "." + KubernetesActivitySourceConfigKeys.serviceIdentifier;
-  @Id String uuid;
-  long createdAt;
-  long lastUpdatedAt;
 
-  @NotNull @FdIndex String accountId;
-  @NotNull String orgIdentifier;
-  @NotNull String projectIdentifier;
-  @NotNull @FdUniqueIndex String identifier;
-  @NotNull String name;
   @NotNull String connectorIdentifier;
   @NotNull @NotEmpty Set<KubernetesActivitySourceConfig> activitySourceConfigs;
 
-  String dataCollectionTaskId;
-  @FdIndex Long dataCollectionTaskIteration;
-
-  @Override
-  public void updateNextIteration(String fieldName, long nextIteration) {
-    if (CVConfigKeys.dataCollectionTaskIteration.equals(fieldName)) {
-      this.dataCollectionTaskIteration = nextIteration;
-      return;
-    }
-    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
-  }
-
-  @Override
-  public Long obtainNextIteration(String fieldName) {
-    if (CVConfigKeys.dataCollectionTaskIteration.equals(fieldName)) {
-      return this.dataCollectionTaskIteration;
-    }
-    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
-  }
-
-  public KubernetesActivitySourceDTO toDTO() {
+  public ActivitySourceDTO toDTO() {
     return KubernetesActivitySourceDTO.builder()
-        .uuid(uuid)
-        .identifier(identifier)
-        .name(name)
+        .uuid(getUuid())
+        .identifier(getIdentifier())
+        .name(getName())
         .connectorIdentifier(connectorIdentifier)
         .activitySourceConfigs(activitySourceConfigs)
-        .createdAt(createdAt)
-        .lastUpdatedAt(lastUpdatedAt)
+        .createdAt(getCreatedAt())
+        .lastUpdatedAt(getLastUpdatedAt())
         .build();
+  }
+
+  public static KubernetesActivitySource fromDTO(
+      String accountId, String orgIdentifier, String projectIdentifier, KubernetesActivitySourceDTO activitySourceDTO) {
+    return KubernetesActivitySource.builder()
+        .uuid(activitySourceDTO.getUuid())
+        .accountId(accountId)
+        .orgIdentifier(orgIdentifier)
+        .projectIdentifier(projectIdentifier)
+        .uuid(activitySourceDTO.getUuid())
+        .identifier(activitySourceDTO.getIdentifier())
+        .name(activitySourceDTO.getName())
+        .connectorIdentifier(activitySourceDTO.getConnectorIdentifier())
+        .activitySourceConfigs(activitySourceDTO.getActivitySourceConfigs())
+        .type(ActivitySourceType.KUBERNETES)
+        .build();
+  }
+
+  public static void setUpdateOperations(
+      UpdateOperations<ActivitySource> updateOperations, KubernetesActivitySourceDTO activitySourceDTO) {
+    updateOperations.set(KubernetesActivitySourceKeys.connectorIdentifier, activitySourceDTO.getConnectorIdentifier())
+        .set(KubernetesActivitySourceKeys.activitySourceConfigs, activitySourceDTO.getActivitySourceConfigs());
   }
 }

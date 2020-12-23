@@ -12,9 +12,10 @@ import static com.google.inject.matcher.Matchers.not;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
+import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceKeys;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
-import io.harness.cvng.activity.entities.KubernetesActivitySource.KubernetesActivitySourceKeys;
 import io.harness.cvng.activity.jobs.K8ActivityCollectionHandler;
+import io.harness.cvng.beans.activity.ActivitySourceType;
 import io.harness.cvng.client.NextGenClientModule;
 import io.harness.cvng.client.VerificationManagerClientModule;
 import io.harness.cvng.core.entities.CVConfig;
@@ -329,14 +330,17 @@ public class VerificationApplication extends Application<VerificationConfigurati
         MongoPersistenceIterator.<KubernetesActivitySource, MorphiaFilterExpander<KubernetesActivitySource>>builder()
             .mode(PersistenceIterator.ProcessMode.PUMP)
             .clazz(KubernetesActivitySource.class)
-            .fieldName(KubernetesActivitySourceKeys.dataCollectionTaskIteration)
+            .fieldName(ActivitySourceKeys.dataCollectionTaskIteration)
             .targetInterval(ofMinutes(5))
             .acceptableNoAlertDelay(ofMinutes(1))
             .executorService(dataCollectionExecutor)
             .semaphore(new Semaphore(5))
             .handler(k8ActivityCollectionHandler)
             .schedulingType(REGULAR)
-            .filterExpander(query -> query.criteria(KubernetesActivitySourceKeys.dataCollectionTaskId).doesNotExist())
+            .filterExpander(query
+                -> query.filter(ActivitySourceKeys.type, ActivitySourceType.KUBERNETES)
+                       .criteria(ActivitySourceKeys.dataCollectionTaskId)
+                       .doesNotExist())
             .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
             .redistribute(true)
             .build();

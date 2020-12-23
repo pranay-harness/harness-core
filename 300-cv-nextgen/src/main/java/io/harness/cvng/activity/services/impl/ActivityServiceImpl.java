@@ -16,18 +16,24 @@ import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentVeri
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
+import io.harness.cvng.activity.entities.ActivitySource;
+import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceKeys;
 import io.harness.cvng.activity.entities.CustomActivity;
 import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.entities.DeploymentActivity.DeploymentActivityKeys;
 import io.harness.cvng.activity.entities.InfrastructureActivity;
 import io.harness.cvng.activity.entities.KubernetesActivity;
+import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
 import io.harness.cvng.beans.activity.ActivityDTO;
+import io.harness.cvng.beans.activity.ActivitySourceDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
+import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.cvng.client.NextGenService;
+import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.WebhookService;
@@ -38,8 +44,10 @@ import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ExecutionStatus;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
+import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.HQuery;
+import io.harness.utils.PageUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -61,6 +69,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
 public class ActivityServiceImpl implements ActivityService {
@@ -72,6 +81,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private NextGenService nextGenService;
   @Inject private HealthVerificationHeatMapService healthVerificationHeatMapService;
   @Inject private CVConfigService cvConfigService;
+  @Inject private VerificationManagerService verificationManagerService;
 
   @Override
   public Activity get(String activityId) {
@@ -551,5 +561,93 @@ public class ActivityServiceImpl implements ActivityService {
 
     activity.fromDTO(activityDTO);
     return activity;
+  }
+
+  @Override
+  public String saveActivitySource(
+      String accountId, String orgIdentifier, String projectIdentifier, ActivitySourceDTO activitySourceDTO) {
+    if (isNotEmpty(activitySourceDTO.getUuid())) {
+      update(activitySourceDTO);
+    }
+
+    ActivitySource activitySource;
+    switch (activitySourceDTO.getType()) {
+      case KUBERNETES:
+        activitySource = KubernetesActivitySource.fromDTO(
+            accountId, orgIdentifier, projectIdentifier, (KubernetesActivitySourceDTO) activitySourceDTO);
+        break;
+      default:
+        throw new IllegalStateException("Invalid type " + activitySourceDTO.getType());
+    }
+    return hPersistence.save(activitySource);
+  }
+
+  private void update(ActivitySourceDTO activitySourceDTO) {
+    KubernetesActivitySource kubernetesActivitySource =
+        hPersistence.get(KubernetesActivitySource.class, activitySourceDTO.getUuid());
+    if (isNotEmpty(kubernetesActivitySource.getDataCollectionTaskId())) {
+      verificationManagerService.deletePerpetualTask(
+          kubernetesActivitySource.getAccountId(), kubernetesActivitySource.getDataCollectionTaskId());
+    }
+    UpdateOperations<ActivitySource> updateOperations = hPersistence.createUpdateOperations(ActivitySource.class)
+                                                            .set(ActivitySourceKeys.name, activitySourceDTO.getName())
+
+                                                            .unset(ActivitySourceKeys.dataCollectionTaskId);
+
+    switch (activitySourceDTO.getType()) {
+      case KUBERNETES:
+        KubernetesActivitySource.setUpdateOperations(updateOperations, (KubernetesActivitySourceDTO) activitySourceDTO);
+        break;
+      default:
+        throw new IllegalStateException("Invalid type " + activitySourceDTO.getType());
+    }
+    hPersistence.update(hPersistence.get(ActivitySource.class, activitySourceDTO.getUuid()), updateOperations);
+  }
+
+  @Override
+  public ActivitySource getActivitySource(String activitySourceId) {
+    return hPersistence.get(ActivitySource.class, activitySourceId);
+  }
+
+  @Override
+  public ActivitySourceDTO getActivitySource(
+      String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
+    ActivitySource activitySource = hPersistence.createQuery(KubernetesActivitySource.class, excludeAuthority)
+                                        .filter(ActivitySourceKeys.accountId, accountId)
+                                        .filter(ActivitySourceKeys.orgIdentifier, orgIdentifier)
+                                        .filter(ActivitySourceKeys.projectIdentifier, projectIdentifier)
+                                        .filter(ActivitySourceKeys.identifier, identifier)
+                                        .get();
+    if (activitySource == null) {
+      return null;
+    }
+    return activitySource.toDTO();
+  }
+
+  @Override
+  public PageResponse<ActivitySourceDTO> listActivitySources(
+      String accountId, String orgIdentifier, String projectIdentifier, int offset, int pageSize, String filter) {
+    List<ActivitySource> activitySources = hPersistence.createQuery(ActivitySource.class, excludeAuthority)
+                                               .filter(ActivitySourceKeys.accountId, accountId)
+                                               .filter(ActivitySourceKeys.orgIdentifier, orgIdentifier)
+                                               .filter(ActivitySourceKeys.projectIdentifier, projectIdentifier)
+                                               .asList();
+    List<ActivitySourceDTO> activitySourceDTOs =
+        activitySources.stream()
+            .filter(activitySource
+                -> isEmpty(filter) || activitySource.getName().toLowerCase().contains(filter.trim().toLowerCase()))
+            .map(activitySource -> activitySource.toDTO())
+            .collect(Collectors.toList());
+    return PageUtils.offsetAndLimit(activitySourceDTOs, offset, pageSize);
+  }
+
+  @Override
+  public boolean deleteActivitySource(
+      String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
+    return hPersistence.delete(hPersistence.createQuery(ActivitySource.class, excludeAuthority)
+                                   .filter(ActivitySourceKeys.accountId, accountId)
+                                   .filter(ActivitySourceKeys.orgIdentifier, orgIdentifier)
+                                   .filter(ActivitySourceKeys.projectIdentifier, projectIdentifier)
+                                   .filter(ActivitySourceKeys.identifier, identifier));
   }
 }
