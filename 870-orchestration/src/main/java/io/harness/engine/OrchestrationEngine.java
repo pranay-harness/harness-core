@@ -57,7 +57,7 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.pms.execution.utils.StatusUtils;
-import io.harness.pms.expression.EngineExpressionService;
+import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
@@ -116,7 +116,7 @@ public class OrchestrationEngine {
   @Inject private DelayEventHelper delayEventHelper;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
-  @Inject private EngineExpressionService engineExpressionService;
+  @Inject private PmsEngineExpressionService pmsEngineExpressionService;
   @Inject private InterruptService interruptService;
   @Inject private TimeoutEngine timeoutEngine;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
@@ -181,7 +181,7 @@ public class OrchestrationEngine {
       String stepParameters = node.getStepParameters();
       Object obj = stepParameters == null
           ? null
-          : engineExpressionService.resolve(ambiance, NodeExecutionUtils.extractStepParameters(stepParameters));
+          : pmsEngineExpressionService.resolve(ambiance, NodeExecutionUtils.extractStepParameters(stepParameters));
       String json = JsonOrchestrationUtils.asJson(obj);
       Document resolvedStepParameters = obj == null ? null : Document.parse(json);
 

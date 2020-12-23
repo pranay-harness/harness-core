@@ -2,8 +2,8 @@ package io.harness.pms.yaml;
 
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.expression.OrchestrationFieldProcessor;
+import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.expression.ProcessorResult;
 import io.harness.pms.yaml.validation.InputSetValidator;
 import io.harness.pms.yaml.validation.InputSetValidatorFactory;
@@ -13,13 +13,13 @@ import io.harness.pms.yaml.validation.RuntimeValidatorResponse;
 import com.google.inject.Inject;
 
 public class ParameterFieldProcessor implements OrchestrationFieldProcessor<ParameterField<?>> {
-  private final EngineExpressionService engineExpressionService;
+  private final PmsEngineExpressionService pmsEngineExpressionService;
   private final InputSetValidatorFactory inputSetValidatorFactory;
 
   @Inject
   public ParameterFieldProcessor(
-      EngineExpressionService engineExpressionService, InputSetValidatorFactory inputSetValidatorFactory) {
-    this.engineExpressionService = engineExpressionService;
+      PmsEngineExpressionService pmsEngineExpressionService, InputSetValidatorFactory inputSetValidatorFactory) {
+    this.pmsEngineExpressionService = pmsEngineExpressionService;
     this.inputSetValidatorFactory = inputSetValidatorFactory;
   }
 
@@ -30,9 +30,9 @@ public class ParameterFieldProcessor implements OrchestrationFieldProcessor<Para
     InputSetValidator inputSetValidator = field.getInputSetValidator();
     if (field.isExpression()) {
       if (field.isTypeString()) {
-        newValue = engineExpressionService.renderExpression(ambiance, field.getExpressionValue());
+        newValue = pmsEngineExpressionService.renderExpression(ambiance, field.getExpressionValue());
       } else {
-        newValue = engineExpressionService.evaluateExpression(ambiance, field.getExpressionValue());
+        newValue = pmsEngineExpressionService.evaluateExpression(ambiance, field.getExpressionValue());
       }
 
       if (newValue instanceof String && EngineExpressionEvaluator.hasVariables((String) newValue)) {
@@ -58,7 +58,7 @@ public class ParameterFieldProcessor implements OrchestrationFieldProcessor<Para
     }
 
     if (newValue != null) {
-      Object finalValue = engineExpressionService.resolve(ambiance, newValue);
+      Object finalValue = pmsEngineExpressionService.resolve(ambiance, newValue);
       if (finalValue != null) {
         field.updateWithValue(finalValue);
         ProcessorResult processorResult = validateUsingValidator(newValue, inputSetValidator, ambiance);
@@ -77,7 +77,7 @@ public class ParameterFieldProcessor implements OrchestrationFieldProcessor<Para
   private ProcessorResult validateUsingValidator(Object value, InputSetValidator inputSetValidator, Ambiance ambiance) {
     if (inputSetValidator != null) {
       RuntimeValidator runtimeValidator =
-          inputSetValidatorFactory.obtainValidator(inputSetValidator, engineExpressionService, ambiance);
+          inputSetValidatorFactory.obtainValidator(inputSetValidator, pmsEngineExpressionService, ambiance);
       RuntimeValidatorResponse validatorResponse =
           runtimeValidator.isValidValue(value, inputSetValidator.getParameters());
       if (!validatorResponse.isValid()) {

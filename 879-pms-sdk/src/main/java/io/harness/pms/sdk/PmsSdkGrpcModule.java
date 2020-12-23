@@ -6,7 +6,10 @@ import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc;
 import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc.NodeExecutionProtoServiceBlockingStub;
 import io.harness.pms.contracts.plan.PmsServiceGrpc;
 import io.harness.pms.contracts.plan.PmsServiceGrpc.PmsServiceBlockingStub;
+import io.harness.pms.contracts.service.EngineExpressionProtoServiceGrpc;
+import io.harness.pms.contracts.service.EngineExpressionProtoServiceGrpc.EngineExpressionProtoServiceBlockingStub;
 import io.harness.pms.contracts.service.OutcomeProtoServiceGrpc;
+import io.harness.pms.contracts.service.OutcomeProtoServiceGrpc.OutcomeProtoServiceBlockingStub;
 import io.harness.pms.contracts.service.PmsExecutionServiceGrpc;
 import io.harness.pms.contracts.service.PmsExecutionServiceGrpc.PmsExecutionServiceBlockingStub;
 import io.harness.pms.contracts.service.SweepingOutputServiceGrpc;
@@ -96,7 +99,7 @@ public class PmsSdkGrpcModule extends AbstractModule {
 
   @Provides
   @Singleton
-  public OutcomeProtoServiceGrpc.OutcomeProtoServiceBlockingStub outcomeGrpcClient() {
+  public OutcomeProtoServiceBlockingStub outcomeGrpcClient() {
     GrpcClientConfig clientConfig = config.getPmsGrpcClientConfig();
     Channel channel = NettyChannelBuilder.forTarget(clientConfig.getTarget())
                           .overrideAuthority(clientConfig.getAuthority())
@@ -114,5 +117,16 @@ public class PmsSdkGrpcModule extends AbstractModule {
                           .usePlaintext()
                           .build();
     return PmsExecutionServiceGrpc.newBlockingStub(channel);
+  }
+
+  @Provides
+  @Singleton
+  public EngineExpressionProtoServiceBlockingStub engineExpressionGrpcClient() {
+    GrpcClientConfig clientConfig = config.getPmsGrpcClientConfig();
+    Channel channel = NettyChannelBuilder.forTarget(clientConfig.getTarget())
+                          .overrideAuthority(clientConfig.getAuthority())
+                          .usePlaintext()
+                          .build();
+    return EngineExpressionProtoServiceGrpc.newBlockingStub(channel);
   }
 }

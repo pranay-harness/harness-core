@@ -1,4 +1,4 @@
-package io.harness.engine.expressions;
+package io.harness.engine.pms.data;
 
 import static io.harness.rule.OwnerRule.PRASHANT;
 
@@ -7,11 +7,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.plan.PlanExecutionService;
-import io.harness.engine.pms.data.PmsOutcomeService;
-import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.expression.EngineExpressionService;
+import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.serializer.persistence.DocumentOrchestrationUtils;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
@@ -21,12 +19,11 @@ import io.harness.utils.DummySweepingOutput;
 
 import com.google.inject.Inject;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class EngineExpressionServiceImplTest extends OrchestrationTestBase {
-  @Inject EngineExpressionService engineExpressionService;
+public class PmsEngineExpressionServiceImplTest extends OrchestrationTestBase {
+  @Inject PmsEngineExpressionService pmsEngineExpressionService;
   @Inject PmsOutcomeService pmsOutcomeService;
   @Inject PmsSweepingOutputService pmsSweepingOutputService;
   @Inject PlanExecutionService planExecutionService;
@@ -49,11 +46,10 @@ public class EngineExpressionServiceImplTest extends OrchestrationTestBase {
   @Test
   @RealMongo
   @Owner(developers = PRASHANT)
-  @Ignore("Move to PmsServiceImpl Test")
   @Category(UnitTests.class)
   public void shouldTestRenderExpressionOutcome() {
     String resolvedExpression =
-        engineExpressionService.renderExpression(ambiance, "${dummyOutcome.test} == \"harness\"");
+        pmsEngineExpressionService.renderExpression(ambiance, "${dummyOutcome.test} == \"harness\"");
     assertThat(resolvedExpression).isNotNull();
     assertThat(resolvedExpression).isEqualTo("harness == \"harness\"");
   }
@@ -61,11 +57,10 @@ public class EngineExpressionServiceImplTest extends OrchestrationTestBase {
   @Test
   @RealMongo
   @Owner(developers = PRASHANT)
-  @Ignore("Move to PmsServiceImpl Test")
   @Category(UnitTests.class)
   public void shouldTestRenderExpressionOutput() {
     String resolvedExpression =
-        engineExpressionService.renderExpression(ambiance, "${dummyOutput.test} == \"harness\"");
+        pmsEngineExpressionService.renderExpression(ambiance, "${dummyOutput.test} == \"harness\"");
     assertThat(resolvedExpression).isNotNull();
     assertThat(resolvedExpression).isEqualTo("harness == \"harness\"");
   }
@@ -73,11 +68,10 @@ public class EngineExpressionServiceImplTest extends OrchestrationTestBase {
   @Test
   @RealMongo
   @Owner(developers = PRASHANT)
-  @Ignore("Move to PmsServiceImpl Test")
   @Category(UnitTests.class)
   public void shouldTestEvaluateExpression() {
-    Object value = engineExpressionService.evaluateExpression(ambiance, "${dummyOutcome.test} == \"harness\"");
+    Object value = pmsEngineExpressionService.evaluateExpression(ambiance, "${dummyOutcome.test} == \"harness\"");
     assertThat(value).isNotNull();
-    assertThat(value).isEqualTo(true);
+    assertThat(value).isEqualTo("true");
   }
 }

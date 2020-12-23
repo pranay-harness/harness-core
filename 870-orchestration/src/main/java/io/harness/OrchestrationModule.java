@@ -16,15 +16,13 @@ import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.InterruptServiceImpl;
 import io.harness.engine.outcomes.OutcomeServiceImpl;
 import io.harness.engine.outputs.ExecutionSweepingOutputServiceImpl;
-import io.harness.engine.pms.data.PmsOutcomeService;
-import io.harness.engine.pms.data.PmsOutcomeServiceImpl;
-import io.harness.engine.pms.data.PmsSweepingOutputService;
-import io.harness.engine.pms.data.PmsSweepingOutputServiceImpl;
+import io.harness.engine.pms.data.*;
 import io.harness.engine.pms.tasks.NgDelegate2TaskExecutor;
 import io.harness.engine.pms.tasks.TaskExecutor;
 import io.harness.govern.ServersModule;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.expression.EngineExpressionService;
+import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
@@ -74,7 +72,6 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     bind(NodeExecutionService.class).to(NodeExecutionServiceImpl.class);
     bind(PlanExecutionService.class).to(PlanExecutionServiceImpl.class);
     bind(InterruptService.class).to(InterruptServiceImpl.class);
-    bind(EngineExpressionService.class).to(EngineExpressionServiceImpl.class);
     bind(OrchestrationService.class).to(OrchestrationServiceImpl.class);
     bind(EngineObtainmentHelper.class).in(Singleton.class);
 
@@ -92,7 +89,10 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     bind(PmsSweepingOutputService.class).to(PmsSweepingOutputServiceImpl.class).in(Singleton.class);
     bind(PmsOutcomeService.class).to(PmsOutcomeServiceImpl.class).in(Singleton.class);
     bind(PmsNodeExecutionService.class).to(PmsNodeExecutionServiceImpl.class).in(Singleton.class);
+    bind(PmsEngineExpressionService.class).to(PmsEngineExpressionServiceImpl.class).in(Singleton.class);
+
     bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingOutputServiceImpl.class).in(Singleton.class);
+    bind(EngineExpressionService.class).to(EngineExpressionServiceImpl.class);
     bind(OutcomeService.class).to(OutcomeServiceImpl.class).in(Singleton.class);
   }
 

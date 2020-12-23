@@ -1,7 +1,7 @@
 package io.harness.pms.yaml.validation;
 
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.expression.EngineExpressionService;
+import io.harness.pms.expression.PmsEngineExpressionService;
 
 import java.util.regex.Pattern;
 
@@ -12,11 +12,11 @@ import java.util.regex.Pattern;
  * ${input}.regex(^${env.name}_[a-z]+) #render and use matcher
  */
 public class RegexValidator implements RuntimeValidator {
-  private final EngineExpressionService engineExpressionService;
+  private final PmsEngineExpressionService pmsEngineExpressionService;
   private final Ambiance ambiance;
 
-  public RegexValidator(EngineExpressionService engineExpressionService, Ambiance ambiance) {
-    this.engineExpressionService = engineExpressionService;
+  public RegexValidator(PmsEngineExpressionService pmsEngineExpressionService, Ambiance ambiance) {
+    this.pmsEngineExpressionService = pmsEngineExpressionService;
     this.ambiance = ambiance;
   }
 
@@ -26,7 +26,7 @@ public class RegexValidator implements RuntimeValidator {
       return RuntimeValidatorResponse.builder().errorMessage("Current value is null").build();
     }
 
-    String regex = engineExpressionService.renderExpression(ambiance, parameters);
+    String regex = pmsEngineExpressionService.renderExpression(ambiance, parameters);
     if (currentValue instanceof String) {
       if (!ExpressionUtils.matchesPattern(Pattern.compile(regex), (String) currentValue)) {
         return RuntimeValidatorResponse.builder().errorMessage("Current value does not match with given regex").build();

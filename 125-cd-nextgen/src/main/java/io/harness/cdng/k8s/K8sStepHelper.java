@@ -60,7 +60,7 @@ import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
-import io.harness.pms.expression.EngineExpressionService;
+import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -102,7 +102,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class K8sStepHelper {
   @Named(DEFAULT_CONNECTOR_SERVICE) @Inject private ConnectorService connectorService;
   @Inject private SecretManagerClientService secretManagerClientService;
-  @Inject private EngineExpressionService engineExpressionService;
+  @Inject private PmsEngineExpressionService pmsEngineExpressionService;
   @Inject private StepDependencyService stepDependencyService;
   @Inject private KryoSerializer kryoSerializer;
 
@@ -295,7 +295,7 @@ public class K8sStepHelper {
     }
 
     return valuesFileContents.stream()
-        .map(valuesFileContent -> engineExpressionService.renderExpression(ambiance, valuesFileContent))
+        .map(valuesFileContent -> pmsEngineExpressionService.renderExpression(ambiance, valuesFileContent))
         .collect(Collectors.toList());
   }
 

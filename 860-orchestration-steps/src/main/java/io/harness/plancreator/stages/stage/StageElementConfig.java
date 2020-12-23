@@ -16,10 +16,11 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@Builder
+@NoArgsConstructor
 @TypeAlias("stageElementConfig")
 public class StageElementConfig {
   String uuid;
@@ -33,4 +34,16 @@ public class StageElementConfig {
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   StageInfoConfig stageType;
+
+  @Builder
+  public StageElementConfig(String uuid, String identifier, String name, ParameterField<String> description,
+      List<FailureStrategyConfig> failureStrategies, String type, StageInfoConfig stageType) {
+    this.uuid = uuid;
+    this.identifier = identifier;
+    this.name = name;
+    this.description = description;
+    this.failureStrategies = failureStrategies;
+    this.type = type;
+    this.stageType = stageType;
+  }
 }
