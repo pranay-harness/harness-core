@@ -237,7 +237,7 @@ public class HealthVerificationHeatMapServiceImplTest extends CvNextGenTest {
     Instant endTime = Instant.now();
     heatMapService.updateRisk(verificationTaskId, 1.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY);
     heatMapService.updateRisk(
-        verificationTaskId, 0.0, endTime.plus(Duration.ofMinutes(15)), HealthVerificationPeriod.POST_ACTIVITY);
+        verificationTaskId, 0.7, endTime.plus(Duration.ofMinutes(15)), HealthVerificationPeriod.POST_ACTIVITY);
 
     Set<CategoryRisk> preActivityRisks =
         heatMapService.getAggregatedRisk(activityId, HealthVerificationPeriod.PRE_ACTIVITY);
@@ -260,7 +260,7 @@ public class HealthVerificationHeatMapServiceImplTest extends CvNextGenTest {
 
     for (CategoryRisk categoryRisk : postActivityRisks) {
       if (categoryRisk.getCategory().equals(CVMonitoringCategory.PERFORMANCE)) {
-        assertThat(categoryRisk.getRisk()).isEqualTo(100.0);
+        assertThat(categoryRisk.getRisk()).isEqualTo(70.0);
       } else {
         assertThat(categoryRisk.getRisk()).isEqualTo(-1.0);
       }

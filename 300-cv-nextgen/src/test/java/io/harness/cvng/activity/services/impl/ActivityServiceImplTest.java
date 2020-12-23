@@ -759,10 +759,14 @@ public class ActivityServiceImplTest extends CvNextGenTest {
   }
 
   @Test
-  @Owner(developers = RAGHU, intermittent = true)
+  @Owner(developers = RAGHU)
   @Category({UnitTests.class})
   public void testCreateVerificationJobInstancesForActivity_defaultJob() throws IllegalAccessException {
     FieldUtils.writeField(activityService, "verificationJobService", realVerificationJobService, true);
+    realVerificationJobInstanceService = spy(realVerificationJobInstanceService);
+    doReturn(Lists.newArrayList(new AppDynamicsCVConfig()))
+        .when(realVerificationJobInstanceService)
+        .getCVConfigsForVerificationJob(any());
     FieldUtils.writeField(activityService, "verificationJobInstanceService", realVerificationJobInstanceService, true);
     KubernetesActivity kubernetesActivity = getKubernetesActivity();
     kubernetesActivity.setVerificationJobRuntimeDetails(null);

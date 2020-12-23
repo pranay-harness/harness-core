@@ -107,6 +107,7 @@ public class HealthVerificationHeatMapServiceImpl implements HealthVerificationH
     List<HealthVerificationHeatMap> heatMaps =
         hPersistence.createQuery(HealthVerificationHeatMap.class, excludeAuthority)
             .filter(HealthVerificationHeatMapKeys.activityId, activityId)
+            .filter(HealthVerificationHeatMapKeys.healthVerificationPeriod, healthVerificationPeriod)
             .filter(HealthVerificationHeatMapKeys.aggregationLevel, AggregationLevel.ACTIVITY)
             .asList();
     if (isEmpty(heatMaps)) {
