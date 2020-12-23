@@ -83,6 +83,7 @@ def main(jsonData, context):
         print("%s table does not exists, creating table..." % clusterDataTableRef)
         createTable(client, clusterDataTableName)
     else:
+        alterClusterTable(client, jsonData)
         print("%s table exists" % clusterDataTableRef)
 
     if not if_tbl_exists(client, unifiedTableRef):
@@ -96,6 +97,20 @@ def main(jsonData, context):
     loadIntoUnifiedGCP(client, jsonData)
     loadIntoUnifiedAWS(client, jsonData)
     client.close()
+
+def alterClusterTable(client, jsonData):
+    print("Altering CLuster Data Table")
+    ds = "%s.%s" % (jsonData["projectName"], jsonData["datasetName"])
+    query = "ALTER TABLE `%s.clusterData` ADD COLUMN IF NOT EXISTS envname STRING, ADD COLUMN IF NOT EXISTS servicename STRING, ADD COLUMN IF NOT EXISTS appname STRING;" % (ds)
+
+    try:
+        query_job = client.query(query)
+        results = query_job.result()
+    except Exception as e:
+        # Error Running Alter Query
+        print(e)
+    else:
+        print("Fnished Altering CLuster Data Table")
 
 
 def ingestDataFromAvroToClusterData(client, jsonData):
@@ -120,9 +135,9 @@ def ingestDataFromAvroToClusterData(client, jsonData):
     )  # Make an API request.
     try:
         load_job.result()  # Wait for the job to complete.
-    except:
+    except Exception as e:
+        print(e)
         # Probably the file was deleted in earlier runs
-        pass
 
     table = client.get_table(jsonData["tableName"])
     print("Total: {} rows in table {}".format(table.num_rows, jsonData["tableName"]))
@@ -194,7 +209,7 @@ def loadIntoUnifiedAWS(client, jsonData):
     # Configure the query job.
     job_config = bigquery.QueryJobConfig()
 
-    query = """DELETE FROM `%s.unifiedTable` WHERE DATE(startTime) >= DATE_SUB(@run_date , INTERVAL 6 DAY) AND cloudProvider = "AWS"; 
+    query = """DELETE FROM `%s.unifiedTable` WHERE DATE(startTime) >= DATE_SUB(@run_date , INTERVAL 6 DAY) AND cloudProvider = "AWS";
                INSERT INTO `%s.unifiedTable` (product, startTime,
                     awsBlendedRate,awsBlendedCost,awsUnblendedRate, awsUnblendedCost, cost, awsServicecode,
                     region,awsAvailabilityzone,awsUsageaccountid,awsInstancetype,awsUsagetype,cloudProvider, labels)
@@ -202,10 +217,10 @@ def loadIntoUnifiedAWS(client, jsonData):
                     awsBlendedRate, blendedcost AS awsBlendedCost, unblendedrate AS awsUnblendedRate, unblendedcost AS
                     awsUnblendedCost, unblendedcost AS cost, productname AS awsServicecode, region, availabilityzone AS
                     awsAvailabilityzone, usageaccountid AS awsUsageaccountid, instancetype AS awsInstancetype, usagetype
-                    AS awsUsagetype, "AWS" AS cloudProvider, tags AS labels FROM `%s.awscur_2020_*` 
+                    AS awsUsagetype, "AWS" AS cloudProvider, tags AS labels FROM `%s.awscur_2020_*`
                WHERE lineitemtype != 'Tax' AND
                     TIMESTAMP_TRUNC(usagestartdate, DAY) >= TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date),
-                    INTERVAL 6 DAY), DAY); 
+                    INTERVAL 6 DAY), DAY);
     """ % (ds, ds, ds)
 
     # Configure the query job.
@@ -265,23 +280,23 @@ def ingestDataFromClusterDataToUnified(client, jsonData):
     year = int(jsonData["fileDate"][0])
     month = MONTHMAP[jsonData["fileDate"][1]]
     day = int(jsonData["fileDate"][2])
-    query = """DELETE FROM `%s.unifiedTable` WHERE DATE(startTime) = DATE(%s, %s, %s) 
+    query = """DELETE FROM `%s.unifiedTable` WHERE DATE(startTime) = DATE(%s, %s, %s)
                 AND cloudProvider = "CLUSTER";
-            INSERT INTO `%s.unifiedTable` (CLOUDPROVIDER, PRODUCT, STARTTIME, ENDTIME, COST, CPUBILLINGAMOUNT, 
-                MEMORYBILLINGAMOUNT, ACTUALIDLECOST, SYSTEMCOST, UNALLOCATEDCOST, NETWORKCOST, CLUSTERCLOUDPROVIDER, 
-                ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, NAMESPACE, WORKLOADNAME, WORKLOADTYPE,  
+            INSERT INTO `%s.unifiedTable` (CLOUDPROVIDER, PRODUCT, STARTTIME, ENDTIME, COST, CPUBILLINGAMOUNT,
+                MEMORYBILLINGAMOUNT, ACTUALIDLECOST, SYSTEMCOST, UNALLOCATEDCOST, NETWORKCOST, CLUSTERCLOUDPROVIDER,
+                ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, NAMESPACE, WORKLOADNAME, WORKLOADTYPE,
                 INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME, LABELS)
-            SELECT "CLUSTER" AS CLOUDPROVIDER, 
+            SELECT "CLUSTER" AS CLOUDPROVIDER,
                 (CASE
                     WHEN CLUSTERTYPE = "K8S" THEN "Kubernetes Cluster"
-                    ELSE "ECS Cluster" 
+                    ELSE "ECS Cluster"
                 END) AS PRODUCT,
-                TIMESTAMP_TRUNC(TIMESTAMP_MILLIS(starttime), DAY) as STARTTIME, TIMESTAMP_TRUNC(TIMESTAMP_MILLIS(endtime), DAY) as ENDTIME, 
-                SUM(billingamount) AS COST, SUM(cpubillingamount) AS CPUBILLINGAMOUNT, SUM(memorybillingamount) AS MEMORYBILLINGAMOUNT, 
-                SUM(actualidlecost) AS ACTUALIDLECOST,  SUM(systemcost) AS SYSTEMCOST,  SUM(unallocatedcost) AS UNALLOCATEDCOST, 
-                SUM(networkcost) AS NETWORKCOST, cloudprovider AS CLUSTERCLOUDPROVIDER, accountid AS ACCOUNTID, clusterid AS CLUSTERID, 
-                clustername AS CLUSTERNAME, clustertype AS CLUSTERTYPE, region AS REGION, namespace AS NAMESPACE, workloadname AS WORKLOADNAME, 
-                workloadtype AS WORKLOADTYPE, instancetype AS INSTANCETYPE, appid AS APPID, serviceid AS SERVICEID, envid AS ENVID, 
+                TIMESTAMP_TRUNC(TIMESTAMP_MILLIS(starttime), DAY) as STARTTIME, TIMESTAMP_TRUNC(TIMESTAMP_MILLIS(endtime), DAY) as ENDTIME,
+                SUM(billingamount) AS COST, SUM(cpubillingamount) AS CPUBILLINGAMOUNT, SUM(memorybillingamount) AS MEMORYBILLINGAMOUNT,
+                SUM(actualidlecost) AS ACTUALIDLECOST,  SUM(systemcost) AS SYSTEMCOST,  SUM(unallocatedcost) AS UNALLOCATEDCOST,
+                SUM(networkcost) AS NETWORKCOST, cloudprovider AS CLUSTERCLOUDPROVIDER, accountid AS ACCOUNTID, clusterid AS CLUSTERID,
+                clustername AS CLUSTERNAME, clustertype AS CLUSTERTYPE, region AS REGION, namespace AS NAMESPACE, workloadname AS WORKLOADNAME,
+                workloadtype AS WORKLOADTYPE, instancetype AS INSTANCETYPE, appname AS APPID, servicename AS SERVICEID, envname AS ENVID,
                 cloudproviderid AS CLOUDPROVIDERID, launchtype AS LAUNCHTYPE, cloudservicename AS CLOUDSERVICENAME, 
                 ANY_VALUE(labels) as LABELS 
             FROM `%s.clusterData` 
