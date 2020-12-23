@@ -156,6 +156,7 @@ import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.core.HttpHeaders;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 
 /**
@@ -1275,6 +1276,9 @@ public class YamlGitServiceImpl implements YamlGitService {
   private GitCommit fetchLastProcessedGitCommitId(String accountId, List<String> yamlGitConfigIds) {
     // After MultiGit support gitCommit record would have list of yamlGitConfigs.
 
+    FindOptions findOptions = new FindOptions();
+    findOptions.modifier("$hint", "gitCommitAccountIdYamlConfigIdsStatusLastUpdatedIdx");
+
     GitCommit gitCommit = wingsPersistence.createQuery(GitCommit.class)
                               .filter(GitCommitKeys.accountId, accountId)
                               .field(GitCommitKeys.status)
@@ -1282,7 +1286,7 @@ public class YamlGitServiceImpl implements YamlGitService {
                               .field(GitCommitKeys.yamlGitConfigIds)
                               .hasAnyOf(yamlGitConfigIds)
                               .order("-lastUpdatedAt")
-                              .get();
+                              .get(findOptions);
 
     // This is to handle the old git commit records which doesn't have yamlGitConfigId
     if (gitCommit == null) {
