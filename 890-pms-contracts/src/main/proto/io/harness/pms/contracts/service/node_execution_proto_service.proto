@@ -4,6 +4,7 @@ package io.harness.pms.contracts.plan;
 
 option java_multiple_files = true;
 
+import "io/harness/pms/contracts/execution/failure/failure_info.proto";
 import "io/harness/pms/contracts/execution/tasks/task_request.proto";
 import "io/harness/pms/contracts/execution/executable_response.proto";
 import "io/harness/pms/contracts/execution/node_execution_proto.proto";
@@ -11,6 +12,7 @@ import "io/harness/pms/contracts/execution/status.proto";
 import "io/harness/pms/contracts/steps/io/step_response_proto.proto";
 import "io/harness/pms/contracts/facilitators/facilitators.proto";
 import "io/harness/pms/contracts/advisers/advise.proto";
+import "io/harness/pms/contracts/service/node_execution_event.proto";
 
 service NodeExecutionProtoService {
   rpc queueNodeExecution(QueueNodeExecutionRequest) returns (QueueNodeExecutionResponse);
@@ -21,6 +23,7 @@ service NodeExecutionProtoService {
   rpc accumulateResponses(AccumulateResponsesRequest) returns (AccumulateResponsesResponse);
   rpc handleFacilitatorResponse(FacilitatorResponseRequest) returns (FacilitatorResponseResponse);
   rpc handleAdviserResponse(AdviserResponseRequest) returns (AdviserResponseResponse);
+  rpc handleEventError(EventErrorRequest) returns (EventErrorResponse);
 }
 
 message QueueNodeExecutionRequest {
@@ -87,3 +90,11 @@ message AdviserResponseRequest {
 }
 
 message AdviserResponseResponse {}
+
+message EventErrorRequest {
+  NodeExecutionEventType eventType = 1;
+  string eventNotifyId = 2;
+  execution.failure.FailureInfo failureInfo = 3;
+}
+
+message EventErrorResponse {}

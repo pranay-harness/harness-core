@@ -19,6 +19,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationBeansRegistrars;
+import io.harness.service.DelegateServiceDriverModule;
 import io.harness.springdata.SpringPersistenceModule;
 
 import com.google.common.base.Suppliers;
@@ -67,6 +68,7 @@ public class CvServiceModule extends AbstractModule {
         });
       }
     });
+    install(DelegateServiceDriverModule.getInstance());
     install(new DelegateServiceDriverGrpcClientModule(
         config.getManagerServiceSecret(), config.getManagerTarget(), config.getManagerAuthority()));
   }

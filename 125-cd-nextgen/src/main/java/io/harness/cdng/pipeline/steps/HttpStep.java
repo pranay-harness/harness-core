@@ -74,8 +74,8 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
       responseBuilder
           .failureInfo(FailureInfo.newBuilder()
                            .setErrorMessage(errorNotifyResponseData.getErrorMessage())
-                           .addAllFailureTypes(
-                               EngineExceptionUtils.transformFailureTypes(errorNotifyResponseData.getFailureTypes()))
+                           .addAllFailureTypes(EngineExceptionUtils.transformToOrchestrationFailureTypes(
+                               errorNotifyResponseData.getFailureTypes()))
                            .build())
           .build();
     } else {

@@ -4,8 +4,13 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
+import io.harness.pms.contracts.steps.io.StepResponseProto;
+import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.tasks.BinaryResponseData;
+import io.harness.tasks.FailureResponseData;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
 
@@ -40,6 +45,16 @@ public class EngineFacilitationCallback implements NotifyCallback {
 
   @Override
   public void notifyError(Map<String, ResponseData> response) {
-    // TODO => Handle Error
+    FailureResponseData failureResponseData = (FailureResponseData) response.values().iterator().next();
+    StepResponseProto stepResponseProto =
+        StepResponseProto.newBuilder()
+            .setStatus(Status.FAILED)
+            .setFailureInfo(FailureInfo.newBuilder()
+                                .setErrorMessage(failureResponseData.getErrorMessage())
+                                .addAllFailureTypes(EngineExceptionUtils.transformToOrchestrationFailureTypes(
+                                    failureResponseData.getFailureTypes()))
+                                .build())
+            .build();
+    orchestrationEngine.handleStepResponse(nodeExecutionId, stepResponseProto);
   }
 }
