@@ -215,7 +215,7 @@ public class GitClientImpl implements GitClient {
       ObjectId startCommitTreeId = repository.resolve(startCommitIdStr + "^{tree}");
 
       // ensure endCommitTreeId is after start commit
-      final boolean commitsInOrder = ensureCommitOrdering(startCommitIdStr, endCommitIdStr, repository);
+      final boolean commitsInOrder = ensureCommitOrdering(git, startCommitIdStr, endCommitIdStr, repository);
       if (!commitsInOrder) {
         throw new YamlException(String.format("Git diff failed. End Commit [%s] should be after start commit [%s]",
                                     endCommitIdStr, startCommitIdStr),
@@ -265,12 +265,15 @@ public class GitClientImpl implements GitClient {
     }
   }
 
-  private boolean ensureCommitOrdering(String startCommitIdStr, String endCommitIdStr, Repository repository)
-      throws IOException {
+  private boolean ensureCommitOrdering(Git git, String startCommitIdStr, String endCommitIdStr, Repository repository)
+      throws IOException, GitAPIException {
     try (RevWalk revWalk = new RevWalk(repository)) {
       final RevCommit startCommit = revWalk.parseCommit(repository.resolve(startCommitIdStr));
       final RevCommit endCommit = revWalk.parseCommit(repository.resolve(endCommitIdStr));
-      return endCommit.getCommitTime() >= startCommit.getCommitTime();
+      Iterable<RevCommit> commits = git.log().addRange(startCommit, endCommit).call();
+      // If iterator hasNext is false, it means startCommit is older than endCommit, return false
+      // and vice versa
+      return commits.iterator().hasNext();
     }
   }
 
