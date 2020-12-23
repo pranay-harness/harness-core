@@ -37,6 +37,7 @@ public class VerificationConfiguration extends Configuration {
   private ManagerAuthConfig managerAuthConfig;
   @JsonProperty("nextGen") private NGManagerServiceConfig ngManagerServiceConfig;
   @JsonProperty("notificationClient") private NotificationClientConfiguration notificationClientConfiguration;
+  private String portalUrl;
 
   /**
    * Instantiates a new Main configuration.

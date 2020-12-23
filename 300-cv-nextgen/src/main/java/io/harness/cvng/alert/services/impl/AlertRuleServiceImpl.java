@@ -11,6 +11,7 @@ import io.harness.cvng.alert.entities.AlertRule.AlertRuleKeys;
 import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.alert.util.ActivityType;
 import io.harness.cvng.alert.util.VerificationStatus;
+import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.ng.beans.PageResponse;
 import io.harness.notification.channeldetails.PagerDutyChannel;
 import io.harness.notification.channeldetails.SlackChannel;
@@ -21,17 +22,28 @@ import io.harness.utils.PageUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.URISyntaxException;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.utils.URIBuilder;
+
 @Slf4j
 public class AlertRuleServiceImpl implements AlertRuleService {
+  DateTimeFormatter DATE_TIME_FORMATTER =
+      DateTimeFormatter.ofPattern("MMM dd' 'hh:mm a z").withZone(ZoneId.systemDefault());
+
   @Inject private HPersistence hPersistence;
   @Inject private NotificationClient notificationClient;
+  @Inject @Named("portalUrl") String portalUrl;
 
   @Override
   public PageResponse<AlertRuleDTO> listAlertRules(String accountId, String orgIdentifier, String projectIdentifier,
@@ -85,7 +97,8 @@ public class AlertRuleServiceImpl implements AlertRuleService {
 
   @Override
   public void processRiskScore(String accountId, String orgIdentifier, String projectIdentifier,
-      String serviceIdentifier, String envIdentifier, double riskScore) {
+      String serviceIdentifier, String envIdentifier, CVMonitoringCategory category, Instant timeStamp,
+      double riskScore) {
     double riskValue = BigDecimal.valueOf(riskScore * 100).setScale(2, RoundingMode.HALF_UP).doubleValue();
     List<AlertRule> alertRules = hPersistence.createQuery(AlertRule.class)
                                      .filter(AlertRuleKeys.accountId, accountId)
@@ -97,6 +110,7 @@ public class AlertRuleServiceImpl implements AlertRuleService {
                                      .asList();
 
     if (isNotEmpty(alertRules)) {
+      String uiUrl = getRiskUrl(accountId, orgIdentifier, projectIdentifier, timeStamp);
       alertRules.stream()
           .filter(alertRule
               -> (alertRule.getAlertCondition().isAllServices()
@@ -104,11 +118,28 @@ public class AlertRuleServiceImpl implements AlertRuleService {
                   && (alertRule.getAlertCondition().isAllEnvironments()
                       || alertRule.getAlertCondition().getEnvironments().contains(envIdentifier)))
           .forEach(rule -> {
-            String alertMessage = "Risk detected in project " + projectIdentifier + " for service " + serviceIdentifier
-                + " and environment " + envIdentifier + ".\nThe current risk score " + riskValue
-                + " is greater than the threshold " + rule.getAlertCondition().getNotify().getThreshold()
-                + " defined in rule " + rule.getName();
-            notifyChannel(accountId, rule.getNotificationMethod(), alertMessage);
+            StringBuilder alertMessage = new StringBuilder("Harness CV detected risk.");
+            alertMessage.append("\nOrganization: ")
+                .append(orgIdentifier)
+                .append("\nProject: ")
+                .append(projectIdentifier)
+                .append("\nService: ")
+                .append(serviceIdentifier)
+                .append("\nEnvironment: ")
+                .append(envIdentifier)
+                .append("\nCategory: ")
+                .append(category.getDisplayName())
+                .append("\nIncident time: ")
+                .append(DATE_TIME_FORMATTER.format(timeStamp))
+                .append("\nNotification rule:")
+                .append(rule.getName())
+                .append("\nAlert threshold: ")
+                .append(rule.getAlertCondition().getNotify().getThreshold())
+                .append("\nCurrent risk: ")
+                .append(riskValue)
+                .append("\nCheck at: ")
+                .append(uiUrl);
+            notifyChannel(accountId, rule.getNotificationMethod(), alertMessage.toString());
           });
     }
   }
@@ -211,5 +242,16 @@ public class AlertRuleServiceImpl implements AlertRuleService {
         .field(AlertRuleKeys.identifier)
         .equal(identifier)
         .get();
+  }
+
+  private String getRiskUrl(String accountId, String orgIdentifier, String projectIdentifier, Instant timeStamp) {
+    try {
+      URIBuilder uriBuilder = new URIBuilder(portalUrl + "ng/#/account/" + accountId + "/cv/org/" + orgIdentifier
+          + "/project/" + projectIdentifier + "/services");
+      uriBuilder.addParameter("timeStamp", String.valueOf(timeStamp.toEpochMilli()));
+      return uriBuilder.build().toString();
+    } catch (URISyntaxException e) {
+      throw new IllegalStateException(e);
+    }
   }
 }

@@ -120,6 +120,11 @@ import org.apache.commons.io.IOUtils;
  * @author Raghu
  */
 public class CVServiceModule extends AbstractModule {
+  private VerificationConfiguration configuration;
+  public CVServiceModule(VerificationConfiguration configuration) {
+    this.configuration = configuration;
+  }
+
   /* (non-Javadoc)
    * @see com.google.inject.AbstractModule#configure()
    */
@@ -216,6 +221,10 @@ public class CVServiceModule extends AbstractModule {
       bind(CVNGMigrationService.class).to(CVNGMigrationServiceImpl.class).in(Singleton.class);
       bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
       bind(StackdriverService.class).to(StackdriverServiceImpl.class);
+      bind(String.class)
+          .annotatedWith(Names.named("portalUrl"))
+          .toInstance(configuration.getPortalUrl().endsWith("/") ? configuration.getPortalUrl()
+                                                                 : configuration.getPortalUrl() + "/");
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
     }

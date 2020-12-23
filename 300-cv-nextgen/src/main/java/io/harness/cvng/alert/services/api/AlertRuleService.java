@@ -3,8 +3,10 @@ package io.harness.cvng.alert.services.api;
 import io.harness.cvng.alert.beans.AlertRuleDTO;
 import io.harness.cvng.alert.util.ActivityType;
 import io.harness.cvng.alert.util.VerificationStatus;
+import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.ng.beans.PageResponse;
 
+import java.time.Instant;
 import java.util.List;
 
 public interface AlertRuleService {
@@ -25,5 +27,5 @@ public interface AlertRuleService {
   List<ActivityType> getActivityTypes(String accountId, String orgIdentifier, String projectIdentifier);
 
   void processRiskScore(String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier,
-      String envIdentifier, double riskScore);
+      String envIdentifier, CVMonitoringCategory category, Instant timeStamp, double riskScore);
 }

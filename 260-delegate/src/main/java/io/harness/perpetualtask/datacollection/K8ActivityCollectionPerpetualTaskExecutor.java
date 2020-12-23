@@ -83,23 +83,6 @@ public class K8ActivityCollectionPerpetualTaskExecutor implements PerpetualTaskE
           @Override
           public void onAdd(V1Event v1Event) {
             if (v1Event.getInvolvedObject().getName().contains(activitySourceConfig.getWorkloadName())) {
-              // don't save kubelet normal events
-              if (v1Event.getType().equals(KubernetesEventType.Normal.name())
-                  && v1Event.getSource().getComponent().equals("kubelet")) {
-                //                return;
-              }
-              ActivityType activityType;
-              switch (v1Event.getSource().getComponent()) {
-                case "deployment-controller":
-                  activityType = ActivityType.DEPLOYMENT;
-                  break;
-                case "replicaset-controller":
-                  activityType = ActivityType.INFRASTRUCTURE;
-                  break;
-                default:
-                  activityType = ActivityType.OTHER;
-                  break;
-              }
               kubernetesActivitiesStoreService.save(taskParams.getAccountId(),
                   KubernetesActivityDTO.builder()
                       .message(v1Event.getMessage())
@@ -108,7 +91,7 @@ public class K8ActivityCollectionPerpetualTaskExecutor implements PerpetualTaskE
                       .name(v1Event.getInvolvedObject().getUid())
                       .activityStartTime(v1Event.getFirstTimestamp().getMillis())
                       .activityEndTime(v1Event.getLastTimestamp().getMillis())
-                      .kubernetesActivityType(activityType)
+                      .kubernetesActivityType(ActivityType.INFRASTRUCTURE)
                       .eventType(KubernetesEventType.valueOf(v1Event.getType()))
                       .serviceIdentifier(activitySourceConfig.getServiceIdentifier())
                       .environmentIdentifier(activitySourceConfig.getEnvIdentifier())
