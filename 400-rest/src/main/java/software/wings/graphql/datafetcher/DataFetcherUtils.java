@@ -221,7 +221,7 @@ public class DataFetcherUtils {
 
     String[] idFilterValues = idFilter.getValues();
 
-    if (isEmpty(idFilterValues)) {
+    if (isEmpty(idFilterValues) && operator != QLIdOperator.NOT_NULL) {
       throw new WingsException("Values cannot be empty");
     }
 
