@@ -30,6 +30,7 @@ import io.harness.cdng.manifest.yaml.ManifestOverrideSets;
 import io.harness.cdng.manifest.yaml.ManifestsOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
+import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
 import io.harness.cdng.pipeline.DeploymentStage;
@@ -118,5 +119,6 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(K8sBlueGreenOutcome.class, 12500);
     kryo.register(HttpOutcome.class, 12501);
     kryo.register(K8sManifestOutcome.class, 12502);
+    kryo.register(ValuesManifestOutcome.class, 12503);
   }
 }
