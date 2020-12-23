@@ -40,7 +40,7 @@ public class ExecutionConnectionDataFetcher
   @Inject private ExecutionQueryHelper executionQueryHelper;
   @Inject private AppService appService;
 
-  private static final String INDIRECT_EXECUTION_FIELD = "includeIndirectExecutions";
+  static final String INDIRECT_EXECUTION_FIELD = "includeIndirectExecutions";
 
   @Override
   @AuthRule(permissionType = PermissionType.LOGGED_IN)

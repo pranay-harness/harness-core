@@ -10,9 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldNameConstants;
 
 @Data
 @Builder
+@FieldNameConstants(innerTypeName = "DeploymentMetadataKeys")
 public class DeploymentMetadata {
   private List<Service> artifactRequiredServices = new ArrayList<>();
   private transient List<String> artifactRequiredServiceIds = new ArrayList<>();

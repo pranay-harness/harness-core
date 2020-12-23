@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.connector;
 
 import static io.harness.rule.OwnerRule.MILOS;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.TMACARI;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -29,6 +30,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -70,6 +72,8 @@ import software.wings.service.intfc.security.SecretManager;
 import com.google.inject.Inject;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
+import java.util.HashSet;
+import javax.validation.ConstraintViolationException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -904,5 +908,50 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
     assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, context))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Connector ID is not provided");
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void updateHelmGCSConnectorThrowsException() {
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withAccountId(ACCOUNT_ID)
+                                   .withCategory(SettingAttribute.SettingCategory.HELM_REPO)
+                                   .withValue(GCSHelmRepoConfig.builder().accountId(ACCOUNT_ID).build())
+                                   .build();
+
+    doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
+
+    doThrow(new ConstraintViolationException(new HashSet<>()))
+        .when(settingsService)
+        .saveWithPruning(isA(SettingAttribute.class), isA(String.class), isA(String.class));
+
+    doReturn(SettingAttribute.Builder.aSettingAttribute()
+                 .withCategory(SettingAttribute.SettingCategory.HELM_REPO)
+                 .withValue(GCSHelmRepoConfig.builder().accountId(ACCOUNT_ID).build())
+                 .build())
+        .when(settingsService)
+        .updateWithSettingFields(setting, setting.getUuid(), GLOBAL_APP_ID);
+
+    doNothing()
+        .when(settingServiceHelper)
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
+
+    doReturn(QLGCSHelmRepoConnector.builder()).when(connectorsController).getConnectorBuilder(any());
+    doReturn(QLGCSHelmRepoConnector.builder()).when(connectorsController).populateConnector(any(), any());
+    doReturn(new EncryptedData()).when(secretManager).getSecretById(ACCOUNT_ID, PASSWORD);
+    doReturn(setting).when(settingsService).getByAccountAndId(ACCOUNT_ID, "GCP");
+
+    dataFetcher.mutateAndFetch(
+        QLUpdateConnectorInput.builder()
+            .connectorId(CONNECTOR_ID)
+            .connectorType(QLConnectorType.GCS_HELM_REPO)
+            .helmConnector(
+                Utility
+                    .getQlHelmConnectorInputBuilder(
+                        getQlGCSPlatformInputBuilder().bucketName(RequestField.ofNullable("newBucketName")).build())
+                    .build())
+            .build(),
+        MutationContext.builder().accountId(ACCOUNT_ID).build());
   }
 }

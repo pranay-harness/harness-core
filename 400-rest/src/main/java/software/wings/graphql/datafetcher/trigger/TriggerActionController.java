@@ -338,7 +338,7 @@ public class TriggerActionController {
     }
   }
 
-  private void validateWorkflow(QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
+  void validateWorkflow(QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput) {
     Workflow workflow = null;
     String appId = qlCreateOrUpdateTriggerInput.getApplicationId();
     QLTriggerActionInput qlTriggerActionInput = qlCreateOrUpdateTriggerInput.getAction();
