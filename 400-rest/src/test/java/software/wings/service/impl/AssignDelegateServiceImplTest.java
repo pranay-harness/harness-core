@@ -18,8 +18,10 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
+import static software.wings.service.impl.AssignDelegateServiceImpl.BLACKLIST_TTL;
 import static software.wings.service.impl.AssignDelegateServiceImpl.ERROR_MESSAGE;
 import static software.wings.service.impl.AssignDelegateServiceImpl.MAX_DELEGATE_LAST_HEARTBEAT;
+import static software.wings.service.impl.AssignDelegateServiceImpl.WHITELIST_TTL;
 import static software.wings.service.impl.AssignDelegateServiceImplTest.CriteriaType.MATCHING_CRITERIA;
 import static software.wings.service.impl.AssignDelegateServiceImplTest.CriteriaType.NOT_MATCHING_CRITERIA;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.COMPUTE_PROVIDER_SETTING_ID;
@@ -35,6 +37,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
+import static java.util.Optional.of;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anySet;
@@ -935,7 +938,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                                     .build();
 
     when(delegateConnectionResultCache.get(ImmutablePair.of(delegate.getUuid(), connectionResult.getCriteria())))
-        .thenReturn(Optional.of(connectionResult));
+        .thenReturn(of(connectionResult));
 
     when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
 
@@ -1756,7 +1759,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     connectionResult.setValidated(true);
     connectionResult.setLastUpdatedAt(clock.millis() - TimeUnit.MINUTES.toMillis(6));
     when(delegateConnectionResultCache.get(ImmutablePair.of(delegateId, connectionResult.getCriteria())))
-        .thenReturn(Optional.of(connectionResult));
+        .thenReturn(of(connectionResult));
     assertThat(assignDelegateService.shouldValidate(task, delegateId)).isTrue();
 
     // test case: connection result present, validated, not expired, delegate disconnected and no other connected
@@ -1767,7 +1770,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     connectionResult.setValidated(true);
     connectionResult.setLastUpdatedAt(clock.millis());
     when(delegateConnectionResultCache.get(ImmutablePair.of(delegateId, connectionResult.getCriteria())))
-        .thenReturn(Optional.of(connectionResult));
+        .thenReturn(of(connectionResult));
     assertThat(assignDelegateService.shouldValidate(task, delegateId)).isTrue();
 
     // test case: connection result present, validated, not expired, delegate disconnected, but there are other
@@ -1786,10 +1789,10 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     connectionResult2.setLastUpdatedAt(clock.millis());
 
     when(delegateConnectionResultCache.get(ImmutablePair.of(delegateId, connectionResult.getCriteria())))
-        .thenReturn(Optional.of(connectionResult));
+        .thenReturn(of(connectionResult));
 
     when(delegateConnectionResultCache.get(ImmutablePair.of(delegate2.getUuid(), connectionResult.getCriteria())))
-        .thenReturn(Optional.of(connectionResult2));
+        .thenReturn(of(connectionResult2));
 
     when(accountDelegatesCache.get(accountId)).thenReturn(Collections.emptyList()).thenReturn(Arrays.asList(delegate2));
     when(delegateService.get(task.getAccountId(), delegate2.getUuid(), false))
@@ -1803,7 +1806,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     connectionResult.setValidated(true);
     connectionResult.setLastUpdatedAt(clock.millis());
     when(delegateConnectionResultCache.get(ImmutablePair.of(delegateId, connectionResult.getCriteria())))
-        .thenReturn(Optional.of(connectionResult));
+        .thenReturn(of(connectionResult));
     when(accountDelegatesCache.get(accountId))
         .thenReturn(
             Arrays.asList(Delegate.builder().uuid(delegateId).status(ENABLED).lastHeartBeat(clock.millis()).build()));
@@ -1837,5 +1840,23 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
         .isFalse();
     verify(delegateSelectionLogsService).logMustExecuteOnDelegateNotMatched(batch, accountId, delegateId2);
     verify(delegateSelectionLogsService, never()).logCanAssign(batch, accountId, delegateId1);
+  }
+
+  @Test
+  @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
+  public void ValidateCriteria() {
+    Optional<DelegateConnectionResult> nullResult = Optional.empty();
+    assertThat(AssignDelegateServiceImpl.shouldValidateCriteria(nullResult, 0)).isTrue();
+
+    Optional<DelegateConnectionResult> trueResult =
+        Optional.of(DelegateConnectionResult.builder().validated(true).lastUpdatedAt(10).build());
+    assertThat(AssignDelegateServiceImpl.shouldValidateCriteria(trueResult, WHITELIST_TTL)).isFalse();
+    assertThat(AssignDelegateServiceImpl.shouldValidateCriteria(trueResult, WHITELIST_TTL + 20)).isTrue();
+
+    Optional<DelegateConnectionResult> falseResult =
+        Optional.of(DelegateConnectionResult.builder().validated(false).lastUpdatedAt(10).build());
+    assertThat(AssignDelegateServiceImpl.shouldValidateCriteria(falseResult, BLACKLIST_TTL)).isFalse();
+    assertThat(AssignDelegateServiceImpl.shouldValidateCriteria(falseResult, BLACKLIST_TTL + 20)).isTrue();
   }
 }
