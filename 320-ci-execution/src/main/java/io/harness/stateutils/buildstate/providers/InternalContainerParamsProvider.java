@@ -87,8 +87,8 @@ public class InternalContainerParamsProvider {
   public CIK8ContainerParams getLiteEngineContainerParams(ConnectorDetails containerImageConnectorDetails,
       Map<String, ConnectorDetails> publishArtifactConnectors, K8PodDetails k8PodDetails,
       String serializedLiteEngineTaskStepInfo, String serviceToken, Integer stageCpuRequest, Integer stageMemoryRequest,
-      List<Integer> serviceGrpcPortList, Map<String, String> logEnvVars, Map<String, String> volumeToMountPath,
-      String workDirPath) {
+      List<Integer> serviceGrpcPortList, Map<String, String> logEnvVars, Map<String, String> tiEnvVars,
+      Map<String, String> volumeToMountPath, String workDirPath) {
     Map<String, String> map = new HashMap<>();
     map.putAll(volumeToMountPath);
     map.put(LITE_ENGINE_VOLUME, LITE_ENGINE_PATH);
@@ -103,7 +103,7 @@ public class InternalContainerParamsProvider {
     return CIK8ContainerParams.builder()
         .name(LITE_ENGINE_CONTAINER_NAME)
         .containerResourceParams(getLiteEngineResourceParams(stageCpuRequest, stageMemoryRequest))
-        .envVars(getLiteEngineEnvVars(k8PodDetails, serviceToken, logEnvVars, workDirPath))
+        .envVars(getLiteEngineEnvVars(k8PodDetails, serviceToken, logEnvVars, tiEnvVars, workDirPath))
         .containerType(CIContainerType.LITE_ENGINE)
         .containerSecrets(ContainerSecrets.builder().connectorDetailsMap(publishArtifactConnectors).build())
         .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
@@ -120,8 +120,8 @@ public class InternalContainerParamsProvider {
         .build();
   }
 
-  private Map<String, String> getLiteEngineEnvVars(
-      K8PodDetails k8PodDetails, String serviceToken, Map<String, String> logEnvVars, String workDirPath) {
+  private Map<String, String> getLiteEngineEnvVars(K8PodDetails k8PodDetails, String serviceToken,
+      Map<String, String> logEnvVars, Map<String, String> tiEnvVars, String workDirPath) {
     Map<String, String> envVars = new HashMap<>();
     final String accountID = k8PodDetails.getBuildNumberDetails().getAccountIdentifier();
     final String projectID = k8PodDetails.getBuildNumberDetails().getProjectIdentifier();
@@ -131,6 +131,9 @@ public class InternalContainerParamsProvider {
 
     // Add log service environment variables
     envVars.putAll(logEnvVars);
+
+    // Add TI service environment variables
+    envVars.putAll(tiEnvVars);
 
     // Add environment variables that need to be used inside the lite engine container
     envVars.put(HARNESS_WORKSPACE, workDirPath);

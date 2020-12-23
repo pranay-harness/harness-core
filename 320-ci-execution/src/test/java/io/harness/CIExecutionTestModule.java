@@ -3,6 +3,7 @@ package io.harness;
 import static org.mockito.Mockito.mock;
 
 import io.harness.ci.beans.entities.LogServiceConfig;
+import io.harness.ci.beans.entities.TIServiceConfig;
 import io.harness.connector.apis.client.ConnectorResourceClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.logserviceclient.CILogServiceClientModule;
@@ -16,6 +17,7 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationBeansRegistrars;
 import io.harness.serializer.OrchestrationRegistrars;
 import io.harness.serializer.PersistenceRegistrars;
+import io.harness.tiserviceclient.TIServiceModule;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -83,5 +85,6 @@ public class CIExecutionTestModule extends AbstractModule {
         ServiceHttpClientConfig.builder().baseUrl("http://localhost:3457/").build(), "test_secret", "NextGenManager"));
     install(new CILogServiceClientModule(
         LogServiceConfig.builder().baseUrl("http://localhost:8079").globalToken("token").build()));
+    install(new TIServiceModule(TIServiceConfig.builder().baseUrl("http://localhost:8078").build()));
   }
 }

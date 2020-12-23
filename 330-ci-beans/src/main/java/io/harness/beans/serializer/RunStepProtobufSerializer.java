@@ -1,8 +1,13 @@
 package io.harness.beans.serializer;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
+import io.harness.beans.yaml.extended.reports.JunitTestReport;
+import io.harness.beans.yaml.extended.reports.UnitTestReport;
 import io.harness.callback.DelegateCallbackToken;
+import io.harness.product.ci.engine.proto.Report;
 import io.harness.product.ci.engine.proto.RunStep;
 import io.harness.product.ci.engine.proto.StepContext;
 import io.harness.product.ci.engine.proto.UnitStep;
@@ -10,6 +15,7 @@ import io.harness.yaml.core.StepElement;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 import org.apache.commons.codec.binary.Base64;
@@ -30,6 +36,18 @@ public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStep
     RunStep.Builder runStepBuilder = RunStep.newBuilder();
     runStepBuilder.setCommand(runStepInfo.getCommand());
     runStepBuilder.setContainerPort(runStepInfo.getPort());
+
+    List<UnitTestReport> reports = runStepInfo.getReports();
+    if (isNotEmpty(reports)) {
+      for (UnitTestReport unitTestReport : reports) {
+        if (unitTestReport.getType() == UnitTestReport.Type.JUNIT) {
+          Report report =
+              Report.newBuilder().setType(Report.Type.JUNIT).addAllPaths(resolveJunitReport(unitTestReport)).build();
+          runStepBuilder.addReports(report);
+        }
+      }
+    }
+
     if (runStepInfo.getOutput() != null) {
       runStepBuilder.addAllEnvVarOutputs(runStepInfo.getOutput());
     }
@@ -47,5 +65,10 @@ public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStep
         .setRun(runStepBuilder.build())
         .setSkipCondition(Optional.ofNullable(skipCondition).orElse(""))
         .build();
+  }
+
+  public List<String> resolveJunitReport(UnitTestReport unitTestReport) {
+    JunitTestReport junitTestReport = (JunitTestReport) unitTestReport;
+    return junitTestReport.getSpec().getPaths();
   }
 }

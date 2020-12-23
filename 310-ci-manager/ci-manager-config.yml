@@ -63,6 +63,9 @@ logServiceConfig:
   baseUrl: http://localhost:8079/
   globalToken: "token"
 
+tiServiceConfig:
+  baseUrl: http://localhost:8078
+
 managerTarget: localhost:9880
 managerAuthority: localhost
 managerServiceSecret: "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM"

@@ -6,7 +6,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CiBeansTestBase;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
+import io.harness.beans.yaml.extended.reports.JunitTestReport;
+import io.harness.beans.yaml.extended.reports.UnitTestReport;
 import io.harness.category.element.UnitTests;
+import io.harness.product.ci.engine.proto.Report;
 import io.harness.product.ci.engine.proto.UnitStep;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.StepElement;
@@ -14,6 +17,7 @@ import io.harness.yaml.core.StepElement;
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.Arrays;
+import java.util.List;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -33,15 +37,22 @@ public class RunStepProtobufSerializerTest extends CiBeansTestBase {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldSerializeRunStep() throws InvalidProtocolBufferException {
+    List<String> paths = Arrays.asList("path1", "path2");
+    JunitTestReport junitTestReport =
+        JunitTestReport.builder().spec(JunitTestReport.Spec.builder().paths(paths).build()).build();
+    List<UnitTestReport> unitTestReportList = Arrays.asList(junitTestReport);
     RunStepInfo runStepInfo = RunStepInfo.builder()
                                   .name(RUN_STEP)
                                   .identifier(RUN_STEP_ID)
                                   .retry(RETRY)
                                   .timeout(TIMEOUT)
                                   .command(MVN_CLEAN_INSTALL)
+                                  .reports(unitTestReportList)
                                   .output(Arrays.asList(OUTPUT))
                                   .build();
     StepElement stepElement = StepElement.builder().type("run").stepSpecType(runStepInfo).build();
+
+    Report report = Report.newBuilder().setType(Report.Type.JUNIT).addAllPaths(paths).build();
 
     runStepInfo.setCallbackId(CALLBACK_ID);
     runStepInfo.setPort(PORT);
@@ -53,5 +64,6 @@ public class RunStepProtobufSerializerTest extends CiBeansTestBase {
     assertThat(runStep.getRun().getContext().getExecutionTimeoutSecs()).isEqualTo(TIMEOUT);
     assertThat(runStep.getRun().getCommand()).isEqualTo(MVN_CLEAN_INSTALL);
     assertThat(runStep.getRun().getContainerPort()).isEqualTo(PORT);
+    assertThat(runStep.getRun().getReports(0)).isEqualTo(report);
   }
 }

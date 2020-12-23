@@ -78,6 +78,9 @@ public class CIExecutionConstants {
   public static final String LOG_SERVICE_TOKEN_VARIABLE = "HARNESS_LOG_SERVICE_TOKEN";
   public static final String LOG_SERVICE_ENDPOINT_VARIABLE = "HARNESS_LOG_SERVICE_ENDPOINT";
 
+  // These are environment variables to be set on the pod for talking to the TI service.
+  public static final String TI_SERVICE_ENDPOINT_VARIABLE = "HARNESS_TI_SERVICE_ENDPOINT";
+
   public static final String DELEGATE_SERVICE_TOKEN_VARIABLE = "DELEGATE_SERVICE_TOKEN";
   public static final String DELEGATE_SERVICE_ENDPOINT_VARIABLE = "DELEGATE_SERVICE_ENDPOINT";
   public static final String DELEGATE_SERVICE_ID_VARIABLE = "DELEGATE_SERVICE_ID";

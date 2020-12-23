@@ -5,6 +5,7 @@ import static io.harness.common.CIExecutionConstants.LOG_SERVICE_ENDPOINT_VARIAB
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.SETUP_ADDON_ARGS;
 import static io.harness.common.CIExecutionConstants.SETUP_ADDON_CONTAINER_NAME;
+import static io.harness.common.CIExecutionConstants.TI_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -57,6 +58,10 @@ public class InternalContainerParamsProviderTest extends CIExecutionTest {
     logEnvVars.put(LOG_SERVICE_ENDPOINT_VARIABLE, logEndpoint);
     logEnvVars.put(LOG_SERVICE_TOKEN_VARIABLE, logSecret);
 
+    String tiEndpoint = "http://localhost:8078";
+    Map<String, String> tiEnvVars = new HashMap<>();
+    tiEnvVars.put(TI_SERVICE_ENDPOINT_VARIABLE, tiEndpoint);
+
     Map<String, String> volumeToMountPath = new HashMap<>();
 
     String serialisedStage = "test";
@@ -66,7 +71,7 @@ public class InternalContainerParamsProviderTest extends CIExecutionTest {
 
     CIK8ContainerParams containerParams = internalContainerParamsProvider.getLiteEngineContainerParams(connectorDetails,
         publishArtifactConnectorDetailsMap, k8PodDetails, serialisedStage, serviceToken, stageCpuRequest,
-        stageMemoryRequest, null, logEnvVars, volumeToMountPath, "/step-exec/workspace");
+        stageMemoryRequest, null, logEnvVars, tiEnvVars, volumeToMountPath, "/step-exec/workspace");
 
     Map<String, String> expectedEnv = new HashMap<>();
     expectedEnv.put(LOG_SERVICE_ENDPOINT_VARIABLE, logEndpoint);

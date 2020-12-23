@@ -56,6 +56,12 @@ pipeline:
                       retry: 2
                       timeout: 30
                       command: mvn -U clean package -Dbuild.number=${BUILD_NUMBER} -DgitBranch=master -DforkMode=perthread -DthreadCount=3 -DargLine="-Xmx2048m"
+                      reports:
+                        - type: junit
+                          spec:
+                            paths:
+                              - rspec.xml
+                              - reports.xml
                 - step:
                     identifier: runUnitTestsIntelligently
                     type: testIntelligence

@@ -22,6 +22,8 @@ import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.beans.yaml.extended.container.Container;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
+import io.harness.beans.yaml.extended.reports.JunitTestReport;
+import io.harness.beans.yaml.extended.reports.UnitTestReport;
 import io.harness.category.element.UnitTests;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
@@ -37,6 +39,8 @@ import io.harness.yaml.utils.YamlPipelineUtils;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -46,6 +50,10 @@ public class CIPipelineYamlTest extends CiBeansTestBase {
   @Category(UnitTests.class)
   public void testCiPipelineConversion() throws IOException {
     ClassLoader classLoader = this.getClass().getClassLoader();
+    List<String> paths = Arrays.asList("rspec.xml", "reports.xml");
+    JunitTestReport junitTestReport =
+        JunitTestReport.builder().spec(JunitTestReport.Spec.builder().paths(paths).build()).build();
+    List<UnitTestReport> unitTestReportList = Arrays.asList(junitTestReport);
     final URL testFile = classLoader.getResource("ci.yml");
     NgPipeline ngPipelineActual = YamlPipelineUtils.read(testFile, NgPipeline.class);
     NgPipeline ngPipelineExpected =
@@ -123,6 +131,7 @@ public class CIPipelineYamlTest extends CiBeansTestBase {
                                                             .timeout(30)
                                                             .command(
                                                                 "mvn -U clean package -Dbuild.number=${BUILD_NUMBER} -DgitBranch=master -DforkMode=perthread -DthreadCount=3 -DargLine=\"-Xmx2048m\"")
+                                                            .reports(unitTestReportList)
                                                             .build())
                                                     .build(),
                                                 StepElement.builder()

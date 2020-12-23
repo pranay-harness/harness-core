@@ -4,6 +4,7 @@ import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.beans.yaml.extended.container.ContainerResource;
+import io.harness.beans.yaml.extended.reports.UnitTestReport;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
@@ -43,6 +44,7 @@ public class RunStepInfo implements CIStepInfo {
   private List<String> output;
   private Map<String, String> environment;
   private String skipCondition;
+  private List<UnitTestReport> reports;
 
   @NotNull private String image;
   private String connector;
@@ -50,10 +52,10 @@ public class RunStepInfo implements CIStepInfo {
 
   @Builder
   @ConstructorProperties({"callbackId", "port", "identifier", "name", "retry", "timeout", "command", "output",
-      "skipCondition", "environment", "image", "connector", "resources"})
+      "skipCondition", "reports", "environment", "image", "connector", "resources"})
   public RunStepInfo(String callbackId, Integer port, String identifier, String name, Integer retry, Integer timeout,
-      String command, List<String> output, String skipCondition, Map<String, String> environment, String image,
-      String connector, ContainerResource resources) {
+      String command, List<String> output, String skipCondition, List<UnitTestReport> reports,
+      Map<String, String> environment, String image, String connector, ContainerResource resources) {
     this.callbackId = callbackId;
     this.port = port;
     this.identifier = identifier;
@@ -63,6 +65,7 @@ public class RunStepInfo implements CIStepInfo {
     this.command = command;
     this.environment = environment;
     this.skipCondition = skipCondition;
+    this.reports = reports;
     this.output = output;
     this.image = image;
     this.connector = connector;
