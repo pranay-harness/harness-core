@@ -11,6 +11,10 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.yaml.schema.TestClass;
 
+import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -39,5 +43,15 @@ public class YamlSchemaUtilsTest extends CategoryTest {
     assertThat(schemaPath).isEqualTo("abc/" + EntityType.CONNECTORS.getYamlName() + "/all.json");
     final String schemaPath1 = YamlSchemaUtils.getSchemaPathForEntityType(EntityType.CONNECTORS, "");
     assertThat(schemaPath1).isEqualTo(EntityType.CONNECTORS.getYamlName() + "/all.json");
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testGetFieldName() {
+    final Field[] declaredFields = TestClass.ClassWithApiModelOverride.class.getDeclaredFields();
+    final Set<String> result =
+        Arrays.stream(declaredFields).map(YamlSchemaUtils::getFieldName).collect(Collectors.toSet());
+    assertThat(result).containsExactlyInAnyOrder("a", "testString", "b", "apimodelproperty", "jsontypeinfo");
   }
 }

@@ -20,6 +20,13 @@ public class YamlSchemaTest extends CategoryTest implements AbstractSchemaChecke
     ensureSchemaUpdated();
   }
 
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testOneOfHasCorrectVales() throws NoSuchFieldException {
+    ensureOneOfHasCorrectValues();
+  }
+
   @Override
   public ClassLoader getClassLoader() {
     return NextGenApplication.class.getClassLoader();
