@@ -1,7 +1,6 @@
 package software.wings.helpers.ext.gcr;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.network.Http.getOkHttpClientBuilder;
@@ -14,6 +13,7 @@ import static java.util.stream.Collectors.toList;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
@@ -73,7 +73,7 @@ public class GcrServiceImpl implements GcrService {
     return retrofit.create(GcrRestClient.class);
   }
 
-  private String getUrl(String gcrHostName) {
+  public String getUrl(String gcrHostName) {
     return "https://" + gcrHostName + (gcrHostName.endsWith("/") ? "" : "/");
   }
 
@@ -197,11 +197,9 @@ public class GcrServiceImpl implements GcrService {
         return false;
       case 403:
         log.info("Response code {} received. User not authorized to access GCR Storage", code);
-        throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-            .addParam("message", "User not authorized to access GCR Storage");
+        throw new InvalidArtifactServerException("User not authorized to access GCR Storage", USER);
       case 401:
-        throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-            .addParam("message", "Invalid Google Container Registry credentials");
+        throw new InvalidArtifactServerException("Invalid Google Container Registry credentials", USER);
       default:
         unhandled(code);
     }

@@ -3,7 +3,6 @@ package software.wings.helpers.ext.gcs;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -11,9 +10,9 @@ import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDeta
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -98,8 +97,8 @@ public class GcsServiceImpl implements GcsService {
         curCount += maxResults;
       } while (nextPageToken != null && curCount < maxToRetrive);
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
-          .addParam("message", "Could not get artifact paths from Google Cloud Storage for bucket :" + bucketName);
+      throw new InvalidArtifactServerException(
+          "Could not get artifact paths from Google Cloud Storage for bucket :" + bucketName);
     }
 
     // Sort artifact paths by updated time in reverse order
@@ -125,10 +124,10 @@ public class GcsServiceImpl implements GcsService {
       }
       return buildDetailsList;
     } catch (WingsException e) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
+      throw new InvalidArtifactServerException(ExceptionUtils.getMessage(e), USER);
     } catch (Exception e) {
       log.error("Error occurred while retrieving artifacts from ", e);
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
+      throw new InvalidArtifactServerException(ExceptionUtils.getMessage(e), USER);
     }
   }
 
@@ -164,8 +163,8 @@ public class GcsServiceImpl implements GcsService {
           }
         } while (nextPageToken != null);
       } catch (Exception e) {
-        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
-            .addParam("message", "Could not get Build details from Google Cloud Storage for bucket :" + bucketName);
+        throw new InvalidArtifactServerException(
+            "Could not get Build details from Google Cloud Storage for bucket :" + bucketName);
       }
 
       // Get build details for recent objects
@@ -204,7 +203,7 @@ public class GcsServiceImpl implements GcsService {
             new GCSPair(so.getName(), Long.toString(GCS_DATE_FORMAT.parse(so.getUpdated().toString()).getTime())));
       }
     } catch (Exception e) {
-      log.error("Exception occurred while parsing GCS objects", USER);
+      log.error("Exception occurred while parsing GCS objects", e);
     }
   }
 
@@ -240,9 +239,8 @@ public class GcsServiceImpl implements GcsService {
           .withUiDisplayName("Build# " + versionId)
           .build();
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message",
-              "Could not get Build details from Google Cloud Storage for object :" + bucketName + "/" + objName);
+      throw new InvalidArtifactServerException(
+          "Could not get Build details from Google Cloud Storage for object :" + bucketName + "/" + objName, USER);
     }
   }
 
@@ -259,8 +257,8 @@ public class GcsServiceImpl implements GcsService {
         versioningEnabled = request.execute().getVersioning().getEnabled();
       }
     } catch (Exception e) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", "Could not get versioning information for GCS bucket. " + ExceptionUtils.getMessage(e));
+      throw new InvalidArtifactServerException(
+          "Could not get versioning information for GCS bucket. " + ExceptionUtils.getMessage(e), USER);
     }
     return versioningEnabled;
   }
@@ -315,8 +313,7 @@ public class GcsServiceImpl implements GcsService {
       Storage.Buckets.List request = bucketsObj.list(projectId);
       listOfBuckets = request.execute();
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", "Could not list Buckets from Google Cloud Storage");
+      throw new InvalidArtifactServerException("Could not list Buckets from Google Cloud Storage", USER);
     }
 
     // Get buckets for the project

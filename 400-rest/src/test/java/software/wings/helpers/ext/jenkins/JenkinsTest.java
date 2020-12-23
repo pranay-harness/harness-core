@@ -2,6 +2,7 @@ package software.wings.helpers.ext.jenkins;
 
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.RAMA;
@@ -14,12 +15,20 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.joor.Reflect.on;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
+import io.harness.exception.ArtifactServerException;
 import io.harness.rule.Owner;
 
 import software.wings.beans.JenkinsConfig;
@@ -27,21 +36,28 @@ import software.wings.beans.command.JenkinsTaskParams;
 import software.wings.helpers.ext.jenkins.model.JobProperty;
 import software.wings.helpers.ext.jenkins.model.JobWithExtendedDetails;
 import software.wings.helpers.ext.jenkins.model.ParametersDefinitionProperty;
+import software.wings.utils.JsonUtils;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.offbytwo.jenkins.model.Build;
+import com.offbytwo.jenkins.model.FolderJob;
+import com.offbytwo.jenkins.model.Job;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import com.offbytwo.jenkins.model.QueueReference;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketTimeoutException;
 import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.http.client.HttpResponseException;
+import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,7 +67,7 @@ import org.junit.experimental.categories.Category;
  * The Class JenkinsTest.
  */
 public class JenkinsTest extends CategoryTest {
-  private static final String JENKINS_URL = "http://localhost:8089";
+  private static final String JENKINS_URL = "http://localhost:8089/";
   private static final String USERNAME = "wingsbuild";
   private static final String PASSWORD = "0db28aa0f4fc0685df9a216fc7af0ca96254b7c2";
 
@@ -289,6 +305,21 @@ public class JenkinsTest extends CategoryTest {
           .extracting(ArtifactFileMetadata::getFileName, ArtifactFileMetadata::getUrl)
           .containsExactly(tuple("docker-scheduler-1.0-SNAPSHOT-all.jar", url));
     });
+
+    buildDetails =
+        jenkins.getBuildsForJob("scheduler-svn", asList("build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar"), 5, true);
+    assertThat(buildDetails)
+        .hasSize(5)
+        .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
+        .containsExactly(tuple("65", "39"), tuple("64", "39"), tuple("63", "39"), tuple("62", "39"), tuple("61", "39"));
+    buildDetails.forEach(buildDetails1 -> {
+      String url = "http://localhost:8089/job/scheduler-svn/" + buildDetails1.getNumber()
+          + "/artifact/build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar";
+      assertThat(buildDetails1.getArtifactFileMetadataList()).isNotEmpty();
+      assertThat(buildDetails1.getArtifactFileMetadataList())
+          .extracting(ArtifactFileMetadata::getFileName, ArtifactFileMetadata::getUrl)
+          .containsExactly(tuple("docker-scheduler-1.0-SNAPSHOT-all.jar", url));
+    });
   }
 
   @Test
@@ -401,5 +432,182 @@ public class JenkinsTest extends CategoryTest {
     Build build = jenkins.getBuild(new QueueReference("http://localhost:8089/queue/item/27287"),
         JenkinsConfig.builder().jenkinsUrl(JENKINS_URL).useConnectorUrlForJobExecution(true).build());
     assertThat(build.getNumber()).isEqualTo(21);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldThrowException() throws IOException {
+    CustomJenkinsServer jenkinsServer = mock(CustomJenkinsServer.class);
+
+    // Tests for GetJobWithDetails
+    Reflect.on(jenkins).set("jenkinsServer", jenkinsServer);
+    when(jenkinsServer.getJob(any(), eq("randomJob1"))).thenThrow(new RuntimeException());
+    assertThatThrownBy(() -> jenkins.getJobWithDetails("randomJob1")).isInstanceOf(ArtifactServerException.class);
+
+    Reflect.on(jenkins).set("jenkinsServer", jenkinsServer);
+    when(jenkinsServer.getJob(any(), eq("randomJob2"))).thenThrow(new HttpResponseException(400, "Bad Request"));
+    assertThatThrownBy(() -> jenkins.getJobWithDetails("randomJob2")).isInstanceOf(ArtifactServerException.class);
+
+    // Tests for GetJob
+    Reflect.on(jenkins).set("jenkinsServer", jenkinsServer);
+    when(jenkinsServer.createJob(any(FolderJob.class), eq("randomJob1"), any(JenkinsConfig.class)))
+        .thenThrow(new RuntimeException());
+    assertThatThrownBy(() -> jenkins.getJob("randomJob1", JenkinsConfig.builder().build()))
+        .isInstanceOf(ArtifactServerException.class);
+
+    Reflect.on(jenkins).set("jenkinsServer", jenkinsServer);
+    when(jenkinsServer.createJob(any(FolderJob.class), eq("randomJob2"), any(JenkinsConfig.class)))
+        .thenThrow(new HttpResponseException(400, "Bad Request"));
+    assertThatThrownBy(() -> jenkins.getJob("randomJob2", JenkinsConfig.builder().build()))
+        .isInstanceOf(ArtifactServerException.class);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldRetryOnFailures() throws IOException {
+    CustomJenkinsServer jenkinsServer = mock(CustomJenkinsServer.class);
+    Reflect.on(jenkins).set("jenkinsServer", jenkinsServer);
+
+    // Tests for GetJobWithDetails
+    JobWithDetails jobWithDetails = new JobWithDetails();
+    when(jenkinsServer.getJob(any(), eq("randomJob")))
+        .thenThrow(new HttpResponseException(500, "Something went wrong"))
+        .thenThrow(new HttpResponseException(400, "Server Error"))
+        .thenReturn(jobWithDetails);
+    JobWithDetails actual = jenkins.getJobWithDetails("randomJob");
+    assertThat(actual).isEqualTo(jobWithDetails);
+    verify(jenkinsServer, times(3)).getJob(any(), eq("randomJob"));
+
+    // Tests for GetJob
+    Job job = new Job();
+    when(jenkinsServer.createJob(any(FolderJob.class), eq("randomJob"), any(JenkinsConfig.class)))
+        .thenThrow(new HttpResponseException(500, "Something went wrong"))
+        .thenThrow(new HttpResponseException(400, "Server Error"))
+        .thenReturn(job);
+    Job actualJob = jenkins.getJob("randomJob", JenkinsConfig.builder().build());
+    assertThat(actualJob).isEqualTo(job);
+    verify(jenkinsServer, times(3)).createJob(any(FolderJob.class), eq("randomJob"), any(JenkinsConfig.class));
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldGetAllJobsFromJenkins() throws IOException {
+    wireMockRule.stubFor(
+        get(urlEqualTo("/api/json"))
+            .willReturn(
+                aResponse()
+                    .withStatus(200)
+                    .withBody(
+                        "{\"_class\":\"com.cloudbees.hudson.plugins.folder.Folder\",\"property\":[{},{\"_class\":\"hudson.plugins.jobConfigHistory.JobConfigHistoryProjectAction\"},{},{\"_class\":\"com.cloudbees.plugins.credentials.ViewCredentialsAction\"}],\"description\":null,\"displayName\":\"parentJob\",\"displayNameOrNull\":null,\"fullDisplayName\":\"parentJob\",\"fullName\":\"parentJob\",\"name\":\"parentJob\",\"url\":\"https://jenkins.wings.software/job/\",\"healthReport\":[],\"jobs\":[{\"_class\":\"hudson.maven.MavenModuleSet\",\"name\":\"abcd\",\"url\":\"https://jenkins.wings.software/job/parentJob/job/abcd/\"},{\"_class\":\"hudson.maven.MavenModuleSet\",\"name\":\"parentJob_war_copy\",\"url\":\"https://jenkins.wings.software/job/parentJob/job/parentJob_war_copy/\",\"color\":\"notbuilt\"}],\"primaryView\":{\"_class\":\"hudson.model.AllView\",\"name\":\"All\",\"url\":\"https://jenkins.wings.software/job/parentJob/\"},\"views\":[{\"_class\":\"hudson.model.AllView\",\"name\":\"All\",\"url\":\"https://jenkins.wings.software/job/parentJob/\"}]}")
+                    .withHeader("Content-Type", "application/json")));
+
+    List<JobDetails> jobs = jenkins.getJobs("");
+    assertThat(jobs.size() == 2).isTrue();
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void triggerThrowErrorJobNotFound() throws IOException {
+    CustomJenkinsServer jenkinsServer = mock(CustomJenkinsServer.class);
+    Reflect.on(jenkins).set("jenkinsServer", jenkinsServer);
+
+    when(jenkinsServer.createJob(any(FolderJob.class), eq("randomJob"), any(JenkinsConfig.class))).thenReturn(null);
+    assertThatThrownBy(() -> jenkins.trigger("randomJob", JenkinsTaskParams.builder().build()))
+        .isInstanceOf(ArtifactServerException.class);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testGetJobsReturnsEmptyArrayWhenException() throws IOException {
+    CustomJenkinsServer jenkinsServer = mock(CustomJenkinsServer.class);
+    Reflect.on(jenkins).set("jenkinsServer", jenkinsServer);
+
+    when(jenkinsServer.getJobs()).thenThrow(new RuntimeException());
+    assertThat(jenkins.getJobs("randomJob")).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testIsRunning() throws IOException {
+    CustomJenkinsHttpClient jenkinsHttpClient = mock(CustomJenkinsHttpClient.class);
+    Reflect.on(jenkins).set("jenkinsHttpClient", jenkinsHttpClient);
+
+    assertThat(jenkins.isRunning()).isTrue();
+
+    when(jenkinsHttpClient.get(eq("/"))).thenThrow(new HttpResponseException(401, "Unauthorized"));
+    assertThatThrownBy(() -> jenkins.isRunning())
+        .isInstanceOf(ArtifactServerException.class)
+        .extracting("message")
+        .isEqualTo("Invalid Jenkins credentials");
+
+    when(jenkinsHttpClient.get(eq("/"))).thenThrow(new HttpResponseException(403, "Forbidden"));
+    assertThatThrownBy(() -> jenkins.isRunning())
+        .isInstanceOf(ArtifactServerException.class)
+        .extracting("message")
+        .isEqualTo("User not authorized to access jenkins");
+
+    when(jenkinsHttpClient.get(eq("/"))).thenThrow(new SocketTimeoutException());
+    assertThatThrownBy(() -> jenkins.isRunning())
+        .isInstanceOf(ArtifactServerException.class)
+        .extracting("message")
+        .isEqualTo("SocketTimeoutException");
+
+    // 4 this is the sum of all the tests.
+    verify(jenkinsHttpClient, times(4)).get(eq("/"));
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void checkGetEnvVarsReturnsEnvMapCorrectly() throws IOException {
+    // In case of blank we get empty response
+    assertThat(jenkins.getEnvVars("     ")).isEmpty();
+
+    CustomJenkinsHttpClient jenkinsHttpClient = mock(CustomJenkinsHttpClient.class);
+    Reflect.on(jenkins).set("jenkinsHttpClient", jenkinsHttpClient);
+
+    Map<String, String> apiResponseEnvMap = ImmutableMap.<String, String>builder()
+                                                .put("JOB_NAME", "test")
+                                                .put("JENKINS_VERSION", "2.150.1")
+                                                .put("key1.xyz", "shouldIgnore")
+                                                .put("key2.abc", "ignored")
+                                                .put("dot.com", "notConsider")
+                                                .build();
+    when(jenkinsHttpClient.get("job/test/2/injectedEnvVars/api/json"))
+        .thenThrow(new HttpResponseException(500, "Something went wrong"))
+        .thenThrow(new HttpResponseException(400, "Some Server Error"))
+        .thenReturn(JsonUtils
+                        .toJsonNode(ImmutableMap.<String, Object>builder()
+                                        .put("_class", "org.jenkinsci.plugins.envinject.EnvInjectVarList")
+                                        .put("envMap", apiResponseEnvMap)
+                                        .build())
+                        .toString());
+
+    Map<String, String> envMap = jenkins.getEnvVars("job/test/2");
+
+    assertThat(envMap).hasSize(2).isEqualTo(
+        ImmutableMap.<String, String>builder().put("JOB_NAME", "test").put("JENKINS_VERSION", "2.150.1").build());
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void checkGetEnvVarsReturnsEnvMapThrowsError() throws IOException {
+    CustomJenkinsHttpClient jenkinsHttpClient = mock(CustomJenkinsHttpClient.class);
+    Reflect.on(jenkins).set("jenkinsHttpClient", jenkinsHttpClient);
+
+    when(jenkinsHttpClient.get("job/test/2/injectedEnvVars/api/json"))
+        .thenThrow(new HttpResponseException(401, "Unauthorized"));
+
+    assertThatThrownBy(() -> jenkins.getEnvVars("job/test/2"))
+        .isInstanceOf(ArtifactServerException.class)
+        .extracting("message")
+        .isEqualTo("Failure in fetching environment variables for job: INVALID_REQUEST");
   }
 }
