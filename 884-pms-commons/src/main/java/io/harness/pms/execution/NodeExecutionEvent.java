@@ -8,6 +8,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AutoLogContext;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
+import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.queue.Queuable;
 

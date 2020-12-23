@@ -9,14 +9,17 @@ import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.plan.AccumulateResponsesRequest;
 import io.harness.pms.contracts.plan.AccumulateResponsesResponse;
 import io.harness.pms.contracts.plan.AddExecutableResponseRequest;
 import io.harness.pms.contracts.plan.AdviserResponseRequest;
+import io.harness.pms.contracts.plan.EventErrorRequest;
 import io.harness.pms.contracts.plan.FacilitatorResponseRequest;
 import io.harness.pms.contracts.plan.HandleStepResponseRequest;
+import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc.NodeExecutionProtoServiceBlockingStub;
 import io.harness.pms.contracts.plan.QueueNodeExecutionRequest;
 import io.harness.pms.contracts.plan.QueueTaskRequest;
@@ -131,6 +134,15 @@ public class PmsNodeExecutionServiceGrpcImpl implements PmsNodeExecutionService 
                                                                     .setNodeExecutionId(nodeExecutionId)
                                                                     .setNotifyId(notifyId)
                                                                     .build());
+  }
+
+  @Override
+  public void handleEventError(NodeExecutionEventType eventType, String eventNotifyId, FailureInfo failureInfo) {
+    nodeExecutionProtoServiceBlockingStub.handleEventError(EventErrorRequest.newBuilder()
+                                                               .setEventType(eventType)
+                                                               .setEventNotifyId(eventNotifyId)
+                                                               .setFailureInfo(failureInfo)
+                                                               .build());
   }
 
   private StepParameters extractStepParametersInternal(StepType stepType, String stepParameters) {

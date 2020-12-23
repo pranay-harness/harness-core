@@ -18,11 +18,14 @@ import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
+import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
+import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
@@ -30,6 +33,7 @@ import io.harness.pms.sdk.core.steps.io.ResponseDataMapper;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 import io.harness.tasks.BinaryResponseData;
+import io.harness.tasks.FailureResponseData;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.ProgressCallback;
@@ -135,5 +139,14 @@ public class PmsNodeExecutionServiceImpl implements PmsNodeExecutionService {
       @NonNull String nodeExecutionId, String notifyId, FacilitatorResponseProto facilitatorResponseProto) {
     waitNotifyEngine.doneWith(
         notifyId, BinaryResponseData.builder().data(facilitatorResponseProto.toByteArray()).build());
+  }
+
+  @Override
+  public void handleEventError(NodeExecutionEventType eventType, String eventNotifyId, FailureInfo failureInfo) {
+    waitNotifyEngine.doneWith(eventNotifyId,
+        FailureResponseData.builder()
+            .errorMessage(failureInfo.getErrorMessage())
+            .failureTypes(EngineExceptionUtils.transformToWingsFailureTypes(failureInfo.getFailureTypesList()))
+            .build());
   }
 }

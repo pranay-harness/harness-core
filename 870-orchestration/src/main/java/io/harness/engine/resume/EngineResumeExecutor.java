@@ -13,7 +13,6 @@ import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.sdk.core.execution.ExecutableProcessor;
 import io.harness.pms.sdk.core.execution.ResumePackage;
-import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.tasks.ResponseData;
 
 import java.util.List;
@@ -44,7 +43,7 @@ public class EngineResumeExecutor implements Runnable {
             StepResponseProto.newBuilder()
                 .setStatus(Status.ERRORED)
                 .setFailureInfo(FailureInfo.newBuilder()
-                                    .addAllFailureTypes(EngineExceptionUtils.transformFailureTypes(
+                                    .addAllFailureTypes(EngineExceptionUtils.transformToOrchestrationFailureTypes(
                                         errorNotifyResponseData.getFailureTypes()))
                                     .setErrorMessage(errorNotifyResponseData.getErrorMessage())
                                     .build())

@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.ExceptionUtils;
 import io.harness.logging.AutoLogContext;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
@@ -14,11 +15,11 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
+import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.execution.AdviseNodeExecutionEventData;
 import io.harness.pms.execution.NodeExecutionEvent;
-import io.harness.pms.execution.NodeExecutionEventType;
 import io.harness.pms.execution.ResumeNodeExecutionEventData;
 import io.harness.pms.execution.StartNodeExecutionEventData;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
@@ -108,15 +109,15 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
           FacilitatorResponseMapper.toFacilitatorResponseProto(currFacilitatorResponse));
       return true;
     } catch (Exception ex) {
-      pmsNodeExecutionService.handleFacilitationResponse(event.getNodeExecution().getUuid(), event.getNotifyId(),
-          FacilitatorResponseProto.newBuilder().setIsSuccessful(false).build());
+      log.error("Error while facilitating execution: {}", ex.getMessage());
+      pmsNodeExecutionService.handleEventError(event.getEventType(), event.getNotifyId(), constructFailureInfo(ex));
       return false;
     }
   }
 
   private boolean startExecution(NodeExecutionEvent event) {
+    NodeExecutionProto nodeExecution = event.getNodeExecution();
     try {
-      NodeExecutionProto nodeExecution = event.getNodeExecution();
       ExecutableProcessor processor = executableProcessorFactory.obtainProcessor(nodeExecution.getMode());
       StepInputPackage inputPackage = obtainInputPackage(nodeExecution);
       StartNodeExecutionEventData eventData = (StartNodeExecutionEventData) event.getEventData();
@@ -133,7 +134,7 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
       return true;
     } catch (Exception ex) {
       log.error("Error while starting execution: {}", ex.getMessage());
-      // TODO: Send error to pipeline service for processing
+      pmsNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), constructStepResponse(ex));
       return false;
     }
   }
@@ -153,8 +154,8 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
             StepResponseProto.newBuilder()
                 .setStatus(Status.ERRORED)
                 .setFailureInfo(FailureInfo.newBuilder()
-                                    .addAllFailureTypes(
-                                        EngineExceptionUtils.transformFailureTypes(errorResponseData.getFailureTypes()))
+                                    .addAllFailureTypes(EngineExceptionUtils.transformToOrchestrationFailureTypes(
+                                        errorResponseData.getFailureTypes()))
                                     .setErrorMessage(errorResponseData.getErrorMessage())
                                     .build())
                 .build();
@@ -170,7 +171,7 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
       return true;
     } catch (Exception ex) {
       log.error("Error while resuming execution : {}", ex.getMessage());
-      // TODO: Send error to pipeline service for processing
+      pmsNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), constructStepResponse(ex));
       return false;
     }
   }
@@ -211,9 +212,20 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
       }
       return true;
     } catch (Exception ex) {
-      log.error("Error while advising Execution : {}", ex.getMessage());
-      // TODO: Send error to pipeline service for processing
+      log.error("Error while advising execution : {}", ex.getMessage());
+      pmsNodeExecutionService.handleEventError(event.getEventType(), event.getNotifyId(), constructFailureInfo(ex));
       return false;
     }
+  }
+
+  private static FailureInfo constructFailureInfo(Exception ex) {
+    return FailureInfo.newBuilder()
+        .addAllFailureTypes(EngineExceptionUtils.getOrchestrationFailureTypes(ex))
+        .setErrorMessage(ExceptionUtils.getMessage(ex))
+        .build();
+  }
+
+  private static StepResponseProto constructStepResponse(Exception ex) {
+    return StepResponseProto.newBuilder().setStatus(Status.FAILED).setFailureInfo(constructFailureInfo(ex)).build();
   }
 }

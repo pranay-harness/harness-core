@@ -7,8 +7,10 @@ import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
+import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.tasks.ResponseData;
@@ -39,4 +41,6 @@ public interface PmsNodeExecutionService {
 
   void handleAdviserResponse(
       @NonNull String nodeExecutionId, @NonNull String notifyId, AdviserResponse adviserResponse);
+
+  void handleEventError(NodeExecutionEventType eventType, String eventNotifyId, FailureInfo failureInfo);
 }
