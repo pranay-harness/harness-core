@@ -74,7 +74,13 @@ public class GithubEntityToDTO implements ConnectorEntityToDTOMapper<GithubConne
     switch (type) {
       case USERNAME_AND_TOKEN:
         final GithubUsernameToken usernameToken = (GithubUsernameToken) auth;
+        SecretRefData usernameReference = null;
+        if (usernameToken.getUsernameRef() != null) {
+          usernameReference = SecretRefHelper.createSecretRef(usernameToken.getUsernameRef());
+        }
         githubHttpCredentialsSpecDTO = GithubUsernameTokenDTO.builder()
+                                           .username(usernameToken.getUsername())
+                                           .usernameRef(usernameReference)
                                            .tokenRef(SecretRefHelper.createSecretRef(usernameToken.getTokenRef()))
                                            .build();
         break;

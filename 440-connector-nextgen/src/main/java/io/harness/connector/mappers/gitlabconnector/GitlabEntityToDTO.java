@@ -71,7 +71,13 @@ public class GitlabEntityToDTO implements ConnectorEntityToDTOMapper<GitlabConne
     switch (type) {
       case USERNAME_AND_TOKEN:
         final GitlabUsernameToken usernameToken = (GitlabUsernameToken) auth;
+        SecretRefData usernameReference = null;
+        if (usernameToken.getUsernameRef() != null) {
+          usernameReference = SecretRefHelper.createSecretRef(usernameToken.getUsernameRef());
+        }
         gitlabHttpCredentialsSpecDTO = GitlabUsernameTokenDTO.builder()
+                                           .username(usernameToken.getUsername())
+                                           .usernameRef(usernameReference)
                                            .tokenRef(SecretRefHelper.createSecretRef(usernameToken.getTokenRef()))
                                            .build();
         break;

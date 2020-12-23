@@ -14,7 +14,6 @@ import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
 @Data
-@Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("GitlabAuthentication")
@@ -25,4 +24,10 @@ public class GitlabAuthenticationDTO {
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
   @Valid
   GitlabCredentialsDTO credentials;
+
+  @Builder
+  public GitlabAuthenticationDTO(GitAuthType authType, GitlabCredentialsDTO credentials) {
+    this.authType = authType;
+    this.credentials = credentials;
+  }
 }

@@ -12,10 +12,13 @@ import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @Data
-@Builder
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("GitlabConnector")
@@ -24,6 +27,15 @@ public class GitlabConnectorDTO extends ConnectorConfigDTO {
   @NotNull String url;
   @Valid @NotNull GitlabAuthenticationDTO authentication;
   @Valid GitlabApiAccessDTO apiAccess;
+
+  @Builder
+  public GitlabConnectorDTO(GitConnectionType connectionType, String url, GitlabAuthenticationDTO authentication,
+      GitlabApiAccessDTO apiAccess) {
+    this.connectionType = connectionType;
+    this.url = url;
+    this.authentication = authentication;
+    this.apiAccess = apiAccess;
+  }
 
   @Override
   public DecryptableEntity getDecryptableEntity() {
