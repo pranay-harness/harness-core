@@ -25,6 +25,7 @@ import software.wings.sm.states.HelmDeployState.HelmDeployStateKeys;
 
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,6 +33,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 public class WorkflowServiceTemplateHelperTest extends WingsBaseTest {
   @Inject @InjectMocks private WorkflowServiceTemplateHelper workflowServiceTemplateHelper;
@@ -187,6 +190,8 @@ public class WorkflowServiceTemplateHelperTest extends WingsBaseTest {
   public void shouldSetTemplateVariablesGivenByUser() {
     Variable var1 = VariableBuilder.aVariable().name("variable").value("from-yaml").build();
     Variable var2 = VariableBuilder.aVariable().name("variable").value("from-template").build();
+    Variable httpVar1 = VariableBuilder.aVariable().name("http-variable").value("http-from-yaml").build();
+    Variable httpVar2 = VariableBuilder.aVariable().name("http-variable").value("http-from-template").build();
     PhaseStep newPhaseStep = PhaseStepBuilder.aPhaseStep(PhaseStepType.PRE_DEPLOYMENT, "Pre deployment")
                                  .addStep(GraphNode.builder()
                                               .name("test")
@@ -195,16 +200,87 @@ public class WorkflowServiceTemplateHelperTest extends WingsBaseTest {
                                               .templateVersion("latest")
                                               .templateVariables(Collections.singletonList(var1))
                                               .build())
+                                 .addStep(GraphNode.builder()
+                                              .name("http-template-test")
+                                              .type(StepType.HTTP.toString())
+                                              .templateUuid("uuid-2")
+                                              .templateVersion("latest")
+                                              .templateVariables(Collections.singletonList(httpVar1))
+                                              .build())
                                  .build();
 
     Template template = Template.builder().build();
     GraphNode graphNode = GraphNode.builder().templateVariables(Collections.singletonList(var2)).build();
+    GraphNode httpGraphNode = GraphNode.builder().templateVariables(Collections.singletonList(httpVar2)).build();
     when(templateService.get(anyString(), anyString())).thenReturn(template);
-    when(templateService.constructEntityFromTemplate(template, EntityType.WORKFLOW)).thenReturn(graphNode);
+    when(templateService.constructEntityFromTemplate(template, EntityType.WORKFLOW)).thenAnswer(new Answer() {
+      private int count = 0;
+      @Override
+      public Object answer(InvocationOnMock invocationOnMock) {
+        if (count == 0) {
+          count++;
+          return graphNode;
+        }
+        return httpGraphNode;
+      }
+    });
 
     workflowServiceTemplateHelper.updateLinkedPhaseStepTemplate(newPhaseStep, null, true);
     assertThat(newPhaseStep.getSteps()).isNotNull();
+    assertThat(newPhaseStep.getSteps()).hasSize(2);
     assertThat(newPhaseStep.getSteps().get(0).getTemplateVariables()).isNotNull();
     assertThat(newPhaseStep.getSteps().get(0).getTemplateVariables().get(0).getValue()).isEqualTo("from-yaml");
+    assertThat(newPhaseStep.getSteps().get(1).getTemplateVariables()).isNotNull();
+    assertThat(newPhaseStep.getSteps().get(1).getTemplateVariables().get(0).getValue()).isEqualTo("http-from-yaml");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void ignoreExtraVariablesAddedFromTemplate() {
+    Variable var1 = VariableBuilder.aVariable().name("variable").value("from-yaml").build();
+    Variable var2 = VariableBuilder.aVariable().name("variable").value("from-template").build();
+    Variable httpVar1 = VariableBuilder.aVariable().name("http-variable").value("http-from-yaml").build();
+    Variable httpVar2 = VariableBuilder.aVariable().name("http-variable").value("http-from-template").build();
+    PhaseStep newPhaseStep = PhaseStepBuilder.aPhaseStep(PhaseStepType.PRE_DEPLOYMENT, "Pre deployment")
+                                 .addStep(GraphNode.builder()
+                                              .name("test")
+                                              .type(StepType.SHELL_SCRIPT.toString())
+                                              .templateUuid("uuid")
+                                              .templateVersion("latest")
+                                              .templateVariables(Arrays.asList(var1, httpVar1))
+                                              .build())
+                                 .addStep(GraphNode.builder()
+                                              .name("http-template-test")
+                                              .type(StepType.HTTP.toString())
+                                              .templateUuid("uuid-2")
+                                              .templateVersion("latest")
+                                              .templateVariables(Arrays.asList(httpVar1, var1))
+                                              .build())
+                                 .build();
+
+    Template template = Template.builder().build();
+    GraphNode graphNode = GraphNode.builder().templateVariables(Collections.singletonList(var2)).build();
+    GraphNode httpGraphNode = GraphNode.builder().templateVariables(Collections.singletonList(httpVar2)).build();
+    when(templateService.get(anyString(), anyString())).thenReturn(template);
+    when(templateService.constructEntityFromTemplate(template, EntityType.WORKFLOW)).thenAnswer(new Answer() {
+      private int count = 0;
+      @Override
+      public Object answer(InvocationOnMock invocationOnMock) {
+        if (count == 0) {
+          count++;
+          return graphNode;
+        }
+        return httpGraphNode;
+      }
+    });
+
+    workflowServiceTemplateHelper.updateLinkedPhaseStepTemplate(newPhaseStep, null, true);
+    assertThat(newPhaseStep.getSteps()).isNotNull();
+    assertThat(newPhaseStep.getSteps()).hasSize(2);
+    assertThat(newPhaseStep.getSteps().get(0).getTemplateVariables()).isNotNull().hasSize(1);
+    assertThat(newPhaseStep.getSteps().get(0).getTemplateVariables().get(0).getValue()).isEqualTo("from-yaml");
+    assertThat(newPhaseStep.getSteps().get(1).getTemplateVariables()).isNotNull().hasSize(1);
+    assertThat(newPhaseStep.getSteps().get(1).getTemplateVariables().get(0).getValue()).isEqualTo("http-from-yaml");
   }
 }
