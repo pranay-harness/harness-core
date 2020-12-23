@@ -3,10 +3,10 @@ package io.harness.beans.serializer;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.callback.DelegateCallbackToken;
+import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.product.ci.engine.proto.PluginStep;
 import io.harness.product.ci.engine.proto.StepContext;
 import io.harness.product.ci.engine.proto.UnitStep;
-import io.harness.yaml.core.StepElement;
 
 import com.google.inject.Inject;
 import java.util.Optional;
@@ -17,7 +17,7 @@ public class PluginCompatibleStepSerializer implements ProtobufStepSerializer<Pl
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
   @Override
-  public UnitStep serializeStep(StepElement step) {
+  public UnitStep serializeStep(StepElementConfig step) {
     CIStepInfo ciStepInfo = (CIStepInfo) step.getStepSpecType();
     PluginCompatibleStep pluginCompatibleStep = (PluginCompatibleStep) ciStepInfo;
 
@@ -43,7 +43,7 @@ public class PluginCompatibleStepSerializer implements ProtobufStepSerializer<Pl
   }
 
   @Override
-  public String serializeToBase64(StepElement step) {
+  public String serializeToBase64(StepElementConfig step) {
     return Base64.encodeBase64String(serializeStep(step).toByteArray());
   }
 }

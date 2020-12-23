@@ -258,7 +258,8 @@ public class K8BuildSetupUtils {
   }
 
   private String getSerializedLiteEngineStepInfo(LiteEngineTaskStepInfo liteEngineTaskStepInfo) {
-    Execution executionPrototype = protobufSerializer.convertExecutionElement(liteEngineTaskStepInfo.getSteps());
+    Execution executionPrototype =
+        protobufSerializer.convertExecutionElement(liteEngineTaskStepInfo.getExecutionElementConfig());
     Execution execution =
         Execution.newBuilder(executionPrototype).setAccountId(liteEngineTaskStepInfo.getAccountId()).build();
     return Base64.encodeBase64String(execution.toByteArray());

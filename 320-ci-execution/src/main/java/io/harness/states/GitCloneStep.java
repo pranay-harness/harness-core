@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class GitCloneStep implements SyncExecutable<GitCloneStepInfo> {
-  public static final StepType STEP_TYPE = GitCloneStepInfo.typeInfo.getStepType();
+  public static final StepType STEP_TYPE = GitCloneStepInfo.STEP_TYPE;
 
   @Override
   public Class<GitCloneStepInfo> getStepParametersClass() {

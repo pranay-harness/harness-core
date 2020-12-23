@@ -7,9 +7,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CiBeansTestBase;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.category.element.UnitTests;
+import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.product.ci.engine.proto.UnitStep;
 import io.harness.rule.Owner;
-import io.harness.yaml.core.StepElement;
 
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -40,7 +40,12 @@ public class PluginStepProtobufSerializerTest extends CiBeansTestBase {
                                         .build();
     pluginStepInfo.setCallbackId(CALLBACK_ID);
     pluginStepInfo.setPort(PORT);
-    StepElement stepElement = StepElement.builder().type("plugin").stepSpecType(pluginStepInfo).build();
+    StepElementConfig stepElement = StepElementConfig.builder()
+                                        .identifier(PLUGIN_STEP_ID)
+                                        .name(PLUGIN_STEP)
+                                        .type("plugin")
+                                        .stepSpecType(pluginStepInfo)
+                                        .build();
 
     String serialize = protobufSerializer.serializeToBase64(stepElement);
     UnitStep pluginStep = UnitStep.parseFrom(Base64.decodeBase64(serialize));

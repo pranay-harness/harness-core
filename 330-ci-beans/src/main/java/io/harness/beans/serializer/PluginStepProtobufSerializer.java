@@ -3,10 +3,10 @@ package io.harness.beans.serializer;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.callback.DelegateCallbackToken;
+import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.product.ci.engine.proto.PluginStep;
 import io.harness.product.ci.engine.proto.StepContext;
 import io.harness.product.ci.engine.proto.UnitStep;
-import io.harness.yaml.core.StepElement;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -19,11 +19,11 @@ public class PluginStepProtobufSerializer implements ProtobufStepSerializer<Plug
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
   @Override
-  public String serializeToBase64(StepElement step) {
+  public String serializeToBase64(StepElementConfig step) {
     return Base64.encodeBase64String(serializeStep(step).toByteArray());
   }
 
-  public UnitStep serializeStep(StepElement step) {
+  public UnitStep serializeStep(StepElementConfig step) {
     CIStepInfo ciStepInfo = (CIStepInfo) step.getStepSpecType();
     PluginStepInfo pluginStepInfo = (PluginStepInfo) ciStepInfo;
 
@@ -39,10 +39,10 @@ public class PluginStepProtobufSerializer implements ProtobufStepSerializer<Plug
 
     String skipCondition = SkipConditionUtils.getSkipCondition(step);
     return UnitStep.newBuilder()
-        .setId(pluginStepInfo.getIdentifier())
+        .setId(step.getIdentifier())
         .setTaskId(pluginStepInfo.getCallbackId())
         .setCallbackToken(delegateCallbackTokenSupplier.get().getToken())
-        .setDisplayName(Optional.ofNullable(pluginStepInfo.getDisplayName()).orElse(""))
+        .setDisplayName(Optional.ofNullable(step.getName()).orElse(""))
         .setSkipCondition(Optional.ofNullable(skipCondition).orElse(""))
         .setPlugin(pluginStep)
         .build();

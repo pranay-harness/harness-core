@@ -8,9 +8,9 @@ import io.harness.CiBeansTestBase;
 import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.category.element.UnitTests;
+import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.product.ci.engine.proto.UnitStep;
 import io.harness.rule.Owner;
-import io.harness.yaml.core.StepElement;
 
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -41,7 +41,12 @@ public class SaveCacheStepProtobufSerializerTest extends CiBeansTestBase {
                                               .paths(Arrays.asList(PATH_1, PATH_2))
                                               .build();
     saveCacheStepInfo.setCallbackId(CALLBACK_ID);
-    StepElement stepElement = StepElement.builder().type("saveCache").stepSpecType(saveCacheStepInfo).build();
+    StepElementConfig stepElement = StepElementConfig.builder()
+                                        .identifier(SAVE_CACHE_ID)
+                                        .name(SAVE_CACHE)
+                                        .type("saveCache")
+                                        .stepSpecType(saveCacheStepInfo)
+                                        .build();
 
     String serialize = protobufSerializer.serializeToBase64(stepElement);
     UnitStep saveCacheStep = UnitStep.parseFrom(Base64.decodeBase64(serialize));

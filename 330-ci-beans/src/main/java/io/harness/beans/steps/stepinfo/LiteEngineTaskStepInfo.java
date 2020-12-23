@@ -5,6 +5,7 @@ import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.yaml.core.ExecutionElement;
@@ -46,16 +47,16 @@ public class LiteEngineTaskStepInfo implements CIStepInfo {
   @NotNull boolean usePVC;
   @NotNull String accountId;
   @NotNull ExecutionElement steps;
-  //@NotNull ExecutionElementConfig steps;
+  @NotNull ExecutionElementConfig executionElementConfig;
   CodeBase ciCodebase;
   @NotNull boolean skipGitClone;
 
   @Builder
-  @ConstructorProperties({"accountId", "identifier", "name", "retry", "timeout", "buildJobEnvInfo", "steps", "usePVC",
-      "ciCodebase", "skipGitClone"})
+  @ConstructorProperties({"accountId", "identifier", "name", "retry", "timeout", "buildJobEnvInfo", "steps",
+      "executionElementConfig", "usePVC", "ciCodebase", "skipGitClone"})
   public LiteEngineTaskStepInfo(String accountId, String identifier, String name, Integer retry, Integer timeout,
-      BuildJobEnvInfo buildJobEnvInfo, ExecutionElement steps, boolean usePVC, CodeBase ciCodebase,
-      boolean skipGitClone) {
+      BuildJobEnvInfo buildJobEnvInfo, ExecutionElement steps, ExecutionElementConfig executionElementConfig,
+      boolean usePVC, CodeBase ciCodebase, boolean skipGitClone) {
     this.accountId = accountId;
     this.identifier = identifier;
     this.name = name;
@@ -63,6 +64,7 @@ public class LiteEngineTaskStepInfo implements CIStepInfo {
     this.timeout = Optional.ofNullable(timeout).orElse(DEFAULT_TIMEOUT);
     this.buildJobEnvInfo = buildJobEnvInfo;
     this.usePVC = usePVC;
+    this.executionElementConfig = executionElementConfig;
     this.steps = steps;
     this.ciCodebase = ciCodebase;
     this.skipGitClone = skipGitClone;

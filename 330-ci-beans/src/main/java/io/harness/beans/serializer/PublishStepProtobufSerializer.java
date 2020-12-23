@@ -12,6 +12,7 @@ import io.harness.beans.steps.stepinfo.publish.artifact.connectors.ArtifactoryCo
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.EcrConnector;
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.GcrConnector;
 import io.harness.callback.DelegateCallbackToken;
+import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.product.ci.engine.proto.AuthType;
 import io.harness.product.ci.engine.proto.BuildPublishImage;
 import io.harness.product.ci.engine.proto.Connector;
@@ -21,7 +22,6 @@ import io.harness.product.ci.engine.proto.PublishArtifactsStep;
 import io.harness.product.ci.engine.proto.UnitStep;
 import io.harness.product.ci.engine.proto.UploadFile;
 import io.harness.utils.IdentifierRefHelper;
-import io.harness.yaml.core.StepElement;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -36,11 +36,11 @@ public class PublishStepProtobufSerializer implements ProtobufStepSerializer<Pub
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
   @Override
-  public String serializeToBase64(StepElement stepInfo) {
+  public String serializeToBase64(StepElementConfig stepInfo) {
     return Base64.encodeBase64String(serializeStep(stepInfo).toByteArray());
   }
 
-  public UnitStep serializeStep(StepElement step) {
+  public UnitStep serializeStep(StepElementConfig step) {
     CIStepInfo ciStepInfo = (CIStepInfo) step.getStepSpecType();
     PublishStepInfo publishStepInfo = (PublishStepInfo) ciStepInfo;
 
@@ -62,10 +62,10 @@ public class PublishStepProtobufSerializer implements ProtobufStepSerializer<Pub
 
     String skipCondition = SkipConditionUtils.getSkipCondition(step);
     return UnitStep.newBuilder()
-        .setId(publishStepInfo.getIdentifier())
+        .setId(step.getIdentifier())
         .setTaskId(publishStepInfo.getCallbackId())
         .setCallbackToken(delegateCallbackTokenSupplier.get().getToken())
-        .setDisplayName(Optional.ofNullable(publishStepInfo.getDisplayName()).orElse(""))
+        .setDisplayName(Optional.ofNullable(step.getName()).orElse(""))
         .setPublishArtifacts(publishArtifactsStepBuilder.build())
         .setSkipCondition(Optional.ofNullable(skipCondition).orElse(""))
         .build();
