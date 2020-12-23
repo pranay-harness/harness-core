@@ -90,6 +90,7 @@ modules = [
     "//950-delegate-tasks-beans",
     "//960-api-services",
     "//960-expression-service",
+    "//960-recaster",
     "//970-api-services-beans",
     "//970-atmosphere",
     "//970-grpc",
