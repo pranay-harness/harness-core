@@ -2,6 +2,7 @@ package io.harness.rule;
 
 import io.harness.cvng.CVNextGenCommonsServiceModule;
 import io.harness.cvng.CVServiceModule;
+import io.harness.cvng.VerificationConfiguration;
 import io.harness.cvng.client.NextGenClientModule;
 import io.harness.cvng.client.VerificationManagerClientModule;
 import io.harness.cvng.core.NGManagerServiceConfig;
@@ -92,7 +93,9 @@ public class CvNextGenRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     });
     modules.add(new CVNextGenCommonsServiceModule());
     modules.add(TestMongoModule.getInstance());
-    modules.add(new CVServiceModule());
+    VerificationConfiguration verificationConfiguration = new VerificationConfiguration();
+    verificationConfiguration.setPortalUrl("https://localhost:8181");
+    modules.add(new CVServiceModule(verificationConfiguration));
     MongoBackendConfiguration mongoBackendConfiguration =
         MongoBackendConfiguration.builder().uri("mongodb://localhost:27017/notificationChannel").build();
     mongoBackendConfiguration.setType("MONGO");

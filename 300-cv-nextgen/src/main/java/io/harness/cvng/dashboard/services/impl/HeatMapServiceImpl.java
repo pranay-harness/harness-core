@@ -85,7 +85,7 @@ public class HeatMapServiceImpl implements HeatMapService {
     }
 
     alertRuleService.processRiskScore(
-        accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier, riskScore);
+        accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier, category, timeStamp, riskScore);
   }
 
   private void updateRiskScore(CVMonitoringCategory category, String accountId, String orgIdentifier,

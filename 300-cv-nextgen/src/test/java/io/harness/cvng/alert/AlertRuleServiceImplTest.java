@@ -26,6 +26,7 @@ import io.harness.cvng.alert.entities.AlertRule;
 import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.alert.util.ActivityType;
 import io.harness.cvng.alert.util.VerificationStatus;
+import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.ng.core.dto.NotificationSettingType;
 import io.harness.notification.channeldetails.SlackChannel;
 import io.harness.notification.notificationclient.NotificationClient;
@@ -34,6 +35,7 @@ import io.harness.rule.Owner;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -295,7 +297,8 @@ public class AlertRuleServiceImplTest extends CvNextGenTest {
 
     alertRuleService.processRiskScore(retrievedAlertRule.getAccountId(), retrievedAlertRule.getOrgIdentifier(),
         retrievedAlertRule.getProjectIdentifier(), retrievedAlertRule.getAlertCondition().getServices().get(0),
-        retrievedAlertRule.getAlertCondition().getEnvironments().get(0), 0);
+        retrievedAlertRule.getAlertCondition().getEnvironments().get(0), CVMonitoringCategory.PERFORMANCE,
+        Instant.now(), 0);
 
     ArgumentCaptor<SlackChannel> applicationArgumentCaptor = ArgumentCaptor.forClass(SlackChannel.class);
     verify(notificationClient, times(0)).sendNotificationAsync(applicationArgumentCaptor.capture());
@@ -346,7 +349,8 @@ public class AlertRuleServiceImplTest extends CvNextGenTest {
 
     alertRuleService.processRiskScore(retrievedAlertRule.getAccountId(), retrievedAlertRule.getOrgIdentifier(),
         retrievedAlertRule.getProjectIdentifier(), retrievedAlertRule.getAlertCondition().getServices().get(0),
-        retrievedAlertRule.getAlertCondition().getEnvironments().get(0), 1);
+        retrievedAlertRule.getAlertCondition().getEnvironments().get(0), CVMonitoringCategory.PERFORMANCE,
+        Instant.now(), 1);
 
     ArgumentCaptor<SlackChannel> applicationArgumentCaptor = ArgumentCaptor.forClass(SlackChannel.class);
 
@@ -401,7 +405,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTest {
     SlackChannel slack_test = getSlackChannel(retrievedAlertRule);
 
     alertRuleService.processRiskScore(retrievedAlertRule.getAccountId(), retrievedAlertRule.getOrgIdentifier(),
-        retrievedAlertRule.getProjectIdentifier(), null, null, 1);
+        retrievedAlertRule.getProjectIdentifier(), null, null, CVMonitoringCategory.PERFORMANCE, Instant.now(), 1);
 
     ArgumentCaptor<SlackChannel> applicationArgumentCaptor = ArgumentCaptor.forClass(SlackChannel.class);
 
@@ -457,7 +461,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTest {
     SlackChannel slack_test = getSlackChannel(retrievedAlertRule);
 
     alertRuleService.processRiskScore(retrievedAlertRule.getAccountId(), retrievedAlertRule.getOrgIdentifier(),
-        retrievedAlertRule.getProjectIdentifier(), null, null, 1);
+        retrievedAlertRule.getProjectIdentifier(), null, null, CVMonitoringCategory.PERFORMANCE, Instant.now(), 1);
 
     ArgumentCaptor<SlackChannel> applicationArgumentCaptor = ArgumentCaptor.forClass(SlackChannel.class);
 
@@ -507,7 +511,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTest {
     assertThat(retrievedAlertRule).isNotNull();
 
     alertRuleService.processRiskScore(retrievedAlertRule.getAccountId(), retrievedAlertRule.getOrgIdentifier(),
-        retrievedAlertRule.getProjectIdentifier(), null, null, 1);
+        retrievedAlertRule.getProjectIdentifier(), null, null, CVMonitoringCategory.PERFORMANCE, Instant.now(), 1);
 
     ArgumentCaptor<SlackChannel> applicationArgumentCaptor = ArgumentCaptor.forClass(SlackChannel.class);
     verify(notificationClient, times(0)).sendNotificationAsync(applicationArgumentCaptor.capture());
@@ -551,7 +555,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTest {
 
     alertRuleService.processRiskScore(retrievedAlertRule.getAccountId(), retrievedAlertRule.getOrgIdentifier(),
         retrievedAlertRule.getProjectIdentifier(), retrievedAlertRule.getAlertCondition().getServices().get(0), "qa",
-        1);
+        CVMonitoringCategory.PERFORMANCE, Instant.now(), 1);
 
     ArgumentCaptor<SlackChannel> applicationArgumentCaptor = ArgumentCaptor.forClass(SlackChannel.class);
     verify(notificationClient, times(0)).sendNotificationAsync(applicationArgumentCaptor.capture());
@@ -595,7 +599,8 @@ public class AlertRuleServiceImplTest extends CvNextGenTest {
 
     alertRuleService.processRiskScore(retrievedAlertRule.getAccountId(), retrievedAlertRule.getOrgIdentifier(),
         retrievedAlertRule.getProjectIdentifier(), "test service",
-        retrievedAlertRule.getAlertCondition().getEnvironments().get(0), 1);
+        retrievedAlertRule.getAlertCondition().getEnvironments().get(0), CVMonitoringCategory.PERFORMANCE,
+        Instant.now(), 1);
 
     ArgumentCaptor<SlackChannel> applicationArgumentCaptor = ArgumentCaptor.forClass(SlackChannel.class);
     verify(notificationClient, times(0)).sendNotificationAsync(applicationArgumentCaptor.capture());
