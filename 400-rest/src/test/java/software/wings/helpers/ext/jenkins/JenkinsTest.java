@@ -29,6 +29,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.exception.ArtifactServerException;
+import io.harness.logging.LoggingInitializer;
 import io.harness.rule.Owner;
 
 import software.wings.beans.JenkinsConfig;
@@ -81,6 +82,7 @@ public class JenkinsTest extends CategoryTest {
 
   @Before
   public void setupMocks() {
+    LoggingInitializer.initializeLogging();
     on(jenkins).set("timeLimiter", new FakeTimeLimiter());
   }
 
@@ -608,6 +610,8 @@ public class JenkinsTest extends CategoryTest {
     assertThatThrownBy(() -> jenkins.getEnvVars("job/test/2"))
         .isInstanceOf(ArtifactServerException.class)
         .extracting("message")
-        .isEqualTo("Failure in fetching environment variables for job: INVALID_REQUEST");
+        .isEqualTo(
+            "Failure in fetching environment variables for job: Invalid request: Failed to collect environment variables from Jenkins: job/test/2/injectedEnvVars/api/json."
+            + "\nThis might be because 'Capture environment variables' is enabled in Jenkins step but EnvInject plugin is not installed in the Jenkins instance.");
   }
 }
