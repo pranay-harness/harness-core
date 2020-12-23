@@ -23,6 +23,16 @@ public @interface OneOfField {
   Class<?>[] groups() default {};
 
   Class<? extends Payload>[] payload() default {};
+
+  /**
+   * Fields of which one is required. This should be same as in java pojo.
+   */
   String[] fields() default {};
+
+  /**
+   * Set to true, if fields in the list are all allowed to be null together.
+   * In short, if we have a condition that either 0 or 1 among fields must be present we should set it to true.
+   * Currently <b>not</b> supported in YAML Schema autogeneration.
+   */
   boolean nullable() default false;
 }

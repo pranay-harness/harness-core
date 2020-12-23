@@ -1,9 +1,14 @@
 package io.harness.yaml.schema;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.exception.InvalidRequestException;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
+import io.harness.yaml.schema.beans.OneOfMapping;
 import io.harness.yaml.schema.beans.SchemaConstants;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
+import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
 import io.harness.yaml.schema.beans.YamlSchemaConfiguration;
 import io.harness.yaml.utils.YamlConstants;
 import io.harness.yaml.utils.YamlSchemaUtils;
@@ -29,6 +34,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -54,14 +60,15 @@ public class YamlSchemaGenerator {
     final Map<String, Model> stringModelMap = swaggerGenerator.generateDefinitions(rootSchemaClass);
     log.info("Generated swagger");
 
-    final Map<String, Set<FieldSubtypeData>> subTypeMap = getSubTypeMap(rootSchemaClass);
+    final Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap = getSwaggerMetaInfo(rootSchemaClass);
     log.info("Generated subtype Map");
 
     final String entitySwaggerName = YamlSchemaUtils.getSwaggerName(rootSchemaClass);
     final String entityName = YamlSchemaUtils.getEntityName(rootSchemaClass);
     log.info("Generating yaml schema for {}", entityName);
     final Map<String, JsonNode> stringJsonNodeMap = generateDefinitions(stringModelMap,
-        yamlSchemaConfiguration.getGeneratedPathRoot() + File.separator + entityName, subTypeMap, entitySwaggerName);
+        yamlSchemaConfiguration.getGeneratedPathRoot() + File.separator + entityName, swaggerDefinitionsMetaInfoMap,
+        entitySwaggerName);
     ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
     DefaultPrettyPrinter defaultPrettyPrinter = new SchemaGeneratorUtils.SchemaPrinter();
     ObjectWriter jsonWriter = mapper.writer(defaultPrettyPrinter);
@@ -81,15 +88,15 @@ public class YamlSchemaGenerator {
   }
 
   /**
-   * @param definitions swagger generated definitions.
-   * @param basePath    path where schema will be stored.
-   * @param subTypeMap  extra subtype info which will be added to definitions.
-   * @param baseNodeKey The root yaml entity name in definition for which schema is being generated.
+   * @param definitions                   swagger generated definitions.
+   * @param basePath                      path where schema will be stored.
+   * @param swaggerDefinitionsMetaInfoMap extra info which will be added to definitions.
+   * @param baseNodeKey                   The root yaml entity name in definition for which schema is being generated.
    * @return map of file path and the the json node of schema.
    */
   @VisibleForTesting
   Map<String, JsonNode> generateDefinitions(Map<String, Model> definitions, String basePath,
-      Map<String, Set<FieldSubtypeData>> subTypeMap, String baseNodeKey) {
+      Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap, String baseNodeKey) {
     Map<String, JsonNode> filePathContentMap = new HashMap<>();
     ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
     try {
@@ -102,7 +109,7 @@ public class YamlSchemaGenerator {
         // Assuming only single node in next
         final String name = node.fieldNames().next();
         ObjectNode value = (ObjectNode) node.get(name);
-        convertSwaggerToJsonSchema(subTypeMap, mapper, name, value);
+        convertSwaggerToJsonSchema(swaggerDefinitionsMetaInfoMap, mapper, name, value);
         filePathContentMap.put(basePath + File.separator + name + YamlConstants.JSON_EXTENSION, value);
         modifiedNode.with(name).setAll(value);
       }
@@ -139,19 +146,70 @@ public class YamlSchemaGenerator {
     outputNode.with(SchemaConstants.DEFINITIONS_NODE).setAll(modifiedNode);
   }
 
-  private void convertSwaggerToJsonSchema(
-      Map<String, Set<FieldSubtypeData>> subTypeMap, ObjectMapper mapper, String name, ObjectNode value) {
+  private void convertSwaggerToJsonSchema(Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap,
+      ObjectMapper mapper, String name, ObjectNode value) {
     value.put(SchemaConstants.SCHEMA_NODE, SchemaConstants.JSON_SCHEMA_7);
-    if (subTypeMap.containsKey(name) && !subTypeMap.get(name).isEmpty()) {
-      List<ObjectNode> allConditionals = new ArrayList<>();
-      final Set<FieldSubtypeData> fieldSubtypeDatas = subTypeMap.get(name);
-      for (FieldSubtypeData fieldSubtypeData : fieldSubtypeDatas) {
-        addConditionalBlock(mapper, allConditionals, fieldSubtypeData);
-        removeFieldWithRefFromSchema(value, fieldSubtypeData);
+    if (swaggerDefinitionsMetaInfoMap.containsKey(name)) {
+      final SwaggerDefinitionsMetaInfo swaggerDefinitionsMetaInfo = swaggerDefinitionsMetaInfoMap.get(name);
+      List<ObjectNode> allOfNodeContents = new ArrayList<>();
+      // conditionals
+      if (!isEmpty(swaggerDefinitionsMetaInfo.getSubtypeClassMap())) {
+        addConditionalAndCleanupFields(swaggerDefinitionsMetaInfoMap, mapper, name, value, allOfNodeContents);
       }
-      value.putArray(SchemaConstants.ALL_OF_NODE).addAll(allConditionals);
+      // oneof mapping
+      if (!isEmpty(swaggerDefinitionsMetaInfo.getOneOfMappings())) {
+        addExtraRequiredNodes(mapper, swaggerDefinitionsMetaInfo, allOfNodeContents);
+      }
+      if (isNotEmpty(allOfNodeContents)) {
+        if (value.has(SchemaConstants.ALL_OF_NODE)) {
+          final ArrayNode allOfNode = (ArrayNode) value.findValue(SchemaConstants.ALL_OF_NODE);
+          allOfNode.addAll(allOfNodeContents);
+        } else {
+          value.putArray(SchemaConstants.ALL_OF_NODE).addAll(allOfNodeContents);
+        }
+      }
     }
+
     removeUnwantedNodes(value, "originalRef");
+  }
+
+  private void addExtraRequiredNodes(
+      ObjectMapper mapper, SwaggerDefinitionsMetaInfo swaggerDefinitionsMetaInfo, List<ObjectNode> allOfNodeContents) {
+    final Set<OneOfMapping> oneOfMappings = swaggerDefinitionsMetaInfo.getOneOfMappings();
+    final List<ObjectNode> allOfNodeRequiredContent =
+        oneOfMappings.stream()
+            .map(mapping -> {
+              final List<ObjectNode> requiredNodes =
+                  mapping.getOneOfFieldNames()
+                      .stream()
+                      .map(field -> {
+                        ObjectNode objectNode = mapper.createObjectNode();
+                        objectNode.putArray(SchemaConstants.REQUIRED_NODE).add(field);
+                        return objectNode;
+                      })
+                      .collect(Collectors.toList());
+
+              if (mapping.isNullable()) {
+                // not handled.
+              }
+              return requiredNodes;
+            })
+            .map(oneOfMapContent -> {
+              ObjectNode oneOfNode = mapper.createObjectNode();
+              oneOfNode.putArray(SchemaConstants.ONE_OF_NODE).addAll(oneOfMapContent);
+              return oneOfNode;
+            })
+            .collect(Collectors.toList());
+    allOfNodeContents.addAll(allOfNodeRequiredContent);
+  }
+
+  private void addConditionalAndCleanupFields(Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap,
+      ObjectMapper mapper, String name, ObjectNode value, List<ObjectNode> allOfNodeContents) {
+    final Set<FieldSubtypeData> fieldSubtypeDatas = swaggerDefinitionsMetaInfoMap.get(name).getSubtypeClassMap();
+    for (FieldSubtypeData fieldSubtypeData : fieldSubtypeDatas) {
+      addConditionalBlock(mapper, allOfNodeContents, fieldSubtypeData);
+      removeFieldWithRefFromSchema(value, fieldSubtypeData);
+    }
   }
 
   private void removeFieldWithRefFromSchema(ObjectNode value, FieldSubtypeData fieldSubtypeData) {
@@ -187,14 +245,14 @@ public class YamlSchemaGenerator {
   }
 
   /**
-   * @param mapper           object mapper.
-   * @param allConditionals  the conditional block in which new condition is to be added.
-   * @param fieldSubtypeData the subtype mapping for fields which will be added to conditionals.
-   *                         Adds conditional block to the single definition.
-   *                         Currently only handled for {@link JsonTypeInfo.As#EXTERNAL_PROPERTY}
+   * @param mapper            object mapper.
+   * @param allOfNodeContents the conditional block in which new condition is to be added.
+   * @param fieldSubtypeData  the subtype mapping for fields which will be added to conditionals.
+   *                          Adds conditional block to the single definition.
+   *                          Currently only handled for {@link JsonTypeInfo.As#EXTERNAL_PROPERTY}
    */
   private void addConditionalBlock(
-      ObjectMapper mapper, List<ObjectNode> allConditionals, FieldSubtypeData fieldSubtypeData) {
+      ObjectMapper mapper, List<ObjectNode> allOfNodeContents, FieldSubtypeData fieldSubtypeData) {
     for (SubtypeClassMap subtypeClassMap : fieldSubtypeData.getSubtypesMapping()) {
       ObjectNode ifElseBlock = mapper.createObjectNode();
       ifElseBlock.with(SchemaConstants.IF_NODE)
@@ -206,15 +264,15 @@ public class YamlSchemaGenerator {
           .with(fieldSubtypeData.getFieldName())
           .put(SchemaConstants.REF_NODE,
               SchemaConstants.DEFINITIONS_STRING_PREFIX + subtypeClassMap.getSubTypeDefinitionKey());
-      allConditionals.add(ifElseBlock);
+      allOfNodeContents.add(ifElseBlock);
     }
   }
 
   @VisibleForTesting
-  Map<String, Set<FieldSubtypeData>> getSubTypeMap(Class<?> clazz) {
-    Map<String, Set<FieldSubtypeData>> classSubtypesMap = new HashMap<>();
-    JacksonSubtypeHelper jacksonSubtypeHelper = new JacksonSubtypeHelper();
-    jacksonSubtypeHelper.getSubtypeMapping(clazz, classSubtypesMap);
-    return classSubtypesMap;
+  Map<String, SwaggerDefinitionsMetaInfo> getSwaggerMetaInfo(Class<?> clazz) {
+    Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap = new HashMap<>();
+    JacksonClassHelper jacksonSubtypeHelper = new JacksonClassHelper();
+    jacksonSubtypeHelper.getRequiredMappings(clazz, swaggerDefinitionsMetaInfoMap);
+    return swaggerDefinitionsMetaInfoMap;
   }
 }

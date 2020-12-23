@@ -1,13 +1,20 @@
 package io.harness.yaml.schema;
 
 import io.harness.EntityType;
+import io.harness.validation.OneOfField;
 import io.harness.yamlSchema.YamlSchemaRoot;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 public class TestClass {
   @JsonSubTypes({
@@ -17,13 +24,36 @@ public class TestClass {
   public interface TestInterface {}
 
   @ApiModel(value = "testName")
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @OneOfField(fields = {"a", "b"})
+  @OneOfField(fields = {"c", "d"})
+  @FieldDefaults(level = AccessLevel.PUBLIC)
   public static class ClassWithApiModelOverride implements TestInterface {
-    String testString;
+    @NotNull String testString;
+    String a;
+    String b;
+    @JsonProperty("jsontypeinfo") String c;
+    @ApiModelProperty(name = "apimodelproperty") String d;
   }
 
-  public static class ClassWithoutApiModelOverride implements TestInterface { String testString; }
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @FieldDefaults(level = AccessLevel.PUBLIC)
+  @OneOfField(fields = {"x", "y"})
+  public static class ClassWithoutApiModelOverride implements TestInterface {
+    String testString;
+    String x;
+    String y;
+  }
 
   @YamlSchemaRoot(EntityType.CONNECTORS)
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @FieldDefaults(level = AccessLevel.PUBLIC)
   public static class ClassWhichContainsInterface {
     @NotNull Types type;
     @JsonProperty("spec")

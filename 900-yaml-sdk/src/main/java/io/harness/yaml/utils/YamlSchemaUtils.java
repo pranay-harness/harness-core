@@ -1,12 +1,17 @@
 package io.harness.yaml.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.EntityType;
+import io.harness.packages.HarnessPackages;
 import io.harness.yamlSchema.YamlSchemaRoot;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import java.io.File;
+import java.lang.reflect.Field;
 import java.net.URLClassLoader;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -28,13 +33,13 @@ public class YamlSchemaUtils {
     if (classLoader != null) {
       FilterBuilder filter = new FilterBuilder().include(FilterBuilder.prefix("io.harness")).include("software.wings");
       reflections = new Reflections(new ConfigurationBuilder()
-                                        .forPackages("io.harness", "software.wings")
+                                        .forPackages(HarnessPackages.IO_HARNESS, HarnessPackages.SOFTWARE_WINGS)
                                         .filterInputsBy(filter)
                                         .setUrls(classLoader.getURLs())
                                         .addClassLoader(classLoader));
 
     } else {
-      reflections = new Reflections("software.wings", "io.harness");
+      reflections = new Reflections(HarnessPackages.IO_HARNESS, HarnessPackages.SOFTWARE_WINGS);
     }
     return reflections.getTypesAnnotatedWith(annotationClass);
   }
@@ -73,5 +78,20 @@ public class YamlSchemaUtils {
   public String getEntityName(Class<?> clazz) {
     YamlSchemaRoot declaredAnnotation = clazz.getDeclaredAnnotation(YamlSchemaRoot.class);
     return declaredAnnotation.value().getYamlName();
+  }
+
+  /**
+   * @param field the field for which we need json schema value.
+   * @return the value of field.
+   */
+  public String getFieldName(Field field) {
+    if (field.getAnnotation(ApiModelProperty.class) != null
+        && isNotEmpty(field.getAnnotation(ApiModelProperty.class).name())) {
+      return field.getAnnotation(ApiModelProperty.class).name();
+    }
+    if (field.getAnnotation(JsonProperty.class) != null) {
+      return field.getAnnotation(JsonProperty.class).value();
+    }
+    return field.getName();
   }
 }
