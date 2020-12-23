@@ -49,6 +49,7 @@ directories:
   960-ng-core-beans
   960-notification-beans
   960-persistence
+  960-recaster
   970-api-services-beans
   970-grpc
   970-ng-commons
