@@ -5,14 +5,18 @@ import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 public abstract class ChildrenPlanCreator<T> implements PartialPlanCreator<T> {
   public String getStartingNodeId(T field) {
     return null;
   }
 
-  public abstract Map<String, PlanCreationResponse> createPlanForChildrenNodes(PlanCreationContext ctx, T config);
+  public abstract LinkedHashMap<String, PlanCreationResponse> createPlanForChildrenNodes(
+      PlanCreationContext ctx, T config);
 
   public abstract PlanNode createPlanForParentNode(PlanCreationContext ctx, T config, List<String> childrenNodeIds);
 
@@ -24,7 +28,7 @@ public abstract class ChildrenPlanCreator<T> implements PartialPlanCreator<T> {
       finalResponse.setStartingNodeId(startingNodeId);
     }
 
-    Map<String, PlanCreationResponse> childrenResponses = createPlanForChildrenNodes(ctx, config);
+    LinkedHashMap<String, PlanCreationResponse> childrenResponses = createPlanForChildrenNodes(ctx, config);
     List<String> childrenNodeIds = new LinkedList<>();
     for (Map.Entry<String, PlanCreationResponse> entry : childrenResponses.entrySet()) {
       finalResponse.merge(entry.getValue());

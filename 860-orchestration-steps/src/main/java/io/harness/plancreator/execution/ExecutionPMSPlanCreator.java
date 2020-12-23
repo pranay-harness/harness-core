@@ -16,13 +16,20 @@ import io.harness.steps.common.NGSectionStep;
 import io.harness.steps.common.NGSectionStepParameters;
 
 import com.google.common.base.Preconditions;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 public class ExecutionPMSPlanCreator extends ChildrenPlanCreator<ExecutionElementConfig> {
   @Override
-  public Map<String, PlanCreationResponse> createPlanForChildrenNodes(
+  public LinkedHashMap<String, PlanCreationResponse> createPlanForChildrenNodes(
       PlanCreationContext ctx, ExecutionElementConfig config) {
-    Map<String, PlanCreationResponse> responseMap = new HashMap<>();
+    LinkedHashMap<String, PlanCreationResponse> responseMap = new LinkedHashMap<>();
     List<YamlField> stepYamlFields = getStepYamlFields(ctx);
     for (YamlField stepYamlField : stepYamlFields) {
       Map<String, YamlField> stepYamlFieldMap = new HashMap<>();

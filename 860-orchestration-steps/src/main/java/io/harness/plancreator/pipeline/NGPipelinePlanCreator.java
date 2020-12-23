@@ -16,7 +16,12 @@ import io.harness.steps.common.pipeline.PipelineSetupStep;
 import io.harness.steps.common.pipeline.PipelineSetupStepParameters;
 
 import com.google.common.base.Preconditions;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class NGPipelinePlanCreator extends ChildrenPlanCreator<PipelineInfoConfig> {
   @Override
@@ -25,9 +30,9 @@ public class NGPipelinePlanCreator extends ChildrenPlanCreator<PipelineInfoConfi
   }
 
   @Override
-  public Map<String, PlanCreationResponse> createPlanForChildrenNodes(
+  public LinkedHashMap<String, PlanCreationResponse> createPlanForChildrenNodes(
       PlanCreationContext ctx, PipelineInfoConfig config) {
-    Map<String, PlanCreationResponse> responseMap = new HashMap<>();
+    LinkedHashMap<String, PlanCreationResponse> responseMap = new LinkedHashMap<>();
     Map<String, YamlField> dependencies = new HashMap<>();
     YamlField stagesYamlNode = Preconditions.checkNotNull(ctx.getCurrentField().getNode().getField("stages"));
     if (stagesYamlNode.getNode() == null) {
