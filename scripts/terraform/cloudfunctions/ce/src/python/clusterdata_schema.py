@@ -66,6 +66,21 @@ clusterDataTableFields = [
       },
       {
         "mode": "NULLABLE",
+        "name": "appname",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "servicename",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "envname",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
         "name": "cloudproviderid",
         "type": "STRING"
       },
