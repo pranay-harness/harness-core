@@ -20,8 +20,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.eventsframework.ProducerShutdownException;
 import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.project.ProjectEntityChangeDTO;
 import io.harness.exception.DuplicateFieldException;

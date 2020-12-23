@@ -1,7 +1,7 @@
-package io.harness.eventsframework.impl;
+package io.harness.eventsframework.impl.noop;
 
-import io.harness.eventsframework.ProducerShutdownException;
 import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
 
 public class NoOpProducer extends AbstractProducer {

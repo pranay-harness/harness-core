@@ -21,9 +21,9 @@ import static org.springframework.data.domain.Pageable.unpaged;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.eventsframework.ProducerShutdownException;
 import io.harness.eventsframework.api.AbstractProducer;
-import io.harness.eventsframework.impl.NoOpProducer;
+import io.harness.eventsframework.api.ProducerShutdownException;
+import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ProjectDTO;

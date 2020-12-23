@@ -6,10 +6,10 @@ import static io.harness.EntityCRUDEventsConstants.ENTITY_CRUD;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.eventsframework.api.AbstractConsumer;
 import io.harness.eventsframework.api.AbstractProducer;
-import io.harness.eventsframework.impl.NoOpConsumer;
-import io.harness.eventsframework.impl.NoOpProducer;
-import io.harness.eventsframework.impl.RedisConsumer;
-import io.harness.eventsframework.impl.RedisProducer;
+import io.harness.eventsframework.impl.noop.NoOpConsumer;
+import io.harness.eventsframework.impl.noop.NoOpProducer;
+import io.harness.eventsframework.impl.redis.RedisConsumer;
+import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.redis.RedisConfig;
 
 import com.google.inject.AbstractModule;

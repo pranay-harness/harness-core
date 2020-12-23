@@ -1,4 +1,4 @@
-package io.harness.eventsframework;
+package io.harness.eventsframework.api;
 
 public class ConsumerShutdownException extends Exception {
   public ConsumerShutdownException(String message) {

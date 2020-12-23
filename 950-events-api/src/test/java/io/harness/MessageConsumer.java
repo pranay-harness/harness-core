@@ -1,10 +1,10 @@
 package io.harness;
 
-import io.harness.eventsframework.ConsumerShutdownException;
 import io.harness.eventsframework.api.AbstractConsumer;
+import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
-import io.harness.eventsframework.impl.RedisConsumer;
-import io.harness.eventsframework.impl.RedisSerialConsumer;
+import io.harness.eventsframework.impl.redis.RedisConsumer;
+import io.harness.eventsframework.impl.redis.RedisSerialConsumer;
 import io.harness.eventsframework.project.ProjectEntityChangeDTO;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.redis.RedisPersistentLocker;

@@ -1,6 +1,5 @@
 package io.harness.eventsframework.api;
 
-import io.harness.eventsframework.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
 
 import java.util.List;
