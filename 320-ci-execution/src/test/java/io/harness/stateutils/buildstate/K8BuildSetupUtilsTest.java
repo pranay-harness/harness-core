@@ -12,6 +12,7 @@ import static io.harness.common.CIExecutionConstants.HARNESS_STAGE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.SECRET_KEY_MINIO_VARIABLE;
+import static io.harness.common.CIExecutionConstants.TI_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.VISTAAR;
 
@@ -31,6 +32,7 @@ import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.category.element.UnitTests;
 import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.ci.beans.entities.LogServiceConfig;
+import io.harness.ci.beans.entities.TIServiceConfig;
 import io.harness.delegate.beans.ci.pod.CIK8ContainerParams;
 import io.harness.delegate.beans.ci.pod.CIK8PodParams;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
@@ -60,17 +62,19 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import retrofit2.Call;
 import retrofit2.Response;
-
+@Slf4j
 public class K8BuildSetupUtilsTest extends CIExecutionTest {
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Inject private K8BuildSetupUtils k8BuildSetupUtils;
   @Inject private SecretVariableUtils secretVariableUtils;
+  @Inject private TIServiceConfig tiServiceConfig;
 
   @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Mock private SecretManagerClientService secretManagerClientService;
@@ -158,6 +162,7 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     Map<String, String> stepEnvVars = new HashMap<>();
     stepEnvVars.put(LOG_SERVICE_ENDPOINT_VARIABLE, logEndpoint);
     stepEnvVars.put(LOG_SERVICE_TOKEN_VARIABLE, logToken);
+    stepEnvVars.put(TI_SERVICE_ENDPOINT_VARIABLE, tiServiceConfig.getBaseUrl());
     stepEnvVars.put(HARNESS_ACCOUNT_ID_VARIABLE, accountID);
     stepEnvVars.put(HARNESS_ORG_ID_VARIABLE, orgID);
     stepEnvVars.put(HARNESS_PROJECT_ID_VARIABLE, projectID);

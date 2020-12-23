@@ -4,6 +4,7 @@ import static com.google.common.collect.ImmutableMap.of;
 import static java.util.stream.Collectors.toSet;
 
 import io.harness.ci.beans.entities.LogServiceConfig;
+import io.harness.ci.beans.entities.TIServiceConfig;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
@@ -45,6 +46,7 @@ public class CIManagerConfiguration extends Configuration implements AssetsBundl
 
   private String ngManagerServiceSecret;
   private LogServiceConfig logServiceConfig;
+  private TIServiceConfig tiServiceConfig;
 
   private String managerServiceSecret;
   private String jwtAuthSecret;
