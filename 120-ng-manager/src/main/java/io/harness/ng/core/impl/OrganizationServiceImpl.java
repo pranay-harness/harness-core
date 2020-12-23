@@ -16,8 +16,8 @@ import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.eventsframework.ProducerShutdownException;
 import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.organization.OrganizationEntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.DuplicateFieldException;

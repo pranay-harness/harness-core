@@ -1,9 +1,9 @@
-package io.harness.eventsframework.impl;
+package io.harness.eventsframework.impl.redis;
 
-import static io.harness.eventsframework.impl.RedisUtils.REDIS_STREAM_INTERNAL_KEY;
+import static io.harness.eventsframework.impl.redis.RedisUtils.REDIS_STREAM_INTERNAL_KEY;
 
-import io.harness.eventsframework.ProducerShutdownException;
 import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
 import io.harness.redis.RedisConfig;
 
@@ -22,9 +22,9 @@ public class RedisProducer extends AbstractProducer {
   private final RStream<String, String> stream;
   private final RedissonClient redissonClient;
 
-  public RedisProducer(String topicName, @NotNull RedissonClient redissonClient) {
+  public RedisProducer(String topicName, @NotNull RedisConfig redisConfig) {
     super(topicName);
-    this.redissonClient = redissonClient;
+    this.redissonClient = RedisUtils.getClient(redisConfig);
     this.stream = RedisUtils.getStream(topicName, redissonClient);
   }
 
@@ -33,20 +33,19 @@ public class RedisProducer extends AbstractProducer {
     Map<String, String> redisData = new HashMap<>(message.getMetadataMap());
     redisData.put(REDIS_STREAM_INTERNAL_KEY, Base64.getEncoder().encodeToString(message.getData().toByteArray()));
     try {
-      StreamMessageId messageId = this.stream.addAll(redisData, 10000, false);
+      StreamMessageId messageId = stream.addAll(redisData, 10000, false);
       return messageId.toString();
     } catch (RedissonShutdownException e) {
-      throw new ProducerShutdownException("Producer for topic: " + this.topicName + " is shutdown.");
+      throw new ProducerShutdownException("Producer for topic: " + getTopicName() + " is shutdown.");
     }
   }
 
   @Override
   public void shutdown() {
-    this.redissonClient.shutdown();
+    redissonClient.shutdown();
   }
 
   public static RedisProducer of(String topicName, @NotNull RedisConfig redisConfig) {
-    RedissonClient client = RedisUtils.getClient(redisConfig);
-    return new RedisProducer(topicName, client);
+    return new RedisProducer(topicName, redisConfig);
   }
 }

@@ -1,7 +1,7 @@
-package io.harness.eventsframework.impl;
+package io.harness.eventsframework.impl.noop;
 
-import io.harness.eventsframework.ConsumerShutdownException;
 import io.harness.eventsframework.api.AbstractConsumer;
+import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
 
 import java.util.Collections;

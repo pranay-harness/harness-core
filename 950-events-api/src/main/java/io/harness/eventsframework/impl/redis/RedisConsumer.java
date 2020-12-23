@@ -1,6 +1,6 @@
-package io.harness.eventsframework.impl;
+package io.harness.eventsframework.impl.redis;
 
-import io.harness.eventsframework.ConsumerShutdownException;
+import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.redis.RedisConfig;
 
@@ -10,25 +10,25 @@ import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.RedissonShutdownException;
 import org.redisson.api.PendingResult;
-import org.redisson.api.RedissonClient;
 import org.redisson.api.StreamMessageId;
 
 @Slf4j
 public class RedisConsumer extends RedisAbstractConsumer {
-  public RedisConsumer(String topicName, String groupName, @NotNull RedissonClient redissonClient) {
-    super(topicName, groupName, redissonClient);
+  public RedisConsumer(String topicName, String groupName, @NotNull RedisConfig redisConfig) {
+    super(topicName, groupName, redisConfig);
   }
 
   private List<Message> getUnackedMessages() throws ConsumerShutdownException {
     List<Message> result = Collections.emptyList();
     try {
-      PendingResult pendingResult = this.stream.getPendingInfo(groupName);
+      String groupName = getGroupName();
+      PendingResult pendingResult = stream.getPendingInfo(groupName);
       if (pendingResult.getTotal() != 0) {
         Map<StreamMessageId, Map<String, String>> messages =
-            this.stream.claim(groupName, name, 10, TimeUnit.MINUTES, pendingResult.getLowestId());
+            stream.claim(groupName, getName(), 10, TimeUnit.MINUTES, pendingResult.getLowestId());
         if (messages.size() != 0)
           // Claim will return the claimed messages after which have been undelivered for a specific time
-          result = getMessageObject(messages);
+          result = RedisUtils.getMessageObject(messages);
       }
       return result;
     } catch (RedissonShutdownException e) {
@@ -47,7 +47,6 @@ public class RedisConsumer extends RedisAbstractConsumer {
   }
 
   public static RedisConsumer of(String topicName, String groupName, @NotNull RedisConfig redisConfig) {
-    RedissonClient client = RedisUtils.getClient(redisConfig);
-    return new RedisConsumer(topicName, groupName, client);
+    return new RedisConsumer(topicName, groupName, redisConfig);
   }
 }

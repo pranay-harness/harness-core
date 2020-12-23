@@ -1,4 +1,4 @@
-package io.harness.eventsframework;
+package io.harness.eventsframework.api;
 
 public class ProducerShutdownException extends Exception {
   public ProducerShutdownException(String message) {

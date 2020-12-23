@@ -1,9 +1,11 @@
 package io.harness.eventsframework.api;
 
-public abstract class AbstractProducer implements Producer {
-  protected final String topicName;
+import lombok.Getter;
 
-  public AbstractProducer(String topicName) {
+public abstract class AbstractProducer implements Producer {
+  @Getter private final String topicName;
+
+  protected AbstractProducer(String topicName) {
     this.topicName = topicName;
   }
 }

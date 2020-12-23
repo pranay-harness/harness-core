@@ -1,7 +1,7 @@
 package io.harness;
 
-import io.harness.eventsframework.impl.NoOpProducer;
-import io.harness.eventsframework.impl.RedisProducer;
+import io.harness.eventsframework.impl.noop.NoOpProducer;
+import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.lock.PersistentLocker;
 import io.harness.lock.redis.RedisPersistentLocker;
 import io.harness.redis.RedisConfig;
