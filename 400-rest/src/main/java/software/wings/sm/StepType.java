@@ -121,6 +121,7 @@ import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.yaml.handler.workflow.ApprovalStepCompletionYamlValidator;
 import software.wings.service.impl.yaml.handler.workflow.EmailStepYamlValidator;
 import software.wings.service.impl.yaml.handler.workflow.GcbStepCompletionYamlValidator;
+import software.wings.service.impl.yaml.handler.workflow.ServiceNowStepCompletionYamlValidator;
 import software.wings.service.impl.yaml.handler.workflow.ShellScriptStepYamlValidator;
 import software.wings.service.impl.yaml.handler.workflow.StepCompletionYamlValidator;
 import software.wings.sm.states.APMVerificationState;
@@ -628,7 +629,7 @@ public enum StepType {
       asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
   SERVICENOW_CREATE_UPDATE(ServiceNowCreateUpdateState.class, SERVICENOW, asList(ISSUE_TRACKING),
       asList(PhaseStepType.values()), asList(DeploymentType.values()),
-      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), ServiceNowStepCompletionYamlValidator.class),
 
   // Notifications
   EMAIL(EmailState.class, WorkflowServiceHelper.EMAIL, asList(NOTIFICATION), asList(PhaseStepType.values()),
