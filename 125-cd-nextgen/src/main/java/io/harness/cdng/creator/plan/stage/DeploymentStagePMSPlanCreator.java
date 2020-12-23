@@ -37,9 +37,9 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
   @Inject private KryoSerializer kryoSerializer;
 
   @Override
-  public Map<String, PlanCreationResponse> createPlanForChildrenNodes(
+  public LinkedHashMap<String, PlanCreationResponse> createPlanForChildrenNodes(
       PlanCreationContext ctx, StageElementConfig field) {
-    Map<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
+    LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
     Map<String, YamlField> dependenciesNodeMap = new HashMap<>();
 
     // Adding service child

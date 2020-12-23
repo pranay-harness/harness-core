@@ -21,7 +21,16 @@ import io.harness.steps.fork.ForkStepParameters;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ParallelPlanCreator extends ChildrenPlanCreator<YamlField> {
@@ -38,10 +47,11 @@ public class ParallelPlanCreator extends ChildrenPlanCreator<YamlField> {
   }
 
   @Override
-  public Map<String, PlanCreationResponse> createPlanForChildrenNodes(PlanCreationContext ctx, YamlField config) {
+  public LinkedHashMap<String, PlanCreationResponse> createPlanForChildrenNodes(
+      PlanCreationContext ctx, YamlField config) {
     List<YamlField> dependencyNodeIdsList = getDependencyNodeIdsList(ctx);
 
-    Map<String, PlanCreationResponse> responseMap = new HashMap<>();
+    LinkedHashMap<String, PlanCreationResponse> responseMap = new LinkedHashMap<>();
     for (YamlField yamlField : dependencyNodeIdsList) {
       Map<String, YamlField> yamlFieldMap = new HashMap<>();
       yamlFieldMap.put(yamlField.getNode().getUuid(), yamlField);

@@ -15,12 +15,20 @@ import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.common.NGSectionStep;
 import io.harness.steps.common.NGSectionStepParameters;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 public class StagesPlanCreator extends ChildrenPlanCreator<StagesConfig> {
   @Override
-  public Map<String, PlanCreationResponse> createPlanForChildrenNodes(PlanCreationContext ctx, StagesConfig config) {
-    Map<String, PlanCreationResponse> responseMap = new HashMap<>();
+  public LinkedHashMap<String, PlanCreationResponse> createPlanForChildrenNodes(
+      PlanCreationContext ctx, StagesConfig config) {
+    LinkedHashMap<String, PlanCreationResponse> responseMap = new LinkedHashMap<>();
     List<YamlField> stageYamlFields = getStageYamlFields(ctx);
     for (YamlField stageYamlField : stageYamlFields) {
       Map<String, YamlField> stageYamlFieldMap = new HashMap<>();

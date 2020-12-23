@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Preconditions;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,9 +43,10 @@ public class DeploymentStagePlanCreator extends ChildrenPlanCreator<DeploymentSt
   }
 
   @Override
-  public Map<String, PlanCreationResponse> createPlanForChildrenNodes(PlanCreationContext ctx, DeploymentStage config) {
+  public LinkedHashMap<String, PlanCreationResponse> createPlanForChildrenNodes(
+      PlanCreationContext ctx, DeploymentStage config) {
     DeploymentStageSpec spec = Preconditions.checkNotNull(config.getSpec());
-    Map<String, PlanCreationResponse> responseMap = new HashMap<>();
+    LinkedHashMap<String, PlanCreationResponse> responseMap = new LinkedHashMap<>();
     createPlanNodeForService(responseMap, ctx, spec.getService());
     createPlanNodeForInfrastructure(responseMap, ctx, spec.getInfrastructure());
     createPlanNodeForSteps(responseMap, ctx, spec.getExecution());

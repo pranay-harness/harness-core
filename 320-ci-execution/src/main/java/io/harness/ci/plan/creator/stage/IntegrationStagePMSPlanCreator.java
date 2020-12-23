@@ -59,11 +59,11 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
   private static final SecureRandom random = new SecureRandom();
 
   @Override
-  public Map<String, PlanCreationResponse> createPlanForChildrenNodes(
+  public LinkedHashMap<String, PlanCreationResponse> createPlanForChildrenNodes(
       PlanCreationContext ctx, StageElementConfig stageElementConfig) {
     // TODO REMOVE THIS AFTER PMS FIX
     stageElementConfig.setType("ci");
-    Map<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
+    LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
     Map<String, YamlField> dependenciesNodeMap = new HashMap<>();
     final String podName = generatePodName(stageElementConfig.getIdentifier());
     YamlField executionField = ctx.getCurrentField().getNode().getField(SPEC).getNode().getField(EXECUTION);
