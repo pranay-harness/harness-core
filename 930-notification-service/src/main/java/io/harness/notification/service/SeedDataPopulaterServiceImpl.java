@@ -14,9 +14,9 @@ import java.net.URL;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@Slf4j
 public class SeedDataPopulaterServiceImpl implements SeedDataPopulaterService {
   private final NotificationTemplateService notificationTemplateService;
 

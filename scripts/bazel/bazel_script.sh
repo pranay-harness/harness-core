@@ -68,8 +68,6 @@ BAZEL_MODULES="\
   //920-delegate-service-beans:module \
   //930-delegate-tasks:module \
   //930-ng-core-clients:module \
-  //930-notification-service:module \
-  //930-notification-service:module_deploy.jar \
   //940-delegate-beans/src/main/proto:all \
   //940-delegate-beans:module \
   //940-notification-client:module \
@@ -233,7 +231,6 @@ build_proto_module() {
 }
 
 build_bazel_application 800-pipeline-service
-build_bazel_application 930-notification-service
 build_bazel_application 940-notification-client
 
 build_bazel_module 420-delegate-agent

@@ -88,3 +88,7 @@ fi
 if [[ "" != "$MONGO_MESSAGE_BROKER_URI" ]]; then
   yq write -i $CONFIG_FILE notificationClient.messageBroker.uri "$MONGO_MESSAGE_BROKER_URI"
 fi
+
+if [[ "" != "$RBAC_URL" ]]; then
+  yq write -i $CONFIG_FILE rbacServiceConfig.baseUrl "$RBAC_URL"
+fi

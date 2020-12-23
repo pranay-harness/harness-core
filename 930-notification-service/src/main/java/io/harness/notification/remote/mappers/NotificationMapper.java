@@ -1,10 +1,13 @@
 package io.harness.notification.remote.mappers;
 
-import static io.harness.NotificationRequest.*;
-
 import io.harness.NotificationRequest;
 import io.harness.notification.dtos.NotificationDTO;
-import io.harness.notification.entities.*;
+import io.harness.notification.entities.Channel;
+import io.harness.notification.entities.EmailChannel;
+import io.harness.notification.entities.MicrosoftTeamsChannel;
+import io.harness.notification.entities.Notification;
+import io.harness.notification.entities.PagerDutyChannel;
+import io.harness.notification.entities.SlackChannel;
 
 import java.util.Optional;
 import lombok.experimental.UtilityClass;
@@ -47,7 +50,7 @@ public class NotificationMapper {
 
   public static NotificationRequest toNotificationRequest(Notification notification) {
     try {
-      NotificationRequest.Builder builder = newBuilder()
+      NotificationRequest.Builder builder = NotificationRequest.newBuilder()
                                                 .setId(notification.getId())
                                                 .setAccountId(notification.getAccountIdentifier())
                                                 .setTeam(notification.getTeam());
@@ -63,14 +66,14 @@ public class NotificationMapper {
 
   private static void setChannel(NotificationRequest.Builder builder, Notification notification) {
     Object channelDetails = notification.getChannel().toObjectofProtoSchema();
-    if (channelDetails instanceof Email) {
-      builder.setEmail((Email) channelDetails);
-    } else if (channelDetails instanceof Slack) {
-      builder.setSlack((Slack) channelDetails);
-    } else if (channelDetails instanceof PagerDuty) {
-      builder.setPagerDuty((PagerDuty) channelDetails);
-    } else if (channelDetails instanceof MSTeam) {
-      builder.setMsTeam((MSTeam) channelDetails);
+    if (channelDetails instanceof NotificationRequest.Email) {
+      builder.setEmail((NotificationRequest.Email) channelDetails);
+    } else if (channelDetails instanceof NotificationRequest.Slack) {
+      builder.setSlack((NotificationRequest.Slack) channelDetails);
+    } else if (channelDetails instanceof NotificationRequest.PagerDuty) {
+      builder.setPagerDuty((NotificationRequest.PagerDuty) channelDetails);
+    } else if (channelDetails instanceof NotificationRequest.MSTeam) {
+      builder.setMsTeam((NotificationRequest.MSTeam) channelDetails);
     }
   }
 

@@ -4,12 +4,20 @@ import static io.harness.NotificationRequest.MSTeam;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.notification.constant.NotificationConstants.*;
+import static io.harness.notification.constant.NotificationConstants.ABORTED_COLOR;
+import static io.harness.notification.constant.NotificationConstants.BLUE_COLOR;
+import static io.harness.notification.constant.NotificationConstants.COMPLETED_COLOR;
+import static io.harness.notification.constant.NotificationConstants.FAILED_COLOR;
+import static io.harness.notification.constant.NotificationConstants.PAUSED_COLOR;
+import static io.harness.notification.constant.NotificationConstants.RESUMED_COLOR;
 import static io.harness.notification.constant.NotificationServiceConstants.TEST_MICROSOFTTEAMS_TEMPLATE;
 
 import static java.lang.String.format;
 import static java.lang.String.join;
-import static org.apache.commons.lang3.StringUtils.*;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.SPACE;
+import static org.apache.commons.lang3.StringUtils.stripToNull;
+import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 import io.harness.NotificationRequest;
 import io.harness.Team;

@@ -213,7 +213,7 @@ cd ../..
 mkdir -p dist/notification-service
 cd dist/notification-service
 
-cp ${HOME}/.bazel-dirs/bin/930-notification-service/module_deploy.jar notification-service-capsule.jar
+cp ../../930-notification-service/target/notification-service-capsule.jar .
 cp ../../930-notification-service/config.yml .
 cp ../../930-notification-service/keystore.jks .
 cp ../../930-notification-service/key.pem .

@@ -1,21 +1,24 @@
 package io.harness.notification.service;
 
 import static org.apache.http.entity.mime.MIME.CONTENT_TYPE;
-import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
 
 import io.harness.notification.beans.NotificationProcessingResponse;
 
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.*;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 @Slf4j
 public class MSTeamsSenderImpl {
   private final OkHttpClient okHttpClient = new OkHttpClient.Builder().retryOnConnectionFailure(true).build();
 
-  private static final MediaType APPLICATION_JSON = MediaType.parse(APPLICATION_JSON_UTF8_VALUE);
+  private static final MediaType APPLICATION_JSON = MediaType.parse(APPLICATION_JSON_VALUE);
 
   public int sendMessage(String message, String webhookUrl) {
     try {
