@@ -7,9 +7,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CiBeansTestBase;
 import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
 import io.harness.category.element.UnitTests;
+import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.product.ci.engine.proto.UnitStep;
 import io.harness.rule.Owner;
-import io.harness.yaml.core.StepElement;
 
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -34,7 +34,12 @@ public class RestoreCacheStepProtobufSerializerTest extends CiBeansTestBase {
                                                     .key(RESTORE_KEY)
                                                     .failIfNotExist(true)
                                                     .build();
-    StepElement stepElement = StepElement.builder().type("restoreCache").stepSpecType(restoreCacheStepInfo).build();
+    StepElementConfig stepElement = StepElementConfig.builder()
+                                        .name(RESTORE_CACHE)
+                                        .identifier(RESTORE_ID)
+                                        .type("restoreCache")
+                                        .stepSpecType(restoreCacheStepInfo)
+                                        .build();
 
     restoreCacheStepInfo.setCallbackId(CALLBACK_ID);
     String serialize = protobufSerializer.serializeToBase64(stepElement);

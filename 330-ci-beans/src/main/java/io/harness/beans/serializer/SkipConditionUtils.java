@@ -1,9 +1,9 @@
 package io.harness.beans.serializer;
 
-import io.harness.yaml.core.StepElement;
+import io.harness.plancreator.steps.StepElementConfig;
 
 public class SkipConditionUtils {
-  public static String getSkipCondition(StepElement step) {
+  public static String getSkipCondition(StepElementConfig step) {
     String skipCondition = null;
     if (step.getSkipCondition() != null) {
       skipCondition = step.getSkipCondition().getValue();

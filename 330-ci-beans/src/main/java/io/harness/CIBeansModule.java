@@ -18,7 +18,7 @@ import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
 import io.harness.beans.steps.stepinfo.TestIntelligenceStepInfo;
-import io.harness.yaml.core.ExecutionElement;
+import io.harness.plancreator.execution.ExecutionElementConfig;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
@@ -37,7 +37,8 @@ public class CIBeansModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(new TypeLiteral<GraphOperations<CIStepInfo>>() {}).toInstance(new GraphOperations<>());
-    bind(new TypeLiteral<ProtobufSerializer<ExecutionElement>>() {}).toInstance(new ExecutionProtobufSerializer());
+    bind(new TypeLiteral<ProtobufSerializer<ExecutionElementConfig>>() {
+    }).toInstance(new ExecutionProtobufSerializer());
     bind(new TypeLiteral<ProtobufStepSerializer<RunStepInfo>>() {}).toInstance(new RunStepProtobufSerializer());
     bind(new TypeLiteral<ProtobufStepSerializer<PluginStepInfo>>() {}).toInstance(new PluginStepProtobufSerializer());
     bind(new TypeLiteral<ProtobufStepSerializer<SaveCacheStepInfo>>() {

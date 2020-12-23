@@ -15,6 +15,7 @@ import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
 import io.harness.beans.steps.stepinfo.TestIntelligenceStepInfo;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
+import io.harness.ci.integrationstage.IntegrationStageUtils;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
 import io.harness.delegate.beans.ci.k8s.CIContainerStatus;
@@ -25,7 +26,9 @@ import io.harness.delegate.task.stepstatus.StepStatusTaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
-import io.harness.plancreators.IntegrationStagePlanCreator;
+import io.harness.plancreator.execution.ExecutionWrapperConfig;
+import io.harness.plancreator.steps.ParallelStepElementConfig;
+import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
@@ -36,11 +39,9 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.serializer.KryoSerializer;
 import io.harness.stateutils.buildstate.BuildSetupUtils;
+import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
-import io.harness.yaml.core.ParallelStepElement;
-import io.harness.yaml.core.StepElement;
-import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -162,79 +163,80 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
 
   private void addCallBackIds(LiteEngineTaskStepInfo liteEngineTaskStepInfo, Ambiance ambiance) {
     Map<String, String> taskIds = new HashMap<>();
-    liteEngineTaskStepInfo.getSteps().getSteps().forEach(
+    liteEngineTaskStepInfo.getExecutionElementConfig().getSteps().forEach(
         executionWrapper -> addCallBackId(executionWrapper, ambiance, taskIds));
 
-    executionSweepingOutputResolver.consume(ambiance, CALLBACK_IDS, StepTaskDetails.builder().taskIds(taskIds).build(),
-        IntegrationStagePlanCreator.GROUP_NAME);
+    executionSweepingOutputResolver.consume(
+        ambiance, CALLBACK_IDS, StepTaskDetails.builder().taskIds(taskIds).build(), StepOutcomeGroup.STAGE.name());
   }
 
-  private void addCallBackId(ExecutionWrapper executionWrapper, Ambiance ambiance, Map<String, String> taskIds) {
+  private void addCallBackId(ExecutionWrapperConfig executionWrapper, Ambiance ambiance, Map<String, String> taskIds) {
     final String accountId = ambiance.getSetupAbstractionsMap().get("accountId");
 
     if (executionWrapper != null) {
-      if (executionWrapper instanceof StepElement) {
-        StepElement stepElement = (StepElement) executionWrapper;
-        setCallBackIdInStepInfo(ambiance, stepElement, accountId, taskIds);
-      } else if (executionWrapper instanceof ParallelStepElement) {
-        ParallelStepElement parallel = (ParallelStepElement) executionWrapper;
-        parallel.getSections().forEach(section -> addCallBackId(section, ambiance, taskIds));
+      if (!executionWrapper.getStep().isNull()) {
+        StepElementConfig stepElementConfig = IntegrationStageUtils.getStepElementConfig(executionWrapper);
+
+        setCallBackIdInStepInfo(ambiance, stepElementConfig, accountId, taskIds);
+      } else if (!executionWrapper.getParallel().isNull()) {
+        ParallelStepElementConfig parallelStepElementConfig =
+            IntegrationStageUtils.getParallelStepElementConfig(executionWrapper);
+        parallelStepElementConfig.getSections().forEach(section -> addCallBackId(section, ambiance, taskIds));
       } else {
         throw new InvalidRequestException("Only Parallel or StepElement is supported");
       }
     }
   }
   private void setCallBackIdInStepInfo(
-      Ambiance ambiance, StepElement stepElement, String accountId, Map<String, String> taskIds) {
+      Ambiance ambiance, StepElementConfig stepElement, String accountId, Map<String, String> taskIds) {
     // TODO replace identifier as key in case two steps can have same identifier
 
-    if (stepElement.getType().equals("run")) {
+    if (stepElement.getStepSpecType().getStepType().equals(RunStepInfo.STEP_TYPE)) {
       RunStepInfo runStepInfo = (RunStepInfo) stepElement.getStepSpecType();
       String taskId = queueDelegateTask(ambiance, runStepInfo.getTimeout(), accountId, ciDelegateTaskExecutor);
       runStepInfo.setCallbackId(taskId);
-      taskIds.put(runStepInfo.getIdentifier(), taskId);
+      taskIds.put(stepElement.getIdentifier(), taskId);
     }
 
-    if (stepElement.getType().equals("plugin")) {
+    if (stepElement.getStepSpecType().getStepType().equals(PluginStep.STEP_TYPE)) {
       PluginStepInfo pluginStepInfo = (PluginStepInfo) stepElement.getStepSpecType();
       String taskId = queueDelegateTask(ambiance, pluginStepInfo.getTimeout(), accountId, ciDelegateTaskExecutor);
       pluginStepInfo.setCallbackId(taskId);
-      taskIds.put(pluginStepInfo.getIdentifier(), taskId);
+      taskIds.put(stepElement.getIdentifier(), taskId);
     }
-
-    if (stepElement.getType().equals("publishArtifacts")) {
+    if (stepElement.getStepSpecType().getStepType().equals(PublishStep.STEP_TYPE)) {
       PublishStepInfo publishStepInfo = (PublishStepInfo) stepElement.getStepSpecType();
       String taskId = queueDelegateTask(ambiance, publishStepInfo.getTimeout(), accountId, ciDelegateTaskExecutor);
       publishStepInfo.setCallbackId(taskId);
-      taskIds.put(publishStepInfo.getIdentifier(), taskId);
+      taskIds.put(stepElement.getIdentifier(), taskId);
     }
 
-    if (stepElement.getType().equals("saveCache")) {
+    if (stepElement.getStepSpecType().getStepType().equals(SaveCacheStep.STEP_TYPE)) {
       SaveCacheStepInfo saveCacheStepInfo = (SaveCacheStepInfo) stepElement.getStepSpecType();
       String taskId = queueDelegateTask(ambiance, saveCacheStepInfo.getTimeout(), accountId, ciDelegateTaskExecutor);
       saveCacheStepInfo.setCallbackId(taskId);
-      taskIds.put(saveCacheStepInfo.getIdentifier(), taskId);
+      taskIds.put(stepElement.getIdentifier(), taskId);
     }
 
-    if (stepElement.getType().equals("restoreCache")) {
+    if (stepElement.getStepSpecType().getStepType().equals(RestoreCacheStep.STEP_TYPE)) {
       RestoreCacheStepInfo restoreCacheStepInfo = (RestoreCacheStepInfo) stepElement.getStepSpecType();
       String taskId = queueDelegateTask(ambiance, restoreCacheStepInfo.getTimeout(), accountId, ciDelegateTaskExecutor);
       restoreCacheStepInfo.setCallbackId(taskId);
-      taskIds.put(restoreCacheStepInfo.getIdentifier(), taskId);
+      taskIds.put(stepElement.getIdentifier(), taskId);
     }
 
-    if (stepElement.getType().equals("testIntelligence")) {
+    if (stepElement.getStepSpecType().getStepType().equals(TestIntelligenceStep.STEP_TYPE)) {
       TestIntelligenceStepInfo runStepInfo = (TestIntelligenceStepInfo) stepElement.getStepSpecType();
       String taskId = queueDelegateTask(ambiance, runStepInfo.getTimeout(), accountId, ciDelegateTaskExecutor);
       runStepInfo.setCallbackId(taskId);
-      taskIds.put(runStepInfo.getIdentifier(), taskId);
+      taskIds.put(stepElement.getIdentifier(), taskId);
     }
 
     if (stepElement.getStepSpecType() instanceof PluginCompatibleStep) {
       PluginCompatibleStep stepInfo = (PluginCompatibleStep) stepElement.getStepSpecType();
       String taskId = queueDelegateTask(ambiance, stepInfo.getTimeout(), accountId, ciDelegateTaskExecutor);
       stepInfo.setCallbackId(taskId);
-      taskIds.put(stepInfo.getIdentifier(), taskId);
+      taskIds.put(stepElement.getIdentifier(), taskId);
     }
   }
 

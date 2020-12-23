@@ -9,6 +9,7 @@ import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 
 import software.wings.jersey.JsonViews;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -30,12 +31,12 @@ public class GitCloneStepInfo implements CIStepInfo {
   public static final int DEFAULT_TIMEOUT = 1200;
 
   @JsonView(JsonViews.Internal.class)
+  @JsonIgnore
   @NotNull
-  public static final TypeInfo typeInfo =
-      TypeInfo.builder()
-          .stepInfoType(CIStepInfoType.GIT_CLONE)
-          .stepType(StepType.newBuilder().setType(CIStepInfoType.GIT_CLONE.name()).build())
-          .build();
+  public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.GIT_CLONE).build();
+
+  @JsonIgnore
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.GIT_CLONE.name()).build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;
@@ -70,7 +71,7 @@ public class GitCloneStepInfo implements CIStepInfo {
 
   @Override
   public StepType getStepType() {
-    return typeInfo.getStepType();
+    return STEP_TYPE;
   }
 
   @Override

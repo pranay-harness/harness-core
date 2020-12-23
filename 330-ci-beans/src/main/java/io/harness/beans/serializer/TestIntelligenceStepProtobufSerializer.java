@@ -3,10 +3,10 @@ package io.harness.beans.serializer;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.TestIntelligenceStepInfo;
 import io.harness.callback.DelegateCallbackToken;
+import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.product.ci.engine.proto.StepContext;
 import io.harness.product.ci.engine.proto.TestIntelligenceStep;
 import io.harness.product.ci.engine.proto.UnitStep;
-import io.harness.yaml.core.StepElement;
 
 import com.google.inject.Inject;
 import java.util.Optional;
@@ -17,11 +17,11 @@ public class TestIntelligenceStepProtobufSerializer implements ProtobufStepSeria
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
   @Override
-  public String serializeToBase64(StepElement object) {
+  public String serializeToBase64(StepElementConfig object) {
     return Base64.encodeBase64String(serializeStep(object).toByteArray());
   }
 
-  public UnitStep serializeStep(StepElement step) {
+  public UnitStep serializeStep(StepElementConfig step) {
     CIStepInfo ciStepInfo = (CIStepInfo) step.getStepSpecType();
     TestIntelligenceStepInfo testIntelligenceStepInfo = (TestIntelligenceStepInfo) ciStepInfo;
 

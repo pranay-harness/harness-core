@@ -3,13 +3,16 @@ package io.harness.beans.serializer;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.beans.steps.CIStepInfo;
+import io.harness.exception.ngexception.CIStageExecutionException;
+import io.harness.plancreator.execution.ExecutionElementConfig;
+import io.harness.plancreator.execution.ExecutionWrapperConfig;
+import io.harness.plancreator.steps.ParallelStepElementConfig;
+import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.pms.yaml.YamlUtils;
 import io.harness.product.ci.engine.proto.Execution;
 import io.harness.product.ci.engine.proto.ParallelStep;
 import io.harness.product.ci.engine.proto.Step;
 import io.harness.product.ci.engine.proto.UnitStep;
-import io.harness.yaml.core.ExecutionElement;
-import io.harness.yaml.core.ParallelStepElement;
-import io.harness.yaml.core.StepElement;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -22,7 +25,7 @@ import org.apache.commons.codec.binary.Base64;
 
 @Slf4j
 @Singleton
-public class ExecutionProtobufSerializer implements ProtobufSerializer<ExecutionElement> {
+public class ExecutionProtobufSerializer implements ProtobufSerializer<ExecutionElementConfig> {
   @Inject private RunStepProtobufSerializer runStepProtobufSerializer;
   @Inject private PublishStepProtobufSerializer publishStepProtobufSerializer;
   @Inject private SaveCacheStepProtobufSerializer saveCacheStepProtobufSerializer;
@@ -32,29 +35,31 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
   @Inject private PluginCompatibleStepSerializer pluginCompatibleStepSerializer;
 
   @Override
-  public String serialize(ExecutionElement object) {
+  public String serialize(ExecutionElementConfig object) {
     return Base64.encodeBase64String(convertExecutionElement(object).toByteArray());
   }
 
-  public Execution convertExecutionElement(ExecutionElement executionElement) {
+  public Execution convertExecutionElement(ExecutionElementConfig executionElement) {
     List<Step> protoSteps = new LinkedList<>();
     if (isEmpty(executionElement.getSteps())) {
       return Execution.newBuilder().build();
     }
 
     executionElement.getSteps().forEach(executionWrapper -> {
-      if (executionWrapper instanceof StepElement) {
-        UnitStep serialisedStep = serialiseStep((StepElement) executionWrapper);
+      if (!executionWrapper.getStep().isNull()) {
+        StepElementConfig stepElementConfig = getStepElementConfig(executionWrapper);
+
+        UnitStep serialisedStep = serialiseStep(stepElementConfig);
         if (serialisedStep != null) {
           protoSteps.add(Step.newBuilder().setUnit(serialisedStep).build());
         }
-      } else if (executionWrapper instanceof ParallelStepElement) {
-        ParallelStepElement parallel = (ParallelStepElement) executionWrapper;
+      } else if (!executionWrapper.getParallel().isNull()) {
+        ParallelStepElementConfig parallelStepElementConfig = getParallelStepElementConfig(executionWrapper);
         List<UnitStep> unitStepsList =
-            parallel.getSections()
+            parallelStepElementConfig.getSections()
                 .stream()
-                .filter(executionWrapperInParallel -> executionWrapperInParallel instanceof StepElement)
-                .map(executionWrapperInParallel -> (StepElement) executionWrapperInParallel)
+                .filter(executionWrapperInParallel -> !executionWrapperInParallel.getStep().isNull())
+                .map(executionWrapperInParallel -> getStepElementConfig(executionWrapper))
                 .map(this::serialiseStep)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
@@ -70,7 +75,7 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
     return Execution.newBuilder().addAllSteps(protoSteps).buildPartial();
   }
 
-  public UnitStep serialiseStep(StepElement step) {
+  public UnitStep serialiseStep(StepElementConfig step) {
     if (step.getStepSpecType() instanceof CIStepInfo) {
       CIStepInfo ciStepInfo = (CIStepInfo) step.getStepSpecType();
       switch (ciStepInfo.getNonYamlInfo().getStepInfoType()) {
@@ -108,6 +113,22 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
       }
     } else {
       throw new IllegalArgumentException("Non CISteps serialisation is not supported");
+    }
+  }
+
+  private ParallelStepElementConfig getParallelStepElementConfig(ExecutionWrapperConfig executionWrapperConfig) {
+    try {
+      return YamlUtils.read(executionWrapperConfig.getParallel().toString(), ParallelStepElementConfig.class);
+    } catch (Exception ex) {
+      throw new CIStageExecutionException("Failed to deserialize ExecutionWrapperConfig parallel node", ex);
+    }
+  }
+
+  private StepElementConfig getStepElementConfig(ExecutionWrapperConfig executionWrapperConfig) {
+    try {
+      return YamlUtils.read(executionWrapperConfig.getStep().toString(), StepElementConfig.class);
+    } catch (Exception ex) {
+      throw new CIStageExecutionException("Failed to deserialize ExecutionWrapperConfig step node", ex);
     }
   }
 }

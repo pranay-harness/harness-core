@@ -9,10 +9,10 @@ import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.yaml.extended.reports.JunitTestReport;
 import io.harness.beans.yaml.extended.reports.UnitTestReport;
 import io.harness.category.element.UnitTests;
+import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.product.ci.engine.proto.Report;
 import io.harness.product.ci.engine.proto.UnitStep;
 import io.harness.rule.Owner;
-import io.harness.yaml.core.StepElement;
 
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -50,7 +50,12 @@ public class RunStepProtobufSerializerTest extends CiBeansTestBase {
                                   .reports(unitTestReportList)
                                   .output(Arrays.asList(OUTPUT))
                                   .build();
-    StepElement stepElement = StepElement.builder().type("run").stepSpecType(runStepInfo).build();
+    StepElementConfig stepElement = StepElementConfig.builder()
+                                        .name(RUN_STEP)
+                                        .identifier(RUN_STEP_ID)
+                                        .type("run")
+                                        .stepSpecType(runStepInfo)
+                                        .build();
 
     Report report = Report.newBuilder().setType(Report.Type.JUNIT).addAllPaths(paths).build();
 

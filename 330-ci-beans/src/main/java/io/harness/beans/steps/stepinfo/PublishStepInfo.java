@@ -8,12 +8,9 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 
-import software.wings.jersey.JsonViews;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.annotation.JsonView;
 import java.beans.ConstructorProperties;
 import java.util.List;
 import java.util.Optional;
@@ -32,13 +29,10 @@ public class PublishStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
   public static final int DEFAULT_TIMEOUT = 1200;
   @JsonIgnore private String callbackId;
-  @JsonView(JsonViews.Internal.class)
-  @NotNull
-  public static final TypeInfo typeInfo =
-      TypeInfo.builder()
-          .stepInfoType(CIStepInfoType.PUBLISH)
-          .stepType(StepType.newBuilder().setType(CIStepInfoType.PUBLISH.name()).build())
-          .build();
+
+  @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.PUBLISH).build();
+  @JsonIgnore
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.PUBLISH.name()).build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;
@@ -71,7 +65,7 @@ public class PublishStepInfo implements CIStepInfo {
 
   @Override
   public StepType getStepType() {
-    return typeInfo.getStepType();
+    return STEP_TYPE;
   }
 
   @Override

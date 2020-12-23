@@ -3,9 +3,9 @@ package io.harness.beans.serializer;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
 import io.harness.callback.DelegateCallbackToken;
+import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.product.ci.engine.proto.RestoreCacheStep;
 import io.harness.product.ci.engine.proto.UnitStep;
-import io.harness.yaml.core.StepElement;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -18,11 +18,11 @@ public class RestoreCacheStepProtobufSerializer implements ProtobufStepSerialize
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
   @Override
-  public String serializeToBase64(StepElement object) {
+  public String serializeToBase64(StepElementConfig object) {
     return Base64.encodeBase64String(serializeStep(object).toByteArray());
   }
 
-  public UnitStep serializeStep(StepElement step) {
+  public UnitStep serializeStep(StepElementConfig step) {
     CIStepInfo ciStepInfo = (CIStepInfo) step.getStepSpecType();
     RestoreCacheStepInfo restoreCacheStepInfo = (RestoreCacheStepInfo) ciStepInfo;
 
@@ -32,10 +32,10 @@ public class RestoreCacheStepProtobufSerializer implements ProtobufStepSerialize
 
     String skipCondition = SkipConditionUtils.getSkipCondition(step);
     return UnitStep.newBuilder()
-        .setId(restoreCacheStepInfo.getIdentifier())
+        .setId(step.getIdentifier())
         .setTaskId(restoreCacheStepInfo.getCallbackId())
         .setCallbackToken(delegateCallbackTokenSupplier.get().getToken())
-        .setDisplayName(Optional.ofNullable(restoreCacheStepInfo.getDisplayName()).orElse(""))
+        .setDisplayName(Optional.ofNullable(step.getName()).orElse(""))
         .setRestoreCache(restoreCacheBuilder.build())
         .setSkipCondition(Optional.ofNullable(skipCondition).orElse(""))
         .build();

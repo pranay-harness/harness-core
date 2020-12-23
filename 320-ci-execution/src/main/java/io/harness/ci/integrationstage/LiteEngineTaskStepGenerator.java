@@ -39,14 +39,16 @@ public class LiteEngineTaskStepGenerator {
           .skipGitClone(gitClone)
           .usePVC(usePVC)
           .buildJobEnvInfo(buildJobEnvInfo)
-          //.steps(executionElement)
+          .steps(null)
+          .executionElementConfig(executionElement)
           .build();
     } else {
       return LiteEngineTaskStepInfo.builder()
           .identifier(LITE_ENGINE_TASK + liteEngineCounter)
           .buildJobEnvInfo(buildJobEnvInfo)
           .usePVC(usePVC)
-          //.steps(executionElement)
+          .steps(null)
+          .executionElementConfig(executionElement)
           .build();
     }
   }

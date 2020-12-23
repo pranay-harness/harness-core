@@ -17,12 +17,12 @@ import io.harness.beans.steps.stepinfo.publish.artifact.connectors.DockerhubConn
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.EcrConnector;
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.GcrConnector;
 import io.harness.category.element.UnitTests;
+import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.product.ci.engine.proto.BuildPublishImage;
 import io.harness.product.ci.engine.proto.LocationType;
 import io.harness.product.ci.engine.proto.UnitStep;
 import io.harness.product.ci.engine.proto.UploadFile;
 import io.harness.rule.Owner;
-import io.harness.yaml.core.StepElement;
 
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -71,7 +71,12 @@ public class PublishStepProtobufSerializerTest extends CiBeansTestBase {
                                           .publishArtifacts(singletonList(filePatternArtifact))
                                           .build();
     publishStepInfo.setCallbackId(CALLBACK_ID);
-    StepElement stepElement = StepElement.builder().type("buildAndPublish").stepSpecType(publishStepInfo).build();
+    StepElementConfig stepElement = StepElementConfig.builder()
+                                        .name(PUBLISH_NAME)
+                                        .identifier(PUBLISH_ID)
+                                        .type("buildAndPublish")
+                                        .stepSpecType(publishStepInfo)
+                                        .build();
 
     String serialize = protobufSerializer.serializeToBase64(stepElement);
     UnitStep publishArtifactStep = UnitStep.parseFrom(Base64.decodeBase64(serialize));
@@ -105,7 +110,12 @@ public class PublishStepProtobufSerializerTest extends CiBeansTestBase {
                                           .callbackId(CALLBACK_ID)
                                           .publishArtifacts(singletonList(dockerFileArtifact))
                                           .build();
-    StepElement stepElement = StepElement.builder().type("buildAndPublish").stepSpecType(publishStepInfo).build();
+    StepElementConfig stepElement = StepElementConfig.builder()
+                                        .name(PUBLISH_NAME)
+                                        .identifier(PUBLISH_ID)
+                                        .type("buildAndPublish")
+                                        .stepSpecType(publishStepInfo)
+                                        .build();
 
     String serialize = protobufSerializer.serializeToBase64(stepElement);
     UnitStep publishArtifactStep = UnitStep.parseFrom(Base64.decodeBase64(serialize));
@@ -140,7 +150,12 @@ public class PublishStepProtobufSerializerTest extends CiBeansTestBase {
                                           .identifier(PUBLISH_ID)
                                           .publishArtifacts(singletonList(dockerFileArtifact))
                                           .build();
-    StepElement stepElement = StepElement.builder().type("buildAndPublish").stepSpecType(publishStepInfo).build();
+    StepElementConfig stepElement = StepElementConfig.builder()
+                                        .name(PUBLISH_NAME)
+                                        .identifier(PUBLISH_ID)
+                                        .type("buildAndPublish")
+                                        .stepSpecType(publishStepInfo)
+                                        .build();
 
     String serialize = protobufSerializer.serializeToBase64(stepElement);
     UnitStep publishArtifactStep = UnitStep.parseFrom(Base64.decodeBase64(serialize));
@@ -176,7 +191,12 @@ public class PublishStepProtobufSerializerTest extends CiBeansTestBase {
                                           .callbackId(CALLBACK_ID)
                                           .publishArtifacts(singletonList(dockerFileArtifact))
                                           .build();
-    StepElement stepElement = StepElement.builder().type("buildAndPublish").stepSpecType(publishStepInfo).build();
+    StepElementConfig stepElement = StepElementConfig.builder()
+                                        .type("buildAndPublish")
+                                        .name(PUBLISH_NAME)
+                                        .identifier(PUBLISH_ID)
+                                        .stepSpecType(publishStepInfo)
+                                        .build();
 
     String serialize = protobufSerializer.serializeToBase64(stepElement);
     UnitStep publishArtifactStep = UnitStep.parseFrom(Base64.decodeBase64(serialize));
