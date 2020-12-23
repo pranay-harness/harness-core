@@ -91,6 +91,7 @@ import migrations.all.RemoveSupportEmailFromSalesContacts;
 import migrations.all.ScheduleSegmentPublishJob;
 import migrations.all.SendInviteUrlForAllUserInvites;
 import migrations.all.SetAccountIdProvisioners;
+import migrations.all.SetDefaultTimeOutAndActionForManualInterventionFailureStrategy;
 import migrations.all.SetDummyTechStackForOldAccounts;
 import migrations.all.SetEmailToIndividualMemberFlag;
 import migrations.all.SetLastLoginTimeToAllUsers;
@@ -297,6 +298,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(180, BaseMigration.class))
         .add(Pair.of(181, GCPMarketplaceCustomerMigration.class))
         .add(Pair.of(182, CEViewsMigration.class))
+        .add(Pair.of(183, SetDefaultTimeOutAndActionForManualInterventionFailureStrategy.class))
         .build();
   }
 }

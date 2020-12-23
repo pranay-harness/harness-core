@@ -2,8 +2,17 @@ package software.wings.sm;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.NEW;
+import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
+import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.interrupts.ExecutionInterruptType.ABORT;
+import static io.harness.interrupts.ExecutionInterruptType.END_EXECUTION;
+import static io.harness.interrupts.ExecutionInterruptType.MARK_FAILED;
+import static io.harness.interrupts.ExecutionInterruptType.MARK_SUCCESS;
+import static io.harness.interrupts.ExecutionInterruptType.WAITING_FOR_MANUAL_INTERVENTION;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
@@ -28,6 +37,7 @@ import static software.wings.utils.WingsTestConstants.PIPELINE_WORKFLOW_EXECUTIO
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,10 +48,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.beans.EmbeddedUser;
-import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.ff.FeatureFlagService;
-import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 import io.harness.waiter.OrchestrationNotifyEventListener;
@@ -60,6 +68,7 @@ import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;
 import software.wings.service.impl.workflow.WorkflowNotificationDetails;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PipelineService;
@@ -108,6 +117,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private ExecutionEventAdvice executionEventAdvice;
   @Mock private StateExecutionInstance stateExecutionInstance;
+  @Mock private AlertService alertService;
   @InjectMocks private StateMachineExecutor injectStateMachineExecutor;
 
   @Captor private ArgumentCaptor<List<NotificationRule>> notificationRuleArgumentCaptor;
@@ -485,7 +495,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String executionUuid = createWorkflowExecution(sm);
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
-    CustomExecutionEventAdvisor advisor = new CustomExecutionEventAdvisor(ExecutionInterruptType.MARK_SUCCESS);
+    CustomExecutionEventAdvisor advisor = new CustomExecutionEventAdvisor(MARK_SUCCESS);
     stateMachineExecutor.execute(sm, executionUuid, executionUuid, null, callback, advisor);
     callback.await();
 
@@ -549,7 +559,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String executionUuid = createWorkflowExecution(sm);
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
-    CustomExecutionEventAdvisor advisor = new CustomExecutionEventAdvisor(ExecutionInterruptType.MARK_FAILED);
+    CustomExecutionEventAdvisor advisor = new CustomExecutionEventAdvisor(MARK_FAILED);
     stateMachineExecutor.execute(sm, executionUuid, executionUuid, null, callback, advisor);
     callback.await();
 
@@ -613,7 +623,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String executionUuid = createWorkflowExecution(sm);
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
-    CustomExecutionEventAdvisor advisor = new CustomExecutionEventAdvisor(ExecutionInterruptType.ABORT);
+    CustomExecutionEventAdvisor advisor = new CustomExecutionEventAdvisor(ABORT);
     stateMachineExecutor.execute(sm, executionUuid, executionUuid, null, callback, advisor);
     callback.await();
 
@@ -1072,7 +1082,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
         .thenReturn(WorkflowNotificationDetails.builder().build());
 
     injectStateMachineExecutor.sendPipelineNotification(
-        context, executionEventAdvice.getUserGroupIdsToNotify(), stateExecutionInstance, ExecutionStatus.SUCCESS);
+        context, executionEventAdvice.getUserGroupIdsToNotify(), stateExecutionInstance, SUCCESS);
     verify(notificationService).sendNotificationAsync(any(Notification.class), singletonList(any()));
 
     ArgumentCaptor<Notification> notificationArgumentCaptor = ArgumentCaptor.forClass(Notification.class);
@@ -1146,5 +1156,48 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     StateExecutionInstance updatedStateExecutionInstance =
         wingsPersistence.get(StateExecutionInstance.class, stateExecutionInstance.getUuid());
     assertThat(updatedStateExecutionInstance.getStateTimeout()).isEqualTo(10);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void testUpdateExecutionInstanceWhenWaitingForIntervention() {
+    when(context.getApp()).thenReturn(anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build());
+    when(alertService.openAlert(any(), any(), any(), any())).thenReturn(null);
+    when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
+    when(pipelineService.readPipeline(any(), any(), anyBoolean())).thenReturn(pipeline);
+    when(workflow.getOrchestrationWorkflow()).thenReturn(new CanaryOrchestrationWorkflow());
+    when(workflowExecutionService.getExecutionDetails(eq(APP_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), anyBoolean()))
+        .thenReturn(WorkflowExecution.builder()
+                        .triggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
+                        .startTs(70L)
+                        .build());
+    when(mockWorkflowService.readWorkflow(any(), any())).thenReturn(workflow);
+    when(notificationMessageResolver.getPlaceholderValues(
+             any(), any(), any(Long.class), any(Long.class), any(), any(), any(), any(), any()))
+        .thenReturn(emptyMap());
+    when(workflowNotificationHelper.getArtifactsDetails(any(), any(), any(), any()))
+        .thenReturn(WorkflowNotificationDetails.builder().build());
+
+    String uuid = generateUuid();
+    ExecutionEventAdvice executionEventAdvice = anExecutionEventAdvice()
+                                                    .withTimeout(60000L)
+                                                    .withActionAfterManualInterventionTimeout(END_EXECUTION)
+                                                    .withExecutionInterruptType(WAITING_FOR_MANUAL_INTERVENTION)
+                                                    .build();
+
+    StateExecutionInstance initialStateExecutionInstance =
+        aStateExecutionInstance().uuid(uuid).appId("appId").displayName("state1").stateName("stateA").build();
+    wingsPersistence.save(initialStateExecutionInstance);
+    StateExecutionInstance updatedStateExecutionInstance = stateMachineExecutor.handleExecutionEventAdvice(
+        context, initialStateExecutionInstance, RUNNING, executionEventAdvice);
+    StateExecutionInstance persistedStateExecutionInstance =
+        wingsPersistence.get(StateExecutionInstance.class, initialStateExecutionInstance.getUuid());
+    assertThat(persistedStateExecutionInstance)
+        .isEqualToIgnoringGivenFields(updatedStateExecutionInstance, "lastUpdatedAt");
+    assertThat(persistedStateExecutionInstance.getStatus()).isEqualTo(WAITING);
+    assertThat(persistedStateExecutionInstance.getExpiryTs()).isEqualTo(updatedStateExecutionInstance.getExpiryTs());
+    assertThat(persistedStateExecutionInstance.getActionAfterManualInterventionTimeout()).isEqualTo(END_EXECUTION);
+    wingsPersistence.delete(updatedStateExecutionInstance);
   }
 }
