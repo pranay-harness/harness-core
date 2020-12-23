@@ -226,6 +226,9 @@ public class CVServiceModule extends AbstractModule {
         .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
         .to(AppDynamicsService.class);
     bind(MonitoringSourceImportStatusCreator.class)
+        .annotatedWith(Names.named(DataSourceType.STACKDRIVER.name()))
+        .to(StackdriverService.class);
+    bind(MonitoringSourceImportStatusCreator.class)
         .annotatedWith(Names.named(DataSourceType.SPLUNK.name()))
         .to(SplunkService.class);
   }

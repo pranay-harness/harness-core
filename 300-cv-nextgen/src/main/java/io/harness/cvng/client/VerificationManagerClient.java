@@ -61,8 +61,8 @@ public interface VerificationManagerClient {
   @POST("appdynamics/metric-data")
   Call<RestResponse<Set<AppdynamicsValidationResponse>>> getAppDynamicsMetricData(@Query("accountId") String accountId,
       @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
-      @Query("appdAppId") long appdAppId, @Query("appdTierId") long appdTierId,
-      @Query("requestGuid") String requestGuid, @Body AppdynamicsMetricPackDataValidationRequest validationRequest);
+      @Query("appName") String appName, @Query("tierName") String tierName, @Query("requestGuid") String requestGuid,
+      @Body AppdynamicsMetricPackDataValidationRequest validationRequest);
 
   @POST("appdynamics/applications-ng")
   Call<RestResponse<List<AppDynamicsApplication>>> getAppDynamicsApplications(@Query("accountId") String accountId,

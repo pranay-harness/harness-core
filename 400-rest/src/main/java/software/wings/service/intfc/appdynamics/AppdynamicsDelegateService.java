@@ -67,6 +67,6 @@ public interface AppdynamicsDelegateService {
 
   @DelegateTaskType(TaskType.APPDYNAMICS_METRIC_PACK_DATA)
   Set<AppdynamicsValidationResponse> getMetricPackData(AppDynamicsConnectorDTO appDynamicsConnectorDTO,
-      List<EncryptedDataDetail> encryptionDetails, long appdAppId, long appdTierId, String requestGuid,
+      List<EncryptedDataDetail> encryptionDetails, String appName, String tierName, String requestGuid,
       List<MetricPackDTO> metricPacks, Instant startTime, Instant endTime);
 }

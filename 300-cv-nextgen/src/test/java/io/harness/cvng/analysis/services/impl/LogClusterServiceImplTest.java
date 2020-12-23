@@ -392,7 +392,8 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     cvConfig.setServiceIdentifier(generateUuid());
     cvConfig.setEnvIdentifier(generateUuid());
     cvConfig.setProjectIdentifier(generateUuid());
-    cvConfig.setGroupId(generateUuid());
+    cvConfig.setIdentifier(generateUuid());
+    cvConfig.setMonitoringSourceName(generateUuid());
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
     cvConfig.setProductName(generateUuid());
   }

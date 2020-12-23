@@ -5,8 +5,8 @@ import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,10 +24,9 @@ import lombok.Value;
 @JsonTypeName("APP_DYNAMICS")
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AppDynamicsDSConfig extends DSConfig {
-  private String applicationName;
-  private Set<MetricPack> metricPacks;
-  private Set<ServiceMapping> serviceMappings;
+  List<AppdynamicsAppConfig> appConfigs;
 
   @Override
   public DataSourceType getType() {
@@ -40,8 +39,6 @@ public class AppDynamicsDSConfig extends DSConfig {
     Map<Key, AppDynamicsCVConfig> existingConfigMap = new HashMap<>();
     List<AppDynamicsCVConfig> existingAppDCVConfig = (List<AppDynamicsCVConfig>) (List<?>) existingCVConfigs;
     for (AppDynamicsCVConfig appDynamicsCVConfig : existingAppDCVConfig) {
-      Preconditions.checkArgument(appDynamicsCVConfig.getApplicationName().equals(this.applicationName),
-          "Can not get update result for different application names.");
       existingConfigMap.put(getKeyFromCVConfig(appDynamicsCVConfig), appDynamicsCVConfig);
     }
     Map<Key, AppDynamicsCVConfig> currentCVConfigsMap = new HashMap<>();
@@ -65,6 +62,15 @@ public class AppDynamicsDSConfig extends DSConfig {
         .build();
   }
 
+  @Data
+  @Builder
+  public static class AppdynamicsAppConfig {
+    String applicationName;
+    String envIdentifier;
+    Set<MetricPack> metricPacks;
+    Set<ServiceMapping> serviceMappings;
+  }
+
   @Value
   @Builder
   public static class ServiceMapping {
@@ -74,21 +80,24 @@ public class AppDynamicsDSConfig extends DSConfig {
 
   private List<AppDynamicsCVConfig> toCVConfigs() {
     List<AppDynamicsCVConfig> cvConfigs = new ArrayList<>();
-    serviceMappings.forEach(serviceMapping -> metricPacks.forEach(metricPack -> {
-      AppDynamicsCVConfig appDynamicsCVConfig = new AppDynamicsCVConfig();
-      fillCommonFields(appDynamicsCVConfig);
-      appDynamicsCVConfig.setApplicationName(this.applicationName);
-      appDynamicsCVConfig.setTierName(serviceMapping.getTierName());
-      appDynamicsCVConfig.setServiceIdentifier(serviceMapping.serviceIdentifier);
-      appDynamicsCVConfig.setMetricPack(metricPack);
-      appDynamicsCVConfig.setCategory(metricPack.getCategory());
-      cvConfigs.add(appDynamicsCVConfig);
-    }));
+    appConfigs.forEach(
+        appConfig -> appConfig.serviceMappings.forEach(serviceMapping -> appConfig.metricPacks.forEach(metricPack -> {
+          AppDynamicsCVConfig appDynamicsCVConfig = new AppDynamicsCVConfig();
+          fillCommonFields(appDynamicsCVConfig);
+          appDynamicsCVConfig.setApplicationName(appConfig.applicationName);
+          appDynamicsCVConfig.setEnvIdentifier(appConfig.envIdentifier);
+          appDynamicsCVConfig.setTierName(serviceMapping.getTierName());
+          appDynamicsCVConfig.setServiceIdentifier(serviceMapping.serviceIdentifier);
+          appDynamicsCVConfig.setMetricPack(metricPack);
+          appDynamicsCVConfig.setCategory(metricPack.getCategory());
+          cvConfigs.add(appDynamicsCVConfig);
+        })));
     return cvConfigs;
   }
 
   private Key getKeyFromCVConfig(AppDynamicsCVConfig appDynamicsCVConfig) {
     return Key.builder()
+        .appName(appDynamicsCVConfig.getApplicationName())
         .metricPack(appDynamicsCVConfig.getMetricPack())
         .serviceIdentifier(appDynamicsCVConfig.getServiceIdentifier())
         .tierName(appDynamicsCVConfig.getTierName())
@@ -97,6 +106,7 @@ public class AppDynamicsDSConfig extends DSConfig {
   @Value
   @Builder
   private static class Key {
+    String appName;
     String tierName;
     String serviceIdentifier;
     MetricPack metricPack;

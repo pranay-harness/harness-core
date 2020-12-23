@@ -10,19 +10,19 @@ import io.harness.cvng.core.entities.CVConfig;
 import org.junit.Before;
 
 public class DSConfigTestBase extends CategoryTest {
-  protected String identifier;
+  protected String monitoringSourceIdentifier;
+  protected String monitoringSourceName;
   protected String accountId;
   protected String projectIdentifier;
   protected String productName;
   protected String connectorIdentifier;
   protected String envIdentifier;
-  protected String groupId;
   protected String serviceIdentifier;
 
   @Before
   public void setUp() {
-    identifier = generateUuid();
-    groupId = identifier;
+    monitoringSourceIdentifier = generateUuid();
+    monitoringSourceName = "source-name";
     accountId = generateUuid();
     projectIdentifier = "harness";
     productName = "Performance monitoring";
@@ -33,8 +33,8 @@ public class DSConfigTestBase extends CategoryTest {
   protected void fillCommonFields(DSConfig dsConfig) {
     dsConfig.setAccountId(accountId);
     dsConfig.setConnectorIdentifier(connectorIdentifier);
-    dsConfig.setEnvIdentifier(envIdentifier);
-    dsConfig.setIdentifier(identifier);
+    dsConfig.setIdentifier(monitoringSourceIdentifier);
+    dsConfig.setMonitoringSourceName(monitoringSourceName);
     dsConfig.setProductName(productName);
     dsConfig.setProjectIdentifier(projectIdentifier);
   }
@@ -45,16 +45,17 @@ public class DSConfigTestBase extends CategoryTest {
     cvConfig.setProductName(productName);
     cvConfig.setProjectIdentifier(projectIdentifier);
     cvConfig.setAccountId(accountId);
-    cvConfig.setGroupId(groupId);
+    cvConfig.setIdentifier(monitoringSourceIdentifier);
+    cvConfig.setMonitoringSourceName(monitoringSourceName);
     cvConfig.setServiceIdentifier(serviceIdentifier);
   }
 
   protected void assertCommon(CVConfig cvConfig, DSConfig dsConfig) {
     assertThat(cvConfig.getAccountId()).isEqualTo(dsConfig.getAccountId());
-    assertThat(cvConfig.getGroupId()).isEqualTo(dsConfig.getIdentifier());
+    assertThat(cvConfig.getIdentifier()).isEqualTo(dsConfig.getIdentifier());
+    assertThat(cvConfig.getMonitoringSourceName()).isEqualTo(dsConfig.getMonitoringSourceName());
     assertThat(cvConfig.getProjectIdentifier()).isEqualTo(dsConfig.getProjectIdentifier());
     assertThat(cvConfig.getConnectorIdentifier()).isEqualTo(dsConfig.getConnectorIdentifier());
-    assertThat(cvConfig.getEnvIdentifier()).isEqualTo(dsConfig.getEnvIdentifier());
     assertThat(cvConfig.getProductName()).isEqualTo(dsConfig.getProductName());
   }
 }

@@ -4,9 +4,11 @@ import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageF
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.beans.TimeSeriesThresholdActionType;
+import io.harness.cvng.beans.TimeSeriesThresholdCriteria;
 import io.harness.cvng.beans.TimeSeriesThresholdType;
 import io.harness.cvng.beans.stackdriver.StackDriverMetricDefinition;
 import io.harness.cvng.core.beans.StackdriverDefinition;
@@ -16,6 +18,7 @@ import io.harness.serializer.JsonUtils;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
+import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -37,6 +40,7 @@ import lombok.experimental.FieldNameConstants;
 public class StackdriverCVConfig extends MetricCVConfig {
   private List<MetricInfo> metricInfoList;
   private String dashboardName;
+  private String dashboardPath;
 
   @Data
   @Builder
@@ -75,7 +79,9 @@ public class StackdriverCVConfig extends MetricCVConfig {
     Set<TimeSeriesThreshold> thresholds = new HashSet<>();
     metricType.getThresholds().forEach(threshold -> {
       thresholdTypes.forEach(type -> {
-        threshold.setThresholdType(type);
+        Gson gson = new Gson();
+        TimeSeriesThresholdCriteria criteria = gson.fromJson(gson.toJson(threshold), TimeSeriesThresholdCriteria.class);
+        criteria.setThresholdType(type);
         thresholds.add(TimeSeriesThreshold.builder()
                            .accountId(getAccountId())
                            .projectIdentifier(getProjectIdentifier())
@@ -83,19 +89,28 @@ public class StackdriverCVConfig extends MetricCVConfig {
                            .metricType(metricType)
                            .metricName(metricName)
                            .action(TimeSeriesThresholdActionType.IGNORE)
-                           .criteria(threshold)
+                           .criteria(criteria)
                            .build());
       });
     });
     return thresholds;
   }
 
-  public void fromStackdriverDefinitions(List<StackdriverDefinition> stackdriverDefinitions, MetricPack metricPack) {
+  public void fromStackdriverDefinitions(
+      List<StackdriverDefinition> stackdriverDefinitions, CVMonitoringCategory category) {
     Preconditions.checkNotNull(stackdriverDefinitions);
     if (metricInfoList == null) {
       metricInfoList = new ArrayList<>();
     }
     dashboardName = stackdriverDefinitions.get(0).getDashboardName();
+    MetricPack metricPack = MetricPack.builder()
+                                .category(category)
+                                .accountId(getAccountId())
+                                .dataSourceType(DataSourceType.STACKDRIVER)
+                                .projectIdentifier(getProjectIdentifier())
+                                .identifier(category.getDisplayName())
+                                .build();
+
     stackdriverDefinitions.forEach(definition -> {
       TimeSeriesMetricType metricType = definition.getRiskProfile().getMetricType();
       metricInfoList.add(MetricInfo.builder()

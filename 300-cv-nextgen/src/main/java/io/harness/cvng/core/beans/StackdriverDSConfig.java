@@ -3,11 +3,9 @@ package io.harness.cvng.core.beans;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.entities.CVConfig;
-import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.StackdriverCVConfig;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,9 +24,7 @@ import lombok.Value;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class StackdriverDSConfig extends DSConfig {
-  private Set<StackdriverDefinition> metricDefinitions;
-  private String serviceIdentifier;
-  private Set<MetricPack> metricPacks;
+  private List<StackdriverConfiguration> metricConfigurations;
 
   @Override
   public DataSourceType getType() {
@@ -43,8 +39,6 @@ public class StackdriverDSConfig extends DSConfig {
     List<StackdriverCVConfig> existingSDCVConfigs = (List<StackdriverCVConfig>) (List<?>) existingCVConfigs;
 
     for (StackdriverCVConfig stackdriverCVConfig : existingSDCVConfigs) {
-      Preconditions.checkArgument(stackdriverCVConfig.getEnvIdentifier().equals(this.getEnvIdentifier()),
-          "Can not get update result for different envIdentifier names.");
       existingConfigMap.put(getKeyFromConfig(stackdriverCVConfig), stackdriverCVConfig);
     }
 
@@ -75,26 +69,28 @@ public class StackdriverDSConfig extends DSConfig {
 
   private List<StackdriverCVConfig> toCVConfigs() {
     // group things under same service_env_category_dashboard into one config
-    Map<String, List<StackdriverDefinition>> categoryMap = new HashMap<>();
-    metricDefinitions.forEach(metricDefinition -> {
-      CVMonitoringCategory category = metricDefinition.getRiskProfile().getCategory();
-      String key = category + "_" + metricDefinition.getDashboardName();
-      if (!categoryMap.containsKey(key)) {
-        categoryMap.put(key, new ArrayList<>());
+    Map<Key, List<StackdriverDefinition>> keyToDefinitionMap = new HashMap<>();
+
+    metricConfigurations.forEach(configuration -> {
+      Key key = getKeyFromStackdriverConfiguration(configuration);
+      if (!keyToDefinitionMap.containsKey(key)) {
+        keyToDefinitionMap.put(key, new ArrayList<>());
       }
-      categoryMap.get(key).add(metricDefinition);
+      keyToDefinitionMap.get(key).add(configuration.getMetricDefinition());
     });
 
-    Map<CVMonitoringCategory, MetricPack> categoryMetricPackMap = new HashMap<>();
-    metricPacks.forEach(pack -> { categoryMetricPackMap.put(pack.getCategory(), pack); });
     List<StackdriverCVConfig> cvConfigs = new ArrayList<>();
-    categoryMap.forEach((key, stackdriverDefinitions) -> {
+
+    keyToDefinitionMap.forEach((key, stackdriverDefinitions) -> {
       StackdriverCVConfig cvConfig = StackdriverCVConfig.builder().build();
       fillCommonFields(cvConfig);
-      CVMonitoringCategory category = stackdriverDefinitions.get(0).getRiskProfile().getCategory();
-      cvConfig.setServiceIdentifier(serviceIdentifier);
-      cvConfig.fromStackdriverDefinitions(stackdriverDefinitions, categoryMetricPackMap.get(category));
+      CVMonitoringCategory category = key.getCategory();
+      cvConfig.setEnvIdentifier(key.getEnvIdentifier());
+      cvConfig.setServiceIdentifier(key.getServiceIdentifier());
+      cvConfig.fromStackdriverDefinitions(stackdriverDefinitions, category);
       cvConfig.setCategory(category);
+      cvConfig.setDashboardName(key.getDashboardName());
+      cvConfig.setDashboardPath(stackdriverDefinitions.get(0).getDashboardPath());
       cvConfigs.add(cvConfig);
     });
 
@@ -103,15 +99,34 @@ public class StackdriverDSConfig extends DSConfig {
 
   private Key getKeyFromConfig(StackdriverCVConfig cvConfig) {
     return Key.builder()
+        .envIdentifier(cvConfig.getEnvIdentifier())
         .serviceIdentifier(cvConfig.getServiceIdentifier())
         .category(cvConfig.getMetricPack().getCategory())
         .dashboardName(cvConfig.getDashboardName())
         .build();
   }
 
+  private Key getKeyFromStackdriverConfiguration(StackdriverConfiguration configuration) {
+    return Key.builder()
+        .envIdentifier(configuration.getEnvIdentifier())
+        .dashboardName(configuration.getMetricDefinition().getDashboardName())
+        .serviceIdentifier(configuration.getServiceIdentifier())
+        .category(configuration.getMetricDefinition().getRiskProfile().getCategory())
+        .build();
+  }
+
+  @Data
+  @Builder
+  public static class StackdriverConfiguration {
+    private StackdriverDefinition metricDefinition;
+    private String serviceIdentifier;
+    private String envIdentifier;
+  }
+
   @Value
   @Builder
   private static class Key {
+    String envIdentifier;
     String serviceIdentifier;
     CVMonitoringCategory category;
     String dashboardName;

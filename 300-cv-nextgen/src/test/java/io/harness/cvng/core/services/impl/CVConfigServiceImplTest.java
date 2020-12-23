@@ -17,6 +17,7 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.AppDynamicsDSConfig;
+import io.harness.cvng.core.beans.AppDynamicsDSConfig.AppdynamicsAppConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.SplunkCVConfig;
@@ -261,7 +262,8 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     cvConfigs.forEach(cvConfig -> {
       cvConfig.setConnectorIdentifier(connectorIdentifier1);
       cvConfig.setProductName("product1");
-      cvConfig.setGroupId("group1");
+      cvConfig.setIdentifier("group1");
+      cvConfig.setMonitoringSourceName("group1");
     });
     cvConfigs.get(0).setProductName("product2");
     save(cvConfigs);
@@ -337,9 +339,9 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
   public void testDeleteByGroupId() {
     String groupName = "appdynamics-app-name";
     List<CVConfig> cvConfigs = createCVConfigs(5);
-    cvConfigs.forEach(cvConfig -> cvConfig.setGroupId(groupName));
+    cvConfigs.forEach(cvConfig -> cvConfig.setIdentifier(groupName));
     save(cvConfigs);
-    cvConfigService.deleteByGroupId(accountId, connectorIdentifier, productName, groupName);
+    cvConfigService.deleteByIdentifier(accountId, orgIdentifier, projectIdentifier, groupName);
     cvConfigs.forEach(cvConfig -> assertThat(cvConfigService.get(cvConfig.getUuid())).isNull());
   }
 
@@ -362,8 +364,7 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
   public void testGetEnvToServicesList() {
     int numOfEnv = 3;
     for (int i = 0; i < numOfEnv; i++) {
-      AppDynamicsDSConfig dataSourceCVConfig = createAppDynamicsDataSourceCVConfig("appd-" + i);
-      dataSourceCVConfig.setEnvIdentifier("env-" + i);
+      AppDynamicsDSConfig dataSourceCVConfig = createAppDynamicsDataSourceCVConfig("appd-" + i, "env-" + i);
       dsConfigService.upsert(dataSourceCVConfig);
     }
 
@@ -429,23 +430,23 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     String MONITORING_SOURCE_SUFFIX = "Monitoring Source Id ";
     List<CVConfig> cvConfigs = createCVConfigs(50);
     for (int i = 0; i < 50; i++) {
-      cvConfigs.get(i).setMonitoringSourceIdentifier(MONITORING_SOURCE_SUFFIX + i);
+      cvConfigs.get(i).setIdentifier(MONITORING_SOURCE_SUFFIX + i);
     }
     save(cvConfigs);
 
-    // Testing for limit
-    List<String> firstPageMonitoringIds =
-        cvConfigService.getMonitoringSourceIds(accountId, orgIdentifier, projectIdentifier, 20, 0);
-    assertThat(firstPageMonitoringIds.size()).isEqualTo(20);
+    // Testing no filter
+    List<String> monitoringSourceIds =
+        cvConfigService.getMonitoringSourceIds(accountId, orgIdentifier, projectIdentifier, null);
+    assertThat(monitoringSourceIds.size()).isEqualTo(50);
 
-    // Testing the second page
-    List<String> secondPageMonitoringIds =
-        cvConfigService.getMonitoringSourceIds(accountId, orgIdentifier, projectIdentifier, 20, 20);
-    assertThat(secondPageMonitoringIds.size()).isEqualTo(20);
+    // Testing filter
+    monitoringSourceIds =
+        cvConfigService.getMonitoringSourceIds(accountId, orgIdentifier, projectIdentifier, "Ce iD   ");
+    assertThat(monitoringSourceIds.size()).isEqualTo(50);
 
-    // Checking that the elements returned in first 20 and next are different
-    firstPageMonitoringIds.removeAll(secondPageMonitoringIds);
-    assertThat(firstPageMonitoringIds.size()).isEqualTo(20);
+    monitoringSourceIds =
+        cvConfigService.getMonitoringSourceIds(accountId, orgIdentifier, projectIdentifier, generateUuid());
+    assertThat(monitoringSourceIds).isEmpty();
   }
 
   @Test
@@ -455,10 +456,10 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     String MONITORING_SOURCE_SUFFIX = "Monitoring Source Id ";
     List<CVConfig> cvConfigs = createCVConfigs(10);
     for (int i = 0; i < 3; i++) {
-      cvConfigs.get(i).setMonitoringSourceIdentifier(MONITORING_SOURCE_SUFFIX + "0");
+      cvConfigs.get(i).setIdentifier(MONITORING_SOURCE_SUFFIX + "0");
     }
     for (int i = 0; i < 3; i++) {
-      cvConfigs.get(i + 3).setMonitoringSourceIdentifier(MONITORING_SOURCE_SUFFIX + "1");
+      cvConfigs.get(i + 3).setIdentifier(MONITORING_SOURCE_SUFFIX + "1");
     }
     save(cvConfigs);
     List<CVConfig> cvConfigsList = cvConfigService.listByMonitoringSources(accountId, orgIdentifier, projectIdentifier,
@@ -466,22 +467,30 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     assertThat(cvConfigsList.size()).isEqualTo(6);
   }
 
-  private AppDynamicsDSConfig createAppDynamicsDataSourceCVConfig(String identifier) {
+  private AppDynamicsDSConfig createAppDynamicsDataSourceCVConfig(String identifier, String envIdentifier) {
     AppDynamicsDSConfig appDynamicsDSConfig = new AppDynamicsDSConfig();
     appDynamicsDSConfig.setIdentifier(identifier);
+    appDynamicsDSConfig.setMonitoringSourceName(generateUuid());
     appDynamicsDSConfig.setConnectorIdentifier(connectorIdentifier);
-    appDynamicsDSConfig.setApplicationName(identifier);
     appDynamicsDSConfig.setProductName(productName);
-    appDynamicsDSConfig.setEnvIdentifier("env");
     appDynamicsDSConfig.setAccountId(accountId);
     appDynamicsDSConfig.setProjectIdentifier(projectIdentifier);
     appDynamicsDSConfig.setOrgIdentifier(orgIdentifier);
-    appDynamicsDSConfig.setMetricPacks(
-        Sets.newHashSet(MetricPack.builder().accountId(accountId).identifier("appd performance metric pack").build()));
-    appDynamicsDSConfig.setServiceMappings(Sets.newHashSet(
-        AppDynamicsDSConfig.ServiceMapping.builder().serviceIdentifier("harness-manager").tierName("manager").build(),
-        AppDynamicsDSConfig.ServiceMapping.builder().serviceIdentifier("harness-qa").tierName("manager-qa").build()));
-
+    appDynamicsDSConfig.setAppConfigs(Lists.newArrayList(
+        AppdynamicsAppConfig.builder()
+            .applicationName(identifier)
+            .envIdentifier(envIdentifier)
+            .metricPacks(Sets.newHashSet(
+                MetricPack.builder().accountId(accountId).identifier("appd performance metric pack").build()))
+            .serviceMappings(Sets.newHashSet(AppDynamicsDSConfig.ServiceMapping.builder()
+                                                 .serviceIdentifier("harness-manager")
+                                                 .tierName("manager")
+                                                 .build(),
+                AppDynamicsDSConfig.ServiceMapping.builder()
+                    .serviceIdentifier("harness-qa")
+                    .tierName("manager-qa")
+                    .build()))
+            .build()));
     return appDynamicsDSConfig;
   }
 
@@ -492,11 +501,11 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     assertThat(actual.getServiceIdentifier()).isEqualTo(expected.getServiceIdentifier());
     assertThat(actual.getEnvIdentifier()).isEqualTo(expected.getEnvIdentifier());
     assertThat(actual.getProjectIdentifier()).isEqualTo(expected.getProjectIdentifier());
-    assertThat(actual.getGroupId()).isEqualTo(expected.getGroupId());
+    assertThat(actual.getIdentifier()).isEqualTo(expected.getIdentifier());
     assertThat(actual.getCategory()).isEqualTo(expected.getCategory());
     assertThat(actual.getProductName()).isEqualTo(expected.getProductName());
     assertThat(actual.getType()).isEqualTo(expected.getType());
-    assertThat(actual.getMonitoringSourceIdentifier()).isEqualTo(expected.getMonitoringSourceIdentifier());
+    assertThat(actual.getIdentifier()).isEqualTo(expected.getIdentifier());
     assertThat(actual.getMonitoringSourceName()).isEqualTo(expected.getMonitoringSourceName());
   }
 
@@ -520,10 +529,11 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     cvConfig.setEnvIdentifier("env");
     cvConfig.setOrgIdentifier(orgIdentifier);
     cvConfig.setProjectIdentifier(projectIdentifier);
-    cvConfig.setGroupId(groupId);
+    cvConfig.setIdentifier(groupId);
+    cvConfig.setMonitoringSourceName(generateUuid());
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
     cvConfig.setProductName(productName);
-    cvConfig.setMonitoringSourceIdentifier(monitoringSourceIdentifier);
+    cvConfig.setIdentifier(monitoringSourceIdentifier);
     cvConfig.setMonitoringSourceName(monitoringSourceName);
   }
 

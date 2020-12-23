@@ -496,7 +496,8 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     cvConfig.setEnvIdentifier("env");
     cvConfig.setOrgIdentifier(orgIdentifier);
     cvConfig.setProjectIdentifier(projectIdentifier);
-    cvConfig.setGroupId(generateUuid());
+    cvConfig.setIdentifier(generateUuid());
+    cvConfig.setMonitoringSourceName(generateUuid());
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
     cvConfig.setProductName(generateUuid());
     cvConfig.setApplicationName("appName");

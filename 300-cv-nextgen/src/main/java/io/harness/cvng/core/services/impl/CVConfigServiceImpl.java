@@ -1,6 +1,8 @@
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -32,7 +34,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -71,7 +72,7 @@ public class CVConfigServiceImpl implements CVConfigService {
   public List<CVConfig> find(String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier,
       String envIdentifier, List<DataSourceType> dataSourceTypes) {
     Preconditions.checkNotNull(accountId);
-    List<CVConfig> cvConfigs = hPersistence.createQuery(CVConfig.class)
+    List<CVConfig> cvConfigs = hPersistence.createQuery(CVConfig.class, excludeAuthority)
                                    .filter(CVConfigKeys.accountId, accountId)
                                    .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
                                    .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
@@ -112,36 +113,39 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   @Override
-  public void deleteByGroupId(String accountId, String connectorIdentifier, String productName, String groupId) {
-    hPersistence.delete(hPersistence.createQuery(CVConfig.class)
-                            .filter(CVConfigKeys.accountId, accountId)
-                            .filter(CVConfigKeys.connectorIdentifier, connectorIdentifier)
-                            .filter(CVConfigKeys.productName, productName)
-                            .filter(CVConfigKeys.groupId, groupId));
+  public void deleteByIdentifier(
+      String accountId, String orgIdentifier, String projectIdentifier, String monitoringSourceIdentifier) {
+    hPersistence.createQuery(CVConfig.class, excludeAuthority)
+        .filter(CVConfigKeys.accountId, accountId)
+        .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
+        .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
+        .filter(CVConfigKeys.identifier, monitoringSourceIdentifier)
+        .forEach(cvConfig -> delete(cvConfig.getUuid()));
   }
 
   @Override
   public List<CVConfig> list(@NotNull String accountId, String connectorIdentifier) {
-    Query<CVConfig> query = hPersistence.createQuery(CVConfig.class)
+    Query<CVConfig> query = hPersistence.createQuery(CVConfig.class, excludeAuthority)
                                 .filter(CVConfigKeys.accountId, accountId)
                                 .filter(CVConfigKeys.connectorIdentifier, connectorIdentifier);
     return query.asList();
   }
   @Override
   public List<CVConfig> list(String accountId, String connectorIdentifier, String productName) {
-    Query<CVConfig> query = hPersistence.createQuery(CVConfig.class)
+    Query<CVConfig> query = hPersistence.createQuery(CVConfig.class, excludeAuthority)
                                 .filter(CVConfigKeys.accountId, accountId)
                                 .filter(CVConfigKeys.connectorIdentifier, connectorIdentifier)
                                 .filter(CVConfigKeys.productName, productName);
     return query.asList();
   }
   @Override
-  public List<CVConfig> list(String accountId, String connectorIdentifier, String productName, String groupId) {
-    Query<CVConfig> query = hPersistence.createQuery(CVConfig.class)
+  public List<CVConfig> list(
+      String accountId, String connectorIdentifier, String productName, String monitoringSourceIdentifier) {
+    Query<CVConfig> query = hPersistence.createQuery(CVConfig.class, excludeAuthority)
                                 .filter(CVConfigKeys.accountId, accountId)
                                 .filter(CVConfigKeys.connectorIdentifier, connectorIdentifier)
                                 .filter(CVConfigKeys.productName, productName)
-                                .filter(CVConfigKeys.groupId, groupId);
+                                .filter(CVConfigKeys.identifier, monitoringSourceIdentifier);
     return query.asList();
   }
 
@@ -177,7 +181,7 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   private List<CVConfig> listConfigsForProject(String accountId, String orgIdentifier, String projectIdentifier) {
-    return hPersistence.createQuery(CVConfig.class)
+    return hPersistence.createQuery(CVConfig.class, excludeAuthority)
         .filter(CVConfigKeys.accountId, accountId)
         .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
         .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
@@ -188,7 +192,7 @@ public class CVConfigServiceImpl implements CVConfigService {
   public List<String> getProductNames(String accountId, String connectorIdentifier) {
     checkNotNull(accountId, "accountId can not be null");
     checkNotNull(connectorIdentifier, "ConnectorIdentifier can not be null");
-    return hPersistence.createQuery(CVConfig.class)
+    return hPersistence.createQuery(CVConfig.class, excludeAuthority)
         .filter(CVConfigKeys.connectorIdentifier, connectorIdentifier)
         .filter(CVConfigKeys.accountId, accountId)
         .project(CVConfigKeys.productName, true)
@@ -204,7 +208,8 @@ public class CVConfigServiceImpl implements CVConfigService {
   public void setCollectionTaskId(String cvConfigId, String perpetualTaskId) {
     UpdateOperations<CVConfig> updateOperations =
         hPersistence.createUpdateOperations(CVConfig.class).set(CVConfigKeys.perpetualTaskId, perpetualTaskId);
-    Query<CVConfig> query = hPersistence.createQuery(CVConfig.class).filter(CVConfigKeys.uuid, cvConfigId);
+    Query<CVConfig> query =
+        hPersistence.createQuery(CVConfig.class, excludeAuthority).filter(CVConfigKeys.uuid, cvConfigId);
     hPersistence.update(query, updateOperations);
   }
 
@@ -241,7 +246,7 @@ public class CVConfigServiceImpl implements CVConfigService {
   @Override
   public List<CVConfig> list(String accountId, String orgIdentifier, String projectIdentifier,
       String environmentIdentifier, String serviceIdentifier, CVMonitoringCategory monitoringCategory) {
-    Query<CVConfig> query = hPersistence.createQuery(CVConfig.class)
+    Query<CVConfig> query = hPersistence.createQuery(CVConfig.class, excludeAuthority)
                                 .filter(CVConfigKeys.accountId, accountId)
                                 .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
                                 .filter(CVConfigKeys.projectIdentifier, projectIdentifier);
@@ -284,7 +289,7 @@ public class CVConfigServiceImpl implements CVConfigService {
   @Override
   public List<CVConfig> getCVConfigs(
       String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier) {
-    return hPersistence.createQuery(CVConfig.class)
+    return hPersistence.createQuery(CVConfig.class, excludeAuthority)
         .filter(CVConfigKeys.accountId, accountId)
         .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
         .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
@@ -294,7 +299,7 @@ public class CVConfigServiceImpl implements CVConfigService {
 
   @Override
   public List<String> getMonitoringSourceIds(
-      String accountId, String orgIdentifier, String projectIdentifier, int limit, int offset) {
+      String accountId, String orgIdentifier, String projectIdentifier, String filter) {
     BasicDBObject cvConfigQuery = new BasicDBObject();
     List<BasicDBObject> conditions = new ArrayList<>();
     conditions.add(new BasicDBObject(CVConfigKeys.accountId, accountId));
@@ -302,31 +307,32 @@ public class CVConfigServiceImpl implements CVConfigService {
     conditions.add(new BasicDBObject(CVConfigKeys.orgIdentifier, orgIdentifier));
     cvConfigQuery.put("$and", conditions);
     List<String> allMonitoringSourceIds =
-        hPersistence.getCollection(CVConfig.class).distinct(CVConfigKeys.monitoringSourceIdentifier, cvConfigQuery);
+        hPersistence.getCollection(CVConfig.class).distinct(CVConfigKeys.identifier, cvConfigQuery);
     Collections.reverse(allMonitoringSourceIds);
-    return Optional.ofNullable(allMonitoringSourceIds)
-        .orElseGet(Collections::emptyList)
-        .stream()
-        .skip(offset)
-        .limit(limit)
-        .collect(Collectors.toList());
+    if (isEmpty(allMonitoringSourceIds) || isEmpty(filter)) {
+      return allMonitoringSourceIds;
+    }
+
+    return allMonitoringSourceIds.stream()
+        .filter(identifier -> identifier.toLowerCase().contains(filter.trim().toLowerCase()))
+        .collect(toList());
   }
 
   @Override
   public List<CVConfig> listByMonitoringSources(
       String accountId, String orgIdentifier, String projectIdentifier, List<String> monitoringSourceIdentifier) {
-    return hPersistence.createQuery(CVConfig.class)
+    return hPersistence.createQuery(CVConfig.class, excludeAuthority)
         .filter(CVConfigKeys.accountId, accountId)
         .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
         .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
-        .field(CVConfigKeys.monitoringSourceIdentifier)
+        .field(CVConfigKeys.identifier)
         .in(monitoringSourceIdentifier)
         .asList();
   }
 
   @Override
   public boolean doesAnyCVConfigExistsInProject(String accountId, String orgIdentifier, String projectIdentifier) {
-    long numberOfCVConfigs = hPersistence.createQuery(CVConfig.class)
+    long numberOfCVConfigs = hPersistence.createQuery(CVConfig.class, excludeAuthority)
                                  .filter(CVConfigKeys.accountId, accountId)
                                  .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
                                  .filter(CVConfigKeys.projectIdentifier, projectIdentifier)

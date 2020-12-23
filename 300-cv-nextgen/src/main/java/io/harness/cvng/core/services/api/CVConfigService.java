@@ -18,15 +18,16 @@ public interface CVConfigService {
   @Nullable CVConfig get(String cvConfigId);
   void delete(String cvConfigId);
 
-  void deleteByGroupId(String accountId, String connectorIdentifier, String productName, String groupId);
+  void deleteByIdentifier(
+      String accountId, String orgIdentifier, String projectIdentifier, String monitoringSourceIdentifier);
   List<CVConfig> list(String accountId, String connectorIdentifier);
   List<CVConfig> list(String accountId, String connectorIdentifier, String productName);
-  List<CVConfig> list(String accountId, String connectorIdentifier, String productName, String groupId);
+  List<CVConfig> list(
+      String accountId, String connectorIdentifier, String productName, String monitoringSourceIdentifier);
   List<CVConfig> list(String accountId, String orgIdentifier, String projectIdentifier, String environmentIdentifier,
       String serviceIdentifier, CVMonitoringCategory monitoringCategory);
   List<String> getProductNames(String accountId, String connectorIdentifier);
-  List<String> getMonitoringSourceIds(
-      String accountId, String orgIdentifier, String projectIdentifier, int limit, int offset);
+  List<String> getMonitoringSourceIds(String accountId, String orgIdentifier, String projectIdentifier, String filter);
   List<CVConfig> listByMonitoringSources(
       String accountId, String orgIdentifier, String projectIdentifier, List<String> monitoringSourceIdentifier);
 

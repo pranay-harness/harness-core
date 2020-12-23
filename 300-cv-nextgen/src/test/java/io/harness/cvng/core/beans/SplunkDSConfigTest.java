@@ -27,6 +27,7 @@ public class SplunkDSConfigTest extends DSConfigTestBase {
   public void setup() {
     splunkDSConfig = new SplunkDSConfig();
     fillCommonFields(splunkDSConfig);
+    splunkDSConfig.setEnvIdentifier(envIdentifier);
     splunkDSConfig.setQuery("exception");
     splunkDSConfig.setServiceInstanceIdentifier("host");
     splunkDSConfig.setEventType(CVNextGenConstants.ERRORS_PACK_IDENTIFIER);
@@ -43,6 +44,7 @@ public class SplunkDSConfigTest extends DSConfigTestBase {
     assertThat(added.size()).isEqualTo(1);
     SplunkCVConfig splunkCVConfig = (SplunkCVConfig) cvConfigUpdateResult.getAdded().get(0);
     assertCommon(splunkCVConfig, splunkDSConfig);
+    assertThat(splunkCVConfig.getEnvIdentifier()).isEqualTo(envIdentifier);
     assertThat(splunkCVConfig.getUuid()).isNull();
     assertThat(splunkCVConfig.getQuery()).isEqualTo(splunkDSConfig.getQuery());
     assertThat(splunkCVConfig.getCategory())
@@ -64,6 +66,7 @@ public class SplunkDSConfigTest extends DSConfigTestBase {
     SplunkCVConfig splunkCVConfig = (SplunkCVConfig) cvConfigUpdateResult.getUpdated().get(0);
     assertCommon(splunkCVConfig, splunkDSConfig);
     assertThat(splunkCVConfig.getUuid()).isNotNull();
+    assertThat(splunkCVConfig.getEnvIdentifier()).isEqualTo(envIdentifier);
     assertThat(splunkCVConfig.getQuery()).isEqualTo(splunkDSConfig.getQuery());
     assertThat(splunkCVConfig.getCategory())
         .isEqualTo(CVMonitoringCategory.fromDisplayName(splunkDSConfig.getEventType()));

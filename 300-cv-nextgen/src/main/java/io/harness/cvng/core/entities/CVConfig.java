@@ -57,7 +57,7 @@ public abstract class CVConfig
                 .field(CVConfigKeys.accountId)
                 .field(CVConfigKeys.orgIdentifier)
                 .field(CVConfigKeys.projectIdentifier)
-                .field(CVConfigKeys.monitoringSourceIdentifier)
+                .field(CVConfigKeys.identifier)
                 .build())
         .build();
   }
@@ -78,8 +78,7 @@ public abstract class CVConfig
   @NotNull private CVMonitoringCategory category;
   private String perpetualTaskId;
   private String productName;
-  private String groupId;
-  @NotNull private String monitoringSourceIdentifier;
+  @NotNull private String identifier;
   @NotNull private String monitoringSourceName;
 
   @FdIndex private Long analysisOrchestrationIteration;
@@ -115,8 +114,8 @@ public abstract class CVConfig
     checkNotNull(serviceIdentifier, generateErrorMessageFromParam(CVConfigKeys.serviceIdentifier));
     checkNotNull(envIdentifier, generateErrorMessageFromParam(CVConfigKeys.envIdentifier));
     checkNotNull(projectIdentifier, generateErrorMessageFromParam(CVConfigKeys.projectIdentifier));
-    checkNotNull(groupId, generateErrorMessageFromParam(CVConfigKeys.groupId));
-
+    checkNotNull(identifier, generateErrorMessageFromParam(CVConfigKeys.identifier));
+    checkNotNull(monitoringSourceName, generateErrorMessageFromParam(CVConfigKeys.monitoringSourceName));
     validateParams();
   }
 

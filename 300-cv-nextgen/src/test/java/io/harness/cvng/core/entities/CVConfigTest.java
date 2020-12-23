@@ -91,10 +91,10 @@ public class CVConfigTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testValidate_whenGroupIdIsUndefined() {
     CVConfig cvConfig = createCVConfig();
-    cvConfig.setGroupId(null);
+    cvConfig.setIdentifier(null);
     assertThatThrownBy(() -> cvConfig.validate())
         .isInstanceOf(NullPointerException.class)
-        .hasMessage("groupId should not be null");
+        .hasMessage("identifier should not be null");
   }
 
   private CVConfig createCVConfig() {
@@ -112,7 +112,8 @@ public class CVConfigTest extends CategoryTest {
     cvConfig.setServiceIdentifier(generateUuid());
     cvConfig.setEnvIdentifier(generateUuid());
     cvConfig.setProjectIdentifier(generateUuid());
-    cvConfig.setGroupId(groupId);
+    cvConfig.setIdentifier(groupId);
+    cvConfig.setMonitoringSourceName(generateUuid());
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
     cvConfig.setProductName(productName);
   }

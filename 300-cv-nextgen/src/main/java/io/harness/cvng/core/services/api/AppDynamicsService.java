@@ -11,12 +11,12 @@ import java.util.Set;
 
 public interface AppDynamicsService extends MonitoringSourceImportStatusCreator {
   Set<AppdynamicsValidationResponse> getMetricPackData(String accountId, String connectorIdentifier,
-      String orgIdentifier, String projectIdentifier, long appdAppId, long appdTierId, String requestGuid,
+      String orgIdentifier, String projectIdentifier, String appName, String tierName, String requestGuid,
       List<MetricPack> metricPacks);
 
   PageResponse<AppDynamicsApplication> getApplications(String accountId, String connectorIdentifier,
       String orgIdentifier, String projectIdentifier, int offset, int pageSize, String filter);
 
   PageResponse<AppDynamicsTier> getTiers(String accountId, String connectorIdentifier, String orgIdentifier,
-      String projectIdentifier, long appDynamicsAppId, int offset, int pageSize, String filter);
+      String projectIdentifier, String appName, int offset, int pageSize, String filter);
 }
