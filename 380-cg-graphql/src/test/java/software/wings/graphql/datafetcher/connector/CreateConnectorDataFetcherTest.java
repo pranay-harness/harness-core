@@ -27,6 +27,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -67,6 +68,8 @@ import software.wings.service.intfc.security.SecretManager;
 
 import java.lang.reflect.Method;
 import java.sql.SQLException;
+import java.util.HashSet;
+import javax.validation.ConstraintViolationException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -947,5 +950,33 @@ public class CreateConnectorDataFetcherTest {
     assertThatThrownBy(() -> dataFetcher.mutateAndFetch(input, mutationContext))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Region should be specified for Amazon S3 hosting platform");
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void createHelmGCSConnectorThrowsException() {
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
+                                   .withValue(GCSHelmRepoConfig.builder().accountId(ACCOUNT_ID).build())
+                                   .build();
+
+    doThrow(new ConstraintViolationException(new HashSet<>()))
+        .when(settingsService)
+        .saveWithPruning(isA(SettingAttribute.class), isA(String.class), isA(String.class));
+    doNothing()
+        .when(settingServiceHelper)
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
+    doReturn(QLGCSHelmRepoConnector.builder()).when(connectorsController).getConnectorBuilder(any());
+    doReturn(QLGCSHelmRepoConnector.builder()).when(connectorsController).populateConnector(any(), any());
+    doReturn(new EncryptedData()).when(secretManager).getSecretById(ACCOUNT_ID, PASSWORD);
+    doReturn(setting).when(settingsService).getByAccountAndId(ACCOUNT_ID, "GCP");
+
+    QLCreateConnectorPayload payload = dataFetcher.mutateAndFetch(
+        QLConnectorInput.builder()
+            .connectorType(QLConnectorType.GCS_HELM_REPO)
+            .helmConnector(Utility.getQlHelmConnectorInputBuilder(getQlGCSPlatformInputBuilder().build()).build())
+            .build(),
+        MutationContext.builder().accountId(ACCOUNT_ID).build());
   }
 }

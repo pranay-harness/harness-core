@@ -2,20 +2,25 @@ package software.wings.graphql.datafetcher.trigger;
 
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.MILAN;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.configuration.DeployMode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WebHookToken;
+import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.trigger.ArtifactTriggerCondition;
 import software.wings.beans.trigger.GithubAction;
 import software.wings.beans.trigger.PipelineTriggerCondition;
@@ -26,13 +31,25 @@ import software.wings.beans.trigger.TriggerConditionType;
 import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookSource;
+import software.wings.graphql.schema.type.trigger.QLArtifactConditionInput;
+import software.wings.graphql.schema.type.trigger.QLBitbucketEvent;
 import software.wings.graphql.schema.type.trigger.QLConditionType;
 import software.wings.graphql.schema.type.trigger.QLCreateOrUpdateTriggerInput;
+import software.wings.graphql.schema.type.trigger.QLCreateOrUpdateTriggerInput.QLCreateOrUpdateTriggerInputBuilder;
+import software.wings.graphql.schema.type.trigger.QLGitHubAction;
+import software.wings.graphql.schema.type.trigger.QLGitHubEvent;
+import software.wings.graphql.schema.type.trigger.QLGitHubEventType;
+import software.wings.graphql.schema.type.trigger.QLGitlabEvent;
 import software.wings.graphql.schema.type.trigger.QLOnNewArtifact;
 import software.wings.graphql.schema.type.trigger.QLOnPipelineCompletion;
 import software.wings.graphql.schema.type.trigger.QLOnSchedule;
 import software.wings.graphql.schema.type.trigger.QLOnWebhook;
+import software.wings.graphql.schema.type.trigger.QLPipelineConditionInput;
+import software.wings.graphql.schema.type.trigger.QLScheduleConditionInput;
 import software.wings.graphql.schema.type.trigger.QLTriggerConditionInput;
+import software.wings.graphql.schema.type.trigger.QLWebhookConditionInput;
+import software.wings.graphql.schema.type.trigger.QLWebhookSource;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.SettingsService;
 
 import java.util.Arrays;
@@ -47,8 +64,11 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 public class TriggerConditionControllerTest extends CategoryTest {
+  public static final String APP_ID = "appId";
   @Mock MainConfiguration mainConfiguration;
   @Mock SettingsService settingsService;
+  @Mock ArtifactStreamService artifactStreamService;
+  @Mock TriggerActionController triggerActionController;
 
   @InjectMocks TriggerConditionController triggerConditionController = Mockito.spy(new TriggerConditionController());
 
@@ -966,5 +986,392 @@ public class TriggerConditionControllerTest extends CategoryTest {
     assertThat(qlOnWebhook.getWebhookEvent()).isNotNull();
     assertThat(qlOnWebhook.getWebhookEvent().getEvent()).isEqualTo(WebhookEventType.RELEASE.getValue());
     assertThat(qlOnWebhook.getWebhookEvent().getAction()).isNull();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldResolveTriggerConditionOnNewArtifactConditionType() {
+    QLArtifactConditionInput artifactTriggerCondition =
+        QLArtifactConditionInput.builder().artifactSourceId("id").artifactFilter("filter").regex(true).build();
+
+    QLTriggerConditionInput qlTriggerConditionInput = QLTriggerConditionInput.builder()
+                                                          .conditionType(QLConditionType.ON_NEW_ARTIFACT)
+                                                          .artifactConditionInput(artifactTriggerCondition)
+                                                          .build();
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder().condition(qlTriggerConditionInput).applicationId(APP_ID).build();
+    when(artifactStreamService.get("id")).thenReturn(CustomArtifactStream.builder().appId(APP_ID).build());
+
+    ArtifactTriggerCondition retrievedArtifactTriggerCondition =
+        (ArtifactTriggerCondition) triggerConditionController.resolveTriggerCondition(qlCreateOrUpdateTriggerInput);
+
+    assertThat(retrievedArtifactTriggerCondition.getArtifactStreamId())
+        .isEqualTo(artifactTriggerCondition.getArtifactSourceId());
+    assertThat(retrievedArtifactTriggerCondition.getArtifactFilter())
+        .isEqualTo(artifactTriggerCondition.getArtifactFilter());
+    assertThat(retrievedArtifactTriggerCondition.isRegex()).isEqualTo(artifactTriggerCondition.getRegex());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorOnNewArtifactConditionInvalidCases() {
+    QLTriggerConditionInput qlTriggerConditionInput =
+        QLTriggerConditionInput.builder().conditionType(QLConditionType.ON_NEW_ARTIFACT).build();
+    QLCreateOrUpdateTriggerInputBuilder qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder().condition(qlTriggerConditionInput).applicationId(APP_ID);
+
+    assertThatThrownBy(() -> triggerConditionController.resolveTriggerCondition(qlCreateOrUpdateTriggerInput.build()))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("ArtifactConditionInput must not be null");
+
+    QLArtifactConditionInput artifactTriggerCondition =
+        QLArtifactConditionInput.builder().artifactFilter("filter").regex(true).build();
+
+    qlTriggerConditionInput = QLTriggerConditionInput.builder()
+                                  .conditionType(QLConditionType.ON_NEW_ARTIFACT)
+                                  .artifactConditionInput(artifactTriggerCondition)
+                                  .build();
+
+    QLCreateOrUpdateTriggerInputBuilder qlCreateOrUpdateTriggerInput2 =
+        qlCreateOrUpdateTriggerInput.condition(qlTriggerConditionInput);
+    assertThatThrownBy(() -> triggerConditionController.resolveTriggerCondition(qlCreateOrUpdateTriggerInput2.build()))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("ArtifactSource must not be null nor empty");
+
+    artifactTriggerCondition =
+        QLArtifactConditionInput.builder().artifactSourceId("id").artifactFilter("filter").regex(true).build();
+
+    qlTriggerConditionInput = QLTriggerConditionInput.builder()
+                                  .conditionType(QLConditionType.ON_NEW_ARTIFACT)
+                                  .artifactConditionInput(artifactTriggerCondition)
+                                  .build();
+
+    QLCreateOrUpdateTriggerInputBuilder qlCreateOrUpdateTriggerInput3 =
+        qlCreateOrUpdateTriggerInput.condition(qlTriggerConditionInput);
+    assertThatThrownBy(() -> triggerConditionController.resolveTriggerCondition(qlCreateOrUpdateTriggerInput3.build()))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Artifact Stream doesn't exist");
+
+    when(artifactStreamService.get("id")).thenReturn(CustomArtifactStream.builder().build());
+    assertThatThrownBy(() -> triggerConditionController.resolveTriggerCondition(qlCreateOrUpdateTriggerInput3.build()))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Artifact Stream doesn't belong to this application");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldResolveTriggerConditionOnScheduleConditionType() {
+    QLTriggerConditionInput qlTriggerConditionInput =
+        QLTriggerConditionInput.builder().conditionType(QLConditionType.ON_SCHEDULE).build();
+    QLCreateOrUpdateTriggerInput qlCreateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder().condition(qlTriggerConditionInput).build();
+
+    assertThatThrownBy(() -> triggerConditionController.resolveTriggerCondition(qlCreateTriggerInput))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("ScheduleConditionInput must not be null");
+
+    QLScheduleConditionInput scheduledTriggerCondition =
+        QLScheduleConditionInput.builder().cronExpression("expression").onNewArtifactOnly(true).build();
+
+    qlTriggerConditionInput = QLTriggerConditionInput.builder()
+                                  .conditionType(QLConditionType.ON_SCHEDULE)
+                                  .scheduleConditionInput(scheduledTriggerCondition)
+                                  .build();
+    QLCreateOrUpdateTriggerInput qlCreateTriggerInput2 =
+        QLCreateOrUpdateTriggerInput.builder().condition(qlTriggerConditionInput).build();
+
+    ScheduledTriggerCondition retrievedScheduledTriggerCondition =
+        (ScheduledTriggerCondition) triggerConditionController.resolveTriggerCondition(qlCreateTriggerInput2);
+
+    assertThat(retrievedScheduledTriggerCondition.getCronExpression())
+        .isEqualTo(scheduledTriggerCondition.getCronExpression());
+    assertThat(retrievedScheduledTriggerCondition.isOnNewArtifactOnly())
+        .isEqualTo(scheduledTriggerCondition.getOnNewArtifactOnly());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldResolveTriggerConditionOnPipelineCompletion() {
+    QLTriggerConditionInput qlTriggerConditionInput =
+        QLTriggerConditionInput.builder().conditionType(QLConditionType.ON_PIPELINE_COMPLETION).build();
+    QLCreateOrUpdateTriggerInput qlCreateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder().condition(qlTriggerConditionInput).build();
+
+    assertThatThrownBy(() -> triggerConditionController.resolveTriggerCondition(qlCreateTriggerInput))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("PipelineConditionInput must not be null");
+
+    QLPipelineConditionInput pipelineConditionInput = QLPipelineConditionInput.builder().pipelineId("id").build();
+
+    doNothing().when(triggerActionController).validatePipeline(qlCreateTriggerInput, "id");
+    qlTriggerConditionInput = QLTriggerConditionInput.builder()
+                                  .conditionType(QLConditionType.ON_PIPELINE_COMPLETION)
+                                  .pipelineConditionInput(pipelineConditionInput)
+                                  .build();
+    QLCreateOrUpdateTriggerInput qlCreateTriggerInput2 =
+        QLCreateOrUpdateTriggerInput.builder().condition(qlTriggerConditionInput).build();
+
+    PipelineTriggerCondition retrievedScheduledTriggerCondition =
+        (PipelineTriggerCondition) triggerConditionController.resolveTriggerCondition(qlCreateTriggerInput2);
+
+    assertThat(retrievedScheduledTriggerCondition.getPipelineId()).isEqualTo(pipelineConditionInput.getPipelineId());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorOnMissingInputWebhookConditionType() {
+    QLTriggerConditionInput qlTriggerConditionInput =
+        QLTriggerConditionInput.builder().conditionType(QLConditionType.ON_WEBHOOK).build();
+    QLCreateOrUpdateTriggerInput qlCreateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder().condition(qlTriggerConditionInput).build();
+
+    assertThatThrownBy(() -> triggerConditionController.resolveTriggerCondition(qlCreateTriggerInput))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("WebhookConditionInput must not be null");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldResolveGitLabTriggerCondition() {
+    QLTriggerConditionInput qlTriggerConditionInput =
+        QLTriggerConditionInput.builder()
+            .conditionType(QLConditionType.ON_WEBHOOK)
+            .webhookConditionInput(QLWebhookConditionInput.builder().webhookSourceType(QLWebhookSource.GITLAB).build())
+            .build();
+    QLCreateOrUpdateTriggerInput qlCreateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder().condition(qlTriggerConditionInput).build();
+
+    assertThatThrownBy(() -> triggerConditionController.resolveTriggerCondition(qlCreateTriggerInput))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Gitlab event must not be null");
+
+    QLWebhookConditionInput webhookConditionInput = QLWebhookConditionInput.builder()
+                                                        .webhookSourceType(QLWebhookSource.GITLAB)
+                                                        .gitlabEvent(QLGitlabEvent.ANY)
+                                                        .build();
+
+    qlTriggerConditionInput = QLTriggerConditionInput.builder()
+                                  .conditionType(QLConditionType.ON_WEBHOOK)
+                                  .webhookConditionInput(webhookConditionInput)
+                                  .build();
+    QLCreateOrUpdateTriggerInput qlCreateTriggerInput2 =
+        QLCreateOrUpdateTriggerInput.builder().condition(qlTriggerConditionInput).build();
+
+    WebHookTriggerCondition webHookTriggerCondition =
+        (WebHookTriggerCondition) triggerConditionController.resolveTriggerCondition(qlCreateTriggerInput2);
+
+    assertThat(webHookTriggerCondition.getWebhookSource().name())
+        .isEqualTo(webhookConditionInput.getWebhookSourceType().name());
+
+    assertThat(webHookTriggerCondition.getEventTypes().get(0).name())
+        .isEqualTo(webhookConditionInput.getGitlabEvent().name());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldResolveBitBucketTriggerCondition() {
+    QLTriggerConditionInput qlTriggerConditionInput =
+        QLTriggerConditionInput.builder()
+            .conditionType(QLConditionType.ON_WEBHOOK)
+            .webhookConditionInput(
+                QLWebhookConditionInput.builder().webhookSourceType(QLWebhookSource.BITBUCKET).build())
+            .build();
+    QLCreateOrUpdateTriggerInput qlCreateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder().condition(qlTriggerConditionInput).build();
+
+    assertThatThrownBy(() -> triggerConditionController.resolveTriggerCondition(qlCreateTriggerInput))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Bitbucket event must not be null");
+
+    QLWebhookConditionInput webhookConditionInput = QLWebhookConditionInput.builder()
+                                                        .webhookSourceType(QLWebhookSource.BITBUCKET)
+                                                        .bitbucketEvent(QLBitbucketEvent.ANY)
+                                                        .build();
+
+    qlTriggerConditionInput = QLTriggerConditionInput.builder()
+                                  .conditionType(QLConditionType.ON_WEBHOOK)
+                                  .webhookConditionInput(webhookConditionInput)
+                                  .build();
+    QLCreateOrUpdateTriggerInput qlCreateTriggerInput2 =
+        QLCreateOrUpdateTriggerInput.builder().condition(qlTriggerConditionInput).build();
+
+    WebHookTriggerCondition webHookTriggerCondition =
+        (WebHookTriggerCondition) triggerConditionController.resolveTriggerCondition(qlCreateTriggerInput2);
+
+    assertThat(webHookTriggerCondition.getWebhookSource().name())
+        .isEqualTo(webhookConditionInput.getWebhookSourceType().name());
+
+    assertThat(webHookTriggerCondition.getEventTypes().get(0).name())
+        .isEqualTo(webhookConditionInput.getBitbucketEvent().name());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldResolveGitHubPullRequestTriggerCondition() {
+    QLTriggerConditionInput qlTriggerConditionInput =
+        QLTriggerConditionInput.builder()
+            .conditionType(QLConditionType.ON_WEBHOOK)
+            .webhookConditionInput(QLWebhookConditionInput.builder().webhookSourceType(QLWebhookSource.GITHUB).build())
+            .build();
+    QLCreateOrUpdateTriggerInput qlCreateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder().condition(qlTriggerConditionInput).build();
+
+    assertThatThrownBy(() -> triggerConditionController.resolveTriggerCondition(qlCreateTriggerInput))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Github event must not be null");
+
+    QLWebhookConditionInput webhookConditionInput =
+        QLWebhookConditionInput.builder()
+            .webhookSourceType(QLWebhookSource.GITHUB)
+            .deployOnlyIfFilesChanged(true)
+            .gitConnectorId("connectorId")
+            .repoName("gitRepo")
+            .githubEvent(
+                QLGitHubEvent.builder().event(QLGitHubEventType.PULL_REQUEST).action(QLGitHubAction.CLOSED).build())
+            .build();
+
+    qlTriggerConditionInput = QLTriggerConditionInput.builder()
+                                  .conditionType(QLConditionType.ON_WEBHOOK)
+                                  .webhookConditionInput(webhookConditionInput)
+                                  .build();
+    QLCreateOrUpdateTriggerInput qlCreateTriggerInput2 =
+        QLCreateOrUpdateTriggerInput.builder().condition(qlTriggerConditionInput).build();
+
+    WebHookTriggerCondition webHookTriggerCondition =
+        (WebHookTriggerCondition) triggerConditionController.resolveTriggerCondition(qlCreateTriggerInput2);
+
+    assertThat(webHookTriggerCondition.getWebhookSource().name())
+        .isEqualTo(webhookConditionInput.getWebhookSourceType().name());
+
+    assertThat(webHookTriggerCondition.getEventTypes().get(0).name())
+        .isEqualTo(webhookConditionInput.getGithubEvent().getEvent().name());
+    assertThat(webHookTriggerCondition.getActions().get(0).name())
+        .isEqualTo(webhookConditionInput.getGithubEvent().getAction().name());
+
+    assertThat(webHookTriggerCondition.getGitConnectorId()).isEqualTo(webhookConditionInput.getGitConnectorId());
+    assertThat(webHookTriggerCondition.getRepoName()).isEqualTo(webhookConditionInput.getRepoName());
+
+    webhookConditionInput =
+        QLWebhookConditionInput.builder()
+            .webhookSourceType(QLWebhookSource.GITHUB)
+            .githubEvent(
+                QLGitHubEvent.builder().event(QLGitHubEventType.PULL_REQUEST).action(QLGitHubAction.RELEASED).build())
+            .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateTriggerInput3 =
+        QLCreateOrUpdateTriggerInput.builder()
+            .condition(QLTriggerConditionInput.builder()
+                           .conditionType(QLConditionType.ON_WEBHOOK)
+                           .webhookConditionInput(webhookConditionInput)
+                           .build())
+            .build();
+    assertThatThrownBy(() -> triggerConditionController.resolveTriggerCondition(qlCreateTriggerInput3))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Unsupported GitHub Action");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldResolveGitHubReleaseTriggerCondition() {
+    QLWebhookConditionInput webhookConditionInput =
+        QLWebhookConditionInput.builder()
+            .webhookSourceType(QLWebhookSource.GITHUB)
+            .githubEvent(
+                QLGitHubEvent.builder().event(QLGitHubEventType.RELEASE).action(QLGitHubAction.PRE_RELEASED).build())
+            .build();
+
+    QLTriggerConditionInput qlTriggerConditionInput = QLTriggerConditionInput.builder()
+                                                          .conditionType(QLConditionType.ON_WEBHOOK)
+                                                          .webhookConditionInput(webhookConditionInput)
+                                                          .build();
+    QLCreateOrUpdateTriggerInput qlCreateTriggerInput2 =
+        QLCreateOrUpdateTriggerInput.builder().condition(qlTriggerConditionInput).build();
+
+    WebHookTriggerCondition webHookTriggerCondition =
+        (WebHookTriggerCondition) triggerConditionController.resolveTriggerCondition(qlCreateTriggerInput2);
+
+    assertThat(webHookTriggerCondition.getWebhookSource().name())
+        .isEqualTo(webhookConditionInput.getWebhookSourceType().name());
+
+    assertThat(webHookTriggerCondition.getEventTypes().get(0).name())
+        .isEqualTo(webhookConditionInput.getGithubEvent().getEvent().name());
+
+    assertThat(webHookTriggerCondition.getReleaseActions().get(0).name())
+        .isEqualTo(webhookConditionInput.getGithubEvent().getAction().name());
+
+    webhookConditionInput =
+        QLWebhookConditionInput.builder()
+            .webhookSourceType(QLWebhookSource.GITHUB)
+            .githubEvent(QLGitHubEvent.builder().event(QLGitHubEventType.RELEASE).action(QLGitHubAction.OPENED).build())
+            .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateTriggerInput3 =
+        QLCreateOrUpdateTriggerInput.builder()
+            .condition(QLTriggerConditionInput.builder()
+                           .conditionType(QLConditionType.ON_WEBHOOK)
+                           .webhookConditionInput(webhookConditionInput)
+                           .build())
+            .build();
+    assertThatThrownBy(() -> triggerConditionController.resolveTriggerCondition(qlCreateTriggerInput3))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Unsupported GitHub Release Action");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldResolveGitHubPackageTriggerCondition() {
+    QLWebhookConditionInput webhookConditionInput = QLWebhookConditionInput.builder()
+                                                        .webhookSourceType(QLWebhookSource.GITHUB)
+                                                        .githubEvent(QLGitHubEvent.builder()
+                                                                         .event(QLGitHubEventType.PACKAGE)
+                                                                         .action(QLGitHubAction.PACKAGE_PUBLISHED)
+                                                                         .build())
+                                                        .build();
+
+    QLTriggerConditionInput qlTriggerConditionInput = QLTriggerConditionInput.builder()
+                                                          .conditionType(QLConditionType.ON_WEBHOOK)
+                                                          .webhookConditionInput(webhookConditionInput)
+                                                          .build();
+    QLCreateOrUpdateTriggerInput qlCreateTriggerInput2 =
+        QLCreateOrUpdateTriggerInput.builder().condition(qlTriggerConditionInput).build();
+
+    WebHookTriggerCondition webHookTriggerCondition =
+        (WebHookTriggerCondition) triggerConditionController.resolveTriggerCondition(qlCreateTriggerInput2);
+
+    assertThat(webHookTriggerCondition.getWebhookSource().name())
+        .isEqualTo(webhookConditionInput.getWebhookSourceType().name());
+
+    assertThat(webHookTriggerCondition.getEventTypes().get(0).name())
+        .isEqualTo(webhookConditionInput.getGithubEvent().getEvent().name());
+
+    assertThat(webHookTriggerCondition.getActions().get(0).name())
+        .isEqualTo(webhookConditionInput.getGithubEvent().getAction().name());
+
+    webhookConditionInput =
+        QLWebhookConditionInput.builder()
+            .webhookSourceType(QLWebhookSource.GITHUB)
+            .githubEvent(QLGitHubEvent.builder().event(QLGitHubEventType.PACKAGE).action(QLGitHubAction.OPENED).build())
+            .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateTriggerInput3 =
+        QLCreateOrUpdateTriggerInput.builder()
+            .condition(QLTriggerConditionInput.builder()
+                           .conditionType(QLConditionType.ON_WEBHOOK)
+                           .webhookConditionInput(webhookConditionInput)
+                           .build())
+            .build();
+    assertThatThrownBy(() -> triggerConditionController.resolveTriggerCondition(qlCreateTriggerInput3))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Unsupported GitHub Package Action");
   }
 }

@@ -4,6 +4,19 @@ import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.PRABU;
 
 import static software.wings.beans.EntityType.ENVIRONMENT;
+import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
+import static software.wings.beans.EntityType.SERVICE;
+import static software.wings.beans.Variable.VariableBuilder.aVariable;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_NAME;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
+import static software.wings.utils.WingsTestConstants.INFRA_NAME;
+import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Arrays.asList;
@@ -12,10 +25,8 @@ import static junit.framework.TestCase.assertNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
@@ -24,9 +35,12 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -37,21 +51,36 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.RuntimeInputsConfig;
+import software.wings.beans.Service;
 import software.wings.beans.Variable;
-import software.wings.beans.Variable.VariableBuilder;
+import software.wings.beans.VariableType;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.CustomArtifactStream;
+import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.deployment.WorkflowVariablesMetadata;
 import software.wings.graphql.datafetcher.MutationContext;
+import software.wings.graphql.schema.mutation.execution.input.QLArtifactIdInput;
+import software.wings.graphql.schema.mutation.execution.input.QLArtifactInputType;
+import software.wings.graphql.schema.mutation.execution.input.QLArtifactValueInput;
+import software.wings.graphql.schema.mutation.execution.input.QLBuildNumberInput;
+import software.wings.graphql.schema.mutation.execution.input.QLExecutionType;
+import software.wings.graphql.schema.mutation.execution.input.QLServiceInput;
 import software.wings.graphql.schema.mutation.execution.input.QLStartExecutionInput;
 import software.wings.graphql.schema.mutation.execution.input.QLVariableInput;
 import software.wings.graphql.schema.mutation.execution.input.QLVariableValue;
 import software.wings.graphql.schema.mutation.execution.input.QLVariableValueType;
+import software.wings.graphql.schema.mutation.execution.payload.QLStartExecutionPayload;
+import software.wings.graphql.schema.type.QLExecutionStatus;
 import software.wings.graphql.schema.type.QLPipelineExecution;
 import software.wings.graphql.schema.type.QLPipelineExecution.QLPipelineExecutionBuilder;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.security.auth.AuthHandler;
+import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -66,14 +95,17 @@ import graphql.schema.DataFetchingEnvironment;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
 @OwnedBy(HarnessTeam.CDC)
 public class PipelineExecutionControllerTest extends WingsBaseTest {
+  private static final String APP_ID = "APP_ID";
   @Mock AuthHandler authHandler;
   @Mock AuthService authService;
   @Mock PipelineService pipelineService;
@@ -81,8 +113,10 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
   @Mock EnvironmentService environmentService;
   @Mock ServiceResourceService serviceResourceService;
   @Mock InfrastructureDefinitionService infrastructureDefinitionService;
-  @Mock ExecutionController executionController;
+  @Inject @InjectMocks ExecutionController executionController;
   @Mock FeatureFlagService featureFlagService;
+  @Mock ArtifactService artifactService;
+  @Mock ArtifactStreamService artifactStreamService;
   @Inject @InjectMocks PipelineExecutionController pipelineExecutionController = new PipelineExecutionController();
 
   private static final String ENVIRONMENT_DEV_ID = "ENV_DEV_ID";
@@ -339,13 +373,253 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
   @Test
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
+  public void shouldStartPipelineWithArtifact() {
+    QLStartExecutionInput qlStartExecutionInput = getStartExecutionInputWithoutManifest();
+    Pipeline pipeline = Pipeline.builder().uuid(PIPELINE_ID).appId(APP_ID).build();
+    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
+    ArgumentCaptor<ExecutionArgs> captor = ArgumentCaptor.forClass(ExecutionArgs.class);
+
+    when(workflowExecutionService.triggerEnvExecution(eq(APP_ID), eq(null), captor.capture(), eq(null)))
+        .thenReturn(WorkflowExecution.builder().uuid(WORKFLOW_EXECUTION_ID).status(ExecutionStatus.RUNNING).build());
+    when(pipelineService.fetchDeploymentMetadata(
+             eq(APP_ID), eq(PIPELINE_ID), any(), eq(null), eq(null), eq(false), eq(null)))
+        .thenReturn(
+            DeploymentMetadata.builder().artifactRequiredServiceIds(asList(SERVICE_ID, SERVICE_ID + 2)).build());
+    when(serviceResourceService.get(eq(APP_ID), anyString()))
+        .thenAnswer(invocationOnMock
+            -> Service.builder()
+                   .appId(APP_ID)
+                   .accountId(ACCOUNT_ID)
+                   .name(invocationOnMock.getArgumentAt(1, String.class))
+                   .uuid(invocationOnMock.getArgumentAt(1, String.class))
+                   .build());
+
+    ArtifactStream artifactStream = CustomArtifactStream.builder().build();
+    when(artifactService.get(ACCOUNT_ID, ARTIFACT_ID + 2))
+        .thenReturn(
+            Artifact.Builder.anArtifact().withUuid(ARTIFACT_ID + 2).withServiceIds(asList(SERVICE_ID + 2)).build());
+    when(artifactStreamService.getArtifactStreamByName(APP_ID, SERVICE_ID, ARTIFACT_SOURCE_NAME))
+        .thenReturn(artifactStream);
+    when(artifactService.getArtifactByBuildNumber(artifactStream, "1.0", false))
+        .thenReturn(Artifact.Builder.anArtifact().withUuid(ARTIFACT_ID).build());
+
+    QLStartExecutionPayload startExecutionPayload =
+        pipelineExecutionController.startPipelineExecution(qlStartExecutionInput, MutationContext.builder().build());
+    assertThat(startExecutionPayload).isNotNull();
+    assertThat(startExecutionPayload.getExecution().getStatus()).isEqualTo(QLExecutionStatus.RUNNING);
+    assertThat(captor.getValue().getArtifacts().stream().map(Artifact::getUuid).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder(ARTIFACT_ID, ARTIFACT_ID + 2);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldStartPipelineWithoutArtifact() {
+    QLStartExecutionInput qlStartExecutionInput = getStartExecutionInputWithoutManifest();
+    Pipeline pipeline = Pipeline.builder().uuid(PIPELINE_ID).appId(APP_ID).build();
+    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
+    ArgumentCaptor<ExecutionArgs> captor = ArgumentCaptor.forClass(ExecutionArgs.class);
+
+    when(workflowExecutionService.triggerEnvExecution(eq(APP_ID), eq(null), captor.capture(), eq(null)))
+        .thenReturn(WorkflowExecution.builder().uuid(WORKFLOW_EXECUTION_ID).status(ExecutionStatus.RUNNING).build());
+    when(pipelineService.fetchDeploymentMetadata(
+             eq(APP_ID), eq(PIPELINE_ID), any(), eq(null), eq(null), eq(false), eq(null)))
+        .thenReturn(DeploymentMetadata.builder().build());
+
+    QLStartExecutionPayload startExecutionPayload =
+        pipelineExecutionController.startPipelineExecution(qlStartExecutionInput, MutationContext.builder().build());
+    assertThat(startExecutionPayload).isNotNull();
+    assertThat(startExecutionPayload.getExecution().getStatus()).isEqualTo(QLExecutionStatus.RUNNING);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorForArtifactMissing() {
+    QLStartExecutionInput qlStartExecutionInput = getStartExecutionInputWithoutManifest();
+    Pipeline pipeline = Pipeline.builder().uuid(PIPELINE_ID).appId(APP_ID).build();
+    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
+    ArgumentCaptor<ExecutionArgs> captor = ArgumentCaptor.forClass(ExecutionArgs.class);
+
+    when(workflowExecutionService.triggerEnvExecution(eq(APP_ID), eq(null), captor.capture(), eq(null)))
+        .thenReturn(WorkflowExecution.builder().uuid(WORKFLOW_EXECUTION_ID).status(ExecutionStatus.RUNNING).build());
+    when(pipelineService.fetchDeploymentMetadata(
+             eq(APP_ID), eq(PIPELINE_ID), any(), eq(null), eq(null), eq(false), eq(null)))
+        .thenReturn(
+            DeploymentMetadata.builder().artifactRequiredServiceIds(asList(SERVICE_ID + 3, SERVICE_ID + 2)).build());
+    when(serviceResourceService.get(eq(APP_ID), anyString()))
+        .thenAnswer(invocationOnMock
+            -> Service.builder()
+                   .appId(APP_ID)
+                   .name(invocationOnMock.getArgumentAt(1, String.class))
+                   .uuid(invocationOnMock.getArgumentAt(1, String.class))
+                   .build());
+    assertThatThrownBy(()
+                           -> pipelineExecutionController.startPipelineExecution(
+                               qlStartExecutionInput, MutationContext.builder().build()))
+        .isInstanceOf(GeneralException.class)
+        .hasMessage("ServiceInput required for service: SERVICE_ID3");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorForInvalidArtifact() {
+    QLStartExecutionInput qlStartExecutionInput = getStartExecutionInputWithoutManifest();
+    Pipeline pipeline = Pipeline.builder().uuid(PIPELINE_ID).appId(APP_ID).build();
+    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
+    ArgumentCaptor<ExecutionArgs> captor = ArgumentCaptor.forClass(ExecutionArgs.class);
+
+    when(workflowExecutionService.triggerEnvExecution(eq(APP_ID), eq(null), captor.capture(), eq(null)))
+        .thenReturn(WorkflowExecution.builder().uuid(WORKFLOW_EXECUTION_ID).status(ExecutionStatus.RUNNING).build());
+    when(pipelineService.fetchDeploymentMetadata(
+             eq(APP_ID), eq(PIPELINE_ID), any(), eq(null), eq(null), eq(false), eq(null)))
+        .thenReturn(
+            DeploymentMetadata.builder().artifactRequiredServiceIds(asList(SERVICE_ID, SERVICE_ID + 2)).build());
+    when(serviceResourceService.get(eq(APP_ID), anyString()))
+        .thenAnswer(invocationOnMock
+            -> Service.builder()
+                   .appId(APP_ID)
+                   .name(invocationOnMock.getArgumentAt(1, String.class))
+                   .uuid(invocationOnMock.getArgumentAt(1, String.class))
+                   .build());
+
+    ArtifactStream artifactStream = CustomArtifactStream.builder().build();
+    when(artifactStreamService.getArtifactStreamByName(APP_ID, SERVICE_ID, ARTIFACT_SOURCE_NAME))
+        .thenReturn(artifactStream);
+    when(artifactService.get(ACCOUNT_ID, ARTIFACT_ID + 2))
+        .thenReturn(
+            Artifact.Builder.anArtifact().withUuid(ARTIFACT_ID + 2).withServiceIds(asList(SERVICE_ID + 2)).build());
+
+    assertThatThrownBy(()
+                           -> pipelineExecutionController.startPipelineExecution(
+                               qlStartExecutionInput, MutationContext.builder().build()))
+        .isInstanceOf(GeneralException.class)
+        .hasMessage("Artifact Stream");
+
+    when(artifactService.getArtifactByBuildNumber(artifactStream, "1.0", false))
+        .thenReturn(Artifact.Builder.anArtifact().withUuid(ARTIFACT_ID).build());
+    when(artifactService.get(ACCOUNT_ID, ARTIFACT_ID + 2)).thenReturn(null);
+    assertThatThrownBy(()
+                           -> pipelineExecutionController.startPipelineExecution(
+                               qlStartExecutionInput, MutationContext.builder().build()))
+        .isInstanceOf(GeneralException.class)
+        .hasMessage("Cannot find artifact for specified Id: ARTIFACT_ID2. Might be deleted");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldStartPipelineWithPipelineVariables() {
+    QLVariableInput environmentVariable =
+        QLVariableInput.builder()
+            .name("${env}")
+            .variableValue(QLVariableValue.builder().type(QLVariableValueType.ID).value(ENV_ID).build())
+            .build();
+
+    QLVariableInput infraVariable =
+        QLVariableInput.builder()
+            .name("${infra}")
+            .variableValue(QLVariableValue.builder().type(QLVariableValueType.NAME).value(INFRA_NAME).build())
+            .build();
+
+    QLVariableInput serviceVariable =
+        QLVariableInput.builder()
+            .name("${service}")
+            .variableValue(QLVariableValue.builder().type(QLVariableValueType.NAME).value(SERVICE_NAME).build())
+            .build();
+
+    QLStartExecutionInput qlStartExecutionInput =
+        QLStartExecutionInput.builder()
+            .executionType(QLExecutionType.PIPELINE)
+            .applicationId(APP_ID)
+            .entityId(PIPELINE_ID)
+            .variableInputs(asList(environmentVariable, infraVariable, serviceVariable))
+            .build();
+    Variable envVariable = aVariable().name("${env}").type(VariableType.ENTITY).entityType(ENVIRONMENT).build();
+    Variable serVariable = aVariable().name("${service}").type(VariableType.ENTITY).entityType(SERVICE).build();
+    Variable infVariable =
+        aVariable().name("${infra}").type(VariableType.ENTITY).entityType(INFRASTRUCTURE_DEFINITION).build();
+
+    Pipeline pipeline = Pipeline.builder().uuid(PIPELINE_ID).appId(APP_ID).build();
+    pipeline.getPipelineVariables().addAll(asList(envVariable, infVariable, serVariable));
+    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
+    when(environmentService.get(APP_ID, ENV_ID)).thenReturn(Environment.Builder.anEnvironment().uuid(ENV_ID).build());
+    when(serviceResourceService.getServiceByName(APP_ID, SERVICE_NAME))
+        .thenReturn(Service.builder().uuid(SERVICE_ID).build());
+    when(infrastructureDefinitionService.getInfraDefByName(APP_ID, ENV_ID, INFRA_NAME))
+        .thenReturn(InfrastructureDefinition.builder().uuid(INFRA_DEFINITION_ID).build());
+
+    ArgumentCaptor<ExecutionArgs> captor = ArgumentCaptor.forClass(ExecutionArgs.class);
+
+    when(workflowExecutionService.triggerEnvExecution(eq(APP_ID), eq(ENV_ID), captor.capture(), eq(null)))
+        .thenReturn(WorkflowExecution.builder().uuid(WORKFLOW_EXECUTION_ID).status(ExecutionStatus.RUNNING).build());
+    when(pipelineService.fetchDeploymentMetadata(
+             eq(APP_ID), eq(PIPELINE_ID), any(), eq(null), eq(null), eq(false), eq(null)))
+        .thenReturn(DeploymentMetadata.builder().build());
+
+    QLStartExecutionPayload startExecutionPayload =
+        pipelineExecutionController.startPipelineExecution(qlStartExecutionInput, MutationContext.builder().build());
+    assertThat(startExecutionPayload).isNotNull();
+    assertThat(startExecutionPayload.getExecution().getStatus()).isEqualTo(QLExecutionStatus.RUNNING);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldStartPipelineWithPipelineVariableMissing() {
+    QLVariableInput environmentVariable =
+        QLVariableInput.builder()
+            .name("${env}")
+            .variableValue(QLVariableValue.builder().type(QLVariableValueType.ID).value(ENV_ID).build())
+            .build();
+
+    QLStartExecutionInput qlStartExecutionInput = QLStartExecutionInput.builder()
+                                                      .executionType(QLExecutionType.PIPELINE)
+                                                      .applicationId(APP_ID)
+                                                      .entityId(PIPELINE_ID)
+                                                      .variableInputs(asList(environmentVariable))
+                                                      .build();
+    Variable envVariable =
+        aVariable().name("${env}").type(VariableType.ENTITY).mandatory(true).entityType(ENVIRONMENT).build();
+    Variable serVariable =
+        aVariable().name("${service}").type(VariableType.ENTITY).mandatory(true).entityType(SERVICE).build();
+    Variable infVariable = aVariable()
+                               .name("${infra}")
+                               .type(VariableType.ENTITY)
+                               .mandatory(true)
+                               .entityType(INFRASTRUCTURE_DEFINITION)
+                               .build();
+
+    Pipeline pipeline = Pipeline.builder().uuid(PIPELINE_ID).appId(APP_ID).build();
+    pipeline.getPipelineVariables().addAll(asList(envVariable, infVariable, serVariable));
+    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
+    when(environmentService.get(APP_ID, ENV_ID)).thenReturn(Environment.Builder.anEnvironment().uuid(ENV_ID).build());
+
+    ArgumentCaptor<ExecutionArgs> captor = ArgumentCaptor.forClass(ExecutionArgs.class);
+
+    when(workflowExecutionService.triggerEnvExecution(eq(APP_ID), eq(ENV_ID), captor.capture(), eq(null)))
+        .thenReturn(WorkflowExecution.builder().uuid(WORKFLOW_EXECUTION_ID).status(ExecutionStatus.RUNNING).build());
+    when(pipelineService.fetchDeploymentMetadata(
+             eq(APP_ID), eq(PIPELINE_ID), any(), eq(null), eq(null), eq(false), eq(null)))
+        .thenReturn(DeploymentMetadata.builder().build());
+
+    assertThatThrownBy(()
+                           -> pipelineExecutionController.startPipelineExecution(
+                               qlStartExecutionInput, MutationContext.builder().build()))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Value not provided for required variable: [${infra},${service}]");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
   public void shouldThrowExceptionForPassingDisallowedValues() {
     Pipeline pipeline = Pipeline.builder().build();
-    pipeline.getPipelineVariables().add(VariableBuilder.aVariable().name("var").allowedList(asList("1", "2")).build());
+    pipeline.getPipelineVariables().add(aVariable().name("var").allowedList(asList("1", "2")).build());
     doReturn(pipeline).when(pipelineService).readPipeline(any(), any(), eq(true));
 
     doNothing().when(authService).checkIfUserAllowedToDeployPipelineToEnv(any(), anyString());
-    doCallRealMethod().when(executionController).validateRestrictedVarsHaveAllowedValues(anyList(), anyList());
 
     QLStartExecutionInput startExecutionInput =
         QLStartExecutionInput.builder()
@@ -367,6 +641,188 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
   @Test
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
+  public void shouldNotStartPipelineWithExpression() {
+    QLVariableInput environmentVariable =
+        QLVariableInput.builder()
+            .name("${env}")
+            .variableValue(QLVariableValue.builder().type(QLVariableValueType.EXPRESSION).value("${env}").build())
+            .build();
+
+    QLStartExecutionInput qlStartExecutionInput = QLStartExecutionInput.builder()
+                                                      .executionType(QLExecutionType.PIPELINE)
+                                                      .applicationId(APP_ID)
+                                                      .entityId(PIPELINE_ID)
+                                                      .variableInputs(asList(environmentVariable))
+                                                      .build();
+    Variable envVariable =
+        aVariable().name("${env}").type(VariableType.ENTITY).mandatory(true).entityType(ENVIRONMENT).build();
+
+    Pipeline pipeline = Pipeline.builder().uuid(PIPELINE_ID).appId(APP_ID).build();
+    pipeline.getPipelineVariables().addAll(asList(envVariable));
+    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
+    when(environmentService.get(APP_ID, ENV_ID)).thenReturn(Environment.Builder.anEnvironment().uuid(ENV_ID).build());
+
+    ArgumentCaptor<ExecutionArgs> captor = ArgumentCaptor.forClass(ExecutionArgs.class);
+
+    when(workflowExecutionService.triggerEnvExecution(eq(APP_ID), eq(ENV_ID), captor.capture(), eq(null)))
+        .thenReturn(WorkflowExecution.builder().uuid(WORKFLOW_EXECUTION_ID).status(ExecutionStatus.RUNNING).build());
+    when(pipelineService.fetchDeploymentMetadata(
+             eq(APP_ID), eq(PIPELINE_ID), any(), eq(null), eq(null), eq(false), eq(null)))
+        .thenReturn(DeploymentMetadata.builder().build());
+
+    assertThatThrownBy(()
+                           -> pipelineExecutionController.startPipelineExecution(
+                               qlStartExecutionInput, MutationContext.builder().build()))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Value Type EXPRESSION Not supported");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldNotStartPipelineWithInvalidEntity() {
+    QLVariableInput environmentVariable =
+        QLVariableInput.builder()
+            .name("${env}")
+            .variableValue(QLVariableValue.builder().type(QLVariableValueType.ID).value(ENV_ID + 2).build())
+            .build();
+
+    QLStartExecutionInput qlStartExecutionInput = QLStartExecutionInput.builder()
+                                                      .executionType(QLExecutionType.PIPELINE)
+                                                      .applicationId(APP_ID)
+                                                      .entityId(PIPELINE_ID)
+                                                      .variableInputs(asList(environmentVariable))
+                                                      .build();
+    Variable envVariable =
+        aVariable().name("${env}").type(VariableType.ENTITY).mandatory(true).entityType(ENVIRONMENT).build();
+
+    Pipeline pipeline = Pipeline.builder().uuid(PIPELINE_ID).appId(APP_ID).build();
+    pipeline.getPipelineVariables().addAll(asList(envVariable));
+    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
+    when(environmentService.get(APP_ID, ENV_ID)).thenReturn(Environment.Builder.anEnvironment().uuid(ENV_ID).build());
+
+    ArgumentCaptor<ExecutionArgs> captor = ArgumentCaptor.forClass(ExecutionArgs.class);
+
+    when(workflowExecutionService.triggerEnvExecution(eq(APP_ID), eq(ENV_ID), captor.capture(), eq(null)))
+        .thenReturn(WorkflowExecution.builder().uuid(WORKFLOW_EXECUTION_ID).status(ExecutionStatus.RUNNING).build());
+    when(pipelineService.fetchDeploymentMetadata(
+             eq(APP_ID), eq(PIPELINE_ID), any(), eq(null), eq(null), eq(false), eq(null)))
+        .thenReturn(DeploymentMetadata.builder().build());
+
+    assertThatThrownBy(()
+                           -> pipelineExecutionController.startPipelineExecution(
+                               qlStartExecutionInput, MutationContext.builder().build()))
+        .isInstanceOf(GeneralException.class)
+        .hasMessage("Environment [ENV_ID2] doesn't exist in specified application APP_ID");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldDisplayWarningForExtraVariables() {
+    QLVariableInput environmentVariable =
+        QLVariableInput.builder()
+            .name("${env}")
+            .variableValue(QLVariableValue.builder().type(QLVariableValueType.ID).value(ENV_ID).build())
+            .build();
+
+    QLVariableInput infraVariable =
+        QLVariableInput.builder()
+            .name("${infra}")
+            .variableValue(QLVariableValue.builder().type(QLVariableValueType.NAME).value(INFRA_NAME).build())
+            .build();
+
+    QLStartExecutionInput qlStartExecutionInput = QLStartExecutionInput.builder()
+                                                      .executionType(QLExecutionType.PIPELINE)
+                                                      .applicationId(APP_ID)
+                                                      .entityId(PIPELINE_ID)
+                                                      .variableInputs(asList(environmentVariable, infraVariable))
+                                                      .build();
+
+    Variable envVariable =
+        aVariable().name("${env}").type(VariableType.ENTITY).mandatory(true).entityType(ENVIRONMENT).build();
+
+    Pipeline pipeline = Pipeline.builder().uuid(PIPELINE_ID).appId(APP_ID).build();
+    pipeline.getPipelineVariables().addAll(asList(envVariable));
+    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
+    when(environmentService.get(APP_ID, ENV_ID)).thenReturn(Environment.Builder.anEnvironment().uuid(ENV_ID).build());
+
+    ArgumentCaptor<ExecutionArgs> captor = ArgumentCaptor.forClass(ExecutionArgs.class);
+
+    when(workflowExecutionService.triggerEnvExecution(eq(APP_ID), eq(ENV_ID), captor.capture(), eq(null)))
+        .thenReturn(WorkflowExecution.builder().uuid(WORKFLOW_EXECUTION_ID).status(ExecutionStatus.RUNNING).build());
+    when(pipelineService.fetchDeploymentMetadata(
+             eq(APP_ID), eq(PIPELINE_ID), any(), eq(null), eq(null), eq(false), eq(null)))
+        .thenReturn(DeploymentMetadata.builder().build());
+
+    QLStartExecutionPayload startExecutionPayload =
+        pipelineExecutionController.startPipelineExecution(qlStartExecutionInput, MutationContext.builder().build());
+    assertThat(startExecutionPayload).isNotNull();
+    assertThat(startExecutionPayload.getExecution().getStatus()).isEqualTo(QLExecutionStatus.RUNNING);
+    assertThat(startExecutionPayload.getWarningMessage()).isNotBlank();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldStartPipelineWithMultiInfra() {
+    QLVariableInput environmentVariable =
+        QLVariableInput.builder()
+            .name("${env}")
+            .variableValue(QLVariableValue.builder().type(QLVariableValueType.ID).value(ENV_ID).build())
+            .build();
+
+    QLVariableInput infraVariable = QLVariableInput.builder()
+                                        .name("${infra}")
+                                        .variableValue(QLVariableValue.builder()
+                                                           .type(QLVariableValueType.NAME)
+                                                           .value(INFRA_NAME + "," + INFRA_NAME + 2)
+                                                           .build())
+                                        .build();
+
+    QLStartExecutionInput qlStartExecutionInput = QLStartExecutionInput.builder()
+                                                      .executionType(QLExecutionType.PIPELINE)
+                                                      .applicationId(APP_ID)
+                                                      .entityId(PIPELINE_ID)
+                                                      .variableInputs(asList(environmentVariable, infraVariable))
+                                                      .build();
+    Variable envVariable =
+        aVariable().name("${env}").type(VariableType.ENTITY).mandatory(true).entityType(ENVIRONMENT).build();
+    Variable infVariable = aVariable()
+                               .name("${infra}")
+                               .type(VariableType.ENTITY)
+                               .mandatory(true)
+                               .allowMultipleValues(true)
+                               .entityType(INFRASTRUCTURE_DEFINITION)
+                               .build();
+
+    Pipeline pipeline = Pipeline.builder().uuid(PIPELINE_ID).appId(APP_ID).accountId(ACCOUNT_ID).build();
+    pipeline.getPipelineVariables().addAll(asList(envVariable, infVariable));
+    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
+    when(environmentService.get(APP_ID, ENV_ID)).thenReturn(Environment.Builder.anEnvironment().uuid(ENV_ID).build());
+    when(infrastructureDefinitionService.getInfraDefByName(APP_ID, ENV_ID, INFRA_NAME))
+        .thenReturn(InfrastructureDefinition.builder().uuid(INFRA_DEFINITION_ID).build());
+    when(infrastructureDefinitionService.getInfraDefByName(APP_ID, ENV_ID, INFRA_NAME + 2))
+        .thenReturn(InfrastructureDefinition.builder().uuid(INFRA_DEFINITION_ID + 2).build());
+    when(featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, ACCOUNT_ID)).thenReturn(true);
+
+    ArgumentCaptor<ExecutionArgs> captor = ArgumentCaptor.forClass(ExecutionArgs.class);
+
+    when(workflowExecutionService.triggerEnvExecution(eq(APP_ID), eq(ENV_ID), captor.capture(), eq(null)))
+        .thenReturn(WorkflowExecution.builder().uuid(WORKFLOW_EXECUTION_ID).status(ExecutionStatus.RUNNING).build());
+    when(pipelineService.fetchDeploymentMetadata(
+             eq(APP_ID), eq(PIPELINE_ID), any(), eq(null), eq(null), eq(false), eq(null)))
+        .thenReturn(DeploymentMetadata.builder().build());
+
+    QLStartExecutionPayload startExecutionPayload =
+        pipelineExecutionController.startPipelineExecution(qlStartExecutionInput, MutationContext.builder().build());
+    assertThat(startExecutionPayload).isNotNull();
+    assertThat(startExecutionPayload.getExecution().getStatus()).isEqualTo(QLExecutionStatus.RUNNING);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
   public void shouldThrowExceptionForPassingDisallowedValuesInRuntime() {
     Pipeline pipeline =
         Pipeline.builder()
@@ -382,8 +838,7 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
                            .build()))
             .build();
 
-    pipeline.getPipelineVariables().add(VariableBuilder.aVariable().name("var").allowedList(asList("1", "2")).build());
-    doCallRealMethod().when(executionController).validateRestrictedVarsHaveAllowedValues(anyList(), anyList());
+    pipeline.getPipelineVariables().add(aVariable().name("var").allowedList(asList("1", "2")).build());
 
     List<QLVariableInput> variableInputs =
         asList(QLVariableInput.builder()
@@ -398,8 +853,33 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
         .hasMessage("Variable var can only take values [1, 2]");
   }
 
+  private QLStartExecutionInput getStartExecutionInputWithoutManifest() {
+    return QLStartExecutionInput.builder()
+        .executionType(QLExecutionType.PIPELINE)
+        .applicationId(APP_ID)
+        .entityId(PIPELINE_ID)
+        .serviceInputs(asList(QLServiceInput.builder()
+                                  .name(SERVICE_ID)
+                                  .artifactValueInput(QLArtifactValueInput.builder()
+                                                          .valueType(QLArtifactInputType.BUILD_NUMBER)
+                                                          .buildNumber(QLBuildNumberInput.builder()
+                                                                           .artifactSourceName(ARTIFACT_SOURCE_NAME)
+                                                                           .buildNumber("1.0")
+                                                                           .build())
+                                                          .build())
+                                  .build(),
+            QLServiceInput.builder()
+                .name(SERVICE_ID + 2)
+                .artifactValueInput(QLArtifactValueInput.builder()
+                                        .valueType(QLArtifactInputType.ARTIFACT_ID)
+                                        .artifactId(QLArtifactIdInput.builder().artifactId(ARTIFACT_ID + 2).build())
+                                        .build())
+                .build()))
+        .build();
+  }
+
   private Variable buildVariable(String name, EntityType entityType, Boolean isRuntime) {
-    Variable variable = VariableBuilder.aVariable().entityType(entityType).name(name).build();
+    Variable variable = aVariable().entityType(entityType).name(name).build();
     variable.setRuntimeInput(isRuntime);
     return variable;
   }

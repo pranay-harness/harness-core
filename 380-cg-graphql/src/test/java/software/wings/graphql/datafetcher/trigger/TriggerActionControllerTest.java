@@ -1,8 +1,18 @@
 package software.wings.graphql.datafetcher.trigger;
 
 import static io.harness.rule.OwnerRule.MILAN;
+import static io.harness.rule.OwnerRule.PRABU;
 
+import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
+
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.beans.WorkflowType;
@@ -12,12 +22,15 @@ import io.harness.rule.Owner;
 
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
+import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.trigger.ArtifactSelection;
 import software.wings.beans.trigger.ArtifactSelection.Type;
 import software.wings.beans.trigger.Trigger;
 import software.wings.graphql.schema.mutation.execution.input.QLExecutionType;
+import software.wings.graphql.schema.type.trigger.QLArtifactConditionInput;
 import software.wings.graphql.schema.type.trigger.QLArtifactSelectionInput;
 import software.wings.graphql.schema.type.trigger.QLArtifactSelectionType;
+import software.wings.graphql.schema.type.trigger.QLConditionType;
 import software.wings.graphql.schema.type.trigger.QLCreateOrUpdateTriggerInput;
 import software.wings.graphql.schema.type.trigger.QLFromTriggeringPipeline;
 import software.wings.graphql.schema.type.trigger.QLFromWebhookPayload;
@@ -27,11 +40,14 @@ import software.wings.graphql.schema.type.trigger.QLLastDeployedFromWorkflow;
 import software.wings.graphql.schema.type.trigger.QLPipelineAction;
 import software.wings.graphql.schema.type.trigger.QLTriggerActionInput;
 import software.wings.graphql.schema.type.trigger.QLTriggerConditionInput;
+import software.wings.graphql.schema.type.trigger.QLWebhookConditionInput;
+import software.wings.graphql.schema.type.trigger.QLWebhookSource;
 import software.wings.graphql.schema.type.trigger.QLWorkflowAction;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.WorkflowService;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -46,8 +62,11 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 public class TriggerActionControllerTest extends CategoryTest {
+  private static final String PIPELINE_ID = "PIPELINE_ID";
   @Mock PipelineService pipelineService;
+  @Mock WorkflowService workflowService;
   @Mock ServiceResourceService serviceResourceService;
+  @Mock ArtifactStreamService artifactStreamService;
 
   @InjectMocks TriggerActionController triggerActionController = Mockito.spy(new TriggerActionController());
 
@@ -65,7 +84,7 @@ public class TriggerActionControllerTest extends CategoryTest {
                                            .serviceName("serviceName")
                                            .type(Type.ARTIFACT_SOURCE)
                                            .build();
-    List<ArtifactSelection> artifactSelections = Arrays.asList(artifactSource);
+    List<ArtifactSelection> artifactSelections = asList(artifactSource);
     Map<String, String> variables = new HashMap<>();
     variables.put("variableKey", "variableResult");
     Trigger trigger = Trigger.builder()
@@ -105,7 +124,7 @@ public class TriggerActionControllerTest extends CategoryTest {
                                            .regex(true)
                                            .type(Type.LAST_COLLECTED)
                                            .build();
-    List<ArtifactSelection> artifactSelections = Arrays.asList(artifactSource);
+    List<ArtifactSelection> artifactSelections = asList(artifactSource);
 
     Map<String, String> variables = new HashMap<>();
     variables.put("variableKey", "variableResult");
@@ -150,7 +169,7 @@ public class TriggerActionControllerTest extends CategoryTest {
                                            .pipelineName("pipelineName")
                                            .type(Type.LAST_DEPLOYED)
                                            .build();
-    List<ArtifactSelection> artifactSelections = Arrays.asList(artifactSource);
+    List<ArtifactSelection> artifactSelections = asList(artifactSource);
 
     Map<String, String> variables = new HashMap<>();
     variables.put("variableKey", "variableResult");
@@ -195,7 +214,7 @@ public class TriggerActionControllerTest extends CategoryTest {
                                            .serviceName("serviceName")
                                            .type(Type.PIPELINE_SOURCE)
                                            .build();
-    List<ArtifactSelection> artifactSelections = Arrays.asList(artifactSource);
+    List<ArtifactSelection> artifactSelections = asList(artifactSource);
 
     Map<String, String> variables = new HashMap<>();
     variables.put("variableKey", "variableResult");
@@ -238,7 +257,7 @@ public class TriggerActionControllerTest extends CategoryTest {
                                            .artifactSourceName("sourceName")
                                            .type(Type.WEBHOOK_VARIABLE)
                                            .build();
-    List<ArtifactSelection> artifactSelections = Arrays.asList(artifactSource);
+    List<ArtifactSelection> artifactSelections = asList(artifactSource);
 
     Map<String, String> variables = new HashMap<>();
     variables.put("variableKey", "variableResult");
@@ -281,7 +300,7 @@ public class TriggerActionControllerTest extends CategoryTest {
                                            .serviceName("serviceName")
                                            .type(Type.ARTIFACT_SOURCE)
                                            .build();
-    List<ArtifactSelection> artifactSelections = Arrays.asList(artifactSource);
+    List<ArtifactSelection> artifactSelections = asList(artifactSource);
     Map<String, String> variables = new HashMap<>();
     variables.put("variableKey", "variableResult");
     Trigger trigger = Trigger.builder()
@@ -322,7 +341,7 @@ public class TriggerActionControllerTest extends CategoryTest {
                                            .regex(true)
                                            .type(Type.LAST_COLLECTED)
                                            .build();
-    List<ArtifactSelection> artifactSelections = Arrays.asList(artifactSource);
+    List<ArtifactSelection> artifactSelections = asList(artifactSource);
 
     Map<String, String> variables = new HashMap<>();
     variables.put("variableKey", "variableResult");
@@ -368,7 +387,7 @@ public class TriggerActionControllerTest extends CategoryTest {
                                            .workflowName("pipelineName")
                                            .type(Type.LAST_DEPLOYED)
                                            .build();
-    List<ArtifactSelection> artifactSelections = Arrays.asList(artifactSource);
+    List<ArtifactSelection> artifactSelections = asList(artifactSource);
 
     Map<String, String> variables = new HashMap<>();
     variables.put("variableKey", "variableResult");
@@ -413,7 +432,7 @@ public class TriggerActionControllerTest extends CategoryTest {
                                            .serviceName("serviceName")
                                            .type(Type.PIPELINE_SOURCE)
                                            .build();
-    List<ArtifactSelection> artifactSelections = Arrays.asList(artifactSource);
+    List<ArtifactSelection> artifactSelections = asList(artifactSource);
 
     Map<String, String> variables = new HashMap<>();
     variables.put("variableKey", "variableResult");
@@ -456,7 +475,7 @@ public class TriggerActionControllerTest extends CategoryTest {
                                            .artifactSourceName("sourceName")
                                            .type(Type.WEBHOOK_VARIABLE)
                                            .build();
-    List<ArtifactSelection> artifactSelections = Arrays.asList(artifactSource);
+    List<ArtifactSelection> artifactSelections = asList(artifactSource);
 
     Map<String, String> variables = new HashMap<>();
     variables.put("variableKey", "variableResult");
@@ -502,7 +521,7 @@ public class TriggerActionControllerTest extends CategoryTest {
 
     QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
         QLCreateOrUpdateTriggerInput.builder()
-            .action(QLTriggerActionInput.builder().artifactSelections(Arrays.asList(qlArtifactSelectionInput)).build())
+            .action(QLTriggerActionInput.builder().artifactSelections(asList(qlArtifactSelectionInput)).build())
             .build();
     triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput, Collections.singletonList("S1"));
   }
@@ -519,7 +538,7 @@ public class TriggerActionControllerTest extends CategoryTest {
 
     QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
         QLCreateOrUpdateTriggerInput.builder()
-            .action(QLTriggerActionInput.builder().artifactSelections(Arrays.asList(qlArtifactSelectionInput)).build())
+            .action(QLTriggerActionInput.builder().artifactSelections(asList(qlArtifactSelectionInput)).build())
             .build();
 
     Mockito.when(serviceResourceService.get(Matchers.anyString())).thenReturn(null);
@@ -559,7 +578,7 @@ public class TriggerActionControllerTest extends CategoryTest {
 
     QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
         QLCreateOrUpdateTriggerInput.builder()
-            .action(QLTriggerActionInput.builder().artifactSelections(Arrays.asList(qlArtifactSelectionInput)).build())
+            .action(QLTriggerActionInput.builder().artifactSelections(asList(qlArtifactSelectionInput)).build())
             .build();
 
     Mockito.doReturn(Type.ARTIFACT_SOURCE)
@@ -601,7 +620,7 @@ public class TriggerActionControllerTest extends CategoryTest {
 
     QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
         QLCreateOrUpdateTriggerInput.builder()
-            .action(QLTriggerActionInput.builder().artifactSelections(Arrays.asList(qlArtifactSelectionInput)).build())
+            .action(QLTriggerActionInput.builder().artifactSelections(asList(qlArtifactSelectionInput)).build())
             .build();
 
     Mockito.doReturn(Type.PIPELINE_SOURCE)
@@ -643,7 +662,7 @@ public class TriggerActionControllerTest extends CategoryTest {
 
     QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
         QLCreateOrUpdateTriggerInput.builder()
-            .action(QLTriggerActionInput.builder().artifactSelections(Arrays.asList(qlArtifactSelectionInput)).build())
+            .action(QLTriggerActionInput.builder().artifactSelections(asList(qlArtifactSelectionInput)).build())
             .build();
 
     Mockito.doReturn(Type.LAST_COLLECTED)
@@ -684,7 +703,7 @@ public class TriggerActionControllerTest extends CategoryTest {
 
     QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
         QLCreateOrUpdateTriggerInput.builder()
-            .action(QLTriggerActionInput.builder().artifactSelections(Arrays.asList(qlArtifactSelectionInput)).build())
+            .action(QLTriggerActionInput.builder().artifactSelections(asList(qlArtifactSelectionInput)).build())
             .build();
 
     Mockito.doReturn(Type.WEBHOOK_VARIABLE)
@@ -726,7 +745,7 @@ public class TriggerActionControllerTest extends CategoryTest {
 
     QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
         QLCreateOrUpdateTriggerInput.builder()
-            .action(QLTriggerActionInput.builder().artifactSelections(Arrays.asList(qlArtifactSelectionInput)).build())
+            .action(QLTriggerActionInput.builder().artifactSelections(asList(qlArtifactSelectionInput)).build())
             .build();
 
     Mockito.doReturn(Type.LAST_DEPLOYED)
@@ -767,7 +786,7 @@ public class TriggerActionControllerTest extends CategoryTest {
 
     QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
         QLCreateOrUpdateTriggerInput.builder()
-            .action(QLTriggerActionInput.builder().artifactSelections(Arrays.asList(qlArtifactSelectionInput)).build())
+            .action(QLTriggerActionInput.builder().artifactSelections(asList(qlArtifactSelectionInput)).build())
             .build();
 
     Mockito.doReturn(Type.LAST_DEPLOYED)
@@ -869,5 +888,436 @@ public class TriggerActionControllerTest extends CategoryTest {
         .thenReturn(Pipeline.builder().appId("appId2").build());
 
     triggerActionController.validatePipeline(qlCreateOrUpdateTriggerInput, "pipelineId");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void resolveArtifactSelectionsShouldThrowInvalidServiceIdException() {
+    QLArtifactSelectionInput qlArtifactSelectionInput =
+        QLArtifactSelectionInput.builder()
+            .artifactSelectionType(QLArtifactSelectionType.FROM_TRIGGERING_ARTIFACT)
+            .serviceId("S1")
+            .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
+            .action(QLTriggerActionInput.builder().artifactSelections(asList(qlArtifactSelectionInput)).build())
+            .build();
+
+    when(serviceResourceService.get(Matchers.anyString())).thenReturn(null);
+    assertThatThrownBy(()
+                           -> triggerActionController.resolveArtifactSelections(
+                               qlCreateOrUpdateTriggerInput, Collections.singletonList("S1")))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("ServiceId does not exist for Artifact Selection. ServiceId: S1");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldResolveArtifactSelectionsForTriggeringAppArtifact() {
+    QLArtifactSelectionInput qlArtifactSelectionInput =
+        QLArtifactSelectionInput.builder()
+            .artifactSelectionType(QLArtifactSelectionType.FROM_TRIGGERING_ARTIFACT)
+            .serviceId(SERVICE_ID)
+            .artifactFilter("filter")
+            .pipelineId(PIPELINE_ID)
+            .workflowId(WORKFLOW_ID)
+            .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
+            .action(QLTriggerActionInput.builder().artifactSelections(asList(qlArtifactSelectionInput)).build())
+            .condition(QLTriggerConditionInput.builder()
+                           .conditionType(QLConditionType.ON_NEW_ARTIFACT)
+                           .artifactConditionInput(
+                               QLArtifactConditionInput.builder().artifactSourceId(ARTIFACT_STREAM_ID).build())
+                           .build())
+            .build();
+
+    Mockito.when(serviceResourceService.get(Matchers.anyString())).thenReturn(Mockito.mock(Service.class));
+
+    ArtifactSelection artifactSelection =
+        triggerActionController.resolveArtifactSelections(qlCreateOrUpdateTriggerInput, Collections.singletonList("S1"))
+            .get(0);
+
+    assertThat(artifactSelection).isNotNull();
+    assertThat(artifactSelection.getType()).isEqualTo(Type.ARTIFACT_SOURCE);
+    assertThat(artifactSelection.getServiceId()).isEqualTo(qlArtifactSelectionInput.getServiceId());
+    assertThat(artifactSelection.getArtifactFilter()).isEqualTo(qlArtifactSelectionInput.getArtifactFilter());
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void validateWorkflowShouldThrowWorkflowDoesntExistException() {
+    QLTriggerActionInput qlTriggerActionInput =
+        QLTriggerActionInput.builder()
+            .entityId("entityId")
+            .artifactSelections(asList(QLArtifactSelectionInput.builder().workflowId("workflowId").build()))
+            .build();
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder().action(qlTriggerActionInput).applicationId("appId").build();
+
+    Mockito.when(workflowService.readWorkflow(Matchers.anyString(), Matchers.anyString())).thenReturn(null);
+
+    triggerActionController.validateWorkflow(qlCreateOrUpdateTriggerInput);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void validateWorkflowShouldThrowWorkflowDoesntBelongToThisAppException() {
+    QLTriggerActionInput qlTriggerActionInput =
+        QLTriggerActionInput.builder()
+            .entityId("entityId")
+            .artifactSelections(asList(QLArtifactSelectionInput.builder().workflowId("workflowId").build()))
+            .build();
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder().action(qlTriggerActionInput).applicationId("appId").build();
+
+    when(workflowService.readWorkflow(Matchers.anyString(), Matchers.anyString()))
+        .thenReturn(aWorkflow().appId("appId2").build());
+
+    triggerActionController.validateWorkflow(qlCreateOrUpdateTriggerInput);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void resolveArtifactSelectionsShouldThrowEmptyServiceException() {
+    QLArtifactSelectionInput qlArtifactSelectionInput =
+        QLArtifactSelectionInput.builder()
+            .artifactSelectionType(QLArtifactSelectionType.FROM_TRIGGERING_ARTIFACT)
+            .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
+            .action(QLTriggerActionInput.builder().artifactSelections(asList(qlArtifactSelectionInput)).build())
+            .build();
+
+    assertThatThrownBy(()
+                           -> triggerActionController.resolveArtifactSelections(
+                               qlCreateOrUpdateTriggerInput, Collections.singletonList("S1")))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Empty serviceId in Artifact Selection");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorOnArtifactSelectionsInvalidCombinations() {
+    QLArtifactSelectionInput qlArtifactSelectionInput =
+        QLArtifactSelectionInput.builder()
+            .artifactSelectionType(QLArtifactSelectionType.FROM_PAYLOAD_SOURCE)
+            .artifactSourceId(ARTIFACT_STREAM_ID)
+            .serviceId(SERVICE_ID)
+            .pipelineId(PIPELINE_ID)
+            .workflowId(WORKFLOW_ID)
+            .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
+            .action(QLTriggerActionInput.builder().artifactSelections(asList(qlArtifactSelectionInput)).build())
+            .condition(QLTriggerConditionInput.builder()
+                           .conditionType(QLConditionType.ON_WEBHOOK)
+                           .webhookConditionInput(
+                               QLWebhookConditionInput.builder().webhookSourceType(QLWebhookSource.GITHUB).build())
+                           .build())
+            .build();
+
+    Mockito.when(serviceResourceService.get(Matchers.anyString())).thenReturn(Mockito.mock(Service.class));
+
+    assertThatThrownBy(()
+                           -> triggerActionController.resolveArtifactSelections(
+                               qlCreateOrUpdateTriggerInput, Collections.singletonList("S1")))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("FROM_PAYLOAD_SOURCE can be used only with CUSTOM Webhook Event");
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput2 =
+        QLCreateOrUpdateTriggerInput.builder()
+            .action(QLTriggerActionInput.builder().artifactSelections(asList(qlArtifactSelectionInput)).build())
+            .condition(QLTriggerConditionInput.builder().conditionType(QLConditionType.ON_SCHEDULE).build())
+            .build();
+
+    assertThatThrownBy(()
+                           -> triggerActionController.resolveArtifactSelections(
+                               qlCreateOrUpdateTriggerInput2, Collections.singletonList("S1")))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("FROM_PAYLOAD_SOURCE can be used only with ON_WEBHOOK Condition Type");
+
+    qlArtifactSelectionInput = QLArtifactSelectionInput.builder()
+                                   .artifactSelectionType(QLArtifactSelectionType.FROM_TRIGGERING_ARTIFACT)
+                                   .serviceId(SERVICE_ID)
+                                   .artifactFilter("filter")
+                                   .pipelineId(PIPELINE_ID)
+                                   .workflowId(WORKFLOW_ID)
+                                   .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput3 =
+        QLCreateOrUpdateTriggerInput.builder()
+            .action(QLTriggerActionInput.builder().artifactSelections(asList(qlArtifactSelectionInput)).build())
+            .condition(QLTriggerConditionInput.builder().conditionType(QLConditionType.ON_SCHEDULE).build())
+            .build();
+
+    assertThatThrownBy(
+        ()
+            -> triggerActionController
+                   .resolveArtifactSelections(qlCreateOrUpdateTriggerInput3, Collections.singletonList("S1"))
+                   .get(0))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("FROM_TRIGGERING_ARTIFACT can be used only with ON_NEW_ARTIFACT Condition Type");
+
+    qlArtifactSelectionInput = QLArtifactSelectionInput.builder()
+                                   .artifactSelectionType(QLArtifactSelectionType.FROM_TRIGGERING_PIPELINE)
+                                   .serviceId(SERVICE_ID)
+                                   .artifactFilter("filter")
+                                   .pipelineId(PIPELINE_ID)
+                                   .workflowId(WORKFLOW_ID)
+                                   .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput4 =
+        QLCreateOrUpdateTriggerInput.builder()
+            .action(QLTriggerActionInput.builder().artifactSelections(asList(qlArtifactSelectionInput)).build())
+            .condition(QLTriggerConditionInput.builder().conditionType(QLConditionType.ON_SCHEDULE).build())
+            .build();
+
+    assertThatThrownBy(
+        ()
+            -> triggerActionController
+                   .resolveArtifactSelections(qlCreateOrUpdateTriggerInput4, Collections.singletonList("S1"))
+                   .get(0))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("FROM_TRIGGERING_PIPELINE can be used only with ON_PIPELINE_COMPLETION Condition Type");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorOnArtifactSelectionsMissingEntities() {
+    QLArtifactSelectionInput qlArtifactSelectionInput =
+        QLArtifactSelectionInput.builder()
+            .artifactSelectionType(QLArtifactSelectionType.LAST_DEPLOYED_WORKFLOW)
+            .serviceId(SERVICE_ID)
+            .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
+            .applicationId(APP_ID)
+            .action(QLTriggerActionInput.builder()
+                        .executionType(QLExecutionType.WORKFLOW)
+                        .artifactSelections(asList(qlArtifactSelectionInput))
+                        .build())
+            .condition(QLTriggerConditionInput.builder()
+                           .conditionType(QLConditionType.ON_WEBHOOK)
+                           .webhookConditionInput(
+                               QLWebhookConditionInput.builder().webhookSourceType(QLWebhookSource.CUSTOM).build())
+                           .build())
+            .build();
+
+    Mockito.when(serviceResourceService.get(Matchers.anyString())).thenReturn(Mockito.mock(Service.class));
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(null);
+
+    assertThatThrownBy(
+        ()
+            -> triggerActionController
+                   .resolveArtifactSelections(qlCreateOrUpdateTriggerInput, Collections.singletonList("S1"))
+                   .get(0))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Workflow Id to select artifact from is required when using LAST_DEPLOYED_WORKFLOW");
+
+    qlArtifactSelectionInput = QLArtifactSelectionInput.builder()
+                                   .artifactSelectionType(QLArtifactSelectionType.LAST_DEPLOYED_WORKFLOW)
+                                   .serviceId(SERVICE_ID)
+                                   .workflowId(WORKFLOW_ID)
+                                   .pipelineId(PIPELINE_ID)
+                                   .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput3 =
+        QLCreateOrUpdateTriggerInput.builder()
+            .applicationId(APP_ID)
+            .action(QLTriggerActionInput.builder()
+                        .executionType(QLExecutionType.PIPELINE)
+                        .artifactSelections(asList(qlArtifactSelectionInput))
+                        .build())
+            .condition(QLTriggerConditionInput.builder()
+                           .conditionType(QLConditionType.ON_WEBHOOK)
+                           .webhookConditionInput(
+                               QLWebhookConditionInput.builder().webhookSourceType(QLWebhookSource.CUSTOM).build())
+                           .build())
+            .build();
+
+    assertThatThrownBy(
+        ()
+            -> triggerActionController
+                   .resolveArtifactSelections(qlCreateOrUpdateTriggerInput3, Collections.singletonList("S1"))
+                   .get(0))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Artifact Selection is not allowed for current Workflow Type");
+
+    qlArtifactSelectionInput = QLArtifactSelectionInput.builder()
+                                   .artifactSelectionType(QLArtifactSelectionType.LAST_DEPLOYED_PIPELINE)
+                                   .serviceId(SERVICE_ID)
+                                   .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput2 =
+        QLCreateOrUpdateTriggerInput.builder()
+            .applicationId(APP_ID)
+            .action(QLTriggerActionInput.builder()
+                        .executionType(QLExecutionType.PIPELINE)
+                        .artifactSelections(asList(qlArtifactSelectionInput))
+                        .build())
+            .condition(QLTriggerConditionInput.builder()
+                           .conditionType(QLConditionType.ON_WEBHOOK)
+                           .webhookConditionInput(
+                               QLWebhookConditionInput.builder().webhookSourceType(QLWebhookSource.CUSTOM).build())
+                           .build())
+            .build();
+
+    Mockito.when(serviceResourceService.get(Matchers.anyString(), Matchers.anyString()))
+        .thenReturn(Mockito.mock(Service.class));
+    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, false)).thenReturn(null);
+
+    assertThatThrownBy(
+        ()
+            -> triggerActionController
+                   .resolveArtifactSelections(qlCreateOrUpdateTriggerInput2, Collections.singletonList("S1"))
+                   .get(0))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Pipeline Id to select artifact from is required when using LAST_DEPLOYED_PIPELINE");
+
+    qlArtifactSelectionInput = QLArtifactSelectionInput.builder()
+                                   .artifactSelectionType(QLArtifactSelectionType.LAST_DEPLOYED_PIPELINE)
+                                   .serviceId(SERVICE_ID)
+                                   .pipelineId(PIPELINE_ID)
+                                   .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput4 =
+        QLCreateOrUpdateTriggerInput.builder()
+            .applicationId(APP_ID)
+            .action(QLTriggerActionInput.builder()
+                        .executionType(QLExecutionType.WORKFLOW)
+                        .artifactSelections(asList(qlArtifactSelectionInput))
+                        .build())
+            .condition(QLTriggerConditionInput.builder()
+                           .conditionType(QLConditionType.ON_WEBHOOK)
+                           .webhookConditionInput(
+                               QLWebhookConditionInput.builder().webhookSourceType(QLWebhookSource.CUSTOM).build())
+                           .build())
+            .build();
+
+    assertThatThrownBy(
+        ()
+            -> triggerActionController
+                   .resolveArtifactSelections(qlCreateOrUpdateTriggerInput4, Collections.singletonList("S1"))
+                   .get(0))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Artifact Selection is not allowed for current Workflow Type");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorOnLastCollectedArtifactStreamIdMissing() {
+    QLArtifactSelectionInput qlArtifactSelectionInput =
+        QLArtifactSelectionInput.builder()
+            .artifactSelectionType(QLArtifactSelectionType.LAST_COLLECTED)
+            .serviceId(SERVICE_ID)
+            .artifactFilter("filter")
+            .pipelineId(PIPELINE_ID)
+            .workflowId(WORKFLOW_ID)
+            .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
+            .action(QLTriggerActionInput.builder().artifactSelections(asList(qlArtifactSelectionInput)).build())
+            .condition(QLTriggerConditionInput.builder()
+                           .conditionType(QLConditionType.ON_WEBHOOK)
+                           .webhookConditionInput(
+                               QLWebhookConditionInput.builder().webhookSourceType(QLWebhookSource.CUSTOM).build())
+                           .build())
+            .build();
+
+    Mockito.when(serviceResourceService.get(Matchers.anyString())).thenReturn(Mockito.mock(Service.class));
+
+    assertThatThrownBy(
+        ()
+            -> triggerActionController
+                   .resolveArtifactSelections(qlCreateOrUpdateTriggerInput, Collections.singletonList("S1"))
+                   .get(0))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Artifact Source Id to select artifact from is required when using LAST_COLLECTED");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorOnLastCollectedArtifactStreamIdInvalid() {
+    QLArtifactSelectionInput qlArtifactSelectionInput =
+        QLArtifactSelectionInput.builder()
+            .artifactSelectionType(QLArtifactSelectionType.LAST_COLLECTED)
+            .serviceId(SERVICE_ID)
+            .artifactFilter("filter")
+            .artifactSourceId(ARTIFACT_STREAM_ID)
+            .pipelineId(PIPELINE_ID)
+            .workflowId(WORKFLOW_ID)
+            .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
+            .action(QLTriggerActionInput.builder().artifactSelections(asList(qlArtifactSelectionInput)).build())
+            .condition(QLTriggerConditionInput.builder()
+                           .conditionType(QLConditionType.ON_WEBHOOK)
+                           .webhookConditionInput(
+                               QLWebhookConditionInput.builder().webhookSourceType(QLWebhookSource.CUSTOM).build())
+                           .build())
+            .build();
+
+    Mockito.when(serviceResourceService.get(Matchers.anyString())).thenReturn(Mockito.mock(Service.class));
+
+    assertThatThrownBy(
+        ()
+            -> triggerActionController
+                   .resolveArtifactSelections(qlCreateOrUpdateTriggerInput, Collections.singletonList("S1"))
+                   .get(0))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Artifact Stream for given id does not exist. Id: ARTIFACT_STREAM_ID");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorOnLastCollectedArtifactStreamInvalid() {
+    QLArtifactSelectionInput qlArtifactSelectionInput =
+        QLArtifactSelectionInput.builder()
+            .artifactSelectionType(QLArtifactSelectionType.LAST_COLLECTED)
+            .serviceId(SERVICE_ID)
+            .artifactFilter("filter")
+            .artifactSourceId(ARTIFACT_STREAM_ID)
+            .pipelineId(PIPELINE_ID)
+            .workflowId(WORKFLOW_ID)
+            .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
+            .action(QLTriggerActionInput.builder().artifactSelections(asList(qlArtifactSelectionInput)).build())
+            .condition(QLTriggerConditionInput.builder()
+                           .conditionType(QLConditionType.ON_WEBHOOK)
+                           .webhookConditionInput(
+                               QLWebhookConditionInput.builder().webhookSourceType(QLWebhookSource.CUSTOM).build())
+                           .build())
+            .build();
+
+    Mockito.when(serviceResourceService.get(Matchers.anyString())).thenReturn(Mockito.mock(Service.class));
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(CustomArtifactStream.builder().build());
+
+    assertThatThrownBy(
+        ()
+            -> triggerActionController
+                   .resolveArtifactSelections(qlCreateOrUpdateTriggerInput, Collections.singletonList("S1"))
+                   .get(0))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Artifact Source does not belong to the service. Service: SERVICE_ID");
   }
 }

@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher;
 
 import static software.wings.beans.Account.Builder.anAccount;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.entities.Cluster;
@@ -15,6 +16,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Application.Builder;
+import software.wings.beans.BuildWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
@@ -32,6 +34,8 @@ import software.wings.beans.ce.CECloudAccount;
 import software.wings.beans.ce.CECluster;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.InstanceType;
+import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.events.TestUtils;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -40,6 +44,7 @@ import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
@@ -89,6 +94,8 @@ public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
   public static final String CLOUD_SERVICE_NAME_ACCOUNT1 = "CLOUD_SERVICE_NAME_ACCOUNT1";
   public static final String WORKLOAD_NAME_ACCOUNT1 = "WORKLOAD_NAME_ACCOUNT1";
   public static final String WORKLOAD_TYPE_ACCOUNT1 = "WORKLOAD_TYPE_ACCOUNT1";
+  public static final String TRIGGER_ID1_APP1_ACCOUNT1 = "TRIGGER_ID1_APP1_ACCOUNT1";
+  public static final String TRIGGER_ID2_APP1_ACCOUNT1 = "TRIGGER_ID2_APP1_ACCOUNT1";
   public static final String ACCOUNT2_ID = "ACCOUNT2_ID";
   public static final String APP3_ID_ACCOUNT2 = "APP3_ID_ACCOUNT2";
   public static final String SERVICE4_ID_APP3_ACCOUNT2 = "SERVICE4_ID_APP3_ACCOUNT2";
@@ -135,6 +142,7 @@ public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
   @Inject EnvironmentService environmentService;
   @Inject InstanceService instanceService;
   @Inject SettingsService settingsService;
+  @Inject TriggerService triggerService;
   @Inject WorkflowService workflowService;
   @Inject PipelineService pipelineService;
   @Inject WorkflowExecutionService workflowExecutionService;
@@ -163,18 +171,41 @@ public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
   }
 
   public String createWorkflowExecution(String accountId, String appId, String workflowId) {
-    WorkflowExecution workflowExecution =
-        WorkflowExecution.builder().workflowId(workflowId).accountId(accountId).appId(appId).build();
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                              .workflowId(workflowId)
+                                              .workflowType(WorkflowType.ORCHESTRATION)
+                                              .status(ExecutionStatus.SUCCESS)
+                                              .accountId(accountId)
+                                              .appId(appId)
+                                              .build();
+    return wingsPersistence.insert(workflowExecution);
+  }
+
+  public String createPipelineExecution(String accountId, String appId, String pipelineId) {
+    long startTs = System.currentTimeMillis();
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                              .workflowId(pipelineId)
+                                              .workflowType(WorkflowType.PIPELINE)
+                                              .status(ExecutionStatus.SUCCESS)
+                                              .startTs(startTs)
+                                              .endTs(startTs + 10)
+                                              .duration(10L)
+                                              .accountId(accountId)
+                                              .appId(appId)
+                                              .build();
     return wingsPersistence.insert(workflowExecution);
   }
 
   public Workflow createWorkflow(String accountId, String appId, String workflowName) {
-    return workflowService.createWorkflow(WorkflowBuilder.aWorkflow()
-                                              .workflowType(WorkflowType.ORCHESTRATION)
-                                              .accountId(accountId)
-                                              .appId(appId)
-                                              .name(workflowName)
-                                              .build());
+    return workflowService.createWorkflow(
+        WorkflowBuilder.aWorkflow()
+            .workflowType(WorkflowType.ORCHESTRATION)
+            .accountId(accountId)
+            .appId(appId)
+            .name(workflowName)
+            .orchestrationWorkflow(
+                BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow().build())
+            .build());
   }
 
   public Pipeline createPipeline(String accountId, String appId, String pipelineName) {
@@ -207,6 +238,19 @@ public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
         Environment.Builder.anEnvironment().name(envName).uuid(envId).appId(appId).accountId(accountId).build());
     setTagToEntity(tagKey, tagValue, accountId, appId, envId, EntityType.ENVIRONMENT);
     return environment;
+  }
+
+  public Trigger createCustomTrigger(
+      String accountId, String appId, String triggerId, String triggerName, String workflowId) {
+    return triggerService.save(Trigger.builder()
+                                   .name(triggerName)
+                                   .uuid(triggerId)
+                                   .appId(appId)
+                                   .condition(WebHookTriggerCondition.builder().build())
+                                   .workflowId(workflowId)
+                                   .workflowType(WorkflowType.ORCHESTRATION)
+                                   .accountId(accountId)
+                                   .build());
   }
 
   public Instance createInstance(String accountId, String appId, String envId, String serviceId,
