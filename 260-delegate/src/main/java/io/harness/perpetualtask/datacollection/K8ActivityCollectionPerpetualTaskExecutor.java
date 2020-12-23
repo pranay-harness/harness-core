@@ -4,6 +4,7 @@ import io.harness.cvng.beans.K8ActivityDataCollectionInfo;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO.KubernetesEventType;
+import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
@@ -65,7 +66,9 @@ public class K8ActivityCollectionPerpetualTaskExecutor implements PerpetualTaskE
               .getCredentials();
       secretDecryptionService.decrypt(kubernetesCredentialAuth, dataCollectionInfo.getEncryptedDataDetails());
       SharedInformerFactory factory = new SharedInformerFactory();
-      dataCollectionInfo.getActivitySourceDTO().getActivitySourceConfigs().forEach(activitySourceConfig -> {
+      KubernetesActivitySourceDTO activitySourceDTO =
+          (KubernetesActivitySourceDTO) dataCollectionInfo.getActivitySourceDTO();
+      activitySourceDTO.getActivitySourceConfigs().forEach(activitySourceConfig -> {
         KubernetesConfig kubernetesConfig = k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(
             kubernetesClusterConfig, activitySourceConfig.getNamespace());
         ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig);

@@ -70,6 +70,7 @@ public abstract class VerificationJob
   private long lastUpdatedAt;
   private String projectIdentifier;
   private String orgIdentifier;
+  private String activitySourceIdentifier;
   private VerificationJobType type;
   @NotNull private String accountId;
   @NotNull private RuntimeParameter serviceIdentifier;
