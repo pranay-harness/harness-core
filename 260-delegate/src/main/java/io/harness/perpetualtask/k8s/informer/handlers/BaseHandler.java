@@ -12,6 +12,7 @@ import io.harness.reflection.ReflectionUtils;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.Timestamp;
+import io.kubernetes.client.common.KubernetesObject;
 import io.kubernetes.client.informer.ResourceEventHandler;
 import io.kubernetes.client.openapi.models.V1DaemonSet;
 import io.kubernetes.client.openapi.models.V1Deployment;
@@ -25,6 +26,7 @@ import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1ReplicaSet;
 import io.kubernetes.client.openapi.models.V1StatefulSet;
 import io.kubernetes.client.openapi.models.V1beta1CronJob;
+import io.kubernetes.client.util.ModelMapper;
 import io.kubernetes.client.util.Yaml;
 import java.io.IOException;
 import java.time.Instant;
@@ -38,7 +40,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.joor.Reflect;
 
 @Slf4j
-public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiType> {
+public abstract class BaseHandler<ApiType extends KubernetesObject> implements ResourceEventHandler<ApiType> {
   private static final String METADATA = "metadata";
 
   static {
@@ -49,18 +51,15 @@ public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiTy
     // Workaround for classpath scanning issues with nested jars
     // See https://github.com/kubernetes-client/java/issues/365
     try {
-      Reflect.on(Yaml.class).call("initModelMap");
-      Map<String, Class<?>> classes = Reflect.on(Yaml.class).get("classes");
-      classes.clear();
-      classes.put("v1beta1/CronJob", V1beta1CronJob.class);
-      classes.put("v1/DaemonSet", V1DaemonSet.class);
-      classes.put("v1/Deployment", V1Deployment.class);
-      classes.put("v1/Event", V1Event.class);
-      classes.put("v1/Job", V1Job.class);
-      classes.put("v1/Node", V1Node.class);
-      classes.put("v1/Pod", V1Pod.class);
-      classes.put("v1/ReplicaSet", V1ReplicaSet.class);
-      classes.put("v1/StatefulSet", V1StatefulSet.class);
+      ModelMapper.addModelMap("", "v1", "Pod", "pods", true, V1Pod.class);
+      ModelMapper.addModelMap("", "v1", "Node", "nodes", false, V1Node.class);
+      ModelMapper.addModelMap("", "v1", "Event", "events", true, V1Event.class);
+      ModelMapper.addModelMap("apps", "v1", "Deployment", "deployments", true, V1Deployment.class);
+      ModelMapper.addModelMap("apps", "v1", "ReplicaSet", "replicasets", true, V1ReplicaSet.class);
+      ModelMapper.addModelMap("apps", "v1", "StatefulSet", "statefulsets", true, V1StatefulSet.class);
+      ModelMapper.addModelMap("apps", "v1", "DaemonSet", "daemonsets", true, V1DaemonSet.class);
+      ModelMapper.addModelMap("batch", "v1", "Job", "jobs", true, V1Job.class);
+      ModelMapper.addModelMap("batch", "v1beta1", "CronJob", "cronjobs", true, V1beta1CronJob.class);
     } catch (Exception e) {
       log.error("Unexpected exception while loading classes: " + e);
     }
