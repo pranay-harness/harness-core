@@ -22,9 +22,9 @@ import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@Slf4j
 public class NotificationTemplateServiceImpl implements NotificationTemplateService {
   private final NotificationTemplateRepository notificationTemplateRepository;
 

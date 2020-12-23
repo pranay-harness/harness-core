@@ -1,6 +1,9 @@
 package io.harness.notification.service;
 
-import static io.harness.notification.constant.NotificationServiceConstants.*;
+import static io.harness.notification.constant.NotificationServiceConstants.MAILSERVICE;
+import static io.harness.notification.constant.NotificationServiceConstants.MSTEAMSSERVICE;
+import static io.harness.notification.constant.NotificationServiceConstants.PAGERDUTYSERVICE;
+import static io.harness.notification.constant.NotificationServiceConstants.SLACKSERVICE;
 
 import io.harness.NotificationRequest;
 import io.harness.notification.NotificationChannelType;

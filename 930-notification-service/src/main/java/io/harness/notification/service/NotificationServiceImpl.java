@@ -5,6 +5,7 @@ import io.harness.Team;
 import io.harness.ng.beans.PageRequest;
 import io.harness.notification.beans.NotificationProcessingResponse;
 import io.harness.notification.entities.Notification;
+import io.harness.notification.entities.Notification.NotificationKeys;
 import io.harness.notification.exception.NotificationException;
 import io.harness.notification.remote.mappers.NotificationMapper;
 import io.harness.notification.repositories.NotificationRepository;
@@ -93,7 +94,7 @@ public class NotificationServiceImpl implements NotificationService {
 
   @Override
   public Page<Notification> list(Team team, PageRequest pageRequest) {
-    Criteria criteria = Criteria.where(Notification.NotificationKeys.team).is(team);
+    Criteria criteria = Criteria.where(NotificationKeys.team).is(team);
     return notificationRepository.findAll(criteria, PageUtils.getPageRequest(pageRequest));
   }
 }

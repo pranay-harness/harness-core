@@ -1,6 +1,9 @@
 package io.harness.notification.modules;
 
-import static io.harness.notification.constant.NotificationServiceConstants.*;
+import static io.harness.notification.constant.NotificationServiceConstants.MAILSERVICE;
+import static io.harness.notification.constant.NotificationServiceConstants.MSTEAMSSERVICE;
+import static io.harness.notification.constant.NotificationServiceConstants.PAGERDUTYSERVICE;
+import static io.harness.notification.constant.NotificationServiceConstants.SLACKSERVICE;
 
 import static java.time.Duration.ofSeconds;
 
@@ -12,8 +15,20 @@ import io.harness.notification.SmtpConfig;
 import io.harness.notification.entities.MongoNotificationRequest;
 import io.harness.notification.eventbackbone.MessageConsumer;
 import io.harness.notification.eventbackbone.MongoMessageConsumer;
-import io.harness.notification.service.*;
-import io.harness.notification.service.api.*;
+import io.harness.notification.service.ChannelServiceImpl;
+import io.harness.notification.service.MSTeamsServiceImpl;
+import io.harness.notification.service.MailServiceImpl;
+import io.harness.notification.service.NotificationServiceImpl;
+import io.harness.notification.service.NotificationSettingsServiceImpl;
+import io.harness.notification.service.NotificationTemplateServiceImpl;
+import io.harness.notification.service.PagerDutyServiceImpl;
+import io.harness.notification.service.SeedDataPopulaterServiceImpl;
+import io.harness.notification.service.SlackServiceImpl;
+import io.harness.notification.service.api.ChannelService;
+import io.harness.notification.service.api.NotificationService;
+import io.harness.notification.service.api.NotificationSettingsService;
+import io.harness.notification.service.api.NotificationTemplateService;
+import io.harness.notification.service.api.SeedDataPopulaterService;
 import io.harness.queue.QueueConsumer;
 
 import com.google.inject.AbstractModule;
@@ -53,7 +68,7 @@ public class NotificationCoreModule extends AbstractModule {
 
   private void bindMessageConsumer() {
     NotificationClientBackendConfiguration notificationClientBackendConfiguration = getBackendConfig();
-    assert (notificationClientBackendConfiguration.getType().equalsIgnoreCase("mongo"));
+    assert notificationClientBackendConfiguration.getType().equalsIgnoreCase("mongo");
     log.info("Using Mongo as the message broker");
     bind(MessageConsumer.class).to(MongoMessageConsumer.class);
   }
