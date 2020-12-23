@@ -7,7 +7,7 @@ import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
-import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
+import io.harness.pms.sdk.core.facilitator.chilidren.ChildrenFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
@@ -60,7 +60,7 @@ public class ParallelPlanCreator extends ChildrenPlanCreator<YamlField> {
         .identifier("parallel" + currentNode.getUuid())
         .stepType(NGForkStep.STEP_TYPE)
         .stepParameters(ForkStepParameters.builder().parallelNodeIds(childrenNodeIds).build())
-        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
+        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildrenFacilitator.FACILITATOR_TYPE).build())
         .adviserObtainments(getAdviserObtainmentFromMetaData(config))
         .skipExpressionChain(true)
         .skipGraphType(SkipType.SKIP_NODE)
