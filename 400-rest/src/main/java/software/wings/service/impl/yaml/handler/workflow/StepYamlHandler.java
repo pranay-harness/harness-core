@@ -57,9 +57,11 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
@@ -72,6 +74,7 @@ import org.apache.commons.lang3.StringUtils;
 @Singleton
 @Slf4j
 public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
+  private static final String SERVICE_NOW_CREATE_UPDATE_PARAMS = "serviceNowCreateUpdateParams";
   @Inject YamlHandlerFactory yamlHandlerFactory;
   @Inject YamlHelper yamlHelper;
   @Inject ServiceResourceService serviceResourceService;
@@ -307,6 +310,17 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
       }
     }
 
+    if (StateType.SERVICENOW_CREATE_UPDATE.name().equals(step.getType())) {
+      Set<String> serviceNowCreateUpdateParams =
+          ((Map<String, Object>) outputProperties.get(SERVICE_NOW_CREATE_UPDATE_PARAMS)).keySet();
+      Set<String> snowCreateUpdateParamsFields = getSnowCreateUpdateParamsFields(outputProperties);
+      Set<String> snowCreateUpdateParamsAdditionalFields = getSnowCreateUpdateParamsAdditionalFields(outputProperties);
+      outputProperties.entrySet().removeIf(entry
+          -> serviceNowCreateUpdateParams.contains(entry.getKey())
+              || snowCreateUpdateParamsFields.contains(entry.getKey())
+              || snowCreateUpdateParamsAdditionalFields.contains(entry.getKey()));
+    }
+
     return StepYaml.builder()
         .name(step.getName())
         .properties(outputProperties == null || outputProperties.isEmpty() ? null : outputProperties)
@@ -315,6 +329,20 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
         .templateUri(templateUri)
         .templateVariables(TemplateHelper.convertToTemplateVariables(step.getTemplateVariables()))
         .build();
+  }
+
+  private Set<String> getSnowCreateUpdateParamsFields(Map<String, Object> outputProperties) {
+    Map<String, Object> fields =
+        (Map<String, Object>) ((Map<String, Object>) outputProperties.get(SERVICE_NOW_CREATE_UPDATE_PARAMS))
+            .get("fields");
+    return isEmpty(fields) ? Collections.emptySet() : fields.keySet();
+  }
+
+  private Set<String> getSnowCreateUpdateParamsAdditionalFields(Map<String, Object> outputProperties) {
+    Map<String, Object> additionalFields =
+        (Map<String, Object>) ((Map<String, Object>) outputProperties.get(SERVICE_NOW_CREATE_UPDATE_PARAMS))
+            .get("additionalFields");
+    return isEmpty(additionalFields) ? Collections.emptySet() : additionalFields.keySet();
   }
 
   // If the properties contain known entity id, convert it into name
