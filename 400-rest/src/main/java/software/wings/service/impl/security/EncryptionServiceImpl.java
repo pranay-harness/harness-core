@@ -166,6 +166,8 @@ public class EncryptionServiceImpl implements EncryptionService {
       VaultEncryptor vaultEncryptor = vaultEncryptorsRegistry.getVaultEncryptor(config.getEncryptionType());
       decryptedValue = vaultEncryptor.fetchSecretValue(config.getAccountId(), record, config);
     } else if (config.getType().equals(CUSTOM)) {
+      log.info("CUSTOM_SECRET_MANAGER: Getting secret from secret manager for secretId {}",
+          encryptedDataDetail.getEncryptedData().getUuid());
       CustomEncryptor customEncryptor = customEncryptorsRegistry.getCustomEncryptor(config.getEncryptionType());
       decryptedValue = customEncryptor.fetchSecretValue(config.getAccountId(), record, config);
     } else {

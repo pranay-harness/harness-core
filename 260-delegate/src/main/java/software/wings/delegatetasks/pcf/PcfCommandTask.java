@@ -10,6 +10,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandTaskParameters;
+import software.wings.helpers.ext.pcf.request.PcfInstanceSyncRequest;
 import software.wings.helpers.ext.pcf.request.PcfRunPluginCommandRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 
@@ -54,6 +55,8 @@ public class PcfCommandTask extends AbstractDelegateRunnableTask {
 
   private PcfCommandExecutionResponse getPcfCommandExecutionResponse(
       PcfCommandRequest pcfCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
-    return pcfDelegateTaskHelper.getPcfCommandExecutionResponse(pcfCommandRequest, encryptedDataDetails, false);
+    boolean isInstanceSync = pcfCommandRequest instanceof PcfInstanceSyncRequest;
+    return pcfDelegateTaskHelper.getPcfCommandExecutionResponse(
+        pcfCommandRequest, encryptedDataDetails, isInstanceSync);
   }
 }
