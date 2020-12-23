@@ -378,7 +378,8 @@ public class KubernetesActivitySourceServiceImplTest extends CvNextGenTest {
     cvConfig.setEnvIdentifier(envIdentifier);
     cvConfig.setOrgIdentifier(orgIdentifier);
     cvConfig.setProjectIdentifier(projectIdentifier);
-    cvConfig.setGroupId(generateUuid());
+    cvConfig.setIdentifier(generateUuid());
+    cvConfig.setMonitoringSourceName(generateUuid());
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
     cvConfig.setProductName(generateUuid());
     cvConfig.setApplicationName("appName");

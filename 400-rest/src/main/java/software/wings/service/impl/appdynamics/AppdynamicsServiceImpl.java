@@ -263,7 +263,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
 
   @Override
   public Set<AppdynamicsValidationResponse> getMetricPackData(String accountId, String orgIdentifier,
-      String projectIdentifier, long appdAppId, long appdTierId, String requestGuid,
+      String projectIdentifier, String appName, String tierName, String requestGuid,
       AppdynamicsMetricPackDataValidationRequest validationRequest) {
     log.info("for {} getting data for {}", projectIdentifier, validationRequest);
     Preconditions.checkState(isNotEmpty(validationRequest.getMetricPacks()),
@@ -281,7 +281,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
                                           .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
                                           .build();
     return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
-        .getMetricPackData(validationRequest.getConnector(), encryptedDataDetails, appdAppId, appdTierId, requestGuid,
+        .getMetricPackData(validationRequest.getConnector(), encryptedDataDetails, appName, tierName, requestGuid,
             validationRequest.getMetricPacks(), Instant.now().minusSeconds(TimeUnit.HOURS.toSeconds(1)), Instant.now());
   }
 }

@@ -400,7 +400,8 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
     appDynamicsCVConfig.setConnectorIdentifier(connectorIdentifier);
     appDynamicsCVConfig.setServiceIdentifier("serviceIdentifier");
     appDynamicsCVConfig.setEnvIdentifier("environmentIdentifier");
-    appDynamicsCVConfig.setGroupId(groupId);
+    appDynamicsCVConfig.setIdentifier(groupId);
+    appDynamicsCVConfig.setMonitoringSourceName(generateUuid());
     appDynamicsCVConfig.setTierName("docker-tier");
     appDynamicsCVConfig.setApplicationName("cv-app");
     appDynamicsCVConfig.setTierName("tierName");

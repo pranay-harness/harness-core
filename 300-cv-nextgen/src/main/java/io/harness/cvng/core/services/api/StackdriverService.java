@@ -8,7 +8,7 @@ import io.harness.ng.core.dto.ResponseDTO;
 
 import java.util.List;
 
-public interface StackdriverService {
+public interface StackdriverService extends MonitoringSourceImportStatusCreator {
   PageResponse<StackdriverDashboardDTO> listDashboards(String accountId, String connectorIdentifier,
       String orgIdentifier, String projectIdentifier, int pageSize, int offset, String filter, String tracingId);
   List<StackdriverDashboardDetail> getDashboardDetails(String accountId, String connectorIdentifier,

@@ -95,7 +95,8 @@ public class LogCVConfigTest extends CategoryTest {
     cvConfig.setServiceIdentifier(generateUuid());
     cvConfig.setEnvIdentifier(generateUuid());
     cvConfig.setProjectIdentifier(generateUuid());
-    cvConfig.setGroupId(groupId);
+    cvConfig.setIdentifier(groupId);
+    cvConfig.setMonitoringSourceName(generateUuid());
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
     cvConfig.setProductName(productName);
   }

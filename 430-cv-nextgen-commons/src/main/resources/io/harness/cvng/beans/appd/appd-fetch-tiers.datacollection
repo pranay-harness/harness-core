@@ -1,0 +1,3 @@
+Var getTiersUrl = concat(Env:baseUrl, "rest/applications/", Env:appName, "/tiers?output=json")
+Var results = sync-call(url=Var:getTiersUrl, header=Env:commonHeaders)
+return Var:results

@@ -17,11 +17,13 @@ public class CVConfigTransformerTestBase extends CvNextGenTest {
   protected String envIdentifier;
   protected String groupId;
   protected String serviceIdentifier;
+  protected String monitoringSourceName;
 
   @Before
   public void setUp() {
     identifier = generateUuid();
     groupId = identifier;
+    monitoringSourceName = generateUuid();
     accountId = generateUuid();
     projectIdentifier = "harness";
     productName = "Performance monitoring";
@@ -32,8 +34,8 @@ public class CVConfigTransformerTestBase extends CvNextGenTest {
   protected void fillCommonFields(DSConfig dsConfig) {
     dsConfig.setAccountId(accountId);
     dsConfig.setConnectorIdentifier(connectorIdentifier);
-    dsConfig.setEnvIdentifier(envIdentifier);
     dsConfig.setIdentifier(identifier);
+    dsConfig.setMonitoringSourceName(monitoringSourceName);
     dsConfig.setProductName(productName);
     dsConfig.setProjectIdentifier(projectIdentifier);
   }
@@ -44,7 +46,8 @@ public class CVConfigTransformerTestBase extends CvNextGenTest {
     cvConfig.setProductName(productName);
     cvConfig.setProjectIdentifier(projectIdentifier);
     cvConfig.setAccountId(accountId);
-    cvConfig.setGroupId(groupId);
+    cvConfig.setIdentifier(groupId);
+    cvConfig.setMonitoringSourceName(monitoringSourceName);
     cvConfig.setServiceIdentifier(serviceIdentifier);
   }
 }

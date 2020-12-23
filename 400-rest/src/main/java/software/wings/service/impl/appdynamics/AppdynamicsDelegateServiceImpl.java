@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.getUnsafeHttpClient;
-import static software.wings.service.impl.ThirdPartyApiCallLog.NO_STATE_EXECUTION_ID;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
@@ -400,12 +399,8 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
 
   @Override
   public Set<AppdynamicsValidationResponse> getMetricPackData(AppDynamicsConnectorDTO appDynamicsConnectorDTO,
-      List<EncryptedDataDetail> encryptionDetails, long appdAppId, long appdTierId, String requestGuid,
+      List<EncryptedDataDetail> encryptionDetails, String appName, String tierName, String requestGuid,
       List<MetricPackDTO> metricPacks, Instant startTime, Instant endTime) {
-    final AppdynamicsTier appdynamicsTier = getAppdynamicsTier(appDynamicsConnectorDTO, appdAppId, appdTierId,
-        encryptionDetails, createApiCallLog(appDynamicsConnectorDTO.getAccountId(), NO_STATE_EXECUTION_ID));
-    Preconditions.checkNotNull(appdynamicsTier, "No tier found with id {} for app {}", appdTierId, appdAppId);
-
     Set<AppdynamicsValidationResponse> appdynamicsValidationResponses = new HashSet<>();
     metricPacks.forEach(metricPack -> {
       final String metricPackName = metricPack.getIdentifier();
@@ -416,12 +411,12 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
           .stream()
           .filter(metricDefinition -> metricDefinition.isIncluded() && isNotEmpty(metricDefinition.getValidationPath()))
           .forEach(metricDefinition -> callables.add(() -> {
-            String metricPath = metricDefinition.getValidationPath().replaceAll(
-                CVNextGenConstants.APPD_TIER_ID_PLACEHOLDER, appdynamicsTier.getName());
+            String metricPath =
+                metricDefinition.getValidationPath().replaceAll(CVNextGenConstants.APPD_TIER_ID_PLACEHOLDER, tierName);
             Call<List<AppdynamicsMetricData>> metriDataRequest =
                 getAppdynamicsRestClient(appDynamicsConnectorDTO)
                     .getMetricDataTimeRange(getHeaderWithCredentials(appDynamicsConnectorDTO, encryptionDetails),
-                        appdAppId, metricPath, startTime.toEpochMilli(), endTime.toEpochMilli(), true);
+                        appName, metricPath, startTime.toEpochMilli(), endTime.toEpochMilli(), true);
             try {
               List<AppdynamicsMetricData> appdynamicsMetricData = requestExecutor.executeRequest(
                   ThirdPartyApiCallLog.createApiCallLog(appDynamicsConnectorDTO.getAccountId(),

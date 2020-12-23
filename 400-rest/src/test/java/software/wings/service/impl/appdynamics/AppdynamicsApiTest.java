@@ -353,20 +353,20 @@ public class AppdynamicsApiTest extends WingsBaseTest {
         AppdynamicsApiTest.class.getResource("/appdynamics/app-dynamics-metric-packs-list.yaml"), Charsets.UTF_8);
     final List<MetricPackDTO> metricPacks = yamlUtils.read(metricPackYaml, new TypeReference<List<MetricPackDTO>>() {});
 
-    final Set<AppdynamicsValidationResponse> metricPacksData =
-        appdynamicsService.getMetricPackData(accountId, generateUuid(), generateUuid(), 100, 200, generateUuid(),
-            AppdynamicsMetricPackDataValidationRequest.builder()
-                .connector(AppDynamicsConnectorDTO.builder()
-                               .controllerUrl("https://www.google.com")
-                               .accountname(generateUuid())
-                               .username(generateUuid())
-                               .passwordRef(SecretRefData.builder()
-                                                .identifier(generateUuid())
-                                                .decryptedValue(generateUuid().toCharArray())
-                                                .build())
-                               .build())
-                .metricPacks(metricPacks)
-                .build());
+    final Set<AppdynamicsValidationResponse> metricPacksData = appdynamicsService.getMetricPackData(accountId,
+        generateUuid(), generateUuid(), generateUuid(), generateUuid(), generateUuid(),
+        AppdynamicsMetricPackDataValidationRequest.builder()
+            .connector(AppDynamicsConnectorDTO.builder()
+                           .controllerUrl("https://www.google.com")
+                           .accountname(generateUuid())
+                           .username(generateUuid())
+                           .passwordRef(SecretRefData.builder()
+                                            .identifier(generateUuid())
+                                            .decryptedValue(generateUuid().toCharArray())
+                                            .build())
+                           .build())
+            .metricPacks(metricPacks)
+            .build());
     assertThat(metricPacksData.size()).isEqualTo(metricPacks.size());
     metricPacksData.forEach(metricPackData -> {
       if (metricPackData.getMetricPackName().equals(PERFORMANCE_PACK_IDENTIFIER)) {

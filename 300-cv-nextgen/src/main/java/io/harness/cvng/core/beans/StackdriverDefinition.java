@@ -13,6 +13,7 @@ import lombok.Value;
 @Builder
 public class StackdriverDefinition {
   private String dashboardName;
+  private String dashboardPath;
   private String metricName;
   private Object jsonMetricDefinition;
   private List<String> metricTags;

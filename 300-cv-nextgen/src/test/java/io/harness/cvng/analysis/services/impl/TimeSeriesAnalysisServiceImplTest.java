@@ -711,7 +711,8 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     cvConfig.setServiceIdentifier(generateUuid());
     cvConfig.setEnvIdentifier(generateUuid());
     cvConfig.setProjectIdentifier(generateUuid());
-    cvConfig.setGroupId("groupId");
+    cvConfig.setIdentifier("groupId");
+    cvConfig.setMonitoringSourceName(generateUuid());
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
     cvConfig.setProductName("productName");
     return cvConfig;

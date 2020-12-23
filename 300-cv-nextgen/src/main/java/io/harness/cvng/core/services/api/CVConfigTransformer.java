@@ -11,7 +11,7 @@ import java.util.List;
 public interface CVConfigTransformer<C extends CVConfig, T extends DSConfig> {
   default T transform(List<? extends CVConfig> cvConfigGroup) {
     Preconditions.checkArgument(isNotEmpty(cvConfigGroup), "List of cvConfigs can not empty");
-    Preconditions.checkArgument(cvConfigGroup.stream().map(CVConfig::getGroupId).distinct().count() == 1,
+    Preconditions.checkArgument(cvConfigGroup.stream().map(CVConfig::getIdentifier).distinct().count() == 1,
         "Group ID should be same for List of all configs.");
     List<C> typedCVConfig = (List<C>) cvConfigGroup;
     return transformToDSConfig(typedCVConfig);

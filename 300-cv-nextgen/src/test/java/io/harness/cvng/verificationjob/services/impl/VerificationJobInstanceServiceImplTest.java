@@ -770,7 +770,8 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     cvConfig.setEnvIdentifier("env");
     cvConfig.setProjectIdentifier(projectIdentifier);
     cvConfig.setOrgIdentifier(orgIdentifier);
-    cvConfig.setGroupId("groupId");
+    cvConfig.setIdentifier("groupId");
+    cvConfig.setMonitoringSourceName(generateUuid());
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
     cvConfig.setProductName("productName");
     return cvConfig;

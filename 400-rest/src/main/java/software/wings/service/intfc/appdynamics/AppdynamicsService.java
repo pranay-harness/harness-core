@@ -53,6 +53,6 @@ public interface AppdynamicsService {
       String workflowExecutionId, ThirdPartyApiCallLog apiCallLog);
 
   Set<AppdynamicsValidationResponse> getMetricPackData(String accountId, String orgIdentifier, String projectIdentifier,
-      long appdAppId, long appdTierId, String requestGuid,
+      String appName, String tierName, String requestGuid,
       AppdynamicsMetricPackDataValidationRequest validationRequest);
 }

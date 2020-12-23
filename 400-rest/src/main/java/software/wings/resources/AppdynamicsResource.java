@@ -94,11 +94,11 @@ public class AppdynamicsResource {
   public RestResponse<Set<AppdynamicsValidationResponse>> getMetricData(
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
-      @QueryParam("appdAppId") @NotNull long appdAppId, @QueryParam("appdTierId") @NotNull long appdTierId,
+      @QueryParam("appName") @NotNull String appName, @QueryParam("tierName") @NotNull String tierName,
       @QueryParam("requestGuid") @NotNull String requestGuid,
       @NotNull @Valid @Body AppdynamicsMetricPackDataValidationRequest validationRequest) {
     return new RestResponse<>(appdynamicsService.getMetricPackData(
-        accountId, orgIdentifier, projectIdentifier, appdAppId, appdTierId, requestGuid, validationRequest));
+        accountId, orgIdentifier, projectIdentifier, appName, tierName, requestGuid, validationRequest));
   }
 
   @POST

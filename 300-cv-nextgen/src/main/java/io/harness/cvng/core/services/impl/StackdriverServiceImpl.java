@@ -8,12 +8,15 @@ import io.harness.cvng.beans.stackdriver.StackDriverMetricDefinition;
 import io.harness.cvng.beans.stackdriver.StackdriverDashboardDetailsRequest;
 import io.harness.cvng.beans.stackdriver.StackdriverDashboardRequest;
 import io.harness.cvng.beans.stackdriver.StackdriverSampleDataRequest;
+import io.harness.cvng.core.beans.MonitoringSourceImportStatus;
 import io.harness.cvng.core.beans.OnboardingRequestDTO;
 import io.harness.cvng.core.beans.OnboardingResponseDTO;
+import io.harness.cvng.core.beans.StackdriverImportStatus;
 import io.harness.cvng.core.beans.StackdriverSampleDataDTO;
 import io.harness.cvng.core.beans.TimeSeriesSampleDTO;
 import io.harness.cvng.core.beans.stackdriver.StackdriverDashboardDTO;
 import io.harness.cvng.core.beans.stackdriver.StackdriverDashboardDetail;
+import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.cvng.core.services.api.StackdriverService;
 import io.harness.cvng.core.utils.DateTimeUtils;
@@ -133,8 +136,16 @@ public class StackdriverServiceImpl implements StackdriverService {
 
     } catch (Exception ex) {
       responseDTO.setStatus(Status.ERROR);
-      responseDTO.setData(StackdriverSampleDataDTO.builder().errorMessage(ex.getMessage()).build());
+      String msg = "Exception while trying to fetch sample data. Please ensure that the metric definition corresponds "
+          + "to a line chart in the dashboard.";
+      responseDTO.setData(StackdriverSampleDataDTO.builder().errorMessage(msg).build());
     }
     return responseDTO;
+  }
+
+  @Override
+  public MonitoringSourceImportStatus createMonitoringSourceImportStatus(
+      List<CVConfig> cvConfigsGroupedByMonitoringSource, int totalNumberOfEnvironments) {
+    return StackdriverImportStatus.builder().build();
   }
 }

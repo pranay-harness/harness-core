@@ -767,7 +767,9 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     doReturn(Lists.newArrayList(new AppDynamicsCVConfig()))
         .when(realVerificationJobInstanceService)
         .getCVConfigsForVerificationJob(any());
+
     FieldUtils.writeField(activityService, "verificationJobInstanceService", realVerificationJobInstanceService, true);
+
     KubernetesActivity kubernetesActivity = getKubernetesActivity();
     kubernetesActivity.setVerificationJobRuntimeDetails(null);
 

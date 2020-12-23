@@ -40,10 +40,10 @@ public class AppDynamicsResource {
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
       @QueryParam("connectorIdentifier") @NotNull String connectorIdentifier,
-      @QueryParam("appdAppId") @NotNull long appdAppId, @QueryParam("appdTierId") @NotNull long appdTierId,
+      @QueryParam("appName") @NotNull String appName, @QueryParam("tierName") @NotNull String tierName,
       @QueryParam("requestGuid") @NotNull String requestGuid, @NotNull @Valid @Body List<MetricPack> metricPacks) {
-    return new RestResponse<>(appDynamicsService.getMetricPackData(accountId, connectorIdentifier, orgIdentifier,
-        projectIdentifier, appdAppId, appdTierId, requestGuid, metricPacks));
+    return new RestResponse<>(appDynamicsService.getMetricPackData(
+        accountId, connectorIdentifier, orgIdentifier, projectIdentifier, appName, tierName, requestGuid, metricPacks));
   }
 
   @GET
@@ -70,9 +70,9 @@ public class AppDynamicsResource {
       @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
-      @NotNull @QueryParam("appDynamicsAppId") long appdynamicsAppId, @QueryParam("offset") @NotNull Integer offset,
+      @NotNull @QueryParam("appName") String appName, @QueryParam("offset") @NotNull Integer offset,
       @QueryParam("pageSize") @NotNull Integer pageSize, @QueryParam("filter") String filter) {
     return new RestResponse<>(appDynamicsService.getTiers(
-        accountId, connectorIdentifier, orgIdentifier, projectIdentifier, appdynamicsAppId, offset, pageSize, filter));
+        accountId, connectorIdentifier, orgIdentifier, projectIdentifier, appName, offset, pageSize, filter));
   }
 }

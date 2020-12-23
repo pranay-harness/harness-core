@@ -10,17 +10,14 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.beans.TimeSeriesThresholdType;
 import io.harness.cvng.core.beans.DSConfig.CVConfigUpdateResult;
+import io.harness.cvng.core.beans.StackdriverDSConfig.StackdriverConfiguration;
 import io.harness.cvng.core.entities.MetricPack;
-import io.harness.cvng.core.entities.MetricPack.MetricDefinition;
 import io.harness.cvng.core.entities.StackdriverCVConfig;
 import io.harness.rule.Owner;
 
-import com.google.common.collect.Sets;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -29,35 +26,39 @@ public class StackdriverDSConfigTest extends DSConfigTestBase {
   StackdriverDSConfig stackdriverDSConfig;
   private List<MetricPack> metricPacks;
   String serviceIdentifier;
+  String envIdentifier;
 
   @Before
   public void setup() {
     stackdriverDSConfig = new StackdriverDSConfig();
     fillCommonFields(stackdriverDSConfig);
-    metricPacks = Arrays.asList(createMetricPack(
-        Arrays.asList(TimeSeriesMetricType.THROUGHPUT, TimeSeriesMetricType.ERROR, TimeSeriesMetricType.RESP_TIME)));
-    stackdriverDSConfig.setMetricPacks(Sets.newHashSet(metricPacks));
+    envIdentifier = generateUuid();
     serviceIdentifier = generateUuid();
-    stackdriverDSConfig.setServiceIdentifier(serviceIdentifier);
   }
 
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void getCVConfigUpdateResult_whenNoConfigExists() {
-    Set<StackdriverDefinition> definitions = new HashSet<>();
-    definitions.add(StackdriverDefinition.builder()
-                        .jsonMetricDefinition("{\"sampleJson\":[]}")
-                        .metricName("metricName")
-                        .dashboardName("dashboardName")
-                        .metricTags(Arrays.asList("tag1"))
-                        .riskProfile(StackdriverDefinition.RiskProfile.builder()
-                                         .metricType(TimeSeriesMetricType.RESP_TIME)
-                                         .category(CVMonitoringCategory.PERFORMANCE)
-                                         .thresholdTypes(Arrays.asList(TimeSeriesThresholdType.ACT_WHEN_HIGHER))
-                                         .build())
-                        .build());
-    stackdriverDSConfig.setMetricDefinitions(definitions);
+    StackdriverConfiguration configuration =
+        StackdriverConfiguration.builder()
+            .serviceIdentifier(serviceIdentifier)
+            .envIdentifier(envIdentifier)
+            .metricDefinition(
+                StackdriverDefinition.builder()
+                    .jsonMetricDefinition("{\"sampleJson\":[]}")
+                    .metricName("metricName")
+                    .dashboardName("dashboardName")
+                    .metricTags(Arrays.asList("tag1"))
+                    .riskProfile(StackdriverDefinition.RiskProfile.builder()
+                                     .metricType(TimeSeriesMetricType.RESP_TIME)
+                                     .category(CVMonitoringCategory.PERFORMANCE)
+                                     .thresholdTypes(Arrays.asList(TimeSeriesThresholdType.ACT_WHEN_HIGHER))
+                                     .build())
+                    .build())
+            .build();
+
+    stackdriverDSConfig.setMetricConfigurations(Arrays.asList(configuration));
 
     CVConfigUpdateResult cvConfigUpdateResult = stackdriverDSConfig.getCVConfigUpdateResult(Collections.emptyList());
 
@@ -79,20 +80,91 @@ public class StackdriverDSConfigTest extends DSConfigTestBase {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
+  public void getCVConfigUpdateResult_whenNoConfigExistsAddMultiple() {
+    StackdriverConfiguration configuration =
+        StackdriverConfiguration.builder()
+            .serviceIdentifier(serviceIdentifier)
+            .envIdentifier(envIdentifier)
+            .metricDefinition(
+                StackdriverDefinition.builder()
+                    .jsonMetricDefinition("{\"sampleJson\":[]}")
+                    .metricName("metricName")
+                    .dashboardName("dashboardName")
+                    .metricTags(Arrays.asList("tag1"))
+                    .riskProfile(StackdriverDefinition.RiskProfile.builder()
+                                     .metricType(TimeSeriesMetricType.RESP_TIME)
+                                     .category(CVMonitoringCategory.PERFORMANCE)
+                                     .thresholdTypes(Arrays.asList(TimeSeriesThresholdType.ACT_WHEN_HIGHER))
+                                     .build())
+                    .build())
+            .build();
+    StackdriverConfiguration configuration2 =
+        StackdriverConfiguration.builder()
+            .serviceIdentifier(serviceIdentifier + "2")
+            .envIdentifier(envIdentifier)
+            .metricDefinition(
+                StackdriverDefinition.builder()
+                    .jsonMetricDefinition("{\"sampleJson\":[]}")
+                    .metricName("metricName")
+                    .dashboardName("dashboardName")
+                    .metricTags(Arrays.asList("tag1"))
+                    .riskProfile(StackdriverDefinition.RiskProfile.builder()
+                                     .metricType(TimeSeriesMetricType.RESP_TIME)
+                                     .category(CVMonitoringCategory.PERFORMANCE)
+                                     .thresholdTypes(Arrays.asList(TimeSeriesThresholdType.ACT_WHEN_HIGHER))
+                                     .build())
+                    .build())
+            .build();
+
+    stackdriverDSConfig.setMetricConfigurations(Arrays.asList(configuration, configuration2));
+
+    CVConfigUpdateResult cvConfigUpdateResult = stackdriverDSConfig.getCVConfigUpdateResult(Collections.emptyList());
+
+    assertThat(cvConfigUpdateResult).isNotNull();
+    assertThat(cvConfigUpdateResult.getAdded()).isNotEmpty();
+    assertThat(cvConfigUpdateResult.getUpdated()).isEmpty();
+    assertThat(cvConfigUpdateResult.getDeleted()).isEmpty();
+
+    assertThat(cvConfigUpdateResult.getAdded().size()).isEqualTo(2);
+
+    boolean service1Present = false;
+    boolean service2Present = false;
+
+    List<StackdriverCVConfig> cvConfigs = (List<StackdriverCVConfig>) (List<?>) cvConfigUpdateResult.getAdded();
+    for (StackdriverCVConfig cvConfig : cvConfigs) {
+      assertThat(cvConfig.getDashboardName()).isEqualTo("dashboardName");
+      if (cvConfig.getServiceIdentifier().equals(serviceIdentifier)) {
+        service1Present = true;
+      } else if (cvConfig.getServiceIdentifier().equals(serviceIdentifier + "2")) {
+        service2Present = true;
+      }
+      assertThat(cvConfig.getCategory().name()).isEqualTo(CVMonitoringCategory.PERFORMANCE.name());
+    }
+    assertThat(service1Present && service2Present).isTrue();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
   public void getCVConfigUpdateResult_whenDeleted() {
-    Set<StackdriverDefinition> definitions = new HashSet<>();
-    definitions.add(StackdriverDefinition.builder()
-                        .jsonMetricDefinition("{\"sampleJson\":[]}")
-                        .metricName("metricName")
-                        .dashboardName("dashboardName")
-                        .metricTags(Arrays.asList("tag1"))
-                        .riskProfile(StackdriverDefinition.RiskProfile.builder()
-                                         .metricType(TimeSeriesMetricType.RESP_TIME)
-                                         .category(CVMonitoringCategory.PERFORMANCE)
-                                         .thresholdTypes(Arrays.asList(TimeSeriesThresholdType.ACT_WHEN_HIGHER))
-                                         .build())
-                        .build());
-    stackdriverDSConfig.setMetricDefinitions(definitions);
+    StackdriverConfiguration configuration =
+        StackdriverConfiguration.builder()
+            .serviceIdentifier(serviceIdentifier)
+            .envIdentifier(envIdentifier)
+            .metricDefinition(
+                StackdriverDefinition.builder()
+                    .jsonMetricDefinition("{\"sampleJson\":[]}")
+                    .metricName("metricName")
+                    .dashboardName("dashboardName")
+                    .metricTags(Arrays.asList("tag1"))
+                    .riskProfile(StackdriverDefinition.RiskProfile.builder()
+                                     .metricType(TimeSeriesMetricType.RESP_TIME)
+                                     .category(CVMonitoringCategory.PERFORMANCE)
+                                     .thresholdTypes(Arrays.asList(TimeSeriesThresholdType.ACT_WHEN_HIGHER))
+                                     .build())
+                    .build())
+            .build();
+    stackdriverDSConfig.setMetricConfigurations(Arrays.asList(configuration));
 
     StackdriverCVConfig existingCVConfig = StackdriverCVConfig.builder().dashboardName("dashboard2").build();
     existingCVConfig.setEnvIdentifier(envIdentifier);
@@ -115,19 +187,24 @@ public class StackdriverDSConfigTest extends DSConfigTestBase {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void getCVConfigUpdateResult_whenUpdated() {
-    Set<StackdriverDefinition> definitions = new HashSet<>();
-    definitions.add(StackdriverDefinition.builder()
-                        .jsonMetricDefinition("{\"sampleJson\":[]}")
-                        .metricName("metricName")
-                        .dashboardName("dashboardName")
-                        .metricTags(Arrays.asList("tag1"))
-                        .riskProfile(StackdriverDefinition.RiskProfile.builder()
-                                         .metricType(TimeSeriesMetricType.RESP_TIME)
-                                         .category(CVMonitoringCategory.PERFORMANCE)
-                                         .thresholdTypes(Arrays.asList(TimeSeriesThresholdType.ACT_WHEN_HIGHER))
-                                         .build())
-                        .build());
-    stackdriverDSConfig.setMetricDefinitions(definitions);
+    StackdriverConfiguration configuration =
+        StackdriverConfiguration.builder()
+            .serviceIdentifier(serviceIdentifier)
+            .envIdentifier(envIdentifier)
+            .metricDefinition(
+                StackdriverDefinition.builder()
+                    .jsonMetricDefinition("{\"sampleJson\":[]}")
+                    .metricName("metricName")
+                    .dashboardName("dashboardName")
+                    .metricTags(Arrays.asList("tag1"))
+                    .riskProfile(StackdriverDefinition.RiskProfile.builder()
+                                     .metricType(TimeSeriesMetricType.RESP_TIME)
+                                     .category(CVMonitoringCategory.PERFORMANCE)
+                                     .thresholdTypes(Arrays.asList(TimeSeriesThresholdType.ACT_WHEN_HIGHER))
+                                     .build())
+                    .build())
+            .build();
+    stackdriverDSConfig.setMetricConfigurations(Arrays.asList(configuration));
 
     StackdriverCVConfig existingCVConfig = StackdriverCVConfig.builder().dashboardName("dashboardName").build();
     existingCVConfig.setEnvIdentifier(envIdentifier);
@@ -149,30 +226,41 @@ public class StackdriverDSConfigTest extends DSConfigTestBase {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void getCVConfigUpdateResult_whenAddedWithExising() {
-    Set<StackdriverDefinition> definitions = new HashSet<>();
-    definitions.add(StackdriverDefinition.builder()
-                        .jsonMetricDefinition("{\"sampleJson\":[]}")
-                        .metricName("metricName")
-                        .dashboardName("dashboardName")
-                        .metricTags(Arrays.asList("tag1"))
-                        .riskProfile(StackdriverDefinition.RiskProfile.builder()
-                                         .metricType(TimeSeriesMetricType.RESP_TIME)
-                                         .category(CVMonitoringCategory.PERFORMANCE)
-                                         .thresholdTypes(Arrays.asList(TimeSeriesThresholdType.ACT_WHEN_HIGHER))
-                                         .build())
-                        .build());
-    definitions.add(StackdriverDefinition.builder()
-                        .jsonMetricDefinition("{\"sampleJson\":[]}")
-                        .metricName("metricName")
-                        .dashboardName("dashboardName2")
-                        .metricTags(Arrays.asList("tag2"))
-                        .riskProfile(StackdriverDefinition.RiskProfile.builder()
-                                         .metricType(TimeSeriesMetricType.RESP_TIME)
-                                         .category(CVMonitoringCategory.PERFORMANCE)
-                                         .thresholdTypes(Arrays.asList(TimeSeriesThresholdType.ACT_WHEN_HIGHER))
-                                         .build())
-                        .build());
-    stackdriverDSConfig.setMetricDefinitions(definitions);
+    StackdriverConfiguration configuration =
+        StackdriverConfiguration.builder()
+            .serviceIdentifier(serviceIdentifier)
+            .envIdentifier(envIdentifier)
+            .metricDefinition(
+                StackdriverDefinition.builder()
+                    .jsonMetricDefinition("{\"sampleJson\":[]}")
+                    .metricName("metricName")
+                    .dashboardName("dashboardName")
+                    .metricTags(Arrays.asList("tag1"))
+                    .riskProfile(StackdriverDefinition.RiskProfile.builder()
+                                     .metricType(TimeSeriesMetricType.RESP_TIME)
+                                     .category(CVMonitoringCategory.PERFORMANCE)
+                                     .thresholdTypes(Arrays.asList(TimeSeriesThresholdType.ACT_WHEN_HIGHER))
+                                     .build())
+                    .build())
+            .build();
+    StackdriverConfiguration configuration2 =
+        StackdriverConfiguration.builder()
+            .serviceIdentifier(serviceIdentifier)
+            .envIdentifier(envIdentifier)
+            .metricDefinition(
+                StackdriverDefinition.builder()
+                    .jsonMetricDefinition("{\"sampleJson\":[]}")
+                    .metricName("metricName")
+                    .dashboardName("dashboardName2")
+                    .metricTags(Arrays.asList("tag2"))
+                    .riskProfile(StackdriverDefinition.RiskProfile.builder()
+                                     .metricType(TimeSeriesMetricType.RESP_TIME)
+                                     .category(CVMonitoringCategory.PERFORMANCE)
+                                     .thresholdTypes(Arrays.asList(TimeSeriesThresholdType.ACT_WHEN_HIGHER))
+                                     .build())
+                    .build())
+            .build();
+    stackdriverDSConfig.setMetricConfigurations(Arrays.asList(configuration, configuration2));
 
     StackdriverCVConfig existingCVConfig = StackdriverCVConfig.builder().dashboardName("dashboardName2").build();
     existingCVConfig.setEnvIdentifier(envIdentifier);
@@ -189,16 +277,5 @@ public class StackdriverDSConfigTest extends DSConfigTestBase {
 
     assertThat(cvConfigUpdateResult.getUpdated().size()).isEqualTo(1);
     assertThat(cvConfigUpdateResult.getAdded().size()).isEqualTo(1);
-  }
-
-  private MetricPack createMetricPack(List<TimeSeriesMetricType> metricTypes) {
-    Set<MetricDefinition> metricPacks = new HashSet<>();
-    metricTypes.forEach(type -> { metricPacks.add(MetricDefinition.builder().name(type.name()).type(type).build()); });
-    return MetricPack.builder()
-        .accountId(accountId)
-        .identifier("metric-pack-" + metricTypes.size())
-        .category(CVMonitoringCategory.PERFORMANCE)
-        .metrics(metricPacks)
-        .build();
   }
 }

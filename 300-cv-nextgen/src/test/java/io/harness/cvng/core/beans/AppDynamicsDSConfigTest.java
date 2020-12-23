@@ -6,12 +6,14 @@ import static io.harness.rule.OwnerRule.KAMAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.core.beans.AppDynamicsDSConfig.AppdynamicsAppConfig;
 import io.harness.cvng.core.beans.DSConfig.CVConfigUpdateResult;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.rule.Owner;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,19 +35,23 @@ public class AppDynamicsDSConfigTest extends DSConfigTestBase {
     metricPacks = IntStream.range(0, 5).mapToObj(i -> createMetricPack(i)).collect(Collectors.toList());
     appdApplicationName = "appd application name";
     appDynamicsDSConfig.setIdentifier(appdApplicationName);
+    appDynamicsDSConfig.setMonitoringSourceName(appdApplicationName);
     appDynamicsDSConfig.setConnectorIdentifier(connectorIdentifier);
-    appDynamicsDSConfig.setApplicationName(appdApplicationName);
     appDynamicsDSConfig.setProductName("Application monitoring");
-    appDynamicsDSConfig.setEnvIdentifier("harnessProd");
     appDynamicsDSConfig.setAccountId(accountId);
   }
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void getCVConfigUpdateResult_whenNoConfigExist() {
-    appDynamicsDSConfig.setMetricPacks(Sets.newHashSet(metricPacks.get(0)));
-    appDynamicsDSConfig.setServiceMappings(Sets.newHashSet(
-        AppDynamicsDSConfig.ServiceMapping.builder().serviceIdentifier("service1").tierName("tier1").build()));
+    appDynamicsDSConfig.setAppConfigs(Lists.newArrayList(
+        AppdynamicsAppConfig.builder()
+            .applicationName(appdApplicationName)
+            .envIdentifier("harnessProd")
+            .metricPacks(Sets.newHashSet(metricPacks.get(0)))
+            .serviceMappings(Sets.newHashSet(
+                AppDynamicsDSConfig.ServiceMapping.builder().serviceIdentifier("service1").tierName("tier1").build()))
+            .build()));
     CVConfigUpdateResult cvConfigUpdateResult = appDynamicsDSConfig.getCVConfigUpdateResult(Collections.emptyList());
     assertThat(cvConfigUpdateResult.getUpdated()).isEmpty();
     assertThat(cvConfigUpdateResult.getDeleted()).isEmpty();
@@ -54,6 +60,7 @@ public class AppDynamicsDSConfigTest extends DSConfigTestBase {
     assertThat(appDynamicsCVConfigs).hasSize(1);
     appDynamicsCVConfigs.forEach(appDynamicsCVConfig -> {
       assertCommon(appDynamicsCVConfig, appDynamicsDSConfig);
+      assertThat(appDynamicsCVConfig.getEnvIdentifier()).isEqualTo("harnessProd");
       assertThat(appDynamicsCVConfig.getMetricPack().getIdentifier()).isEqualTo(metricPacks.get(0).getIdentifier());
     });
     assertThat(appDynamicsCVConfigs.get(0).getServiceIdentifier()).isEqualTo("service1");
@@ -64,10 +71,15 @@ public class AppDynamicsDSConfigTest extends DSConfigTestBase {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void getCVConfigUpdateResult_checkDeleted() {
-    appDynamicsDSConfig.setMetricPacks(Sets.newHashSet(metricPacks.get(0), metricPacks.get(1)));
-    appDynamicsDSConfig.setServiceMappings(Sets.newHashSet(
-        AppDynamicsDSConfig.ServiceMapping.builder().serviceIdentifier("service1").tierName("tier1").build(),
-        AppDynamicsDSConfig.ServiceMapping.builder().serviceIdentifier("service2").tierName("tier2").build()));
+    appDynamicsDSConfig.setAppConfigs(Lists.newArrayList(
+        AppdynamicsAppConfig.builder()
+            .applicationName(appdApplicationName)
+            .envIdentifier("harnessProd")
+            .metricPacks(Sets.newHashSet(metricPacks.get(0), metricPacks.get(1)))
+            .serviceMappings(Sets.newHashSet(
+                AppDynamicsDSConfig.ServiceMapping.builder().serviceIdentifier("service1").tierName("tier1").build(),
+                AppDynamicsDSConfig.ServiceMapping.builder().serviceIdentifier("service2").tierName("tier2").build()))
+            .build()));
     List<CVConfig> cvConfigs = new ArrayList<>();
     cvConfigs.add(create("service1", metricPacks.get(3), "tier1"));
     CVConfigUpdateResult result = appDynamicsDSConfig.getCVConfigUpdateResult(cvConfigs);
@@ -80,10 +92,16 @@ public class AppDynamicsDSConfigTest extends DSConfigTestBase {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void getCVConfigUpdateResult_checkAdded() {
-    appDynamicsDSConfig.setMetricPacks(Sets.newHashSet(metricPacks.get(0)));
-    appDynamicsDSConfig.setServiceMappings(Sets.newHashSet(
-        AppDynamicsDSConfig.ServiceMapping.builder().serviceIdentifier("service1").tierName("tier1").build(),
-        AppDynamicsDSConfig.ServiceMapping.builder().serviceIdentifier("service2").tierName("tier2").build()));
+    appDynamicsDSConfig.setAppConfigs(Lists.newArrayList(
+        AppdynamicsAppConfig.builder()
+            .applicationName(appdApplicationName)
+            .envIdentifier("harnessProd")
+            .metricPacks(Sets.newHashSet(metricPacks.get(0)))
+            .serviceMappings(Sets.newHashSet(
+                AppDynamicsDSConfig.ServiceMapping.builder().serviceIdentifier("service1").tierName("tier1").build(),
+                AppDynamicsDSConfig.ServiceMapping.builder().serviceIdentifier("service2").tierName("tier2").build()))
+            .build()));
+
     List<CVConfig> cvConfigs = new ArrayList<>();
     cvConfigs.add(create("service1", metricPacks.get(0), "tier1"));
     CVConfigUpdateResult result = appDynamicsDSConfig.getCVConfigUpdateResult(cvConfigs);
@@ -98,10 +116,15 @@ public class AppDynamicsDSConfigTest extends DSConfigTestBase {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void getCVConfigUpdateResult_checkUpdated() {
-    appDynamicsDSConfig.setMetricPacks(Sets.newHashSet(metricPacks.get(0)));
-    appDynamicsDSConfig.setServiceMappings(Sets.newHashSet(
-        AppDynamicsDSConfig.ServiceMapping.builder().serviceIdentifier("service1").tierName("tier1").build(),
-        AppDynamicsDSConfig.ServiceMapping.builder().serviceIdentifier("service2").tierName("tier2").build()));
+    appDynamicsDSConfig.setAppConfigs(Lists.newArrayList(
+        AppdynamicsAppConfig.builder()
+            .applicationName(appdApplicationName)
+            .envIdentifier("harnessProd")
+            .metricPacks(Sets.newHashSet(metricPacks.get(0)))
+            .serviceMappings(Sets.newHashSet(
+                AppDynamicsDSConfig.ServiceMapping.builder().serviceIdentifier("service1").tierName("tier1").build(),
+                AppDynamicsDSConfig.ServiceMapping.builder().serviceIdentifier("service2").tierName("tier2").build()))
+            .build()));
     List<CVConfig> cvConfigs = new ArrayList<>();
     cvConfigs.add(create("service1", metricPacks.get(0), "tier1"));
     CVConfigUpdateResult result = appDynamicsDSConfig.getCVConfigUpdateResult(cvConfigs);
@@ -116,10 +139,15 @@ public class AppDynamicsDSConfigTest extends DSConfigTestBase {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void getCVConfigUpdateResult_existingConfigOneEach() {
-    appDynamicsDSConfig.setMetricPacks(Sets.newHashSet(metricPacks.get(0), metricPacks.get(1)));
-    appDynamicsDSConfig.setServiceMappings(Sets.newHashSet(
-        AppDynamicsDSConfig.ServiceMapping.builder().serviceIdentifier("service1").tierName("tier1").build(),
-        AppDynamicsDSConfig.ServiceMapping.builder().serviceIdentifier("service2").tierName("tier2").build()));
+    appDynamicsDSConfig.setAppConfigs(Lists.newArrayList(
+        AppdynamicsAppConfig.builder()
+            .applicationName(appdApplicationName)
+            .envIdentifier("harnessProd")
+            .metricPacks(Sets.newHashSet(metricPacks.get(0), metricPacks.get(1)))
+            .serviceMappings(Sets.newHashSet(
+                AppDynamicsDSConfig.ServiceMapping.builder().serviceIdentifier("service1").tierName("tier1").build(),
+                AppDynamicsDSConfig.ServiceMapping.builder().serviceIdentifier("service2").tierName("tier2").build()))
+            .build()));
     List<CVConfig> cvConfigs = new ArrayList<>();
     cvConfigs.add(create("service1", metricPacks.get(0), "tier1"));
     cvConfigs.add(create("service1", metricPacks.get(2), "tier1"));

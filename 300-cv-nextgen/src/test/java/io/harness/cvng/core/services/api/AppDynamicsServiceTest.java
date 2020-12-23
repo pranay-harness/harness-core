@@ -12,18 +12,20 @@ import static org.mockito.Mockito.when;
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
 import io.harness.cvng.beans.appd.AppDynamicsTier;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.RequestExecutor;
 import io.harness.cvng.client.VerificationManagerClient;
+import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.AppdynamicsImportStatus;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.ng.beans.PageResponse;
-import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+import io.harness.serializer.JsonUtils;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -42,8 +44,10 @@ import org.mockito.Mock;
 
 public class AppDynamicsServiceTest extends CvNextGenTest {
   @Inject AppDynamicsService appDynamicsService;
+  @Inject OnboardingService onboardingService;
   @Mock VerificationManagerClient verificationManagerClient;
   @Mock NextGenService nextGenService;
+  @Mock VerificationManagerService verificationManagerService;
   @Mock private RequestExecutor requestExecutor;
   private String accountId;
   private String connectorIdentifier;
@@ -53,12 +57,14 @@ public class AppDynamicsServiceTest extends CvNextGenTest {
     accountId = generateUuid();
     connectorIdentifier = generateUuid();
     FieldUtils.writeField(appDynamicsService, "verificationManagerClient", verificationManagerClient, true);
-    FieldUtils.writeField(appDynamicsService, "nextGenService", nextGenService, true);
+    FieldUtils.writeField(appDynamicsService, "onboardingService", onboardingService, true);
+    FieldUtils.writeField(onboardingService, "nextGenService", nextGenService, true);
+    FieldUtils.writeField(onboardingService, "verificationManagerService", verificationManagerService, true);
     FieldUtils.writeField(appDynamicsService, "requestExecutor", requestExecutor, true);
-    when(nextGenService.get(anyString(), anyString(), anyString(), anyString())).then(invocation -> {
-      Object[] args = invocation.getArguments();
-      return Optional.of(ConnectorInfoDTO.builder().connectorConfig(AppDynamicsConnectorDTO.builder().build()).build());
-    });
+    when(nextGenService.get(anyString(), anyString(), anyString(), anyString()))
+        .then(invocation
+            -> Optional.of(
+                ConnectorInfoDTO.builder().connectorConfig(AppDynamicsConnectorDTO.builder().build()).build()));
   }
 
   @Test
@@ -73,7 +79,9 @@ public class AppDynamicsServiceTest extends CvNextGenTest {
     for (int i = 0; i < 5; i++) {
       appDynamicsApplications.add(AppDynamicsApplication.builder().name(generateUuid()).build());
     }
-    when(requestExecutor.execute(any())).thenReturn(new RestResponse(appDynamicsApplications));
+    when(verificationManagerService.getDataCollectionResponse(
+             anyString(), anyString(), anyString(), any(DataCollectionRequest.class)))
+        .thenReturn(JsonUtils.asJson(appDynamicsApplications));
     AppdynamicsImportStatus appdynamicsImportStatus =
         (AppdynamicsImportStatus) appDynamicsService.createMonitoringSourceImportStatus(cvConfigs, 3);
     assertThat(appdynamicsImportStatus).isNotNull();
@@ -102,8 +110,9 @@ public class AppDynamicsServiceTest extends CvNextGenTest {
       appDynamicsApplications.add(AppDynamicsApplication.builder().name("app-" + i).id(i).build());
     }
     Collections.shuffle(appDynamicsApplications);
-
-    when(requestExecutor.execute(any())).thenReturn(new RestResponse(appDynamicsApplications));
+    when(verificationManagerService.getDataCollectionResponse(
+             anyString(), anyString(), anyString(), any(DataCollectionRequest.class)))
+        .thenReturn(JsonUtils.asJson(appDynamicsApplications));
     PageResponse<AppDynamicsApplication> applications = appDynamicsService.getApplications(
         accountId, connectorIdentifier, generateUuid(), generateUuid(), 0, 5, "ApP-2");
     assertThat(applications.getContent())
@@ -123,9 +132,11 @@ public class AppDynamicsServiceTest extends CvNextGenTest {
     for (int i = 0; i < numOfApplications; i++) {
       appDynamicsTiers.add(AppDynamicsTier.builder().name("tier-" + i).id(i).build());
     }
-    when(requestExecutor.execute(any())).thenReturn(new RestResponse(appDynamicsTiers));
-    PageResponse<AppDynamicsTier> applications =
-        appDynamicsService.getTiers(accountId, connectorIdentifier, generateUuid(), generateUuid(), 10, 0, 5, "IeR-2");
+    when(verificationManagerService.getDataCollectionResponse(
+             anyString(), anyString(), anyString(), any(DataCollectionRequest.class)))
+        .thenReturn(JsonUtils.asJson(appDynamicsTiers));
+    PageResponse<AppDynamicsTier> applications = appDynamicsService.getTiers(
+        accountId, connectorIdentifier, generateUuid(), generateUuid(), generateUuid(), 0, 5, "IeR-2");
     assertThat(applications.getContent())
         .isEqualTo(Lists.newArrayList(AppDynamicsTier.builder().name("tier-2").id(2).build(),
             AppDynamicsTier.builder().name("tier-20").id(20).build(),
