@@ -60,7 +60,6 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.User;
-import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.GenericDbCache;
 import software.wings.resources.graphql.GraphQLUtils;
 import software.wings.security.AuthRuleFilter;
@@ -145,15 +144,14 @@ public class SecureResourceTest extends CategoryTest {
   private static GraphQLUtils graphQLUtils = mock(GraphQLUtils.class);
   private static HarnessCacheManager harnessCacheManager = mock(HarnessCacheManager.class);
   private static Cache<String, AuthToken> authTokenCache = mock(Cache.class);
+  private static Cache<String, User> userCache = mock(Cache.class);
   private static Cache<String, UserPermissionInfo> cachePermissionInfo = mock(Cache.class);
   private static Cache<String, UserRestrictionInfo> cacheRestrictionInfo = mock(Cache.class);
   private static VersionInfoManager versionInfoManager = mock(VersionInfoManager.class);
-  private static ConfigurationController configurationController = mock(ConfigurationController.class);
 
-  private static AuthService authService =
-      new AuthServiceImpl(genericDbCache, hPersistence, userService, userGroupService, usageRestrictionsService,
-          harnessCacheManager, authTokenCache, configuration, verificationServiceSecretManager, authHandler,
-          harnessUserGroupService, secretManager, versionInfoManager, configurationController);
+  private static AuthService authService = new AuthServiceImpl(genericDbCache, hPersistence, userService,
+      userGroupService, usageRestrictionsService, harnessCacheManager, authTokenCache, userCache, configuration,
+      verificationServiceSecretManager, authHandler, harnessUserGroupService, secretManager, versionInfoManager);
 
   private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(authService, authHandler, appService, userService,
       accountService, whitelistService, harnessUserGroupService, graphQLUtils);
@@ -263,7 +261,7 @@ public class SecureResourceTest extends CategoryTest {
         .thenReturn(cachePermissionInfo);
     when(harnessCacheManager.getCache(any(), eq(String.class), eq(UserRestrictionInfo.class), any(), eq("1234")))
         .thenReturn(cacheRestrictionInfo);
-    when(userService.getUserFromCacheOrDB(USER_ID)).thenReturn(user);
+    when(userCache.get(USER_ID)).thenReturn(user);
     when(cachePermissionInfo.get(USER_ID)).thenReturn(userPermissionInfo);
     when(authTokenCache.get(VALID_TOKEN)).thenReturn(new AuthToken(ACCOUNT_ID, USER_ID, TOKEN_EXPIRY_IN_MILLIS));
     when(genericDbCache.get(Account.class, ACCOUNT_ID))
