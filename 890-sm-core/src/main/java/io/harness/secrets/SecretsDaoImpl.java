@@ -1,6 +1,7 @@
 package io.harness.secrets;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
@@ -20,6 +21,7 @@ import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter;
 import io.harness.beans.SecretFile;
 import io.harness.beans.SecretText;
 import io.harness.beans.SecretUpdateData;
@@ -31,6 +33,8 @@ import io.harness.security.encryption.EncryptionType;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import javax.validation.executable.ValidateOnExecution;
@@ -54,6 +58,8 @@ public class SecretsDaoImpl implements SecretsDao {
     return Optional.ofNullable(hPersistence.createQuery(EncryptedData.class)
                                    .filter(EncryptedDataKeys.accountId, accountId)
                                    .filter(EncryptedDataKeys.ID_KEY, secretId)
+                                   .field(EncryptedDataKeys.ngMetadata)
+                                   .equal(null)
                                    .get());
   }
 
@@ -62,6 +68,8 @@ public class SecretsDaoImpl implements SecretsDao {
     return Optional.ofNullable(hPersistence.createQuery(EncryptedData.class)
                                    .filter(EncryptedDataKeys.accountId, accountId)
                                    .filter(EncryptedDataKeys.name, secretName)
+                                   .field(EncryptedDataKeys.ngMetadata)
+                                   .equal(null)
                                    .get());
   }
 
@@ -76,7 +84,9 @@ public class SecretsDaoImpl implements SecretsDao {
     query.criteria(EncryptedDataKeys.accountId)
         .equal(accountId)
         .criteria(EncryptedDataKeys.encryptionType)
-        .equal(encryptionType);
+        .equal(encryptionType)
+        .criteria(EncryptedDataKeys.ngMetadata)
+        .equal(null);
     if (isNotEmpty(key) && isNotEmpty(path)) {
       query.and(query.or(query.criteria(EncryptedDataKeys.encryptionKey).equal(key),
           query.criteria(EncryptedDataKeys.path).equal(path)));
@@ -98,7 +108,9 @@ public class SecretsDaoImpl implements SecretsDao {
     Query<EncryptedData> query =
         hPersistence.createQuery(EncryptedData.class)
             .filter(EncryptedDataKeys.accountId, secretUpdateData.getExistingRecord().getAccountId())
-            .filter(EncryptedDataKeys.ID_KEY, secretUpdateData.getExistingRecord().getUuid());
+            .filter(EncryptedDataKeys.ID_KEY, secretUpdateData.getExistingRecord().getUuid())
+            .field(EncryptedDataKeys.ngMetadata)
+            .equal(null);
     UpdateOperations<EncryptedData> updateOperations = hPersistence.createUpdateOperations(EncryptedData.class);
     if (secretUpdateData.isNameChanged()) {
       String newName = secretUpdateData.getUpdatedSecret().getName();
@@ -145,7 +157,9 @@ public class SecretsDaoImpl implements SecretsDao {
   public EncryptedData migrateSecret(String accountId, String secretId, EncryptedRecord encryptedRecord) {
     Query<EncryptedData> query = hPersistence.createQuery(EncryptedData.class)
                                      .filter(EncryptedDataKeys.accountId, accountId)
-                                     .filter(EncryptedDataKeys.ID_KEY, secretId);
+                                     .filter(EncryptedDataKeys.ID_KEY, secretId)
+                                     .field(EncryptedDataKeys.ngMetadata)
+                                     .equal(null);
     UpdateOperations<EncryptedData> updateOperations = hPersistence.createUpdateOperations(EncryptedData.class);
     updateOperations.set(EncryptedDataKeys.kmsId, encryptedRecord.getKmsId());
     updateOperations.set(EncryptedDataKeys.encryptionType, encryptedRecord.getEncryptionType());
@@ -161,6 +175,12 @@ public class SecretsDaoImpl implements SecretsDao {
 
   @Override
   public PageResponse<EncryptedData> listSecrets(PageRequest<EncryptedData> pageRequest) {
+    Object[] allowedNgMetaDataValues = {null};
+    pageRequest.addFilter(SearchFilter.builder()
+                              .fieldName(EncryptedDataKeys.ngMetadata)
+                              .op(EQ)
+                              .fieldValues(allowedNgMetaDataValues)
+                              .build());
     return hPersistence.query(EncryptedData.class, pageRequest);
   }
 
@@ -169,7 +189,9 @@ public class SecretsDaoImpl implements SecretsDao {
       String accountId, String secretManagerId, boolean shouldIncludeSecretManagerSecrets) {
     Query<EncryptedData> query = hPersistence.createQuery(EncryptedData.class)
                                      .filter(EncryptedDataKeys.accountId, accountId)
-                                     .filter(EncryptedDataKeys.kmsId, secretManagerId);
+                                     .filter(EncryptedDataKeys.kmsId, secretManagerId)
+                                     .field(EncryptedDataKeys.ngMetadata)
+                                     .equal(null);
 
     if (!shouldIncludeSecretManagerSecrets) {
       query.field(EncryptedDataKeys.type)
@@ -185,6 +207,8 @@ public class SecretsDaoImpl implements SecretsDao {
         .in(secretIds)
         .field(EncryptedDataKeys.accountId)
         .equal(accountId)
+        .field(EncryptedDataKeys.ngMetadata)
+        .equal(null)
         .fetch();
   }
 }

@@ -7,6 +7,7 @@ import static io.harness.eraro.ErrorCode.GCP_KMS_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.helpers.GlobalSecretManagerUtils.isNgHarnessSecretManager;
 import static io.harness.persistence.HPersistence.upToOne;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
@@ -152,8 +153,21 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
       String message = "Another GCP KMS secret configuration with the same display name exists";
       throw new DuplicateFieldException(message, USER_SRE, e);
     }
+    String credentialEncryptedDataId = null;
+    if (isNgHarnessSecretManager(gcpKmsConfig.getNgMetadata())) {
+      EncryptedData globalSecretManagerCredentials = wingsPersistence.createQuery(EncryptedData.class)
+                                                         .field(EncryptedDataKeys.accountId)
+                                                         .equal(GLOBAL_ACCOUNT_ID)
+                                                         .field(EncryptedDataKeys.type)
+                                                         .equal(EncryptionType.GCP_KMS)
+                                                         .get();
 
-    String credentialEncryptedDataId = saveSecretField(gcpKmsConfig, gcpKmsConfigId, credentialEncryptedData);
+      if (globalSecretManagerCredentials != null) {
+        credentialEncryptedDataId = globalSecretManagerCredentials.getUuid();
+      }
+    } else {
+      credentialEncryptedDataId = saveSecretField(gcpKmsConfig, gcpKmsConfigId, credentialEncryptedData);
+    }
     if (credentialEncryptedDataId == null) {
       String message = "Failed to save Encrypted Data for GCP KMS credentials. Please retry saving the configuration.";
       throw new SecretManagementException(GCP_KMS_OPERATION_ERROR, message, USER_SRE);
@@ -286,7 +300,7 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Can not delete global KMS secret manager", USER);
     }
 
-    if (isNotEmpty(gcpKmsConfig.getCredentials())) {
+    if (isNotEmpty(gcpKmsConfig.getCredentials()) && !isNgHarnessSecretManager(gcpKmsConfig.getNgMetadata())) {
       wingsPersistence.delete(EncryptedData.class, String.valueOf(gcpKmsConfig.getCredentials()));
       log.info("Deleted encrypted auth token record {} associated with GCP KMS '{}'", gcpKmsConfig.getCredentials(),
           gcpKmsConfig.getName());

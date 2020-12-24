@@ -1,5 +1,6 @@
 package io.harness.helpers;
 
+import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -13,6 +14,8 @@ public class GlobalSecretManagerUtils {
   public static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
 
   public static boolean isNgHarnessSecretManager(NGSecretManagerMetadata ngSecretManagerMetadata) {
-    return ngSecretManagerMetadata != null && Boolean.TRUE.equals(ngSecretManagerMetadata.getHarnessManaged());
+    return ngSecretManagerMetadata != null
+        && (Boolean.TRUE.equals(ngSecretManagerMetadata.getHarnessManaged())
+            || HARNESS_SECRET_MANAGER_IDENTIFIER.equals(ngSecretManagerMetadata.getIdentifier()));
   }
 }

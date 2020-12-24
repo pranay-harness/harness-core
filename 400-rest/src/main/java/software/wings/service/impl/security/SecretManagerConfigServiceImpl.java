@@ -128,8 +128,10 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
 
   @Override
   public void clearDefaultFlagOfSecretManagers(String accountId) {
-    Query<SecretManagerConfig> updateQuery =
-        wingsPersistence.createQuery(SecretManagerConfig.class).filter(SecretManagerConfigKeys.accountId, accountId);
+    Query<SecretManagerConfig> updateQuery = wingsPersistence.createQuery(SecretManagerConfig.class)
+                                                 .filter(SecretManagerConfigKeys.accountId, accountId)
+                                                 .field(SecretManagerConfigKeys.ngMetadata)
+                                                 .equal(null);
     UpdateOperations<SecretManagerConfig> updateOperations =
         wingsPersistence.createUpdateOperations(SecretManagerConfig.class)
             .set(SecretManagerConfigKeys.isDefault, false);
@@ -154,6 +156,8 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
                                                   .field(SecretManagerConfigKeys.accountId)
                                                   .equal(accountId)
                                                   .filter(SecretManagerConfigKeys.isDefault, true)
+                                                  .field(SecretManagerConfigKeys.ngMetadata)
+                                                  .equal(null)
                                                   .get();
 
     if (secretManagerConfig != null) {
@@ -252,6 +256,8 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
           .in(Arrays.asList(accountId, GLOBAL_ACCOUNT_ID))
           .field(SecretManagerConfigKeys.ID_KEY)
           .equal(entityId)
+          .field(SecretManagerConfigKeys.ngMetadata)
+          .equal(null)
           .get();
     }
   }
@@ -270,6 +276,8 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
           .enableValidation()
           .field(SecretManagerConfigKeys.encryptionType)
           .equal(encryptionType)
+          .field(SecretManagerConfigKeys.ngMetadata)
+          .equal(null)
           .get();
     }
   }
@@ -284,6 +292,8 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
           .disableValidation()
           .field(SecretManagerConfigKeys.name)
           .equal(secretMangerName)
+          .field(SecretManagerConfigKeys.ngMetadata)
+          .equal(null)
           .enableValidation()
           .get();
     }
@@ -305,6 +315,8 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
     List<SecretManagerConfig> secretManagerConfigList = wingsPersistence.createQuery(SecretManagerConfig.class)
                                                             .field(SecretManagerConfigKeys.accountId)
                                                             .in(accountIds)
+                                                            .field(SecretManagerConfigKeys.ngMetadata)
+                                                            .equal(null)
                                                             .asList();
 
     Map<String, Integer> countOfSecretManagersPerAccount = accountIds.stream().collect(
@@ -423,7 +435,9 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
     }
     Query<SecretManagerConfig> query = wingsPersistence.createQuery(SecretManagerConfig.class)
                                            .filter(SecretManagerConfigKeys.accountId, accountId)
-                                           .filter(SecretManagerConfigKeys.ID_KEY, secretManagerId);
+                                           .filter(SecretManagerConfigKeys.ID_KEY, secretManagerId)
+                                           .field(SecretManagerConfigKeys.ngMetadata)
+                                           .equal(null);
     wingsPersistence.findAndModify(query, updateOperations, returnNewOptions);
   }
 
@@ -468,6 +482,8 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
       List<SecretManagerConfig> secretManagerConfigList = wingsPersistence.createQuery(SecretManagerConfig.class)
                                                               .field(SecretManagerConfigKeys.accountId)
                                                               .in(Arrays.asList(accountId, GLOBAL_ACCOUNT_ID))
+                                                              .field(SecretManagerConfigKeys.ngMetadata)
+                                                              .equal(null)
                                                               .order(Sort.descending(CREATED_AT_KEY))
                                                               .asList();
 

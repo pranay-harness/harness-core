@@ -1209,6 +1209,7 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
     when(mockWingsPersistence.createQuery(eq(EncryptedData.class))).thenReturn(query2);
     when(query2.filter(anyString(), anyObject())).thenReturn(query2);
     when(query2.field(any())).thenReturn(fieldEnd2);
+    when(fieldEnd2.equal(any())).thenReturn(query2);
     when(fieldEnd2.exists()).thenReturn(query2);
     when(query2.fetch()).thenReturn(iterator2);
     doReturn(false).when(iterator2).hasNext();
@@ -1219,6 +1220,8 @@ public class UsageRestrictionsServiceImplTest extends CategoryTest {
 
     when(mockWingsPersistence.createQuery(eq(SecretManagerConfig.class))).thenReturn(query3);
     when(query3.filter(anyString(), anyString())).thenReturn(query3);
+    when(query3.field(any())).thenReturn(fieldEnd3);
+    when(fieldEnd3.equal(any())).thenReturn(query3);
     when(query3.fetch()).thenReturn(iterator3);
     doReturn(false).when(iterator3).hasNext();
 
