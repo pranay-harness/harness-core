@@ -449,6 +449,7 @@ import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
 import java.time.Clock;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -564,6 +565,16 @@ public class DelegateModule extends AbstractModule {
         new ThreadFactoryBuilder().setNameFormat("system-%d").setPriority(Thread.MAX_PRIORITY).build());
     Runtime.getRuntime().addShutdownHook(new Thread(() -> { systemExecutor.shutdownNow(); }));
     return systemExecutor;
+  }
+
+  @Provides
+  @Singleton
+  @Named("grpcServiceExecutor")
+  public ExecutorService grpcServiceExecutor() {
+    ExecutorService grpcServiceExecutor = Executors.newFixedThreadPool(
+        1, new ThreadFactoryBuilder().setNameFormat("grpc-%d").setPriority(Thread.MAX_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { grpcServiceExecutor.shutdownNow(); }));
+    return grpcServiceExecutor;
   }
 
   @Provides

@@ -46,6 +46,7 @@ import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 
 import software.wings.beans.Delegate;
+import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.buildsource.BuildSourceResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
@@ -86,6 +87,7 @@ import org.mockito.ArgumentCaptor;
 @Slf4j
 public class DelegateAgentResourceTest {
   private static final DelegateService delegateService = mock(DelegateService.class);
+  private static final ConfigurationController configurationController = mock(ConfigurationController.class);
 
   private static final HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
 
@@ -114,10 +116,10 @@ public class DelegateAgentResourceTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .instance(
-              new DelegateAgentResource(delegateService, accountService, wingsPersistence, delegateRequestRateLimiter,
-                  subdomainUrlHelper, artifactCollectionResponseHandler, instanceSyncResponseHandler,
-                  manifestCollectionResponseHandler, connectorHearbeatPublisher, kryoSerializer))
+          .instance(new DelegateAgentResource(delegateService, accountService, wingsPersistence,
+              delegateRequestRateLimiter, subdomainUrlHelper, artifactCollectionResponseHandler,
+              instanceSyncResponseHandler, manifestCollectionResponseHandler, connectorHearbeatPublisher,
+              kryoSerializer, configurationController))
           .instance(new AbstractBinder() {
             @Override
             protected void configure() {
@@ -136,7 +138,9 @@ public class DelegateAgentResourceTest {
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void shouldGetDelegateConfiguration() {
-    DelegateConfiguration delegateConfiguration = DelegateConfiguration.builder().build();
+    List<String> delegateVersions = new ArrayList<>();
+    DelegateConfiguration delegateConfiguration =
+        DelegateConfiguration.builder().delegateVersions(delegateVersions).build();
     when(accountService.getDelegateConfiguration(ACCOUNT_ID)).thenReturn(delegateConfiguration);
     RestResponse<DelegateConfiguration> restResponse =
         RESOURCES.client()

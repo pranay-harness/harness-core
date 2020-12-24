@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
@@ -38,6 +39,7 @@ import io.harness.security.annotations.DelegateAuth;
 import io.harness.serializer.KryoSerializer;
 
 import software.wings.beans.Delegate;
+import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.manifest.ManifestCollectionExecutionResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
@@ -91,13 +93,15 @@ public class DelegateAgentResource {
   private ManifestCollectionResponseHandler manifestCollectionResponseHandler;
   private ConnectorHearbeatPublisher connectorHearbeatPublisher;
   private KryoSerializer kryoSerializer;
+  private ConfigurationController configurationController;
 
   @Inject
   public DelegateAgentResource(DelegateService delegateService, AccountService accountService,
       WingsPersistence wingsPersistence, DelegateRequestRateLimiter delegateRequestRateLimiter,
       SubdomainUrlHelperIntfc subdomainUrlHelper, ArtifactCollectionResponseHandler artifactCollectionResponseHandler,
       InstanceHelper instanceHelper, ManifestCollectionResponseHandler manifestCollectionResponseHandler,
-      ConnectorHearbeatPublisher connectorHearbeatPublisher, KryoSerializer kryoSerializer) {
+      ConnectorHearbeatPublisher connectorHearbeatPublisher, KryoSerializer kryoSerializer,
+      ConfigurationController configurationController) {
     this.instanceHelper = instanceHelper;
     this.delegateService = delegateService;
     this.accountService = accountService;
@@ -108,6 +112,7 @@ public class DelegateAgentResource {
     this.manifestCollectionResponseHandler = manifestCollectionResponseHandler;
     this.connectorHearbeatPublisher = connectorHearbeatPublisher;
     this.kryoSerializer = kryoSerializer;
+    this.configurationController = configurationController;
   }
 
   @DelegateAuth
@@ -118,7 +123,14 @@ public class DelegateAgentResource {
   public RestResponse<DelegateConfiguration> getDelegateConfiguration(
       @QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      return new RestResponse<>(accountService.getDelegateConfiguration(accountId));
+      DelegateConfiguration configuration = accountService.getDelegateConfiguration(accountId);
+      String primaryDelegateVersion = configurationController.getPrimaryVersion();
+      // Adding primary delegate to the last element of delegate versions.
+      if (isNotEmpty(configuration.getDelegateVersions())) {
+        configuration.getDelegateVersions().remove(primaryDelegateVersion);
+        configuration.getDelegateVersions().add(primaryDelegateVersion);
+      }
+      return new RestResponse<>(configuration);
     }
   }
 
