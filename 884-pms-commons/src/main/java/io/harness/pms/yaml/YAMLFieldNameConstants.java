@@ -5,6 +5,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class YAMLFieldNameConstants {
   public static final String EXECUTION = "execution";
+  public static final String CI_CODE_BASE = "ciCodebase";
   public static final String PARALLEL = "parallel";
   public static final String SPEC = "spec";
   public static final String STAGE = "stage";

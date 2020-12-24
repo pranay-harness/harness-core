@@ -1,6 +1,7 @@
 package io.harness.ci.plan.creator.stage;
 
 import static io.harness.common.CICommonPodConstants.POD_NAME_PREFIX;
+import static io.harness.pms.yaml.YAMLFieldNameConstants.CI_CODE_BASE;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.EXECUTION;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.PARALLEL;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.SPEC;
@@ -12,6 +13,7 @@ import static org.apache.commons.lang3.CharUtils.isAsciiAlphanumeric;
 
 import io.harness.beans.stages.IntegrationStageStepParametersPMS;
 import io.harness.ci.integrationstage.CILiteEngineIntegrationStageModifier;
+import io.harness.ci.integrationstage.IntegrationStageUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.plancreator.execution.ExecutionElementConfig;
@@ -33,6 +35,7 @@ import io.harness.pms.yaml.YamlUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.states.IntegrationStageStepPMS;
 import io.harness.steps.StepOutcomeGroup;
+import io.harness.yaml.extended.ci.codebase.CodeBase;
 import io.harness.yaml.utils.JsonPipelineUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -62,12 +65,23 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
   @Override
   public LinkedHashMap<String, PlanCreationResponse> createPlanForChildrenNodes(
       PlanCreationContext ctx, StageElementConfig stageElementConfig) {
-    // TODO REMOVE THIS AFTER PMS FIX
-    stageElementConfig.setType("ci");
     LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
     Map<String, YamlField> dependenciesNodeMap = new HashMap<>();
     final String podName = generatePodName(stageElementConfig.getIdentifier());
     YamlField executionField = ctx.getCurrentField().getNode().getField(SPEC).getNode().getField(EXECUTION);
+
+    // YamlNode ciCodeBaseNode = YamlUtils.findParentNode(ctx.getCurrentField().getNode(), CI_CODE_BASE);
+    YamlNode ciCodeBaseNode = ctx.getCurrentField()
+                                  .getNode()
+                                  .getParentNode()
+                                  .getParentNode()
+                                  .getParentNode()
+                                  .getField(CI_CODE_BASE)
+                                  .getNode();
+    CodeBase ciCodeBase = IntegrationStageUtils.getCiCodeBase(ciCodeBaseNode);
+    //    Object obj = ctx.getGlobalContext().get("webhookEventRepoType");
+    //    Object obj1 = ctx.getGlobalContext().get("webhookEventType");
+    //    Object obj2 = ctx.getGlobalContext().get(SetupAbstractionKeys.eventPayload);
 
     ExecutionElementConfig executionElementConfig;
 
@@ -78,13 +92,13 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
     }
     YamlNode parentNode = executionField.getNode().getParentNode();
     ExecutionElementConfig modifiedExecutionPlan = ciLiteEngineIntegrationStageModifier.modifyExecutionPlan(
-        executionElementConfig, stageElementConfig, ctx, podName);
+        executionElementConfig, stageElementConfig, ctx, podName, ciCodeBase);
 
     try {
       String jsonString = JsonPipelineUtils.writeJsonString(modifiedExecutionPlan);
       JsonNode jsonNode = JsonPipelineUtils.getMapper().readTree(jsonString);
-      YamlNode rootYamlNode = new YamlNode(jsonNode, parentNode);
-      dependenciesNodeMap.put(executionField.getNode().getUuid(), new YamlField(EXECUTION, rootYamlNode));
+      YamlNode modifiedExecutionNode = new YamlNode(jsonNode, parentNode);
+      dependenciesNodeMap.put(executionField.getNode().getUuid(), new YamlField(EXECUTION, modifiedExecutionNode));
     } catch (IOException e) {
       throw new InvalidRequestException("Invalid yaml", e);
     }
