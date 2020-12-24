@@ -20,26 +20,24 @@ type PluginStep interface {
 }
 
 type pluginStep struct {
-	id             string
-	displayName    string
-	image          string
-	imageSecretEnv string // Name of environment variable that stores the docker image secret. If not set, plugin is public.
-	containerPort  uint32
-	stepContext    *pb.StepContext
-	log            *zap.SugaredLogger
+	id            string
+	displayName   string
+	image         string
+	containerPort uint32
+	stepContext   *pb.StepContext
+	log           *zap.SugaredLogger
 }
 
 // NewPluginStep creates a plugin step executor
 func NewPluginStep(step *pb.UnitStep, log *zap.SugaredLogger) PluginStep {
 	r := step.GetPlugin()
 	return &pluginStep{
-		id:             step.GetId(),
-		displayName:    step.GetDisplayName(),
-		image:          r.GetImage(),
-		imageSecretEnv: r.GetImageSecretEnv(),
-		containerPort:  r.GetContainerPort(),
-		stepContext:    r.GetContext(),
-		log:            log,
+		id:            step.GetId(),
+		displayName:   step.GetDisplayName(),
+		image:         r.GetImage(),
+		containerPort: r.GetContainerPort(),
+		stepContext:   r.GetContext(),
+		log:           log,
 	}
 }
 
@@ -92,9 +90,8 @@ func (e *pluginStep) getExecuteStepArg() *addonpb.ExecuteStepRequest {
 			DisplayName: e.displayName,
 			Step: &pb.UnitStep_Plugin{
 				Plugin: &pb.PluginStep{
-					Image:          e.image,
-					Context:        e.stepContext,
-					ImageSecretEnv: e.imageSecretEnv,
+					Image:   e.image,
+					Context: e.stepContext,
 				},
 			},
 		},

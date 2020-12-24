@@ -17,7 +17,7 @@ import (
 //go:generate mockgen -source service.go -package=services -destination mocks/service_mock.go IntegrationSvc
 
 const (
-	imageSecretEnv = "HARNESS_DOCKER_SECRET" // Docker image secret for integration service
+	imageSecretEnv = "HARNESS_IMAGE_SECRET" // Docker image secret for integration service
 )
 
 var (
@@ -58,7 +58,7 @@ func (s *integrationSvc) Run() error {
 	ctx := context.Background()
 	commands, err := s.getEntrypoint(ctx)
 	if err != nil {
-		logErr(s.log, "failed to find entrypoint for plugin", s.id, commands, start, err)
+		logErr(s.log, "failed to find entrypoint for service", s.id, commands, start, err)
 		return err
 	}
 
