@@ -34,11 +34,10 @@ public class SaveCacheGCSStepInfo implements PluginCompatibleStep {
 
   @JsonView(JsonViews.Internal.class)
   @NotNull
-  public static final TypeInfo typeInfo =
-      TypeInfo.builder()
-          .stepInfoType(CIStepInfoType.SAVE_CACHE_GCS)
-          .stepType(StepType.newBuilder().setType(CIStepInfoType.SAVE_CACHE_GCS.name()).build())
-          .build();
+  public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.SAVE_CACHE_GCS).build();
+
+  @JsonIgnore
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.SAVE_CACHE_GCS.name()).build();
 
   @JsonIgnore private String callbackId;
   @JsonIgnore private Integer port;
@@ -90,7 +89,7 @@ public class SaveCacheGCSStepInfo implements PluginCompatibleStep {
 
   @Override
   public StepType getStepType() {
-    return typeInfo.getStepType();
+    return STEP_TYPE;
   }
 
   @Override

@@ -33,11 +33,9 @@ public class SaveCacheStepInfo implements CIStepInfo {
   @JsonIgnore private String callbackId;
   @JsonView(JsonViews.Internal.class)
   @NotNull
-  public static final TypeInfo typeInfo =
-      TypeInfo.builder()
-          .stepInfoType(CIStepInfoType.SAVE_CACHE)
-          .stepType(StepType.newBuilder().setType(CIStepInfoType.SAVE_CACHE.name()).build())
-          .build();
+  public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.SAVE_CACHE).build();
+  @JsonIgnore
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.SAVE_CACHE.name()).build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;

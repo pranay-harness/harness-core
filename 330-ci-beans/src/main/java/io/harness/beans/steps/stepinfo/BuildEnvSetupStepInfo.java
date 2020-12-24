@@ -10,6 +10,7 @@ import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 
 import software.wings.jersey.JsonViews;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -32,12 +33,9 @@ public class BuildEnvSetupStepInfo implements CIStepInfo {
 
   @JsonView(JsonViews.Internal.class)
   @NotNull
-  public static final TypeInfo typeInfo =
-      TypeInfo.builder()
-          .stepInfoType(CIStepInfoType.SETUP_ENV)
-          .stepType(StepType.newBuilder().setType(CIStepInfoType.SETUP_ENV.name()).build())
-          .build();
-
+  public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.SETUP_ENV).build();
+  @JsonIgnore
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.SETUP_ENV.name()).build();
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
@@ -72,7 +70,7 @@ public class BuildEnvSetupStepInfo implements CIStepInfo {
 
   @Override
   public StepType getStepType() {
-    return typeInfo.getStepType();
+    return STEP_TYPE;
   }
 
   @Override

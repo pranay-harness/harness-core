@@ -44,7 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BuildStep implements SyncExecutable<BuildStepInfo> {
-  public static final StepType STEP_TYPE = BuildStepInfo.typeInfo.getStepType();
+  public static final StepType STEP_TYPE = BuildStepInfo.STEP_TYPE;
   public static final String TASK_TYPE = "EXECUTE_COMMAND";
   @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject private ConnectorUtils connectorUtils;

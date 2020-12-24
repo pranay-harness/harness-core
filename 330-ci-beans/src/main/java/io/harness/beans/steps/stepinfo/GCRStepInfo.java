@@ -35,11 +35,8 @@ public class GCRStepInfo implements PluginCompatibleStep {
 
   @JsonView(JsonViews.Internal.class)
   @NotNull
-  public static final TypeInfo typeInfo =
-      TypeInfo.builder()
-          .stepInfoType(CIStepInfoType.GCR)
-          .stepType(StepType.newBuilder().setType(CIStepInfoType.GCR.name()).build())
-          .build();
+  public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.GCR).build();
+  @JsonIgnore public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.GCR.name()).build();
 
   @JsonIgnore private String callbackId;
   @JsonIgnore private Integer port;
@@ -99,7 +96,7 @@ public class GCRStepInfo implements PluginCompatibleStep {
 
   @Override
   public StepType getStepType() {
-    return typeInfo.getStepType();
+    return STEP_TYPE;
   }
 
   @Override

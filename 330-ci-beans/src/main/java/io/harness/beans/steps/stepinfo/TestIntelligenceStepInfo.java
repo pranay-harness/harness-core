@@ -31,11 +31,11 @@ public class TestIntelligenceStepInfo implements CIStepInfo {
 
   @JsonView(JsonViews.Internal.class)
   @NotNull
-  public static final TypeInfo typeInfo =
-      TypeInfo.builder()
-          .stepInfoType(CIStepInfoType.TEST_INTELLIGENCE)
-          .stepType(StepType.newBuilder().setType(CIStepInfoType.TEST_INTELLIGENCE.name()).build())
-          .build();
+  public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.TEST_INTELLIGENCE).build();
+
+  @JsonIgnore
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(CIStepInfoType.TEST_INTELLIGENCE.name()).build();
 
   @JsonIgnore private String callbackId;
   @NotNull @EntityIdentifier private String identifier;
@@ -83,7 +83,7 @@ public class TestIntelligenceStepInfo implements CIStepInfo {
 
   @Override
   public StepType getStepType() {
-    return typeInfo.getStepType();
+    return STEP_TYPE;
   }
 
   @Override

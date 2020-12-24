@@ -35,11 +35,10 @@ public class DockerStepInfo implements PluginCompatibleStep {
 
   @JsonView(JsonViews.Internal.class)
   @NotNull
-  public static final TypeInfo typeInfo =
-      TypeInfo.builder()
-          .stepInfoType(CIStepInfoType.DOCKER)
-          .stepType(StepType.newBuilder().setType(CIStepInfoType.DOCKER.name()).build())
-          .build();
+  public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.DOCKER).build();
+
+  @JsonIgnore
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.DOCKER.name()).build();
 
   @JsonIgnore private String callbackId;
   @JsonIgnore private Integer port;
@@ -97,7 +96,7 @@ public class DockerStepInfo implements PluginCompatibleStep {
 
   @Override
   public StepType getStepType() {
-    return typeInfo.getStepType();
+    return STEP_TYPE;
   }
 
   @Override

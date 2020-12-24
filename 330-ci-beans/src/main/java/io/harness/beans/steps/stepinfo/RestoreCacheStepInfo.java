@@ -32,11 +32,10 @@ public class RestoreCacheStepInfo implements CIStepInfo {
   @JsonIgnore private String callbackId;
   @JsonView(JsonViews.Internal.class)
   @NotNull
-  public static final TypeInfo typeInfo =
-      TypeInfo.builder()
-          .stepInfoType(CIStepInfoType.RESTORE_CACHE)
-          .stepType(StepType.newBuilder().setType(CIStepInfoType.RESTORE_CACHE.name()).build())
-          .build();
+  public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.RESTORE_CACHE).build();
+
+  @JsonIgnore
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.RESTORE_CACHE.name()).build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;
@@ -70,7 +69,7 @@ public class RestoreCacheStepInfo implements CIStepInfo {
 
   @Override
   public StepType getStepType() {
-    return typeInfo.getStepType();
+    return STEP_TYPE;
   }
 
   @Override

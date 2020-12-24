@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 // TODO Cleanup Support for other types (Non K8)
 public class CleanupStep implements SyncExecutable<CleanupStepInfo> {
-  public static final StepType STEP_TYPE = CleanupStepInfo.typeInfo.getStepType();
+  public static final StepType STEP_TYPE = CleanupStepInfo.STEP_TYPE;
   public static final String TASK_TYPE = "EXECUTE_COMMAND";
   @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject private ConnectorUtils connectorUtils;
