@@ -5,10 +5,8 @@ import static io.harness.pms.plan.execution.PlanExecutionResource.EMBEDDED_USER;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.plan.GraphLayoutNode;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.execution.beans.ExecutionErrorInfo;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.ExecutionTriggerInfo;
@@ -23,7 +21,6 @@ import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.events.SyncOrchestrationEventHandler;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 
-import com.google.cloud.Timestamp;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.text.SimpleDateFormat;
@@ -31,7 +28,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Singleton
 public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEventHandler {
@@ -54,8 +50,8 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
     }
     updateExecutionInfoInPipelineEntity(
         accountId, orgId, projectId, pipelineId, pipelineEntity.get().getExecutionSummaryInfo());
-    Map<String, GraphLayoutNode> layoutNodeMap = pipelineEntity.get().getLayoutNodeMap();
-    String startingNodeId = pipelineEntity.get().getStartingNodeID();
+    Map<String, GraphLayoutNode> layoutNodeMap = planExecution.getPlan().getGraphLayoutInfo().getLayoutNodesMap();
+    String startingNodeId = planExecution.getPlan().getGraphLayoutInfo().getStartingNodeId();
     Map<String, GraphLayoutNodeDTO> layoutNodeDTOMap = new HashMap<>();
     for (Map.Entry<String, GraphLayoutNode> entry : layoutNodeMap.entrySet()) {
       layoutNodeDTOMap.put(entry.getKey(), GraphLayoutDtoMapper.toDto(entry.getValue()));
@@ -64,7 +60,7 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
         PipelineExecutionSummaryEntity.builder()
             .layoutNodeMap(layoutNodeDTOMap)
             .pipelineIdentifier(pipelineId)
-            .startingNodeId(pipelineEntity.get().getStartingNodeID())
+            .startingNodeId(startingNodeId)
             .planExecutionId(planExecutionId)
             .name(pipelineEntity.get().getName())
             .inputSetYaml(ambiance.getSetupAbstractionsMap().get(SetupAbstractionKeys.inputSetYaml))

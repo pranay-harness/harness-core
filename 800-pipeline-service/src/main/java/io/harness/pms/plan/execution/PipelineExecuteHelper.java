@@ -50,7 +50,7 @@ public class PipelineExecuteHelper {
     contextAttributes.put(SetupAbstractionKeys.eventPayload, eventPayload);
     String pipelineYaml;
     if (EmptyPredicate.isEmpty(inputSetPipelineYaml)) {
-      pipelineYaml = pipelineEntity.get().getProcessedYaml();
+      pipelineYaml = pipelineEntity.get().getYaml();
     } else {
       pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), inputSetPipelineYaml);
       contextAttributes.put(SetupAbstractionKeys.inputSetYaml, inputSetPipelineYaml);
@@ -70,8 +70,7 @@ public class PipelineExecuteHelper {
 
     String mergedRuntimeInputYaml = validateAndMergeHelper.getMergeInputSetFromPipelineTemplate(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetReferences);
-    String pipelineYaml = YamlUtils.injectUuid(
-        MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getProcessedYaml(), mergedRuntimeInputYaml));
+    String pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), mergedRuntimeInputYaml);
     Map<String, Object> contextAttributes = new HashMap<>();
     contextAttributes.put(SetupAbstractionKeys.inputSetYaml, mergedRuntimeInputYaml);
     contextAttributes.put(SetupAbstractionKeys.pipelineIdentifier, pipelineIdentifier);
@@ -79,9 +78,9 @@ public class PipelineExecuteHelper {
     return startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml, user, contextAttributes);
   }
 
-  public PlanExecution startExecution(String accountId, String orgIdentifier, String projectIdentifier,
-      String processedYaml, EmbeddedUser user, Map<String, Object> contextAttributes) throws IOException {
-    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(processedYaml);
+  public PlanExecution startExecution(String accountId, String orgIdentifier, String projectIdentifier, String yaml,
+      EmbeddedUser user, Map<String, Object> contextAttributes) throws IOException {
+    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(yaml);
     Plan plan = PlanExecutionUtils.extractPlan(resp);
     ImmutableMap.Builder<String, String> abstractionsBuilder =
         ImmutableMap.<String, String>builder()

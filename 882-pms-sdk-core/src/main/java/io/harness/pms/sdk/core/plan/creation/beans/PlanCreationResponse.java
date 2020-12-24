@@ -2,9 +2,7 @@ package io.harness.pms.sdk.core.plan.creation.beans;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
-import io.harness.pms.contracts.plan.PlanCreationContextValue;
-import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.plan.*;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.mappers.PlanNodeProtoMapper;
 import io.harness.pms.yaml.YamlField;
@@ -21,6 +19,8 @@ public class PlanCreationResponse {
   @Singular Map<String, PlanNode> nodes;
   @Singular Map<String, YamlField> dependencies;
   @Singular("contextMap") Map<String, PlanCreationContextValue> contextMap;
+  GraphLayoutResponse graphLayoutResponse;
+
   String startingNodeId;
 
   public void merge(PlanCreationResponse other) {
@@ -28,6 +28,7 @@ public class PlanCreationResponse {
     addDependencies(other.getDependencies());
     mergeStartingNodeId(other.getStartingNodeId());
     mergeContext(other.getContextMap());
+    mergeLayoutNodeInfo(other.getGraphLayoutResponse());
   }
 
   public void mergeContext(Map<String, PlanCreationContextValue> contextMap) {
@@ -37,6 +38,18 @@ public class PlanCreationResponse {
     for (Map.Entry<String, PlanCreationContextValue> entry : contextMap.entrySet()) {
       putContextValue(entry.getKey(), entry.getValue());
     }
+  }
+
+  public void mergeLayoutNodeInfo(GraphLayoutResponse layoutNodeInfo) {
+    if (layoutNodeInfo == null) {
+      return;
+    }
+    if (graphLayoutResponse == null) {
+      graphLayoutResponse = layoutNodeInfo;
+      return;
+    }
+    graphLayoutResponse.mergeStartingNodeId(layoutNodeInfo.getStartingNodeId());
+    graphLayoutResponse.addLayoutNodes(layoutNodeInfo.getLayoutNodes());
   }
 
   public void addNodes(Map<String, PlanNode> newNodes) {
@@ -127,6 +140,9 @@ public class PlanCreationResponse {
       for (Map.Entry<String, PlanCreationContextValue> dependency : contextMap.entrySet()) {
         finalBlobResponseBuilder.putContext(dependency.getKey(), dependency.getValue());
       }
+    }
+    if (graphLayoutResponse != null) {
+      finalBlobResponseBuilder.setGraphLayoutInfo(graphLayoutResponse.getLayoutNodeInfo());
     }
     return finalBlobResponseBuilder.build();
   }

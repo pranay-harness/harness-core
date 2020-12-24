@@ -2,9 +2,12 @@ package io.harness.plancreator.stages;
 
 import io.harness.plancreator.beans.PlanCreationConstants;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.contracts.plan.EdgeLayoutList;
+import io.harness.pms.contracts.plan.GraphLayoutNode;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
+import io.harness.pms.sdk.core.plan.creation.beans.GraphLayoutResponse;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
@@ -15,14 +18,7 @@ import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.common.NGSectionStep;
 import io.harness.steps.common.NGSectionStepParameters;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class StagesPlanCreator extends ChildrenPlanCreator<StagesConfig> {
   @Override
@@ -37,6 +33,36 @@ public class StagesPlanCreator extends ChildrenPlanCreator<StagesConfig> {
           stageYamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(stageYamlFieldMap).build());
     }
     return responseMap;
+  }
+
+  @Override
+  public GraphLayoutResponse getLayoutNodeInfo(PlanCreationContext ctx, StagesConfig config) {
+    Map<String, GraphLayoutNode> stageYamlFieldMap = new LinkedHashMap<>();
+    List<YamlField> stagesYamlField = getStageYamlFields(ctx);
+    List<EdgeLayoutList> edgeLayoutLists = new ArrayList<>();
+    for (YamlField stageYamlField : stagesYamlField) {
+      EdgeLayoutList.Builder stageEdgesBuilder = EdgeLayoutList.newBuilder();
+      stageEdgesBuilder.addNextIds(stageYamlField.getNode().getUuid());
+      edgeLayoutLists.add(stageEdgesBuilder.build());
+    }
+    for (int i = 0; i < edgeLayoutLists.size(); i++) {
+      YamlField stageYamlField = stagesYamlField.get(i);
+      if (stageYamlField.getName().equals("parallel")) {
+        continue;
+      }
+      stageYamlFieldMap.put(stageYamlField.getNode().getUuid(),
+          GraphLayoutNode.newBuilder()
+              .setNodeUUID(stageYamlField.getNode().getUuid())
+              .setNodeType("stage")
+              .setNodeIdentifier(stageYamlField.getNode().getIdentifier())
+              .setEdgeLayoutList(
+                  i + 1 < edgeLayoutLists.size() ? edgeLayoutLists.get(i + 1) : EdgeLayoutList.newBuilder().build())
+              .build());
+    }
+    return GraphLayoutResponse.builder()
+        .layoutNodes(stageYamlFieldMap)
+        .startingNodeId(stagesYamlField.get(0).getNode().getUuid())
+        .build();
   }
 
   @Override

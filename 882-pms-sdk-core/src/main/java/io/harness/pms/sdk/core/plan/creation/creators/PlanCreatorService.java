@@ -131,7 +131,9 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
 
         finalResponse.addNodes(response.getNodes());
         finalResponse.mergeContext(response.getContextMap());
+        finalResponse.mergeLayoutNodeInfo(response.getGraphLayoutResponse());
         finalResponse.mergeStartingNodeId(response.getStartingNodeId());
+        finalResponse.mergeLayoutNodeInfo(response.getGraphLayoutResponse());
         if (EmptyPredicate.isNotEmpty(response.getDependencies())) {
           for (YamlField childField : response.getDependencies().values()) {
             dependencies.put(childField.getNode().getUuid(), childField);

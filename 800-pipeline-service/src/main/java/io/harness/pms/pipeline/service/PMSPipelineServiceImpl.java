@@ -251,9 +251,6 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
         filtersAndStageCount.getFilters().forEach(
             (key, value) -> pipelineEntity.getFilters().put(key, Document.parse(value)));
       }
-      pipelineEntity.setLayoutNodeMap(filtersAndStageCount.getLayoutNodeMap());
-      pipelineEntity.setStartingNodeID(filtersAndStageCount.getStartingNodeId());
-      pipelineEntity.setProcessedYaml(filtersAndStageCount.getProcessedYaml());
     } catch (Exception ex) {
       throw new InvalidRequestException(
           format("Error happened while creating filters for pipeline: %s", ex.getMessage(), ex));

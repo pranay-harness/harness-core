@@ -62,7 +62,6 @@ public class PipelineEntity implements PersistentEntity, AccountAccess, UuidAwar
 
   @Id @org.mongodb.morphia.annotations.Id String uuid;
   @NotEmpty String yaml;
-  @NotEmpty String processedYaml;
   @NotEmpty String accountId;
   @NotEmpty String orgIdentifier;
   @NotEmpty String identifier;
@@ -78,8 +77,6 @@ public class PipelineEntity implements PersistentEntity, AccountAccess, UuidAwar
 
   @Version Long version;
   @Builder.Default Map<String, org.bson.Document> filters = new HashMap<>();
-  @Builder.Default Map<String, GraphLayoutNode> layoutNodeMap = new HashMap<>();
-  String startingNodeID;
   ExecutionSummaryInfo executionSummaryInfo;
 
   @Override

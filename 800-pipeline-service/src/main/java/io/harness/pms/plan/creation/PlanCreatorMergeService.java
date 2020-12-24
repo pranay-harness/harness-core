@@ -57,7 +57,8 @@ public class PlanCreatorMergeService {
       });
     }
 
-    YamlField pipelineField = YamlUtils.extractPipelineField(content);
+    String processedYaml = YamlUtils.injectUuid(content);
+    YamlField pipelineField = YamlUtils.extractPipelineField(processedYaml);
     Map<String, YamlFieldBlob> dependencies = new HashMap<>();
     dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
     PlanCreationBlobResponse finalResponse = createPlanForDependenciesRecursive(services, dependencies);
@@ -78,6 +79,7 @@ public class PlanCreatorMergeService {
       PlanCreationBlobResponseUtils.addNodes(finalResponseBuilder, currIterationResponse.getNodesMap());
       PlanCreationBlobResponseUtils.mergeStartingNodeId(
           finalResponseBuilder, currIterationResponse.getStartingNodeId());
+      PlanCreationBlobResponseUtils.mergeLayoutNodeInfo(finalResponseBuilder, currIterationResponse);
       if (EmptyPredicate.isNotEmpty(finalResponseBuilder.getDependenciesMap())) {
         throw new InvalidRequestException("Some YAML nodes could not be parsed");
       }

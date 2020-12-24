@@ -18,16 +18,6 @@ public abstract class ChildrenFilterJsonCreator<T> implements FilterJsonCreator<
     FilterCreationResponse response = FilterCreationResponse.builder().build();
     response.addDependencies(getDependencies(filterCreationContext));
     response.setPipelineFilter(getFilterForGivenField());
-    response.setLayoutNodes(createLayoutNodeMap(filterCreationContext, field));
-    if (EmptyPredicate.isNotEmpty(getStartingNodeId(filterCreationContext, field))) {
-      response.setStartingNodeId(getStartingNodeId(filterCreationContext, field));
-    }
     return response;
   }
-
-  public Map<String, GraphLayoutNode> createLayoutNodeMap(FilterCreationContext filterCreationContext, T yamlField) {
-    return new HashMap<>();
-  }
-
-  abstract public String getStartingNodeId(FilterCreationContext filterCreationContext, T field);
 }
