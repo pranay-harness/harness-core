@@ -47,7 +47,6 @@ import software.wings.delegatetasks.k8s.client.KubernetesClientFactoryModule;
 
 import ch.qos.logback.classic.LoggerContext;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -192,13 +191,6 @@ public class DelegateApplication {
 
     // Add JVM shutdown hook so as to have a clean shutdown
     addShutdownHook(injector, messageService);
-
-    if (configuration.isGrpcServiceEnabled()) {
-      log.info("Initializing gRPC server...");
-      ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
-      serviceManager.awaitHealthy();
-      Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
-    }
 
     boolean watched = watcherProcess != null;
     if (watched) {

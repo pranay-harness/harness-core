@@ -15,7 +15,9 @@ import static io.harness.delegate.message.MessageConstants.DELEGATE_SEND_VERSION
 import static io.harness.delegate.message.MessageConstants.DELEGATE_SHUTDOWN_PENDING;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_SHUTDOWN_STARTED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_STARTED;
+import static io.harness.delegate.message.MessageConstants.DELEGATE_START_GRPC;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_STOP_ACQUIRING;
+import static io.harness.delegate.message.MessageConstants.DELEGATE_STOP_GRPC;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_SWITCH_STORAGE;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_UPGRADE_NEEDED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_UPGRADE_PENDING;
@@ -131,6 +133,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.io.filefilter.AgeFileFilter;
@@ -524,6 +527,9 @@ public class WatcherServiceImpl implements WatcherService {
         List<String> upgradeNeededList = new ArrayList<>();
         List<String> shutdownNeededList = new ArrayList<>();
         List<String> drainingNeededList = new ArrayList<>();
+        List<String> stopGrpcServerList = new ArrayList<>();
+        List<String> startGrpcServerList = new ArrayList<>();
+
         String upgradePendingDelegate = null;
         boolean newDelegateTimedOut = false;
         long now = clock.millis();
@@ -625,6 +631,12 @@ public class WatcherServiceImpl implements WatcherService {
               if (upgradePending) {
                 upgradePendingDelegate = delegateProcess;
               }
+
+              if (isPrimaryDelegate(delegateVersion, expectedVersions)) {
+                startGrpcServerList.add(delegateProcess);
+              } else {
+                stopGrpcServerList.add(delegateProcess);
+              }
             }
           }
 
@@ -680,6 +692,20 @@ public class WatcherServiceImpl implements WatcherService {
                 delegateProcess -> messageService.writeMessageToChannel(DELEGATE, delegateProcess, UPGRADING_DELEGATE));
             startDelegateProcess(null, ".", upgradeNeededList, "DelegateUpgradeScript", getProcessId());
           }
+        }
+
+        if (isNotEmpty(startGrpcServerList)) {
+          startGrpcServerList.forEach(
+              delegateProcess -> messageService.writeMessageToChannel(DELEGATE, delegateProcess, DELEGATE_START_GRPC));
+
+          // We don't want to stop older grpc service unless one delegate agent with primary version is running.
+          if (isNotEmpty(stopGrpcServerList)) {
+            stopGrpcServerList.forEach(
+                delegateProcess -> messageService.writeMessageToChannel(DELEGATE, delegateProcess, DELEGATE_STOP_GRPC));
+          }
+        } else if (isNotEmpty(stopGrpcServerList)) {
+          log.warn("Found no running delegate to start grpc server. Skipping stopping of grpc server on {}",
+              stopGrpcServerList);
         }
       }
 
@@ -869,6 +895,15 @@ public class WatcherServiceImpl implements WatcherService {
     } catch (Exception e) {
       // Ignore
     }
+  }
+
+  // Last element in expected version list is primary delegate version
+  private boolean isPrimaryDelegate(String delegateVersion, List<String> expectedVersions) {
+    if (CollectionUtils.isEmpty(expectedVersions)) {
+      return false;
+    }
+
+    return delegateVersion.equals(expectedVersions.get(expectedVersions.size() - 1));
   }
 
   @VisibleForTesting
