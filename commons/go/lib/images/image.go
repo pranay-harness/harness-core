@@ -1,8 +1,6 @@
 package images
 
 import (
-	"encoding/base64"
-
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
@@ -16,16 +14,11 @@ func PublicMetadata(image string) ([]string, []string, error) {
 }
 
 // PrivateMetadata returns entrypoint & commands for private image.
-// It takes base64 encoded docker config secret for image as an input.
+// It takes docker config secret in json format for image as an input.
 func PrivateMetadata(image, dockerCfg string) ([]string, []string, error) {
-	decoded, err := base64.StdEncoding.DecodeString(dockerCfg)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to decode docker config secret")
-	}
-
 	secret := k8v1.Secret{
 		Data: map[string][]byte{
-			k8v1.DockerConfigKey: decoded,
+			k8v1.DockerConfigKey: []byte(dockerCfg),
 		},
 		Type: k8v1.SecretTypeDockercfg,
 	}

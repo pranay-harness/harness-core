@@ -46,9 +46,7 @@ message RunStep {
 message PluginStep {
   string image = 1;
   StepContext context = 2;
-  uint32 container_port = 3;    // Port of the container on which plugin step needs to be executed
-  string image_secret_env = 4;  // Name of environment variable that stores the docker image secret.
-                                // If not set, plugin is public.
+  uint32 container_port = 3;  // Port of the container on which plugin step needs to be executed
 }
 
 message SaveCacheStep {
