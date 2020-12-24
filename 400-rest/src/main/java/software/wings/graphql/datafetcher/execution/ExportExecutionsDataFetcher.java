@@ -40,7 +40,7 @@ public class ExportExecutionsDataFetcher
     String accountId = mutationContext.getAccountId();
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
       Query<WorkflowExecution> query = wingsPersistence.createAuthorizedQuery(WorkflowExecution.class);
-      executionQueryHelper.setQuery(triggerExecutionInput.getFilters(), query, accountId);
+      executionQueryHelper.setBaseQuery(triggerExecutionInput.getFilters(), query, accountId);
       ExportExecutionsRequestSummary summary = exportExecutionsResourceService.export(
           accountId, query, QLExportExecutionsInput.toUserParams(triggerExecutionInput));
       return QLExportExecutionsPayload.fromExportExecutionsRequestSummary(summary, triggerExecutionInput);

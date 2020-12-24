@@ -1,0 +1,136 @@
+package software.wings.graphql.datafetcher.execution;
+
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
+
+import static org.mockito.Matchers.eq;
+
+import io.harness.category.element.UnitTests;
+import io.harness.rule.Owner;
+
+import software.wings.WingsBaseTest;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
+import software.wings.graphql.datafetcher.DataFetcherUtils;
+import software.wings.graphql.datafetcher.tag.TagHelper;
+import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+import software.wings.graphql.schema.type.aggregation.QLIdOperator;
+import software.wings.graphql.schema.type.aggregation.QLNumberFilter;
+import software.wings.graphql.schema.type.aggregation.QLNumberOperator;
+import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
+import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
+import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTagFilter;
+import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTagType;
+import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
+
+import com.google.inject.Inject;
+import java.util.Collections;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Matchers;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.Query;
+
+public class ExecutionQueryHelperTest extends WingsBaseTest {
+  @Mock private DataFetcherUtils utils;
+  @Mock private TagHelper tagHelper;
+  @Inject @InjectMocks private ExecutionQueryHelper executionQueryHelper;
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldSetQueryFiltersCorrectlyQLBaseExecutionFilter() {
+    QLBaseExecutionFilter filter = new QLBaseExecutionFilter();
+    filter.setExecution(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"EXEC"}).build());
+    filter.setApplication(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"APP"}).build());
+    filter.setService(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"SERVICE"}).build());
+    filter.setCloudProvider(
+        QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"CLOUD_PROVIDER"}).build());
+    filter.setEnvironment(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"ENV"}).build());
+    filter.setStatus(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"STATUS"}).build());
+    filter.setEndTime(QLTimeFilter.builder().operator(QLTimeOperator.EQUALS).value(12345L).build());
+    filter.setStartTime(QLTimeFilter.builder().operator(QLTimeOperator.EQUALS).value(0L).build());
+    filter.setCreationTime(QLTimeFilter.builder().operator(QLTimeOperator.EQUALS).value(123L).build());
+    filter.setDuration(QLNumberFilter.builder().operator(QLNumberOperator.EQUALS).values(new Integer[] {100}).build());
+    filter.setTag(QLDeploymentTagFilter.builder()
+                      .entityType(QLDeploymentTagType.ENVIRONMENT)
+                      .tags(Collections.singletonList(QLTagInput.builder().name("name").value("value").build()))
+                      .build());
+    filter.setTriggeredBy(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"TRIG_BY"}).build());
+    filter.setTrigger(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"TRIGGER"}).build());
+    filter.setWorkflow(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"WF"}).build());
+    filter.setPipeline(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"PIPELINE"}).build());
+
+    Query query = Mockito.mock(Query.class);
+    FieldEnd fieldEnd = Mockito.mock(FieldEnd.class);
+    Mockito.when(query.field(Matchers.any())).thenReturn(fieldEnd);
+    executionQueryHelper.setBaseQuery(Collections.singletonList(filter), query, "ACCOUNT_ID");
+    Mockito.verify(query, Mockito.times(1)).field(WorkflowExecutionKeys.uuid);
+    Mockito.verify(query, Mockito.times(1)).field(WorkflowExecutionKeys.appId);
+    Mockito.verify(query, Mockito.times(1)).field(WorkflowExecutionKeys.deployedCloudProviders);
+    Mockito.verify(query, Mockito.times(1)).field(WorkflowExecutionKeys.duration);
+    Mockito.verify(query, Mockito.times(1)).field(WorkflowExecutionKeys.endTs);
+    Mockito.verify(query, Mockito.times(1)).field(WorkflowExecutionKeys.deployedEnvironments + ".uuid");
+    Mockito.verify(query, Mockito.times(2)).field(WorkflowExecutionKeys.workflowId);
+    Mockito.verify(query, Mockito.times(1)).field(WorkflowExecutionKeys.deployedServices);
+    Mockito.verify(query, Mockito.times(1)).field(WorkflowExecutionKeys.startTs);
+    Mockito.verify(query, Mockito.times(1)).field(WorkflowExecutionKeys.status);
+    Mockito.verify(query, Mockito.times(1)).field(WorkflowExecutionKeys.deploymentTriggerId);
+    Mockito.verify(query, Mockito.times(1)).field(WorkflowExecutionKeys.triggeredBy);
+    Mockito.verify(query, Mockito.times(1)).field(WorkflowExecutionKeys.createdAt);
+    Mockito.verify(query, Mockito.times(1)).field(WorkflowExecutionKeys.envIds);
+    Mockito.verify(query, Mockito.never()).field(WorkflowExecutionKeys.pipelineExecutionId);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldSetQueryFiltersCorrectlyQLExecutionFilter() {
+    QLExecutionFilter filter = new QLExecutionFilter();
+    filter.setExecution(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"EXEC"}).build());
+    filter.setApplication(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"APP"}).build());
+    filter.setService(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"SERVICE"}).build());
+    filter.setCloudProvider(
+        QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"CLOUD_PROVIDER"}).build());
+    filter.setEnvironment(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"ENV"}).build());
+    filter.setStatus(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"STATUS"}).build());
+    filter.setEndTime(QLTimeFilter.builder().operator(QLTimeOperator.EQUALS).value(12345L).build());
+    filter.setStartTime(QLTimeFilter.builder().operator(QLTimeOperator.EQUALS).value(0L).build());
+    filter.setCreationTime(QLTimeFilter.builder().operator(QLTimeOperator.EQUALS).value(123L).build());
+    filter.setDuration(QLNumberFilter.builder().operator(QLNumberOperator.EQUALS).values(new Integer[] {100}).build());
+    filter.setTag(QLDeploymentTagFilter.builder()
+                      .entityType(QLDeploymentTagType.ENVIRONMENT)
+                      .tags(Collections.singletonList(QLTagInput.builder().name("name").value("value").build()))
+                      .build());
+    filter.setTriggeredBy(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"TRIG_BY"}).build());
+    filter.setTrigger(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"TRIGGER"}).build());
+    filter.setWorkflow(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"WF"}).build());
+    filter.setPipeline(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"PIPELINE"}).build());
+    filter.setPipelineExecutionId(
+        QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"PIPE_EXEC_ID"}).build());
+
+    Query query = Mockito.mock(Query.class);
+    FieldEnd fieldEnd = Mockito.mock(FieldEnd.class);
+    Mockito.when(query.field(Matchers.any())).thenReturn(fieldEnd);
+    executionQueryHelper.setQuery(Collections.singletonList(filter), query, "ACCOUNT_ID");
+    Mockito.verify(query, Mockito.times(1)).field(WorkflowExecutionKeys.uuid);
+    Mockito.verify(query, Mockito.times(1)).field(WorkflowExecutionKeys.appId);
+    Mockito.verify(query, Mockito.times(1)).field(WorkflowExecutionKeys.deployedCloudProviders);
+    Mockito.verify(query, Mockito.times(1)).field(WorkflowExecutionKeys.duration);
+    Mockito.verify(query, Mockito.times(1)).field(WorkflowExecutionKeys.endTs);
+    Mockito.verify(query, Mockito.times(1)).field(WorkflowExecutionKeys.deployedEnvironments + ".uuid");
+    Mockito.verify(query, Mockito.times(2)).field(WorkflowExecutionKeys.workflowId);
+    Mockito.verify(query, Mockito.times(1)).field(WorkflowExecutionKeys.deployedServices);
+    Mockito.verify(query, Mockito.times(1)).field(WorkflowExecutionKeys.startTs);
+    Mockito.verify(query, Mockito.times(1)).field(WorkflowExecutionKeys.status);
+    Mockito.verify(query, Mockito.times(1)).field(WorkflowExecutionKeys.deploymentTriggerId);
+    Mockito.verify(query, Mockito.times(1)).field(WorkflowExecutionKeys.triggeredBy);
+    Mockito.verify(query, Mockito.times(1)).field(WorkflowExecutionKeys.createdAt);
+    Mockito.verify(query, Mockito.times(1)).field(WorkflowExecutionKeys.envIds);
+    Mockito.verify(query, Mockito.times(1)).field(WorkflowExecutionKeys.pipelineExecutionId);
+    Mockito.verify(utils, Mockito.times(1))
+        .setIdFilter(eq(query.field(WorkflowExecutionKeys.pipelineExecutionId)),
+            eq(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"PIPE_EXEC_ID"}).build()));
+  }
+}

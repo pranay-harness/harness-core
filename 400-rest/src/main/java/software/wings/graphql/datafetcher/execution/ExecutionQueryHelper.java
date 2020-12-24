@@ -23,6 +23,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
@@ -34,7 +35,7 @@ public class ExecutionQueryHelper {
   @Inject protected DataFetcherUtils utils;
   @Inject protected TagHelper tagHelper;
 
-  public void setQuery(List<QLExecutionFilter> filters, Query query, String accountId) {
+  public void setBaseQuery(List<QLBaseExecutionFilter> filters, Query query, String accountId) {
     if (isEmpty(filters)) {
       return;
     }
@@ -126,12 +127,6 @@ public class ExecutionQueryHelper {
         utils.setTimeFilter(field, timeFilter);
       }
 
-      if (filter.getPipelineExecutionId() != null) {
-        field = query.field(WorkflowExecutionKeys.pipelineExecutionId);
-        QLIdFilter idFilter = filter.getPipelineExecutionId();
-        utils.setIdFilter(field, idFilter);
-      }
-
       if (filter.getTag() != null) {
         QLDeploymentTagFilter tagFilter = filter.getTag();
         List<QLTagInput> tags = tagFilter.getTags();
@@ -158,6 +153,24 @@ public class ExecutionQueryHelper {
             log.error("EntityType {} not supported in execution query", tagFilter.getEntityType());
             throw new InvalidRequestException("Error while compiling execution query", WingsException.USER);
         }
+      }
+    });
+  }
+
+  public void setQuery(List<QLExecutionFilter> filters, Query query, String accountId) {
+    if (isEmpty(filters)) {
+      return;
+    }
+    setBaseQuery(
+        filters.stream().map(filter -> (QLBaseExecutionFilter) filter).collect(Collectors.toList()), query, accountId);
+
+    filters.forEach(filter -> {
+      FieldEnd<? extends Query<WorkflowExecution>> field;
+
+      if (filter.getPipelineExecutionId() != null) {
+        field = query.field(WorkflowExecutionKeys.pipelineExecutionId);
+        QLIdFilter idFilter = filter.getPipelineExecutionId();
+        utils.setIdFilter(field, idFilter);
       }
     });
   }
