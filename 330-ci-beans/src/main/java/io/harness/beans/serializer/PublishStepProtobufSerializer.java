@@ -12,6 +12,7 @@ import io.harness.beans.steps.stepinfo.publish.artifact.connectors.ArtifactoryCo
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.EcrConnector;
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.GcrConnector;
 import io.harness.callback.DelegateCallbackToken;
+import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.product.ci.engine.proto.AuthType;
 import io.harness.product.ci.engine.proto.BuildPublishImage;
@@ -27,7 +28,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Optional;
 import java.util.function.Supplier;
-import org.apache.commons.codec.binary.Base64;
 
 @Singleton
 public class PublishStepProtobufSerializer implements ProtobufStepSerializer<PublishStepInfo> {
@@ -35,14 +35,13 @@ public class PublishStepProtobufSerializer implements ProtobufStepSerializer<Pub
   public static final String TYPE_NOT_IMPLEMENTED_YET = "%s not implemented yet";
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
-  @Override
-  public String serializeToBase64(StepElementConfig stepInfo) {
-    return Base64.encodeBase64String(serializeStep(stepInfo).toByteArray());
-  }
-
-  public UnitStep serializeStep(StepElementConfig step) {
+  public UnitStep serializeStep(StepElementConfig step, Integer port, String callbackId) {
     CIStepInfo ciStepInfo = (CIStepInfo) step.getStepSpecType();
     PublishStepInfo publishStepInfo = (PublishStepInfo) ciStepInfo;
+
+    if (callbackId == null) {
+      throw new CIStageExecutionException("CallbackId can not be null");
+    }
 
     PublishArtifactsStep.Builder publishArtifactsStepBuilder = PublishArtifactsStep.newBuilder();
     publishStepInfo.getPublishArtifacts().forEach(artifact -> {
@@ -63,7 +62,7 @@ public class PublishStepProtobufSerializer implements ProtobufStepSerializer<Pub
     String skipCondition = SkipConditionUtils.getSkipCondition(step);
     return UnitStep.newBuilder()
         .setId(step.getIdentifier())
-        .setTaskId(publishStepInfo.getCallbackId())
+        .setTaskId(callbackId)
         .setCallbackToken(delegateCallbackTokenSupplier.get().getToken())
         .setDisplayName(Optional.ofNullable(step.getName()).orElse(""))
         .setPublishArtifacts(publishArtifactsStepBuilder.build())

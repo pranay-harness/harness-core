@@ -36,7 +36,7 @@ public class LiteEngineTaskStepGenerator {
       return LiteEngineTaskStepInfo.builder()
           .identifier(LITE_ENGINE_TASK + liteEngineCounter)
           .ciCodebase(ciCodebase)
-          .skipGitClone(gitClone)
+          .skipGitClone(!gitClone)
           .usePVC(usePVC)
           .buildJobEnvInfo(buildJobEnvInfo)
           .steps(null)

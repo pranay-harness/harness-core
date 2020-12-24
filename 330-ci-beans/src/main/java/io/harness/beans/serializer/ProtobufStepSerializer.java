@@ -5,6 +5,5 @@ import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.product.ci.engine.proto.UnitStep;
 
 public interface ProtobufStepSerializer<T extends CIStepInfo> {
-  UnitStep serializeStep(StepElementConfig step);
-  String serializeToBase64(StepElementConfig step);
+  UnitStep serializeStep(StepElementConfig step, Integer port, String callbackId);
 }

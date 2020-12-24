@@ -3,6 +3,7 @@ package io.harness.beans.serializer;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.callback.DelegateCallbackToken;
+import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.product.ci.engine.proto.PluginStep;
 import io.harness.product.ci.engine.proto.StepContext;
@@ -12,18 +13,14 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Optional;
 import java.util.function.Supplier;
-import org.apache.commons.codec.binary.Base64;
 
 @Singleton
 public class PluginStepProtobufSerializer implements ProtobufStepSerializer<PluginStepInfo> {
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
   @Override
-  public String serializeToBase64(StepElementConfig step) {
-    return Base64.encodeBase64String(serializeStep(step).toByteArray());
-  }
 
-  public UnitStep serializeStep(StepElementConfig step) {
+  public UnitStep serializeStep(StepElementConfig step, Integer port, String callbackId) {
     CIStepInfo ciStepInfo = (CIStepInfo) step.getStepSpecType();
     PluginStepInfo pluginStepInfo = (PluginStepInfo) ciStepInfo;
 
@@ -31,8 +28,15 @@ public class PluginStepProtobufSerializer implements ProtobufStepSerializer<Plug
                                   .setNumRetries(pluginStepInfo.getRetry())
                                   .setExecutionTimeoutSecs(pluginStepInfo.getTimeout())
                                   .build();
+    if (port == null) {
+      throw new CIStageExecutionException("Port can not be null");
+    }
+
+    if (callbackId == null) {
+      throw new CIStageExecutionException("CallbackId can not be null");
+    }
     PluginStep pluginStep = PluginStep.newBuilder()
-                                .setContainerPort(pluginStepInfo.getPort())
+                                .setContainerPort(port)
                                 .setImage(pluginStepInfo.getImage())
                                 .setContext(stepContext)
                                 .build();
@@ -40,7 +44,7 @@ public class PluginStepProtobufSerializer implements ProtobufStepSerializer<Plug
     String skipCondition = SkipConditionUtils.getSkipCondition(step);
     return UnitStep.newBuilder()
         .setId(step.getIdentifier())
-        .setTaskId(pluginStepInfo.getCallbackId())
+        .setTaskId(callbackId)
         .setCallbackToken(delegateCallbackTokenSupplier.get().getToken())
         .setDisplayName(Optional.ofNullable(step.getName()).orElse(""))
         .setSkipCondition(Optional.ofNullable(skipCondition).orElse(""))

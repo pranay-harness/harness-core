@@ -7,6 +7,7 @@ import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.yaml.extended.reports.JunitTestReport;
 import io.harness.beans.yaml.extended.reports.UnitTestReport;
 import io.harness.callback.DelegateCallbackToken;
+import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.product.ci.engine.proto.Report;
 import io.harness.product.ci.engine.proto.RunStep;
@@ -18,24 +19,25 @@ import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
-import org.apache.commons.codec.binary.Base64;
 
 @Singleton
 public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStepInfo> {
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
-  @Override
-  public String serializeToBase64(StepElementConfig object) {
-    return Base64.encodeBase64String(serializeStep(object).toByteArray());
-  }
-
-  public UnitStep serializeStep(StepElementConfig step) {
+  public UnitStep serializeStep(StepElementConfig step, Integer port, String callbackId) {
     CIStepInfo ciStepInfo = (CIStepInfo) step.getStepSpecType();
     RunStepInfo runStepInfo = (RunStepInfo) ciStepInfo;
 
+    if (callbackId == null) {
+      throw new CIStageExecutionException("CallbackId can not be null");
+    }
+
     RunStep.Builder runStepBuilder = RunStep.newBuilder();
     runStepBuilder.setCommand(runStepInfo.getCommand());
-    runStepBuilder.setContainerPort(runStepInfo.getPort());
+    if (port == null) {
+      throw new CIStageExecutionException("Port can not be null");
+    }
+    runStepBuilder.setContainerPort(port);
 
     List<UnitTestReport> reports = runStepInfo.getReports();
     if (isNotEmpty(reports)) {
@@ -59,7 +61,7 @@ public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStep
     String skipCondition = SkipConditionUtils.getSkipCondition(step);
     return UnitStep.newBuilder()
         .setId(step.getIdentifier())
-        .setTaskId(runStepInfo.getCallbackId())
+        .setTaskId(callbackId)
         .setCallbackToken(delegateCallbackTokenSupplier.get().getToken())
         .setDisplayName(Optional.ofNullable(runStepInfo.getDisplayName()).orElse(""))
         .setRun(runStepBuilder.build())

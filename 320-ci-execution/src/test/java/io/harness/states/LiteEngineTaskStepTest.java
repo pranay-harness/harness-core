@@ -17,7 +17,6 @@ import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ci.CIK8BuildTaskParams;
 import io.harness.delegate.beans.ci.k8s.CIContainerStatus;
 import io.harness.delegate.beans.ci.k8s.CiK8sTaskResponse;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
@@ -93,8 +92,8 @@ public class LiteEngineTaskStepTest extends CIExecutionTest {
   public void shouldObtainTask() {
     when(ciDelegateTaskExecutor.queueTask(eq(ambiance.getSetupAbstractionsMap()), any())).thenReturn("taskId");
 
-    when(buildSetupUtils.getBuildSetupTaskParams(eq(liteEngineTaskStepInfo), eq(ambiance)))
-        .thenReturn(CIK8BuildTaskParams.builder().build());
+    //    when(buildSetupUtils.getBuildSetupTaskParams(eq(liteEngineTaskStepInfo), eq(ambiance)))
+    //        .thenReturn(CIK8BuildTaskParams.builder().build());
 
     //    TaskRequest taskRequest =
     //        liteEngineTaskStep.obtainTask(ambiance, liteEngineTaskStepInfo, StepInputPackage.builder().build());
