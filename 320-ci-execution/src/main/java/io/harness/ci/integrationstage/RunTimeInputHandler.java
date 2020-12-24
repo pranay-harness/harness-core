@@ -8,7 +8,7 @@ import lombok.experimental.UtilityClass;
 public class RunTimeInputHandler {
   public boolean resolveGitClone(ParameterField<Boolean> cloneRepository) {
     if (cloneRepository == null || cloneRepository.isExpression() || cloneRepository.getValue() == null) {
-      return false;
+      return true;
     } else {
       return (boolean) cloneRepository.fetchFinalValue();
     }

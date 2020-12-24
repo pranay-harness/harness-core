@@ -24,7 +24,7 @@ public class CILiteEngineIntegrationStageModifier implements StageExecutionModif
 
   @Override
   public ExecutionElementConfig modifyExecutionPlan(ExecutionElementConfig execution,
-      StageElementConfig stageElementConfig, PlanCreationContext context, String podName) {
+      StageElementConfig stageElementConfig, PlanCreationContext context, String podName, CodeBase ciCodeBase) {
     log.info("Modifying execution plan to add lite entine step for integration stage {}",
         stageElementConfig.getIdentifier());
     //    CIExecutionArgs ciExecutionArgs =
@@ -44,7 +44,7 @@ public class CILiteEngineIntegrationStageModifier implements StageExecutionModif
                                           .executionSource(ManualExecutionSource.builder().branch("master").build())
                                           .buildNumberDetails(BuildNumberDetails.builder().buildNumber(10l).build())
                                           .build();
-    return getCILiteEngineTaskExecution(stageElementConfig, ciExecutionArgs, null, podName, execution.getUuid());
+    return getCILiteEngineTaskExecution(stageElementConfig, ciExecutionArgs, ciCodeBase, podName, execution.getUuid());
   }
 
   private ExecutionElementConfig getCILiteEngineTaskExecution(StageElementConfig integrationStage,
