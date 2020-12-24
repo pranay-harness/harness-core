@@ -22,6 +22,12 @@ message PlanCreationBlobResponse {
   map<string, YamlFieldBlob> dependencies = 2;
   string startingNodeId = 3;
   map<string, PlanCreationContextValue> context = 4;
+  GraphLayoutInfo graphLayoutInfo = 5;
+}
+
+message GraphLayoutInfo {
+  string startingNodeId = 1;
+  map<string, GraphLayoutNode> layoutNodes = 2;
 }
 
 message PlanCreationContextValue {
@@ -47,6 +53,5 @@ message FilterCreationBlobResponse {
   uint32 stageCount = 2;
   map<string, YamlFieldBlob> dependencies = 3;
   map<string, YamlFieldBlob> resolvedDependencies = 4;
-  map<string, GraphLayoutNode> layoutNodes = 5;
   string startingNodeId = 6;
 }

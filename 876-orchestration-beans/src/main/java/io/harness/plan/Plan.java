@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.PersistentEntity;
+import io.harness.pms.contracts.plan.GraphLayoutInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.mappers.PlanNodeProtoMapper;
@@ -46,11 +47,14 @@ public final class Plan implements PersistentEntity {
   @NotNull String startingNodeId;
 
   Map<String, String> setupAbstractions;
+  GraphLayoutInfo graphLayoutInfo;
 
-  Plan(List<PlanNodeProto> nodes, String startingNodeId, Map<String, String> setupAbstractions) {
+  Plan(List<PlanNodeProto> nodes, String startingNodeId, Map<String, String> setupAbstractions,
+      GraphLayoutInfo graphLayoutInfo) {
     this.nodes = nodes;
     this.startingNodeId = startingNodeId;
     this.setupAbstractions = setupAbstractions;
+    this.graphLayoutInfo = graphLayoutInfo;
   }
 
   public boolean isEmpty() {
@@ -76,18 +80,21 @@ public final class Plan implements PersistentEntity {
   // GENERATED WITH A COMBINATION OF @Singular and @Builder
 
   public static PlanBuilder builder() {
-    return new PlanBuilder(new ArrayList<>(), null, new HashMap<>());
+    return new PlanBuilder(new ArrayList<>(), null, new HashMap<>(), GraphLayoutInfo.newBuilder().build());
   }
 
   public static class PlanBuilder {
     private ArrayList<PlanNodeProto> nodes;
     private String startingNodeId;
     private Map<String, String> setupAbstractions;
+    private GraphLayoutInfo graphLayoutInfo;
 
-    public PlanBuilder(ArrayList<PlanNodeProto> nodes, String startingNodeId, Map<String, String> setupAbstractions) {
+    public PlanBuilder(ArrayList<PlanNodeProto> nodes, String startingNodeId, Map<String, String> setupAbstractions,
+        GraphLayoutInfo graphLayoutInfo) {
       this.nodes = nodes;
       this.startingNodeId = startingNodeId;
       this.setupAbstractions = setupAbstractions;
+      this.graphLayoutInfo = graphLayoutInfo;
     }
 
     public PlanBuilder node(PlanNode node) {
@@ -121,6 +128,11 @@ public final class Plan implements PersistentEntity {
       return this;
     }
 
+    public PlanBuilder layoutNodeInfo(GraphLayoutInfo layoutNodeInfo) {
+      this.graphLayoutInfo = layoutNodeInfo;
+      return this;
+    }
+
     public Plan build() {
       if (EmptyPredicate.isEmpty(this.nodes)) {
         return internalBuild();
@@ -142,7 +154,7 @@ public final class Plan implements PersistentEntity {
           nodes = Collections.unmodifiableList(new ArrayList<>(this.nodes));
       }
 
-      return new Plan(nodes, startingNodeId, setupAbstractions);
+      return new Plan(nodes, startingNodeId, setupAbstractions, graphLayoutInfo);
     }
 
     public String toString() {

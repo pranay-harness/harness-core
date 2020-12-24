@@ -108,10 +108,6 @@ public class FilterCreatorService {
         continue;
       }
       finalResponse.setStageCount(finalResponse.getStageCount() + response.getStageCount());
-      finalResponse.addLayoutNodes(response.getLayoutNodes());
-      if (EmptyPredicate.isNotEmpty(response.getStartingNodeId())) {
-        finalResponse.setStartingNodeId(response.getStartingNodeId());
-      }
       filterCreationResponseMerger.mergeFilterCreationResponse(finalResponse, response);
       finalResponse.addResolvedDependency(yamlField);
       if (isNotEmpty(response.getDependencies())) {

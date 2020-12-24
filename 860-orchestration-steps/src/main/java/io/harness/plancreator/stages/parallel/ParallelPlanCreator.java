@@ -3,12 +3,15 @@ package io.harness.plancreator.stages.parallel;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.contracts.plan.EdgeLayoutList;
+import io.harness.pms.contracts.plan.GraphLayoutNode;
 import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
 import io.harness.pms.sdk.core.facilitator.chilidren.ChildrenFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
+import io.harness.pms.sdk.core.plan.creation.beans.GraphLayoutResponse;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
@@ -75,6 +78,39 @@ public class ParallelPlanCreator extends ChildrenPlanCreator<YamlField> {
         .skipExpressionChain(true)
         .skipGraphType(SkipType.SKIP_NODE)
         .build();
+  }
+
+  @Override
+  public GraphLayoutResponse getLayoutNodeInfo(PlanCreationContext ctx, YamlField config) {
+    List<String> possibleSiblings = new ArrayList<>();
+    possibleSiblings.add("stage");
+    possibleSiblings.add("parallel");
+    YamlField nextSibling = ctx.getCurrentField().getNode().nextSiblingFromParentArray("parallel", possibleSiblings);
+
+    List<YamlField> children = getDependencyNodeIdsList(ctx);
+    List<String> childrenUuids =
+        children.stream().map(YamlField::getNode).map(YamlNode::getUuid).collect(Collectors.toList());
+    EdgeLayoutList.Builder stagesEdgesBuilder = EdgeLayoutList.newBuilder().addAllCurrentNodeChildren(childrenUuids);
+    if (nextSibling != null) {
+      stagesEdgesBuilder.addNextIds(nextSibling.getNode().getUuid());
+    }
+    Map<String, GraphLayoutNode> layoutNodeMap = children.stream().collect(Collectors.toMap(stageField
+        -> stageField.getNode().getUuid(),
+        stageField
+        -> GraphLayoutNode.newBuilder()
+               .setNodeUUID(stageField.getNode().getUuid())
+               .setNodeType("stage")
+               .setNodeIdentifier(stageField.getNode().getIdentifier())
+               .setEdgeLayoutList(EdgeLayoutList.newBuilder().build())
+               .build()));
+    GraphLayoutNode parallelNode = GraphLayoutNode.newBuilder()
+                                       .setNodeUUID(config.getNode().getUuid())
+                                       .setNodeType("parallel")
+                                       .setNodeIdentifier("parallel" + config.getNode().getUuid())
+                                       .setEdgeLayoutList(stagesEdgesBuilder.build())
+                                       .build();
+    layoutNodeMap.put(config.getNode().getUuid(), parallelNode);
+    return GraphLayoutResponse.builder().layoutNodes(layoutNodeMap).build();
   }
 
   private List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlField currentField) {

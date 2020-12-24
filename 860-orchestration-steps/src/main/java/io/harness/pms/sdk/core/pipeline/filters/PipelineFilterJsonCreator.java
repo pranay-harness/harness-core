@@ -32,20 +32,4 @@ public class PipelineFilterJsonCreator extends ChildrenFilterJsonCreator<Pipelin
   public PipelineFilter getFilterForGivenField() {
     return null;
   }
-
-  @Override
-  public String getStartingNodeId(FilterCreationContext filterCreationContext, PipelineInfoConfig pipelineInfoConfig) {
-    return StagesFilterJsonCreator.getStartingNodeId(
-        Preconditions.checkNotNull(filterCreationContext.getCurrentField().getNode().getField("stages")));
-  }
-
-  @Override
-  public Map<String, GraphLayoutNode> createLayoutNodeMap(
-      FilterCreationContext filterCreationContext, PipelineInfoConfig pipelineInfoConfig) {
-    Map<String, GraphLayoutNode> layoutNodeMap = new HashMap<>();
-    YamlField stagesYamlNode =
-        Preconditions.checkNotNull(filterCreationContext.getCurrentField().getNode().getField("stages"));
-    layoutNodeMap.putAll(StagesFilterJsonCreator.getStagesGraphLayoutNode(stagesYamlNode));
-    return layoutNodeMap;
-  }
 }

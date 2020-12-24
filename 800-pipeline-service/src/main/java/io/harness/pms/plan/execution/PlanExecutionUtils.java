@@ -18,6 +18,9 @@ public class PlanExecutionUtils {
     if (planCreationBlobResponse.getStartingNodeId() != null) {
       planBuilder.startingNodeId(planCreationBlobResponse.getStartingNodeId());
     }
+    if (planCreationBlobResponse.getGraphLayoutInfo() != null) {
+      planBuilder.layoutNodeInfo(planCreationBlobResponse.getGraphLayoutInfo());
+    }
     return planBuilder.build();
   }
 }

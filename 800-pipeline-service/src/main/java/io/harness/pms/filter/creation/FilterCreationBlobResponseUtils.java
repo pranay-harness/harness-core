@@ -15,18 +15,10 @@ public class FilterCreationBlobResponseUtils {
     if (response == null) {
       return;
     }
-    mergeStartingNodeId(builder, response.getResponse());
     mergeResolvedDependencies(builder, response.getResponse());
     mergeDependencies(builder, response.getResponse());
     mergeFilters(response, filters);
     updateStageCount(builder, response.getResponse());
-    mergeLayoutNodeMap(builder, response.getResponse());
-  }
-
-  public void mergeStartingNodeId(FilterCreationBlobResponse.Builder builder, FilterCreationBlobResponse response) {
-    if (EmptyPredicate.isNotEmpty(response.getStartingNodeId())) {
-      builder.setStartingNodeId(response.getStartingNodeId());
-    }
   }
 
   public void updateStageCount(
@@ -57,12 +49,6 @@ public class FilterCreationBlobResponseUtils {
           builder.putDependencies(key, value);
         }
       });
-    }
-  }
-
-  public void mergeLayoutNodeMap(FilterCreationBlobResponse.Builder builder, FilterCreationBlobResponse response) {
-    if (isNotEmpty(response.getLayoutNodesMap())) {
-      response.getLayoutNodesMap().forEach(builder::putLayoutNodes);
     }
   }
 }

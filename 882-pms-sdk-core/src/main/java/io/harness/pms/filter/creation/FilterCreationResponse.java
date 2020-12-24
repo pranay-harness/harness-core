@@ -19,8 +19,6 @@ import lombok.Data;
 public class FilterCreationResponse {
   PipelineFilter pipelineFilter;
   int stageCount;
-  String startingNodeId;
-  @Default Map<String, GraphLayoutNode> layoutNodes = new HashMap<>();
   @Default Map<String, YamlField> dependencies = new HashMap<>();
   @Default Map<String, YamlField> resolvedDependencies = new HashMap<>();
 
@@ -65,25 +63,6 @@ public class FilterCreationResponse {
     dependencies.put(nodeId, field);
   }
 
-  public void addLayoutNodes(Map<String, GraphLayoutNode> layoutNodes) {
-    if (EmptyPredicate.isEmpty(layoutNodes)) {
-      return;
-    }
-    layoutNodes.values().forEach(this::addLayoutNode);
-  }
-
-  public void addLayoutNode(GraphLayoutNode layoutNode) {
-    if (layoutNode == null) {
-      return;
-    }
-    if (layoutNodes == null) {
-      layoutNodes = new HashMap<>();
-    } else if (!(layoutNodes instanceof HashMap)) {
-      layoutNodes = new HashMap<>(layoutNodes);
-    }
-    layoutNodes.put(layoutNode.getNodeUUID(), layoutNode);
-  }
-
   public FilterCreationBlobResponse toBlobResponse() {
     FilterCreationBlobResponse.Builder finalBlobResponseBuilder = FilterCreationBlobResponse.newBuilder();
     if (pipelineFilter != null) {
@@ -102,14 +81,7 @@ public class FilterCreationResponse {
       }
     }
 
-    if (isNotEmpty(layoutNodes)) {
-      finalBlobResponseBuilder.putAllLayoutNodes(layoutNodes);
-    }
-
     finalBlobResponseBuilder.setStageCount(stageCount);
-    if (isNotEmpty(startingNodeId)) {
-      finalBlobResponseBuilder.setStartingNodeId(startingNodeId);
-    }
     return finalBlobResponseBuilder.build();
   }
 }

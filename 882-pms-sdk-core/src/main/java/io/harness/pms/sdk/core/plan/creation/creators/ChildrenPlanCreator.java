@@ -2,6 +2,7 @@ package io.harness.pms.sdk.core.plan.creation.creators;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.sdk.core.plan.PlanNode;
+import io.harness.pms.sdk.core.plan.creation.beans.GraphLayoutResponse;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 
@@ -20,6 +21,10 @@ public abstract class ChildrenPlanCreator<T> implements PartialPlanCreator<T> {
 
   public abstract PlanNode createPlanForParentNode(PlanCreationContext ctx, T config, List<String> childrenNodeIds);
 
+  public GraphLayoutResponse getLayoutNodeInfo(PlanCreationContext ctx, T config) {
+    return GraphLayoutResponse.builder().build();
+  }
+
   @Override
   public PlanCreationResponse createPlanForField(PlanCreationContext ctx, T config) {
     PlanCreationResponse finalResponse = PlanCreationResponse.builder().build();
@@ -36,6 +41,7 @@ public abstract class ChildrenPlanCreator<T> implements PartialPlanCreator<T> {
     }
 
     finalResponse.addNode(createPlanForParentNode(ctx, config, childrenNodeIds));
+    finalResponse.setGraphLayoutResponse(getLayoutNodeInfo(ctx, config));
     return finalResponse;
   }
 }

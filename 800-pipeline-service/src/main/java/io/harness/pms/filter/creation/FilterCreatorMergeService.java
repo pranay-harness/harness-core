@@ -68,13 +68,7 @@ public class FilterCreatorMergeService {
     FilterCreationBlobResponse response = obtainFiltersRecursively(services, dependencies, filters);
     validateFilterCreationBlobResponse(response);
 
-    return FilterCreatorMergeServiceResponse.builder()
-        .filters(filters)
-        .layoutNodeMap(response.getLayoutNodesMap())
-        .stageCount(response.getStageCount())
-        .startingNodeId(response.getStartingNodeId())
-        .processedYaml(processedYaml)
-        .build();
+    return FilterCreatorMergeServiceResponse.builder().filters(filters).stageCount(response.getStageCount()).build();
   }
 
   @VisibleForTesting
@@ -106,8 +100,6 @@ public class FilterCreatorMergeService {
       }
       FilterCreationBlobResponseUtils.mergeDependencies(responseBuilder, currIterResponse);
       FilterCreationBlobResponseUtils.updateStageCount(responseBuilder, currIterResponse);
-      FilterCreationBlobResponseUtils.mergeLayoutNodeMap(responseBuilder, currIterResponse);
-      FilterCreationBlobResponseUtils.mergeStartingNodeId(responseBuilder, currIterResponse);
     }
 
     return responseBuilder.build();
