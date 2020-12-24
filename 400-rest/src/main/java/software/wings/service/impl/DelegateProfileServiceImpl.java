@@ -16,6 +16,8 @@ import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.exception.InvalidRequestException;
+import io.harness.observer.Subject;
+import io.harness.service.intfc.DelegateProfileObserver;
 
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
@@ -30,6 +32,7 @@ import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
@@ -47,6 +50,8 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AuditServiceHelper auditServiceHelper;
+
+  @Getter private Subject<DelegateProfileObserver> delegateProfileSubject = new Subject<>();
 
   @Override
   public PageResponse<DelegateProfile> list(PageRequest<DelegateProfile> pageRequest) {
@@ -78,6 +83,8 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
   @Override
   public DelegateProfile update(DelegateProfile delegateProfile) {
+    DelegateProfile originalProfile = get(delegateProfile.getAccountId(), delegateProfile.getUuid());
+
     UpdateOperations<DelegateProfile> updateOperations = wingsPersistence.createUpdateOperations(DelegateProfile.class);
     setUnset(updateOperations, DelegateProfileKeys.name, delegateProfile.getName());
     setUnset(updateOperations, DelegateProfileKeys.description, delegateProfile.getDescription());
@@ -92,6 +99,10 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     wingsPersistence.update(query, updateOperations);
     DelegateProfile updatedDelegateProfile = get(delegateProfile.getAccountId(), delegateProfile.getUuid());
     log.info("Updated delegate profile: {}", updatedDelegateProfile.getUuid());
+
+    delegateProfileSubject.fireInform(
+        DelegateProfileObxxxxxxxx:onProfileUpdated, originalProfile, updatedDelegateProfile);
+
     auditServiceHelper.reportForAuditingUsingAccountId(
         delegateProfile.getAccountId(), delegateProfile, updatedDelegateProfile, Event.Type.UPDATE);
     log.info("Auditing update of Delegate Profile for accountId={}", delegateProfile.getAccountId());
