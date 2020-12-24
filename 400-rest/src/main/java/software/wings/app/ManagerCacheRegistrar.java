@@ -8,6 +8,7 @@ import io.harness.version.VersionInfoManager;
 
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.AuthToken;
+import software.wings.beans.User;
 import software.wings.beans.security.access.WhitelistConfig;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRestrictionInfo;
@@ -60,6 +61,15 @@ public class ManagerCacheRegistrar extends AbstractModule {
   public Cache<String, Integer> getTrialRegistrationEmailCache(HarnessCacheManager harnessCacheManager) {
     return harnessCacheManager.getCache(
         TRIAL_EMAIL_CACHE, String.class, Integer.class, AccessedExpiryPolicy.factoryOf(Duration.ONE_HOUR));
+  }
+
+  @Provides
+  @Named(USER_CACHE)
+  @Singleton
+  public Cache<String, User> getUserCache(
+      HarnessCacheManager harnessCacheManager, VersionInfoManager versionInfoManager) {
+    return harnessCacheManager.getCache(USER_CACHE, String.class, User.class,
+        AccessedExpiryPolicy.factoryOf(Duration.THIRTY_MINUTES), versionInfoManager.getVersionInfo().getBuildNo());
   }
 
   @Provides
@@ -122,6 +132,7 @@ public class ManagerCacheRegistrar extends AbstractModule {
     }, Names.named(HARNESS_API_KEY_CACHE)));
     mapBinder.addBinding(TRIAL_EMAIL_CACHE).to(Key.get(new TypeLiteral<Cache<String, Integer>>() {
     }, Names.named(TRIAL_EMAIL_CACHE)));
+    mapBinder.addBinding(USER_CACHE).to(Key.get(new TypeLiteral<Cache<String, User>>() {}, Names.named(USER_CACHE)));
     mapBinder.addBinding(APIKEY_CACHE).to(Key.get(new TypeLiteral<Cache<String, ApiKeyEntry>>() {
     }, Names.named(APIKEY_CACHE)));
     mapBinder.addBinding(NEW_RELIC_APPLICATION_CACHE)

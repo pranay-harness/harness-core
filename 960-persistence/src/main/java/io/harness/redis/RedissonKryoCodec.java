@@ -14,7 +14,6 @@ import io.harness.serializer.KryoSerializer;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Registration;
-import com.esotericsoftware.kryo.serializers.FieldSerializer;
 import com.esotericsoftware.kryo.util.IntMap;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -32,7 +31,6 @@ public class RedissonKryoCodec extends KryoCodec {
   public static synchronized Kryo kryo() {
     final ClassResolver classResolver = new ClassResolver();
     HKryo kryo = new HKryo(classResolver);
-    kryo.setDefaultSerializer(FieldSerializer.class);
 
     try {
       Reflections reflections = new Reflections("io.harness.serializer.kryo");

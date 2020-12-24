@@ -33,14 +33,12 @@ import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.beans.FeatureName;
-import io.harness.cache.HarnessCacheManager;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.segment.SegmentHandler;
@@ -67,7 +65,6 @@ import software.wings.beans.RoleType;
 import software.wings.beans.User;
 import software.wings.beans.User.Builder;
 import software.wings.beans.Workflow;
-import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.GenericDbCache;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.PermissionAttribute;
@@ -124,8 +121,6 @@ public class AuthServiceTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private SegmentHandler segmentHandler;
   @Mock FeatureFlagService featureFlagService;
-  @Mock private ConfigurationController configurationController;
-  @Mock private HarnessCacheManager harnessCacheManager;
   @Mock PortalConfig portalConfig;
   @Inject MainConfiguration mainConfiguration;
   @Inject @InjectMocks private UserService userService;
@@ -143,8 +138,6 @@ public class AuthServiceTest extends WingsBaseTest {
   public void setUp() throws Exception {
     initMocks(this);
     on(mainConfiguration).set("portal", portalConfig);
-    when(configurationController.isPrimary()).thenReturn(true);
-    when(harnessCacheManager.getCache(anyString(), eq(String.class), eq(User.class), any())).thenReturn(userCache);
     when(userCache.get(USER_ID)).thenReturn(User.Builder.anUser().uuid(USER_ID).build());
     when(authTokenCache.get(VALID_TOKEN)).thenReturn(new AuthToken(ACCOUNT_ID, USER_ID, 86400000L));
     when(authTokenCache.get(EXPIRED_TOKEN)).thenReturn(new AuthToken(ACCOUNT_ID, USER_ID, 0L));
