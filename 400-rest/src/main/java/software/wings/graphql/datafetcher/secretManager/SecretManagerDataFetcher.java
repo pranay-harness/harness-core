@@ -7,15 +7,13 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
+import io.harness.secretmanagers.SecretManagerConfigService;
 
-import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.schema.query.QLSecretManagerQueryParameters;
 import software.wings.graphql.schema.type.secretManagers.QLSecretManager;
 import software.wings.graphql.schema.type.secretManagers.QLSecretManager.QLSecretManagerBuilder;
-import software.wings.graphql.schema.type.secretManagers.QLSecretManager.QLSecretManagerKeys;
 import software.wings.security.annotations.AuthRule;
 
 import com.google.inject.Inject;
@@ -24,6 +22,7 @@ public class SecretManagerDataFetcher
     extends AbstractObjectDataFetcher<QLSecretManager, QLSecretManagerQueryParameters> {
   @Inject private HPersistence persistence;
   @Inject private SecretManagerController secretManagerController;
+  @Inject private SecretManagerConfigService secretManagerConfigService;
   private static final String SECURITY_MANAGER_DOES_NOT_EXIST_MSG = "Secret Manager does not exist";
 
   @Override
@@ -49,25 +48,10 @@ public class SecretManagerDataFetcher
   }
 
   private SecretManagerConfig getByName(String name, String accountId) {
-    SecretManagerConfig secretManager = null;
-    try (
-        HIterator<SecretManagerConfig> iterator = new HIterator<>(persistence.createQuery(SecretManagerConfig.class)
-                                                                      .disableValidation()
-                                                                      .filter(QLSecretManagerKeys.name, name)
-                                                                      .filter(SettingAttributeKeys.accountId, accountId)
-                                                                      .fetch())) {
-      if (iterator.hasNext()) {
-        secretManager = iterator.next();
-      }
-    }
-    return secretManager;
+    return secretManagerConfigService.getSecretManagerByName(accountId, name);
   }
 
   private SecretManagerConfig getById(String id, String accountId) {
-    SecretManagerConfig secretManagerConfig = persistence.get(SecretManagerConfig.class, id);
-    if (!secretManagerConfig.getAccountId().equals(accountId)) {
-      return null;
-    }
-    return secretManagerConfig;
+    return secretManagerConfigService.getSecretManager(accountId, id, true);
   }
 }

@@ -41,6 +41,7 @@ public class SecretManagersDataFetcher
   protected QLSecretManagerConnection fetchConnection(List<QLSecretManagerFilter> filters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
     Query<SecretManagerConfig> query = populateFilters(wingsPersistence, filters, SecretManagerConfig.class, true);
+    query.field(SecretManagerConfigKeys.ngMetadata).equal(null);
     query.order(Sort.descending(SecretManagerConfigKeys.createdAt));
     QLSecretManagerConnectionBuilder connectionBuilder = QLSecretManagerConnection.builder();
     connectionBuilder.pageInfo(dataFetcherUtils.populate(pageQueryParameters, query, secretManager -> {

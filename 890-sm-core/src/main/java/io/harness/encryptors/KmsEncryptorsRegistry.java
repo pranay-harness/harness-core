@@ -44,6 +44,7 @@ public class KmsEncryptorsRegistry {
     globalEncryptors = new EnumMap<>(EncryptionType.class);
     globalEncryptors.put(KMS, GLOBAL_AWS_KMS_ENCRYPTOR);
     globalEncryptors.put(GCP_KMS, GLOBAL_GCP_KMS_ENCRYPTOR);
+    globalEncryptors.put(LOCAL, LOCAL_ENCRYPTOR);
   }
 
   public KmsEncryptor getKmsEncryptor(EncryptionConfig encryptionConfig) {

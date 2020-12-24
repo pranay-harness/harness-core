@@ -1302,13 +1302,18 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   }
 
   private HIterator<EncryptedData> getEncryptedDataWithUsageRestrictionsIterator(String accountId) {
-    return new HIterator<>(
-        wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, accountId).fetch());
+    return new HIterator<>(wingsPersistence.createQuery(EncryptedData.class)
+                               .filter(EncryptedDataKeys.accountId, accountId)
+                               .field(EncryptedDataKeys.ngMetadata)
+                               .equal(null)
+                               .fetch());
   }
 
   private HIterator<SecretManagerConfig> getSecretManagerConfigWithUsageRestrictionsIterator(String accountId) {
     return new HIterator<>(wingsPersistence.createQuery(SecretManagerConfig.class)
                                .filter(SecretManagerConfigKeys.accountId, accountId)
+                               .field(SecretManagerConfigKeys.ngMetadata)
+                               .equal(null)
                                .fetch());
   }
 

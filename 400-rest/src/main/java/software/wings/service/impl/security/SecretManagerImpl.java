@@ -762,8 +762,11 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public void deleteByAccountId(String accountId) {
-    List<EncryptedData> encryptedDataList =
-        wingsPersistence.createQuery(EncryptedData.class).filter(EncryptedDataKeys.accountId, accountId).asList();
+    List<EncryptedData> encryptedDataList = wingsPersistence.createQuery(EncryptedData.class)
+                                                .filter(EncryptedDataKeys.accountId, accountId)
+                                                .field(EncryptedDataKeys.ngMetadata)
+                                                .equal(null)
+                                                .asList();
     for (EncryptedData encryptedData : encryptedDataList) {
       try {
         deleteSecret(accountId, encryptedData.getUuid(), new HashMap<>(), true);

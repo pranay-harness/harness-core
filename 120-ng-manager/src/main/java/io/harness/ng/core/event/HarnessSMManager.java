@@ -47,9 +47,7 @@ public class HarnessSMManager {
   @DefaultOrganization
   public boolean deleteHarnessSecretManager(
       String accountIdentifier, @OrgIdentifier String orgIdentifier, @ProjectIdentifier String projectIdentifier) {
-    return false;
-    // TODO{karan} Remove this comment once deletion logic is fixed for gcp kms config
-    // return secretManagerConnectorService.delete(accountIdentifier, orgIdentifier, projectIdentifier,
-    // HARNESS_SECRET_MANAGER_IDENTIFIER);
+    return secretManagerConnectorService.delete(
+        accountIdentifier, orgIdentifier, projectIdentifier, HARNESS_SECRET_MANAGER_IDENTIFIER);
   }
 }
