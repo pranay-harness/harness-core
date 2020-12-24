@@ -1,5 +1,8 @@
 package io.harness.cdng.creator.plan.stage;
 
+import static io.harness.pms.yaml.YAMLFieldNameConstants.PARALLEL;
+import static io.harness.pms.yaml.YAMLFieldNameConstants.STAGES;
+
 import io.harness.cdng.creator.plan.infrastructure.InfrastructurePmsPlanCreator;
 import io.harness.cdng.creator.plan.service.ServicePMSPlanCreator;
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
@@ -45,11 +48,12 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
     // Adding service child
     YamlField serviceField = ctx.getCurrentField().getNode().getField("spec").getNode().getField("service");
 
-    PlanNode servicePlanNode = ServicePMSPlanCreator.createPlanForServiceNode(
-        serviceField, ((DeploymentStageConfig) field.getStageType()).getService(), kryoSerializer);
-    planCreationResponseMap.put(serviceField.getNode().getUuid(),
-        PlanCreationResponse.builder().node(serviceField.getNode().getUuid(), servicePlanNode).build());
-
+    if (serviceField != null) {
+      PlanNode servicePlanNode = ServicePMSPlanCreator.createPlanForServiceNode(
+          serviceField, ((DeploymentStageConfig) field.getStageType()).getService(), kryoSerializer);
+      planCreationResponseMap.put(serviceField.getNode().getUuid(),
+          PlanCreationResponse.builder().node(serviceField.getNode().getUuid(), servicePlanNode).build());
+    }
     // Adding infrastructure node
     String infraDefNodeUuid = ctx.getCurrentField()
                                   .getNode()
@@ -130,6 +134,10 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
   }
 
   private boolean checkIfParentIsParallel(YamlField currentField) {
-    return YamlUtils.getGivenYamlNodeFromParentPath(currentField.getNode(), "parallel") != null;
+    YamlNode parallelNode = YamlUtils.findParentNode(currentField.getNode(), PARALLEL);
+    if (parallelNode != null) {
+      return YamlUtils.findParentNode(parallelNode, STAGES) != null;
+    }
+    return false;
   }
 }

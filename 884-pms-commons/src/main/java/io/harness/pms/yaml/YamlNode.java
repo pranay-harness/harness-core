@@ -1,7 +1,12 @@
 package io.harness.pms.yaml;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.Value;
 
@@ -49,10 +54,9 @@ public class YamlNode {
     List<YamlNode> yamlNodes = parentNode.parentNode.asArray();
     for (int i = 0; i < yamlNodes.size() - 1; i++) {
       YamlField givenNode = yamlNodes.get(i).getField(currentFieldName);
-      if (givenNode != null && givenNode.getNode().getUuid() != null) {
-        if (givenNode.getNode().getUuid().equals(this.getUuid())) {
-          return getMatchingFieldNameFromParent(yamlNodes.get(i + 1), new HashSet<>(possibleSiblingFieldNames));
-        }
+      if (givenNode != null && givenNode.getNode().getUuid() != null
+          && givenNode.getNode().getUuid().equals(this.getUuid())) {
+        return getMatchingFieldNameFromParent(yamlNodes.get(i + 1), new HashSet<>(possibleSiblingFieldNames));
       }
     }
     return null;
@@ -89,17 +93,15 @@ public class YamlNode {
 
   public String getUuid() {
     String uuidValue = getStringValue(UUID_FIELD_NAME);
-    if (uuidValue == null && parentNode != null) {
-      // This means that current node is of array type
-      if (parentNode.isObject()) {
-        List<YamlField> childFields = parentNode.fields();
-        for (YamlField childField : childFields) {
-          if (compareFirstChildOfArrayNode(childField.getNode(), this)) {
-            return parentNode.getUuid() + childField.getName();
-          }
+    // This means that current node is of array type
+    if (uuidValue == null && parentNode != null && parentNode.isObject()) {
+      List<YamlField> childFields = parentNode.fields();
+      for (YamlField childField : childFields) {
+        if (compareFirstChildOfArrayNode(childField.getNode(), this)) {
+          return parentNode.getUuid() + childField.getName();
         }
-        return null;
       }
+      return null;
     }
     return uuidValue;
   }
@@ -107,13 +109,10 @@ public class YamlNode {
   private boolean compareFirstChildOfArrayNode(YamlNode firstParent, YamlNode secondParent) {
     List<YamlNode> firstParentChildNodes = firstParent.asArray();
     List<YamlNode> secondParentChildNodes = secondParent.asArray();
-    if (firstParentChildNodes.size() == 0 || secondParentChildNodes.size() == 0) {
+    if (firstParentChildNodes.isEmpty() || secondParentChildNodes.isEmpty()) {
       return false;
     }
-    if (firstParentChildNodes.get(0).getUuid().equals(secondParentChildNodes.get(0).getUuid())) {
-      return true;
-    }
-    return false;
+    return firstParentChildNodes.get(0).getUuid().equals(secondParentChildNodes.get(0).getUuid());
   }
 
   public String getIdentifier() {
@@ -138,8 +137,11 @@ public class YamlNode {
   }
 
   public YamlField getField(String name) {
-    JsonNode value = getValueInternal(name);
-    return value == null ? null : new YamlField(name, new YamlNode(currJsonNode.findValue(name), this));
+    JsonNode valueFromField = getValueInternal(name);
+    if (valueFromField != null) {
+      return new YamlField(name, new YamlNode(valueFromField, this));
+    }
+    return null;
   }
 
   private JsonNode getValueInternal(String key) {
