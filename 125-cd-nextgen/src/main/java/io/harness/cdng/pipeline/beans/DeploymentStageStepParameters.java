@@ -1,5 +1,7 @@
 package io.harness.cdng.pipeline.beans;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
@@ -34,7 +36,7 @@ public class DeploymentStageStepParameters implements StepParameters {
     }
     DeploymentStageConfig stageType = (DeploymentStageConfig) config.getStageType();
     Map<String, Object> variablesMap = new HashMap<>();
-    if (stageType.getVariables() != null) {
+    if (isNotEmpty(stageType.getVariables())) {
       for (NGVariable variable : stageType.getVariables()) {
         variablesMap.put(variable.getName(), variable.getValue());
       }

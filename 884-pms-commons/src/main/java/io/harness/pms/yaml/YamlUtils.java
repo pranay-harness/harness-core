@@ -1,14 +1,15 @@
 package io.harness.pms.yaml;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.serializer.jackson.NGHarnessJacksonModule;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,6 +48,9 @@ public class YamlUtils {
 
   public <T> T read(String yaml, Class<T> cls) throws IOException {
     return mapper.readValue(yaml, cls);
+  }
+  public <T> T read(String yaml, TypeReference<T> valueTypeRef) throws IOException {
+    return mapper.readValue(yaml, valueTypeRef);
   }
 
   public String write(Object object) {
@@ -146,7 +150,7 @@ public class YamlUtils {
       return Collections.singletonList(getQNForNode(yamlNode, null));
     }
     String qualifiedName = getQNForNode(yamlNode, yamlNode.getParentNode());
-    if (EmptyPredicate.isEmpty(qualifiedName)) {
+    if (isEmpty(qualifiedName)) {
       return getQualifiedNameList(yamlNode.getParentNode(), fieldName);
     }
     if (qualifiedName.equals(fieldName)) {
@@ -225,6 +229,20 @@ public class YamlUtils {
       return getGivenYamlNodeFromParentPath(currentNode.getParentNode(), fieldName);
     }
     return requiredNode;
+  }
+
+  public YamlNode findParentNode(YamlNode currentNode, String parentName) {
+    if (isEmpty(currentNode.getUuid())) {
+      return null;
+    }
+    YamlNode parentNode = getGivenYamlNodeFromParentPath(currentNode, parentName);
+    if (parentNode == null) {
+      return null;
+    }
+    if (!parentNode.toString().contains(currentNode.getUuid())) {
+      return null;
+    }
+    return parentNode;
   }
 
   private YamlNode checkNodeIfParentIsObject(YamlNode parentNode, String fieldName) {

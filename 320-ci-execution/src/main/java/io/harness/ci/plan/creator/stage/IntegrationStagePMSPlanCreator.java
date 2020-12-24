@@ -5,6 +5,7 @@ import static io.harness.pms.yaml.YAMLFieldNameConstants.EXECUTION;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.PARALLEL;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.SPEC;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STAGE;
+import static io.harness.pms.yaml.YAMLFieldNameConstants.STAGES;
 
 import static java.lang.Character.toLowerCase;
 import static org.apache.commons.lang3.CharUtils.isAsciiAlphanumeric;
@@ -141,7 +142,11 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
   }
 
   private boolean checkIfParentIsParallel(YamlField currentField) {
-    return YamlUtils.getGivenYamlNodeFromParentPath(currentField.getNode(), PARALLEL) != null;
+    YamlNode parallelNode = YamlUtils.findParentNode(currentField.getNode(), PARALLEL);
+    if (parallelNode != null) {
+      return YamlUtils.findParentNode(parallelNode, STAGES) != null;
+    }
+    return false;
   }
 
   private String generatePodName(String identifier) {
