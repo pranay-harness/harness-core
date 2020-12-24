@@ -12,7 +12,6 @@ import static io.harness.delegate.task.citasks.cik8handler.SecretSpecBuilder.SEC
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
-import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
@@ -25,7 +24,6 @@ import io.harness.delegate.beans.ci.pod.CIK8PodParams;
 import io.harness.delegate.beans.ci.pod.CIK8ServicePodParams;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.pod.ContainerParams;
-import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector;
 import io.harness.delegate.beans.ci.pod.PVCParams;
 import io.harness.delegate.beans.ci.pod.PodParams;
 import io.harness.delegate.beans.ci.pod.SecretParams;
@@ -37,15 +35,14 @@ import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.task.citasks.CIBuildTaskHandler;
 import io.harness.delegate.task.citasks.cik8handler.params.CIConstants;
 import io.harness.delegate.task.citasks.cik8handler.pod.CIK8PodSpecBuilder;
-import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.CommandExecutionStatus;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -67,7 +64,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
 
   @NotNull private Type type = CIBuildTaskHandler.Type.GCP_K8;
 
-  private static final String IMAGE_ID_FORMAT = "%s-%s";
+  private static final String DOCKER_CONFIG_KEY = ".dockercfg";
 
   @Override
   public Type getType() {
@@ -171,9 +168,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     Optional.ofNullable(podParams.getContainerParamsList()).ifPresent(containerParamsList::addAll);
     Optional.ofNullable(podParams.getInitContainerParamsList()).ifPresent(containerParamsList::addAll);
 
-    Map<String, ImageDetailsWithConnector> imageDetailsById = new HashMap<>();
     for (CIK8ContainerParams containerParams : containerParamsList) {
-      ImageDetails imageDetails = containerParams.getImageDetailsWithConnector().getImageDetails();
       ConnectorDetails connectorDetails = containerParams.getImageDetailsWithConnector().getImageConnectorDetails();
       String registryUrl = null;
       if (connectorDetails != null && connectorDetails.getConnectorType() == ConnectorType.DOCKER) {
@@ -181,12 +176,23 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
         registryUrl = dockerConnectorDTO.getDockerRegistryUrl();
       }
       if (isNotBlank(registryUrl)) {
-        imageDetailsById.put(format(IMAGE_ID_FORMAT, imageDetails.getName(), imageDetails.getRegistryUrl()),
-            containerParams.getImageDetailsWithConnector());
+        Secret imgSecret = kubeCtlHandler.createRegistrySecret(
+            kubernetesClient, namespace, containerParams.getImageDetailsWithConnector());
+        if (imgSecret != null) {
+          switch (containerParams.getContainerType()) {
+            case SERVICE:
+            case PLUGIN:
+              String secretName = imgSecret.getMetadata().getName();
+              updateContainerWithSecretVariable("HARNESS_IMAGE_SECRET",
+                  SecretParams.builder().type(SecretParams.Type.TEXT).secretKey(DOCKER_CONFIG_KEY).build(), secretName,
+                  containerParams);
+              break;
+            default:
+              break;
+          }
+        }
       }
     }
-    imageDetailsById.forEach(
-        (imageId, imageDetails) -> kubeCtlHandler.createRegistrySecret(kubernetesClient, namespace, imageDetails));
   }
 
   private void createEnvVariablesSecrets(KubernetesClient kubernetesClient, String namespace,

@@ -35,7 +35,10 @@ import io.harness.delegate.task.citasks.cik8handler.pod.CIK8PodSpecBuilder;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 
+import com.google.common.collect.ImmutableMap;
 import io.fabric8.kubernetes.api.model.PodBuilder;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import java.io.UnsupportedEncodingException;
@@ -61,6 +64,14 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
   private static Integer storageMib = 100;
   private static String claimName = "pvc";
   private static String volume1 = "volume1";
+  private static String secretName = "foo";
+  private static Secret imgSecret = new SecretBuilder()
+                                        .withNewMetadata()
+                                        .withName(secretName)
+                                        .withNamespace(namespace)
+                                        .endMetadata()
+                                        .withData(ImmutableMap.of(".dockercfg", "test"))
+                                        .build();
 
   @Before
   public void setUp() {
@@ -119,7 +130,8 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
 
     when(k8sConnectorHelper.createKubernetesClient(any(ConnectorDetails.class))).thenReturn(kubernetesClient);
     doNothing().when(kubeCtlHandler).createGitSecret(kubernetesClient, namespace, gitConnectorDetails);
-    doNothing().when(kubeCtlHandler).createRegistrySecret(kubernetesClient, namespace, imageDetailsWithConnector);
+    when(kubeCtlHandler.createRegistrySecret(kubernetesClient, namespace, imageDetailsWithConnector))
+        .thenReturn(imgSecret);
     when(podSpecBuilder.createSpec((PodParams) cik8BuildTaskParams.getCik8PodParams())).thenReturn(podBuilder);
     doThrow(KubernetesClientException.class)
         .when(kubeCtlHandler)
@@ -145,7 +157,8 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
 
     when(k8sConnectorHelper.createKubernetesClient(any(ConnectorDetails.class))).thenReturn(kubernetesClient);
     when(secretSpecBuilder.decryptGitSecretVariables(gitConnectorDetails)).thenReturn(gitSecretData);
-    doNothing().when(kubeCtlHandler).createRegistrySecret(kubernetesClient, namespace, imageDetailsWithConnector);
+    when(kubeCtlHandler.createRegistrySecret(kubernetesClient, namespace, imageDetailsWithConnector))
+        .thenReturn(imgSecret);
     when(podSpecBuilder.createSpec((PodParams) cik8BuildTaskParams.getCik8PodParams())).thenReturn(podBuilder);
     when(kubeCtlHandler.createPod(kubernetesClient, podBuilder.build(), namespace)).thenReturn(podBuilder.build());
     when(kubeCtlHandler.waitUntilPodIsReady(
@@ -159,7 +172,7 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
-  public void executeTaskInternalWithPVC() throws UnsupportedEncodingException, TimeoutException, InterruptedException {
+  public void executeTaskInternalWithPVC() throws TimeoutException, InterruptedException {
     KubernetesClient kubernetesClient = mock(KubernetesClient.class);
     PodBuilder podBuilder = new PodBuilder();
 
@@ -168,7 +181,8 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
         cik8BuildTaskParams.getCik8PodParams().getContainerParamsList().get(0).getImageDetailsWithConnector();
 
     when(k8sConnectorHelper.createKubernetesClient(any(ConnectorDetails.class))).thenReturn(kubernetesClient);
-    doNothing().when(kubeCtlHandler).createRegistrySecret(kubernetesClient, namespace, imageDetailsWithConnector);
+    when(kubeCtlHandler.createRegistrySecret(kubernetesClient, namespace, imageDetailsWithConnector))
+        .thenReturn(imgSecret);
     doNothing().when(kubeCtlHandler).createPVC(kubernetesClient, namespace, claimName, storageClass, storageMib);
     when(podSpecBuilder.createSpec((PodParams) cik8BuildTaskParams.getCik8PodParams())).thenReturn(podBuilder);
     when(kubeCtlHandler.createPod(kubernetesClient, podBuilder.build(), namespace)).thenReturn(podBuilder.build());
@@ -201,7 +215,8 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
 
     when(k8sConnectorHelper.createKubernetesClient(any(ConnectorDetails.class))).thenReturn(kubernetesClient);
     doNothing().when(kubeCtlHandler).createGitSecret(kubernetesClient, namespace, gitConnectorDetails);
-    doNothing().when(kubeCtlHandler).createRegistrySecret(kubernetesClient, namespace, imageDetailsWithConnector);
+    when(kubeCtlHandler.createRegistrySecret(kubernetesClient, namespace, imageDetailsWithConnector))
+        .thenReturn(imgSecret);
     when(kubeCtlHandler.fetchCustomVariableSecretKeyMap(getSecretVariableDetails())).thenReturn(getCustomVarSecret());
     when(kubeCtlHandler.fetchConnectorsSecretKeyMap(publishArtifactEncryptedValues))
         .thenReturn(getPublishArtifactSecrets());
@@ -217,8 +232,7 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
-  public void executeTaskInternalWithServicePodSuccess()
-      throws UnsupportedEncodingException, TimeoutException, InterruptedException {
+  public void executeTaskInternalWithServicePodSuccess() throws TimeoutException, InterruptedException {
     KubernetesClient kubernetesClient = mock(KubernetesClient.class);
     PodBuilder podBuilder = new PodBuilder();
 
@@ -236,7 +250,8 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
     when(k8sConnectorHelper.createKubernetesClient(any(ConnectorDetails.class))).thenReturn(kubernetesClient);
     when(secretSpecBuilder.decryptGitSecretVariables(cik8BuildTaskParams.getCik8PodParams().getGitConnector()))
         .thenReturn(gitSecretData);
-    doNothing().when(kubeCtlHandler).createRegistrySecret(kubernetesClient, namespace, imageDetailsWithConnector);
+    when(kubeCtlHandler.createRegistrySecret(kubernetesClient, namespace, imageDetailsWithConnector))
+        .thenReturn(imgSecret);
     when(kubeCtlHandler.fetchCustomVariableSecretKeyMap(getSecretVariableDetails())).thenReturn(getCustomVarSecret());
     when(kubeCtlHandler.fetchConnectorsSecretKeyMap(publishArtifactConnectors)).thenReturn(getPublishArtifactSecrets());
 
