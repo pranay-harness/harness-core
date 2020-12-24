@@ -4,35 +4,30 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 
-import software.wings.graphql.schema.type.aggregation.EntityFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLNumberFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTagFilter;
 
 import lombok.Builder;
-import lombok.ToString;
-import lombok.Value;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @OwnedBy(CDC)
-@Value
-@Builder
-@ToString
-public class QLExecutionFilter implements EntityFilter {
-  private QLIdFilter execution;
-  private QLIdFilter application;
-  private QLIdFilter service;
-  private QLIdFilter cloudProvider;
-  private QLIdFilter environment;
-  private QLIdFilter status;
-  private QLTimeFilter endTime;
-  private QLTimeFilter startTime;
-  private QLNumberFilter duration;
-  private QLIdFilter triggeredBy;
-  private QLIdFilter trigger;
-  private QLIdFilter workflow;
-  private QLIdFilter pipeline;
-  private QLTimeFilter creationTime;
-  private QLIdFilter pipelineExecutionId;
-  private QLDeploymentTagFilter tag;
+@Data
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+public class QLExecutionFilter extends QLBaseExecutionFilter {
+  QLIdFilter pipelineExecutionId;
+
+  @Builder
+  public QLExecutionFilter(QLIdFilter execution, QLIdFilter application, QLIdFilter service, QLIdFilter cloudProvider,
+      QLIdFilter environment, QLIdFilter status, QLTimeFilter endTime, QLTimeFilter startTime, QLNumberFilter duration,
+      QLIdFilter triggeredBy, QLIdFilter trigger, QLIdFilter workflow, QLIdFilter pipeline, QLTimeFilter creationTime,
+      QLDeploymentTagFilter tag, QLIdFilter pipelineExecutionId) {
+    super(execution, application, service, cloudProvider, environment, status, endTime, startTime, duration,
+        triggeredBy, trigger, workflow, pipeline, creationTime, tag);
+    this.pipelineExecutionId = pipelineExecutionId;
+  }
 }

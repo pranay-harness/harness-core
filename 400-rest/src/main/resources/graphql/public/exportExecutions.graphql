@@ -3,6 +3,24 @@ extend type Mutation {
   exportExecutions(input: ExportExecutionsInput!): ExportExecutionsPayload @dataFetcher(name: exportExecutions)
 }
 
+input ExportExecutionFilter {
+  execution: IdFilter
+  application: IdFilter
+  service: IdFilter
+  cloudProvider: IdFilter
+  environment: IdFilter
+  status: IdFilter
+  endTime: TimeFilter
+  startTime: TimeFilter
+  duration: NumberFilter
+  triggeredBy: IdFilter
+  trigger: IdFilter
+  workflow: IdFilter
+  pipeline: IdFilter
+  creationTime: TimeFilter
+  tag: DeploymentTagFilter
+}
+
 input ExportExecutionsInput {
   clientMutationId: String
   #Notify only the triggering user
@@ -10,7 +28,7 @@ input ExportExecutionsInput {
   #User group ids
   userGroupIds: [String!]
   #Execution filters
-  filters: [ExecutionFilter!]
+  filters: [ExportExecutionFilter!]
 }
 
 type ExportExecutionsPayload {

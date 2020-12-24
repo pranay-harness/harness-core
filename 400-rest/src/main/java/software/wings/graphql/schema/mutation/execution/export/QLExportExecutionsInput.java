@@ -7,7 +7,7 @@ import io.harness.beans.CreatedByType;
 import io.harness.execution.export.request.ExportExecutionsRequest.OutputFormat;
 import io.harness.execution.export.request.ExportExecutionsUserParams;
 
-import software.wings.graphql.datafetcher.execution.QLExecutionFilter;
+import software.wings.graphql.datafetcher.execution.QLBaseExecutionFilter;
 import software.wings.graphql.schema.mutation.QLMutationInput;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
@@ -26,7 +26,7 @@ public class QLExportExecutionsInput implements QLMutationInput {
   String clientMutationId;
   Boolean notifyOnlyTriggeringUser;
   List<String> userGroupIds;
-  List<QLExecutionFilter> filters;
+  List<QLBaseExecutionFilter> filters;
 
   public static ExportExecutionsUserParams toUserParams(QLExportExecutionsInput input) {
     return ExportExecutionsUserParams.builder()
