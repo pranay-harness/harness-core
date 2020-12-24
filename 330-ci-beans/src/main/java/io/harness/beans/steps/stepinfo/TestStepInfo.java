@@ -10,6 +10,7 @@ import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 
 import software.wings.jersey.JsonViews;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -39,6 +40,8 @@ public class TestStepInfo implements CIStepInfo {
           .stepInfoType(CIStepInfoType.TEST)
           .stepType(StepType.newBuilder().setType(CIStepInfoType.TEST.name()).build())
           .build();
+  @JsonIgnore
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.TEST.name()).build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;
@@ -72,7 +75,7 @@ public class TestStepInfo implements CIStepInfo {
 
   @Override
   public StepType getStepType() {
-    return typeInfo.getStepType();
+    return STEP_TYPE;
   }
 
   @Override

@@ -33,11 +33,11 @@ public class RestoreCacheS3StepInfo implements PluginCompatibleStep {
 
   @JsonView(JsonViews.Internal.class)
   @NotNull
-  public static final TypeInfo typeInfo =
-      TypeInfo.builder()
-          .stepInfoType(CIStepInfoType.RESTORE_CACHE_S3)
-          .stepType(StepType.newBuilder().setType(CIStepInfoType.RESTORE_CACHE_S3.name()).build())
-          .build();
+  public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.RESTORE_CACHE_S3).build();
+
+  @JsonIgnore
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(CIStepInfoType.RESTORE_CACHE_S3.name()).build();
 
   @JsonIgnore private String callbackId;
   @JsonIgnore private Integer port;
@@ -89,7 +89,7 @@ public class RestoreCacheS3StepInfo implements PluginCompatibleStep {
 
   @Override
   public StepType getStepType() {
-    return typeInfo.getStepType();
+    return STEP_TYPE;
   }
 
   @Override
