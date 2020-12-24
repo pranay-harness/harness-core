@@ -17,6 +17,7 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -26,7 +27,9 @@ import io.harness.delegate.beans.DelegateProfile.DelegateProfileBuilder;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.exception.InvalidRequestException;
+import io.harness.observer.Subject;
 import io.harness.rule.Owner;
+import io.harness.service.intfc.DelegateProfileObserver;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
@@ -37,6 +40,8 @@ import software.wings.service.impl.DelegateProfileServiceImpl;
 import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -53,6 +58,7 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
   public static final String ACCOUNT_NAME = "ACCOUNT_NAME";
   public static final String ACCOUNT_KEY = "ACCOUNT_KEY";
 
+  private Subject<DelegateProfileObserver> delegateProfileSubject = mock(Subject.class);
   @Mock private AuditServiceHelper auditServiceHelper;
   @InjectMocks @Inject private DelegateProfileServiceImpl delegateProfileService;
 
@@ -71,6 +77,11 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
         .version(VERSION)
         .status(Status.ENABLED)
         .lastHeartBeat(System.currentTimeMillis());
+  }
+
+  @Before
+  public void setup() throws IllegalAccessException {
+    FieldUtils.writeField(delegateProfileService, "delegateProfileSubject", delegateProfileSubject, true);
   }
 
   @Test
@@ -262,6 +273,8 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     assertThat(updatedDelegateProfile.isApprovalRequired()).isEqualTo(true);
     assertThat(updatedDelegateProfile.getSelectors()).isEqualTo(profileSelectors);
     assertThat(updatedDelegateProfile.getScopingRules()).containsExactly(rule);
+
+    verify(delegateProfileSubject).fireInform(any(), any(DelegateProfile.class), any(DelegateProfile.class));
   }
 
   @Test

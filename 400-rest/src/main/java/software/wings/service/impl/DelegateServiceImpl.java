@@ -57,6 +57,7 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.compare;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
@@ -140,6 +141,7 @@ import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateCallbackService;
+import io.harness.service.intfc.DelegateProfileObserver;
 import io.harness.service.intfc.DelegateSyncService;
 import io.harness.service.intfc.DelegateTaskResultsProvider;
 import io.harness.service.intfc.DelegateTaskSelectorMapService;
@@ -366,6 +368,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
   @Inject @Getter private Subject<DelegateObserver> subject = new Subject<>();
+  @Getter private Subject<DelegateProfileObserver> delegateProfileSubject = new Subject<>();
 
   private LoadingCache<String, String> delegateVersionCache = CacheBuilder.newBuilder()
                                                                   .maximumSize(10000)
@@ -686,14 +689,26 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public Delegate update(Delegate delegate) {
+    Delegate originalDelegate = get(delegate.getAccountId(), delegate.getUuid(), false);
+    boolean newProfileApplied = originalDelegate != null
+        && compare(originalDelegate.getDelegateProfileId(), delegate.getDelegateProfileId()) != 0;
+
     UpdateOperations<Delegate> updateOperations = getDelegateUpdateOperations(delegate);
 
+    Delegate updatedDelegate = null;
     if (ECS.equals(delegate.getDelegateType())) {
-      return updateEcsDelegate(delegate, true);
+      updatedDelegate = updateEcsDelegate(delegate, true);
     } else {
       log.info("Updating delegate : {}", delegate.getUuid());
-      return updateDelegate(delegate, updateOperations);
+      updatedDelegate = updateDelegate(delegate, updateOperations);
     }
+
+    if (newProfileApplied) {
+      delegateProfileSubject.fireInform(DelegateProfileObxxxxxxxx:onProfileApplied, delegate.getAccountId(),
+          delegate.getUuid(), delegate.getDelegateProfileId());
+    }
+
+    return updatedDelegate;
   }
 
   private Delegate updateEcsDelegate(Delegate delegate, boolean updateEntireEcsCluster) {

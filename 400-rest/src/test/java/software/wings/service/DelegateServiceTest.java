@@ -63,6 +63,7 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -104,12 +105,14 @@ import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.exception.WingsException;
 import io.harness.logstreaming.LogStreamingServiceConfig;
+import io.harness.observer.Subject;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Cache;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.serializer.KryoSerializer;
+import io.harness.service.intfc.DelegateProfileObserver;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.version.VersionInfo;
 import io.harness.version.VersionInfoManager;
@@ -238,6 +241,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private UsageLimitedFeature delegatesFeature;
 
   @Inject private WingsPersistence wingsPersistence;
+  private Subject<DelegateProfileObserver> delegateProfileSubject = mock(Subject.class);
 
   private Account account =
       anAccount().withLicenseInfo(LicenseInfo.builder().accountStatus(AccountStatus.ACTIVE).build()).build();
@@ -247,7 +251,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Before
-  public void setUp() {
+  public void setUp() throws IllegalAccessException {
     CdnConfig cdnConfig = new CdnConfig();
     cdnConfig.setUrl("http://localhost:9500");
     when(subdomainUrlHelper.getDelegateMetadataUrl(any(), any(), any()))
@@ -299,6 +303,8 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(broadcasterFactory.lookup(anyString(), anyBoolean())).thenReturn(broadcaster);
     when(versionInfoManager.getVersionInfo()).thenReturn(VersionInfo.builder().version(VERSION).build());
     //    when(delegatesFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(Integer.MAX_VALUE);
+
+    FieldUtils.writeField(delegateService, "delegateProfileSubject", delegateProfileSubject, true);
   }
 
   @Test
@@ -471,17 +477,21 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldUpdate() {
     String accountId = generateUuid();
+    String delegateProfileId = generateUuid();
+
     Delegate delegate = createDelegateBuilder().build();
     delegate.setAccountId(accountId);
     wingsPersistence.save(delegate);
     delegate.setLastHeartBeat(System.currentTimeMillis());
     delegate.setStatus(Status.DISABLED);
+    delegate.setDelegateProfileId(delegateProfileId);
     delegateService.update(delegate);
     Delegate updatedDelegate = wingsPersistence.get(Delegate.class, delegate.getUuid());
     assertThat(updatedDelegate).isEqualToIgnoringGivenFields(delegate, DelegateKeys.validUntil);
     verify(eventEmitter)
         .send(Channel.DELEGATES,
             anEvent().withOrgId(accountId).withUuid(delegate.getUuid()).withType(Type.UPDATE).build());
+    verify(delegateProfileSubject).fireInform(any(), eq(accountId), eq(delegate.getUuid()), eq(delegateProfileId));
   }
 
   @Test

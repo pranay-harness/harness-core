@@ -42,6 +42,7 @@ import io.harness.delay.DelayEventListener;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
+import io.harness.delegate.event.handler.DelegateProfileEventHandler;
 import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.event.EventsModule;
 import io.harness.event.listener.EventListener;
@@ -942,6 +943,13 @@ public class WingsApplication extends Application<MainConfiguration> {
     ApplicationManifestServiceImpl applicationManifestService =
         (ApplicationManifestServiceImpl) injector.getInstance(Key.get(ApplicationManifestService.class));
     applicationManifestService.getSubject().register(injector.getInstance(Key.get(ManifestPerpetualTaskManger.class)));
+
+    DelegateProfileServiceImpl delegateProfileService =
+        (DelegateProfileServiceImpl) injector.getInstance(Key.get(DelegateProfileService.class));
+    DelegateProfileEventHandler delegateProfileEventHandler =
+        injector.getInstance(Key.get(DelegateProfileEventHandler.class));
+    delegateService.getDelegateProfileSubject().register(delegateProfileEventHandler);
+    delegateProfileService.getDelegateProfileSubject().register(delegateProfileEventHandler);
 
     registerSharedObservers(injector);
   }
