@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>950-featire-flag</artifactId>
+    <artifactId>940-feature-flag</artifactId>
     <dependencies>
         <dependency>
             <groupId>de.bwaldvogel</groupId>
@@ -23,6 +23,16 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>950-events-api</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>950-events-api-proto</artifactId>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>

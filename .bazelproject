@@ -32,6 +32,7 @@ directories:
   930-ng-core-clients
   930-notification-service
   940-delegate-beans
+  940-feature-flag
   940-notification-client
   940-secret-manager-client
   950-command-library-common
@@ -41,7 +42,6 @@ directories:
   950-events-framework
   950-ng-core
   950-ng-project-n-orgs
-  950-feature-flag
   950-timeout-engine
   950-wait-engine
   950-walktree-visitor

@@ -9,43 +9,44 @@ import static io.harness.exception.WingsException.USER;
 
 import io.harness.eventsframework.account.AccountEntityChangeDTO;
 import io.harness.eventsframework.consumer.Message;
+import io.harness.exception.InvalidRequestException;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.Map;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
 public class AccountChangeEventMessageProcessor implements ConsumerMessageProcessor {
   private final HarnessSMManager harnessSMManager;
   private final DefaultOrganizationManager defaultOrganizationManager;
 
-  @Inject
-  public AccountChangeEventMessageProcessor(
-      HarnessSMManager harnessSMManager, DefaultOrganizationManager defaultOrganizationManager) {
-    this.harnessSMManager = harnessSMManager;
-    this.defaultOrganizationManager = defaultOrganizationManager;
-  }
-
   @Override
   public void processMessage(Message message) {
     if (!validateMessage(message)) {
-      log.error("Invalid message received by Account Change Event Processor");
-      return;
+      if (message != null) {
+        throw new InvalidRequestException(String.format(
+            "Invalid message received by Account Change Event Processor with message id %s", message.getId()));
+      } else {
+        throw new InvalidRequestException("Null message received by Account Change Event Processor");
+      }
     }
 
     AccountEntityChangeDTO accountEntityChangeDTO;
     try {
       accountEntityChangeDTO = AccountEntityChangeDTO.parseFrom(message.getMessage().getData());
     } catch (InvalidProtocolBufferException e) {
-      log.error("Exception in unpacking AccountEntityChangeDTO for key {}", message.getId(), e);
-      return;
+      throw new InvalidRequestException(
+          String.format("Exception in unpacking AccountEntityChangeDTO for key %s", message.getId()), e);
     }
 
     Map<String, String> metadataMap = message.getMessage().getMetadataMap();
-    if (metadataMap.containsKey(ACTION_METADATA)) {
+    if (metadataMap.get(ACTION_METADATA) != null) {
       switch (metadataMap.get(ACTION_METADATA)) {
         case CREATE_ACTION:
           processCreateAction(accountEntityChangeDTO);
@@ -59,6 +60,7 @@ public class AccountChangeEventMessageProcessor implements ConsumerMessageProces
   }
 
   private void processCreateAction(AccountEntityChangeDTO accountEntityChangeDTO) {
+    // TODO{karan} remove this try catch when implementing separately in 400-rest and 120-ng-manager
     try {
       harnessSMManager.createHarnessSecretManager(accountEntityChangeDTO.getAccountId(), null, null);
     } catch (Exception ex) {
@@ -69,8 +71,8 @@ public class AccountChangeEventMessageProcessor implements ConsumerMessageProces
 
     try {
       defaultOrganizationManager.createDefaultOrganization(accountEntityChangeDTO.getAccountId());
-    } catch (Exception ex) {
-      log.error(String.format("Failed to create Default Organization for accountIdentifier %s",
+    } catch (DuplicateKeyException ex) {
+      log.error(String.format("Default Organization for accountIdentifier %s already exists",
                     accountEntityChangeDTO.getAccountId()),
           ex, USER);
     }
@@ -88,23 +90,11 @@ public class AccountChangeEventMessageProcessor implements ConsumerMessageProces
                     accountEntityChangeDTO.getAccountId()),
           ex, USER);
     }
-
-    try {
-      if (!defaultOrganizationManager.deleteDefaultOrganization(accountEntityChangeDTO.getAccountId())) {
-        log.error(String.format("Default Organization could not be deleted for accountIdentifier %s",
-                      accountEntityChangeDTO.getAccountId()),
-            USER);
-      }
-    } catch (Exception ex) {
-      log.error(String.format("Default Organization could not be deleted for accountIdentifier %s",
-                    accountEntityChangeDTO.getAccountId()),
-          ex, USER);
-    }
+    defaultOrganizationManager.deleteDefaultOrganization(accountEntityChangeDTO.getAccountId());
   }
 
   private boolean validateMessage(Message message) {
     return message != null && message.hasMessage() && message.getMessage().getMetadataMap() != null
-        && message.getMessage().getMetadataMap().containsKey(ENTITY_TYPE_METADATA)
         && ACCOUNT_ENTITY.equals(message.getMessage().getMetadataMap().get(ENTITY_TYPE_METADATA));
   }
 }

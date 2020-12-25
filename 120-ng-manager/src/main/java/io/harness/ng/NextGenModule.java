@@ -6,6 +6,7 @@ import static io.harness.EntityCRUDEventsConstants.ACTIVITY_ENTITY;
 import static io.harness.EntityCRUDEventsConstants.ORGANIZATION_ENTITY;
 import static io.harness.EntityCRUDEventsConstants.PROJECT_ENTITY;
 import static io.harness.EntityCRUDEventsConstants.SETUP_USAGE_ENTITY;
+import static io.harness.ff.FeatureFlagServiceImpl.FEATURE_FLAG_STREAM;
 
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
@@ -49,6 +50,7 @@ import io.harness.ng.core.entityactivity.event.EntityActivityCrudEventMessagePro
 import io.harness.ng.core.entitysetupusage.event.SetupUsageChangeEventMessageProcessor;
 import io.harness.ng.core.event.AccountChangeEventMessageProcessor;
 import io.harness.ng.core.event.ConsumerMessageProcessor;
+import io.harness.ng.core.event.FeatureFlagChangeEventMessageProcessor;
 import io.harness.ng.core.event.OrganizationChangeEventMessageProcessor;
 import io.harness.ng.core.event.ProjectChangeEventMessageProcessor;
 import io.harness.ng.core.gitsync.GitChangeProcessorService;
@@ -274,6 +276,9 @@ public class NextGenModule extends AbstractModule {
     bind(ConsumerMessageProcessor.class)
         .annotatedWith(Names.named(ACTIVITY_ENTITY))
         .to(EntityActivityCrudEventMessageProcessor.class);
+    bind(ConsumerMessageProcessor.class)
+        .annotatedWith(Names.named(FEATURE_FLAG_STREAM))
+        .to(FeatureFlagChangeEventMessageProcessor.class);
   }
 
   private OrchestrationModuleConfig getOrchestrationConfig() {

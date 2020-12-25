@@ -2,6 +2,7 @@ package io.harness.ng.eventsframework;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.EntityCRUDEventsConstants.ENTITY_CRUD;
+import static io.harness.ff.FeatureFlagServiceImpl.FEATURE_FLAG_STREAM;
 
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.eventsframework.api.AbstractConsumer;
@@ -38,6 +39,9 @@ public class EventsFrameworkModule extends AbstractModule {
       bind(AbstractConsumer.class)
           .annotatedWith(Names.named(ENTITY_CRUD))
           .toInstance(NoOpConsumer.of(DUMMY_TOPIC_NAME, DUMMY_GROUP_NAME));
+      bind(AbstractConsumer.class)
+          .annotatedWith(Names.named(FEATURE_FLAG_STREAM))
+          .toInstance(NoOpConsumer.of(DUMMY_TOPIC_NAME, DUMMY_GROUP_NAME));
     } else {
       bind(AbstractProducer.class)
           .annotatedWith(Names.named(ENTITY_CRUD))
@@ -45,6 +49,9 @@ public class EventsFrameworkModule extends AbstractModule {
       bind(AbstractConsumer.class)
           .annotatedWith(Names.named(ENTITY_CRUD))
           .toInstance(RedisConsumer.of(ENTITY_CRUD, NG_MANAGER.getServiceId(), redisConfig));
+      bind(AbstractConsumer.class)
+          .annotatedWith(Names.named(FEATURE_FLAG_STREAM))
+          .toInstance(RedisConsumer.of(FEATURE_FLAG_STREAM, NG_MANAGER.getServiceId(), redisConfig));
     }
   }
 }

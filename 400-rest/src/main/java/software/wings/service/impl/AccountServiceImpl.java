@@ -305,7 +305,10 @@ public class AccountServiceImpl implements AccountService {
       }
 
       publishAccountChangeEvent(account);
-      publishAccountChangeEventViaEventFramework(account, CREATE_ACTION);
+      // TODO {karan} remove this if condition when NG is enabled globally for new accounts
+      if (fromDataGen) {
+        publishAccountChangeEventViaEventFramework(account, CREATE_ACTION);
+      }
 
       log.info("Successfully created account.");
     }

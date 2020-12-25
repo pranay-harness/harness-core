@@ -9,40 +9,42 @@ import static io.harness.exception.WingsException.USER;
 
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.project.ProjectEntityChangeDTO;
+import io.harness.exception.InvalidRequestException;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.Map;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
 public class ProjectChangeEventMessageProcessor implements ConsumerMessageProcessor {
   private final HarnessSMManager harnessSMManager;
 
-  @Inject
-  public ProjectChangeEventMessageProcessor(HarnessSMManager harnessSMManager) {
-    this.harnessSMManager = harnessSMManager;
-  }
-
   @Override
   public void processMessage(Message message) {
     if (!validateMessage(message)) {
-      log.error("Invalid message received by Project Change Event Processor");
-      return;
+      if (message != null) {
+        throw new InvalidRequestException(String.format(
+            "Invalid message received by Project Change Event Processor with message id %s", message.getId()));
+      } else {
+        throw new InvalidRequestException("Null message received by Project Change Event Processor");
+      }
     }
 
     ProjectEntityChangeDTO projectEntityChangeDTO;
     try {
       projectEntityChangeDTO = ProjectEntityChangeDTO.parseFrom(message.getMessage().getData());
     } catch (InvalidProtocolBufferException e) {
-      log.error("Exception in unpacking ProjectEntityChangeDTO for key {}", message.getId(), e);
-      return;
+      throw new InvalidRequestException(
+          String.format("Exception in unpacking ProjectEntityChangeDTO for key %s", message.getId()), e);
     }
 
     Map<String, String> metadataMap = message.getMessage().getMetadataMap();
-    if (metadataMap.containsKey(ACTION_METADATA)) {
+    if (metadataMap.get(ACTION_METADATA) != null) {
       switch (metadataMap.get(ACTION_METADATA)) {
         case CREATE_ACTION:
           processCreateAction(projectEntityChangeDTO);
@@ -92,7 +94,6 @@ public class ProjectChangeEventMessageProcessor implements ConsumerMessageProces
 
   private boolean validateMessage(Message message) {
     return message != null && message.hasMessage() && message.getMessage().getMetadataMap() != null
-        && message.getMessage().getMetadataMap().containsKey(ENTITY_TYPE_METADATA)
         && PROJECT_ENTITY.equals(message.getMessage().getMetadataMap().get(ENTITY_TYPE_METADATA));
   }
 }

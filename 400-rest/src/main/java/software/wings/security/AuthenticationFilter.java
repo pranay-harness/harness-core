@@ -170,6 +170,11 @@ public class AuthenticationFilter implements ContainerRequestFilter {
       return;
     }
 
+    if (isNextGenManagerRequest(resourceInfo)) {
+      validateNextGenRequest(containerRequestContext);
+      return;
+    }
+
     if (isIdentityServiceOriginatedRequest(containerRequestContext)) {
       String identityServiceToken =
           substringAfter(containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION), IDENTITY_SERVICE_PREFIX);
@@ -195,11 +200,6 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
     // Bearer token validation is needed for environments without Gateway
     if (checkIfBearerTokenAndValidate(authorization, containerRequestContext)) {
-      return;
-    }
-
-    if (isNextGenManagerRequest(resourceInfo)) {
-      validateNextGenRequest(containerRequestContext);
       return;
     }
 

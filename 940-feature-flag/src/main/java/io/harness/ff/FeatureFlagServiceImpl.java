@@ -1,5 +1,6 @@
 package io.harness.ff;
 
+import static io.harness.beans.FeatureName.NEXT_GEN_ENABLED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -7,6 +8,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -16,13 +18,18 @@ import io.harness.beans.FeatureFlag.FeatureFlagKeys;
 import io.harness.beans.FeatureFlag.Scope;
 import io.harness.beans.FeatureName;
 import io.harness.configuration.DeployMode;
+import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.featureflag.FeatureFlagChangeDTO;
+import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
 
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -33,6 +40,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -42,6 +50,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Slf4j
 public class FeatureFlagServiceImpl implements FeatureFlagService {
   @Inject private HPersistence persistence;
+  public static final String FEATURE_FLAG_STREAM = "featureFlagStream";
+  @Inject(optional = true) @Nullable @Named(FEATURE_FLAG_STREAM) private AbstractProducer eventProducer;
 
   private long lastEpoch;
   private final Map<FeatureName, FeatureFlag> cache = new HashMap<>();
@@ -66,10 +76,31 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
                                                          .setOnInsert(FeatureFlagKeys.obsolete, false)
                                                          .setOnInsert(FeatureFlagKeys.enabled, false);
     FeatureFlag featureFlag = persistence.findAndModify(query, updateOperations, HPersistence.upsertReturnNewOptions);
+    if (NEXT_GEN_ENABLED.equals(featureName)) {
+      publishNGEnabledEvent(accountId, true);
+    }
     synchronized (cache) {
       cache.put(featureName, featureFlag);
     }
     log.info("Enabled feature name :[{}] for account id: [{}]", featureName.name(), accountId);
+  }
+
+  private void publishNGEnabledEvent(String accountId, boolean enable) {
+    try {
+      if (eventProducer != null) {
+        eventProducer.send(Message.newBuilder()
+                               .putAllMetadata(ImmutableMap.of("accountId", accountId))
+                               .setData(FeatureFlagChangeDTO.newBuilder()
+                                            .setAccountId(accountId)
+                                            .setEnable(enable)
+                                            .setFeatureName(NEXT_GEN_ENABLED.toString())
+                                            .build()
+                                            .toByteString())
+                               .build());
+      }
+    } catch (Exception ex) {
+      log.error("Failed to publish account change event for enabling next gen via event framework.", ex);
+    }
   }
 
   @Override
@@ -87,6 +118,9 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
       featureFlag.getAccountIds().remove(accountId);
     }
     persistence.save(featureFlag);
+    if (enabled && NEXT_GEN_ENABLED.equals(FeatureName.valueOf(featureName))) {
+      publishNGEnabledEvent(accountId, true);
+    }
     synchronized (cache) {
       cache.put(FeatureName.valueOf(featureName), featureFlag);
     }
@@ -274,6 +308,17 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
       return Optional.empty();
     }
     persistence.save(featureFlag);
+    if (NEXT_GEN_ENABLED.equals(FeatureName.valueOf(featureFlagName))) {
+      FeatureFlag existingFeatureFlag = featureFlagOptional.get();
+      Set<String> existingAccounts =
+          existingFeatureFlag.getAccountIds() != null ? existingFeatureFlag.getAccountIds() : emptySet();
+      Set<String> updatedAccounts = featureFlag.getAccountIds() != null ? featureFlag.getAccountIds() : emptySet();
+      updatedAccounts.forEach(account -> {
+        if (!existingAccounts.contains(account)) {
+          publishNGEnabledEvent(account, true);
+        }
+      });
+    }
     synchronized (cache) {
       cache.put(FeatureName.valueOf(featureFlagName), featureFlag);
     }
