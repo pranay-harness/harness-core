@@ -3,15 +3,19 @@ package io.harness.stateutils.buildstate;
 import static io.harness.executionplan.CIExecutionPlanTestHelper.GIT_CONNECTOR;
 import static io.harness.rule.OwnerRule.HARSH;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.category.element.UnitTests;
 import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.ci.beans.entities.LogServiceConfig;
+import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
@@ -23,6 +27,8 @@ import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -52,8 +58,11 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
   @Test
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
-  public void shouldFetBuildSetupTaskParams() throws Exception {
-    Ambiance ambiance = Ambiance.newBuilder().build();
+  public void shouldFetBuildSetupTaskParams() {
+    Map<String, String> setupAbstractions = new HashMap<>();
+    setupAbstractions.put("accountId", "foo");
+    Ambiance ambiance = Ambiance.newBuilder().putAllSetupAbstractions(setupAbstractions).build();
+    HashMap<String, String> taskIds = new HashMap<>();
     when(connectorUtils.getConnectorDetails(any(), eq(GIT_CONNECTOR)))
         .thenReturn(ciExecutionPlanTestHelper.getGitConnector());
     when(connectorUtils.getConnectorDetailsWithConversionInfo(any(), any()))
@@ -71,11 +80,46 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
                         .namespace("namespace")
                         .buildNumberDetails(BuildNumberDetails.builder().buildNumber(1L).build())
                         .build());
-    //
-    //    CIBuildSetupTaskParams buildSetupTaskParams = buildSetupUtils.getBuildSetupTaskParams(
-    //        ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackId(), ambiance);
-    //    assertThat(buildSetupTaskParams).isNotNull();
-    //    verify(logServiceUtils, times(1)).getLogServiceConfig();
-    //    verify(logServiceUtils, times(1)).getLogServiceToken(any());
+
+    CIBuildSetupTaskParams buildSetupTaskParams = buildSetupUtils.getBuildSetupTaskParams(
+        ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackId(), ambiance, taskIds);
+    assertThat(buildSetupTaskParams).isNotNull();
+    verify(logServiceUtils, times(1)).getLogServiceConfig();
+    verify(logServiceUtils, times(1)).getLogServiceToken(any());
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void shouldFetBuildSetupTaskParamsWithAccountConnector() {
+    Map<String, String> setupAbstractions = new HashMap<>();
+    setupAbstractions.put("accountId", "foo");
+    Ambiance ambiance = Ambiance.newBuilder().putAllSetupAbstractions(setupAbstractions).build();
+
+    HashMap<String, String> taskIds = new HashMap<>();
+    when(connectorUtils.getConnectorDetails(any(), eq(GIT_CONNECTOR)))
+        .thenReturn(ciExecutionPlanTestHelper.getGitAccountConnector());
+    when(connectorUtils.getConnectorDetailsWithConversionInfo(any(), any()))
+        .thenReturn(ConnectorDetails.builder().identifier("connectorId").build());
+
+    when(secretVariableUtils.getSecretVariableDetails(any(), any()))
+        .thenReturn(SecretVariableDetails.builder().build());
+    LogServiceConfig logServiceConfig = LogServiceConfig.builder().baseUrl("endpoint").globalToken("token").build();
+    when(logServiceUtils.getLogServiceConfig()).thenReturn(logServiceConfig);
+    when(logServiceUtils.getLogServiceToken(any())).thenReturn("token");
+    when(pmsEngineExpressionService.renderExpression(any(), any())).thenReturn(CLUSTER_NAME);
+    when(executionSweepingOutputResolver.resolve(any(), any()))
+        .thenReturn(K8PodDetails.builder()
+                        .clusterName("cluster")
+                        .namespace("namespace")
+                        .buildNumberDetails(BuildNumberDetails.builder().buildNumber(1L).build())
+                        .build());
+
+    CIBuildSetupTaskParams buildSetupTaskParams = buildSetupUtils.getBuildSetupTaskParams(
+        ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackIdReponameSet(), ambiance,
+        taskIds);
+    assertThat(buildSetupTaskParams).isNotNull();
+    verify(logServiceUtils, times(1)).getLogServiceConfig();
+    verify(logServiceUtils, times(1)).getLogServiceToken(any());
   }
 }

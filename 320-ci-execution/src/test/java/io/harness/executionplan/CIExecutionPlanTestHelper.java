@@ -93,6 +93,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
+import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
 import io.harness.encryption.Scope;
@@ -101,6 +102,8 @@ import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
+import io.harness.plancreator.execution.ExecutionElementConfig;
+import io.harness.plancreator.execution.ExecutionWrapperConfig;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.ParallelStepElement;
@@ -110,8 +113,6 @@ import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.intfc.Connector;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
-import io.harness.yaml.extended.ci.codebase.CodeBaseType;
-import io.harness.yaml.extended.ci.codebase.impl.GitHubCodeBase;
 
 import com.google.inject.Singleton;
 import graph.StepInfoGraph;
@@ -198,14 +199,20 @@ public class CIExecutionPlanTestHelper {
   }
 
   public CodeBase getCICodebase() {
-    return CodeBase.builder()
-        .codeBaseType(CodeBaseType.GIT_HUB)
-        .codeBaseSpec(GitHubCodeBase.builder().connectorRef(GIT_CONNECTOR).build())
-        .build();
+    return CodeBase.builder().connectorRef(GIT_CONNECTOR).build();
+  }
+
+  public CodeBase getCICodebaseWithRepoName() {
+    return CodeBase.builder().connectorRef(GIT_CONNECTOR).repoName("portal").build();
   }
 
   public ConnectorDetails getGitConnector() {
     ConnectorInfoDTO connectorInfo = getGitConnectorDTO().getConnectorInfo();
+    return buildConnector(connectorInfo);
+  }
+
+  public ConnectorDetails getGitAccountConnector() {
+    ConnectorInfoDTO connectorInfo = getGitConnectorDTOAccountLevel().getConnectorInfo();
     return buildConnector(connectorInfo);
   }
 
@@ -241,6 +248,7 @@ public class CIExecutionPlanTestHelper {
   }
 
   public LiteEngineTaskStepInfo getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackId() {
+    List<ExecutionWrapperConfig> steps = new ArrayList<>();
     return LiteEngineTaskStepInfo.builder()
         .identifier("liteEngineTask1")
         .buildJobEnvInfo(getCIBuildJobEnvInfoOnFirstPod())
@@ -248,6 +256,20 @@ public class CIExecutionPlanTestHelper {
         .steps(getExpectedExecutionElement(true))
         .accountId("accountId")
         .ciCodebase(getCICodebase())
+        .executionElementConfig(ExecutionElementConfig.builder().steps(steps).build())
+        .build();
+  }
+
+  public LiteEngineTaskStepInfo getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackIdReponameSet() {
+    List<ExecutionWrapperConfig> steps = new ArrayList<>();
+    return LiteEngineTaskStepInfo.builder()
+        .identifier("liteEngineTask1")
+        .buildJobEnvInfo(getCIBuildJobEnvInfoOnFirstPod())
+        .usePVC(true)
+        .steps(getExpectedExecutionElement(true))
+        .accountId("accountId")
+        .ciCodebase(getCICodebaseWithRepoName())
+        .executionElementConfig(ExecutionElementConfig.builder().steps(steps).build())
         .build();
   }
 
@@ -1066,6 +1088,31 @@ public class CIExecutionPlanTestHelper {
                                                 .url("https://github.com/wings-software/portal.git")
                                                 .branchName("master")
                                                 .gitAuthType(GitAuthType.HTTP)
+                                                .gitConnectionType(GitConnectionType.REPO)
+                                                .gitAuth(GitHTTPAuthenticationDTO.builder()
+                                                             .username("username")
+                                                             .passwordRef(SecretRefData.builder()
+                                                                              .identifier("gitPassword")
+                                                                              .scope(Scope.ACCOUNT)
+                                                                              .decryptedValue("password".toCharArray())
+                                                                              .build())
+                                                             .build())
+                                                .build())
+                           .build())
+        .build();
+  }
+
+  public ConnectorDTO getGitConnectorDTOAccountLevel() {
+    return ConnectorDTO.builder()
+        .connectorInfo(ConnectorInfoDTO.builder()
+                           .name("gitConnector")
+                           .identifier("gitConnector")
+                           .connectorType(ConnectorType.GIT)
+                           .connectorConfig(GitConfigDTO.builder()
+                                                .url("https://github.com/wings-software/")
+                                                .branchName("master")
+                                                .gitAuthType(GitAuthType.HTTP)
+                                                .gitConnectionType(GitConnectionType.ACCOUNT)
                                                 .gitAuth(GitHTTPAuthenticationDTO.builder()
                                                              .username("username")
                                                              .passwordRef(SecretRefData.builder()

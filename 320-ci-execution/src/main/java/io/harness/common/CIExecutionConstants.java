@@ -25,6 +25,7 @@ public class CIExecutionConstants {
   public static final String GIT_CLONE_DEPTH_ATTRIBUTE = "depth";
   public static final String GIT_URL_SUFFIX = ".git";
   public static final String GIT_SSH_URL_PREFIX = "git@";
+  public static final String PATH_SEPARATOR = "/";
 
   // Constant for run/plugin step images
   public static final String STEP_COMMAND = "/step-exec/.harness/bin/ci-addon";
