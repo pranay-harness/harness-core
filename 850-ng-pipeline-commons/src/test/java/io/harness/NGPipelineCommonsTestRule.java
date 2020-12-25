@@ -16,6 +16,8 @@ import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.sdk.PmsSdkConfiguration;
+import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.queue.QueueController;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
@@ -88,15 +90,6 @@ public class NGPipelineCommonsTestRule implements MethodRule, InjectorRuleMixin,
 
       @Provides
       @Singleton
-      public OrchestrationModuleConfig orchestrationModuleConfig() {
-        return OrchestrationModuleConfig.builder()
-            .serviceName("NG_PIPELINE_COMMONS_TEST")
-            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
-            .build();
-      }
-
-      @Provides
-      @Singleton
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder()
             .addAll(OrchestrationBeansRegistrars.morphiaConverters)
@@ -147,7 +140,13 @@ public class NGPipelineCommonsTestRule implements MethodRule, InjectorRuleMixin,
     modules.add(TimeModule.getInstance());
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
-    modules.add(NGPipelineCommonsModule.getInstance());
+    modules.add(
+        NGPipelineCommonsModule.getInstance(OrchestrationModuleConfig.builder()
+                                                .serviceName("NG_PIPELINE_COMMONS_TEST")
+                                                .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+                                                .build()));
+    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder().serviceName("ngPipelineCommonsTest").build();
+    modules.add(PmsSdkModule.getInstance(sdkConfig));
 
     return modules;
   }

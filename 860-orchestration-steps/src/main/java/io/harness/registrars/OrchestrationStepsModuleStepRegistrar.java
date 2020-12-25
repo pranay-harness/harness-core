@@ -17,7 +17,6 @@ import io.harness.steps.resourcerestraint.ResourceRestraintStep;
 import io.harness.steps.section.SectionStep;
 import io.harness.steps.section.chain.SectionChainStep;
 
-import com.google.inject.Injector;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
@@ -25,20 +24,20 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(CDC)
 @UtilityClass
 public class OrchestrationStepsModuleStepRegistrar {
-  public Map<StepType, Step> getEngineSteps(Injector injector) {
-    Map<StepType, Step> engineSteps = new HashMap<>();
+  public Map<StepType, Class<? extends Step>> getEngineSteps() {
+    Map<StepType, Class<? extends Step>> engineSteps = new HashMap<>();
 
-    engineSteps.put(BarrierStep.STEP_TYPE, injector.getInstance(BarrierStep.class));
-    engineSteps.put(ResourceRestraintStep.STEP_TYPE, injector.getInstance(ResourceRestraintStep.class));
-    engineSteps.put(ForkStep.STEP_TYPE, injector.getInstance(ForkStep.class));
-    engineSteps.put(SectionStep.STEP_TYPE, injector.getInstance(SectionStep.class));
-    engineSteps.put(DummyStep.STEP_TYPE, injector.getInstance(DummyStep.class));
-    engineSteps.put(SectionChainStep.STEP_TYPE, injector.getInstance(SectionChainStep.class));
-    engineSteps.put(DummySectionStep.STEP_TYPE, injector.getInstance(DummySectionStep.class));
-    engineSteps.put(PipelineSetupStep.STEP_TYPE, injector.getInstance(PipelineSetupStep.class));
-    engineSteps.put(StepGroupStep.STEP_TYPE, injector.getInstance(StepGroupStep.class));
-    engineSteps.put(NGForkStep.STEP_TYPE, injector.getInstance(NGForkStep.class));
-    engineSteps.put(NGSectionStep.STEP_TYPE, injector.getInstance(NGSectionStep.class));
+    engineSteps.put(BarrierStep.STEP_TYPE, BarrierStep.class);
+    engineSteps.put(ResourceRestraintStep.STEP_TYPE, ResourceRestraintStep.class);
+    engineSteps.put(ForkStep.STEP_TYPE, ForkStep.class);
+    engineSteps.put(SectionStep.STEP_TYPE, SectionStep.class);
+    engineSteps.put(DummyStep.STEP_TYPE, DummyStep.class);
+    engineSteps.put(SectionChainStep.STEP_TYPE, SectionChainStep.class);
+    engineSteps.put(DummySectionStep.STEP_TYPE, DummySectionStep.class);
+    engineSteps.put(PipelineSetupStep.STEP_TYPE, PipelineSetupStep.class);
+    engineSteps.put(StepGroupStep.STEP_TYPE, StepGroupStep.class);
+    engineSteps.put(NGForkStep.STEP_TYPE, NGForkStep.class);
+    engineSteps.put(NGSectionStep.STEP_TYPE, NGSectionStep.class);
 
     return engineSteps;
   }

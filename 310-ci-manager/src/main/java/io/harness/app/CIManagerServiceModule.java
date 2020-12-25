@@ -99,7 +99,8 @@ public class CIManagerServiceModule extends AbstractModule {
         .annotatedWith(Names.named("taskPollExecutor"))
         .toInstance(new ManagedScheduledExecutorService("TaskPoll-Thread"));
 
-    install(new CIExecutionServiceModule(ciManagerConfiguration.getCiExecutionServiceConfig()));
+    install(new CIExecutionServiceModule(
+        ciManagerConfiguration.getCiExecutionServiceConfig(), ciManagerConfiguration.getShouldConfigureWithPMS()));
     install(DelegateServiceDriverModule.getInstance());
     install(new DelegateServiceDriverGrpcClientModule(ciManagerConfiguration.getManagerServiceSecret(),
         ciManagerConfiguration.getManagerTarget(), ciManagerConfiguration.getManagerAuthority()));

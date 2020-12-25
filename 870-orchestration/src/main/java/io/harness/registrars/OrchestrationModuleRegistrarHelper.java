@@ -9,11 +9,13 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class OrchestrationModuleRegistrarHelper {
-  public void mergeEventHandlers(Map<OrchestrationEventType, Set<OrchestrationEventHandler>> finalHandlers,
-      Map<OrchestrationEventType, Set<OrchestrationEventHandler>> handlers) {
-    for (Map.Entry<OrchestrationEventType, Set<OrchestrationEventHandler>> entry : handlers.entrySet()) {
+  public void mergeEventHandlers(
+      Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> finalHandlers,
+      Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> handlers) {
+    for (Map.Entry<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> entry :
+        handlers.entrySet()) {
       if (finalHandlers.containsKey(entry.getKey())) {
-        Set<OrchestrationEventHandler> existing = finalHandlers.get(entry.getKey());
+        Set<Class<? extends OrchestrationEventHandler>> existing = finalHandlers.get(entry.getKey());
         existing.addAll(entry.getValue());
         finalHandlers.put(entry.getKey(), existing);
       } else {

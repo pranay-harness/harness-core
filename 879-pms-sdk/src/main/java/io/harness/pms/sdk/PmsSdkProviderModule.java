@@ -1,5 +1,7 @@
 package io.harness.pms.sdk;
 
+import static io.harness.pms.sdk.PmsSdkConfiguration.DeployMode.REMOTE;
+
 import io.harness.mongo.MongoConfig;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
@@ -11,17 +13,12 @@ import io.harness.pms.sdk.core.resolver.outcome.OutcomeGrpcServiceImpl;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingGrpcOutputService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
-import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.pms.sdk.execution.PmsNodeExecutionServiceGrpcImpl;
-import io.harness.serializer.KryoSerializer;
 
-import com.google.common.util.concurrent.Service;
-import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import java.util.Set;
 
 class PmsSdkProviderModule extends AbstractModule {
   private final PmsSdkConfiguration config;
@@ -41,22 +38,20 @@ class PmsSdkProviderModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(PmsNodeExecutionService.class).to(PmsNodeExecutionServiceGrpcImpl.class).in(Singleton.class);
-    bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingGrpcOutputService.class).in(Singleton.class);
-    bind(EngineExpressionService.class).to(EngineGrpcExpressionService.class).in(Singleton.class);
-    bind(OutcomeService.class).to(OutcomeGrpcServiceImpl.class).in(Singleton.class);
-  }
-
-  @Provides
-  @Singleton
-  public PipelineServiceInfoProvider pipelineServiceInfoProvider() {
-    return config.getPipelineServiceInfoProvider();
-  }
-
-  @Provides
-  @Singleton
-  public ExecutionSummaryModuleInfoProvider moduleInfoProvider() {
-    return config.getExecutionSummaryModuleInfoProvider();
+    if (config.getDeploymentMode().equals(REMOTE)) {
+      bind(PmsNodeExecutionService.class).to(PmsNodeExecutionServiceGrpcImpl.class).in(Singleton.class);
+      bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingGrpcOutputService.class).in(Singleton.class);
+      bind(EngineExpressionService.class).to(EngineGrpcExpressionService.class).in(Singleton.class);
+      bind(OutcomeService.class).to(OutcomeGrpcServiceImpl.class).in(Singleton.class);
+    }
+    if (config.getExecutionSummaryModuleInfoProviderClass() != null) {
+      bind(ExecutionSummaryModuleInfoProvider.class)
+          .to(config.getExecutionSummaryModuleInfoProviderClass())
+          .in(Singleton.class);
+    }
+    if (config.getPipelineServiceInfoProviderClass() != null) {
+      bind(PipelineServiceInfoProvider.class).to(config.getPipelineServiceInfoProviderClass()).in(Singleton.class);
+    }
   }
 
   @Provides
@@ -64,29 +59,17 @@ class PmsSdkProviderModule extends AbstractModule {
   public FilterCreationResponseMerger filterCreationResponseMerger() {
     return config.getFilterCreationResponseMerger();
   }
-
-  @Provides
-  @Singleton
-  public ServiceManager serviceManager(Set<Service> services) {
-    return new ServiceManager(services);
-  }
+  //
+  //  @Provides
+  //  @Singleton
+  //  public ServiceManager serviceManager(Set<Service> services) {
+  //    return new ServiceManager(services);
+  //  }
 
   @Provides
   @Singleton
   @Named("pmsSdkMongoConfig")
   public MongoConfig mongoConfig() {
     return config.getMongoConfig();
-  }
-
-  @Provides
-  @Singleton
-  public AsyncWaitEngine asyncWaitEngine() {
-    return config.getAsyncWaitEngine();
-  }
-
-  @Provides
-  @Singleton
-  public KryoSerializer kryoSerializer() {
-    return config.getKryoSerializer();
   }
 }

@@ -79,7 +79,12 @@ public class PipelineServiceModule extends AbstractModule {
     install(PipelineServiceGrpcModule.getInstance());
     install(new SpringPersistenceModule());
     install(PmsDelegateServiceDriverModule.getInstance());
-    install(OrchestrationModule.getInstance());
+    install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
+                                                .serviceName("PIPELINE")
+                                                .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+                                                .withPMS(false)
+                                                .isPipelineService(true)
+                                                .build()));
     install(OrchestrationVisualizationModule.getInstance());
     install(new AbstractModule() {
       @Override
@@ -162,16 +167,6 @@ public class PipelineServiceModule extends AbstractModule {
         .put(DelegateSyncTaskResponse.class, "pms_delegateSyncTaskResponses")
         .put(DelegateAsyncTaskResponse.class, "pms_delegateAsyncTaskResponses")
         .put(DelegateTaskProgressResponse.class, "pms_delegateTaskProgressResponses")
-        .build();
-  }
-
-  @Provides
-  @Singleton
-  public OrchestrationModuleConfig orchestrationModuleConfig() {
-    return OrchestrationModuleConfig.builder()
-        .serviceName("PIPELINE")
-        .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
-        .withPMS(true)
         .build();
   }
 

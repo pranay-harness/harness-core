@@ -52,21 +52,24 @@ import java.util.concurrent.TimeUnit;
 
 public class OrchestrationModule extends AbstractModule implements ServersModule {
   private static OrchestrationModule instance;
+  private final OrchestrationModuleConfig config;
 
-  public static OrchestrationModule getInstance() {
+  public static OrchestrationModule getInstance(OrchestrationModuleConfig orchestrationModuleConfig) {
     if (instance == null) {
-      instance = new OrchestrationModule();
+      instance = new OrchestrationModule(orchestrationModuleConfig);
     }
     return instance;
   }
 
-  private OrchestrationModule() {}
+  private OrchestrationModule(OrchestrationModuleConfig config) {
+    this.config = config;
+  }
 
   @Override
   protected void configure() {
     install(WaiterModule.getInstance());
     install(OrchestrationBeansModule.getInstance());
-    install(OrchestrationQueueModule.getInstance());
+    install(OrchestrationQueueModule.getInstance(config));
 
     bind(StateInspectionService.class).to(StateInspectionServiceImpl.class);
     bind(NodeExecutionService.class).to(NodeExecutionServiceImpl.class);
@@ -88,31 +91,33 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     // PMS Services
     bind(PmsSweepingOutputService.class).to(PmsSweepingOutputServiceImpl.class).in(Singleton.class);
     bind(PmsOutcomeService.class).to(PmsOutcomeServiceImpl.class).in(Singleton.class);
-    bind(PmsNodeExecutionService.class).to(PmsNodeExecutionServiceImpl.class).in(Singleton.class);
     bind(PmsEngineExpressionService.class).to(PmsEngineExpressionServiceImpl.class).in(Singleton.class);
 
-    bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingOutputServiceImpl.class).in(Singleton.class);
-    bind(EngineExpressionService.class).to(EngineExpressionServiceImpl.class);
-    bind(OutcomeService.class).to(OutcomeServiceImpl.class).in(Singleton.class);
+    if (!config.isWithPMS()) {
+      bind(PmsNodeExecutionService.class).to(PmsNodeExecutionServiceImpl.class).in(Singleton.class);
+      bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingOutputServiceImpl.class).in(Singleton.class);
+      bind(EngineExpressionService.class).to(EngineExpressionServiceImpl.class);
+      bind(OutcomeService.class).to(OutcomeServiceImpl.class).in(Singleton.class);
+    }
   }
 
   @Provides
   @Singleton
   @Named("EngineExecutorService")
-  public ExecutorService engineExecutionServiceThreadPool(OrchestrationModuleConfig config) {
+  public ExecutorService engineExecutionServiceThreadPool() {
     return ThreadPool.create(config.getCorePoolSize(), config.getMaxPoolSize(), config.getIdleTimeInSecs(),
         TimeUnit.SECONDS, new ThreadFactoryBuilder().setNameFormat("EngineExecutorService-%d").build());
   }
 
   @Provides
   @Singleton
-  public ExpressionEvaluatorProvider expressionEvaluatorProvider(OrchestrationModuleConfig config) {
+  public ExpressionEvaluatorProvider expressionEvaluatorProvider() {
     return config.getExpressionEvaluatorProvider();
   }
 
   @Provides
   @Named(OrchestrationPublisherName.PUBLISHER_NAME)
-  public String publisherName(OrchestrationModuleConfig config) {
+  public String publisherName() {
     return config.getPublisherName();
   }
 
@@ -126,5 +131,11 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
   @Override
   public List<Closeable> servers(Injector injector) {
     return asList(() -> injector.getInstance(TimerScheduledExecutorService.class).shutdownNow());
+  }
+
+  @Provides
+  @Singleton
+  public OrchestrationModuleConfig orchestrationModuleConfig() {
+    return config;
   }
 }

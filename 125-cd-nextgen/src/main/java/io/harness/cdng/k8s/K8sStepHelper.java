@@ -10,7 +10,6 @@ import static io.harness.steps.StepUtils.prepareTaskRequest;
 import static java.lang.String.format;
 
 import io.harness.beans.IdentifierRef;
-import io.harness.cdng.executionplan.CDStepDependencyKey;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.manifest.ManifestStoreType;
@@ -22,7 +21,7 @@ import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome;
-import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
+import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTaskType;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
@@ -48,8 +47,6 @@ import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.executionplan.stepsdependency.StepDependencyService;
-import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.executions.steps.LoggingMetadata;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
@@ -60,10 +57,11 @@ import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
-import io.harness.pms.expression.PmsEngineExpressionService;
+import io.harness.pms.expression.EngineExpressionService;
+import io.harness.pms.sdk.core.resolver.RefObjectUtil;
+import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
-import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
@@ -102,9 +100,9 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class K8sStepHelper {
   @Named(DEFAULT_CONNECTOR_SERVICE) @Inject private ConnectorService connectorService;
   @Inject private SecretManagerClientService secretManagerClientService;
-  @Inject private PmsEngineExpressionService pmsEngineExpressionService;
-  @Inject private StepDependencyService stepDependencyService;
+  @Inject private EngineExpressionService engineExpressionService;
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private OutcomeService outcomeService;
 
   String getReleaseName(InfrastructureOutcome infrastructure) {
     switch (infrastructure.getKind()) {
@@ -295,7 +293,7 @@ public class K8sStepHelper {
     }
 
     return valuesFileContents.stream()
-        .map(valuesFileContent -> pmsEngineExpressionService.renderExpression(ambiance, valuesFileContent))
+        .map(valuesFileContent -> engineExpressionService.renderExpression(ambiance, valuesFileContent))
         .collect(Collectors.toList());
   }
 
@@ -361,17 +359,13 @@ public class K8sStepHelper {
         .build();
   }
 
-  public TaskChainResponse startChainLink(K8sStepExecutor k8sStepExecutor, Ambiance ambiance,
-      K8sStepParameters k8sStepParameters, StepInputPackage inputPackage) {
-    StepDependencySpec serviceSpec = k8sStepParameters.getStepDependencySpecs().get(CDStepDependencyKey.SERVICE.name());
-    ServiceOutcome serviceOutcome =
-        CDStepDependencyUtils.getService(stepDependencyService, serviceSpec, inputPackage, k8sStepParameters, ambiance);
+  public TaskChainResponse startChainLink(
+      K8sStepExecutor k8sStepExecutor, Ambiance ambiance, K8sStepParameters k8sStepParameters) {
+    ServiceOutcome serviceOutcome = (ServiceOutcome) outcomeService.resolve(
+        ambiance, RefObjectUtil.getOutcomeRefObject(OutcomeExpressionConstants.SERVICE));
 
-    StepDependencySpec infraSpec =
-        k8sStepParameters.getStepDependencySpecs().get(CDStepDependencyKey.INFRASTRUCTURE.name());
-
-    InfrastructureOutcome infrastructureOutcome = CDStepDependencyUtils.getInfrastructure(
-        stepDependencyService, infraSpec, inputPackage, k8sStepParameters, ambiance);
+    InfrastructureOutcome infrastructureOutcome = (InfrastructureOutcome) outcomeService.resolve(
+        ambiance, RefObjectUtil.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
 
     Map<String, ManifestOutcome> manifestOutcomeMap = serviceOutcome.getManifests();
     Validator.notEmptyCheck("Manifests can't be empty", manifestOutcomeMap.keySet());

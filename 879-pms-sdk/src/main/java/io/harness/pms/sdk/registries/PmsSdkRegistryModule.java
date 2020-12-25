@@ -15,10 +15,16 @@ import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.facilitator.Facilitator;
-import io.harness.pms.sdk.core.registries.*;
+import io.harness.pms.sdk.core.registries.AdviserRegistry;
+import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
+import io.harness.pms.sdk.core.registries.OrchestrationEventHandlerRegistry;
+import io.harness.pms.sdk.core.registries.OrchestrationFieldRegistry;
+import io.harness.pms.sdk.core.registries.ResolverRegistry;
+import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.resolver.Resolver;
 import io.harness.pms.sdk.core.steps.Step;
-import io.harness.pms.sdk.registries.registrar.*;
+import io.harness.pms.sdk.registries.registrar.OrchestrationFieldRegistrar;
+import io.harness.pms.sdk.registries.registrar.ResolverRegistrar;
 import io.harness.pms.sdk.registries.registrar.local.PmsSdkAdviserRegistrar;
 import io.harness.pms.sdk.registries.registrar.local.PmsSdkFacilitatorRegistrar;
 import io.harness.pms.sdk.registries.registrar.local.PmsSdkOrchestrationEventRegistrars;
@@ -28,7 +34,10 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -58,11 +67,11 @@ public class PmsSdkRegistryModule extends AbstractModule {
 
   @Provides
   @Singleton
-  StepRegistry providesStateRegistry() {
+  StepRegistry providesStateRegistry(Injector injector) {
     StepRegistry stepRegistry = new StepRegistry();
-    Map<StepType, Step> engineSteps = config.getEngineSteps();
+    Map<StepType, Class<? extends Step>> engineSteps = config.getEngineSteps();
     if (EmptyPredicate.isNotEmpty(engineSteps)) {
-      engineSteps.forEach(stepRegistry::register);
+      engineSteps.forEach((k, v) -> stepRegistry.register(k, injector.getInstance(v)));
     }
     return stepRegistry;
   }
@@ -71,13 +80,13 @@ public class PmsSdkRegistryModule extends AbstractModule {
   @Singleton
   AdviserRegistry providesAdviserRegistry(Injector injector) {
     AdviserRegistry adviserRegistry = new AdviserRegistry();
-    Map<AdviserType, Adviser> engineAdvisers = config.getEngineAdvisers();
+    Map<AdviserType, Class<? extends Adviser>> engineAdvisers = config.getEngineAdvisers();
     if (EmptyPredicate.isEmpty(engineAdvisers)) {
       engineAdvisers = new HashMap<>();
     }
-    engineAdvisers.putAll(PmsSdkAdviserRegistrar.getEngineAdvisers(injector));
+    engineAdvisers.putAll(PmsSdkAdviserRegistrar.getEngineAdvisers());
     if (EmptyPredicate.isNotEmpty(engineAdvisers)) {
-      engineAdvisers.forEach(adviserRegistry::register);
+      engineAdvisers.forEach((k, v) -> adviserRegistry.register(k, injector.getInstance(v)));
     }
     return adviserRegistry;
   }
@@ -97,12 +106,12 @@ public class PmsSdkRegistryModule extends AbstractModule {
   @Singleton
   FacilitatorRegistry providesFacilitatorRegistry(Injector injector) {
     FacilitatorRegistry facilitatorRegistry = new FacilitatorRegistry();
-    Map<FacilitatorType, Facilitator> engineFacilitators = config.getEngineFacilitators();
+    Map<FacilitatorType, Class<? extends Facilitator>> engineFacilitators = config.getEngineFacilitators();
     if (EmptyPredicate.isEmpty(engineFacilitators)) {
       engineFacilitators = new HashMap<>();
     }
-    engineFacilitators.putAll(PmsSdkFacilitatorRegistrar.getEngineFacilitators(injector));
-    engineFacilitators.forEach(facilitatorRegistry::register);
+    engineFacilitators.putAll(PmsSdkFacilitatorRegistrar.getEngineFacilitators());
+    engineFacilitators.forEach((k, v) -> facilitatorRegistry.register(k, injector.getInstance(v)));
     return facilitatorRegistry;
   }
 
@@ -110,11 +119,15 @@ public class PmsSdkRegistryModule extends AbstractModule {
   @Singleton
   OrchestrationEventHandlerRegistry providesEventHandlerRegistry(Injector injector) {
     OrchestrationEventHandlerRegistry handlerRegistry = new OrchestrationEventHandlerRegistry();
-    Map<OrchestrationEventType, Set<OrchestrationEventHandler>> engineEventHandlersMap =
+    Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> engineEventHandlersMap =
         config.getEngineEventHandlersMap();
     if (EmptyPredicate.isNotEmpty(engineEventHandlersMap)) {
-      mergeEventHandlers(engineEventHandlersMap, PmsSdkOrchestrationEventRegistrars.getHandlers(injector));
-      engineEventHandlersMap.forEach((k, v) -> handlerRegistry.register(k, v));
+      mergeEventHandlers(engineEventHandlersMap, PmsSdkOrchestrationEventRegistrars.getHandlers());
+      engineEventHandlersMap.forEach((key, value) -> {
+        Set<OrchestrationEventHandler> eventHandlerSet = new HashSet<>();
+        value.forEach(v -> eventHandlerSet.add(injector.getInstance(v)));
+        handlerRegistry.register(key, eventHandlerSet);
+      });
     }
     return handlerRegistry;
   }
@@ -132,11 +145,13 @@ public class PmsSdkRegistryModule extends AbstractModule {
     return orchestrationFieldRegistry;
   }
 
-  private void mergeEventHandlers(Map<OrchestrationEventType, Set<OrchestrationEventHandler>> finalHandlers,
-      Map<OrchestrationEventType, Set<OrchestrationEventHandler>> handlers) {
-    for (Map.Entry<OrchestrationEventType, Set<OrchestrationEventHandler>> entry : handlers.entrySet()) {
+  private void mergeEventHandlers(
+      Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> finalHandlers,
+      Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> handlers) {
+    for (Map.Entry<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> entry :
+        handlers.entrySet()) {
       if (finalHandlers.containsKey(entry.getKey())) {
-        Set<OrchestrationEventHandler> existing = finalHandlers.get(entry.getKey());
+        Set<Class<? extends OrchestrationEventHandler>> existing = finalHandlers.get(entry.getKey());
         existing.addAll(entry.getValue());
         finalHandlers.put(entry.getKey(), existing);
       } else {

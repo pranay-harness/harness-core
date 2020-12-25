@@ -13,7 +13,6 @@ import io.harness.pms.sdk.core.facilitator.chilidren.ChildrenFacilitator;
 import io.harness.pms.sdk.core.facilitator.sync.SyncFacilitator;
 import io.harness.pms.sdk.core.facilitator.task.TaskFacilitator;
 
-import com.google.inject.Injector;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
@@ -21,16 +20,16 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(CDC)
 @UtilityClass
 public class PmsSdkFacilitatorRegistrar {
-  public Map<FacilitatorType, Facilitator> getEngineFacilitators(Injector injector) {
-    Map<FacilitatorType, Facilitator> engineFacilitators = new HashMap<>();
+  public Map<FacilitatorType, Class<? extends Facilitator>> getEngineFacilitators() {
+    Map<FacilitatorType, Class<? extends Facilitator>> engineFacilitators = new HashMap<>();
 
-    engineFacilitators.put(AsyncFacilitator.FACILITATOR_TYPE, injector.getInstance(AsyncFacilitator.class));
-    engineFacilitators.put(SyncFacilitator.FACILITATOR_TYPE, injector.getInstance(SyncFacilitator.class));
-    engineFacilitators.put(ChildFacilitator.FACILITATOR_TYPE, injector.getInstance(ChildFacilitator.class));
-    engineFacilitators.put(ChildrenFacilitator.FACILITATOR_TYPE, injector.getInstance(ChildrenFacilitator.class));
-    engineFacilitators.put(TaskFacilitator.FACILITATOR_TYPE, injector.getInstance(TaskFacilitator.class));
-    engineFacilitators.put(TaskChainFacilitator.FACILITATOR_TYPE, injector.getInstance(TaskChainFacilitator.class));
-    engineFacilitators.put(ChildChainFacilitator.FACILITATOR_TYPE, injector.getInstance(ChildChainFacilitator.class));
+    engineFacilitators.put(AsyncFacilitator.FACILITATOR_TYPE, AsyncFacilitator.class);
+    engineFacilitators.put(SyncFacilitator.FACILITATOR_TYPE, SyncFacilitator.class);
+    engineFacilitators.put(ChildFacilitator.FACILITATOR_TYPE, ChildFacilitator.class);
+    engineFacilitators.put(ChildrenFacilitator.FACILITATOR_TYPE, ChildrenFacilitator.class);
+    engineFacilitators.put(TaskFacilitator.FACILITATOR_TYPE, TaskFacilitator.class);
+    engineFacilitators.put(TaskChainFacilitator.FACILITATOR_TYPE, TaskChainFacilitator.class);
+    engineFacilitators.put(ChildChainFacilitator.FACILITATOR_TYPE, ChildChainFacilitator.class);
 
     return engineFacilitators;
   }

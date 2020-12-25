@@ -12,11 +12,10 @@ import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
-import io.harness.persistence.HPersistence;
 import io.harness.pms.exception.WingsExceptionMapper;
 import io.harness.pms.execution.registrar.PmsOrchestrationEventRegistrar;
 import io.harness.pms.sdk.PmsSdkConfiguration;
-import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
+import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.pms.triggers.scm.SCMGrpcClientModule;
 import io.harness.pms.triggers.service.TriggerWebhookExecutionService;
@@ -35,13 +34,7 @@ import io.harness.waiter.ProgressUpdateService;
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.Module;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
+import com.google.inject.*;
 import com.google.inject.name.Names;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -128,6 +121,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerResources(environment, injector);
     registerJerseyProviders(environment, injector);
     registerManagedBeans(environment, injector);
+
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     injector.getInstance(TriggerWebhookExecutionService.class).registerIterators();
 
@@ -140,13 +134,11 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   }
 
   private void getPmsSDKModules(List<Module> modules) {
-    Injector injector = Guice.createInjector(modules);
-    PmsSdkConfiguration sdkConfig =
-        PmsSdkConfiguration.builder()
-            .serviceName("pms")
-            .engineEventHandlersMap(PmsOrchestrationEventRegistrar.getEngineEventHandlers(injector))
-            .build();
-    modules.add(PmsSdkRegistryModule.getInstance(sdkConfig));
+    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
+                                        .serviceName("pms")
+                                        .engineEventHandlersMap(PmsOrchestrationEventRegistrar.getEngineEventHandlers())
+                                        .build();
+    modules.add(PmsSdkModule.getInstance(sdkConfig));
   }
 
   private void registerEventListeners(Injector injector) {

@@ -4,19 +4,15 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 
 import io.harness.maintenance.MaintenanceController;
 import io.harness.persistence.HPersistence;
-import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.sample.cv.creator.CvPipelineServiceInfoProvider;
 import io.harness.pms.sample.cv.creator.filters.CVFilterCreationResponseMerger;
 import io.harness.pms.sdk.PmsSdkConfiguration;
+import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
-import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
-import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
-import io.harness.pms.sdk.execution.beans.PipelineModuleInfo;
-import io.harness.pms.sdk.execution.beans.StageModuleInfo;
-import io.harness.serializer.KryoSerializer;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Module;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -24,6 +20,8 @@ import io.dropwizard.jersey.errors.EarlyEofExceptionMapper;
 import io.dropwizard.jersey.jackson.JsonProcessingExceptionMapper;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
@@ -57,43 +55,36 @@ public class CvServiceApplication extends Application<CvServiceConfiguration> {
   public void run(CvServiceConfiguration config, Environment environment) {
     log.info("Starting Pipeline Service Application ...");
     MaintenanceController.forceMaintenance(true);
-    Injector injector = Guice.createInjector(new CvServiceModule(config));
+    List<Module> modules = new ArrayList<>();
+    modules.add(new CvServiceModule(config));
+    modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(config)));
+    Injector injector = Guice.createInjector(modules);
 
     injector.getInstance(HPersistence.class);
     registerJerseyProviders(environment, injector);
 
-    PmsSdkConfiguration sdkConfig =
-        PmsSdkConfiguration.builder()
-            .deploymentMode(PmsSdkConfiguration.DeployMode.REMOTE)
-            .serviceName("cv")
-            .mongoConfig(config.getMongoConfig())
-            .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
-            .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
-            .pipelineServiceInfoProvider(injector.getInstance(CvPipelineServiceInfoProvider.class))
-            .filterCreationResponseMerger(new CVFilterCreationResponseMerger())
-            .asyncWaitEngine(injector.getInstance(AsyncWaitEngine.class))
-            .kryoSerializer(injector.getInstance(KryoSerializer.class))
-            .engineSteps(CvServiceStepRegistrar.getEngineSteps(injector))
-            .executionSummaryModuleInfoProvider(new ExecutionSummaryModuleInfoProvider() {
-              @Override
-              public PipelineModuleInfo getPipelineLevelModuleInfo(NodeExecutionProto nodeExecutionProto) {
-                return null;
-              }
-
-              @Override
-              public StageModuleInfo getStageLevelModuleInfo(NodeExecutionProto nodeExecutionProto) {
-                return null;
-              }
-            })
-            .build();
+    PmsSdkConfiguration sdkConfig = getPmsSdkConfiguration(config);
     try {
-      PmsSdkModule.initializeDefaultInstance(sdkConfig);
+      PmsSdkInitHelper.initializeSDKInstance(injector, sdkConfig);
     } catch (Exception e) {
       log.error("Failed To register pipeline sdk");
       System.exit(1);
     }
 
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private PmsSdkConfiguration getPmsSdkConfiguration(CvServiceConfiguration config) {
+    return PmsSdkConfiguration.builder()
+        .deploymentMode(PmsSdkConfiguration.DeployMode.REMOTE)
+        .serviceName("cv")
+        .mongoConfig(config.getMongoConfig())
+        .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
+        .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
+        .pipelineServiceInfoProviderClass(CvPipelineServiceInfoProvider.class)
+        .filterCreationResponseMerger(new CVFilterCreationResponseMerger())
+        .engineSteps(CvServiceStepRegistrar.getEngineSteps())
+        .build();
   }
 
   private void registerJerseyProviders(Environment environment, Injector injector) {

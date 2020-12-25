@@ -28,10 +28,10 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
+import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
-import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
-import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
+import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
@@ -46,14 +46,12 @@ import io.harness.serializer.CiExecutionRegistrars;
 import io.harness.serializer.ConnectorNextGenRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.KryoSerializer;
 import io.harness.serializer.OrchestrationRegistrars;
 import io.harness.serializer.PersistenceRegistrars;
 import io.harness.serializer.YamlBeansModuleRegistrars;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
-import io.harness.springdata.SpringPersistenceModule;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -211,7 +209,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     });
 
     modules.add(MongoModule.getInstance());
-    modules.add(new SpringPersistenceModule());
+    modules.add(new CIPersistenceModule(configuration.getShouldConfigureWithPMS()));
     addGuiceValidationModule(modules);
     modules.add(new CIManagerServiceModule(configuration));
 
@@ -234,16 +232,17 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
       }
     });
 
-    getPmsSDKModules(modules, configuration);
+    modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(configuration)));
+
     Injector injector = Guice.createInjector(modules);
-    registerPMSSDK(injector, configuration);
+    registerPMSSDK(configuration, injector);
     registerResources(environment, injector);
     registerWaitEnginePublishers(injector);
     registerManagedBeans(environment, injector);
     registerHealthCheck(environment, injector);
     registerAuthFilters(configuration, environment);
     registerExecutionPlanCreators(injector);
-    registerQueueListeners(injector);
+    registerQueueListeners(injector, configuration);
     registerStores(configuration, injector);
     scheduleJobs(injector);
     log.info("Starting app done");
@@ -277,52 +276,37 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     }
   }
 
-  private void getPmsSDKModules(List<Module> modules, CIManagerConfiguration appConfig) {
-    Injector injector = Guice.createInjector(modules);
-    boolean remote = false;
-    if (appConfig.getShouldConfigureWithPMS() != null && appConfig.getShouldConfigureWithPMS()) {
-      remote = true;
-    }
-    if (!remote) {
-      PmsSdkConfiguration sdkConfig =
-          PmsSdkConfiguration.builder()
-              .deploymentMode(DeployMode.LOCAL)
-              .serviceName("ci")
-              .asyncWaitEngine(injector.getInstance(AsyncWaitEngine.class))
-              .engineSteps(ExecutionRegistrar.getEngineSteps(injector))
-              .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers(injector))
-              .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators(injector))
-              .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers(injector))
-              .build();
-      modules.add(PmsSdkRegistryModule.getInstance(sdkConfig));
-    }
-  }
-
-  private void registerPMSSDK(Injector injector, CIManagerConfiguration config) {
-    if (config.getShouldConfigureWithPMS() != null && config.getShouldConfigureWithPMS()) {
-      PmsSdkConfiguration sdkConfig =
-          PmsSdkConfiguration.builder()
-              .deploymentMode(DeployMode.REMOTE)
-              .serviceName("ci")
-              .pipelineServiceInfoProvider(injector.getInstance(CIPipelineServiceInfoProvider.class))
-              .asyncWaitEngine(injector.getInstance(AsyncWaitEngine.class))
-              .mongoConfig(config.getPmsMongoConfig())
-              .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
-              .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
-              .filterCreationResponseMerger(new CIFilterCreationResponseMerger())
-              .engineSteps(ExecutionRegistrar.getEngineSteps(injector))
-              .executionSummaryModuleInfoProvider(injector.getInstance(CIModuleInfoProvider.class))
-              .kryoSerializer(injector.getInstance(KryoSerializer.class))
-              .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers(injector))
-              .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators(injector))
-              .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers(injector))
-              .build();
+  private void registerPMSSDK(CIManagerConfiguration config, Injector injector) {
+    PmsSdkConfiguration sdkConfig = getPmsSdkConfiguration(config);
+    if (sdkConfig.getDeploymentMode().equals(DeployMode.REMOTE)) {
       try {
-        PmsSdkModule.initializeDefaultInstance(sdkConfig);
+        PmsSdkInitHelper.initializeSDKInstance(injector, sdkConfig);
       } catch (Exception e) {
         throw new GeneralException("Fail to start ci manager because pms sdk registration failed", e);
       }
     }
+  }
+
+  private PmsSdkConfiguration getPmsSdkConfiguration(CIManagerConfiguration config) {
+    boolean remote = false;
+    if (config.getShouldConfigureWithPMS() != null && config.getShouldConfigureWithPMS()) {
+      remote = true;
+    }
+
+    return PmsSdkConfiguration.builder()
+        .deploymentMode(remote ? DeployMode.REMOTE : DeployMode.LOCAL)
+        .serviceName("ci")
+        .pipelineServiceInfoProviderClass(CIPipelineServiceInfoProvider.class)
+        .mongoConfig(config.getPmsMongoConfig())
+        .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
+        .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
+        .filterCreationResponseMerger(new CIFilterCreationResponseMerger())
+        .engineSteps(ExecutionRegistrar.getEngineSteps())
+        .executionSummaryModuleInfoProviderClass(CIModuleInfoProvider.class)
+        .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers())
+        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
+        .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers())
+        .build();
   }
 
   private void scheduleJobs(Injector injector) {
@@ -339,11 +323,14 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         .scheduleWithFixedDelay(injector.getInstance(ProgressUpdateService.class), 0L, 5L, TimeUnit.SECONDS);
   }
 
-  private void registerQueueListeners(Injector injector) {
+  private void registerQueueListeners(Injector injector, CIManagerConfiguration configuration) {
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class), 5);
     queueListenerController.register(injector.getInstance(OrchestrationEventListener.class), 1);
     queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
+    if (configuration.getShouldConfigureWithPMS()) {
+      queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 1);
+    }
   }
 
   private void registerManagedBeans(Environment environment, Injector injector) {

@@ -14,8 +14,6 @@ import io.harness.pms.sdk.core.facilitator.Facilitator;
 import io.harness.pms.sdk.core.pipeline.filters.FilterCreationResponseMerger;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.core.steps.Step;
-import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
-import io.harness.serializer.KryoSerializer;
 
 import java.util.Map;
 import java.util.Set;
@@ -30,15 +28,13 @@ public class PmsSdkConfiguration {
   MongoConfig mongoConfig;
   GrpcServerConfig grpcServerConfig;
   GrpcClientConfig pmsGrpcClientConfig;
-  PipelineServiceInfoProvider pipelineServiceInfoProvider;
+  Class<? extends PipelineServiceInfoProvider> pipelineServiceInfoProviderClass;
   FilterCreationResponseMerger filterCreationResponseMerger;
-  AsyncWaitEngine asyncWaitEngine;
-  KryoSerializer kryoSerializer;
-  Map<StepType, Step> engineSteps;
-  Map<AdviserType, Adviser> engineAdvisers;
-  Map<FacilitatorType, Facilitator> engineFacilitators;
-  Map<OrchestrationEventType, Set<OrchestrationEventHandler>> engineEventHandlersMap;
-  ExecutionSummaryModuleInfoProvider executionSummaryModuleInfoProvider;
+  Map<StepType, Class<? extends Step>> engineSteps;
+  Map<AdviserType, Class<? extends Adviser>> engineAdvisers;
+  Map<FacilitatorType, Class<? extends Facilitator>> engineFacilitators;
+  Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> engineEventHandlersMap;
+  Class<? extends ExecutionSummaryModuleInfoProvider> executionSummaryModuleInfoProviderClass;
 
   public enum DeployMode {
     LOCAL,

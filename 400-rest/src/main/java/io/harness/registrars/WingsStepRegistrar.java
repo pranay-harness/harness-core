@@ -11,7 +11,6 @@ import io.harness.redesign.states.http.chain.BasicHttpChainStep;
 import io.harness.redesign.states.shell.ShellScriptStep;
 import io.harness.redesign.states.wait.WaitStep;
 
-import com.google.inject.Injector;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
@@ -19,17 +18,17 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(CDC)
 @UtilityClass
 public class WingsStepRegistrar {
-  public Map<StepType, Step> getEngineSteps(Injector injector) {
-    Map<StepType, Step> engineSteps = new HashMap<>();
+  public Map<StepType, Class<? extends Step>> getEngineSteps() {
+    Map<StepType, Class<? extends Step>> engineSteps = new HashMap<>();
 
     // Add CORE/Example/Experimental States Here
-    engineSteps.put(BasicHttpStep.STEP_TYPE, injector.getInstance(BasicHttpStep.class));
-    engineSteps.put(WaitStep.STEP_TYPE, injector.getInstance(WaitStep.class));
-    engineSteps.put(ShellScriptStep.STEP_TYPE, injector.getInstance(ShellScriptStep.class));
-    engineSteps.put(EmailStep.STEP_TYPE, injector.getInstance(EmailStep.class));
-    engineSteps.put(BasicHttpChainStep.STEP_TYPE, injector.getInstance(BasicHttpChainStep.class));
+    engineSteps.put(BasicHttpStep.STEP_TYPE, BasicHttpStep.class);
+    engineSteps.put(WaitStep.STEP_TYPE, WaitStep.class);
+    engineSteps.put(ShellScriptStep.STEP_TYPE, ShellScriptStep.class);
+    engineSteps.put(EmailStep.STEP_TYPE, EmailStep.class);
+    engineSteps.put(BasicHttpChainStep.STEP_TYPE, BasicHttpChainStep.class);
 
-    engineSteps.putAll(OrchestrationStepsModuleStepRegistrar.getEngineSteps(injector));
+    engineSteps.putAll(OrchestrationStepsModuleStepRegistrar.getEngineSteps());
     return engineSteps;
   }
 }

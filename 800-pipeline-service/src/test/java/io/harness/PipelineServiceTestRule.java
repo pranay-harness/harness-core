@@ -14,6 +14,9 @@ import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.execution.registrar.PmsOrchestrationEventRegistrar;
+import io.harness.pms.sdk.PmsSdkConfiguration;
+import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.queue.QueueController;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
@@ -80,15 +83,6 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
 
       @Provides
       @Singleton
-      public OrchestrationModuleConfig orchestrationModuleConfig() {
-        return OrchestrationModuleConfig.builder()
-            .serviceName("PIPELINE_TEST")
-            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
-            .build();
-      }
-
-      @Provides
-      @Singleton
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder()
             .addAll(PipelineServiceModuleRegistrars.morphiaConverters)
@@ -119,7 +113,11 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
     modules.add(TimeModule.getInstance());
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
-    modules.add(OrchestrationModule.getInstance());
+    modules.add(
+        OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
+                                            .serviceName("PIPELINE_TEST")
+                                            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+                                            .build()));
 
     modules.add(mongoTypeModule(annotations));
 
@@ -140,6 +138,11 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
       }
     });
 
+    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
+                                        .serviceName("pmsTest")
+                                        .engineEventHandlersMap(PmsOrchestrationEventRegistrar.getEngineEventHandlers())
+                                        .build();
+    modules.add(PmsSdkModule.getInstance(sdkConfig));
     return modules;
   }
 

@@ -42,7 +42,7 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
   @Override
   public TaskChainResponse startChainLink(
       Ambiance ambiance, K8sBlueGreenStepParameters k8sBlueGreenStepParameters, StepInputPackage inputPackage) {
-    return k8sStepHelper.startChainLink(this, ambiance, k8sBlueGreenStepParameters, inputPackage);
+    return k8sStepHelper.startChainLink(this, ambiance, k8sBlueGreenStepParameters);
   }
 
   @Override

@@ -14,7 +14,6 @@ import io.harness.registrars.OrchestrationModuleRegistrarHelper;
 import io.harness.registrars.OrchestrationVisualizationModuleEventHandlerRegistrar;
 
 import com.google.common.collect.Sets;
-import com.google.inject.Injector;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -23,16 +22,15 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(CDC)
 @UtilityClass
 public class PmsOrchestrationEventRegistrar {
-  public Map<OrchestrationEventType, Set<OrchestrationEventHandler>> getEngineEventHandlers(Injector injector) {
-    Map<OrchestrationEventType, Set<OrchestrationEventHandler>> engineEventHandlersMap = new HashMap<>();
-    engineEventHandlersMap.put(
-        ORCHESTRATION_START, Sets.newHashSet(injector.getInstance(ExecutionSummaryCreateEventHandler.class)));
-    engineEventHandlersMap.put(
-        PLAN_EXECUTION_STATUS_UPDATE, Sets.newHashSet(injector.getInstance(ExecutionInfoUpdateEventHandler.class)));
+  public Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> getEngineEventHandlers() {
+    Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> engineEventHandlersMap =
+        new HashMap<>();
+    engineEventHandlersMap.put(ORCHESTRATION_START, Sets.newHashSet(ExecutionSummaryCreateEventHandler.class));
+    engineEventHandlersMap.put(PLAN_EXECUTION_STATUS_UPDATE, Sets.newHashSet(ExecutionInfoUpdateEventHandler.class));
     OrchestrationModuleRegistrarHelper.mergeEventHandlers(
-        engineEventHandlersMap, OrchestrationVisualizationModuleEventHandlerRegistrar.getEngineEventHandlers(injector));
+        engineEventHandlersMap, OrchestrationVisualizationModuleEventHandlerRegistrar.getEngineEventHandlers());
     OrchestrationModuleRegistrarHelper.mergeEventHandlers(
-        engineEventHandlersMap, OrchestrationModuleEventHandlerRegistrar.getEngineEventHandlers(injector));
+        engineEventHandlersMap, OrchestrationModuleEventHandlerRegistrar.getEngineEventHandlers());
     return engineEventHandlersMap;
   }
 }

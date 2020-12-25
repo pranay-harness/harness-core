@@ -18,4 +18,5 @@ public class OrchestrationModuleConfig {
   @Builder.Default long idleTimeInSecs = 10;
   @Builder.Default String publisherName = ORCHESTRATION;
   boolean withPMS;
+  boolean isPipelineService;
 }

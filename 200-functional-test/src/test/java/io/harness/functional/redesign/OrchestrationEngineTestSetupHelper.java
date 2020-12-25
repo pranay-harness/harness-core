@@ -44,6 +44,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.inject.Inject;
+import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import io.restassured.config.ObjectMapperConfig;
 import io.restassured.config.RestAssuredConfig;
 import io.restassured.config.SSLConfig;
@@ -83,6 +84,7 @@ public class OrchestrationEngineTestSetupHelper {
                       mapper.addMixIn(FailureInfo.class, FailureInfoTestMixin.class);
                       mapper.addMixIn(PlanNodeProto.class, PlanNodeProtoTestMixin.class);
                       mapper.addMixIn(StepOutcomeRef.class, StepOutcomeRefTestMixin.class);
+                      mapper.registerModule(new ProtobufModule());
                       return mapper;
                     }))
                     .sslConfig(new SSLConfig().relaxedHTTPSValidation()))

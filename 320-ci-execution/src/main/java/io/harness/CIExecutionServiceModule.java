@@ -11,15 +11,16 @@ import io.harness.waiter.OrchestrationNotifyEventListener;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
+import java.util.Optional;
 
 public class CIExecutionServiceModule extends AbstractModule {
   private CIExecutionServiceConfig ciExecutionServiceConfig;
+  private final Boolean withPMS;
 
   @Inject
-  public CIExecutionServiceModule(CIExecutionServiceConfig ciExecutionServiceConfig) {
+  public CIExecutionServiceModule(CIExecutionServiceConfig ciExecutionServiceConfig, Boolean withPMS) {
     this.ciExecutionServiceConfig = ciExecutionServiceConfig;
+    this.withPMS = withPMS;
   }
 
   @Override
@@ -29,20 +30,16 @@ public class CIExecutionServiceModule extends AbstractModule {
     install(OrchestrationVisualizationModule.getInstance());
     install(ExecutionPlanModule.getInstance());
 
-    install(NGPipelineCommonsModule.getInstance());
+    install(
+        NGPipelineCommonsModule.getInstance(OrchestrationModuleConfig.builder()
+                                                .serviceName("CI")
+                                                .withPMS(Optional.ofNullable(withPMS).orElse(false))
+                                                .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+                                                .publisherName(OrchestrationNotifyEventListener.ORCHESTRATION)
+                                                .maxPoolSize(10)
+                                                .build()));
     bind(CIBuildService.class).to(CIBuildServiceImpl.class);
     this.bind(CIExecutionServiceConfig.class).toInstance(this.ciExecutionServiceConfig);
     bind(CIPipelineExecutionService.class).to(CIPipelineExecutionServiceImpl.class);
-  }
-
-  @Provides
-  @Singleton
-  public OrchestrationModuleConfig orchestrationModuleConfig() {
-    return OrchestrationModuleConfig.builder()
-        .serviceName("CI")
-        .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
-        .publisherName(OrchestrationNotifyEventListener.ORCHESTRATION)
-        .maxPoolSize(10)
-        .build();
   }
 }

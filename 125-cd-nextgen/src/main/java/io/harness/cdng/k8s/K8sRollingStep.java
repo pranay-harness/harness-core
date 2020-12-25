@@ -42,7 +42,7 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
   @Override
   public TaskChainResponse startChainLink(
       Ambiance ambiance, K8sRollingStepParameters k8sRollingStepParameters, StepInputPackage inputPackage) {
-    return k8sStepHelper.startChainLink(this, ambiance, k8sRollingStepParameters, inputPackage);
+    return k8sStepHelper.startChainLink(this, ambiance, k8sRollingStepParameters);
   }
 
   public TaskChainResponse executeK8sTask(K8sManifestOutcome k8sManifestOutcome, Ambiance ambiance,

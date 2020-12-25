@@ -9,22 +9,13 @@ import static org.mockito.Mockito.doReturn;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
-import io.harness.cdng.executionplan.CDStepDependencyKey;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
-import io.harness.cdng.service.beans.ServiceOutcome;
-import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
-import io.harness.exception.InvalidArgumentsException;
-import io.harness.executionplan.stepsdependency.StepDependencyResolverContext;
-import io.harness.executionplan.stepsdependency.StepDependencyService;
-import io.harness.executionplan.stepsdependency.StepDependencySpec;
-import io.harness.executionplan.stepsdependency.bean.KeyAwareStepDependencySpec;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.rule.Owner;
 
 import java.util.ArrayList;
@@ -44,7 +35,6 @@ import org.mockito.junit.MockitoRule;
 public class K8sStepHelperTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
-  @Mock StepDependencyService stepDependencyService;
   @Mock private ConnectorService connectorService;
   @InjectMocks private K8sStepHelper k8sStepHelper;
 
@@ -146,39 +136,5 @@ public class K8sStepHelperTest extends CategoryTest {
         k8sStepHelper.getAggregatedValuesManifests(serviceManifestOutcomes);
     assertThat(aggregatedValuesManifests).hasSize(1);
     assertThat(aggregatedValuesManifests.get(0)).isEqualTo(valuesManifestOutcome);
-  }
-
-  @Test
-  @Owner(developers = VAIBHAV_SI)
-  @Category(UnitTests.class)
-  public void testStartChainLink() {
-    StepDependencySpec serviceSpec = KeyAwareStepDependencySpec.builder().key("SERVICE").build();
-    StepDependencySpec infraSpec = KeyAwareStepDependencySpec.builder().key("INFRA").build();
-    Map<String, StepDependencySpec> stepDependencySpecs = new HashMap<String, StepDependencySpec>() {
-      {
-        put(CDStepDependencyKey.SERVICE.name(), serviceSpec);
-        put(CDStepDependencyKey.INFRASTRUCTURE.name(), infraSpec);
-      }
-    };
-    K8sRollingStepInfo k8sRollingStepInfo =
-        K8sRollingStepInfo.infoBuilder().stepDependencySpecs(stepDependencySpecs).build();
-
-    Ambiance ambiance = Ambiance.newBuilder().build();
-    StepInputPackage stepInputPackage = StepInputPackage.builder().build();
-    StepDependencyResolverContext resolverContext =
-        CDStepDependencyUtils.getStepDependencyResolverContext(stepInputPackage, k8sRollingStepInfo, ambiance);
-
-    doReturn(Optional.empty()).when(stepDependencyService).resolve(serviceSpec, resolverContext);
-    assertThatThrownBy(() -> k8sStepHelper.startChainLink(null, ambiance, k8sRollingStepInfo, stepInputPackage))
-        .isInstanceOf(InvalidArgumentsException.class)
-        .hasMessageContaining("Service Dependency is not available");
-
-    ServiceOutcome serviceOutcome = ServiceOutcome.builder().build();
-    doReturn(Optional.of(serviceOutcome)).when(stepDependencyService).resolve(serviceSpec, resolverContext);
-
-    doReturn(Optional.empty()).when(stepDependencyService).resolve(infraSpec, resolverContext);
-    assertThatThrownBy(() -> k8sStepHelper.startChainLink(null, ambiance, k8sRollingStepInfo, stepInputPackage))
-        .isInstanceOf(InvalidArgumentsException.class)
-        .hasMessageContaining("Infrastructure Dependency is not available");
   }
 }

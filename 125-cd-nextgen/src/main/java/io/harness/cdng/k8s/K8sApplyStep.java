@@ -39,7 +39,7 @@ public class K8sApplyStep implements TaskChainExecutable<K8sApplyStepParameters>
   @Override
   public TaskChainResponse startChainLink(
       Ambiance ambiance, K8sApplyStepParameters k8sApplyStepParameters, StepInputPackage inputPackage) {
-    return k8sStepHelper.startChainLink(this, ambiance, k8sApplyStepParameters, inputPackage);
+    return k8sStepHelper.startChainLink(this, ambiance, k8sApplyStepParameters);
   }
 
   @Override
