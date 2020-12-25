@@ -71,6 +71,7 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
     YamlField executionField = ctx.getCurrentField().getNode().getField(SPEC).getNode().getField(EXECUTION);
 
     // YamlNode ciCodeBaseNode = YamlUtils.findParentNode(ctx.getCurrentField().getNode(), CI_CODE_BASE);
+    // TODO above method is not returning parent currently, using direct traversal
     YamlNode ciCodeBaseNode = ctx.getCurrentField()
                                   .getNode()
                                   .getParentNode()
@@ -79,6 +80,7 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
                                   .getField(CI_CODE_BASE)
                                   .getNode();
     CodeBase ciCodeBase = IntegrationStageUtils.getCiCodeBase(ciCodeBaseNode);
+    // TODO retrieval is not supported yet
     //    Object obj = ctx.getGlobalContext().get("webhookEventRepoType");
     //    Object obj1 = ctx.getGlobalContext().get("webhookEventType");
     //    Object obj2 = ctx.getGlobalContext().get(SetupAbstractionKeys.eventPayload);
