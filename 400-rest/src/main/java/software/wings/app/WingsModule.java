@@ -2,6 +2,7 @@ package software.wings.app;
 
 import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.EntityCRUDEventsConstants.ENTITY_CRUD;
+import static io.harness.ff.FeatureFlagServiceImpl.FEATURE_FLAG_STREAM;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
 import io.harness.OrchestrationModule;
@@ -831,7 +832,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
         configuration.getGrpcDelegateServiceClientConfig().getTarget(),
         configuration.getGrpcDelegateServiceClientConfig().getAuthority()));
     install(PersistentLockModule.getInstance());
-    install(FeatureFlagModule.getInstance());
     install(new AbstractModule() {
       @Override
       protected void configure() {
@@ -840,13 +840,20 @@ public class WingsModule extends AbstractModule implements ServersModule {
           bind(AbstractProducer.class)
               .annotatedWith(Names.named(ENTITY_CRUD))
               .toInstance(NoOpProducer.of("dummy_topic_name"));
+          bind(AbstractProducer.class)
+              .annotatedWith(Names.named(FEATURE_FLAG_STREAM))
+              .toInstance(NoOpProducer.of("dummy_topic_name"));
         } else {
           bind(AbstractProducer.class)
               .annotatedWith(Names.named(ENTITY_CRUD))
               .toInstance(RedisProducer.of(ENTITY_CRUD, redisConfig));
+          bind(AbstractProducer.class)
+              .annotatedWith(Names.named(FEATURE_FLAG_STREAM))
+              .toInstance(RedisProducer.of(FEATURE_FLAG_STREAM, redisConfig));
         }
       }
     });
+    install(FeatureFlagModule.getInstance());
 
     bind(MainConfiguration.class).toInstance(configuration);
     // RetryOnException Binding start

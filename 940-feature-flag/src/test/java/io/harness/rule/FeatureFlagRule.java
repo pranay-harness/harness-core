@@ -1,5 +1,11 @@
 package io.harness.rule;
 
+import static io.harness.ff.FeatureFlagServiceImpl.FEATURE_FLAG_STREAM;
+
+import static java.time.Duration.ofSeconds;
+
+import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.ff.FeatureFlagModule;
@@ -22,6 +28,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Names;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -81,6 +88,9 @@ public class FeatureFlagRule implements MethodRule, InjectorRuleMixin, MongoRule
       @Override
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
+        bind(AbstractProducer.class)
+            .annotatedWith(Names.named(FEATURE_FLAG_STREAM))
+            .toInstance(NoOpProducer.of("dummy_topic_name"));
       }
     });
 

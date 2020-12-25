@@ -50,28 +50,27 @@ public class EntityCRUDStreamConsumer implements Runnable {
         List<Message> messages = redisConsumer.read(2, TimeUnit.SECONDS);
         for (Message message : messages) {
           String messageId = message.getId();
-          processMessage(message);
+          try {
+            processMessage(message);
+          } catch (Exception ex) {
+            log.error(String.format("Error occurred in processing message with id %s", message.getId()), ex);
+            continue;
+          }
           redisConsumer.acknowledge(messageId);
         }
       }
     } catch (Exception ex) {
-      log.info("The consumer for entity crud stream ended", ex);
+      log.error("The consumer for entity crud stream ended", ex);
     }
   }
 
   private void processMessage(Message message) {
     if (message.hasMessage()) {
       Map<String, String> metadataMap = message.getMessage().getMetadataMap();
-      if (metadataMap != null && metadataMap.containsKey(ENTITY_TYPE_METADATA)) {
+      if (metadataMap != null && metadataMap.get(ENTITY_TYPE_METADATA) != null) {
         String entityType = metadataMap.get(ENTITY_TYPE_METADATA);
-        if (processorMap.containsKey(entityType)) {
-          try {
-            processorMap.get(entityType).processMessage(message);
-          } catch (Exception ex) {
-            log.error(String.format("Error occurred in processing message of entityType %s and id %s", entityType,
-                          message.getId()),
-                ex);
-          }
+        if (processorMap.get(entityType) != null) {
+          processorMap.get(entityType).processMessage(message);
         }
       }
     }

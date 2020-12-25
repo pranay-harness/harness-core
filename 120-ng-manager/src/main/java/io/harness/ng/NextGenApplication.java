@@ -22,6 +22,7 @@ import io.harness.maintenance.MaintenanceController;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.EtagFilter;
 import io.harness.ng.core.event.EntityCRUDStreamConsumer;
+import io.harness.ng.core.event.FeatureFlagStreamConsumer;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.NotFoundExceptionMapper;
@@ -170,6 +171,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void createConsumerThreadsToListenToEvents(Injector injector) {
     new Thread(injector.getInstance(EntityCRUDStreamConsumer.class)).start();
+    new Thread(injector.getInstance(FeatureFlagStreamConsumer.class)).start();
   }
 
   private void registerYamlSdk() {

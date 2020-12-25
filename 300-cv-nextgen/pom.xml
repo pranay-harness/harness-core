@@ -46,6 +46,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>940-feature-flag</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>940-notification-client</artifactId>
             <version>${project.parent.version}</version>
             <scope>compile</scope>
@@ -53,11 +58,6 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>940-secret-manager-client</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>950-feature-flag</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
