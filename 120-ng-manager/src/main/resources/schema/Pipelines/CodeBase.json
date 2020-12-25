@@ -1,34 +1,16 @@
 {
   "type": "object",
   "required": [
-    "spec",
-    "type"
+    "connectorRef",
+    "repoName"
   ],
   "properties": {
-    "type": {
-      "type": "string",
-      "enum": [
-        "GitHub"
-      ]
+    "connectorRef": {
+      "type": "string"
+    },
+    "repoName": {
+      "type": "string"
     }
   },
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "allOf": [
-    {
-      "if": {
-        "properties": {
-          "type": {
-            "const": "GitHub"
-          }
-        }
-      },
-      "then": {
-        "properties": {
-          "spec": {
-            "$ref": "#/definitions/GitHubCodeBase"
-          }
-        }
-      }
-    }
-  ]
+  "$schema": "http://json-schema.org/draft-07/schema#"
 }

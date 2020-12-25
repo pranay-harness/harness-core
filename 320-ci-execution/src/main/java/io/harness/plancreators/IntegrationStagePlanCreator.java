@@ -38,7 +38,6 @@ import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.serializer.KryoSerializer;
 import io.harness.states.IntegrationStageStep;
 import io.harness.yaml.core.ExecutionElement;
-import io.harness.yaml.extended.ci.codebase.impl.GitHubCodeBase;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -98,7 +97,7 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
                              -> new InvalidRequestException(
                                  "Execution arguments are empty for pipeline execution " + context.getAccountId()));
 
-    return ((GitHubCodeBase) ngPipeline.getCiCodebase().getCodeBaseSpec()).getConnectorRef();
+    return ngPipeline.getCiCodebase().getConnectorRef();
   }
 
   private String retrieveLastCommitSha(WebhookExecutionSource webhookExecutionSource) {

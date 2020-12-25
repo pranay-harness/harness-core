@@ -9,8 +9,6 @@ import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.variables.NumberNGVariable;
 import io.harness.yaml.core.variables.StringNGVariable;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
-import io.harness.yaml.extended.ci.codebase.CodeBaseType;
-import io.harness.yaml.extended.ci.codebase.impl.GitHubCodeBase;
 
 import com.esotericsoftware.kryo.Kryo;
 
@@ -25,7 +23,5 @@ public class YamlKryoRegistrar implements KryoRegistrar {
     kryo.register(ParallelStepElement.class, 35009);
     kryo.register(ParallelStageElement.class, 35010);
     kryo.register(CodeBase.class, 35011);
-    kryo.register(CodeBaseType.class, 35012);
-    kryo.register(GitHubCodeBase.class, 35013);
   }
 }

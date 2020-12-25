@@ -5,7 +5,6 @@ import static io.harness.common.BuildEnvironmentConstants.DRONE_NETRC_USERNAME;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_REMOTE_URL;
 import static io.harness.common.CICommonPodConstants.STEP_EXEC;
 import static io.harness.common.CIExecutionConstants.ACCESS_KEY_MINIO_VARIABLE;
-import static io.harness.common.CIExecutionConstants.GIT_SSH_URL_PREFIX;
 import static io.harness.common.CIExecutionConstants.GIT_URL_SUFFIX;
 import static io.harness.common.CIExecutionConstants.HARNESS_ACCOUNT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_BUILD_ID_VARIABLE;
@@ -16,10 +15,13 @@ import static io.harness.common.CIExecutionConstants.HARNESS_WORKSPACE;
 import static io.harness.common.CIExecutionConstants.LOCALHOST_IP;
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_TOKEN_VARIABLE;
+import static io.harness.common.CIExecutionConstants.PATH_SEPARATOR;
 import static io.harness.common.CIExecutionConstants.SECRET_KEY_MINIO_VARIABLE;
 import static io.harness.common.CIExecutionConstants.TI_SERVICE_ENDPOINT_VARIABLE;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -49,14 +51,15 @@ import io.harness.delegate.beans.ci.pod.PVCParams;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
+import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
-import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.git.GitClientHelper;
 import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
@@ -66,14 +69,9 @@ import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.product.ci.engine.proto.Execution;
 import io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
-import io.harness.yaml.extended.ci.codebase.CodeBaseSpec;
-import io.harness.yaml.extended.ci.codebase.CodeBaseType;
-import io.harness.yaml.extended.ci.codebase.impl.GitHubCodeBase;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -134,9 +132,10 @@ public class K8BuildSetupUtils {
     ConnectorDetails harnessInternalImageRegistryConnectorDetails =
         connectorUtils.getConnectorDetails(ngAccess, ciExecutionServiceConfig.getDefaultInternalImageConnector());
     ConnectorDetails gitConnector = getGitConnector(ngAccess, ciCodebase, skipGitClone);
+    Map<String, String> gitEnvVars = getGitEnvVariables(gitConnector, ciCodebase);
 
     List<CIK8ContainerParams> containerParamsList = getContainerParamsList(k8PodDetails, podSetupInfo, ngAccess,
-        harnessInternalImageRegistryConnectorDetails, gitConnector, liteEngineTaskStepInfo, taskIds, accountId);
+        harnessInternalImageRegistryConnectorDetails, gitEnvVars, liteEngineTaskStepInfo, taskIds, accountId);
 
     CIK8ContainerParams setupAddOnContainerParams =
         internalContainerParamsProvider.getSetupAddonContainerParams(harnessInternalImageRegistryConnectorDetails,
@@ -166,12 +165,12 @@ public class K8BuildSetupUtils {
   }
 
   public List<CIK8ContainerParams> getContainerParamsList(K8PodDetails k8PodDetails, PodSetupInfo podSetupInfo,
-      NGAccess ngAccess, ConnectorDetails harnessInternalImageRegistryConnectorDetails, ConnectorDetails gitConnector,
+      NGAccess ngAccess, ConnectorDetails harnessInternalImageRegistryConnectorDetails, Map<String, String> gitEnvVars,
       LiteEngineTaskStepInfo liteEngineTaskStepInfo, Map<String, String> taskIds, String accountId) {
     Map<String, String> logEnvVars = getLogServiceEnvVariables(k8PodDetails);
     Map<String, String> tiEnvVars = getTIServiceEnvVariables();
     Map<String, String> commonEnvVars =
-        getCommonStepEnvVariables(k8PodDetails, logEnvVars, tiEnvVars, gitConnector, podSetupInfo.getWorkDirPath());
+        getCommonStepEnvVariables(k8PodDetails, logEnvVars, tiEnvVars, gitEnvVars, podSetupInfo.getWorkDirPath());
     Map<String, ConnectorConversionInfo> stepConnectors =
         ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getStepConnectorRefs();
     Set<String> publishArtifactStepIds =
@@ -324,7 +323,7 @@ public class K8BuildSetupUtils {
 
   @NotNull
   private Map<String, String> getCommonStepEnvVariables(K8PodDetails k8PodDetails, Map<String, String> logEnvVars,
-      Map<String, String> tiEnvVars, ConnectorDetails gitConnector, String workDirPath) {
+      Map<String, String> tiEnvVars, Map<String, String> gitEnvVars, String workDirPath) {
     Map<String, String> envVars = new HashMap<>();
     final String accountID = k8PodDetails.getBuildNumberDetails().getAccountIdentifier();
     final String projectID = k8PodDetails.getBuildNumberDetails().getProjectIdentifier();
@@ -334,11 +333,11 @@ public class K8BuildSetupUtils {
 
     // Add log service environment variables
     envVars.putAll(logEnvVars);
-
     // Add TI service environment variables
     envVars.putAll(tiEnvVars);
+    // Add git connector environment variables
+    envVars.putAll(gitEnvVars);
 
-    envVars.putAll(getGitEnvVariables(gitConnector));
     // Add other environment variables needed in the containers
     envVars.put(HARNESS_WORKSPACE, workDirPath);
     envVars.put(HARNESS_ACCOUNT_ID_VARIABLE, accountID);
@@ -349,64 +348,57 @@ public class K8BuildSetupUtils {
     return envVars;
   }
 
-  private Map<String, String> getGitEnvVariables(ConnectorDetails gitConnector) {
+  private Map<String, String> getGitEnvVariables(ConnectorDetails gitConnector, CodeBase ciCodebase) {
     Map<String, String> envVars = new HashMap<>();
     if (gitConnector == null) {
       return envVars;
     }
 
     validateGitConnector(gitConnector);
+
     GitConfigDTO gitConfigDTO = (GitConfigDTO) gitConnector.getConnectorConfig();
+    String gitUrl = getGitUrl(gitConfigDTO, ciCodebase);
+    String domain = GitClientHelper.getGitSCM(gitUrl);
 
-    String url = gitConfigDTO.getUrl();
-    if (!url.endsWith(GIT_URL_SUFFIX)) {
-      url += GIT_URL_SUFFIX;
-    }
-
-    envVars.put(DRONE_REMOTE_URL, url);
-
+    envVars.put(DRONE_REMOTE_URL, gitUrl);
+    envVars.put(DRONE_NETRC_MACHINE, domain);
     if (gitConfigDTO.getGitAuthType() == GitAuthType.HTTP) {
-      envVars.putAll(getGitHTTPEnvVars(gitConfigDTO, url));
-    } else if (gitConfigDTO.getGitAuthType() == GitAuthType.SSH) {
-      envVars.putAll(getGitSSHEnvVars(url));
+      GitHTTPAuthenticationDTO gitAuth = (GitHTTPAuthenticationDTO) gitConfigDTO.getGitAuth();
+      envVars.put(DRONE_NETRC_USERNAME, gitAuth.getUsername());
     }
     return envVars;
   }
 
-  private Map<String, String> getGitHTTPEnvVars(GitConfigDTO gitConfigDTO, String gitURL) {
-    Map<String, String> envVars = new HashMap<>();
-    GitHTTPAuthenticationDTO gitAuth = (GitHTTPAuthenticationDTO) gitConfigDTO.getGitAuth();
-    envVars.put(DRONE_NETRC_USERNAME, gitAuth.getUsername());
+  private String getGitUrl(GitConfigDTO gitConfigDTO, CodeBase ciCodebase) {
+    String gitUrl;
+    String url = gitConfigDTO.getUrl();
+    if (gitConfigDTO.getGitConnectionType() == GitConnectionType.REPO) {
+      gitUrl = url;
+    } else if (gitConfigDTO.getGitConnectionType() == GitConnectionType.ACCOUNT) {
+      if (ciCodebase == null) {
+        throw new IllegalArgumentException("CI codebase spec is not set");
+      }
 
-    URI uri;
-    try {
-      uri = new URI(gitURL);
-    } catch (URISyntaxException e) {
-      throw new GeneralException("Url syntax problems found while getting git http env vars", e);
+      if (isEmpty(ciCodebase.getRepoName())) {
+        throw new IllegalArgumentException("Repo name is not set in CI codebase spec");
+      }
+
+      String repoName = ciCodebase.getRepoName();
+      if (url.endsWith(PATH_SEPARATOR)) {
+        gitUrl = url + repoName;
+      } else {
+        gitUrl = url + PATH_SEPARATOR + repoName;
+      }
+    } else {
+      throw new InvalidArgumentsException(
+          format("Invalid connection type for git connector: %s", gitConfigDTO.getGitConnectionType().toString()),
+          WingsException.USER);
     }
-    String domain = uri.getHost();
-    envVars.put(DRONE_NETRC_MACHINE, domain);
-    return envVars;
-  }
 
-  private Map<String, String> getGitSSHEnvVars(String gitURL) {
-    // ssh URL starts with `git@`. Remove `git@` to find the domain.
-    String sshUrl = gitURL;
-    if (sshUrl.startsWith(GIT_SSH_URL_PREFIX)) {
-      sshUrl = sshUrl.substring(4);
+    if (!url.endsWith(GIT_URL_SUFFIX)) {
+      gitUrl += GIT_URL_SUFFIX;
     }
-
-    URI uri;
-    try {
-      uri = new URI(sshUrl);
-    } catch (URISyntaxException e) {
-      throw new GeneralException("Url syntax problems found while getting git ssh env vars", e);
-    }
-    String domain = uri.getHost();
-
-    Map<String, String> envVars = new HashMap<>();
-    envVars.put(DRONE_NETRC_MACHINE, domain);
-    return envVars;
+    return gitUrl;
   }
 
   private void validateGitConnector(ConnectorDetails gitConnector) {
@@ -426,29 +418,18 @@ public class K8BuildSetupUtils {
     }
   }
 
-  private ConnectorDetails getGitConnector(NGAccess ngAccess, CodeBase ciCodebase, boolean skipGitClone) {
+  private ConnectorDetails getGitConnector(NGAccess ngAccess, CodeBase codeBase, boolean skipGitClone) {
     if (skipGitClone) {
       return null;
     }
 
-    if (ciCodebase == null) {
+    if (codeBase == null) {
       throw new IllegalArgumentException("CI codebase is not set");
     }
 
-    CodeBaseSpec codeBaseSpec = ciCodebase.getCodeBaseSpec();
-    if (codeBaseSpec == null) {
-      throw new IllegalArgumentException("CI codebase spec is not set");
+    if (codeBase.getConnectorRef() == null) {
+      throw new IllegalArgumentException("Git connector is not set in CI codebase");
     }
-
-    if (ciCodebase.getCodeBaseType() == CodeBaseType.GIT_HUB) {
-      GitHubCodeBase gitHubCodeBase = (GitHubCodeBase) codeBaseSpec;
-
-      if (gitHubCodeBase.getConnectorRef() == null) {
-        throw new IllegalArgumentException("Git connector is not set in CI codebase");
-      }
-      return connectorUtils.getConnectorDetails(ngAccess, gitHubCodeBase.getConnectorRef());
-    } else {
-      throw new IllegalArgumentException("Only git hub code base is supported");
-    }
+    return connectorUtils.getConnectorDetails(ngAccess, codeBase.getConnectorRef());
   }
 }
