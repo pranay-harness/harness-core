@@ -52,7 +52,11 @@ public class CdServiceModule extends AbstractModule {
     install(MongoModule.getInstance());
     install(new SpringPersistenceModule());
     bind(HPersistence.class).to(MongoPersistence.class);
-    install(OrchestrationModule.getInstance());
+    install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
+                                                .serviceName("CD_SAMPLE")
+                                                .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+                                                .withPMS(true)
+                                                .build()));
     install(new AbstractModule() {
       @Override
       protected void configure() {
@@ -118,16 +122,6 @@ public class CdServiceModule extends AbstractModule {
         .put(DelegateSyncTaskResponse.class, "cdSample_delegateSyncTaskResponses")
         .put(DelegateAsyncTaskResponse.class, "cdSample_delegateAsyncTaskResponses")
         .put(DelegateTaskProgressResponse.class, "cdSample_delegateTaskProgressResponses")
-        .build();
-  }
-
-  @Provides
-  @Singleton
-  public OrchestrationModuleConfig orchestrationModuleConfig() {
-    return OrchestrationModuleConfig.builder()
-        .serviceName("CD_SAMPLE")
-        .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
-        .withPMS(true)
         .build();
   }
 

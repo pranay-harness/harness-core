@@ -17,6 +17,8 @@ import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.sdk.PmsSdkConfiguration;
+import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
@@ -101,15 +103,6 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
 
       @Provides
       @Singleton
-      public OrchestrationModuleConfig orchestrationModuleConfig() {
-        return OrchestrationModuleConfig.builder()
-            .serviceName("ORCHESTRATION_TEST")
-            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
-            .build();
-      }
-
-      @Provides
-      @Singleton
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder()
             .addAll(OrchestrationRegistrars.morphiaConverters)
@@ -159,7 +152,13 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
     modules.add(TimeModule.getInstance());
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
-    modules.add(OrchestrationModule.getInstance());
+    modules.add(
+        OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
+                                            .serviceName("ORCHESTRATION_TEST")
+                                            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+                                            .build()));
+    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder().serviceName("orchestrationTest").build();
+    modules.add(PmsSdkModule.getInstance(sdkConfig));
     return modules;
   }
 

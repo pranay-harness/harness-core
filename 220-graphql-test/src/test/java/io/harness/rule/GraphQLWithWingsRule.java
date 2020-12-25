@@ -14,7 +14,4 @@ public class GraphQLWithWingsRule extends WingsRule {
     modules.add(new GraphQLModule());
     return modules;
   }
-
-  @Override
-  public void getPmsSDKModules(List<Module> modules) {}
 }

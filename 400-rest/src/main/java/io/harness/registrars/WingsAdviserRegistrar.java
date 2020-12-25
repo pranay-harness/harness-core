@@ -7,7 +7,6 @@ import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviser;
 
-import com.google.inject.Injector;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
@@ -15,12 +14,11 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(CDC)
 @UtilityClass
 public class WingsAdviserRegistrar {
-  public Map<AdviserType, Adviser> getEngineAdvisers(Injector injector) {
-    Map<AdviserType, Adviser> engineAdvisers = new HashMap<>();
-    engineAdvisers.put(
-        HttpResponseCodeSwitchAdviser.ADVISER_TYPE, injector.getInstance(HttpResponseCodeSwitchAdviser.class));
+  public Map<AdviserType, Class<? extends Adviser>> getEngineAdvisers() {
+    Map<AdviserType, Class<? extends Adviser>> engineAdvisers = new HashMap<>();
+    engineAdvisers.put(HttpResponseCodeSwitchAdviser.ADVISER_TYPE, HttpResponseCodeSwitchAdviser.class);
 
-    engineAdvisers.putAll(OrchestrationAdviserRegistrar.getEngineAdvisers(injector));
+    engineAdvisers.putAll(OrchestrationAdviserRegistrar.getEngineAdvisers());
     return engineAdvisers;
   }
 }

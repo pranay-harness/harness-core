@@ -337,7 +337,7 @@ public class OrchestrationEngine {
       return outcomeRefs;
     }
 
-    if (config.isWithPMS()) {
+    if (config.isWithPMS() || config.isPipelineService()) {
       stepOutcomeProtos.forEach(proto -> {
         if (isNotEmpty(proto.getOutcome())) {
           String instanceId =

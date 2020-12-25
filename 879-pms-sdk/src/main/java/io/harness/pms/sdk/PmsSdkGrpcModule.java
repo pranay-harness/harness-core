@@ -17,6 +17,7 @@ import io.harness.pms.contracts.service.SweepingOutputServiceGrpc.SweepingOutput
 import io.harness.pms.sdk.core.plan.creation.creators.PlanCreatorService;
 
 import com.google.common.util.concurrent.Service;
+import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.Provides;
@@ -49,7 +50,7 @@ public class PmsSdkGrpcModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    Multibinder<Service> serviceBinder = Multibinder.newSetBinder(binder(), Service.class);
+    Multibinder<Service> serviceBinder = Multibinder.newSetBinder(binder(), Service.class, Names.named("pmsServices"));
     serviceBinder.addBinding().to(Key.get(Service.class, Names.named("pms-sdk-grpc-service")));
   }
 
@@ -128,5 +129,12 @@ public class PmsSdkGrpcModule extends AbstractModule {
                           .usePlaintext()
                           .build();
     return EngineExpressionProtoServiceGrpc.newBlockingStub(channel);
+  }
+
+  @Provides
+  @Singleton
+  @Named("pmsSDKServiceManager")
+  public ServiceManager serviceManager(@Named("pmsServices") Set<Service> services) {
+    return new ServiceManager(services);
   }
 }

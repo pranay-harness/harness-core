@@ -8,12 +8,12 @@ import io.harness.pms.sample.cd.creator.CdPipelineServiceInfoProvider;
 import io.harness.pms.sample.cd.creator.filters.CDFilterCreationResponseMerger;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
+import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
-import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
-import io.harness.serializer.KryoSerializer;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Module;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -21,6 +21,8 @@ import io.dropwizard.jersey.errors.EarlyEofExceptionMapper;
 import io.dropwizard.jersey.jackson.JsonProcessingExceptionMapper;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
@@ -54,33 +56,37 @@ public class CdServiceApplication extends Application<CdServiceConfiguration> {
   public void run(CdServiceConfiguration config, Environment environment) {
     log.info("Starting Pipeline Service Application ...");
     MaintenanceController.forceMaintenance(true);
-    Injector injector = Guice.createInjector(new CdServiceModule(config));
+    PmsSdkConfiguration sdkConfig = getPmsSdkConfiguration(config);
+    List<Module> modules = new ArrayList<>();
+    modules.add(new CdServiceModule(config));
+    modules.add(PmsSdkModule.getInstance(sdkConfig));
+    Injector injector = Guice.createInjector(modules);
 
     injector.getInstance(HPersistence.class);
     registerJerseyProviders(environment, injector);
 
-    PmsSdkConfiguration sdkConfig =
-        PmsSdkConfiguration.builder()
-            .deploymentMode(DeployMode.REMOTE)
-            .serviceName("cd")
-            .mongoConfig(config.getMongoConfig())
-            .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
-            .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
-            .pipelineServiceInfoProvider(injector.getInstance(CdPipelineServiceInfoProvider.class))
-            .filterCreationResponseMerger(new CDFilterCreationResponseMerger())
-            .asyncWaitEngine(injector.getInstance(AsyncWaitEngine.class))
-            .kryoSerializer(injector.getInstance(KryoSerializer.class))
-            .engineSteps(CdServiceStepRegistrar.getEngineSteps(injector))
-            .executionSummaryModuleInfoProvider(injector.getInstance(CDExecutionSummaryModuleInfoProvider.class))
-            .build();
     try {
-      PmsSdkModule.initializeDefaultInstance(sdkConfig);
+      PmsSdkInitHelper.initializeSDKInstance(injector, sdkConfig);
     } catch (Exception e) {
       log.error("Failed To register pipeline sdk");
       System.exit(1);
     }
 
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private PmsSdkConfiguration getPmsSdkConfiguration(CdServiceConfiguration config) {
+    return PmsSdkConfiguration.builder()
+        .deploymentMode(DeployMode.REMOTE)
+        .serviceName("cd")
+        .mongoConfig(config.getMongoConfig())
+        .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
+        .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
+        .pipelineServiceInfoProviderClass(CdPipelineServiceInfoProvider.class)
+        .filterCreationResponseMerger(new CDFilterCreationResponseMerger())
+        .engineSteps(CdServiceStepRegistrar.getEngineSteps())
+        .executionSummaryModuleInfoProviderClass(CDExecutionSummaryModuleInfoProvider.class)
+        .build();
   }
 
   private void registerJerseyProviders(Environment environment, Injector injector) {

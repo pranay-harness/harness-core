@@ -51,7 +51,11 @@ public class CvServiceModule extends AbstractModule {
     install(MongoModule.getInstance());
     install(new SpringPersistenceModule());
     bind(HPersistence.class).to(MongoPersistence.class);
-    install(OrchestrationModule.getInstance());
+    install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
+                                                .serviceName("CV_SAMPLE")
+                                                .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+                                                .withPMS(true)
+                                                .build()));
     install(new AbstractModule() {
       @Override
       protected void configure() {
@@ -117,16 +121,6 @@ public class CvServiceModule extends AbstractModule {
         .put(DelegateSyncTaskResponse.class, "cvSample_delegateSyncTaskResponses")
         .put(DelegateAsyncTaskResponse.class, "cvSample_delegateAsyncTaskResponses")
         .put(DelegateTaskProgressResponse.class, "cvSample_delegateTaskProgressResponses")
-        .build();
-  }
-
-  @Provides
-  @Singleton
-  public OrchestrationModuleConfig orchestrationModuleConfig() {
-    return OrchestrationModuleConfig.builder()
-        .serviceName("CV_SAMPLE")
-        .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
-        .withPMS(true)
         .build();
   }
 

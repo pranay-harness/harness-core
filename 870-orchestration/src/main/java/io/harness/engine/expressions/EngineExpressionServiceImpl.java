@@ -9,8 +9,10 @@ import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.serializer.persistence.DocumentOrchestrationUtils;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 @OwnedBy(CDC)
+@Singleton
 public class EngineExpressionServiceImpl implements EngineExpressionService {
   @Inject PmsEngineExpressionService pmsEngineExpressionService;
 

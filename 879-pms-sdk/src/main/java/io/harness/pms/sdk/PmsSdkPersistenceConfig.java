@@ -2,8 +2,10 @@ package io.harness.pms.sdk;
 
 import io.harness.annotation.HarnessRepo;
 import io.harness.mongo.MongoConfig;
+import io.harness.serializer.PmsSdkModuleRegistrars;
 import io.harness.springdata.HMongoTemplate;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -13,15 +15,22 @@ import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import com.mongodb.ReadPreference;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.CustomConversions;
+import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
+import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 @Configuration
@@ -33,10 +42,12 @@ public class PmsSdkPersistenceConfig extends AbstractMongoConfiguration {
   protected final List<Class<? extends Converter<?, ?>>> springConverters;
 
   @Inject
-  public PmsSdkPersistenceConfig(Injector injector, List<Class<? extends Converter<?, ?>>> springConverters) {
+  public PmsSdkPersistenceConfig(Injector injector) {
     this.injector = injector;
     this.mongoConfig = injector.getInstance(Key.get(MongoConfig.class, Names.named("pmsSdkMongoConfig")));
-    this.springConverters = springConverters;
+    this.springConverters = ImmutableList.<Class<? extends Converter<?, ?>>>builder()
+                                .addAll(PmsSdkModuleRegistrars.springConverters)
+                                .build();
   }
 
   @Override
@@ -61,7 +72,26 @@ public class PmsSdkPersistenceConfig extends AbstractMongoConfiguration {
 
   @Bean(name = "pmsSdkMongoTemplate")
   public MongoTemplate mongoTemplate() throws Exception {
-    return new HMongoTemplate(mongoDbFactory(), mappingMongoConverter());
+    MongoClientOptions primaryMongoClientOptions = MongoClientOptions.builder()
+                                                       .retryWrites(true)
+                                                       .connectTimeout(mongoConfig.getConnectTimeout())
+                                                       .serverSelectionTimeout(mongoConfig.getServerSelectionTimeout())
+                                                       .maxConnectionIdleTime(mongoConfig.getMaxConnectionIdleTime())
+                                                       .connectionsPerHost(mongoConfig.getConnectionsPerHost())
+                                                       .readPreference(ReadPreference.primary())
+                                                       .build();
+    MongoClientURI uri =
+        new MongoClientURI(mongoConfig.getUri(), MongoClientOptions.builder(primaryMongoClientOptions));
+    MongoClient mongoClient = new MongoClient(uri);
+    MongoDbFactory mongoDbFactory = new SimpleMongoDbFactory(mongoClient, Objects.requireNonNull(uri.getDatabase()));
+    DbRefResolver dbRefResolver = new DefaultDbRefResolver(mongoDbFactory);
+    MongoMappingContext mappingContext = this.mongoMappingContext();
+    mappingContext.setAutoIndexCreation(false);
+    MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mappingContext);
+    converter.setCustomConversions(customConversions());
+    converter.setCodecRegistryProvider(mongoDbFactory);
+    converter.afterPropertiesSet();
+    return new HMongoTemplate(mongoDbFactory, converter);
   }
 
   @Bean

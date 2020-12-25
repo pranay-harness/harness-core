@@ -12,7 +12,12 @@ import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.pms.sdk.PmsSdkConfiguration;
+import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.queue.QueueController;
+import io.harness.registrars.ExecutionRegistrar;
+import io.harness.registrars.OrchestrationAdviserRegistrar;
+import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.CiBeansRegistrars;
@@ -28,6 +33,7 @@ import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 
+import ci.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -142,7 +148,19 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
     modules.add(new CIManagerServiceModule(configuration));
+    modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration()));
     return modules;
+  }
+
+  private PmsSdkConfiguration getPmsSdkConfiguration() {
+    return PmsSdkConfiguration.builder()
+        .deploymentMode(PmsSdkConfiguration.DeployMode.LOCAL)
+        .serviceName("ci")
+        .engineSteps(ExecutionRegistrar.getEngineSteps())
+        .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers())
+        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
+        .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers())
+        .build();
   }
 
   @Override

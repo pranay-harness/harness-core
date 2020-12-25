@@ -1,14 +1,11 @@
 package io.harness.cdng.k8s;
 
-import io.harness.cdng.executionplan.CDStepDependencyKey;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
-import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
+import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTaskType;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.k8s.K8sTaskType;
-import io.harness.executionplan.stepsdependency.StepDependencyService;
-import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.ngpipeline.common.AmbianceHelper;
@@ -16,6 +13,8 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.core.resolver.RefObjectUtil;
+import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -35,7 +34,7 @@ public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollback
       StepType.newBuilder().setType(ExecutionNodeType.K8S_ROLLBACK_ROLLING.getName()).build();
 
   @Inject K8sStepHelper k8sStepHelper;
-  @Inject private StepDependencyService stepDependencyService;
+  @Inject private OutcomeService outcomeService;
   @Inject private KryoSerializer kryoSerializer;
 
   @Override
@@ -46,15 +45,11 @@ public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollback
   @Override
   public TaskRequest obtainTask(
       Ambiance ambiance, K8sRollingRollbackStepParameters stepParameters, StepInputPackage inputPackage) {
-    StepDependencySpec k8sRollingSpec =
-        stepParameters.getStepDependencySpecs().get(CDStepDependencyKey.K8S_ROLL_OUT.name());
-    K8sRollingOutcome k8sRollingOutcome = CDStepDependencyUtils.getK8sRolling(
-        stepDependencyService, k8sRollingSpec, inputPackage, stepParameters, ambiance);
+    K8sRollingOutcome k8sRollingOutcome = (K8sRollingOutcome) outcomeService.resolve(
+        ambiance, RefObjectUtil.getOutcomeRefObject(OutcomeExpressionConstants.K8S_ROLL_OUT));
 
-    StepDependencySpec infraSpec =
-        stepParameters.getStepDependencySpecs().get(CDStepDependencyKey.INFRASTRUCTURE.name());
-    InfrastructureOutcome infrastructure = CDStepDependencyUtils.getInfrastructure(
-        stepDependencyService, infraSpec, inputPackage, stepParameters, ambiance);
+    InfrastructureOutcome infrastructure = (InfrastructureOutcome) outcomeService.resolve(
+        ambiance, RefObjectUtil.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
 
     K8sRollingDeployRollbackTaskParameters taskParameters =
         K8sRollingDeployRollbackTaskParameters.builder()

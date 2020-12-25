@@ -71,7 +71,6 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.NextGenRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
-import io.harness.springdata.SpringPersistenceModule;
 import io.harness.version.VersionModule;
 import io.harness.waiter.NgOrchestrationNotifyEventListener;
 
@@ -170,7 +169,7 @@ public class NextGenModule extends AbstractModule {
         .toInstance(appConfig.getEventsFrameworkConfiguration().getRedisConfig());
     install(new ValidationModule(getValidatorFactory()));
     install(MongoModule.getInstance());
-    install(new SpringPersistenceModule());
+    install(new NextGenPersistenceModule(appConfig.getShouldConfigureWithPMS()));
     install(new CoreModule());
     install(new InviteModule(this.appConfig.getServiceHttpClientConfig(),
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
@@ -178,7 +177,7 @@ public class NextGenModule extends AbstractModule {
     install(new GitSyncModule());
     install(new DefaultOrganizationModule());
     install(new NGAggregateModule());
-    install(NGModule.getInstance());
+    install(NGModule.getInstance(getOrchestrationConfig()));
     install(new EventsFrameworkModule(this.appConfig.getEventsFrameworkConfiguration()));
     install(new SecretManagementModule());
     install(new SecretManagementClientModule(this.appConfig.getServiceHttpClientConfig(),
@@ -237,7 +236,7 @@ public class NextGenModule extends AbstractModule {
       }
     });
 
-    install(OrchestrationModule.getInstance());
+    install(OrchestrationModule.getInstance(getOrchestrationConfig()));
     install(OrchestrationStepsModule.getInstance());
     install(OrchestrationVisualizationModule.getInstance());
     install(ExecutionPlanModule.getInstance());
@@ -277,11 +276,10 @@ public class NextGenModule extends AbstractModule {
         .to(EntityActivityCrudEventMessageProcessor.class);
   }
 
-  @Provides
-  @Singleton
-  public OrchestrationModuleConfig orchestrationModuleConfig() {
+  private OrchestrationModuleConfig getOrchestrationConfig() {
     return OrchestrationModuleConfig.builder()
         .serviceName("CD_NG")
+        .withPMS(appConfig.getShouldConfigureWithPMS())
         .expressionEvaluatorProvider(new CDExpressionEvaluatorProvider())
         .publisherName(NgOrchestrationNotifyEventListener.NG_ORCHESTRATION)
         .build();

@@ -1,6 +1,7 @@
 package io.harness.cdng;
 
 import io.harness.NGPipelineCommonsModule;
+import io.harness.OrchestrationModuleConfig;
 import io.harness.WalkTreeModule;
 import io.harness.cdng.artifact.resources.docker.service.DockerResourceService;
 import io.harness.cdng.artifact.resources.docker.service.DockerResourceServiceImpl;
@@ -22,12 +23,17 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class NGModule extends AbstractModule {
   private static final AtomicReference<NGModule> instanceRef = new AtomicReference<>();
+  private final OrchestrationModuleConfig config;
 
-  public static NGModule getInstance() {
+  public static NGModule getInstance(OrchestrationModuleConfig config) {
     if (instanceRef.get() == null) {
-      instanceRef.compareAndSet(null, new NGModule());
+      instanceRef.compareAndSet(null, new NGModule(config));
     }
     return instanceRef.get();
+  }
+
+  public NGModule(OrchestrationModuleConfig config) {
+    this.config = config;
   }
 
   @Override
@@ -35,7 +41,7 @@ public class NGModule extends AbstractModule {
     install(NGCoreModule.getInstance());
     install(WalkTreeModule.getInstance());
     install(ExecutionPlanModule.getInstance());
-    install(NGPipelineCommonsModule.getInstance());
+    install(NGPipelineCommonsModule.getInstance(config));
     install(StageTypeToStageExecutionMapperRegistryModule.getInstance());
 
     bind(ArtifactSourceService.class).to(ArtifactSourceServiceImpl.class);

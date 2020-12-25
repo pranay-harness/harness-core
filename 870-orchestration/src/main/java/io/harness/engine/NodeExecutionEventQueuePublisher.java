@@ -1,6 +1,5 @@
 package io.harness.engine;
 
-import io.harness.OrchestrationModuleConfig;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.queue.QueuePublisher;
@@ -13,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class NodeExecutionEventQueuePublisher {
-  @Inject private OrchestrationModuleConfig config;
   @Inject private QueuePublisher<NodeExecutionEvent> nodeExecutionEventQueuePublisher;
   @Inject(optional = true) private StepTypeLookupService stepTypeLookupService;
 
@@ -24,7 +22,7 @@ public class NodeExecutionEventQueuePublisher {
 
   private String findNodeExecutionServiceName(NodeExecutionProto nodeExecution) {
     if (stepTypeLookupService == null) {
-      return config.getServiceName();
+      return "_pms_";
     }
     return stepTypeLookupService.findNodeExecutionServiceName(nodeExecution);
   }

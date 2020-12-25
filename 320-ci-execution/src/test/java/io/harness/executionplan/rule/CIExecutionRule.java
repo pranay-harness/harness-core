@@ -17,7 +17,13 @@ import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.sdk.PmsSdkConfiguration;
+import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
+import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.queue.QueueController;
+import io.harness.registrars.ExecutionRegistrar;
+import io.harness.registrars.OrchestrationAdviserRegistrar;
+import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.springdata.SpringPersistenceTestModule;
@@ -26,6 +32,7 @@ import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 
+import ci.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
 import com.google.common.base.Suppliers;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -98,7 +105,8 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
                                                  .delegateServiceEndpointVariableValue("delegate-service:8080")
                                                  .liteEngineImageTag("v1.4-alpha")
                                                  .pvcDefaultStorageSize(25600)
-                                                 .build()));
+                                                 .build(),
+        false));
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
@@ -117,7 +125,19 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
         return mock(NgDelegate2TaskExecutor.class);
       }
     });
+    modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration()));
     return modules;
+  }
+
+  private PmsSdkConfiguration getPmsSdkConfiguration() {
+    return PmsSdkConfiguration.builder()
+        .deploymentMode(DeployMode.LOCAL)
+        .serviceName("ci")
+        .engineSteps(ExecutionRegistrar.getEngineSteps())
+        .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers())
+        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
+        .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers())
+        .build();
   }
 
   @Override

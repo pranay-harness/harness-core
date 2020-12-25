@@ -34,9 +34,6 @@ public class CommandLibraryServerTestRule extends WingsRule {
   }
 
   @Override
-  public void getPmsSDKModules(List<Module> modules) {}
-
-  @Override
   public List<Module> modules(List<Annotation> annotations) throws Exception {
     List<Module> modules = new ArrayList<>();
     modules.add(new ClosingFactoryModule(closingFactory));

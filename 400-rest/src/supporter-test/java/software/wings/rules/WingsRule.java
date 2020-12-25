@@ -40,8 +40,9 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.sdk.PmsSdkConfiguration;
+import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
+import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
-import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
@@ -234,8 +235,7 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     }
     CacheModule cacheModule = new CacheModule(cacheConfigBuilder.build());
     modules.add(0, cacheModule);
-
-    getPmsSDKModules(modules);
+    addPMSSdkModule(modules);
     injector = Guice.createInjector(modules);
     registerListeners(annotations.stream().filter(Listeners.class ::isInstance).findFirst());
     registerScheduledJobs(injector);
@@ -251,23 +251,25 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     }
   }
 
-  public void getPmsSDKModules(List<Module> modules) {
-    Injector injector = Guice.createInjector(modules);
-    Map<OrchestrationEventType, Set<OrchestrationEventHandler>> engineEventHandlersMap = new HashMap<>();
+  public void addPMSSdkModule(List<Module> modules) {
+    modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration()));
+  }
+
+  private PmsSdkConfiguration getPmsSdkConfiguration() {
+    Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> engineEventHandlersMap =
+        new HashMap<>();
     OrchestrationModuleRegistrarHelper.mergeEventHandlers(
-        engineEventHandlersMap, OrchestrationVisualizationModuleEventHandlerRegistrar.getEngineEventHandlers(injector));
+        engineEventHandlersMap, OrchestrationVisualizationModuleEventHandlerRegistrar.getEngineEventHandlers());
     OrchestrationModuleRegistrarHelper.mergeEventHandlers(
-        engineEventHandlersMap, OrchestrationStepsModuleEventHandlerRegistrar.getEngineEventHandlers(injector));
-    PmsSdkConfiguration sdkConfig =
-        PmsSdkConfiguration.builder()
-            .deploymentMode(PmsSdkConfiguration.DeployMode.LOCAL)
-            .serviceName("wings")
-            .engineSteps(WingsStepRegistrar.getEngineSteps(injector))
-            .engineAdvisers(WingsAdviserRegistrar.getEngineAdvisers(injector))
-            .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators(injector))
-            .engineEventHandlersMap(engineEventHandlersMap)
-            .build();
-    modules.add(PmsSdkRegistryModule.getInstance(sdkConfig));
+        engineEventHandlersMap, OrchestrationStepsModuleEventHandlerRegistrar.getEngineEventHandlers());
+    return PmsSdkConfiguration.builder()
+        .deploymentMode(DeployMode.LOCAL)
+        .serviceName("wings")
+        .engineSteps(WingsStepRegistrar.getEngineSteps())
+        .engineAdvisers(WingsAdviserRegistrar.getEngineAdvisers())
+        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
+        .engineEventHandlersMap(engineEventHandlersMap)
+        .build();
   }
 
   protected Set<Class<? extends KryoRegistrar>> getKryoRegistrars() {

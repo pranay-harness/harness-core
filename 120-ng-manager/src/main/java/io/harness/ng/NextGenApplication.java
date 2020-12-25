@@ -32,20 +32,18 @@ import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
+import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
-import io.harness.pms.sdk.core.registries.StepRegistry;
-import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
-import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
+import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
+import io.harness.registrars.NGExecutionEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationAdviserRegistrar;
-import io.harness.registrars.OrchestrationExecutionEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.security.JWTAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
-import io.harness.serializer.KryoSerializer;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
@@ -144,8 +142,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     MaintenanceController.forceMaintenance(true);
     List<Module> modules = new ArrayList<>();
     modules.add(new NextGenModule(appConfig));
-
-    getPmsSDKModules(modules, appConfig);
+    modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(appConfig)));
     Injector injector = Guice.createInjector(modules);
 
     // Will create collections and Indexes
@@ -160,11 +157,10 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerScheduleJobs(injector);
     registerWaitEnginePublishers(injector);
     registerManagedBeans(environment, injector);
-    registerQueueListeners(injector);
+    registerQueueListeners(injector, appConfig);
     registerExecutionPlanCreators(injector);
     registerAuthFilters(appConfig, environment, injector);
-
-    registerPipelineSDK(injector, appConfig);
+    registerPipelineSDK(appConfig, injector);
 
     registerYamlSdk();
 
@@ -186,53 +182,37 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     YamlSdkModule.initializeDefaultInstance(yamlSdkConfiguration);
   }
 
-  private void getPmsSDKModules(List<Module> modules, NextGenConfiguration appConfig) {
-    Injector injector = Guice.createInjector(modules);
-    boolean remote = false;
-    if (appConfig.getShouldConfigureWithPMS() != null && appConfig.getShouldConfigureWithPMS()) {
-      remote = true;
-    }
-    if (!remote) {
-      PmsSdkConfiguration sdkConfig =
-          PmsSdkConfiguration.builder()
-              .deploymentMode(DeployMode.LOCAL)
-              .serviceName("cd")
-              .asyncWaitEngine(injector.getInstance(AsyncWaitEngine.class))
-              .engineSteps(NgStepRegistrar.getEngineSteps(injector))
-              .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers(injector))
-              .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators(injector))
-              .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers(injector))
-              .build();
-      modules.add(PmsSdkRegistryModule.getInstance(sdkConfig));
-    }
-  }
-
-  public void registerPipelineSDK(Injector injector, NextGenConfiguration appConfig) {
-    if (appConfig.getShouldConfigureWithPMS() != null && appConfig.getShouldConfigureWithPMS()) {
-      PmsSdkConfiguration sdkConfig =
-          PmsSdkConfiguration.builder()
-              .deploymentMode(DeployMode.REMOTE)
-              .serviceName("cd")
-              .mongoConfig(appConfig.getPmsMongoConfig())
-              .grpcServerConfig(appConfig.getPmsSdkGrpcServerConfig())
-              .pmsGrpcClientConfig(appConfig.getPmsGrpcClientConfig())
-              .pipelineServiceInfoProvider(injector.getInstance(CDNGPlanCreatorProvider.class))
-              .filterCreationResponseMerger(new CDNGFilterCreationResponseMerger())
-              .asyncWaitEngine(injector.getInstance(AsyncWaitEngine.class))
-              .engineSteps(NgStepRegistrar.getEngineSteps(injector))
-              .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers(injector))
-              .kryoSerializer(injector.getInstance(KryoSerializer.class))
-              .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators(injector))
-              .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers(injector))
-              .executionSummaryModuleInfoProvider(injector.getInstance(CDNGModuleInfoProvider.class))
-              .build();
+  public void registerPipelineSDK(NextGenConfiguration appConfig, Injector injector) {
+    PmsSdkConfiguration sdkConfig = getPmsSdkConfiguration(appConfig);
+    if (sdkConfig.getDeploymentMode().equals(DeployMode.REMOTE)) {
       try {
-        PmsSdkModule.initializeDefaultInstance(sdkConfig);
+        PmsSdkInitHelper.initializeSDKInstance(injector, sdkConfig);
       } catch (Exception e) {
         log.error("Failed To register pipeline sdk");
         System.exit(1);
       }
     }
+  }
+
+  private PmsSdkConfiguration getPmsSdkConfiguration(NextGenConfiguration appConfig) {
+    boolean remote = false;
+    if (appConfig.getShouldConfigureWithPMS() != null && appConfig.getShouldConfigureWithPMS()) {
+      remote = true;
+    }
+    return PmsSdkConfiguration.builder()
+        .deploymentMode(remote ? DeployMode.REMOTE : DeployMode.LOCAL)
+        .serviceName("cd")
+        .mongoConfig(appConfig.getPmsMongoConfig())
+        .grpcServerConfig(appConfig.getPmsSdkGrpcServerConfig())
+        .pmsGrpcClientConfig(appConfig.getPmsGrpcClientConfig())
+        .pipelineServiceInfoProviderClass(CDNGPlanCreatorProvider.class)
+        .filterCreationResponseMerger(new CDNGFilterCreationResponseMerger())
+        .engineSteps(NgStepRegistrar.getEngineSteps())
+        .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers())
+        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
+        .engineEventHandlersMap(NGExecutionEventHandlerRegistrar.getEngineEventHandlers())
+        .executionSummaryModuleInfoProviderClass(CDNGModuleInfoProvider.class)
+        .build();
   }
 
   private void registerManagedBeans(Environment environment, Injector injector) {
@@ -281,13 +261,16 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     environment.jersey().register(injector.getInstance(EtagFilter.class));
   }
 
-  private void registerQueueListeners(Injector injector) {
+  private void registerQueueListeners(Injector injector, NextGenConfiguration appConfig) {
     log.info("Initializing queue listeners...");
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 5);
     queueListenerController.register(injector.getInstance(EmailNotificationListener.class), 1);
     queueListenerController.register(injector.getInstance(OrchestrationEventListener.class), 1);
     queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
+    if (appConfig.getShouldConfigureWithPMS()) {
+      queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 1);
+    }
   }
 
   private void registerWaitEnginePublishers(Injector injector) {
@@ -319,10 +302,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void registerExecutionPlanCreators(Injector injector) {
     injector.getInstance(ExecutionPlanCreatorRegistrar.class).register();
-  }
-
-  private StepRegistry registerStepRegistry(Injector injector) {
-    return injector.getInstance(StepRegistry.class);
   }
 
   private void registerAuthFilters(NextGenConfiguration configuration, Environment environment, Injector injector) {

@@ -13,7 +13,6 @@ import io.harness.pms.sdk.core.adviser.marksuccess.OnMarkSuccessAdviser;
 import io.harness.pms.sdk.core.adviser.retry.RetryAdviser;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviser;
 
-import com.google.inject.Injector;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
@@ -22,16 +21,16 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class PmsSdkAdviserRegistrar {
-  public Map<AdviserType, Adviser> getEngineAdvisers(Injector injector) {
-    Map<AdviserType, Adviser> engineAdvisers = new HashMap<>();
+  public Map<AdviserType, Class<? extends Adviser>> getEngineAdvisers() {
+    Map<AdviserType, Class<? extends Adviser>> engineAdvisers = new HashMap<>();
 
-    engineAdvisers.put(IgnoreAdviser.ADVISER_TYPE, injector.getInstance(IgnoreAdviser.class));
-    engineAdvisers.put(OnSuccessAdviser.ADVISER_TYPE, injector.getInstance(OnSuccessAdviser.class));
-    engineAdvisers.put(OnFailAdviser.ADVISER_TYPE, injector.getInstance(OnFailAdviser.class));
-    engineAdvisers.put(ManualInterventionAdviser.ADVISER_TYPE, injector.getInstance(ManualInterventionAdviser.class));
-    engineAdvisers.put(OnAbortAdviser.ADVISER_TYPE, injector.getInstance(OnAbortAdviser.class));
-    engineAdvisers.put(OnMarkSuccessAdviser.ADVISER_TYPE, injector.getInstance(OnMarkSuccessAdviser.class));
-    engineAdvisers.put(RetryAdviser.ADVISER_TYPE, injector.getInstance(RetryAdviser.class));
+    engineAdvisers.put(IgnoreAdviser.ADVISER_TYPE, IgnoreAdviser.class);
+    engineAdvisers.put(OnSuccessAdviser.ADVISER_TYPE, OnSuccessAdviser.class);
+    engineAdvisers.put(OnFailAdviser.ADVISER_TYPE, OnFailAdviser.class);
+    engineAdvisers.put(ManualInterventionAdviser.ADVISER_TYPE, ManualInterventionAdviser.class);
+    engineAdvisers.put(OnAbortAdviser.ADVISER_TYPE, OnAbortAdviser.class);
+    engineAdvisers.put(OnMarkSuccessAdviser.ADVISER_TYPE, OnMarkSuccessAdviser.class);
+    engineAdvisers.put(RetryAdviser.ADVISER_TYPE, RetryAdviser.class);
 
     return engineAdvisers;
   }
