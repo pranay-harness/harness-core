@@ -1,5 +1,6 @@
 package io.harness.ci.plan.creator;
 
+import io.harness.beans.execution.ExecutionSource;
 import io.harness.ci.plan.creator.execution.CIPipelineModuleInfo;
 import io.harness.ci.plan.creator.execution.CIStageModuleInfo;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
@@ -17,11 +18,16 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
 
   @Override
   public PipelineModuleInfo getPipelineLevelModuleInfo(NodeExecutionProto nodeExecutionProto) {
-    return CIPipelineModuleInfo.builder().build();
+    // TODO retrieve executionSource here
+    ExecutionSource executionSource = null;
+    return CIPipelineModuleInfo.builder()
+        .ciWebhookInfoDTO(CIModuleInfoMapper.getCIBuildResponseDTO(executionSource))
+        .build();
   }
 
   @Override
   public StageModuleInfo getStageLevelModuleInfo(NodeExecutionProto nodeExecutionProto) {
+    nodeExecutionProto.getAmbiance().getSetupAbstractionsMap();
     return CIStageModuleInfo.builder().build();
   }
 }
