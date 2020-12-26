@@ -53,10 +53,10 @@ public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStep
     if (runStepInfo.getOutput() != null) {
       runStepBuilder.addAllEnvVarOutputs(runStepInfo.getOutput());
     }
-    runStepBuilder.setContext(StepContext.newBuilder()
-                                  .setNumRetries(runStepInfo.getRetry())
-                                  .setExecutionTimeoutSecs(runStepInfo.getTimeout())
-                                  .build());
+
+    long timeout = TimeoutUtils.parseTimeoutString(step.getTimeout(), ciStepInfo.getDefaultTimeout());
+    runStepBuilder.setContext(
+        StepContext.newBuilder().setNumRetries(runStepInfo.getRetry()).setExecutionTimeoutSecs(timeout).build());
 
     String skipCondition = SkipConditionUtils.getSkipCondition(step);
     return UnitStep.newBuilder()

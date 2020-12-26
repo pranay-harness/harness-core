@@ -24,12 +24,11 @@ import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@JsonTypeName("run")
+@JsonTypeName("Run")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("runStepInfo")
 public class RunStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 1;
-  public static final int DEFAULT_TIMEOUT = 60 * 60 * 2; // 2 hour
 
   @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.RUN).build();
   @JsonIgnore public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.RUN.name()).build();
@@ -39,7 +38,7 @@ public class RunStepInfo implements CIStepInfo {
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
-  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
+
   @NotNull private String command;
   private List<String> output;
   private Map<String, String> environment;
@@ -51,17 +50,17 @@ public class RunStepInfo implements CIStepInfo {
   private ContainerResource resources;
 
   @Builder
-  @ConstructorProperties({"callbackId", "port", "identifier", "name", "retry", "timeout", "command", "output",
-      "skipCondition", "reports", "environment", "image", "connector", "resources"})
-  public RunStepInfo(String callbackId, Integer port, String identifier, String name, Integer retry, Integer timeout,
-      String command, List<String> output, String skipCondition, List<UnitTestReport> reports,
-      Map<String, String> environment, String image, String connector, ContainerResource resources) {
+  @ConstructorProperties({"callbackId", "port", "identifier", "name", "retry", "command", "output", "skipCondition",
+      "reports", "environment", "image", "connector", "resources"})
+  public RunStepInfo(String callbackId, Integer port, String identifier, String name, Integer retry, String command,
+      List<String> output, String skipCondition, List<UnitTestReport> reports, Map<String, String> environment,
+      String image, String connector, ContainerResource resources) {
     this.callbackId = callbackId;
     this.port = port;
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
-    this.timeout = Optional.ofNullable(timeout).orElse(DEFAULT_TIMEOUT);
+
     this.command = command;
     this.environment = environment;
     this.skipCondition = skipCondition;

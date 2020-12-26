@@ -24,12 +24,11 @@ import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@JsonTypeName("saveCache")
+@JsonTypeName("SaveCache")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("saveCacheStepInfo")
 public class SaveCacheStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
-  public static final int DEFAULT_TIMEOUT = 1200;
   @JsonIgnore private String callbackId;
   @JsonView(JsonViews.Internal.class)
   @NotNull
@@ -40,18 +39,18 @@ public class SaveCacheStepInfo implements CIStepInfo {
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
-  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
+
   @NotNull private String key;
   @NotNull private List<String> paths;
 
   @Builder
-  @ConstructorProperties({"callbackId", "identifier", "name", "retry", "timeout", "key", "paths"})
-  public SaveCacheStepInfo(String callbackId, String identifier, String name, Integer retry, Integer timeout,
-      String key, List<String> paths) {
+  @ConstructorProperties({"callbackId", "identifier", "name", "retry", "key", "paths"})
+  public SaveCacheStepInfo(
+      String callbackId, String identifier, String name, Integer retry, String key, List<String> paths) {
+    this.callbackId = callbackId;
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
-    this.timeout = Optional.ofNullable(timeout).orElse(DEFAULT_TIMEOUT);
     this.key = key;
     this.paths = paths;
   }

@@ -21,9 +21,10 @@ public class PluginCompatibleStepSerializer implements ProtobufStepSerializer<Pl
     CIStepInfo ciStepInfo = (CIStepInfo) step.getStepSpecType();
     PluginCompatibleStep pluginCompatibleStep = (PluginCompatibleStep) ciStepInfo;
 
+    long timeout = TimeoutUtils.parseTimeoutString(step.getTimeout(), ciStepInfo.getDefaultTimeout());
     StepContext stepContext = StepContext.newBuilder()
                                   .setNumRetries(pluginCompatibleStep.getRetry())
-                                  .setExecutionTimeoutSecs(pluginCompatibleStep.getTimeout())
+                                  .setExecutionTimeoutSecs(timeout)
                                   .build();
     if (port == null) {
       throw new CIStageExecutionException("Port can not be null");

@@ -22,12 +22,11 @@ import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@JsonTypeName("plugin")
+@JsonTypeName("Plugin")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("pluginStepInfo")
 public class PluginStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 1;
-  public static final int DEFAULT_TIMEOUT = 60 * 60 * 2; // 2 hour
 
   @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.PLUGIN).build();
   @JsonIgnore
@@ -37,8 +36,6 @@ public class PluginStepInfo implements CIStepInfo {
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
-  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
-  private String skipCondition;
 
   private Map<String, String> settings;
   @NotNull private String image;
@@ -46,17 +43,16 @@ public class PluginStepInfo implements CIStepInfo {
   private ContainerResource resources;
   @Builder
 
-  @ConstructorProperties({"callbackId", "port", "identifier", "name", "retry", "timeout", "skipCondition", "settings",
-      "image", "connector", "resources"})
-  public PluginStepInfo(String callbackId, Integer port, String identifier, String name, Integer retry, Integer timeout,
-      String skipCondition, Map<String, String> settings, String image, String connector, ContainerResource resources) {
+  @ConstructorProperties(
+      {"callbackId", "port", "identifier", "name", "retry", "settings", "image", "connector", "resources"})
+  public PluginStepInfo(String callbackId, Integer port, String identifier, String name, Integer retry,
+      Map<String, String> settings, String image, String connector, ContainerResource resources) {
     this.callbackId = callbackId;
     this.port = port;
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
-    this.timeout = Optional.ofNullable(timeout).orElse(DEFAULT_TIMEOUT);
-    this.skipCondition = skipCondition;
+
     this.settings = settings;
     this.image = image;
     this.connector = connector;

@@ -38,10 +38,10 @@ public class LiteEngineTaskStepInfo implements CIStepInfo {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(CIStepInfoType.LITE_ENGINE_TASK.name()).build();
 
+  @JsonIgnore @Builder.Default int timeout = DEFAULT_TIMEOUT;
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
-  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
 
   @NotNull BuildJobEnvInfo buildJobEnvInfo;
   @NotNull boolean usePVC;
@@ -52,16 +52,16 @@ public class LiteEngineTaskStepInfo implements CIStepInfo {
   @NotNull boolean skipGitClone;
 
   @Builder
-  @ConstructorProperties({"accountId", "identifier", "name", "retry", "timeout", "buildJobEnvInfo", "steps",
+  @ConstructorProperties({"accountId", "identifier", "name", "retry", "buildJobEnvInfo", "steps",
       "executionElementConfig", "usePVC", "ciCodebase", "skipGitClone"})
-  public LiteEngineTaskStepInfo(String accountId, String identifier, String name, Integer retry, Integer timeout,
+  public LiteEngineTaskStepInfo(String accountId, String identifier, String name, Integer retry,
       BuildJobEnvInfo buildJobEnvInfo, ExecutionElement steps, ExecutionElementConfig executionElementConfig,
       boolean usePVC, CodeBase ciCodebase, boolean skipGitClone) {
     this.accountId = accountId;
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
-    this.timeout = Optional.ofNullable(timeout).orElse(DEFAULT_TIMEOUT);
+
     this.buildJobEnvInfo = buildJobEnvInfo;
     this.usePVC = usePVC;
     this.executionElementConfig = executionElementConfig;

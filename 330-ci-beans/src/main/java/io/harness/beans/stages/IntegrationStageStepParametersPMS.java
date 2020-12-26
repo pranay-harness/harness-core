@@ -33,7 +33,7 @@ public class IntegrationStageStepParametersPMS implements StepParameters {
   ParameterField<List<String>> sharedPaths;
   ParameterField<String> skipCondition;
   ParameterField<String> workingDirectory;
-  ParameterField<Boolean> skipGitClone;
+  ParameterField<Boolean> enableCloneRepo;
   String childNodeID;
 
   public static IntegrationStageStepParametersPMS getStepParameters(
@@ -56,14 +56,14 @@ public class IntegrationStageStepParametersPMS implements StepParameters {
         .name(stageElementConfig.getName())
         .description(stageElementConfig.getDescription())
         .infrastructure(integrationStageConfig.getInfrastructure())
-        .dependencies(integrationStageConfig.getDependencies())
-        .workingDirectory(integrationStageConfig.getWorkingDirectory())
+        .dependencies(integrationStageConfig.getServiceDependencies())
+        .workingDirectory(integrationStageConfig.getWorkspace())
         .type(stageElementConfig.getType())
         .skipCondition(integrationStageConfig.getSkipCondition())
         .variables(variablesMap)
         .childNodeID(childNodeID)
         .sharedPaths(integrationStageConfig.getSharedPaths())
-        .skipGitClone(integrationStageConfig.getCloneRepository())
+        .enableCloneRepo(integrationStageConfig.getEnableCloneRepo())
         .build();
   }
 }

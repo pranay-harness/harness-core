@@ -10,7 +10,7 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
-@JsonTypeName("secret")
+@JsonTypeName("Secret")
 @TypeAlias("customSecretVariable")
 public class CustomSecretVariable implements CustomVariable {
   @Builder.Default @NotNull Type type = Type.SECRET;

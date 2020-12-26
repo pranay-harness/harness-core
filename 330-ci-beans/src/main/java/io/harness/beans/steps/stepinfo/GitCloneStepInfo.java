@@ -23,7 +23,7 @@ import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@JsonTypeName("gitClone")
+@JsonTypeName("GitClone")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("gitCloneStepInfo")
 public class GitCloneStepInfo implements CIStepInfo {
@@ -41,19 +41,19 @@ public class GitCloneStepInfo implements CIStepInfo {
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
-  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
+
   @NotNull private String gitConnector;
   @NotNull private String branch;
   private String path;
 
   @Builder
-  @ConstructorProperties({"identifier", "name", "retry", "timeout", "gitConnector", "branch", "path"})
+  @ConstructorProperties({"identifier", "name", "retry", "gitConnector", "branch", "path"})
   public GitCloneStepInfo(
-      String identifier, String name, Integer retry, Integer timeout, String gitConnector, String branch, String path) {
+      String identifier, String name, Integer retry, String gitConnector, String branch, String path) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
-    this.timeout = Optional.ofNullable(timeout).orElse(DEFAULT_TIMEOUT);
+
     this.gitConnector = gitConnector;
     this.branch = branch;
     this.path = path;

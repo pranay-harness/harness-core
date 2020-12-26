@@ -10,7 +10,10 @@ import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.yaml.extended.container.ContainerResource;
+import io.harness.beans.yaml.extended.container.quantity.unit.BinaryQuantityUnit;
+import io.harness.beans.yaml.extended.container.quantity.unit.DecimalQuantityUnit;
 import io.harness.ci.config.CIExecutionServiceConfig;
+import io.harness.ci.utils.QuantityUtils;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
 import io.harness.delegate.beans.ci.pod.ContainerResourceParams;
 import io.harness.exception.InvalidRequestException;
@@ -28,12 +31,12 @@ public class CIServiceBuilder {
       StageElementConfig stageElementConfig, PortFinder portFinder, CIExecutionServiceConfig ciExecutionServiceConfig) {
     List<ContainerDefinitionInfo> containerDefinitionInfos = new ArrayList<>();
     IntegrationStageConfig integrationStage = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
-    if (isEmpty(integrationStage.getDependencies())) {
+    if (isEmpty(integrationStage.getServiceDependencies())) {
       return containerDefinitionInfos;
     }
 
     int serviceIdx = 0;
-    for (DependencyElement dependencyElement : integrationStage.getDependencies()) {
+    for (DependencyElement dependencyElement : integrationStage.getServiceDependencies()) {
       if (dependencyElement == null) {
         continue;
       }
@@ -81,11 +84,11 @@ public class CIServiceBuilder {
     Integer memory = ciExecutionServiceConfig.getDefaultMemoryLimit();
 
     if (resource != null && resource.getLimit() != null) {
-      if (resource.getLimit().getCpu() != 0) {
-        cpu = resource.getLimit().getCpu();
+      if (resource.getLimit().getCpu() != null) {
+        cpu = QuantityUtils.getCpuQuantityValueInUnit(resource.getLimit().getCpu(), DecimalQuantityUnit.m);
       }
-      if (resource.getLimit().getMemory() != 0) {
-        memory = resource.getLimit().getMemory();
+      if (resource.getLimit().getMemory() != null) {
+        memory = QuantityUtils.getMemoryQuantityValueInUnit(resource.getLimit().getMemory(), BinaryQuantityUnit.Mi);
       }
     }
     return ContainerResourceParams.builder()
@@ -100,11 +103,11 @@ public class CIServiceBuilder {
     List<String> serviceIdList = new ArrayList<>();
     IntegrationStageConfig integrationStage = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
 
-    if (isEmpty(integrationStage.getDependencies())) {
+    if (isEmpty(integrationStage.getServiceDependencies())) {
       return serviceIdList;
     }
 
-    for (DependencyElement dependencyElement : integrationStage.getDependencies()) {
+    for (DependencyElement dependencyElement : integrationStage.getServiceDependencies()) {
       if (dependencyElement == null) {
         continue;
       }
@@ -120,11 +123,11 @@ public class CIServiceBuilder {
     List<Integer> grpcPortList = new ArrayList<>();
     IntegrationStageConfig integrationStage = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
 
-    if (isEmpty(integrationStage.getDependencies())) {
+    if (isEmpty(integrationStage.getServiceDependencies())) {
       return grpcPortList;
     }
 
-    for (DependencyElement dependencyElement : integrationStage.getDependencies()) {
+    for (DependencyElement dependencyElement : integrationStage.getServiceDependencies()) {
       if (dependencyElement == null) {
         continue;
       }

@@ -67,7 +67,7 @@ public class CILiteEngineStepGroupUtils {
         stageElementConfig.getIdentifier(), ciExecutionArgs.getBuildNumberDetails().getBuildNumber(), usePVC);
 
     List<ExecutionWrapperConfig> liteEngineExecutionSections = new ArrayList<>();
-    boolean gitClone = RunTimeInputHandler.resolveGitClone(integrationStageConfig.getCloneRepository());
+    boolean gitClone = RunTimeInputHandler.resolveGitClone(integrationStageConfig.getEnableCloneRepo());
 
     if (gitClone) {
       liteEngineExecutionSections.add(getGitCloneStep(ciExecutionArgs));

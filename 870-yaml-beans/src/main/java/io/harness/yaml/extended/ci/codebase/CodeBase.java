@@ -1,18 +1,19 @@
 package io.harness.yaml.extended.ci.codebase;
 
+import io.harness.pms.yaml.ParameterField;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import javax.validation.constraints.NotNull;
-import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.FieldDefaults;
+import lombok.Value;
+import org.springframework.data.annotation.TypeAlias;
 
-@Data
+@Value
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-@FieldDefaults(level = AccessLevel.PRIVATE)
+@TypeAlias("io.harness.yaml.extended.ci.CodeBase")
 public class CodeBase {
   @NotNull String connectorRef;
   @NotNull String repoName;
+  @NotNull ParameterField<Build> build;
 }

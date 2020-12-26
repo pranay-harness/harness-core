@@ -25,12 +25,11 @@ import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@JsonTypeName("saveCacheGCS")
+@JsonTypeName("SaveCacheGCS")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("saveCacheGCSStepInfo")
 public class SaveCacheGCSStepInfo implements PluginCompatibleStep {
   public static final int DEFAULT_RETRY = 1;
-  public static final int DEFAULT_TIMEOUT = 60 * 60 * 2; // 2 hour
 
   @JsonView(JsonViews.Internal.class)
   @NotNull
@@ -44,7 +43,6 @@ public class SaveCacheGCSStepInfo implements PluginCompatibleStep {
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
-  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
 
   @NotNull private String connectorRef;
   @JsonIgnore @NotNull private String image;
@@ -57,17 +55,17 @@ public class SaveCacheGCSStepInfo implements PluginCompatibleStep {
   private String target;
 
   @Builder
-  @ConstructorProperties({"callbackId", "port", "identifier", "name", "retry", "timeout", "connectorRef", "image",
-      "resources", "key", "bucket", "sourcePath", "target"})
+  @ConstructorProperties({"callbackId", "port", "identifier", "name", "retry", "connectorRef", "image", "resources",
+      "key", "bucket", "sourcePath", "target"})
   public SaveCacheGCSStepInfo(String callbackId, Integer port, String identifier, String name, Integer retry,
-      Integer timeout, String connectorRef, String image, ContainerResource resources, String key, String bucket,
+      String connectorRef, String image, ContainerResource resources, String key, String bucket,
       List<String> sourcePath, String target) {
     this.callbackId = callbackId;
     this.port = port;
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
-    this.timeout = Optional.ofNullable(timeout).orElse(DEFAULT_TIMEOUT);
+
     this.connectorRef = connectorRef;
     this.image = Optional.ofNullable(image).orElse("homerovalle/drone-gcs-cache:latest");
     this.resources = resources;

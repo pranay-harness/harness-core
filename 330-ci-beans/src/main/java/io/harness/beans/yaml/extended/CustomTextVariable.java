@@ -8,7 +8,7 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
-@JsonTypeName("text")
+@JsonTypeName("Text")
 @TypeAlias("customTextVariable")
 public class CustomTextVariable implements CustomVariable {
   @Builder.Default @NotNull Type type = Type.TEXT;

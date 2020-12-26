@@ -31,33 +31,24 @@ public class IntegrationPipelineExecutionModifierTest extends CIExecutionTest {
   private List<StageElementWrapper> getInputStages() {
     IntegrationStage stage1 =
         IntegrationStage.builder().identifier("s1").infrastructure(K8sDirectInfraYaml.builder().build()).build();
-    IntegrationStage stage2 =
-        IntegrationStage.builder()
-            .identifier("s2")
-            .infrastructure(UseFromStageInfraYaml.builder()
-                                .useFromStage(UseFromStageInfraYaml.UseFromStage.builder().stage("s1").build())
-                                .build())
-            .build();
+    IntegrationStage stage2 = IntegrationStage.builder()
+                                  .identifier("s2")
+                                  .infrastructure(UseFromStageInfraYaml.builder().useFromStage("s1").build())
+                                  .build();
 
     IntegrationStage stage3 =
         IntegrationStage.builder().identifier("s3").infrastructure(K8sDirectInfraYaml.builder().build()).build();
-    IntegrationStage stage4 =
-        IntegrationStage.builder()
-            .identifier("s4")
-            .infrastructure(UseFromStageInfraYaml.builder()
-                                .useFromStage(UseFromStageInfraYaml.UseFromStage.builder().stage("s1").build())
-                                .build())
-            .build();
+    IntegrationStage stage4 = IntegrationStage.builder()
+                                  .identifier("s4")
+                                  .infrastructure(UseFromStageInfraYaml.builder().useFromStage("s1").build())
+                                  .build();
 
     IntegrationStage stage5 =
         IntegrationStage.builder().identifier("s5").infrastructure(K8sDirectInfraYaml.builder().build()).build();
-    IntegrationStage stage6 =
-        IntegrationStage.builder()
-            .identifier("s6")
-            .infrastructure(UseFromStageInfraYaml.builder()
-                                .useFromStage(UseFromStageInfraYaml.UseFromStage.builder().stage("s3").build())
-                                .build())
-            .build();
+    IntegrationStage stage6 = IntegrationStage.builder()
+                                  .identifier("s6")
+                                  .infrastructure(UseFromStageInfraYaml.builder().useFromStage("s3").build())
+                                  .build();
 
     StageElement stageElement1 = StageElement.builder().identifier("s1").stageType(stage1).build();
     StageElement stageElement2 = StageElement.builder().identifier("s2").stageType(stage2).build();

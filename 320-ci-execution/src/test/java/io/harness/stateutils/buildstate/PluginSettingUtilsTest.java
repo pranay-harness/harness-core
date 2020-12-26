@@ -18,7 +18,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.rule.Owner;
 
-import com.google.common.collect.ImmutableMap;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,10 +33,10 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
                                      .registry("gcr.io")
                                      .repo("harness")
                                      .tags(asList("tag1", "tag2"))
-                                     .dockerFile("Dockerfile")
+                                     .dockerfile("Dockerfile")
                                      .context("context")
                                      .target("target")
-                                     .buildArgs(ImmutableMap.of("arg1", "argValue1", "arg2", "argValue2"))
+                                     .buildArgs(asList("arg1", "arg2"))
                                      .labels(Collections.singletonMap("label", "label1"))
                                      .build();
 
@@ -48,7 +47,7 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_DOCKERFILE", "Dockerfile");
     expected.put("PLUGIN_CONTEXT", "context");
     expected.put("PLUGIN_TARGET", "target");
-    expected.put("PLUGIN_BUILD_ARGS", "arg1=argValue1,arg2=argValue2");
+    expected.put("PLUGIN_BUILD_ARGS", "arg1,arg2");
     expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
     Map<String, String> pluginCompatiblePublishStepEnvVariables =
         PluginSettingUtils.getPluginCompatibleEnvVariables(dockerStepInfo);
@@ -63,10 +62,10 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
                                      .registry("https://aws_account_id.dkr.ecr.region.amazonaws.com.")
                                      .repo("harness")
                                      .tags(asList("tag1", "tag2"))
-                                     .dockerFile("Dockerfile")
+                                     .dockerfile("Dockerfile")
                                      .context("context")
                                      .target("target")
-                                     .buildArgs(ImmutableMap.of("arg1", "argValue1", "arg2", "argValue2"))
+                                     .buildArgs(asList("arg1", "arg2"))
                                      .labels(Collections.singletonMap("label", "label1"))
                                      .build();
 
@@ -77,7 +76,7 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_DOCKERFILE", "Dockerfile");
     expected.put("PLUGIN_CONTEXT", "context");
     expected.put("PLUGIN_TARGET", "target");
-    expected.put("PLUGIN_BUILD_ARGS", "arg1=argValue1,arg2=argValue2");
+    expected.put("PLUGIN_BUILD_ARGS", "arg1,arg2");
     expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
     Map<String, String> pluginCompatiblePublishStepEnvVariables =
         PluginSettingUtils.getPluginCompatibleEnvVariables(dockerStepInfo);
@@ -90,10 +89,10 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     DockerStepInfo dockerStepInfo = DockerStepInfo.builder()
                                         .repo("harness")
                                         .tags(asList("tag1", "tag2"))
-                                        .dockerFile("Dockerfile")
+                                        .dockerfile("Dockerfile")
                                         .context("context")
                                         .target("target")
-                                        .buildArgs(ImmutableMap.of("arg1", "argValue1", "arg2", "argValue2"))
+                                        .buildArgs(asList("arg1", "arg2"))
                                         .labels(Collections.singletonMap("label", "label1"))
                                         .build();
 
@@ -103,7 +102,7 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_DOCKERFILE", "Dockerfile");
     expected.put("PLUGIN_CONTEXT", "context");
     expected.put("PLUGIN_TARGET", "target");
-    expected.put("PLUGIN_BUILD_ARGS", "arg1=argValue1,arg2=argValue2");
+    expected.put("PLUGIN_BUILD_ARGS", "arg1,arg2");
     expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
     Map<String, String> pluginCompatiblePublishStepEnvVariables =
         PluginSettingUtils.getPluginCompatibleEnvVariables(dockerStepInfo);
