@@ -147,7 +147,6 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(DependencyElement.class, 100064);
     kryo.register(CIServiceInfo.class, 100065);
     kryo.register(UseFromStageInfraYaml.class, 100066);
-    kryo.register(UseFromStageInfraYaml.UseFromStage.class, 100067);
     kryo.register(ManualExecutionSource.class, 100068);
     kryo.register(Infrastructure.Type.class, 100069);
     kryo.register(WebhookBaseAttributes.class, 100070);

@@ -34,8 +34,13 @@ import io.harness.beans.yaml.extended.CustomSecretVariable;
 import io.harness.beans.yaml.extended.CustomTextVariable;
 import io.harness.beans.yaml.extended.CustomVariable;
 import io.harness.beans.yaml.extended.container.ContainerResource;
+import io.harness.beans.yaml.extended.container.quantity.CpuQuantity;
+import io.harness.beans.yaml.extended.container.quantity.MemoryQuantity;
+import io.harness.beans.yaml.extended.container.quantity.unit.BinaryQuantityUnit;
+import io.harness.beans.yaml.extended.container.quantity.unit.DecimalQuantityUnit;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.ci.config.CIExecutionServiceConfig;
+import io.harness.ci.utils.QuantityUtils;
 import io.harness.common.CICommonPodConstants;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
 import io.harness.delegate.beans.ci.pod.ContainerResourceParams;
@@ -588,16 +593,18 @@ public class BuildJobEnvInfoBuilder {
 
   private Integer getContainerMemoryLimit(ContainerResource resource) {
     Integer memoryLimit = ciExecutionServiceConfig.getDefaultMemoryLimit();
-    if (resource != null && resource.getLimit() != null && resource.getLimit().getMemory() > 0) {
-      memoryLimit = resource.getLimit().getMemory();
+    if (resource != null && resource.getLimit() != null && resource.getLimit().getMemory() != null) {
+      MemoryQuantity memoryLimitMemoryQuantity = resource.getLimit().getMemory();
+      memoryLimit = QuantityUtils.getMemoryQuantityValueInUnit(memoryLimitMemoryQuantity, BinaryQuantityUnit.Mi);
     }
     return memoryLimit;
   }
 
   private Integer getContainerCpuLimit(ContainerResource resource) {
     Integer cpuLimit = ciExecutionServiceConfig.getDefaultCPULimit();
-    if (resource != null && resource.getLimit() != null && resource.getLimit().getCpu() > 0) {
-      cpuLimit = resource.getLimit().getCpu();
+    if (resource != null && resource.getLimit() != null && resource.getLimit().getCpu() != null) {
+      CpuQuantity cpuLimitQuantity = resource.getLimit().getCpu();
+      cpuLimit = QuantityUtils.getCpuQuantityValueInUnit(cpuLimitQuantity, DecimalQuantityUnit.m);
     }
     return cpuLimit;
   }
@@ -722,9 +729,8 @@ public class BuildJobEnvInfoBuilder {
   private String getWorkingDirectory(StageElementConfig stageElementConfig) {
     IntegrationStageConfig integrationStageConfig = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
 
-    if ((integrationStageConfig.getWorkingDirectory() != null)
-        && !integrationStageConfig.getWorkingDirectory().isExpression()) {
-      return (String) integrationStageConfig.getWorkingDirectory().fetchFinalValue();
+    if ((integrationStageConfig.getWorkspace() != null) && !integrationStageConfig.getWorkspace().isExpression()) {
+      return (String) integrationStageConfig.getWorkspace().fetchFinalValue();
     } else {
       return CICommonPodConstants.STEP_EXEC_WORKING_DIR;
     }

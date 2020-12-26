@@ -1,10 +1,14 @@
 {
   "type": "object",
   "required": [
+    "build",
     "connectorRef",
     "repoName"
   ],
   "properties": {
+    "build": {
+      "$ref": "#/definitions/ParameterFieldBuild"
+    },
     "connectorRef": {
       "type": "string"
     },

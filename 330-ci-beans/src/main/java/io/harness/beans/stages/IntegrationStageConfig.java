@@ -20,7 +20,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Data
 @Builder
 @AllArgsConstructor
-@JsonTypeName("ci")
+@JsonTypeName("CI")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("integrationStage")
 public class IntegrationStageConfig implements StageInfoConfig {
@@ -28,9 +28,9 @@ public class IntegrationStageConfig implements StageInfoConfig {
   List<CustomVariable> variables;
   private ParameterField<List<String>> sharedPaths;
   ExecutionElementConfig execution;
-  private ParameterField<String> workingDirectory;
+  private ParameterField<String> workspace;
   private Infrastructure infrastructure;
-  private List<DependencyElement> dependencies;
-  private ParameterField<Boolean> cloneRepository;
+  private List<DependencyElement> serviceDependencies;
+  private ParameterField<Boolean> enableCloneRepo;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
 }

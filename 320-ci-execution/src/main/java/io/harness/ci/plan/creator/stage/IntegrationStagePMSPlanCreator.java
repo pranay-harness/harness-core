@@ -1,9 +1,11 @@
 package io.harness.ci.plan.creator.stage;
 
 import static io.harness.common.CICommonPodConstants.POD_NAME_PREFIX;
+import static io.harness.pms.yaml.YAMLFieldNameConstants.CI;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.CI_CODE_BASE;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.EXECUTION;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.PARALLEL;
+import static io.harness.pms.yaml.YAMLFieldNameConstants.PROPERTIES;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.SPEC;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STAGE;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STAGES;
@@ -55,7 +57,7 @@ import java.util.Set;
 public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageElementConfig> {
   @Inject private KryoSerializer kryoSerializer;
 
-  public static final String STAGE_NAME = "ci";
+  public static final String STAGE_NAME = "CI";
   static final String SOURCE = "123456789bcdfghjklmnpqrstvwxyz";
   static final Integer RANDOM_LENGTH = 8;
   @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
@@ -77,6 +79,10 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
                                   .getParentNode()
                                   .getParentNode()
                                   .getParentNode()
+                                  .getField(PROPERTIES)
+                                  .getNode()
+                                  .getField(CI)
+                                  .getNode()
                                   .getField(CI_CODE_BASE)
                                   .getNode();
     CodeBase ciCodeBase = IntegrationStageUtils.getCiCodeBase(ciCodeBaseNode);

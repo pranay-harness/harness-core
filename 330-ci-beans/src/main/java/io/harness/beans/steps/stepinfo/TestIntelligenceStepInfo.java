@@ -14,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import java.beans.ConstructorProperties;
+import java.util.Optional;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
@@ -22,7 +23,7 @@ import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@JsonTypeName("testIntelligence")
+@JsonTypeName("TestIntelligence")
 @TypeAlias("testIntelligenceStepInfo")
 public class TestIntelligenceStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
@@ -41,7 +42,7 @@ public class TestIntelligenceStepInfo implements CIStepInfo {
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
-  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
+
   @NotNull private String goals;
   @NotNull private String language;
   @NotNull private String buildTool;
@@ -52,16 +53,14 @@ public class TestIntelligenceStepInfo implements CIStepInfo {
   private int port;
 
   @Builder
-  @ConstructorProperties({"callbackId", "identifier", "name", "retry", "timeout", "goals", "language", "buildTool",
-      "image", "connector", "resources", "port"})
-  public TestIntelligenceStepInfo(String callbackId, String identifier, String name, int retry, int timeout,
-      String goals, String language, String buildTool, String image, String connector, ContainerResource resources,
-      int port) {
+  @ConstructorProperties({"callbackId", "identifier", "name", "retry", "goals", "language", "buildTool", "image",
+      "connector", "resources", "port"})
+  public TestIntelligenceStepInfo(String callbackId, String identifier, String name, Integer retry, String goals,
+      String language, String buildTool, String image, String connector, ContainerResource resources, int port) {
     this.callbackId = callbackId;
     this.identifier = identifier;
     this.name = name;
-    this.retry = retry;
-    this.timeout = timeout;
+    this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
     this.goals = goals;
     this.language = language;
     this.buildTool = buildTool;
@@ -69,6 +68,11 @@ public class TestIntelligenceStepInfo implements CIStepInfo {
     this.connector = connector;
     this.resources = resources;
     this.port = port;
+  }
+
+  @Override
+  public long getDefaultTimeout() {
+    return DEFAULT_TIMEOUT;
   }
 
   @Override

@@ -25,7 +25,7 @@ import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@JsonTypeName("build")
+@JsonTypeName("Build")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("buildStepInfo")
 public class BuildStepInfo implements CIStepInfo {
@@ -38,20 +38,19 @@ public class BuildStepInfo implements CIStepInfo {
 
   @JsonIgnore
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.BUILD.name()).build();
+  @JsonIgnore @Builder.Default int timeout = DEFAULT_TIMEOUT;
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
-  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
   private List<ScriptInfo> scriptInfos;
 
   @Builder
-  @ConstructorProperties({"identifier", "name", "retry", "timeout", "scriptInfos"})
-  public BuildStepInfo(String identifier, String name, Integer retry, Integer timeout, List<ScriptInfo> scriptInfos) {
+  @ConstructorProperties({"identifier", "name", "retry", "scriptInfos"})
+  public BuildStepInfo(String identifier, String name, Integer retry, List<ScriptInfo> scriptInfos) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
-    this.timeout = Optional.ofNullable(timeout).orElse(DEFAULT_TIMEOUT);
     this.scriptInfos = scriptInfos;
   }
 

@@ -6,8 +6,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", visible = true)
 public interface CustomVariable {
   enum Type {
-    @JsonProperty("text") TEXT,
-    @JsonProperty("secret") SECRET;
+    @JsonProperty("Text") TEXT,
+    @JsonProperty("Secret") SECRET;
   }
   Type getType();
 }

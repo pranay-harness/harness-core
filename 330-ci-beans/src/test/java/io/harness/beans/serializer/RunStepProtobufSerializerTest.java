@@ -41,7 +41,6 @@ public class RunStepProtobufSerializerTest extends CiBeansTestBase {
                                   .name(RUN_STEP)
                                   .identifier(RUN_STEP_ID)
                                   .retry(RETRY)
-                                  .timeout(TIMEOUT)
                                   .command(MVN_CLEAN_INSTALL)
                                   .reports(unitTestReportList)
                                   .output(Arrays.asList(OUTPUT))

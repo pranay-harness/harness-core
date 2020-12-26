@@ -26,6 +26,8 @@ public class StepElementConfig {
   String uuid;
   @EntityIdentifier String identifier;
   @EntityName String name;
+  String description;
+  String timeout;
   List<FailureStrategyConfig> failureStrategies;
 
   String type;
@@ -36,11 +38,14 @@ public class StepElementConfig {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
 
   @Builder
-  public StepElementConfig(String uuid, String identifier, String name, List<FailureStrategyConfig> failureStrategies,
-      String type, StepSpecType stepSpecType, ParameterField<String> skipCondition) {
+  public StepElementConfig(String uuid, String identifier, String name, String description, String timeout,
+      List<FailureStrategyConfig> failureStrategies, String type, StepSpecType stepSpecType,
+      ParameterField<String> skipCondition) {
     this.uuid = uuid;
     this.identifier = identifier;
     this.name = name;
+    this.description = description;
+    this.timeout = timeout;
     this.failureStrategies = failureStrategies;
     this.type = type;
     this.stepSpecType = stepSpecType;

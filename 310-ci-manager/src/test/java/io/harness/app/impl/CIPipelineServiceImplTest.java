@@ -108,7 +108,7 @@ public class CIPipelineServiceImplTest extends CIManagerTest {
 
     // Assert testIntelligence spec
     StepElement stepElement = (StepElement) execution.getSteps().get(4);
-    assertThat(stepElement.getType()).isEqualTo("testIntelligence");
+    assertThat(stepElement.getType()).isEqualTo("TestIntelligence");
     assertThat(stepElement.getIdentifier()).isEqualTo("runUnitTestsIntelligently");
     TestIntelligenceStepInfo testIntelligenceStepInfo = (TestIntelligenceStepInfo) stepElement.getStepSpecType();
     assertThat(testIntelligenceStepInfo.getGoals()).isEqualTo("echo \"Running test\"");

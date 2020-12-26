@@ -27,7 +27,7 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
-@JsonTypeName("ci")
+@JsonTypeName("CI")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("integrationStage")
 public class IntegrationStage implements CIStage {

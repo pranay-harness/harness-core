@@ -5,11 +5,11 @@ pipeline:
   stages:
   - stage:
       identifier: masterBuildUpload
-      type: ci
+      type: CI
       spec:
         description: This stage is run hourly to build binaries from master and upload
         infrastructure:
-          type: kubernetes-direct
+          type: KubernetesDirect
           spec:
             connectorRef: MyKubeCluster1
             namespace: ShoppingCart
@@ -27,16 +27,16 @@ pipeline:
           imagePath: "us.gcr.io/platform-205701/jenkins-slave-portal-oracle-8u191:12" #if version
         customVariables: #users can specify both in the pipeline & stage level. these vars are available as env vars
           - name: internalPath
-            type: text
+            type: Text
             value: "{input}"
           - name: runTimeVal #will get a value in runtime to be used in a following stage -how?
-            type: secret
+            type: Secret
             value: org.runTimeValSecret
         execution:
           steps:
             - step:
-                identifier: gitClone
-                type: gitClone
+                identifier: GitClone
+                type: GitClone
                 spec:
                   gitConnector: gitGlobal
                   path: portal
@@ -44,44 +44,39 @@ pipeline:
             - parallel:
                 - step:
                     identifier: runLint
-                    type: run
+                    type: Run
                     spec:
                       retry: 2
-                      timeout: 30
                       command: ./run lint
                 - step:
                     identifier: runUnitTests
-                    type: run
+                    type: Run
                     spec:
                       retry: 2
-                      timeout: 30
                       command: mvn -U clean package -Dbuild.number=${BUILD_NUMBER} -DgitBranch=master -DforkMode=perthread -DthreadCount=3 -DargLine="-Xmx2048m"
             - step:
                 identifier: generateReport
-                type: run
+                type: Run
                 spec:
-                  timeout: 30
                   retry: 2
                   command: ./ci/generate_report.sh
             - step:
                 identifier: buildMaster
-                type: run
+                type: Run
                 spec:
                   retry: 2
-                  timeout: 75
                   command: mvn clean install
             - step:
                 identifier: runUnitTestsIntelligently
-                type: testIntelligence
+                type: TestIntelligence
                 spec:
                   retry: 2
-                  timeout: 30
                   goals: echo "Running test"
                   buildTool: maven
                   language: java
             - step:
                 identifier: uploadArtifact
-                type: publishArtifacts
+                type: PublishArtifacts
                 spec:
                   publishArtifacts:
                     - dockerFile: Dockerfile

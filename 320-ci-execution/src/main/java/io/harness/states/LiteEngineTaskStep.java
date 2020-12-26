@@ -6,14 +6,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.beans.dependencies.ServiceDependency;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.outcomes.DependencyOutcome;
-import io.harness.beans.plugin.compatible.PluginCompatibleStep;
+import io.harness.beans.serializer.TimeoutUtils;
+import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
-import io.harness.beans.steps.stepinfo.PluginStepInfo;
-import io.harness.beans.steps.stepinfo.PublishStepInfo;
-import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
-import io.harness.beans.steps.stepinfo.RunStepInfo;
-import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
-import io.harness.beans.steps.stepinfo.TestIntelligenceStepInfo;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.ci.integrationstage.IntegrationStageUtils;
 import io.harness.delegate.beans.TaskData;
@@ -192,47 +187,10 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
   private void createStepCallbackIds(
       Ambiance ambiance, StepElementConfig stepElement, String accountId, Map<String, String> taskIds) {
     // TODO replace identifier as key in case two steps can have same identifier
-
-    if (stepElement.getStepSpecType().getStepType().equals(RunStepInfo.STEP_TYPE)) {
-      RunStepInfo runStepInfo = (RunStepInfo) stepElement.getStepSpecType();
-      String taskId = queueDelegateTask(ambiance, runStepInfo.getTimeout(), accountId, ciDelegateTaskExecutor);
-      taskIds.put(stepElement.getIdentifier(), taskId);
-    }
-
-    if (stepElement.getStepSpecType().getStepType().equals(PluginStep.STEP_TYPE)) {
-      PluginStepInfo pluginStepInfo = (PluginStepInfo) stepElement.getStepSpecType();
-      String taskId = queueDelegateTask(ambiance, pluginStepInfo.getTimeout(), accountId, ciDelegateTaskExecutor);
-      taskIds.put(stepElement.getIdentifier(), taskId);
-    }
-    if (stepElement.getStepSpecType().getStepType().equals(PublishStep.STEP_TYPE)) {
-      PublishStepInfo publishStepInfo = (PublishStepInfo) stepElement.getStepSpecType();
-      String taskId = queueDelegateTask(ambiance, publishStepInfo.getTimeout(), accountId, ciDelegateTaskExecutor);
-      taskIds.put(stepElement.getIdentifier(), taskId);
-    }
-
-    if (stepElement.getStepSpecType().getStepType().equals(SaveCacheStep.STEP_TYPE)) {
-      SaveCacheStepInfo saveCacheStepInfo = (SaveCacheStepInfo) stepElement.getStepSpecType();
-      String taskId = queueDelegateTask(ambiance, saveCacheStepInfo.getTimeout(), accountId, ciDelegateTaskExecutor);
-      taskIds.put(stepElement.getIdentifier(), taskId);
-    }
-
-    if (stepElement.getStepSpecType().getStepType().equals(RestoreCacheStep.STEP_TYPE)) {
-      RestoreCacheStepInfo restoreCacheStepInfo = (RestoreCacheStepInfo) stepElement.getStepSpecType();
-      String taskId = queueDelegateTask(ambiance, restoreCacheStepInfo.getTimeout(), accountId, ciDelegateTaskExecutor);
-      taskIds.put(stepElement.getIdentifier(), taskId);
-    }
-
-    if (stepElement.getStepSpecType().getStepType().equals(TestIntelligenceStep.STEP_TYPE)) {
-      TestIntelligenceStepInfo runStepInfo = (TestIntelligenceStepInfo) stepElement.getStepSpecType();
-      String taskId = queueDelegateTask(ambiance, runStepInfo.getTimeout(), accountId, ciDelegateTaskExecutor);
-      taskIds.put(stepElement.getIdentifier(), taskId);
-    }
-
-    if (stepElement.getStepSpecType() instanceof PluginCompatibleStep) {
-      PluginCompatibleStep stepInfo = (PluginCompatibleStep) stepElement.getStepSpecType();
-      String taskId = queueDelegateTask(ambiance, stepInfo.getTimeout(), accountId, ciDelegateTaskExecutor);
-      taskIds.put(stepElement.getIdentifier(), taskId);
-    }
+    long timeout = TimeoutUtils.parseTimeoutString(
+        stepElement.getTimeout(), ((CIStepInfo) stepElement.getStepSpecType()).getDefaultTimeout());
+    String taskId = queueDelegateTask(ambiance, timeout, accountId, ciDelegateTaskExecutor);
+    taskIds.put(stepElement.getIdentifier(), taskId);
   }
 
   private String queueDelegateTask(Ambiance ambiance, long timeout, String accountId, CIDelegateTaskExecutor executor) {

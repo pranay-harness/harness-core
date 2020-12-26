@@ -25,12 +25,11 @@ import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@JsonTypeName("saveCacheS3")
+@JsonTypeName("SaveCacheS3")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("saveCacheS3StepInfo")
 public class SaveCacheS3StepInfo implements PluginCompatibleStep {
   public static final int DEFAULT_RETRY = 1;
-  public static final int DEFAULT_TIMEOUT = 60 * 60 * 2; // 2 hour
 
   @JsonView(JsonViews.Internal.class)
   @NotNull
@@ -43,7 +42,6 @@ public class SaveCacheS3StepInfo implements PluginCompatibleStep {
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
-  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
 
   @NotNull private String connectorRef;
   @JsonIgnore @NotNull private String image;
@@ -57,17 +55,17 @@ public class SaveCacheS3StepInfo implements PluginCompatibleStep {
   private String target;
 
   @Builder
-  @ConstructorProperties({"callbackId", "port", "identifier", "name", "retry", "timeout", "connectorRef", "image",
-      "resources", "endpoint", "key", "bucket", "sourcePath", "target"})
+  @ConstructorProperties({"callbackId", "port", "identifier", "name", "retry", "connectorRef", "image", "resources",
+      "endpoint", "key", "bucket", "sourcePath", "target"})
   public SaveCacheS3StepInfo(String callbackId, Integer port, String identifier, String name, Integer retry,
-      Integer timeout, String connectorRef, String image, ContainerResource resources, String endpoint, String key,
-      String bucket, List<String> sourcePath, String target) {
+      String connectorRef, String image, ContainerResource resources, String endpoint, String key, String bucket,
+      List<String> sourcePath, String target) {
     this.callbackId = callbackId;
     this.port = port;
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
-    this.timeout = Optional.ofNullable(timeout).orElse(DEFAULT_TIMEOUT);
+
     this.connectorRef = connectorRef;
     this.image = Optional.ofNullable(image).orElse("plugins/s3-cache:latest");
     this.resources = resources;

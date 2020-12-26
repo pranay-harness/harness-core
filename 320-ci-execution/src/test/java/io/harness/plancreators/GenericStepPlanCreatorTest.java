@@ -40,7 +40,6 @@ public class GenericStepPlanCreatorTest extends CIExecutionTest {
                    .path("/test/path")
 
                    .retry(3)
-                   .timeout(60)
                    .build();
   }
 

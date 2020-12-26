@@ -16,14 +16,5 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("useFromStageInfraYaml")
 public class UseFromStageInfraYaml implements Infrastructure {
   @JsonIgnore @Builder.Default private Type type = Type.USE_FROM_STAGE;
-  private UseFromStage useFromStage;
-
-  @Data
-  @Builder
-  @NoArgsConstructor
-  @AllArgsConstructor
-  @TypeAlias("useFromStageInfraYaml_useFromStage")
-  public static class UseFromStage {
-    private String stage;
-  }
+  private String useFromStage;
 }

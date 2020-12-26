@@ -64,6 +64,8 @@ import io.harness.beans.yaml.extended.CustomVariable;
 import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.beans.yaml.extended.container.Container;
 import io.harness.beans.yaml.extended.container.ContainerResource;
+import io.harness.beans.yaml.extended.container.quantity.CpuQuantity;
+import io.harness.beans.yaml.extended.container.quantity.MemoryQuantity;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.ci.beans.entities.BuildNumberDetails;
@@ -146,11 +148,15 @@ public class CIExecutionPlanTestHelper {
 
   private static final Integer PLUGIN_STEP_LIMIT_MEM = 50;
   private static final Integer PLUGIN_STEP_LIMIT_CPU = 100;
+  private static final String PLUGIN_STEP_LIMIT_MEM_STRING = "50Mi";
+  private static final String PLUGIN_STEP_LIMIT_CPU_STRING = "100m";
   private static final String PLUGIN_ENV_VAR = "foo";
   private static final String PLUGIN_ENV_VAL = "bar";
 
   private static final String SERVICE_ID = "db";
   private static final String SERVICE_CTR_NAME = "service-0";
+  private static final String SERVICE_LIMIT_MEM_STRING = "60Mi";
+  private static final String SERVICE_LIMIT_CPU_STRING = "80m";
   private static final Integer SERVICE_LIMIT_MEM = 60;
   private static final Integer SERVICE_LIMIT_CPU = 80;
   private static final String SERVICE_IMAGE = "redis";
@@ -420,18 +426,18 @@ public class CIExecutionPlanTestHelper {
   private DependencyElement getServiceDependencyElement() {
     return DependencyElement.builder()
         .identifier(SERVICE_ID)
-        .dependencySpecType(
-            CIServiceInfo.builder()
-                .identifier(SERVICE_ID)
-                .args(Collections.singletonList(SERVICE_ARGS))
-                .entrypoint(Collections.singletonList(SERVICE_ENTRYPOINT))
-                .image(SERVICE_IMAGE)
-                .resources(
-                    ContainerResource.builder()
-                        .limit(
-                            ContainerResource.Limit.builder().cpu(SERVICE_LIMIT_CPU).memory(SERVICE_LIMIT_MEM).build())
-                        .build())
-                .build())
+        .dependencySpecType(CIServiceInfo.builder()
+                                .identifier(SERVICE_ID)
+                                .args(Collections.singletonList(SERVICE_ARGS))
+                                .entrypoint(Collections.singletonList(SERVICE_ENTRYPOINT))
+                                .image(SERVICE_IMAGE)
+                                .resources(ContainerResource.builder()
+                                               .limit(ContainerResource.Limit.builder()
+                                                          .cpu(CpuQuantity.fromString(SERVICE_LIMIT_CPU_STRING))
+                                                          .memory(MemoryQuantity.fromString(SERVICE_LIMIT_MEM_STRING))
+                                                          .build())
+                                               .build())
+                                .build())
         .build();
   }
 
@@ -567,8 +573,8 @@ public class CIExecutionPlanTestHelper {
                           .image(PLUGIN_STEP_IMAGE)
                           .resources(ContainerResource.builder()
                                          .limit(ContainerResource.Limit.builder()
-                                                    .cpu(PLUGIN_STEP_LIMIT_CPU)
-                                                    .memory(PLUGIN_STEP_LIMIT_MEM)
+                                                    .cpu(CpuQuantity.fromString(PLUGIN_STEP_LIMIT_CPU_STRING))
+                                                    .memory(MemoryQuantity.fromString(PLUGIN_STEP_LIMIT_MEM_STRING))
                                                     .build())
                                          .build())
                           .port(PORT_STARTING_RANGE + index)

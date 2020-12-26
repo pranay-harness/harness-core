@@ -27,13 +27,8 @@ public class PluginStepProtobufSerializerTest extends CiBeansTestBase {
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
   public void shouldSerializeRunStep() throws InvalidProtocolBufferException {
-    PluginStepInfo pluginStepInfo = PluginStepInfo.builder()
-                                        .name(PLUGIN_STEP)
-                                        .identifier(PLUGIN_STEP_ID)
-                                        .retry(RETRY)
-                                        .timeout(TIMEOUT)
-                                        .image(PLUGIN_IMAGE)
-                                        .build();
+    PluginStepInfo pluginStepInfo =
+        PluginStepInfo.builder().name(PLUGIN_STEP).identifier(PLUGIN_STEP_ID).retry(RETRY).image(PLUGIN_IMAGE).build();
     pluginStepInfo.setCallbackId(CALLBACK_ID);
     pluginStepInfo.setPort(PORT);
     StepElementConfig stepElement = StepElementConfig.builder()

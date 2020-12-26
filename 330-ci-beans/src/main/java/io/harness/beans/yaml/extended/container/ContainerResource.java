@@ -1,5 +1,8 @@
 package io.harness.beans.yaml.extended.container;
 
+import io.harness.beans.yaml.extended.container.quantity.CpuQuantity;
+import io.harness.beans.yaml.extended.container.quantity.MemoryQuantity;
+
 import java.beans.ConstructorProperties;
 import java.util.Optional;
 import javax.validation.constraints.Min;
@@ -13,8 +16,8 @@ import org.springframework.data.annotation.TypeAlias;
 @Data
 @TypeAlias("resource")
 public class ContainerResource {
-  public static final int MEM_LIMIT_DEFAULT = 200;
-  public static final int CPU_MILLI_LIMIT_DEFAULT = 200;
+  public static final String MEM_LIMIT_DEFAULT = "200Mi";
+  public static final String CPU_MILLI_LIMIT_DEFAULT = "200m";
 
   @NotNull Limit limit;
 
@@ -30,7 +33,7 @@ public class ContainerResource {
   @AllArgsConstructor
   @TypeAlias("resource_limit")
   public static class Limit {
-    @Builder.Default @Min(0) private int memory = MEM_LIMIT_DEFAULT;
-    @Builder.Default @Min(0) private int cpu = CPU_MILLI_LIMIT_DEFAULT;
+    @Builder.Default @Min(0) private MemoryQuantity memory = MemoryQuantity.fromString(MEM_LIMIT_DEFAULT);
+    @Builder.Default @Min(0) private CpuQuantity cpu = CpuQuantity.fromString(CPU_MILLI_LIMIT_DEFAULT);
   }
 }

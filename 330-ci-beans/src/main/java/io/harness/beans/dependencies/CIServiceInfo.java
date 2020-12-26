@@ -20,7 +20,7 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
-@JsonTypeName("service")
+@JsonTypeName("Service")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("ciServiceInfo")
 public class CIServiceInfo implements DependencySpecType {

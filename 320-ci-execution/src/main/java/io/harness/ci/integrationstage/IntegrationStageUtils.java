@@ -17,7 +17,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class IntegrationStageUtils {
   public IntegrationStageConfig getIntegrationStageConfig(StageElementConfig stageElementConfig) {
-    if (stageElementConfig.getType().equals("ci")) {
+    if (stageElementConfig.getType().equals("CI")) {
       return (IntegrationStageConfig) stageElementConfig.getStageType();
     } else {
       throw new CIStageExecutionException("Invalid stage type: " + stageElementConfig.getStageType());

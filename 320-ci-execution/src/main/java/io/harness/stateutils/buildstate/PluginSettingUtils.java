@@ -78,10 +78,10 @@ public class PluginSettingUtils {
     setMandatoryEnvironmentVariable(map, PLUGIN_REPO, stepInfo.getRepo());
     setMandatoryEnvironmentVariable(map, PLUGIN_TAGS, listToStringSlice(stepInfo.getTags()));
 
-    setOptionalEnvironmentVariable(map, PLUGIN_DOCKERFILE, stepInfo.getDockerFile());
+    setOptionalEnvironmentVariable(map, PLUGIN_DOCKERFILE, stepInfo.getDockerfile());
     setOptionalEnvironmentVariable(map, PLUGIN_CONTEXT, stepInfo.getContext());
     setOptionalEnvironmentVariable(map, PLUGIN_TARGET, stepInfo.getTarget());
-    setOptionalEnvironmentVariable(map, PLUGIN_BUILD_ARGS, mapToStringSlice(stepInfo.getBuildArgs()));
+    setOptionalEnvironmentVariable(map, PLUGIN_BUILD_ARGS, listToStringSlice(stepInfo.getBuildArgs()));
     setOptionalEnvironmentVariable(map, PLUGIN_CUSTOM_LABELS, mapToStringSlice(stepInfo.getLabels()));
 
     return map;
@@ -94,10 +94,10 @@ public class PluginSettingUtils {
     setMandatoryEnvironmentVariable(map, PLUGIN_REPO, stepInfo.getRepo());
     setMandatoryEnvironmentVariable(map, PLUGIN_TAGS, listToStringSlice(stepInfo.getTags()));
 
-    setOptionalEnvironmentVariable(map, PLUGIN_DOCKERFILE, stepInfo.getDockerFile());
+    setOptionalEnvironmentVariable(map, PLUGIN_DOCKERFILE, stepInfo.getDockerfile());
     setOptionalEnvironmentVariable(map, PLUGIN_CONTEXT, stepInfo.getContext());
     setOptionalEnvironmentVariable(map, PLUGIN_TARGET, stepInfo.getTarget());
-    setOptionalEnvironmentVariable(map, PLUGIN_BUILD_ARGS, mapToStringSlice(stepInfo.getBuildArgs()));
+    setOptionalEnvironmentVariable(map, PLUGIN_BUILD_ARGS, listToStringSlice(stepInfo.getBuildArgs()));
     setOptionalEnvironmentVariable(map, PLUGIN_CUSTOM_LABELS, mapToStringSlice(stepInfo.getLabels()));
 
     return map;
@@ -109,10 +109,10 @@ public class PluginSettingUtils {
     setMandatoryEnvironmentVariable(map, PLUGIN_REPO, stepInfo.getRepo());
     setMandatoryEnvironmentVariable(map, PLUGIN_TAGS, listToStringSlice(stepInfo.getTags()));
 
-    setOptionalEnvironmentVariable(map, PLUGIN_DOCKERFILE, stepInfo.getDockerFile());
+    setOptionalEnvironmentVariable(map, PLUGIN_DOCKERFILE, stepInfo.getDockerfile());
     setOptionalEnvironmentVariable(map, PLUGIN_CONTEXT, stepInfo.getContext());
     setOptionalEnvironmentVariable(map, PLUGIN_TARGET, stepInfo.getTarget());
-    setOptionalEnvironmentVariable(map, PLUGIN_BUILD_ARGS, mapToStringSlice(stepInfo.getBuildArgs()));
+    setOptionalEnvironmentVariable(map, PLUGIN_BUILD_ARGS, listToStringSlice(stepInfo.getBuildArgs()));
     setOptionalEnvironmentVariable(map, PLUGIN_CUSTOM_LABELS, mapToStringSlice(stepInfo.getLabels()));
     return map;
   }

@@ -26,7 +26,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@JsonTypeName("test")
+@JsonTypeName("Test")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("testStepInfo")
 public class TestStepInfo implements CIStepInfo {
@@ -46,19 +46,17 @@ public class TestStepInfo implements CIStepInfo {
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
-  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
 
   @NotEmpty private String numParallel;
   private List<ScriptInfo> scriptInfos;
 
   @Builder
-  @ConstructorProperties({"identifier", "name", "retry", "timeout", "numParallel", "scriptInfos"})
-  public TestStepInfo(String identifier, String name, Integer retry, Integer timeout, String numParallel,
-      List<ScriptInfo> scriptInfos) {
+  @ConstructorProperties({"identifier", "name", "retry", "numParallel", "scriptInfos"})
+  public TestStepInfo(String identifier, String name, Integer retry, String numParallel, List<ScriptInfo> scriptInfos) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
-    this.timeout = Optional.ofNullable(timeout).orElse(DEFAULT_TIMEOUT);
+
     this.numParallel = numParallel;
     this.scriptInfos = scriptInfos;
   }

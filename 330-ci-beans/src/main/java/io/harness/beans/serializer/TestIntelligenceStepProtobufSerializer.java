@@ -20,6 +20,8 @@ public class TestIntelligenceStepProtobufSerializer implements ProtobufStepSeria
     CIStepInfo ciStepInfo = (CIStepInfo) step.getStepSpecType();
     TestIntelligenceStepInfo testIntelligenceStepInfo = (TestIntelligenceStepInfo) ciStepInfo;
 
+    long timeout = TimeoutUtils.parseTimeoutString(step.getTimeout(), ciStepInfo.getDefaultTimeout());
+
     if (callbackId == null) {
       throw new CIStageExecutionException("CallbackId can not be null");
     }
@@ -35,7 +37,7 @@ public class TestIntelligenceStepProtobufSerializer implements ProtobufStepSeria
     testIntelligenceStepBuilder.setBuildTool(testIntelligenceStepInfo.getBuildTool());
     testIntelligenceStepBuilder.setContext(StepContext.newBuilder()
                                                .setNumRetries(testIntelligenceStepInfo.getRetry())
-                                               .setExecutionTimeoutSecs(testIntelligenceStepInfo.getTimeout())
+                                               .setExecutionTimeoutSecs(timeout)
                                                .build());
 
     String skipCondition = SkipConditionUtils.getSkipCondition(step);

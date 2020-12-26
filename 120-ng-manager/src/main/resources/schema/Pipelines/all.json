@@ -8,13 +8,50 @@
   },
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
+    "Build": {
+      "type": "object",
+      "required": [
+        "spec",
+        "type"
+      ],
+      "properties": {
+        "spec": {
+          "$ref": "#/definitions/BuildSpec"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "branch",
+            "tag"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "BuildSpec": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "CIProperties": {
+      "type": "object",
+      "properties": {
+        "codebase": {
+          "$ref": "#/definitions/CodeBase"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "CodeBase": {
       "type": "object",
       "required": [
+        "build",
         "connectorRef",
         "repoName"
       ],
       "properties": {
+        "build": {
+          "$ref": "#/definitions/ParameterFieldBuild"
+        },
         "connectorRef": {
           "type": "string"
         },
@@ -52,6 +89,15 @@
             "ALLOWED_VALUES",
             "REGEX"
           ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "NGProperties": {
+      "type": "object",
+      "properties": {
+        "ci": {
+          "$ref": "#/definitions/CIProperties"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -157,6 +203,36 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "ParameterFieldBuild": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/OrchestrationFieldType"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "$ref": "#/definitions/Build"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "ParameterFieldObject": {
       "type": "object",
       "properties": {
@@ -204,9 +280,6 @@
         "name"
       ],
       "properties": {
-        "ciCodebase": {
-          "$ref": "#/definitions/CodeBase"
-        },
         "description": {
           "type": "string"
         },
@@ -215,6 +288,9 @@
         },
         "name": {
           "type": "string"
+        },
+        "properties": {
+          "$ref": "#/definitions/NGProperties"
         },
         "stages": {
           "type": "array",

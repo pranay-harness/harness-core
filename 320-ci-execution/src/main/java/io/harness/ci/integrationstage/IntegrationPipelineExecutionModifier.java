@@ -77,7 +77,7 @@ public class IntegrationPipelineExecutionModifier implements PipelineExecutionMo
 
     if (infrastructure.getType() == Infrastructure.Type.USE_FROM_STAGE) {
       Infrastructure actualInfrastructure =
-          infrastructureCache.get(((UseFromStageInfraYaml) infrastructure).getUseFromStage().getStage());
+          infrastructureCache.get(((UseFromStageInfraYaml) infrastructure).getUseFromStage());
       if (actualInfrastructure == null) {
         throw new InvalidArgumentsException("Stage identifier given in useFromStage doesn't exist.");
       } else {

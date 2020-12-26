@@ -18,7 +18,7 @@ public class CIStageFilterJsonCreator implements FilterJsonCreator<StageElementC
 
   @Override
   public Map<String, Set<String>> getSupportedTypes() {
-    return Collections.singletonMap("stage", Collections.singleton("ci"));
+    return Collections.singletonMap("stage", Collections.singleton("CI"));
   }
 
   @Override

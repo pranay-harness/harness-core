@@ -5,8 +5,8 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.plancreator.stages.StageElementWrapperConfig;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.yaml.core.properties.NGProperties;
 import io.harness.yaml.core.variables.NGVariable;
-import io.harness.yaml.extended.ci.codebase.CodeBase;
 
 import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
@@ -33,7 +33,7 @@ public class PipelineInfoConfig {
   Map<String, String> tags;
 
   List<NGVariable> variables;
-  CodeBase ciCodebase;
+  NGProperties properties;
 
   @Singular List<StageElementWrapperConfig> stages;
 }
