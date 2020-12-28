@@ -21,6 +21,9 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.docker.DockerAuthType;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
+import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
@@ -28,7 +31,6 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthent
 import io.harness.delegate.task.citasks.cik8handler.helper.ConnectorEnvVariablesHelper;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
-import io.harness.k8s.model.ImageDetails;
 import io.harness.security.encryption.SecretDecryptionService;
 
 import com.google.common.collect.ImmutableMap;
@@ -42,6 +44,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONObject;
 
 /**
  * Helper class to create spec for image registry and GIT secrets. Generated spec can be used for creation of secrets on
@@ -51,9 +54,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class SecretSpecBuilder {
-  private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =
-      "{\"%s\":{\"username\":\"%s\",\"password\":\"%s\"}}";
   private static final String DOCKER_REGISTRY_SECRET_TYPE = "kubernetes.io/dockercfg";
+  private static final String BASE_GCR_HOSTNAME = "gcr.io";
+  private static final String GCR_USERNAME = "_json_key";
+  private static final String PATH_SEPARATOR = "/";
+  private static final String USERNAME = "username";
+  private static final String PASSWORD = "password";
 
   public static final String GIT_SECRET_USERNAME_KEY = "username";
   public static final String GIT_SECRET_PWD_KEY = "password";
@@ -68,42 +74,61 @@ public class SecretSpecBuilder {
   @Inject private ConnectorEnvVariablesHelper connectorEnvVariablesHelper;
   @Inject private SecretDecryptionService secretDecryptionService;
 
-  public Secret getRegistrySecretSpec(ImageDetailsWithConnector imageDetailsWithConnector, String namespace) {
+  public Secret getRegistrySecretSpec(
+      String secretName, ImageDetailsWithConnector imageDetailsWithConnector, String namespace) {
     ConnectorDetails connectorDetails = imageDetailsWithConnector.getImageConnectorDetails();
+    if (connectorDetails == null) {
+      return null;
+    }
+
     String registryUrl = null;
     String username = null;
     String password = null;
-    if (connectorDetails != null) {
-      log.info("Decrypting image registry connector details of id:[{}], type:[{}]", connectorDetails.getIdentifier(),
-          connectorDetails.getConnectorType());
-      if (connectorDetails.getConnectorType() == ConnectorType.DOCKER) {
-        DockerConnectorDTO dockerConfig = (DockerConnectorDTO) connectorDetails.getConnectorConfig();
-        registryUrl = dockerConfig.getDockerRegistryUrl();
 
-        if (dockerConfig.getAuth().getAuthType() == DockerAuthType.USER_PASSWORD) {
-          DockerUserNamePasswordDTO dockerUserNamePasswordDTO =
-              (DockerUserNamePasswordDTO) secretDecryptionService.decrypt(
-                  dockerConfig.getAuth().getCredentials(), connectorDetails.getEncryptedDataDetails());
-          username = dockerUserNamePasswordDTO.getUsername();
-          password = String.valueOf(dockerUserNamePasswordDTO.getPasswordRef().getDecryptedValue());
-        }
+    log.info("Decrypting image registry connector details of id:[{}], type:[{}]", connectorDetails.getIdentifier(),
+        connectorDetails.getConnectorType());
+    if (connectorDetails.getConnectorType() == ConnectorType.DOCKER) {
+      DockerConnectorDTO dockerConfig = (DockerConnectorDTO) connectorDetails.getConnectorConfig();
+      registryUrl = dockerConfig.getDockerRegistryUrl();
+
+      if (dockerConfig.getAuth().getAuthType() == DockerAuthType.USER_PASSWORD) {
+        DockerUserNamePasswordDTO dockerUserNamePasswordDTO =
+            (DockerUserNamePasswordDTO) secretDecryptionService.decrypt(
+                dockerConfig.getAuth().getCredentials(), connectorDetails.getEncryptedDataDetails());
+        username = dockerUserNamePasswordDTO.getUsername();
+        password = String.valueOf(dockerUserNamePasswordDTO.getPasswordRef().getDecryptedValue());
+      }
+    } else if (connectorDetails.getConnectorType() == ConnectorType.GCP) {
+      // Image name is of format: HOST-NAME/PROJECT-ID/IMAGE. HOST-NAME is registry url.
+      String imageName = imageDetailsWithConnector.getImageDetails().getName();
+      String[] imageParts = imageName.split(PATH_SEPARATOR);
+      if (imageParts.length >= 1 && imageParts[0].endsWith(BASE_GCR_HOSTNAME)) {
+        registryUrl = imageParts[0];
+      } else {
+        throw new InvalidArgumentsException(
+            format("Invalid image: %s for GCR connector", imageName), WingsException.USER);
+      }
+
+      GcpConnectorDTO gcpConnectorConfig = (GcpConnectorDTO) connectorDetails.getConnectorConfig();
+      if (gcpConnectorConfig.getCredential().getGcpCredentialType() == GcpCredentialType.MANUAL_CREDENTIALS) {
+        GcpManualDetailsDTO credentialConfig = (GcpManualDetailsDTO) secretDecryptionService.decrypt(
+            (GcpManualDetailsDTO) gcpConnectorConfig.getCredential().getConfig(),
+            connectorDetails.getEncryptedDataDetails());
+        password = String.valueOf(credentialConfig.getSecretKeyRef().getDecryptedValue());
+        username = GCR_USERNAME;
       }
     }
 
     if (!(isNotBlank(registryUrl) && isNotBlank(username) && isNotBlank(password))) {
       return null;
     }
-    imageDetailsWithConnector.getImageDetails().setUsername(username);
-    imageDetailsWithConnector.getImageDetails().setPassword(password);
-    imageDetailsWithConnector.getImageDetails().setRegistryUrl(registryUrl);
 
-    String registrySecretName =
-        getKubernetesRegistrySecretName(ImageDetails.builder().registryUrl(registryUrl).username(username).build());
-    String credentialData = format(DOCKER_REGISTRY_CREDENTIAL_TEMPLATE, registryUrl, username, password);
+    String credentialData =
+        new JSONObject().put(registryUrl, new JSONObject().put(USERNAME, username).put(PASSWORD, password)).toString();
     Map<String, String> data = ImmutableMap.of(DOCKER_CONFIG_KEY, encodeBase64(credentialData));
     return new SecretBuilder()
         .withNewMetadata()
-        .withName(registrySecretName)
+        .withName(secretName)
         .withNamespace(namespace)
         .endMetadata()
         .withType(DOCKER_REGISTRY_SECRET_TYPE)

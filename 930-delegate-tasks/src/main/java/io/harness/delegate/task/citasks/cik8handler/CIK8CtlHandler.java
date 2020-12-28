@@ -55,8 +55,8 @@ public class CIK8CtlHandler {
   @Inject private Sleeper sleeper;
 
   public Secret createRegistrySecret(
-      KubernetesClient kubernetesClient, String namespace, ImageDetailsWithConnector imageDetails) {
-    Secret secret = secretSpecBuilder.getRegistrySecretSpec(imageDetails, namespace);
+      KubernetesClient kubernetesClient, String namespace, String secretName, ImageDetailsWithConnector imageDetails) {
+    Secret secret = secretSpecBuilder.getRegistrySecretSpec(secretName, imageDetails, namespace);
     if (secret == null) {
       return null;
     }

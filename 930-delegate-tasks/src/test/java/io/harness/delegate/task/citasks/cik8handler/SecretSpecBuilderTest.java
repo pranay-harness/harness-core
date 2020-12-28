@@ -30,6 +30,10 @@ import io.harness.delegate.beans.connector.docker.DockerAuthType;
 import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
+import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
@@ -47,7 +51,6 @@ import io.harness.security.encryption.EncryptionType;
 import io.harness.security.encryption.SecretDecryptionService;
 
 import io.fabric8.kubernetes.api.model.Secret;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -65,7 +68,9 @@ public class SecretSpecBuilderTest extends CategoryTest {
   @Mock private ConnectorEnvVariablesHelper connectorEnvVariablesHelper;
   @InjectMocks private SecretSpecBuilder secretSpecBuilder;
 
+  private static final String secretName = "foo";
   private static final String imageName = "IMAGE";
+  private static final String gcpImageName = "us.gcr.io/ci/addon";
   private static final String tag = "TAG";
   private static final String namespace = "default";
   private static final String podName = "pod";
@@ -124,7 +129,7 @@ public class SecretSpecBuilderTest extends CategoryTest {
   @Test
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
-  public void shouldConvertCustomSecretTextVariables() throws IOException {
+  public void shouldConvertCustomSecretTextVariables() {
     SecretVariableDetails secretVariableDetails =
         SecretVariableDetails.builder()
             .secretVariableDTO(SecretVariableDTO.builder()
@@ -154,7 +159,7 @@ public class SecretSpecBuilderTest extends CategoryTest {
   @Test
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
-  public void shouldConvertCustomSecretFile() throws IOException {
+  public void shouldConvertCustomSecretFile() {
     SecretVariableDetails secretVariableDetails =
         SecretVariableDetails.builder()
             .secretVariableDTO(SecretVariableDTO.builder()
@@ -188,24 +193,24 @@ public class SecretSpecBuilderTest extends CategoryTest {
     ImageDetails imageDetails1 = ImageDetails.builder().name(imageName).tag(tag).build();
     ImageDetailsWithConnector imageDetailsWithConnector1 =
         ImageDetailsWithConnector.builder().imageDetails(imageDetails1).build();
-    assertNull(secretSpecBuilder.getRegistrySecretSpec(imageDetailsWithConnector1, namespace));
+    assertNull(secretSpecBuilder.getRegistrySecretSpec(secretName, imageDetailsWithConnector1, namespace));
 
     ImageDetails imageDetails2 = ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).build();
     ImageDetailsWithConnector imageDetailsWithConnector2 =
         ImageDetailsWithConnector.builder().imageDetails(imageDetails2).build();
-    assertNull(secretSpecBuilder.getRegistrySecretSpec(imageDetailsWithConnector2, namespace));
+    assertNull(secretSpecBuilder.getRegistrySecretSpec(secretName, imageDetailsWithConnector2, namespace));
 
     ImageDetails imageDetails3 =
         ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).username(userName).build();
     ImageDetailsWithConnector imageDetailsWithConnector3 =
         ImageDetailsWithConnector.builder().imageDetails(imageDetails3).build();
-    assertNull(secretSpecBuilder.getRegistrySecretSpec(imageDetailsWithConnector3, namespace));
+    assertNull(secretSpecBuilder.getRegistrySecretSpec(secretName, imageDetailsWithConnector3, namespace));
 
     ImageDetails imageDetails4 =
         ImageDetails.builder().name(imageName).tag(tag).registryUrl(registryUrl).password(password).build();
     ImageDetailsWithConnector imageDetailsWithConnector4 =
         ImageDetailsWithConnector.builder().imageDetails(imageDetails4).build();
-    assertNull(secretSpecBuilder.getRegistrySecretSpec(imageDetailsWithConnector4, namespace));
+    assertNull(secretSpecBuilder.getRegistrySecretSpec(secretName, imageDetailsWithConnector4, namespace));
   }
 
   @Test
@@ -242,15 +247,77 @@ public class SecretSpecBuilderTest extends CategoryTest {
     ImageDetailsWithConnector imageDetailsWithConnector =
         ImageDetailsWithConnector.builder().imageDetails(imageDetails).imageConnectorDetails(connectorDetails).build();
 
-    Secret secret = secretSpecBuilder.getRegistrySecretSpec(imageDetailsWithConnector, namespace);
-    assertEquals(registrySecretName, secret.getMetadata().getName());
+    Secret secret = secretSpecBuilder.getRegistrySecretSpec(secretName, imageDetailsWithConnector, namespace);
+    assertEquals(secretName, secret.getMetadata().getName());
+    assertEquals(namespace, secret.getMetadata().getNamespace());
+  }
+
+  @Test(expected = InvalidArgumentsException.class)
+  @Owner(developers = SHUBHAM)
+  @Category(UnitTests.class)
+  public void getRegistrySecretSpecWithGCRCredErr() {
+    GcpManualDetailsDTO gcpManualDetailsDTO =
+        GcpManualDetailsDTO.builder()
+            .secretKeyRef(SecretRefData.builder().decryptedValue("key".toCharArray()).build())
+            .build();
+    GcpConnectorDTO gcpConnectorDTO = GcpConnectorDTO.builder()
+                                          .credential(GcpConnectorCredentialDTO.builder()
+                                                          .gcpCredentialType(GcpCredentialType.MANUAL_CREDENTIALS)
+                                                          .config(gcpManualDetailsDTO)
+                                                          .build())
+                                          .build();
+
+    ConnectorDetails connectorDetails = getConnectorDetails(gcpConnectorDTO, ConnectorType.GCP);
+    ImageDetails imageDetails = ImageDetails.builder()
+                                    .name(imageName)
+                                    .tag(tag)
+                                    .registryUrl(registryUrl)
+                                    .username(userName)
+                                    .password(password)
+                                    .build();
+
+    when(secretDecryptionService.decrypt(any(), eq(connectorDetails.getEncryptedDataDetails())))
+        .thenReturn(gcpManualDetailsDTO);
+    ImageDetailsWithConnector imageDetailsWithConnector =
+        ImageDetailsWithConnector.builder().imageDetails(imageDetails).imageConnectorDetails(connectorDetails).build();
+
+    Secret secret = secretSpecBuilder.getRegistrySecretSpec(secretName, imageDetailsWithConnector, namespace);
+    assertEquals(secretName, secret.getMetadata().getName());
+    assertEquals(namespace, secret.getMetadata().getNamespace());
+  }
+
+  @Test
+  @Owner(developers = SHUBHAM)
+  @Category(UnitTests.class)
+  public void getRegistrySecretSpecWithGCRCred() {
+    GcpManualDetailsDTO gcpManualDetailsDTO =
+        GcpManualDetailsDTO.builder()
+            .secretKeyRef(SecretRefData.builder().decryptedValue("key".toCharArray()).build())
+            .build();
+    GcpConnectorDTO gcpConnectorDTO = GcpConnectorDTO.builder()
+                                          .credential(GcpConnectorCredentialDTO.builder()
+                                                          .gcpCredentialType(GcpCredentialType.MANUAL_CREDENTIALS)
+                                                          .config(gcpManualDetailsDTO)
+                                                          .build())
+                                          .build();
+
+    ConnectorDetails connectorDetails = getConnectorDetails(gcpConnectorDTO, ConnectorType.GCP);
+    ImageDetails imageDetails = ImageDetails.builder().name(gcpImageName).tag(tag).build();
+
+    when(secretDecryptionService.decrypt(any(), eq(connectorDetails.getEncryptedDataDetails())))
+        .thenReturn(gcpManualDetailsDTO);
+    ImageDetailsWithConnector imageDetailsWithConnector =
+        ImageDetailsWithConnector.builder().imageDetails(imageDetails).imageConnectorDetails(connectorDetails).build();
+
+    Secret secret = secretSpecBuilder.getRegistrySecretSpec(secretName, imageDetailsWithConnector, namespace);
+    assertEquals(secretName, secret.getMetadata().getName());
     assertEquals(namespace, secret.getMetadata().getNamespace());
   }
 
   @Test()
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
-  public void getGitSecretSpecWithEmptyCred() throws UnsupportedEncodingException {
+  public void getGitSecretSpecWithEmptyCred() {
     when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
     assertThatThrownBy(
         ()
