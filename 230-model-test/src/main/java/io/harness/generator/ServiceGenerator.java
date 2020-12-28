@@ -275,13 +275,15 @@ public class ServiceGenerator {
   }
 
   public Service ensureK8sTest(Randomizer.Seed seed, Owners owners, String name) {
-    owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
+    final Application application =
+        owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
     owners.add(ensureService(seed, owners,
         builder()
             .name(name)
             .artifactType(ArtifactType.DOCKER)
             .deploymentType(DeploymentType.KUBERNETES)
             .isK8sV2(true)
+            .appId(application.getUuid())
             .build()));
     ArtifactStream artifactStream =
         artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_DOCKER);
