@@ -18,6 +18,8 @@ import io.harness.ngpipeline.inputset.helpers.InputSetMergeHelper;
 import io.harness.ngpipeline.pipeline.beans.resources.NGPipelineExecutionResponseDTO;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.plan.Plan;
+import io.harness.pms.pipeline.ExecutionTriggerInfo;
+import io.harness.pms.pipeline.TriggerType;
 import io.harness.walktree.visitor.response.VisitorErrorResponse;
 import io.harness.walktree.visitor.response.VisitorErrorResponseWrapper;
 import io.harness.yaml.core.StageElement;
@@ -159,7 +161,8 @@ public class NGPipelineExecuteHelper {
           .put(SetupAbstractionKeys.userName, user.getName())
           .put(SetupAbstractionKeys.userEmail, user.getEmail());
     }
-    return orchestrationService.startExecution(planForPipeline, abstractionsBuilder.build());
+    return orchestrationService.startExecution(planForPipeline, abstractionsBuilder.build(),
+        ExecutionTriggerInfo.builder().triggerType(TriggerType.MANUAL).triggeredBy(user).build());
   }
 
   private EmbeddedUser getEmbeddedUser() {

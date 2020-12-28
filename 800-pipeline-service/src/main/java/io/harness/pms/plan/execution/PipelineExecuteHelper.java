@@ -2,7 +2,6 @@ package io.harness.pms.plan.execution;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.OrchestrationService;
 import io.harness.exception.InvalidRequestException;
@@ -11,11 +10,10 @@ import io.harness.plan.Plan;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.merger.helpers.MergeHelper;
 import io.harness.pms.ngpipeline.inputset.helpers.ValidateAndMergeHelper;
+import io.harness.pms.pipeline.ExecutionTriggerInfo;
 import io.harness.pms.pipeline.PipelineEntity;
-import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.plan.creation.PlanCreatorMergeService;
-import io.harness.pms.yaml.YamlUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -39,7 +37,7 @@ public class PipelineExecuteHelper {
 
   public PlanExecution runPipelineWithInputSetPipelineYaml(@NotNull String accountId, @NotNull String orgIdentifier,
       @NotNull String projectIdentifier, @NotNull String pipelineIdentifier, String inputSetPipelineYaml,
-      String eventPayload, EmbeddedUser user) throws IOException {
+      String eventPayload, ExecutionTriggerInfo triggerInfo) throws IOException {
     Optional<PipelineEntity> pipelineEntity =
         pmsPipelineService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
     if (!pipelineEntity.isPresent()) {
@@ -56,12 +54,12 @@ public class PipelineExecuteHelper {
       contextAttributes.put(SetupAbstractionKeys.inputSetYaml, inputSetPipelineYaml);
     }
     contextAttributes.put(SetupAbstractionKeys.pipelineIdentifier, pipelineIdentifier);
-    return startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml, user, contextAttributes);
+    return startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml, triggerInfo, contextAttributes);
   }
 
   public PlanExecution runPipelineWithInputSetReferencesList(String accountId, String orgIdentifier,
-      String projectIdentifier, String pipelineIdentifier, List<String> inputSetReferences, EmbeddedUser user)
-      throws IOException {
+      String projectIdentifier, String pipelineIdentifier, List<String> inputSetReferences,
+      ExecutionTriggerInfo triggerInfo) throws IOException {
     Optional<PipelineEntity> pipelineEntity =
         pmsPipelineService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
     if (!pipelineEntity.isPresent()) {
@@ -75,11 +73,11 @@ public class PipelineExecuteHelper {
     contextAttributes.put(SetupAbstractionKeys.inputSetYaml, mergedRuntimeInputYaml);
     contextAttributes.put(SetupAbstractionKeys.pipelineIdentifier, pipelineIdentifier);
 
-    return startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml, user, contextAttributes);
+    return startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml, triggerInfo, contextAttributes);
   }
 
   public PlanExecution startExecution(String accountId, String orgIdentifier, String projectIdentifier, String yaml,
-      EmbeddedUser user, Map<String, Object> contextAttributes) throws IOException {
+      ExecutionTriggerInfo triggerInfo, Map<String, Object> contextAttributes) throws IOException {
     PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(yaml);
     Plan plan = PlanExecutionUtils.extractPlan(resp);
     ImmutableMap.Builder<String, String> abstractionsBuilder =
@@ -96,31 +94,11 @@ public class PipelineExecuteHelper {
       });
     }
 
-    if (user != null) {
-      abstractionsBuilder.put(SetupAbstractionKeys.userId, user.getUuid())
-          .put(SetupAbstractionKeys.userName, user.getName())
-          .put(SetupAbstractionKeys.userEmail, user.getEmail());
-    }
+    // TODO : Remove this from here trigger info will be available separately in ambiance
+    abstractionsBuilder.put(SetupAbstractionKeys.userId, triggerInfo.getTriggeredBy().getUuid())
+        .put(SetupAbstractionKeys.userName, triggerInfo.getTriggeredBy().getName())
+        .put(SetupAbstractionKeys.userEmail, triggerInfo.getTriggeredBy().getEmail());
 
-    return orchestrationService.startExecution(plan, abstractionsBuilder.build());
-  }
-
-  public PlanExecution startExecution(
-      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier) throws IOException {
-    Optional<PipelineEntity> pipelineEntity =
-        pmsPipelineService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
-    if (!pipelineEntity.isPresent()) {
-      throw new InvalidRequestException(String.format("The given pipeline id [%s] does not exist", pipelineIdentifier));
-    }
-    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(pipelineEntity.get().getYaml());
-    Plan plan = PlanExecutionUtils.extractPlan(resp);
-    ImmutableMap.Builder<String, String> abstractionsBuilder =
-        ImmutableMap.<String, String>builder()
-            .put(SetupAbstractionKeys.accountId, accountId)
-            .put(SetupAbstractionKeys.orgIdentifier, orgIdentifier)
-            .put(SetupAbstractionKeys.projectIdentifier, projectIdentifier)
-            .put(SetupAbstractionKeys.pipelineIdentifier, pipelineIdentifier);
-
-    return orchestrationService.startExecution(plan, abstractionsBuilder.build());
+    return orchestrationService.startExecution(plan, abstractionsBuilder.build(), triggerInfo);
   }
 }

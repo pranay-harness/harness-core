@@ -18,7 +18,6 @@ import io.harness.execution.PlanExecution;
 import io.harness.plan.Plan;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.rule.Owner;
-import io.harness.service.GraphGenerationService;
 
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
@@ -40,7 +39,6 @@ import org.mockito.Mock;
 public class CustomExecutionServiceImplTest extends WingsBaseTest {
   @Inject private TestUtils testUtils;
   @Mock private OrchestrationService orchestrationService;
-  @Mock private GraphGenerationService graphGenerationService;
   @InjectMocks @Inject private CustomExecutionServiceImpl customExecutionService;
 
   @Mock private MainConfiguration configuration;
@@ -62,7 +60,7 @@ public class CustomExecutionServiceImplTest extends WingsBaseTest {
   public void shouldExecuteHttpSwitch() {
     UserThreadLocal.set(user);
     Plan expectedSwitchHttpPlan = customExecutionProvider.provideHttpSwitchPlan();
-    when(orchestrationService.startExecution(any(), any()))
+    when(orchestrationService.startExecution(any(), any(), any()))
         .thenReturn(PlanExecution.builder().status(RUNNING).plan(expectedSwitchHttpPlan).build());
     PlanExecution planExecutionResponse = customExecutionService.executeHttpSwitch();
 
@@ -76,7 +74,7 @@ public class CustomExecutionServiceImplTest extends WingsBaseTest {
   public void shouldExecuteHttpFork() {
     UserThreadLocal.set(user);
     Plan expectedForkPlan = customExecutionProvider.provideHttpForkPlan();
-    when(orchestrationService.startExecution(any(), any()))
+    when(orchestrationService.startExecution(any(), any(), any()))
         .thenReturn(PlanExecution.builder().status(RUNNING).plan(expectedForkPlan).build());
     PlanExecution planExecutionResponse = customExecutionService.executeHttpFork();
 
@@ -90,7 +88,7 @@ public class CustomExecutionServiceImplTest extends WingsBaseTest {
   public void shouldExecuteSectionPlan() {
     UserThreadLocal.set(user);
     Plan expectedSelectionPlan = customExecutionProvider.provideHttpSectionPlan();
-    when(orchestrationService.startExecution(any(), any()))
+    when(orchestrationService.startExecution(any(), any(), any()))
         .thenReturn(PlanExecution.builder().status(RUNNING).plan(expectedSelectionPlan).build());
     PlanExecution planExecutionResponse = customExecutionService.executeSectionPlan();
 
@@ -104,7 +102,7 @@ public class CustomExecutionServiceImplTest extends WingsBaseTest {
   public void shouldExecuteRetryPlan() {
     UserThreadLocal.set(user);
     Plan expectedRetryPlan = customExecutionProvider.provideHttpRetryIgnorePlan();
-    when(orchestrationService.startExecution(any(), any()))
+    when(orchestrationService.startExecution(any(), any(), any()))
         .thenReturn(PlanExecution.builder().status(RUNNING).plan(expectedRetryPlan).build());
     PlanExecution planExecutionResponse = customExecutionService.executeRetryIgnorePlan();
 
@@ -118,7 +116,7 @@ public class CustomExecutionServiceImplTest extends WingsBaseTest {
   public void shouldExecuteSimpleShellScriptPlan() {
     UserThreadLocal.set(user);
     Plan expectedShellScriptPlan = customExecutionProvider.provideSimpleShellScriptPlan();
-    when(orchestrationService.startExecution(any(), any()))
+    when(orchestrationService.startExecution(any(), any(), any()))
         .thenReturn(PlanExecution.builder().status(Status.RUNNING).plan(expectedShellScriptPlan).build());
     PlanExecution planExecutionResponse = customExecutionService.executeSimpleShellScriptPlan(ACCOUNT_ID, APP_ID);
 
@@ -132,7 +130,7 @@ public class CustomExecutionServiceImplTest extends WingsBaseTest {
   public void shouldExecuteMultipleBarriersPlan() {
     UserThreadLocal.set(user);
     Plan expectedMultipleBarriersPlan = customExecutionProvider.providePlanWithMultipleBarriers();
-    when(orchestrationService.startExecution(any(), any()))
+    when(orchestrationService.startExecution(any(), any(), any()))
         .thenReturn(PlanExecution.builder().status(Status.RUNNING).plan(expectedMultipleBarriersPlan).build());
     PlanExecution planExecutionResponse = customExecutionService.executeMultipleBarriersPlan();
 

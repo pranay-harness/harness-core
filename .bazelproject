@@ -58,6 +58,7 @@ directories:
   980-commons
   990-commons-test
   tools/bazel
+  400-rest
 
 # Automatically includes all relevant targets under the 'directories' above
 derive_targets_from_directories: true

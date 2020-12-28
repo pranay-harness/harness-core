@@ -9,6 +9,7 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.PlanRepo;
@@ -21,9 +22,9 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.Interrupt;
+import io.harness.pms.pipeline.ExecutionTriggerInfo;
+import io.harness.pms.pipeline.TriggerType;
 import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
-import io.harness.pms.sdk.core.registries.AdviserRegistry;
-import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.rule.Owner;
 import io.harness.waiter.OrchestrationNotifyEventListener;
@@ -47,9 +48,12 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private InterruptTestHelper interruptTestHelper;
   @Inject private StepRegistry stepRegistry;
-  @Inject private FacilitatorRegistry facilitatorRegistry;
-  @Inject private AdviserRegistry adviserRegistry;
   @Inject private PlanRepo planRepo;
+
+  private final EmbeddedUser embeddedUser =
+      EmbeddedUser.builder().email(PRASHANT).name(PRASHANT).uuid(generateUuid()).build();
+  private final ExecutionTriggerInfo triggerInfo =
+      ExecutionTriggerInfo.builder().triggerType(TriggerType.MANUAL).triggeredBy(embeddedUser).build();
 
   @Before
   public void setUp() {
@@ -60,7 +64,8 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestHandleInterrupt() {
-    PlanExecution execution = orchestrationService.startExecution(planRepo.planWithFailure(), getAbstractions());
+    PlanExecution execution =
+        orchestrationService.startExecution(planRepo.planWithFailure(), getAbstractions(), triggerInfo);
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), INTERVENTION_WAITING);
     assertThat(execution).isNotNull();
   }
@@ -69,7 +74,8 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestHandleInterruptWithRetry() {
-    PlanExecution execution = orchestrationService.startExecution(planRepo.planWithFailure(), getAbstractions());
+    PlanExecution execution =
+        orchestrationService.startExecution(planRepo.planWithFailure(), getAbstractions(), triggerInfo);
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), INTERVENTION_WAITING);
     List<NodeExecution> nodeExecutionList =
         nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(execution.getUuid());
@@ -99,7 +105,8 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestHandleInterruptWithMarkSuccess() {
-    PlanExecution execution = orchestrationService.startExecution(planRepo.planWithFailure(), getAbstractions());
+    PlanExecution execution =
+        orchestrationService.startExecution(planRepo.planWithFailure(), getAbstractions(), triggerInfo);
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), INTERVENTION_WAITING);
     List<NodeExecution> nodeExecutionList =
         nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(execution.getUuid());
@@ -127,7 +134,8 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestHandleInterruptWithMarkFailed() {
-    PlanExecution execution = orchestrationService.startExecution(planRepo.planWithFailure(), getAbstractions());
+    PlanExecution execution =
+        orchestrationService.startExecution(planRepo.planWithFailure(), getAbstractions(), triggerInfo);
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), INTERVENTION_WAITING);
     List<NodeExecution> nodeExecutionList =
         nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(execution.getUuid());
@@ -152,7 +160,7 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
   }
 
   private Map<String, String> getAbstractions() {
-    return ImmutableMap.of("accountId", generateUuid(), "appId", generateUuid(), "userId", generateUuid(), "userName",
-        PRASHANT, "userEmail", PRASHANT);
+    return ImmutableMap.of("accountId", generateUuid(), "appId", generateUuid(), "userId", embeddedUser.getUuid(),
+        "userName", embeddedUser.getName(), "userEmail", embeddedUser.getEmail());
   }
 }

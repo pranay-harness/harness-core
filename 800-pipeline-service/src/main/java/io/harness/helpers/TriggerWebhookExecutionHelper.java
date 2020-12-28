@@ -25,7 +25,9 @@ import io.harness.ngtriggers.helpers.WebhookEventToTriggerMapper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
 import io.harness.pms.merger.helpers.MergeHelper;
+import io.harness.pms.pipeline.ExecutionTriggerInfo;
 import io.harness.pms.pipeline.PipelineEntity;
+import io.harness.pms.pipeline.TriggerType;
 import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.plan.execution.PipelineExecuteHelper;
@@ -112,6 +114,8 @@ public class TriggerWebhookExecutionHelper {
   private PlanExecution resolveRuntimeInputAndSubmitExecutionRequest(
       TriggerDetails triggerDetails, Map<String, Object> contextAttributes) {
     EmbeddedUser embeddedUser = EmbeddedUser.builder().email("").name("trigger").uuid("systemUser").build();
+    ExecutionTriggerInfo triggerInfo =
+        ExecutionTriggerInfo.builder().triggerType(TriggerType.WEBHOOK).triggeredBy(embeddedUser).build();
     try {
       NGTriggerEntity ngTriggerEntity = triggerDetails.getNgTriggerEntity();
       String targetIdentifier = ngTriggerEntity.getTargetIdentifier();
@@ -144,7 +148,7 @@ public class TriggerWebhookExecutionHelper {
           MergeHelper.mergeInputSetIntoPipeline(pipelineYaml, sanitizedRuntimeInputYaml);
 
       return pipelineExecuteHelper.startExecution(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),
-          ngTriggerEntity.getProjectIdentifier(), finalPipelineYmlForTrigger, embeddedUser, contextAttributes);
+          ngTriggerEntity.getProjectIdentifier(), finalPipelineYmlForTrigger, triggerInfo, contextAttributes);
     } catch (Exception e) {
       throw new TriggerException("Failed while requesting Pipeline Execution" + e.getMessage(), USER);
     }

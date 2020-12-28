@@ -9,7 +9,7 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import io.harness.plan.Plan;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.contracts.plan.GraphLayoutInfo;
+import io.harness.pms.pipeline.ExecutionTriggerInfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.Duration;
@@ -49,6 +49,9 @@ public class PlanExecution implements PersistentEntity, UuidAccess {
   Status status;
   Long startTs;
   Long endTs;
+
+  ExecutionTriggerInfo executionTriggerInfo;
+
   @Wither @LastModifiedDate Long lastUpdatedAt;
   @Wither @Version Long version;
 }
