@@ -11,15 +11,20 @@ import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.views.dao.CEViewDao;
 import io.harness.ccm.views.dao.ViewCustomFieldDao;
+import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.entities.ViewCustomField;
 import io.harness.ccm.views.entities.ViewField;
 import io.harness.ccm.views.entities.ViewFieldIdentifier;
+import io.harness.ccm.views.entities.ViewIdCondition;
+import io.harness.ccm.views.entities.ViewRule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
 import com.google.cloud.bigquery.BigQuery;
 import com.google.inject.Inject;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.junit.Before;
@@ -32,6 +37,7 @@ import org.mockito.MockitoAnnotations;
 public class ViewCustomFieldServiceImplTest extends CategoryTest {
   @InjectMocks @Inject private ViewCustomFieldServiceImpl viewCustomFieldService;
   @Mock private ViewCustomFieldDao viewCustomFieldDao;
+  @Mock private CEViewDao ceViewDao;
   @Mock BigQuery bigQuery;
 
   private static final String ACCOUNT_ID = "account_id";
@@ -76,6 +82,13 @@ public class ViewCustomFieldServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testDeleteCustomField() {
     doReturn(true).when(viewCustomFieldDao).delete(any(), any());
+    doReturn(ViewCustomField.builder().viewId(VIEW_ID).build()).when(viewCustomFieldDao).getById(any());
+    ViewRule viewRule = ViewRule.builder()
+                            .viewConditions(Arrays.asList(
+                                ViewIdCondition.builder().viewField(ViewField.builder().fieldId("ID").build()).build()))
+                            .build();
+    doReturn(CEView.builder().viewRules(Arrays.asList(viewRule)).build()).when(ceViewDao).get(VIEW_ID);
+
     boolean delete = viewCustomFieldService.delete(UUID, ACCOUNT_ID);
     assertThat(delete).isTrue();
   }
