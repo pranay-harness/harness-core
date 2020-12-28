@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.beans.FeatureName.CD_PAGE_PERFORMANCE;
 import static io.harness.beans.SearchFilter.Operator.GE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -22,6 +23,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.WorkflowType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.state.inspection.StateInspection;
@@ -69,6 +71,7 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.swagger.annotations.Api;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -96,6 +99,7 @@ public class ExecutionResource {
   @Inject private StateInspectionService stateInspectionService;
   @Inject private DeploymentAuthHandler deploymentAuthHandler;
   @Inject private AuthService authService;
+  @Inject private FeatureFlagService featureFlagService;
   @Inject @Named(DeploymentHistoryFeature.FEATURE_NAME) private RestrictedFeature deploymentHistoryFeature;
 
   private static final String EXECUTION_DOES_NOT_EXIST = "No workflow execution exists for id: ";
@@ -159,8 +163,29 @@ public class ExecutionResource {
         -> pageRequest.addFilter(WorkflowExecutionKeys.startTs, GE,
             EpochUtils.calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(val, "UTC")));
 
-    final PageResponse<WorkflowExecution> workflowExecutions =
+    boolean isFlagEnabled = featureFlagService.isEnabled(CD_PAGE_PERFORMANCE, accountId);
+    if (isFlagEnabled) {
+      List<PageRequest.Option> options = pageRequest.getOptions();
+      if (options == null) {
+        options = new ArrayList<>();
+      }
+      options.add(PageRequest.Option.SKIPCOUNT);
+      pageRequest.setOptions(options);
+      // We will ask for one more than limit, and if its not exactly one more, we know we are at the end of the list.
+      pageRequest.setLimit(Integer.toString(Integer.parseInt(pageRequest.getLimit()) + 1));
+    }
+    PageResponse<WorkflowExecution> workflowExecutions =
         workflowExecutionService.listExecutions(pageRequest, includeGraph, true, true, false);
+
+    if (isFlagEnabled) {
+      int offset = Integer.parseInt(pageRequest.getOffset());
+      int limit = Integer.parseInt(pageRequest.getLimit()) - 1;
+      workflowExecutions.setTotal(offset + (long) workflowExecutions.size());
+      if (workflowExecutions.size() == limit + 1) {
+        workflowExecutions.remove(workflowExecutions.size() - 1);
+      }
+      workflowExecutions.setLimit(Integer.toString(limit));
+    }
 
     workflowExecutions.forEach(we -> we.setStateMachine(null));
     return new RestResponse<>(workflowExecutions);

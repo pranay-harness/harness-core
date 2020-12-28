@@ -470,7 +470,7 @@ public class PageRequest<T> {
         .toString();
   }
 
-  public enum Option { COUNT, LIST }
+  public enum Option { COUNT, LIST, SKIPCOUNT }
   /**
    * The enum Page request type.
    */

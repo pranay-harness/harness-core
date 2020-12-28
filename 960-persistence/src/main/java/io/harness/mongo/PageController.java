@@ -60,7 +60,9 @@ public class PageController {
 
     PageResponse<T> response = new PageResponse<>(req);
 
-    if (req.getOptions() == null || req.getOptions().contains(PageRequest.Option.LIST)) {
+    // when pageRequest has SKIPCOUNT option, we won't do count query to db.
+    boolean hasSkipCount = (req.getOptions() != null && req.getOptions().contains(PageRequest.Option.SKIPCOUNT));
+    if (req.getOptions() == null || req.getOptions().contains(PageRequest.Option.LIST) || hasSkipCount) {
       q.offset(req.getStart());
 
       int limit = PageRequest.UNLIMITED.equals(req.getLimit()) ? PageRequest.DEFAULT_UNLIMITED : req.getPageSize();
@@ -69,13 +71,13 @@ public class PageController {
       List<T> list = q.asList();
       response.setResponse(list);
 
-      if (req.getOptions() == null || req.getOptions().contains(PageRequest.Option.COUNT)) {
+      if (req.getOptions() == null || (req.getOptions().contains(PageRequest.Option.COUNT) && !hasSkipCount)) {
         // if the size list is less than the limit we know the the total count. There is no need
         // to query for it.
         response.setTotal((list.size() < limit) ? (long) req.getStart() + list.size() : q.count());
       }
     }
-    if (req.getOptions() == null || req.getOptions().contains(PageRequest.Option.COUNT)) {
+    if (req.getOptions() == null || (req.getOptions().contains(PageRequest.Option.COUNT) && !hasSkipCount)) {
       response.setTotal(q.count());
     }
 
