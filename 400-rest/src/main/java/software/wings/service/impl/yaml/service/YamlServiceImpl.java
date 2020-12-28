@@ -81,7 +81,6 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.HarnessException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.exception.YamlException;
 import io.harness.ff.FeatureFlagService;
@@ -851,7 +850,8 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   private void checkThatEntityIdInChangeAndInYamlIsSame(
       BaseYamlHandler yamlSyncHandler, String accountId, String filePath, ChangeContext changeContext) {
     GitFileChange change = (GitFileChange) changeContext.getChange();
-    if (changeContext.getYamlType() == TAG || changeContext.getYamlType() == APPLICATION_DEFAULTS) {
+    if (changeContext.getYamlType() == TAG || changeContext.getYamlType() == APPLICATION_DEFAULTS
+        || isEmpty(change.getEntityId())) {
       return;
     }
     String entityIdFromYaml;
@@ -866,7 +866,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       }
       log.error("Exception while getting entity from the change context for filePath : [{}] in accountId : [{}]",
           filePath, accountId, ex);
-      throw new UnexpectedException("Error while updating the entity using the YAML");
+      throw ex;
     }
 
     if (isNotEmpty(change.getEntityId())) {
