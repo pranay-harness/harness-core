@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.handler.service;
 
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.AGORODETKI;
+import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.YOGESH;
 
@@ -338,5 +339,44 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
     assertThatThrownBy(() -> serviceYamlHandler.upsertFromYaml(changeContext, null))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("The 'deploymentType' can not be updated when a Service is already created.");
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void testServiceCreationWithWinRM() {
+    Service winRmService = Service.builder()
+                               .appId(APP_ID)
+                               .deploymentType(DeploymentType.WINRM)
+                               .artifactType(ArtifactType.IIS_VirtualDirectory)
+                               .build();
+    final Yaml yaml = serviceYamlHandler.toYaml(winRmService, APP_ID);
+
+    when(serviceResourceService.getServiceByName(APP_ID, SERVICE_NAME)).thenReturn(null);
+    when(yamlHelper.getService(APP_ID, validYamlFilePath)).thenReturn(null);
+    ChangeContext<Yaml> changeContext = getChangeContext(yaml);
+    Service updatedFromYaml = serviceYamlHandler.upsertFromYaml(changeContext, null);
+    assertThat(updatedFromYaml).isNotNull();
+    assertThat(updatedFromYaml.getArtifactType()).isEqualTo(ArtifactType.IIS_VirtualDirectory);
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorIfArtifactTypeIncorrect() {
+    Service winRmService = Service.builder()
+                               .appId(APP_ID)
+                               .deploymentType(DeploymentType.WINRM)
+                               .artifactType(ArtifactType.IIS_VirtualDirectory)
+                               .build();
+    final Yaml yaml = serviceYamlHandler.toYaml(winRmService, APP_ID);
+    yaml.setArtifactType("garbageValue");
+    when(serviceResourceService.getServiceByName(APP_ID, SERVICE_NAME)).thenReturn(null);
+    when(yamlHelper.getService(APP_ID, validYamlFilePath)).thenReturn(null);
+    ChangeContext<Yaml> changeContext = getChangeContext(yaml);
+
+    assertThatThrownBy(() -> serviceYamlHandler.upsertFromYaml(changeContext, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Cannot find the value: garbageValue");
   }
 }
