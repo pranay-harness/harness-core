@@ -7,6 +7,7 @@ import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -31,24 +32,19 @@ public class PluginStepInfo implements CIStepInfo {
   @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.PLUGIN).build();
   @JsonIgnore
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.PLUGIN.name()).build();
-  private String callbackId;
-  private Integer port;
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
 
-  private Map<String, String> settings;
-  @NotNull private String image;
-  private String connector;
+  private ParameterField<Map<String, String>> settings;
+  @NotNull private ParameterField<String> image;
+  private ParameterField<String> connector;
   private ContainerResource resources;
   @Builder
 
-  @ConstructorProperties(
-      {"callbackId", "port", "identifier", "name", "retry", "settings", "image", "connector", "resources"})
-  public PluginStepInfo(String callbackId, Integer port, String identifier, String name, Integer retry,
-      Map<String, String> settings, String image, String connector, ContainerResource resources) {
-    this.callbackId = callbackId;
-    this.port = port;
+  @ConstructorProperties({"identifier", "name", "retry", "settings", "image", "connector", "resources"})
+  public PluginStepInfo(String identifier, String name, Integer retry, ParameterField<Map<String, String>> settings,
+      ParameterField<String> image, ParameterField<String> connector, ContainerResource resources) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);

@@ -47,10 +47,11 @@ public class PublishStepProtobufSerializer implements ProtobufStepSerializer<Pub
     publishStepInfo.getPublishArtifacts().forEach(artifact -> {
       switch (artifact.getType()) {
         case FILE_PATTERN:
-          publishArtifactsStepBuilder.addFiles(resolveFilePattern((FilePatternArtifact) artifact));
+          publishArtifactsStepBuilder.addFiles(
+              resolveFilePattern((FilePatternArtifact) artifact, step.getIdentifier()));
           break;
         case DOCKER_FILE:
-          publishArtifactsStepBuilder.addImages(resolveDockerFile((DockerFileArtifact) artifact));
+          publishArtifactsStepBuilder.addImages(resolveDockerFile((DockerFileArtifact) artifact, step.getIdentifier()));
           break;
         case DOCKER_IMAGE:
           throw new IllegalArgumentException(String.format(TYPE_NOT_IMPLEMENTED_YET, artifact.getType()));
@@ -70,42 +71,61 @@ public class PublishStepProtobufSerializer implements ProtobufStepSerializer<Pub
         .build();
   }
 
-  private BuildPublishImage resolveDockerFile(DockerFileArtifact dockerFileArtifact) {
+  private BuildPublishImage resolveDockerFile(DockerFileArtifact dockerFileArtifact, String identifier) {
     BuildPublishImage.Builder imageBuilder = BuildPublishImage.newBuilder();
-    imageBuilder.setContext(dockerFileArtifact.getContext());
-    imageBuilder.setDockerFile(dockerFileArtifact.getDockerFile());
+    String context = RunTimeInputHandler.resolveStringParameter(
+        "context", "DockerHub", identifier, dockerFileArtifact.getContext(), false);
+    if (context != null && !context.equals(RunTimeInputHandler.UNRESOLVED_PARAMETER)) {
+      imageBuilder.setContext(context);
+    }
+
+    String dockerFile = RunTimeInputHandler.resolveStringParameter(
+        "dockerfile", "DockerHub", identifier, dockerFileArtifact.getDockerFile(), false);
+    if (dockerFile != null && !dockerFile.equals(RunTimeInputHandler.UNRESOLVED_PARAMETER)) {
+      imageBuilder.setDockerFile(dockerFile);
+    }
+
     imageBuilder.setDestination(Destination.newBuilder()
-                                    .setConnector(getConnector(dockerFileArtifact))
+                                    .setConnector(getConnector(dockerFileArtifact, identifier))
                                     .setLocationType(getLocationType(dockerFileArtifact.getConnector().getType()))
                                     .setDestinationUrl(getImageDestinationUrl(dockerFileArtifact.getConnector(),
-                                        dockerFileArtifact.getImage(), dockerFileArtifact.getTag()))
+                                        RunTimeInputHandler.resolveStringParameter(
+                                            "Image", "DockerHub", identifier, dockerFileArtifact.getImage(), true),
+                                        RunTimeInputHandler.resolveStringParameter(
+                                            "Tag", "DockerHub", identifier, dockerFileArtifact.getTag(), true),
+                                        identifier))
                                     .build());
     return imageBuilder.build();
   }
 
-  private UploadFile resolveFilePattern(FilePatternArtifact filePatternArtifact) {
+  private UploadFile resolveFilePattern(FilePatternArtifact filePatternArtifact, String identifier) {
     UploadFile.Builder uploadFileBuilder = UploadFile.newBuilder();
     uploadFileBuilder.setFilePattern(filePatternArtifact.getFilePattern());
-    uploadFileBuilder.setDestination(Destination.newBuilder()
-                                         .setConnector(getConnector(filePatternArtifact))
-                                         .setLocationType(getLocationType(filePatternArtifact.getConnector().getType()))
-                                         .setDestinationUrl(getFileDestinationUrl(filePatternArtifact.getConnector()))
-                                         .build());
+    uploadFileBuilder.setDestination(
+        Destination.newBuilder()
+            .setConnector(getConnector(filePatternArtifact, identifier))
+            .setLocationType(getLocationType(filePatternArtifact.getConnector().getType()))
+            .setDestinationUrl(getFileDestinationUrl(filePatternArtifact.getConnector(), identifier))
+            .build());
     return uploadFileBuilder.build();
   }
 
-  private Connector getConnector(Artifact artifact) {
+  private Connector getConnector(Artifact artifact, String identifier) {
     return Connector.newBuilder()
         .setAuth(getAuthType(artifact.getConnector().getType()))
-        .setId(IdentifierRefHelper.getIdentifier(artifact.getConnector().getConnectorRef()))
+        .setId(IdentifierRefHelper.getIdentifier(RunTimeInputHandler.resolveStringParameter("ConnectorRef",
+            artifact.getConnector().getType().name(), identifier, artifact.getConnector().getConnectorRef(), true)))
         .build();
   }
 
-  private String getFileDestinationUrl(ArtifactConnector connector) {
+  private String getFileDestinationUrl(ArtifactConnector connector, String identifier) {
     switch (connector.getType()) {
       case ARTIFACTORY:
         ArtifactoryConnector artifactoryConnector = (ArtifactoryConnector) connector;
-        return artifactoryConnector.getRepository() + artifactoryConnector.getArtifactPath();
+        return RunTimeInputHandler.resolveStringParameter(
+                   "Repository", "ARTIFACTORY", identifier, artifactoryConnector.getRepository(), true)
+            + RunTimeInputHandler.resolveStringParameter(
+                "ArtifactPath", "ARTIFACTORY", identifier, artifactoryConnector.getArtifactPath(), true);
       case NEXUS:
       case S3:
         throw new IllegalArgumentException(String.format(TYPE_NOT_IMPLEMENTED_YET, connector.getType()));
@@ -113,17 +133,20 @@ public class PublishStepProtobufSerializer implements ProtobufStepSerializer<Pub
         throw new IllegalArgumentException(String.format(TYPE_NOT_SUPPORTED, connector.getType()));
     }
   }
-  private String getImageDestinationUrl(ArtifactConnector connector, String image, String tag) {
+  private String getImageDestinationUrl(ArtifactConnector connector, String image, String tag, String identifier) {
     switch (connector.getType()) {
       case ECR:
         EcrConnector ecrConnector = (EcrConnector) connector;
-        return ecrConnector.getLocation();
+        RunTimeInputHandler.resolveStringParameter("Location", "ECR", identifier, ecrConnector.getLocation(), true);
       case GCR:
         GcrConnector gcrConnector = (GcrConnector) connector;
-        return gcrConnector.getLocation();
+        RunTimeInputHandler.resolveStringParameter("Location", "GCR", identifier, gcrConnector.getLocation(), true);
       case ARTIFACTORY:
         ArtifactoryConnector artifactoryConnector = (ArtifactoryConnector) connector;
-        return artifactoryConnector.getRepository() + artifactoryConnector.getArtifactPath();
+        return RunTimeInputHandler.resolveStringParameter(
+                   "Repository", "ARTIFACTORY", identifier, artifactoryConnector.getRepository(), true)
+            + RunTimeInputHandler.resolveStringParameter(
+                "ArtifactPath", "ARTIFACTORY", identifier, artifactoryConnector.getArtifactPath(), true);
       case DOCKERHUB:
         return String.format("%s:%s", image, tag);
       case NEXUS:

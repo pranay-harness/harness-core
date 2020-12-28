@@ -36,7 +36,8 @@ public class PluginStepProtobufSerializer implements ProtobufStepSerializer<Plug
     }
     PluginStep pluginStep = PluginStep.newBuilder()
                                 .setContainerPort(port)
-                                .setImage(pluginStepInfo.getImage())
+                                .setImage(RunTimeInputHandler.resolveStringParameter(
+                                    "Image", "Plugin", step.getIdentifier(), pluginStepInfo.getImage(), true))
                                 .setContext(stepContext)
                                 .build();
 

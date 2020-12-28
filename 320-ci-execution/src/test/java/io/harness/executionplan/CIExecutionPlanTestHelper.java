@@ -106,6 +106,7 @@ import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.ParallelStepElement;
@@ -449,11 +450,9 @@ public class CIExecutionPlanTestHelper {
         .stepSpecType(RunStepInfo.builder()
                           .identifier(RUN_STEP_ID)
                           .name(RUN_STEP_NAME)
-                          .command("./test-script1.sh")
-                          .callbackId("test-p1-callbackId")
-                          .image(RUN_STEP_IMAGE)
-                          .connector(RUN_STEP_CONNECTOR)
-                          .port(PORT_STARTING_RANGE + index)
+                          .command(ParameterField.createValueField("./test-script1.sh"))
+                          .image(ParameterField.createValueField(RUN_STEP_IMAGE))
+                          .connector(ParameterField.createValueField(RUN_STEP_CONNECTOR))
                           .build())
         .build();
   }
@@ -569,16 +568,14 @@ public class CIExecutionPlanTestHelper {
         .stepSpecType(PluginStepInfo.builder()
                           .identifier(PLUGIN_STEP_ID)
                           .name(PLUGIN_STEP_NAME)
-                          .callbackId("test-p1-callbackId")
-                          .image(PLUGIN_STEP_IMAGE)
+                          .image(ParameterField.createValueField(PLUGIN_STEP_IMAGE))
                           .resources(ContainerResource.builder()
                                          .limit(ContainerResource.Limit.builder()
                                                     .cpu(CpuQuantity.fromString(PLUGIN_STEP_LIMIT_CPU_STRING))
                                                     .memory(MemoryQuantity.fromString(PLUGIN_STEP_LIMIT_MEM_STRING))
                                                     .build())
                                          .build())
-                          .port(PORT_STARTING_RANGE + index)
-                          .settings(settings)
+                          .settings(ParameterField.createValueField(settings))
                           .build())
         .build();
   }
@@ -716,11 +713,9 @@ public class CIExecutionPlanTestHelper {
         .type(CIStepInfoType.PLUGIN.name().toLowerCase())
         .stepSpecType(PluginStepInfo.builder()
                           .identifier(GIT_CLONE_STEP_ID)
-                          .image(GIT_CLONE_IMAGE)
+                          .image(ParameterField.createValueField(GIT_CLONE_IMAGE))
                           .name(GIT_CLONE_STEP_NAME)
-                          .settings(settings)
-                          .callbackId(callbackId)
-                          .port(PORT_STARTING_RANGE + index)
+                          .settings(ParameterField.createValueField(settings))
                           .build())
         .build();
   }
@@ -732,44 +727,45 @@ public class CIExecutionPlanTestHelper {
             .sections(asList(getRunStepElement(index), getPluginStepElement(index + 1)))
             .build(),
         ParallelStepElement.builder()
-            .sections(asList(StepElement.builder()
-                                 .identifier("publish-1")
-                                 .type("publishArtifacts")
-                                 .stepSpecType(PublishStepInfo.builder()
-                                                   .identifier("publish-1")
-                                                   .callbackId("publish-1-callbackId")
-                                                   .publishArtifacts(singletonList(
-                                                       DockerFileArtifact.builder()
-                                                           .connector(GcrConnector.builder()
-                                                                          .connectorRef("gcr-connector")
-                                                                          .location("us.gcr.io/ci-play/portal:v01")
-                                                                          .build())
-                                                           .tag("v01")
-                                                           .image("ci-play/portal")
-                                                           .context("~/")
-                                                           .dockerFile("~/Dockerfile")
-                                                           .build()))
-                                                   .build())
-                                 .build(),
+            .sections(asList(
+                StepElement.builder()
+                    .identifier("publish-1")
+                    .type("publishArtifacts")
+                    .stepSpecType(
+                        PublishStepInfo.builder()
+                            .identifier("publish-1")
+                            .publishArtifacts(singletonList(
+                                DockerFileArtifact.builder()
+                                    .connector(
+                                        GcrConnector.builder()
+                                            .connectorRef(ParameterField.createValueField("gcr-connector"))
+                                            .location(ParameterField.createValueField("us.gcr.io/ci-play/portal:v01"))
+                                            .build())
+                                    .tag(ParameterField.createValueField("v01"))
+                                    .image(ParameterField.createValueField("ci-play/portal"))
+                                    .context(ParameterField.createValueField("~/"))
+                                    .dockerFile(ParameterField.createValueField("~/Dockerfile"))
+                                    .build()))
+                            .build())
+                    .build(),
                 StepElement.builder()
                     .identifier("publish-2")
                     .type("publishArtifacts")
                     .stepSpecType(
                         PublishStepInfo.builder()
                             .identifier("publish-2")
-                            .callbackId("publish-2-callbackId")
                             .publishArtifacts(singletonList(
                                 DockerFileArtifact.builder()
                                     .connector(
                                         EcrConnector.builder()
-                                            .connectorRef("ecr-connector")
-                                            .location(
-                                                " https://987923132879.dkr.ecr.eu-west-1.amazonaws.com/ci-play/portal:v01")
+                                            .connectorRef(ParameterField.createValueField("ecr-connector"))
+                                            .location(ParameterField.createValueField(
+                                                " https://987923132879.dkr.ecr.eu-west-1.amazonaws.com/ci-play/portal:v01"))
                                             .build())
-                                    .tag("v01")
-                                    .image("ci-play/portal")
-                                    .context("~/")
-                                    .dockerFile("~/Dockerfile")
+                                    .tag(ParameterField.createValueField("v01"))
+                                    .image(ParameterField.createValueField("ci-play/portal"))
+                                    .context(ParameterField.createValueField("~/"))
+                                    .dockerFile(ParameterField.createValueField("~/Dockerfile"))
                                     .build()))
                             .build())
                     .build()))
@@ -783,44 +779,45 @@ public class CIExecutionPlanTestHelper {
             .sections(asList(getRunStepElement(index + 1), getPluginStepElement(index + 2)))
             .build(),
         ParallelStepElement.builder()
-            .sections(asList(StepElement.builder()
-                                 .identifier("publish-1")
-                                 .type("publishArtifacts")
-                                 .stepSpecType(PublishStepInfo.builder()
-                                                   .identifier("publish-1")
-                                                   .callbackId("publish-1-callbackId")
-                                                   .publishArtifacts(singletonList(
-                                                       DockerFileArtifact.builder()
-                                                           .connector(GcrConnector.builder()
-                                                                          .connectorRef("gcr-connector")
-                                                                          .location("us.gcr.io/ci-play/portal:v01")
-                                                                          .build())
-                                                           .tag("v01")
-                                                           .image("ci-play/portal")
-                                                           .context("~/")
-                                                           .dockerFile("~/Dockerfile")
-                                                           .build()))
-                                                   .build())
-                                 .build(),
+            .sections(asList(
+                StepElement.builder()
+                    .identifier("publish-1")
+                    .type("publishArtifacts")
+                    .stepSpecType(
+                        PublishStepInfo.builder()
+                            .identifier("publish-1")
+                            .publishArtifacts(singletonList(
+                                DockerFileArtifact.builder()
+                                    .connector(
+                                        GcrConnector.builder()
+                                            .connectorRef(ParameterField.createValueField("gcr-connector"))
+                                            .location(ParameterField.createValueField("us.gcr.io/ci-play/portal:v01"))
+                                            .build())
+                                    .tag(ParameterField.createValueField("v01"))
+                                    .image(ParameterField.createValueField("ci-play/portal"))
+                                    .context(ParameterField.createValueField("~/"))
+                                    .dockerFile(ParameterField.createValueField("~/Dockerfile"))
+                                    .build()))
+                            .build())
+                    .build(),
                 StepElement.builder()
                     .identifier("publish-2")
                     .type("publishArtifacts")
                     .stepSpecType(
                         PublishStepInfo.builder()
                             .identifier("publish-2")
-                            .callbackId("publish-2-callbackId")
                             .publishArtifacts(singletonList(
                                 DockerFileArtifact.builder()
                                     .connector(
                                         EcrConnector.builder()
-                                            .connectorRef("ecr-connector")
-                                            .location(
-                                                " https://987923132879.dkr.ecr.eu-west-1.amazonaws.com/ci-play/portal:v01")
+                                            .connectorRef(ParameterField.createValueField("ecr-connector"))
+                                            .location(ParameterField.createValueField(
+                                                " https://987923132879.dkr.ecr.eu-west-1.amazonaws.com/ci-play/portal:v01"))
                                             .build())
-                                    .tag("v01")
-                                    .image("ci-play/portal")
-                                    .context("~/")
-                                    .dockerFile("~/Dockerfile")
+                                    .tag(ParameterField.createValueField("v01"))
+                                    .image(ParameterField.createValueField("ci-play/portal"))
+                                    .context(ParameterField.createValueField("~/"))
+                                    .dockerFile(ParameterField.createValueField("~/Dockerfile"))
                                     .build()))
                             .build())
                     .build()))

@@ -44,10 +44,8 @@ public class RestoreCacheStepInfo implements CIStepInfo {
   private boolean failIfNotExist;
 
   @Builder
-  @ConstructorProperties({"callbackId", "identifier", "name", "retry", "key", "failIfNotExist"})
-  public RestoreCacheStepInfo(
-      String callbackId, String identifier, String name, Integer retry, String key, boolean failIfNotExist) {
-    this.callbackId = callbackId;
+  @ConstructorProperties({"name", "retry", "key", "failIfNotExist"})
+  public RestoreCacheStepInfo(String identifier, String name, Integer retry, String key, boolean failIfNotExist) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);

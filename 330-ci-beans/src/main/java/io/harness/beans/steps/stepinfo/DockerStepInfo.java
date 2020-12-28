@@ -7,6 +7,7 @@ import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.yaml.ParameterField;
 
 import software.wings.jersey.JsonViews;
 
@@ -39,37 +40,35 @@ public class DockerStepInfo implements PluginCompatibleStep {
   @JsonIgnore
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.DOCKER.name()).build();
 
-  @JsonIgnore private String callbackId;
-  @JsonIgnore private Integer port;
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
-  @NotNull private String connectorRef;
-  @JsonIgnore @NotNull private String image;
+  @NotNull private ParameterField<String> connectorRef;
+  @JsonIgnore @NotNull private ParameterField<String> image;
   private ContainerResource resources;
 
   // plugin settings
-  @NotNull private String repo;
-  @NotNull private List<String> tags;
-  private String context;
-  private String dockerfile;
-  private String target;
-  private Map<String, String> labels;
-  private List<String> buildArgs;
+  @NotNull private ParameterField<String> repo;
+  @NotNull private ParameterField<List<String>> tags;
+  private ParameterField<String> context;
+  private ParameterField<String> dockerfile;
+  private ParameterField<String> target;
+  private ParameterField<Map<String, String>> labels;
+  private ParameterField<List<String>> buildArgs;
 
   @Builder
-  @ConstructorProperties({"callbackId", "port", "identifier", "name", "retry", "connectorRef", "image", "resources",
-      "repo", "tags", "context", "dockerfile", "target", "labels", "buildArgs"})
-  public DockerStepInfo(String callbackId, Integer port, String identifier, String name, Integer retry,
-      String connectorRef, String image, ContainerResource resources, String repo, List<String> tags, String context,
-      String dockerfile, String target, Map<String, String> labels, List<String> buildArgs) {
-    this.callbackId = callbackId;
-    this.port = port;
+  @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "image", "resources", "repo", "tags",
+      "context", "dockerfile", "target", "labels", "buildArgs"})
+  public DockerStepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
+      ParameterField<String> image, ContainerResource resources, ParameterField<String> repo,
+      ParameterField<List<String>> tags, ParameterField<String> context, ParameterField<String> dockerfile,
+      ParameterField<String> target, ParameterField<Map<String, String>> labels,
+      ParameterField<List<String>> buildArgs) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
     this.connectorRef = connectorRef;
-    this.image = Optional.ofNullable(image).orElse("plugins/kaniko:latest");
+    this.image = Optional.ofNullable(image).orElse(ParameterField.createValueField("plugins/kaniko:latest"));
     this.resources = resources;
     this.repo = repo;
     this.tags = tags;

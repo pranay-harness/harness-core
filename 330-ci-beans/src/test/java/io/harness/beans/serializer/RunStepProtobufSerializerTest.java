@@ -7,7 +7,6 @@ import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.yaml.extended.reports.JunitTestReport;
 import io.harness.beans.yaml.extended.reports.UnitTestReport;
 import io.harness.category.element.UnitTests;
-import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.product.ci.engine.proto.Report;
 import io.harness.rule.Owner;
 
@@ -37,20 +36,20 @@ public class RunStepProtobufSerializerTest extends CiBeansTestBase {
     JunitTestReport junitTestReport =
         JunitTestReport.builder().spec(JunitTestReport.Spec.builder().paths(paths).build()).build();
     List<UnitTestReport> unitTestReportList = Arrays.asList(junitTestReport);
-    RunStepInfo runStepInfo = RunStepInfo.builder()
-                                  .name(RUN_STEP)
-                                  .identifier(RUN_STEP_ID)
-                                  .retry(RETRY)
-                                  .command(MVN_CLEAN_INSTALL)
-                                  .reports(unitTestReportList)
-                                  .output(Arrays.asList(OUTPUT))
-                                  .build();
-    StepElementConfig stepElement = StepElementConfig.builder()
-                                        .name(RUN_STEP)
-                                        .identifier(RUN_STEP_ID)
-                                        .type("run")
-                                        .stepSpecType(runStepInfo)
-                                        .build();
+    //    RunStepInfo runStepInfo = RunStepInfo.builder()
+    //                                  .name(RUN_STEP)
+    //                                  .identifier(RUN_STEP_ID)
+    //                                  .retry(RETRY)
+    //                                  .command(MVN_CLEAN_INSTALL)
+    //                                  .reports(unitTestReportList)
+    //                                  .output(Arrays.asList(OUTPUT))
+    //                                  .build();
+    //    StepElementConfig stepElement = StepElementConfig.builder()
+    //                                        .name(RUN_STEP)
+    //                                        .identifier(RUN_STEP_ID)
+    //                                        .type("run")
+    //                                        .stepSpecType(runStepInfo)
+    //                                        .build();
 
     Report report = Report.newBuilder().setType(Report.Type.JUNIT).addAllPaths(paths).build();
 

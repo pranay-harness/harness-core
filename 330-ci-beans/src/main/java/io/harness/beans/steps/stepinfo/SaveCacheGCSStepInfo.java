@@ -7,6 +7,7 @@ import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.yaml.ParameterField;
 
 import software.wings.jersey.JsonViews;
 
@@ -38,36 +39,33 @@ public class SaveCacheGCSStepInfo implements PluginCompatibleStep {
   @JsonIgnore
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.SAVE_CACHE_GCS.name()).build();
 
-  @JsonIgnore private String callbackId;
-  @JsonIgnore private Integer port;
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
 
-  @NotNull private String connectorRef;
-  @JsonIgnore @NotNull private String image;
+  @NotNull private ParameterField<String> connectorRef;
+  @JsonIgnore @NotNull private ParameterField<String> image;
   private ContainerResource resources;
 
   // plugin settings
-  @NotNull private String key;
-  @NotNull private String bucket;
-  @NotNull private List<String> sourcePath;
-  private String target;
+  @NotNull private ParameterField<String> key;
+  @NotNull private ParameterField<String> bucket;
+  @NotNull private ParameterField<List<String>> sourcePath;
+  private ParameterField<String> target;
 
   @Builder
-  @ConstructorProperties({"callbackId", "port", "identifier", "name", "retry", "connectorRef", "image", "resources",
-      "key", "bucket", "sourcePath", "target"})
-  public SaveCacheGCSStepInfo(String callbackId, Integer port, String identifier, String name, Integer retry,
-      String connectorRef, String image, ContainerResource resources, String key, String bucket,
-      List<String> sourcePath, String target) {
-    this.callbackId = callbackId;
-    this.port = port;
+  @ConstructorProperties({"identifier", "name", "retry", "timeout", "connectorRef", "image", "resources", "key",
+      "bucket", "sourcePath", "target"})
+  public SaveCacheGCSStepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
+      ParameterField<String> image, ContainerResource resources, ParameterField<String> key,
+      ParameterField<String> bucket, ParameterField<List<String>> sourcePath, ParameterField<String> target) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
 
     this.connectorRef = connectorRef;
-    this.image = Optional.ofNullable(image).orElse("homerovalle/drone-gcs-cache:latest");
+    this.image =
+        Optional.ofNullable(image).orElse(ParameterField.createValueField("homerovalle/drone-gcs-cache:latest"));
     this.resources = resources;
     this.key = key;
     this.bucket = bucket;

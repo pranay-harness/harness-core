@@ -6,12 +6,10 @@ import io.harness.CiBeansTestBase;
 import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.category.element.UnitTests;
-import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.util.Arrays;
 import java.util.function.Supplier;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -30,19 +28,19 @@ public class SaveCacheStepProtobufSerializerTest extends CiBeansTestBase {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldSerializeSaveCache() throws InvalidProtocolBufferException {
-    SaveCacheStepInfo saveCacheStepInfo = SaveCacheStepInfo.builder()
-                                              .name(SAVE_CACHE)
-                                              .identifier(SAVE_CACHE_ID)
-                                              .key(SAVE_CACHE_KEY)
-                                              .paths(Arrays.asList(PATH_1, PATH_2))
-                                              .build();
-    saveCacheStepInfo.setCallbackId(CALLBACK_ID);
-    StepElementConfig stepElement = StepElementConfig.builder()
-                                        .identifier(SAVE_CACHE_ID)
-                                        .name(SAVE_CACHE)
-                                        .type("saveCache")
-                                        .stepSpecType(saveCacheStepInfo)
-                                        .build();
+    //    SaveCacheStepInfo saveCacheStepInfo = SaveCacheStepInfo.builder()
+    //                                              .name(SAVE_CACHE)
+    //                                              .identifier(SAVE_CACHE_ID)
+    //                                              .key(SAVE_CACHE_KEY)
+    //                                              .paths(Arrays.asList(PATH_1, PATH_2))
+    //                                              .build();
+    //    saveCacheStepInfo.setCallbackId(CALLBACK_ID);
+    //    StepElementConfig stepElement = StepElementConfig.builder()
+    //                                        .identifier(SAVE_CACHE_ID)
+    //                                        .name(SAVE_CACHE)
+    //                                        .type("saveCache")
+    //                                        .stepSpecType(saveCacheStepInfo)
+    //                                        .build();
 
     //    String serialize = protobufSerializer.serializeToBase64(stepElement);
     //    UnitStep saveCacheStep = UnitStep.parseFrom(Base64.decodeBase64(serialize));

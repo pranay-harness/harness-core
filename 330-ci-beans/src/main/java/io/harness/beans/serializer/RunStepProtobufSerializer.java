@@ -33,7 +33,8 @@ public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStep
     }
 
     RunStep.Builder runStepBuilder = RunStep.newBuilder();
-    runStepBuilder.setCommand(runStepInfo.getCommand());
+    runStepBuilder.setCommand(RunTimeInputHandler.resolveStringParameter(
+        "Command", "Run", step.getIdentifier(), runStepInfo.getCommand(), true));
     if (port == null) {
       throw new CIStageExecutionException("Port can not be null");
     }
@@ -50,8 +51,10 @@ public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStep
       }
     }
 
-    if (runStepInfo.getOutput() != null) {
-      runStepBuilder.addAllEnvVarOutputs(runStepInfo.getOutput());
+    List<String> output = RunTimeInputHandler.resolveListParameter(
+        "Output", "Run", runStepInfo.getIdentifier(), runStepInfo.getOutput(), false);
+    if (isNotEmpty(output)) {
+      runStepBuilder.addAllEnvVarOutputs(output);
     }
 
     long timeout = TimeoutUtils.parseTimeoutString(step.getTimeout(), ciStepInfo.getDefaultTimeout());

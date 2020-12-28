@@ -5,7 +5,6 @@ import static io.harness.rule.OwnerRule.SHUBHAM;
 import io.harness.CiBeansTestBase;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.category.element.UnitTests;
-import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
@@ -27,16 +26,14 @@ public class PluginStepProtobufSerializerTest extends CiBeansTestBase {
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
   public void shouldSerializeRunStep() throws InvalidProtocolBufferException {
-    PluginStepInfo pluginStepInfo =
-        PluginStepInfo.builder().name(PLUGIN_STEP).identifier(PLUGIN_STEP_ID).retry(RETRY).image(PLUGIN_IMAGE).build();
-    pluginStepInfo.setCallbackId(CALLBACK_ID);
-    pluginStepInfo.setPort(PORT);
-    StepElementConfig stepElement = StepElementConfig.builder()
-                                        .identifier(PLUGIN_STEP_ID)
-                                        .name(PLUGIN_STEP)
-                                        .type("plugin")
-                                        .stepSpecType(pluginStepInfo)
-                                        .build();
+    //    PluginStepInfo pluginStepInfo =
+    //        PluginStepInfo.builder().name(PLUGIN_STEP).identifier(PLUGIN_STEP_ID).retry(RETRY).image(PLUGIN_IMAGE).build();
+    //    StepElementConfig stepElement = StepElementConfig.builder()
+    //                                        .identifier(PLUGIN_STEP_ID)
+    //                                        .name(PLUGIN_STEP)
+    //                                        .type("plugin")
+    //                                        .stepSpecType(pluginStepInfo)
+    //                                        .build();
 
     //    String serialize = protobufSerializer.serializeToBase64(stepElement);
     //    UnitStep pluginStep = UnitStep.parseFrom(Base64.decodeBase64(serialize));

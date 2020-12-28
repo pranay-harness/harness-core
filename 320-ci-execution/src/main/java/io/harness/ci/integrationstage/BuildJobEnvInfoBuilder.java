@@ -23,6 +23,7 @@ import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
+import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
@@ -268,18 +269,21 @@ public class BuildJobEnvInfoBuilder {
   private ContainerDefinitionInfo createPluginCompatibleStepContainerDefinition(PluginCompatibleStep stepInfo,
       CIExecutionArgs ciExecutionArgs, PortFinder portFinder, int stepIndex, String identifier) {
     Integer port = portFinder.getNextPort();
-    stepInfo.setPort(port);
 
     String containerName = String.format("%s%d", STEP_PREFIX, stepIndex);
     Map<String, String> envVarMap = new HashMap<>();
     envVarMap.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
-    envVarMap.putAll(PluginSettingUtils.getPluginCompatibleEnvVariables(stepInfo));
+    envVarMap.putAll(PluginSettingUtils.getPluginCompatibleEnvVariables(stepInfo, identifier));
+
     return ContainerDefinitionInfo.builder()
         .name(containerName)
         .commands(StepContainerUtils.getCommand())
         .args(StepContainerUtils.getArguments(port))
         .envVars(envVarMap)
-        .containerImageDetails(ContainerImageDetails.builder().imageDetails(getImageInfo(stepInfo.getImage())).build())
+        .containerImageDetails(ContainerImageDetails.builder()
+                                   .imageDetails(getImageInfo(RunTimeInputHandler.resolveStringParameter(
+                                       "Image", "Plugin", identifier, stepInfo.getImage(), true)))
+                                   .build())
         .containerResourceParams(getStepContainerResource(stepInfo.getResources()))
         .ports(Collections.singletonList(port))
         .containerType(CIContainerType.PLUGIN)
@@ -297,8 +301,10 @@ public class BuildJobEnvInfoBuilder {
     Map<String, String> stepEnvVars = new HashMap<>();
     stepEnvVars.putAll(getEnvVariables(integrationStage));
     stepEnvVars.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
-    if (!isEmpty(runStepInfo.getEnvironment())) {
-      stepEnvVars.putAll(runStepInfo.getEnvironment());
+    Map<String, String> envvars =
+        RunTimeInputHandler.resolveMapParameter("envVariables", "Run", identifier, runStepInfo.getEnvironment(), false);
+    if (!isEmpty(envvars)) {
+      stepEnvVars.putAll(envvars);
     }
     return ContainerDefinitionInfo.builder()
         .name(containerName)
@@ -308,8 +314,10 @@ public class BuildJobEnvInfoBuilder {
         .stepIdentifier(identifier)
         .secretVariables(getSecretVariables(integrationStage))
         .containerImageDetails(ContainerImageDetails.builder()
-                                   .imageDetails(getImageInfo(runStepInfo.getImage()))
-                                   .connectorIdentifier(runStepInfo.getConnector())
+                                   .imageDetails(getImageInfo(RunTimeInputHandler.resolveStringParameter(
+                                       "Image", "Run", identifier, runStepInfo.getImage(), true)))
+                                   .connectorIdentifier(RunTimeInputHandler.resolveStringParameter(
+                                       "connectorRef", "Run", identifier, runStepInfo.getConnector(), true))
                                    .build())
         .containerResourceParams(getStepContainerResource(runStepInfo.getResources()))
         .ports(Collections.singletonList(port))
@@ -352,8 +360,10 @@ public class BuildJobEnvInfoBuilder {
     String containerName = String.format("%s%d", STEP_PREFIX, stepIndex);
     Map<String, String> envVarMap = new HashMap<>();
     envVarMap.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
-    if (!isEmpty(pluginStepInfo.getSettings())) {
-      for (Map.Entry<String, String> entry : pluginStepInfo.getSettings().entrySet()) {
+    Map<String, String> settings =
+        RunTimeInputHandler.resolveMapParameter("settings", "Plugin", identifier, pluginStepInfo.getSettings(), true);
+    if (!isEmpty(settings)) {
+      for (Map.Entry<String, String> entry : settings.entrySet()) {
         String key = PLUGIN_ENV_PREFIX + entry.getKey().toUpperCase();
         envVarMap.put(key, entry.getValue());
       }
@@ -365,8 +375,10 @@ public class BuildJobEnvInfoBuilder {
         .envVars(envVarMap)
         .stepIdentifier(identifier)
         .containerImageDetails(ContainerImageDetails.builder()
-                                   .imageDetails(getImageInfo(pluginStepInfo.getImage()))
-                                   .connectorIdentifier(pluginStepInfo.getConnector())
+                                   .imageDetails(getImageInfo(RunTimeInputHandler.resolveStringParameter(
+                                       "Image", "Plugin", identifier, pluginStepInfo.getImage(), true)))
+                                   .connectorIdentifier(RunTimeInputHandler.resolveStringParameter(
+                                       "connectorRef", "Plugin", identifier, pluginStepInfo.getConnector(), true))
                                    .build())
         .containerResourceParams(getStepContainerResource(pluginStepInfo.getResources()))
         .ports(Collections.singletonList(port))
@@ -476,7 +488,8 @@ public class BuildJobEnvInfoBuilder {
     if (stepElement.getStepSpecType() instanceof PublishStepInfo) {
       List<Artifact> publishArtifacts = ((PublishStepInfo) stepElement.getStepSpecType()).getPublishArtifacts();
       for (Artifact artifact : publishArtifacts) {
-        String connectorRef = artifact.getConnector().getConnectorRef();
+        String connectorRef = RunTimeInputHandler.resolveStringParameter("connectorRef", stepElement.getType(),
+            stepElement.getIdentifier(), artifact.getConnector().getConnectorRef(), true);
         String connectorId = IdentifierRefHelper.getIdentifier(connectorRef);
         String stepId = stepElement.getIdentifier();
         switch (artifact.getConnector().getType()) {
@@ -527,7 +540,8 @@ public class BuildJobEnvInfoBuilder {
         case "uploadToS3":
           map.put(stepElement.getIdentifier(),
               ConnectorConversionInfo.builder()
-                  .connectorRef(step.getConnectorRef())
+                  .connectorRef(RunTimeInputHandler.resolveStringParameter(
+                      "connectorRef", stepElement.getType(), stepElement.getIdentifier(), step.getConnectorRef(), true))
                   .envToSecretEntry(EnvVariableEnum.AWS_ACCESS_KEY, PLUGIN_ACCESS_KEY)
                   .envToSecretEntry(EnvVariableEnum.AWS_SECRET_KEY, PLUGIN_SECRET_KEY)
                   .build());
@@ -538,7 +552,8 @@ public class BuildJobEnvInfoBuilder {
         case "restoreCacheGCS":
           map.put(stepElement.getIdentifier(),
               ConnectorConversionInfo.builder()
-                  .connectorRef(step.getConnectorRef())
+                  .connectorRef(RunTimeInputHandler.resolveStringParameter(
+                      "connectorRef", stepElement.getType(), stepElement.getIdentifier(), step.getConnectorRef(), true))
                   .envToSecretEntry(EnvVariableEnum.GCP_KEY, PLUGIN_JSON_KEY)
                   .build());
 
@@ -546,7 +561,8 @@ public class BuildJobEnvInfoBuilder {
         case "buildAndPushDockerHub":
           map.put(stepElement.getIdentifier(),
               ConnectorConversionInfo.builder()
-                  .connectorRef(step.getConnectorRef())
+                  .connectorRef(RunTimeInputHandler.resolveStringParameter(
+                      "connectorRef", stepElement.getType(), stepElement.getIdentifier(), step.getConnectorRef(), true))
                   .envToSecretEntry(EnvVariableEnum.DOCKER_USERNAME, PLUGIN_USERNAME)
                   .envToSecretEntry(EnvVariableEnum.DOCKER_PASSWORD, PLUGIN_PASSW)
                   .envToSecretEntry(EnvVariableEnum.DOCKER_REGISTRY, PLUGIN_REGISTRY)

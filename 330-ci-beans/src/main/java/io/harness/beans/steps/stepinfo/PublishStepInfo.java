@@ -27,7 +27,6 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("publishStepInfo")
 public class PublishStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
-  @JsonIgnore private String callbackId;
 
   @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.PUBLISH).build();
   @JsonIgnore
@@ -40,9 +39,8 @@ public class PublishStepInfo implements CIStepInfo {
   @NotNull private List<Artifact> publishArtifacts;
 
   @Builder
-  @ConstructorProperties({"callbackId", "identifier", "name", "retry", "publishArtifacts"})
-  PublishStepInfo(String callbackId, String identifier, String name, Integer retry, List<Artifact> publishArtifacts) {
-    this.callbackId = callbackId;
+  @ConstructorProperties({"identifier", "name", "retry", "publishArtifacts"})
+  PublishStepInfo(String identifier, String name, Integer retry, List<Artifact> publishArtifacts) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);

@@ -7,6 +7,7 @@ import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.yaml.ParameterField;
 
 import software.wings.jersey.JsonViews;
 
@@ -38,36 +39,33 @@ public class RestoreCacheS3StepInfo implements PluginCompatibleStep {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(CIStepInfoType.RESTORE_CACHE_S3.name()).build();
 
-  @JsonIgnore private String callbackId;
-  @JsonIgnore private Integer port;
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
 
-  @NotNull private String connectorRef;
-  @JsonIgnore @NotNull private String image;
+  @NotNull private ParameterField<String> connectorRef;
+  @JsonIgnore @NotNull private ParameterField<String> image;
   private ContainerResource resources;
 
   // plugin settings
-  private String endpoint;
-  @NotNull private String key;
-  @NotNull private String bucket;
-  private String target;
+  private ParameterField<String> endpoint;
+  @NotNull private ParameterField<String> key;
+  @NotNull private ParameterField<String> bucket;
+  private ParameterField<String> target;
 
   @Builder
-  @ConstructorProperties({"callbackId", "port", "identifier", "name", "retry", "connectorRef", "image", "resources",
-      "endpoint", "key", "bucket", "target"})
-  public RestoreCacheS3StepInfo(String callbackId, Integer port, String identifier, String name, Integer retry,
-      String connectorRef, String image, ContainerResource resources, String endpoint, String key, String bucket,
-      String target) {
-    this.callbackId = callbackId;
-    this.port = port;
+  @ConstructorProperties(
+      {"identifier", "name", "retry", "connectorRef", "image", "resources", "endpoint", "key", "bucket", "target"})
+
+  public RestoreCacheS3StepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
+      ParameterField<String> image, ContainerResource resources, ParameterField<String> endpoint,
+      ParameterField<String> key, ParameterField<String> bucket, ParameterField<String> target) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
 
     this.connectorRef = connectorRef;
-    this.image = Optional.ofNullable(image).orElse("plugins/s3-cache:latest");
+    this.image = Optional.ofNullable(image).orElse(ParameterField.createValueField("plugins/s3-cache:latest"));
     this.resources = resources;
     this.endpoint = endpoint;
     this.key = key;
