@@ -1,13 +1,18 @@
 package software.wings.graphql.datafetcher.execution;
 
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
+import static io.harness.rule.OwnerRule.INDER;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.eq;
 
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
+import software.wings.beans.EntityType;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.datafetcher.tag.TagHelper;
@@ -132,5 +137,30 @@ public class ExecutionQueryHelperTest extends WingsBaseTest {
     Mockito.verify(utils, Mockito.times(1))
         .setIdFilter(eq(query.field(WorkflowExecutionKeys.pipelineExecutionId)),
             eq(QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(new String[] {"PIPE_EXEC_ID"}).build()));
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldGetEntityType() {
+    assertThatThrownBy(() -> executionQueryHelper.getEntityType(null))
+            .isInstanceOf(InvalidRequestException.class)
+            .hasMessage("Please provide entity type");
+
+    QLDeploymentTagType entityType = QLDeploymentTagType.APPLICATION;
+    EntityType entityType1 = executionQueryHelper.getEntityType(entityType);
+    assertThat(entityType1).isEqualTo(EntityType.APPLICATION);
+
+    entityType = QLDeploymentTagType.SERVICE;
+    entityType1 = executionQueryHelper.getEntityType(entityType);
+    assertThat(entityType1).isEqualTo(EntityType.SERVICE);
+
+    entityType = QLDeploymentTagType.ENVIRONMENT;
+    entityType1 = executionQueryHelper.getEntityType(entityType);
+    assertThat(entityType1).isEqualTo(EntityType.ENVIRONMENT);
+
+    entityType = QLDeploymentTagType.DEPLOYMENT;
+    entityType1 = executionQueryHelper.getEntityType(entityType);
+    assertThat(entityType1).isEqualTo(EntityType.DEPLOYMENT);
   }
 }
