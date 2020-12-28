@@ -12,7 +12,7 @@ import static io.harness.delegate.task.citasks.cik8handler.SecretSpecBuilder.SEC
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static java.lang.String.format;
 
 import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
 import io.harness.delegate.beans.ci.CIK8BuildTaskParams;
@@ -30,8 +30,6 @@ import io.harness.delegate.beans.ci.pod.SecretParams;
 import io.harness.delegate.beans.ci.pod.SecretVarParams;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.delegate.beans.ci.pod.SecretVolumeParams;
-import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.task.citasks.CIBuildTaskHandler;
 import io.harness.delegate.task.citasks.cik8handler.params.CIConstants;
 import io.harness.delegate.task.citasks.cik8handler.pod.CIK8PodSpecBuilder;
@@ -65,6 +63,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
   @NotNull private Type type = CIBuildTaskHandler.Type.GCP_K8;
 
   private static final String DOCKER_CONFIG_KEY = ".dockercfg";
+  private static final String HARNESS_IMAGE_SECRET = "HARNESS_IMAGE_SECRET";
 
   @Override
   public Type getType() {
@@ -72,8 +71,8 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
   }
 
   public K8sTaskExecutionResponse executeTaskInternal(CIBuildSetupTaskParams ciBuildSetupTaskParams) {
-    CiK8sTaskResponse k8sTaskResponse = null;
     CIK8BuildTaskParams cik8BuildTaskParams = (CIK8BuildTaskParams) ciBuildSetupTaskParams;
+    String cik8BuildTaskParamsStr = cik8BuildTaskParams.toString();
     ConnectorDetails gitConnectorDetails = cik8BuildTaskParams.getCik8PodParams().getGitConnector();
 
     PodParams podParams = cik8BuildTaskParams.getCik8PodParams();
@@ -81,6 +80,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     String podName = podParams.getName();
 
     K8sTaskExecutionResponse result;
+    CiK8sTaskResponse k8sTaskResponse = null;
     try (AutoLogContext ignore1 = new K8LogContext(podParams.getName(), null, OVERRIDE_ERROR)) {
       try {
         KubernetesClient kubernetesClient =
@@ -116,7 +116,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
                        .build();
         }
       } catch (TimeoutException timeoutException) {
-        log.error("Processing CI K8 build timed out: {}", ciBuildSetupTaskParams, timeoutException);
+        log.error("Processing CI K8 build timed out: {}", cik8BuildTaskParamsStr, timeoutException);
         String errorMessage = k8sTaskResponse.getPodStatus().getErrorMessage();
         k8sTaskResponse.setPodStatus(PodStatus.builder().status(PENDING).errorMessage(errorMessage).build());
         result = K8sTaskExecutionResponse.builder()
@@ -125,7 +125,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
                      .k8sTaskResponse(k8sTaskResponse)
                      .build();
       } catch (Exception ex) {
-        log.error("Exception in processing CI K8 build setup task: {}", ciBuildSetupTaskParams, ex);
+        log.error("Exception in processing CI K8 build setup task: {}", cik8BuildTaskParamsStr, ex);
         result = K8sTaskExecutionResponse.builder()
                      .commandExecutionStatus(CommandExecutionStatus.FAILURE)
                      .errorMessage(ex.getMessage())
@@ -152,9 +152,9 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
       return;
     }
 
-    log.info("Creating pvc for pod name: {}", podParams.getName());
     for (PVCParams pvcParams : podParams.getPvcParamList()) {
       if (!pvcParams.isPresent()) {
+        log.info("Creating pvc for pod name: {} with name {}", podParams.getName(), pvcParams.getClaimName());
         kubeCtlHandler.createPVC(
             kubernetesClient, namespace, pvcParams.getClaimName(), pvcParams.getStorageClass(), pvcParams.getSizeMib());
       }
@@ -169,27 +169,19 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     Optional.ofNullable(podParams.getInitContainerParamsList()).ifPresent(containerParamsList::addAll);
 
     for (CIK8ContainerParams containerParams : containerParamsList) {
-      ConnectorDetails connectorDetails = containerParams.getImageDetailsWithConnector().getImageConnectorDetails();
-      String registryUrl = null;
-      if (connectorDetails != null && connectorDetails.getConnectorType() == ConnectorType.DOCKER) {
-        DockerConnectorDTO dockerConnectorDTO = (DockerConnectorDTO) connectorDetails.getConnectorConfig();
-        registryUrl = dockerConnectorDTO.getDockerRegistryUrl();
-      }
-      if (isNotBlank(registryUrl)) {
-        Secret imgSecret = kubeCtlHandler.createRegistrySecret(
-            kubernetesClient, namespace, containerParams.getImageDetailsWithConnector());
-        if (imgSecret != null) {
-          switch (containerParams.getContainerType()) {
-            case SERVICE:
-            case PLUGIN:
-              String secretName = imgSecret.getMetadata().getName();
-              updateContainerWithSecretVariable("HARNESS_IMAGE_SECRET",
-                  SecretParams.builder().type(SecretParams.Type.TEXT).secretKey(DOCKER_CONFIG_KEY).build(), secretName,
-                  containerParams);
-              break;
-            default:
-              break;
-          }
+      String secretName = format("%s-image-%s", podParams.getName(), containerParams.getName());
+      Secret imgSecret = kubeCtlHandler.createRegistrySecret(
+          kubernetesClient, namespace, secretName, containerParams.getImageDetailsWithConnector());
+      if (imgSecret != null) {
+        switch (containerParams.getContainerType()) {
+          case SERVICE:
+          case PLUGIN:
+            updateContainerWithSecretVariable(HARNESS_IMAGE_SECRET,
+                SecretParams.builder().type(SecretParams.Type.TEXT).secretKey(DOCKER_CONFIG_KEY).build(), secretName,
+                containerParams);
+            break;
+          default:
+            break;
         }
       }
     }
