@@ -8,12 +8,14 @@ import io.harness.pms.contracts.execution.ChildrenExecutableResponse;
 import io.harness.pms.contracts.execution.ChildrenExecutableResponse.Child;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.steps.executables.ChildrenExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.steps.OrchestrationStepTypes;
+import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
 
 import java.util.Map;
@@ -40,13 +42,6 @@ public class ForkStep implements ChildrenExecutable<ForkStepParameters> {
   @Override
   public StepResponse handleChildrenResponse(
       Ambiance ambiance, ForkStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
-    StepResponseBuilder responseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
-    for (ResponseData responseData : responseDataMap.values()) {
-      Status executionStatus = ((StepResponseNotifyData) responseData).getStatus();
-      if (executionStatus != Status.SUCCEEDED) {
-        responseBuilder.status(executionStatus);
-      }
-    }
-    return responseBuilder.build();
+    return StepUtils.createStepResponseFromChildResponse(responseDataMap);
   }
 }
