@@ -77,6 +77,8 @@ public class PlanCreationBlobResponseUtils {
       GraphLayoutInfo.Builder layoutNodeInfo = GraphLayoutInfo.newBuilder();
       if (EmptyPredicate.isEmpty(builder.getGraphLayoutInfo().getStartingNodeId())) {
         layoutNodeInfo.setStartingNodeId(otherStartingNodeId);
+      } else {
+        layoutNodeInfo.setStartingNodeId(builder.getGraphLayoutInfo().getStartingNodeId());
       }
       Map<String, GraphLayoutNode> layoutMap = new HashMap<>();
       if (builder.getGraphLayoutInfo() != null) {

@@ -2,6 +2,7 @@ package io.harness.pms.sdk.execution;
 
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.service.ExecutionSummaryUpdateRequest;
+import io.harness.pms.sdk.PmsSdkModuleUtils;
 import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
@@ -9,6 +10,7 @@ import io.harness.pms.sdk.core.execution.PmsExecutionGrpcClient;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import io.grpc.StatusRuntimeException;
 import java.util.Objects;
 
@@ -16,6 +18,7 @@ import java.util.Objects;
 public class ExecutionSummaryUpdateEventHandler implements AsyncOrchestrationEventHandler {
   @Inject(optional = true) PmsExecutionGrpcClient pmsClient;
   @Inject(optional = true) ExecutionSummaryModuleInfoProvider executionSummaryModuleInfoProvider;
+  @Inject @Named(PmsSdkModuleUtils.SDK_SERVICE_NAME) String serviceName;
 
   public ExecutionSummaryUpdateEventHandler() {}
 
@@ -24,7 +27,7 @@ public class ExecutionSummaryUpdateEventHandler implements AsyncOrchestrationEve
     NodeExecutionProto nodeExecutionProto = orchestrationEvent.getNodeExecutionProto();
     ExecutionSummaryUpdateRequest.Builder executionSummaryUpdateRequest =
         ExecutionSummaryUpdateRequest.newBuilder()
-            .setModuleName("cd")
+            .setModuleName(serviceName)
             .setPlanExecutionId(nodeExecutionProto.getAmbiance().getPlanExecutionId())
             .setPipelineModuleInfoJson(
                 executionSummaryModuleInfoProvider.getPipelineLevelModuleInfo(nodeExecutionProto).toJson())

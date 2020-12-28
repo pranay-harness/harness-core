@@ -1,4 +1,4 @@
-package io.harness.pms.pipeline.entity;
+package io.harness.pms.plan.execution.beans;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.data.validator.Trimmed;
@@ -11,7 +11,7 @@ import io.harness.persistence.UuidAware;
 import io.harness.pms.contracts.execution.ExecutionErrorInfo;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.pipeline.ExecutionTriggerInfo;
-import io.harness.pms.pipeline.resource.GraphLayoutNodeDTO;
+import io.harness.pms.plan.execution.beans.dto.GraphLayoutNodeDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;

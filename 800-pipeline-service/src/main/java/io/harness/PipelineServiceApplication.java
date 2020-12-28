@@ -13,7 +13,8 @@ import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.pms.exception.WingsExceptionMapper;
-import io.harness.pms.execution.registrar.PmsOrchestrationEventRegistrar;
+import io.harness.pms.plan.execution.PmsExecutionServiceInfoProvider;
+import io.harness.pms.plan.execution.registrar.PmsOrchestrationEventRegistrar;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
@@ -137,6 +138,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
                                         .serviceName("pms")
                                         .engineEventHandlersMap(PmsOrchestrationEventRegistrar.getEngineEventHandlers())
+                                        .executionSummaryModuleInfoProviderClass(PmsExecutionServiceInfoProvider.class)
                                         .build();
     modules.add(PmsSdkModule.getInstance(sdkConfig));
   }

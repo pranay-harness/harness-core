@@ -11,6 +11,8 @@ import io.harness.pms.ngpipeline.inputset.beans.resource.MergeInputSetRequestDTO
 import io.harness.pms.pipeline.ExecutionTriggerInfo;
 import io.harness.pms.pipeline.TriggerType;
 import io.harness.pms.plan.creation.PlanCreatorMergeService;
+import io.harness.pms.plan.execution.beans.dto.InterruptDTO;
+import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.yaml.YamlUtils;
 
 import com.google.common.collect.ImmutableMap;
@@ -26,6 +28,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -98,6 +101,7 @@ public class PlanExecutionResource {
   @Inject private final OrchestrationService orchestrationService;
   @Inject private final PlanCreatorMergeService planCreatorMergeService;
   @Inject private final PipelineExecuteHelper pipelineExecuteHelper;
+  @Inject private final PMSExecutionService pmsExecutionService;
 
   private static final String tempPipeline = "pipeline:\n"
       + "  name: \"Manager Service Deployment\"\n"
@@ -432,5 +436,15 @@ public class PlanExecutionResource {
     PlanExecutionResponseDto planExecutionResponseDto =
         PlanExecutionResponseDto.builder().planExecution(planExecution).build();
     return ResponseDTO.newResponse(planExecutionResponseDto);
+  }
+
+  @PUT
+  @ApiOperation(value = "pause, resume or stop the pipeline executions", nickname = "handleInterrupt")
+  @Path("/interrupt/{planExecutionId}")
+  public ResponseDTO<InterruptDTO> handleInterrupt(@NotNull @QueryParam("accountIdentifier") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgId, @NotNull @QueryParam("projectIdentifier") String projectId,
+      @NotNull @QueryParam("interruptType") PlanExecutionInterruptType executionInterruptType,
+      @NotNull @PathParam("planExecutionId") String planExecutionId) {
+    return ResponseDTO.newResponse(pmsExecutionService.registerInterrupt(executionInterruptType, planExecutionId));
   }
 }

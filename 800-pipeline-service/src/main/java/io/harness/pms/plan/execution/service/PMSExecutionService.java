@@ -1,8 +1,9 @@
-package io.harness.pms.exception.service;
+package io.harness.pms.plan.execution.service;
 
 import io.harness.dto.OrchestrationGraphDTO;
-import io.harness.pms.pipeline.entity.PipelineExecutionSummaryEntity;
-import io.harness.pms.pipeline.resource.PipelineExecutionSummaryDTO;
+import io.harness.pms.plan.execution.PlanExecutionInterruptType;
+import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
+import io.harness.pms.plan.execution.beans.dto.InterruptDTO;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,4 +18,6 @@ public interface PMSExecutionService {
       String accountId, String orgId, String projectId, String planExecutionId);
 
   OrchestrationGraphDTO getOrchestrationGraph(String stageNodeId, String planExecutionId);
+
+  InterruptDTO registerInterrupt(PlanExecutionInterruptType executionInterruptType, String planExecutionId);
 }

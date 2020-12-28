@@ -1,7 +1,6 @@
 package io.harness.repositories.executions;
 
-import io.harness.pms.pipeline.PipelineEntity;
-import io.harness.pms.pipeline.entity.PipelineExecutionSummaryEntity;
+import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

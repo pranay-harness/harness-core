@@ -1,7 +1,7 @@
 package io.harness.repositories.executions;
 
 import io.harness.annotation.HarnessRepo;
-import io.harness.pms.pipeline.entity.PipelineExecutionSummaryEntity;
+import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 
 import java.util.Optional;
 import org.springframework.data.repository.PagingAndSortingRepository;
