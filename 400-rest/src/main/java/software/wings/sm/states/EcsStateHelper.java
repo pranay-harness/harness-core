@@ -1154,4 +1154,17 @@ public class EcsStateHelper {
     }
     return ((AwsEcsAllPhaseRollbackData) sweepingOutput).isAllPhaseRollbackDone();
   }
+
+  int renderTimeout(String expr, ExecutionContext context, int defaultValue) {
+    int retVal = defaultValue;
+    if (isNotEmpty(expr)) {
+      try {
+        retVal = Integer.parseInt(context.renderExpression(expr));
+      } catch (NumberFormatException e) {
+        log.error(format("Number format Exception while evaluating: [%s]", expr), e);
+        retVal = defaultValue;
+      }
+    }
+    return retVal;
+  }
 }
