@@ -17,6 +17,7 @@ import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.steps.StepOutcomeGroup;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
@@ -55,7 +56,8 @@ public class IntegrationStageStepPMS implements ChildExecutable<IntegrationStage
                                       .namespace(k8sDirectInfraYaml.getSpec().getNamespace())
                                       .build();
 
-      executionSweepingOutputResolver.consume(ambiance, ContextElement.podDetails, k8PodDetails, null);
+      executionSweepingOutputResolver.consume(
+          ambiance, ContextElement.podDetails, k8PodDetails, StepOutcomeGroup.STAGE.name());
     }
 
     final String executionNodeId = integrationStageStepParametersPMS.getChildNodeID();

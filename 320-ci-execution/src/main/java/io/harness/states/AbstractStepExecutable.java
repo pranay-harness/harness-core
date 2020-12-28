@@ -13,6 +13,7 @@ import io.harness.pms.contracts.execution.AsyncExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.resolver.RefObjectUtil;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.AsyncExecutable;
@@ -39,28 +40,29 @@ public abstract class AbstractStepExecutable implements AsyncExecutable<CIStepIn
       Ambiance ambiance, CIStepInfo stepParameters, StepInputPackage inputPackage) {
     StepTaskDetails stepTaskDetails = (StepTaskDetails) executionSweepingOutputResolver.resolve(
         ambiance, RefObjectUtil.getSweepingOutputRefObject(CALLBACK_IDS));
-
-    log.info("Waiting on response for task id {} and step Id {}",
-        stepTaskDetails.getTaskIds().get(stepParameters.getIdentifier()), stepParameters.getIdentifier());
+    String stepIdentifier = AmbianceUtils.obtainStepIdentifier(ambiance);
+    log.info("Waiting on response for task id {} and step Id {}", stepTaskDetails.getTaskIds().get(stepIdentifier),
+        stepIdentifier);
     return AsyncExecutableResponse.newBuilder()
-        .addCallbackIds(stepTaskDetails.getTaskIds().get(stepParameters.getIdentifier()))
+        .addCallbackIds(stepTaskDetails.getTaskIds().get(stepIdentifier))
         .build();
   }
 
   @Override
   public StepResponse handleAsyncResponse(
       Ambiance ambiance, CIStepInfo stepParameters, Map<String, ResponseData> responseDataMap) {
+    String stepIdentifier = AmbianceUtils.obtainStepIdentifier(ambiance);
     StepStatusTaskResponseData stepStatusTaskResponseData =
         (StepStatusTaskResponseData) responseDataMap.values().iterator().next();
     StepStatus stepStatus = stepStatusTaskResponseData.getStepStatus();
 
-    log.info("Received response {} for step {}", stepStatus.getStepExecutionStatus(), stepParameters.getIdentifier());
+    log.info("Received response {} for step {}", stepStatus.getStepExecutionStatus(), stepIdentifier);
     if (stepStatus.getStepExecutionStatus() == StepExecutionStatus.SUCCESS) {
       return StepResponse.builder()
           .status(Status.SUCCEEDED)
           .stepOutcome(StepResponse.StepOutcome.builder()
                            .outcome(CiStepOutcome.builder().output(stepStatus.getOutput()).build())
-                           .name(stepParameters.getIdentifier())
+                           .name(stepIdentifier)
                            .build())
           .build();
     } else if (stepStatus.getStepExecutionStatus() == StepExecutionStatus.SKIPPED) {
