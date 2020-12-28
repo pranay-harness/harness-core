@@ -60,8 +60,8 @@ scmConnectionConfig:
   url: localhost:8091
 
 logServiceConfig:
-  baseUrl: http://localhost:8079/
-  globalToken: "token"
+  baseUrl: https://qb.harness.io/log-service/
+  globalToken: "c76e567a-b341-404d-a8dd-d9738714eb82"
 
 tiServiceConfig:
   baseUrl: http://localhost:8078
