@@ -176,6 +176,9 @@ public class ExecutionQueryHelper {
   }
 
   public EntityType getEntityType(QLDeploymentTagType entityType) {
+    if (entityType == null) {
+      throw new InvalidRequestException("Please provide entity type");
+    }
     switch (entityType) {
       case APPLICATION:
         return EntityType.APPLICATION;
