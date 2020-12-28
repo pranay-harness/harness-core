@@ -18,7 +18,6 @@ import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfig;
-import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
@@ -410,8 +409,6 @@ public class K8sStepHelper {
   public List<ValuesManifestOutcome> getAggregatedValuesManifests(@NotEmpty List<ManifestOutcome> manifestOutcomeList) {
     List<ValuesManifestOutcome> aggregateValuesManifests = new ArrayList<>();
 
-    addValuesEntryForK8ManifestIfNeeded(manifestOutcomeList, aggregateValuesManifests);
-
     List<ValuesManifestOutcome> serviceValuesManifests =
         manifestOutcomeList.stream()
             .filter(manifestOutcome -> ManifestType.VALUES.equals(manifestOutcome.getType()))
@@ -422,27 +419,6 @@ public class K8sStepHelper {
       aggregateValuesManifests.addAll(serviceValuesManifests);
     }
     return aggregateValuesManifests;
-  }
-
-  private void addValuesEntryForK8ManifestIfNeeded(
-      List<ManifestOutcome> serviceManifests, List<ValuesManifestOutcome> aggregateValuesManifests) {
-    K8sManifestOutcome k8sManifestOutcome =
-        (K8sManifestOutcome) serviceManifests.stream()
-            .filter(manifestOutcome -> ManifestType.K8Manifest.equals(manifestOutcome.getType()))
-            .findFirst()
-            .orElse(null);
-
-    if (k8sManifestOutcome != null && k8sManifestOutcome.getStore() != null
-        && ManifestStoreType.GIT.equals(k8sManifestOutcome.getStore().getStoreConfig().getKind())) {
-      GitStore gitStore = (GitStore) k8sManifestOutcome.getStore().getStoreConfig();
-      ValuesManifestOutcome valuesManifest =
-          ValuesManifestOutcome.builder()
-              .identifier(k8sManifestOutcome.getIdentifier())
-              .store(StoreConfigWrapper.builder().storeConfig(gitStore.cloneInternal()).build())
-              .build();
-
-      aggregateValuesManifests.add(valuesManifest);
-    }
   }
 
   private List<String> getValuesFileContentsForLocalStore(List<ValuesManifestOutcome> aggregatedValuesManifests) {

@@ -72,5 +72,5 @@ pipeline:
                   identifier: rolloutDeployment
                   type: K8sRollingDeploy
                   spec:
-                    timeout: 120000
+                    timeout: 5m
                     skipDryRun: false
