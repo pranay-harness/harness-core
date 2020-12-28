@@ -34,12 +34,12 @@ public class RecastObjectCreator implements RecastObjectFactory {
     try {
       return getNoArgsConstructor(clazz).newInstance();
     } catch (Exception e) {
-      if (Collection.class.isAssignableFrom(clazz)) {
+      if (Set.class.isAssignableFrom(clazz)) {
+        return (T) createSet(null);
+      } else if (Collection.class.isAssignableFrom(clazz)) {
         return (T) createList(null);
       } else if (Map.class.isAssignableFrom(clazz)) {
         return (T) createMap(null);
-      } else if (Set.class.isAssignableFrom(clazz)) {
-        return (T) createSet(null);
       }
       throw new RecasterException("No usable constructor for " + clazz.getName(), e);
     }

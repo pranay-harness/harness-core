@@ -14,12 +14,9 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
@@ -313,57 +310,6 @@ public class RecastTest extends RecasterTestBase {
   private static class DummyCharacterArray {
     private Character[] characterClassArray;
     private char[] charPrimitiveArray;
-  }
-
-  @Test
-  @Owner(developers = ALEXEI)
-  @Category(UnitTests.class)
-  public void shouldTestRecasterWithSimpleList() {
-    final List<Integer> list = Arrays.asList(1, 2, 3);
-
-    Recast recast = new Recast(recaster, ImmutableSet.of(DummySimpleList.class));
-    DummySimpleList dummyList = DummySimpleList.builder().list(list).build();
-    Document document = recast.toDocument(dummyList);
-
-    assertThat(document).isNotEmpty();
-    assertThat(document).isNotEmpty();
-    assertThat(document.get("list")).isEqualTo(list);
-
-    DummySimpleList recastedSimpleList = recast.fromDocument(document, DummySimpleList.class);
-    assertThat(recastedSimpleList).isNotNull();
-    assertThat(recastedSimpleList.list).isEqualTo(list);
-  }
-
-  @Builder
-  @NoArgsConstructor
-  @AllArgsConstructor
-  private static class DummySimpleList {
-    private List<Integer> list;
-  }
-
-  @Test
-  @Owner(developers = ALEXEI)
-  @Category(UnitTests.class)
-  public void shouldTestRecasterWithSimpleSet() {
-    final Set<Integer> set = ImmutableSet.of(1, 2, 3);
-
-    Recast recast = new Recast(recaster, ImmutableSet.of(DummySimpleSet.class));
-    DummySimpleSet dummySet = DummySimpleSet.builder().set(set).build();
-    Document document = recast.toDocument(dummySet);
-
-    assertThat(document).isNotEmpty();
-    assertThat((List) document.get("set")).containsExactlyInAnyOrderElementsOf(set);
-
-    DummySimpleSet recastedSimpleSet = recast.fromDocument(document, DummySimpleSet.class);
-    assertThat(recastedSimpleSet).isNotNull();
-    assertThat(recastedSimpleSet.set).isEqualTo(set);
-  }
-
-  @Builder
-  @NoArgsConstructor
-  @AllArgsConstructor
-  private static class DummySimpleSet {
-    private Set<Integer> set;
   }
 
   @Test
