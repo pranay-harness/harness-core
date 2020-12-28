@@ -1,4 +1,4 @@
-package io.harness.pms.execution.registrar;
+package io.harness.pms.plan.execution.registrar;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.pms.contracts.execution.events.OrchestrationEventType.ORCHESTRATION_START;
@@ -6,8 +6,8 @@ import static io.harness.pms.contracts.execution.events.OrchestrationEventType.P
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
-import io.harness.pms.execution.handlers.ExecutionInfoUpdateEventHandler;
-import io.harness.pms.execution.handlers.ExecutionSummaryCreateEventHandler;
+import io.harness.pms.plan.execution.handlers.ExecutionInfoUpdateEventHandler;
+import io.harness.pms.plan.execution.handlers.ExecutionSummaryCreateEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.registrars.OrchestrationModuleEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationModuleRegistrarHelper;

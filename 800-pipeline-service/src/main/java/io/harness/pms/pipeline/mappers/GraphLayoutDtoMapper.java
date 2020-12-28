@@ -3,8 +3,8 @@ package io.harness.pms.pipeline.mappers;
 import io.harness.pms.contracts.plan.EdgeLayoutList;
 import io.harness.pms.contracts.plan.GraphLayoutNode;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.pipeline.resource.EdgeLayoutListDTO;
-import io.harness.pms.pipeline.resource.GraphLayoutNodeDTO;
+import io.harness.pms.plan.execution.beans.dto.EdgeLayoutListDTO;
+import io.harness.pms.plan.execution.beans.dto.GraphLayoutNodeDTO;
 
 import lombok.experimental.UtilityClass;
 

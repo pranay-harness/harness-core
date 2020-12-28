@@ -1,4 +1,4 @@
-package io.harness.pms.pipeline.resource;
+package io.harness.pms.plan.execution.beans.dto;
 
 import io.harness.pms.contracts.execution.ExecutionErrorInfo;
 import io.harness.pms.execution.ExecutionStatus;

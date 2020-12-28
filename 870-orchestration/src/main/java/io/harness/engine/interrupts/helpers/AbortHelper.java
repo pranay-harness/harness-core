@@ -46,7 +46,7 @@ public class AbortHelper {
     try {
       Ambiance ambiance = nodeExecution.getAmbiance();
       PlanNodeProto node = nodeExecution.getNode();
-      Step currentState = Preconditions.checkNotNull(stepRegistry.obtain(node.getStepType()));
+      // Step currentState = Preconditions.checkNotNull(stepRegistry.obtain(node.getStepType()));
       ExecutableResponse executableResponse = nodeExecution.obtainLatestExecutableResponse();
       if (executableResponse != null && nodeExecution.isTaskSpawningMode()) {
         String taskId;

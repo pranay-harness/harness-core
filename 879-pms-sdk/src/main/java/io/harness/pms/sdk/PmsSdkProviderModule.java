@@ -72,4 +72,11 @@ class PmsSdkProviderModule extends AbstractModule {
   public MongoConfig mongoConfig() {
     return config.getMongoConfig();
   }
+
+  @Provides
+  @Singleton
+  @Named(PmsSdkModuleUtils.SDK_SERVICE_NAME)
+  public String serviceName() {
+    return config.getServiceName();
+  }
 }

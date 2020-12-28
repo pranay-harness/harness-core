@@ -1,11 +1,9 @@
 package io.harness.pms.pipeline.mappers;
 
-import io.harness.pms.contracts.execution.ExecutionErrorInfo;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.pipeline.ExecutionTriggerInfo;
-import io.harness.pms.pipeline.entity.PipelineExecutionSummaryEntity;
-import io.harness.pms.pipeline.resource.GraphLayoutNodeDTO;
-import io.harness.pms.pipeline.resource.PipelineExecutionSummaryDTO;
+import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
+import io.harness.pms.plan.execution.beans.dto.GraphLayoutNodeDTO;
+import io.harness.pms.plan.execution.beans.dto.PipelineExecutionSummaryDTO;
 
 import java.util.Map;
 import lombok.experimental.UtilityClass;

@@ -1,6 +1,6 @@
 package io.harness.repositories.executions;
 
-import io.harness.pms.pipeline.entity.PipelineExecutionSummaryEntity;
+import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 
 import com.google.inject.Inject;
 import java.time.Duration;
