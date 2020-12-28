@@ -1864,8 +1864,7 @@
           "required": [
             "oidcClientIdRef",
             "oidcIssuerUrl",
-            "oidcPasswordRef",
-            "oidcUsername"
+            "oidcPasswordRef"
           ],
           "properties": {
             "oidcClientIdRef": {
@@ -1885,8 +1884,25 @@
             },
             "oidcUsername": {
               "type": "string"
+            },
+            "oidcUsernameRef": {
+              "type": "string"
             }
           }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "oidcUsername"
+              ]
+            },
+            {
+              "required": [
+                "oidcUsernameRef"
+              ]
+            }
+          ]
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -1918,8 +1934,7 @@
         {
           "type": "object",
           "required": [
-            "passwordRef",
-            "username"
+            "passwordRef"
           ],
           "properties": {
             "passwordRef": {
@@ -1927,8 +1942,25 @@
             },
             "username": {
               "type": "string"
+            },
+            "usernameRef": {
+              "type": "string"
             }
           }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "usernameRef"
+              ]
+            },
+            {
+              "required": [
+                "username"
+              ]
+            }
+          ]
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
