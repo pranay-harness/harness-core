@@ -8,6 +8,7 @@ import io.harness.beans.yaml.extended.reports.UnitTestReport;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -33,30 +34,27 @@ public class RunStepInfo implements CIStepInfo {
   @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.RUN).build();
   @JsonIgnore public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.RUN.name()).build();
 
-  @JsonIgnore private String callbackId;
-  @JsonIgnore private Integer port;
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
 
-  @NotNull private String command;
-  private List<String> output;
-  private Map<String, String> environment;
+  @NotNull private ParameterField<String> command;
+  private ParameterField<List<String>> output;
+  private ParameterField<Map<String, String>> environment;
   private String skipCondition;
   private List<UnitTestReport> reports;
 
-  @NotNull private String image;
-  private String connector;
+  @NotNull private ParameterField<String> image;
+  private ParameterField<String> connector;
   private ContainerResource resources;
 
   @Builder
-  @ConstructorProperties({"callbackId", "port", "identifier", "name", "retry", "command", "output", "skipCondition",
-      "reports", "environment", "image", "connector", "resources"})
-  public RunStepInfo(String callbackId, Integer port, String identifier, String name, Integer retry, String command,
-      List<String> output, String skipCondition, List<UnitTestReport> reports, Map<String, String> environment,
-      String image, String connector, ContainerResource resources) {
-    this.callbackId = callbackId;
-    this.port = port;
+  @ConstructorProperties({"identifier", "name", "retry", "command", "output", "skipCondition", "reports", "environment",
+      "image", "connector", "resources"})
+  public RunStepInfo(String identifier, String name, Integer retry, ParameterField<String> command,
+      ParameterField<List<String>> output, String skipCondition, List<UnitTestReport> reports,
+      ParameterField<Map<String, String>> environment, ParameterField<String> image, ParameterField<String> connector,
+      ContainerResource resources) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);

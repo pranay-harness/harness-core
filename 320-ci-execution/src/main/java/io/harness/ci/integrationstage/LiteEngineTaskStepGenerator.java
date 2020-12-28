@@ -2,6 +2,7 @@ package io.harness.ci.integrationstage;
 
 import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.executionargs.CIExecutionArgs;
+import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.plancreator.execution.ExecutionElementConfig;

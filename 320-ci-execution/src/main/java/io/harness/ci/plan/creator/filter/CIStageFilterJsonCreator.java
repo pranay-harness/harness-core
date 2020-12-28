@@ -25,7 +25,7 @@ public class CIStageFilterJsonCreator implements FilterJsonCreator<StageElementC
   public FilterCreationResponse handleNode(FilterCreationContext filterCreationContext, StageElementConfig yamlField) {
     FilterCreationResponseBuilder creationResponse = FilterCreationResponse.builder();
 
-    // TODO No way to retrieve codebase info
+    // filterCreationContext.getCurrentField().getNode().getParentNode().getParentNode().getParentNode()
     return creationResponse.build();
   }
 }

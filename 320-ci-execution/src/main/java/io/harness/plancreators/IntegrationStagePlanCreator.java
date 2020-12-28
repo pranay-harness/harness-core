@@ -27,7 +27,6 @@ import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
-import io.harness.integrationstage.CILiteEngineIntegrationStageModifier;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
@@ -56,7 +55,6 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
   static final Integer RANDOM_LENGTH = 8;
   @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
   @Inject private KryoSerializer kryoSerializer;
-  @Inject private CILiteEngineIntegrationStageModifier ciLiteEngineIntegrationStageModifier;
   private static final SecureRandom random = new SecureRandom();
   @Override
   public ExecutionPlanCreatorResponse createPlan(
@@ -74,8 +72,7 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
     BuildNumberDetails buildNumber = ciExecutionArgs.getBuildNumberDetails();
 
     ExecutionElement execution = integrationStage.getExecution();
-    ExecutionElement modifiedExecutionPlan =
-        ciLiteEngineIntegrationStageModifier.modifyExecutionPlan(execution, integrationStage, context, podName);
+    ExecutionElement modifiedExecutionPlan = execution;
 
     integrationStage.setExecution(modifiedExecutionPlan);
     if (ciExecutionArgs.getExecutionSource() != null

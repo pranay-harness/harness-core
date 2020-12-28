@@ -14,6 +14,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.executionargs.CIExecutionArgs;
+import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
@@ -26,6 +27,7 @@ import io.harness.plancreator.execution.ExecutionWrapperConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 import io.harness.yaml.utils.JsonPipelineUtils;
 
@@ -202,9 +204,9 @@ public class CILiteEngineStepGroupUtils {
     settings.put(GIT_CLONE_DEPTH_ATTRIBUTE, cloneDepth.toString());
     PluginStepInfo step = PluginStepInfo.builder()
                               .identifier(GIT_CLONE_STEP_ID)
-                              .image(GIT_CLONE_IMAGE)
+                              .image(ParameterField.createValueField(GIT_CLONE_IMAGE))
                               .name(GIT_CLONE_STEP_NAME)
-                              .settings(settings)
+                              .settings(ParameterField.createValueField(settings))
                               .build();
 
     String uuid = generateUuid();

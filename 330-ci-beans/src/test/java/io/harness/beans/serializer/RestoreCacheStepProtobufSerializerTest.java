@@ -5,7 +5,6 @@ import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import io.harness.CiBeansTestBase;
 import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
 import io.harness.category.element.UnitTests;
-import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
@@ -24,18 +23,18 @@ public class RestoreCacheStepProtobufSerializerTest extends CiBeansTestBase {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldSerializeRestoreCacheStep() throws InvalidProtocolBufferException {
-    RestoreCacheStepInfo restoreCacheStepInfo = RestoreCacheStepInfo.builder()
-                                                    .name(RESTORE_CACHE)
-                                                    .identifier(RESTORE_ID)
-                                                    .key(RESTORE_KEY)
-                                                    .failIfNotExist(true)
-                                                    .build();
-    StepElementConfig stepElement = StepElementConfig.builder()
-                                        .name(RESTORE_CACHE)
-                                        .identifier(RESTORE_ID)
-                                        .type("restoreCache")
-                                        .stepSpecType(restoreCacheStepInfo)
-                                        .build();
+    //    RestoreCacheStepInfo restoreCacheStepInfo = RestoreCacheStepInfo.builder()
+    //                                                    .name(RESTORE_CACHE)
+    //                                                    .identifier(RESTORE_ID)
+    //                                                    .key(RESTORE_KEY)
+    //                                                    .failIfNotExist(true)
+    //                                                    .build();
+    //    StepElementConfig stepElement = StepElementConfig.builder()
+    //                                        .name(RESTORE_CACHE)
+    //                                        .identifier(RESTORE_ID)
+    //                                        .type("restoreCache")
+    //                                        .stepSpecType(restoreCacheStepInfo)
+    //                                        .build();
 
     //    restoreCacheStepInfo.setCallbackId(CALLBACK_ID);
     //    String serialize = protobufSerializer.serializeToBase64(stepElement);
