@@ -16,5 +16,5 @@ connector:
           spec:
             # Username for the Kubernetes cluster. Requried
             username:  "admin"
-            # Password Ref for the Kubernetes cluster. Reference to secret (either secret name or identifier). Required
-            passwordRef: "acc.kube_cluster_password"
+            # Password Ref for the Kubernetes cluster. Reference to secret (identifier). Required
+            passwordRef: "account.kube_cluster_password"

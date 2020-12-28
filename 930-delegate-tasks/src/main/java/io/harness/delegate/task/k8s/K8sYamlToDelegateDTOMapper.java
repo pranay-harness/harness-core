@@ -3,6 +3,8 @@ package io.harness.delegate.task.k8s;
 import static io.harness.k8s.KubernetesHelperService.getKubernetesConfigFromDefaultKubeConfigFile;
 import static io.harness.k8s.KubernetesHelperService.getKubernetesConfigFromServiceAccount;
 import static io.harness.k8s.KubernetesHelperService.isRunningInCluster;
+import static io.harness.utils.FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef;
+import static io.harness.utils.FieldWithPlainTextOrSecretValueHelper.getValueFromPlainTextOrSecretRef;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -61,7 +63,8 @@ public class K8sYamlToDelegateDTOMapper {
       case USER_PASSWORD:
         kubernetesConfigBuilder.authType(KubernetesClusterAuthType.USER_PASSWORD);
         KubernetesUserNamePasswordDTO userNamePasswordDTO = (KubernetesUserNamePasswordDTO) authDTO.getCredentials();
-        kubernetesConfigBuilder.username(userNamePasswordDTO.getUsername().toCharArray());
+        kubernetesConfigBuilder.username(
+            getValueFromPlainTextOrSecretRef(userNamePasswordDTO.getUsername(), userNamePasswordDTO.getUsernameRef()));
         kubernetesConfigBuilder.password(userNamePasswordDTO.getPasswordRef().getDecryptedValue());
         break;
 
@@ -90,7 +93,9 @@ public class K8sYamlToDelegateDTOMapper {
         kubernetesConfigBuilder.oidcSecret(openIdConnectDTO.getOidcSecretRef() != null
                 ? openIdConnectDTO.getOidcSecretRef().getDecryptedValue()
                 : null);
-        kubernetesConfigBuilder.oidcUsername(openIdConnectDTO.getOidcUsername());
+        String oidcUsername = getSecretAsStringFromPlainTextOrSecretRef(
+            openIdConnectDTO.getOidcUsername(), openIdConnectDTO.getOidcUsernameRef());
+        kubernetesConfigBuilder.oidcUsername(oidcUsername);
         kubernetesConfigBuilder.oidcPassword(openIdConnectDTO.getOidcPasswordRef().getDecryptedValue());
         kubernetesConfigBuilder.oidcGrantType(OidcGrantType.password);
         kubernetesConfigBuilder.oidcIdentityProviderUrl(openIdConnectDTO.getOidcIssuerUrl());

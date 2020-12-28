@@ -11,6 +11,7 @@ public class K8sOpenIdConnect implements KubernetesAuth {
   String oidcIssuerUrl;
   String oidcClientIdRef;
   String oidcUsername;
+  String oidcUsernameRef;
   String oidcPasswordRef;
   String oidcSecretRef;
   String oidcScopes;
