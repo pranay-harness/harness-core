@@ -69,6 +69,11 @@ public class AmbianceUtils {
     return ambiance.getLevelsList().get(ambiance.getLevelsList().size() - 1);
   }
 
+  public static String obtainStepIdentifier(Ambiance ambiance) {
+    Level level = obtainCurrentLevel(ambiance);
+    return level == null || isEmpty(level.getIdentifier()) ? null : level.getIdentifier();
+  }
+
   public static AutoLogContext autoLogContext(Ambiance ambiance) {
     return new AutoLogContext(logContextMap(ambiance), OVERRIDE_NESTS);
   }

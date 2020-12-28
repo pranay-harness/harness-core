@@ -18,6 +18,7 @@ import io.harness.delegate.task.stepstatus.StepStatus;
 import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
@@ -60,7 +61,7 @@ public class RunStepTest extends CIExecutionTest {
 
   @Before
   public void setUp() {
-    ambiance = Ambiance.newBuilder().build();
+    ambiance = Ambiance.newBuilder().addLevels(Level.newBuilder().setIdentifier("runStepId").build()).build();
     stepInfo = RunStepInfo.builder().identifier(STEP_ID).build();
     stepInputPackage = StepInputPackage.builder().build();
     refObject = RefObjectUtil.getSweepingOutputRefObject(CALLBACK_IDS);
