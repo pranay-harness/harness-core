@@ -9,6 +9,7 @@ import io.harness.govern.ServersModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
 import io.harness.pms.serializer.kryo.PmsContractsKryoRegistrar;
+import io.harness.queue.QueueController;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
@@ -19,6 +20,7 @@ import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
@@ -48,6 +50,7 @@ public class PmsSdkRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
 
     List<Module> modules = new ArrayList<>();
     modules.add(new ClosingFactoryModule(closingFactory));
+    modules.add(PmsSdkModule.getInstance(PmsSdkConfiguration.builder().build()));
     modules.add(PmsSdkCoreModule.getInstance());
     modules.add(PmsCommonsModule.getInstance());
     modules.add(PmsSdkRegistryModule.getInstance(PmsSdkConfiguration.builder().build()));
@@ -74,6 +77,22 @@ public class PmsSdkRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
       @Singleton
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder().build();
+      }
+    });
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(QueueController.class).toInstance(new QueueController() {
+          @Override
+          public boolean isPrimary() {
+            return true;
+          }
+
+          @Override
+          public boolean isNotPrimary() {
+            return false;
+          }
+        });
       }
     });
     return modules;
