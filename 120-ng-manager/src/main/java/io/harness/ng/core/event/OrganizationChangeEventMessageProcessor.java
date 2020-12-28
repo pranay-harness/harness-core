@@ -8,7 +8,7 @@ import static io.harness.EntityCRUDEventsConstants.ORGANIZATION_ENTITY;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.eventsframework.consumer.Message;
-import io.harness.eventsframework.organization.OrganizationEntityChangeDTO;
+import io.harness.eventsframework.entity_crud.organization.OrganizationEntityChangeDTO;
 import io.harness.exception.InvalidRequestException;
 
 import com.google.inject.Inject;

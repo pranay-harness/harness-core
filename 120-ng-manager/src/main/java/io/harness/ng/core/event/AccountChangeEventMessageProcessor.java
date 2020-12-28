@@ -7,8 +7,8 @@ import static io.harness.EntityCRUDEventsConstants.DELETE_ACTION;
 import static io.harness.EntityCRUDEventsConstants.ENTITY_TYPE_METADATA;
 import static io.harness.exception.WingsException.USER;
 
-import io.harness.eventsframework.account.AccountEntityChangeDTO;
 import io.harness.eventsframework.consumer.Message;
+import io.harness.eventsframework.entity_crud.account.AccountEntityChangeDTO;
 import io.harness.exception.InvalidRequestException;
 
 import com.google.inject.Inject;
