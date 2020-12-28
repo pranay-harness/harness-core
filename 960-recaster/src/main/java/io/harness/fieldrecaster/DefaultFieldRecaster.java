@@ -10,9 +10,11 @@ import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 
@@ -119,11 +121,14 @@ public class DefaultFieldRecaster implements FieldRecaster {
     final Object docVal = cf.getDocumentValue(document);
     if (docVal != null) {
       // multiple documents in a List
-      values = cf.isSet() ? recaster.getObjectFactory().createSet(cf) : recaster.getObjectFactory().createList(cf);
+      values = docVal instanceof Set ? recaster.getObjectFactory().createSet(cf)
+                                     : recaster.getObjectFactory().createList(cf);
 
-      final List<Object> dbValues;
+      final Collection<Object> dbValues;
       if (docVal instanceof List) {
         dbValues = (List<Object>) docVal;
+      } else if (docVal instanceof Set) {
+        dbValues = (Set<Object>) docVal;
       } else {
         dbValues = new ArrayList<>();
         dbValues.add(docVal);
@@ -230,7 +235,7 @@ public class DefaultFieldRecaster implements FieldRecaster {
     }
 
     if (coll != null) {
-      final List<Object> values = new ArrayList<>();
+      final Collection<Object> values = new ArrayList<>();
       for (final Object o : coll) {
         if (null == o) {
           values.add(null);
@@ -292,11 +297,7 @@ public class DefaultFieldRecaster implements FieldRecaster {
       }
 
       if (isSingleValue && !RecastReflectionUtils.isPrimitiveLike(type)) {
-        final Document documentObject = recaster.toDocument(newObj);
-        if (!includeClassName) {
-          documentObject.remove(Recaster.RECAST_CLASS_KEY);
-        }
-        return documentObject;
+        return recaster.toDocument(newObj);
       } else if (newObj instanceof Document) {
         return newObj;
       } else if (isMap) {
@@ -312,7 +313,7 @@ public class DefaultFieldRecaster implements FieldRecaster {
         }
         // Set/List but needs elements converted
       } else if (!isSingleValue && !RecastReflectionUtils.isPrimitiveLike(subType)) {
-        final List<Object> values = new ArrayList<>();
+        final Collection<Object> values = new ArrayList<>();
         if (type.isArray()) {
           for (final Object obj : (Object[]) newObj) {
             values.add(recaster.toDocument(obj));
@@ -386,7 +387,7 @@ public class DefaultFieldRecaster implements FieldRecaster {
           return m;
         }
       } else if (!isSingleValue && !RecastReflectionUtils.isPrimitiveLike(subType)) {
-        final List<Object> values = new ArrayList<>();
+        final Collection<Object> values = new ArrayList<>();
         if (type.isArray()) {
           for (final Object obj : (Object[]) newObj) {
             if (obj instanceof Document) {
