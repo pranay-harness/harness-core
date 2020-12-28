@@ -8,17 +8,28 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.plan.Plan;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.ngpipeline.inputset.beans.resource.MergeInputSetRequestDTOPMS;
+import io.harness.pms.pipeline.ExecutionTriggerInfo;
+import io.harness.pms.pipeline.TriggerType;
 import io.harness.pms.plan.creation.PlanCreatorMergeService;
 import io.harness.pms.yaml.YamlUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
-import io.swagger.annotations.*;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import java.io.IOException;
 import java.util.HashMap;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import lombok.AccessLevel;
@@ -379,7 +390,8 @@ public class PlanExecutionResource {
     Plan plan = PlanExecutionUtils.extractPlan(resp);
     PlanExecution planExecution = orchestrationService.startExecution(plan,
         new HashMap<>(ImmutableMap.of(
-            "accountId", "kmpySmUISimoRrJL6NL73w", "orgIdentifier", "harness", "projectIdentifier", "pipeline")));
+            "accountId", "kmpySmUISimoRrJL6NL73w", "orgIdentifier", "harness", "projectIdentifier", "pipeline")),
+        ExecutionTriggerInfo.builder().triggerType(TriggerType.MANUAL).build());
     return Response.ok(planExecution, MediaType.APPLICATION_JSON_TYPE).build();
   }
 
@@ -394,8 +406,9 @@ public class PlanExecutionResource {
       @PathParam("identifier") @NotEmpty String pipelineIdentifier,
       @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
       @ApiParam(hidden = true, type = "") String inputSetPipelineYaml) throws IOException {
-    PlanExecution planExecution = pipelineExecuteHelper.runPipelineWithInputSetPipelineYaml(
-        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetPipelineYaml, null, EMBEDDED_USER);
+    PlanExecution planExecution = pipelineExecuteHelper.runPipelineWithInputSetPipelineYaml(accountId, orgIdentifier,
+        projectIdentifier, pipelineIdentifier, inputSetPipelineYaml, null,
+        ExecutionTriggerInfo.builder().triggerType(TriggerType.MANUAL).triggeredBy(EMBEDDED_USER).build());
     PlanExecutionResponseDto planExecutionResponseDto =
         PlanExecutionResponseDto.builder().planExecution(planExecution).build();
     return ResponseDTO.newResponse(planExecutionResponseDto);
@@ -412,8 +425,10 @@ public class PlanExecutionResource {
       @PathParam("identifier") @NotEmpty String pipelineIdentifier,
       @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
       @NotNull @Valid MergeInputSetRequestDTOPMS mergeInputSetRequestDTO) throws IOException {
+    ExecutionTriggerInfo triggerInfo =
+        ExecutionTriggerInfo.builder().triggerType(TriggerType.MANUAL).triggeredBy(EMBEDDED_USER).build();
     PlanExecution planExecution = pipelineExecuteHelper.runPipelineWithInputSetReferencesList(accountId, orgIdentifier,
-        projectIdentifier, pipelineIdentifier, mergeInputSetRequestDTO.getInputSetReferences(), EMBEDDED_USER);
+        projectIdentifier, pipelineIdentifier, mergeInputSetRequestDTO.getInputSetReferences(), triggerInfo);
     PlanExecutionResponseDto planExecutionResponseDto =
         PlanExecutionResponseDto.builder().planExecution(planExecution).build();
     return ResponseDTO.newResponse(planExecutionResponseDto);

@@ -15,6 +15,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.pipeline.ExecutionTriggerInfo;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 
 import com.google.inject.Inject;
@@ -32,18 +33,20 @@ public class OrchestrationServiceImpl implements OrchestrationService {
   @Inject private InterruptManager interruptManager;
 
   @Override
-  public PlanExecution startExecution(Plan plan) {
-    return startExecution(plan, new HashMap<>());
+  public PlanExecution startExecution(Plan plan, ExecutionTriggerInfo triggerInfo) {
+    return startExecution(plan, new HashMap<>(), triggerInfo);
   }
 
   @Override
-  public PlanExecution startExecution(@Valid Plan plan, Map<String, String> setupAbstractions) {
+  public PlanExecution startExecution(
+      @Valid Plan plan, Map<String, String> setupAbstractions, ExecutionTriggerInfo triggerInfo) {
     PlanExecution planExecution = PlanExecution.builder()
                                       .uuid(generateUuid())
                                       .plan(plan)
                                       .setupAbstractions(setupAbstractions)
                                       .status(Status.RUNNING)
                                       .startTs(System.currentTimeMillis())
+                                      .executionTriggerInfo(triggerInfo)
                                       .build();
     PlanNodeProto planNode = plan.fetchStartingNode();
     if (planNode == null) {
@@ -64,7 +67,8 @@ public class OrchestrationServiceImpl implements OrchestrationService {
   @Override
   public PlanExecution rerunExecution(String planExecutionId, Map<String, String> setupAbstractions) {
     PlanExecution planExecution = planExecutionService.get(planExecutionId);
-    return startExecution(planExecution.getPlan(), setupAbstractions == null ? new HashMap<>() : setupAbstractions);
+    return startExecution(planExecution.getPlan(), setupAbstractions == null ? new HashMap<>() : setupAbstractions,
+        planExecution.getExecutionTriggerInfo());
   }
 
   @Override

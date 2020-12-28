@@ -1,5 +1,6 @@
 package io.harness.engine.interrupts.handlers;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.interrupts.ExecutionInterruptType.PAUSE_ALL;
 import static io.harness.interrupts.ExecutionInterruptType.RESUME_ALL;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
@@ -11,6 +12,7 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.PlanRepo;
@@ -20,6 +22,8 @@ import io.harness.engine.interrupts.InterruptTestHelper;
 import io.harness.engine.interrupts.steps.SimpleAsyncStep;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
+import io.harness.pms.pipeline.ExecutionTriggerInfo;
+import io.harness.pms.pipeline.TriggerType;
 import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.rule.Owner;
@@ -45,6 +49,11 @@ public class PauseAndResumeHandlerTest extends WingsBaseTest {
   @Inject private InterruptService interruptService;
   @Inject private PlanRepo planRepo;
 
+  private final EmbeddedUser embeddedUser =
+      EmbeddedUser.builder().email(PRASHANT).name(PRASHANT).uuid(generateUuid()).build();
+  private final ExecutionTriggerInfo triggerInfo =
+      ExecutionTriggerInfo.builder().triggerType(TriggerType.MANUAL).triggeredBy(embeddedUser).build();
+
   @Before
   public void setUp() {
     stepRegistry.register(SimpleAsyncStep.STEP_TYPE, injector.getInstance(SimpleAsyncStep.class));
@@ -56,7 +65,7 @@ public class PauseAndResumeHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldTestRegisterAndHandleInterrupt() {
     // Execute Plan And wait it to be in RUNNING status
-    PlanExecution execution = orchestrationService.startExecution(planRepo.planWithBigWait());
+    PlanExecution execution = orchestrationService.startExecution(planRepo.planWithBigWait(), triggerInfo);
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), RUNNING);
 
     // Issue Pause Interrupt

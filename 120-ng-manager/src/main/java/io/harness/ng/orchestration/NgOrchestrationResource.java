@@ -1,12 +1,20 @@
 package io.harness.ng.orchestration;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
+import io.harness.beans.EmbeddedUser;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
+import io.harness.pms.pipeline.ExecutionTriggerInfo;
+import io.harness.pms.pipeline.TriggerType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.redesign.services.CustomExecutionProvider;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.rest.RestResponse;
+
+import software.wings.beans.User;
+import software.wings.security.UserThreadLocal;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -36,7 +44,7 @@ public class NgOrchestrationResource {
   public RestResponse<PlanExecution> triggerHttpV2Plan(
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("appId") @NotNull String appId) {
     PlanExecution execution = orchestrationService.startExecution(
-        customExecutionProvider.provideHttpSwitchPlanV2(), getAbstractions(accountId, appId));
+        customExecutionProvider.provideHttpSwitchPlanV2(), getAbstractions(accountId, appId), getTriggerInfo());
     return new RestResponse<>(execution);
   }
 
@@ -46,7 +54,7 @@ public class NgOrchestrationResource {
   public RestResponse<PlanExecution> triggerHttpV3Plan(
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("appId") @NotNull String appId) {
     PlanExecution execution = orchestrationService.startExecution(
-        customExecutionProvider.provideHttpSwitchPlanV3(), getAbstractions(accountId, appId));
+        customExecutionProvider.provideHttpSwitchPlanV3(), getAbstractions(accountId, appId), getTriggerInfo());
     return new RestResponse<>(execution);
   }
 
@@ -57,7 +65,7 @@ public class NgOrchestrationResource {
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("appId") @NotNull String appId) {
     PlanExecution execution = orchestrationService.startExecution(
         customExecutionProvider.provideTaskChainPlan(OrchestrationFacilitatorType.TASK_CHAIN),
-        getAbstractions(accountId, appId));
+        getAbstractions(accountId, appId), getTriggerInfo());
     return new RestResponse<>(execution);
   }
 
@@ -68,7 +76,7 @@ public class NgOrchestrationResource {
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("appId") @NotNull String appId) {
     PlanExecution execution = orchestrationService.startExecution(
         customExecutionProvider.provideTaskChainPlan(OrchestrationFacilitatorType.TASK_CHAIN),
-        getAbstractions(accountId, appId));
+        getAbstractions(accountId, appId), getTriggerInfo());
     return new RestResponse<>(execution);
   }
 
@@ -98,5 +106,16 @@ public class NgOrchestrationResource {
   private Map<String, String> getAbstractions(String accountId, String appId) {
     return ImmutableMap.of("accountId", accountId, "appId", appId, "userId", "lv0euRhKRCyiXWzS7pOg6g", "userName",
         "Admin", "userEmail", "admin@harness.io");
+  }
+
+  private ExecutionTriggerInfo getTriggerInfo() {
+    User user = UserThreadLocal.get();
+    EmbeddedUser embeddedUser = null;
+    if (user == null) {
+      embeddedUser = EmbeddedUser.builder().email("admin@harness.io").name("Admin").uuid(generateUuid()).build();
+    } else {
+      embeddedUser = EmbeddedUser.builder().email(user.getEmail()).name(user.getName()).uuid(user.getUuid()).build();
+    }
+    return ExecutionTriggerInfo.builder().triggerType(TriggerType.MANUAL).triggeredBy(embeddedUser).build();
   }
 }
