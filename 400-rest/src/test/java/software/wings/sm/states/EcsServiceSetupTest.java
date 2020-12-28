@@ -270,16 +270,10 @@ public class EcsServiceSetupTest extends WingsBaseTest {
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
   public void testGetTimeoutMillis() {
-    state.setServiceSteadyStateTimeout(0);
-    assertThat(state.getTimeoutMillis()).isNull();
-
-    doReturn(600000).when(mockEcsStateHelper).getTimeout(10);
-    state.setServiceSteadyStateTimeout(10);
-    assertThat(state.getTimeoutMillis()).isEqualTo(10 * 60 * 1000);
-
-    doReturn(null).when(mockEcsStateHelper).getTimeout(35792);
-    state.setServiceSteadyStateTimeout(35792);
-    assertThat(state.getTimeoutMillis()).isNull();
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    state.setServiceSteadyStateTimeout("10");
+    doReturn(10).when(mockEcsStateHelper).renderTimeout(anyString(), any(), anyInt());
+    assertThat(state.getTimeoutMillis(mockContext)).isEqualTo(15 * 60 * 1000);
   }
 
   @Test

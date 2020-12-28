@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.USER;
@@ -9,6 +10,8 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_TIMEOUT_MIN;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_STATE_TIMEOUT_BUFFER_MIN;
 import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
@@ -81,6 +84,7 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.ApplicationManifestUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.HashMap;
@@ -109,7 +113,7 @@ public class EcsServiceSetup extends State {
   @Getter @Setter private String loadBalancerName;
   @Getter @Setter private String targetContainerName;
   @Getter @Setter private String desiredInstanceCount;
-  @Getter @Setter private int serviceSteadyStateTimeout;
+  @Getter @Setter private String serviceSteadyStateTimeout;
   @Getter @Setter private ResizeStrategy resizeStrategy;
   @Getter @Setter private List<AwsAutoScalarConfig> awsAutoScalarConfigs;
 
@@ -146,18 +150,20 @@ public class EcsServiceSetup extends State {
   }
 
   @Override
-  public Integer getTimeoutMillis() {
-    if (serviceSteadyStateTimeout == 0) {
+  public Integer getTimeoutMillis(ExecutionContext context) {
+    if (isEmpty(serviceSteadyStateTimeout)) {
       return null;
     }
-    return ecsStateHelper.getTimeout(serviceSteadyStateTimeout);
+    return Ints.checkedCast(TimeUnit.MINUTES.toMillis(DEFAULT_STATE_TIMEOUT_BUFFER_MIN
+        + ecsStateHelper.renderTimeout(serviceSteadyStateTimeout, context, DEFAULT_AMI_ASG_TIMEOUT_MIN)));
   }
 
   private ExecutionResponse executeInternal(ExecutionContext context) {
     boolean valuesInGit = false;
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
 
-    EcsSetUpDataBag dataBag = ecsStateHelper.prepareBagForEcsSetUp(context, serviceSteadyStateTimeout,
+    EcsSetUpDataBag dataBag = ecsStateHelper.prepareBagForEcsSetUp(context,
+        ecsStateHelper.renderTimeout(serviceSteadyStateTimeout, context, DEFAULT_AMI_ASG_TIMEOUT_MIN),
         artifactCollectionUtils, serviceResourceService, infrastructureMappingService, settingsService, secretManager);
 
     if (featureFlagService.isEnabled(FeatureName.ECS_REMOTE_MANIFEST, context.getAccountId())) {
@@ -237,7 +243,8 @@ public class EcsServiceSetup extends State {
         .loadBalancerName(loadBalancerName)
         .targetContainerName(targetContainerName)
         .desiredInstanceCount(desiredInstanceCount)
-        .serviceSteadyStateTimeout(serviceSteadyStateTimeout)
+        .serviceSteadyStateTimeout(
+            ecsStateHelper.renderTimeout(serviceSteadyStateTimeout, context, DEFAULT_AMI_ASG_TIMEOUT_MIN))
         .resizeStrategy(resizeStrategy)
         .awsAutoScalarConfigs(awsAutoScalarConfigs)
         .build();
@@ -407,9 +414,10 @@ public class EcsServiceSetup extends State {
 
     ImageDetails imageDetails =
         artifactCollectionUtils.fetchContainerImageDetails(artifact, context.getWorkflowExecutionId());
-    ContainerServiceElement containerServiceElement = ecsStateHelper.buildContainerServiceElement(context,
-        setupExecutionData, executionStatus, imageDetails, getMaxInstances(), getFixedInstances(),
-        getDesiredInstanceCount(), getResizeStrategy(), getServiceSteadyStateTimeout(), log);
+    ContainerServiceElement containerServiceElement =
+        ecsStateHelper.buildContainerServiceElement(context, setupExecutionData, executionStatus, imageDetails,
+            getMaxInstances(), getFixedInstances(), getDesiredInstanceCount(), getResizeStrategy(),
+            ecsStateHelper.renderTimeout(serviceSteadyStateTimeout, context, DEFAULT_AMI_ASG_TIMEOUT_MIN), log);
     ecsStateHelper.populateFromDelegateResponse(setupExecutionData, executionData, containerServiceElement);
     sweepingOutputService.save(
         context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
@@ -508,7 +516,7 @@ public class EcsServiceSetup extends State {
     this.fixedInstances = stateExecutionData.getFixedInstances();
     this.loadBalancerName = stateExecutionData.getLoadBalancerName();
     this.maxInstances = stateExecutionData.getMaxInstances();
-    this.serviceSteadyStateTimeout = stateExecutionData.getServiceSteadyStateTimeout();
+    this.serviceSteadyStateTimeout = String.valueOf(stateExecutionData.getServiceSteadyStateTimeout());
     this.targetContainerName = stateExecutionData.getTargetContainerName();
     this.targetGroupArn = stateExecutionData.getTargetGroupArn();
     this.targetPort = stateExecutionData.getTargetPort();
