@@ -6,6 +6,7 @@ import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalSta
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.TARGET_EXECUTION_REQUESTED;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.TriggerException;
 import io.harness.execution.PlanExecution;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
@@ -22,13 +23,11 @@ import io.harness.ngtriggers.beans.target.TargetSpec;
 import io.harness.ngtriggers.beans.target.pipeline.PipelineTargetSpec;
 import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
 import io.harness.ngtriggers.helpers.WebhookEventToTriggerMapper;
-import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
 import io.harness.pms.merger.helpers.MergeHelper;
 import io.harness.pms.pipeline.ExecutionTriggerInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.TriggerType;
-import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.plan.execution.PipelineExecuteHelper;
 import io.harness.pms.plan.execution.SetupAbstractionKeys;
@@ -41,7 +40,6 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class TriggerWebhookExecutionHelper {
-  private final NGTriggerService ngTriggerService;
   private final PipelineExecuteHelper pipelineExecuteHelper;
   private final WebhookEventPayloadParser webhookEventPayloadParser;
   private final WebhookEventToTriggerMapper webhookEventToTriggerMapper;
@@ -122,33 +120,29 @@ public class TriggerWebhookExecutionHelper {
       Optional<PipelineEntity> pipelineEntityToExecute = pmsPipelineService.get(ngTriggerEntity.getAccountId(),
           ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(), targetIdentifier, false);
 
-      if (pipelineEntityToExecute.get() == null) {
-        throw new TriggerException(new StringBuilder(128)
-                                       .append("Unable to continue trigger execution. Pipeline with identifier: ")
-                                       .append(ngTriggerEntity.getTargetIdentifier())
-                                       .append(", with org: ")
-                                       .append(ngTriggerEntity.getOrgIdentifier())
-                                       .append(", with ProjectId: ")
-                                       .append(ngTriggerEntity.getProjectIdentifier())
-                                       .append(", For Trigger: ")
-                                       .append(ngTriggerEntity.getIdentifier())
-                                       .append(" does not exists. ")
-                                       .toString(),
+      if (!pipelineEntityToExecute.isPresent()) {
+        throw new TriggerException("Unable to continue trigger execution. Pipeline with identifier: "
+                + ngTriggerEntity.getTargetIdentifier() + ", with org: " + ngTriggerEntity.getOrgIdentifier()
+                + ", with ProjectId: " + ngTriggerEntity.getProjectIdentifier()
+                + ", For Trigger: " + ngTriggerEntity.getIdentifier() + " does not exists. ",
             USER);
       }
+      contextAttributes.put(SetupAbstractionKeys.pipelineIdentifier, pipelineEntityToExecute.get().getIdentifier());
 
       String runtimeInputYaml = readRuntimeInputFromConfig(triggerDetails.getNgTriggerConfig());
 
-      String pipelineYaml = pipelineEntityToExecute.get().getYaml();
-
-      String sanitizedRuntimeInputYaml = MergeHelper.sanitizeRuntimeInput(pipelineYaml, runtimeInputYaml);
-      contextAttributes.put(SetupAbstractionKeys.inputSetYaml, sanitizedRuntimeInputYaml);
-
-      String finalPipelineYmlForTrigger =
-          MergeHelper.mergeInputSetIntoPipeline(pipelineYaml, sanitizedRuntimeInputYaml);
+      String pipelineYaml;
+      if (EmptyPredicate.isEmpty(runtimeInputYaml)) {
+        pipelineYaml = pipelineEntityToExecute.get().getYaml();
+      } else {
+        String pipelineYamlBeforeMerge = pipelineEntityToExecute.get().getYaml();
+        String sanitizedRuntimeInputYaml = MergeHelper.sanitizeRuntimeInput(pipelineYamlBeforeMerge, runtimeInputYaml);
+        contextAttributes.put(SetupAbstractionKeys.inputSetYaml, sanitizedRuntimeInputYaml);
+        pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineYamlBeforeMerge, sanitizedRuntimeInputYaml);
+      }
 
       return pipelineExecuteHelper.startExecution(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),
-          ngTriggerEntity.getProjectIdentifier(), finalPipelineYmlForTrigger, triggerInfo, contextAttributes);
+          ngTriggerEntity.getProjectIdentifier(), pipelineYaml, triggerInfo, contextAttributes);
     } catch (Exception e) {
       throw new TriggerException("Failed while requesting Pipeline Execution" + e.getMessage(), USER);
     }
