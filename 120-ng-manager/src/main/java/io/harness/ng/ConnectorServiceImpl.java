@@ -29,7 +29,7 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.encryption.Scope;
 import io.harness.eventsframework.api.AbstractProducer;
-import io.harness.eventsframework.connector.ConnectorEntityChangeDTO;
+import io.harness.eventsframework.entity_crud.connector.ConnectorEntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.activityhistory.NGActivityType;

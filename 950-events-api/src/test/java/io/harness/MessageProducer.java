@@ -1,9 +1,9 @@
 package io.harness;
 
 import io.harness.eventsframework.api.ProducerShutdownException;
+import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
 import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.eventsframework.producer.Message;
-import io.harness.eventsframework.project.ProjectEntityChangeDTO;
 import io.harness.redis.RedisConfig;
 
 import com.google.common.collect.ImmutableMap;
