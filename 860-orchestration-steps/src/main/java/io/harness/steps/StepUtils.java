@@ -45,14 +45,12 @@ public class StepUtils {
   private StepUtils() {}
 
   public static StepResponse createStepResponseFromChildResponse(Map<String, ResponseData> responseDataMap) {
-    StepResponseBuilder responseBuilder = StepResponse.builder();
-    StepResponseNotifyData statusNotifyResponseData =
-        (StepResponseNotifyData) responseDataMap.values().iterator().next();
-    // If suspended, then the final execution should be Success
-    if (statusNotifyResponseData.getStatus() == Status.SUSPENDED) {
-      responseBuilder.status(Status.SUCCEEDED);
-    } else {
-      responseBuilder.status(statusNotifyResponseData.getStatus());
+    StepResponseBuilder responseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
+    for (ResponseData responseData : responseDataMap.values()) {
+      Status executionStatus = ((StepResponseNotifyData) responseData).getStatus();
+      if (executionStatus != Status.SUCCEEDED && executionStatus != Status.SUSPENDED) {
+        responseBuilder.status(executionStatus);
+      }
     }
     return responseBuilder.build();
   }
