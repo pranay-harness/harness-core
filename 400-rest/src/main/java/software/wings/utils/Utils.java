@@ -2,11 +2,11 @@ package software.wings.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NameValuePair.Yaml;
@@ -94,7 +94,11 @@ public class Utils {
       try {
         return Enum.valueOf(enumClass, stringValue.trim().toUpperCase());
       } catch (IllegalArgumentException ex) {
-        throw new WingsException(ex);
+        try {
+          return Enum.valueOf(enumClass, stringValue.trim());
+        } catch (IllegalArgumentException enumNotFound) {
+          throw new InvalidRequestException(format("Cannot find the value: %s", stringValue.trim()));
+        }
       }
     }
     return null;
