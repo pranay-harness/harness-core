@@ -24,5 +24,6 @@ require (
 	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b
 	google.golang.org/grpc v1.31.0
 	google.golang.org/protobuf v1.25.0
+	k8s.io/api v0.19.4 // indirect
 	sigs.k8s.io/structured-merge-diff v1.0.1-0.20191108220359-b1b620dd3f06 // indirect
 )

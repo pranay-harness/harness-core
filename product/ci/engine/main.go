@@ -4,15 +4,14 @@ package main
 	CI lite engine executes steps of stage provided as an input.
 */
 import (
-	"os"
-
 	"github.com/alexflint/go-arg"
 	"github.com/wings-software/portal/commons/go/lib/logs"
+	"github.com/wings-software/portal/product/ci/common/external"
 	"github.com/wings-software/portal/product/ci/engine/consts"
 	"github.com/wings-software/portal/product/ci/engine/executor"
 	"github.com/wings-software/portal/product/ci/engine/grpc"
-	logger "github.com/wings-software/portal/product/ci/logger/util"
 	"go.uber.org/zap"
+	"os"
 )
 
 const (
@@ -22,7 +21,7 @@ const (
 
 var (
 	executeStage        = executor.ExecuteStage
-	newHTTPRemoteLogger = logger.GetHTTPRemoteLogger
+	newHTTPRemoteLogger = external.GetHTTPRemoteLogger
 	engineServer        = grpc.NewEngineServer
 )
 

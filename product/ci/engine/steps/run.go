@@ -41,6 +41,7 @@ type runStep struct {
 	envVarOutputs []string
 	containerPort uint32
 	stepContext   *pb.StepContext
+	reports       []*pb.Report
 	stageOutput   output.StageOutput
 	log           *zap.SugaredLogger
 }
@@ -56,6 +57,7 @@ func NewRunStep(step *pb.UnitStep, tmpFilePath string, so output.StageOutput,
 		containerPort: r.GetContainerPort(),
 		stepContext:   r.GetContext(),
 		envVarOutputs: r.GetEnvVarOutputs(),
+		reports:       r.GetReports(),
 		tmpFilePath:   tmpFilePath,
 		stageOutput:   so,
 		log:           log,
@@ -134,6 +136,7 @@ func (e *runStep) getExecuteStepArg() *addonpb.ExecuteStepRequest {
 				Run: &pb.RunStep{
 					Command:       e.command,
 					Context:       e.stepContext,
+					Reports:       e.reports,
 					EnvVarOutputs: e.envVarOutputs,
 				},
 			},

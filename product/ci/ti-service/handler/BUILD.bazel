@@ -1,0 +1,20 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "db.go",
+        "handler.go",
+        "header.go",
+        "helper.go",
+    ],
+    importpath = "github.com/wings-software/portal/product/ci/ti-service/handler",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//product/ci/ti-service/config:go_default_library",
+        "//product/ci/ti-service/db:go_default_library",
+        "//product/ci/ti-service/types:go_default_library",
+        "@com_github_go_chi_chi//:go_default_library",
+        "@org_uber_go_zap//:go_default_library",
+    ],
+)

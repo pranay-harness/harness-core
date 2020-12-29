@@ -10,6 +10,11 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/wings-software/portal/product/ci/addon/testreports"
+	"github.com/wings-software/portal/product/ci/addon/testreports/junit"
+	"github.com/wings-software/portal/product/ci/common/external"
+	"github.com/wings-software/portal/product/ci/ti-service/types"
+
 	"github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/utils"
@@ -40,6 +45,7 @@ type runTask struct {
 	timeoutSecs       int64
 	numRetries        int32
 	tmpFilePath       string
+	reports           []*pb.Report
 	log               *zap.SugaredLogger
 	procWriter        io.Writer
 	fs                filesystem.FileSystem
@@ -50,6 +56,7 @@ type runTask struct {
 func NewRunTask(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogger, w io.Writer) RunTask {
 	r := step.GetRun()
 	fs := filesystem.NewOSFileSystem(log)
+
 	timeoutSecs := r.GetContext().GetExecutionTimeoutSecs()
 	if timeoutSecs == 0 {
 		timeoutSecs = defaultTimeoutSecs
@@ -65,6 +72,7 @@ func NewRunTask(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogger, w
 		command:           r.GetCommand(),
 		tmpFilePath:       tmpFilePath,
 		envVarOutputs:     r.GetEnvVarOutputs(),
+		reports:           r.GetReports(),
 		timeoutSecs:       timeoutSecs,
 		numRetries:        numRetries,
 		cmdContextFactory: exec.OsCommandContextGracefulWithLog(log),
@@ -79,9 +87,21 @@ func (e *runTask) Run(ctx context.Context) (map[string]string, int32, error) {
 	var err error
 	var o map[string]string
 	for i := int32(1); i <= e.numRetries; i++ {
+		// Collect reports only if the step was completed successfully
+		// TODO: (vistaar) Add a failure strategy later if needed
 		if o, err = e.execute(ctx, i); err == nil {
+			st := time.Now()
+			err = e.collectTestReports(ctx)
+			if err != nil {
+				e.log.Errorw("unable to collect test reports", zap.Error(err))
+				continue // Retry if specified
+			}
+			e.log.Infow(fmt.Sprintf("collected test reports in %s time", time.Since(st)))
 			return o, i, nil
 		}
+	}
+	if err != nil {
+		return nil, e.numRetries, err
 	}
 	return nil, e.numRetries, err
 }
@@ -225,6 +245,63 @@ func getLoggableCmd(cmd string) (string, error) {
 	buf := new(bytes.Buffer)
 	printer.Print(buf, prog)
 	return buf.String(), nil
+}
+
+func (r *runTask) collectTestReports(ctx context.Context) error {
+	// Test cases from reports are identified at a per-step level and won't cause overwriting/clashes
+	// at the backend.
+	for _, report := range r.reports {
+		var rep testreports.TestReporter
+		var err error
+
+		org, err := external.GetOrgId()
+		if err != nil {
+			return err
+		}
+		project, err := external.GetProjectId()
+		if err != nil {
+			return err
+		}
+		build, err := external.GetBuildId()
+		if err != nil {
+			return err
+		}
+		stage, err := external.GetStageId()
+		if err != nil {
+			return err
+		}
+
+		reportStr := ""
+		x := report.GetType()
+		switch x {
+		case pb.Report_UNKNOWN:
+			return errors.New("report type is unknown")
+		case pb.Report_JUNIT:
+			rep = junit.New(report.GetPaths(), r.log)
+			reportStr = "junit"
+		}
+
+		var tests []*types.TestCase
+		testc, _ := rep.GetTests(ctx)
+		for t := range testc {
+			tests = append(tests, t)
+		}
+
+		// Create TI service client
+		client, err := external.GetTiHTTPClient()
+		if err != nil {
+			r.log.Errorw("could not create client to TI service", zap.Error(err))
+			return err
+		}
+
+		// Write tests to TI service
+		err = client.Write(ctx, org, project, build, stage, r.id, reportStr, tests)
+		if err != nil {
+			r.log.Errorw("could not write tests to TI service", zap.Error(err))
+			return err
+		}
+	}
+	return nil
 }
 
 func logCommandExecErr(log *zap.SugaredLogger, errMsg, stepID, args string, retryCount int32, startTime time.Time, err error) {
