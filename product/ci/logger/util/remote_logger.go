@@ -28,7 +28,10 @@ func GetHTTPRemoteLogger(stepID string) (*logs.RemoteLogger, error) {
 	if err != nil {
 		return nil, err
 	}
-	writer := logs.NewRemoteWriter(client, key)
+	writer, err := logs.NewRemoteWriter(client, key)
+	if err != nil {
+		return nil, err
+	}
 	rl, err := logs.NewRemoteLogger(writer)
 	if err != nil {
 		return nil, err

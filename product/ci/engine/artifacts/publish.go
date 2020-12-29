@@ -60,7 +60,7 @@ func (p *publishArtifacts) Publish(ctx context.Context, files []*pb.UploadFile, 
 	// and error out if any argument is invalid or we can do preliminary validation to ensure that
 	// the request is mostly correct and then error out if an individual publish fails. We are going with
 	// the second approach here.
-	p.log.Infow("Publishing artifacts")
+	p.log.Infow("Starting publishing of artifacts")
 	err := validatePublishRequest(files, images)
 	if err != nil {
 		p.log.Errorw("Invalid artifact upload arguments", "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
@@ -110,10 +110,9 @@ func (p *publishArtifacts) Publish(ctx context.Context, files []*pb.UploadFile, 
 			return err
 		}
 	}
+
 	p.log.Infow(
-		"Successfully published all artifacts",
-		"elapsed_time_ms", utils.TimeSince(start),
-	)
+		"Successfully published all artifacts")
 	return nil
 }
 
@@ -123,7 +122,6 @@ func (p *publishArtifacts) buildPublishToDockerHub(dockerFilePath string, contex
 
 	destinationURL := destination.GetDestinationUrl()
 	connectorID := destination.GetConnector().GetId()
-
 	usernameEnv := fmt.Sprintf("%s%s", userNameEnvFormat, connectorID)
 	passwordEnv := fmt.Sprintf("%s%s", passwordEnvFormat, connectorID)
 	dockerHubEnv := fmt.Sprintf("%s%s", endpointEnvFormat, connectorID)
@@ -151,7 +149,6 @@ func (p *publishArtifacts) buildPublishToDockerHub(dockerFilePath string, contex
 			"time_elapsed_ms", utils.TimeSince(st), zap.Error(err))
 		return err
 	}
-
 	p.log.Infow("Successfully published image", "docker_file_path", dockerFilePath, "context", context,
 		"destination", destination.String(), "elapsed_time_ms", utils.TimeSince(st))
 	return nil

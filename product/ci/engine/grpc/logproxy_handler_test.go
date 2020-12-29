@@ -2,6 +2,9 @@ package grpc
 
 import (
 	"bytes"
+	"google.golang.org/grpc"
+	"io"
+
 	"context"
 	"encoding/json"
 	"errors"
@@ -15,6 +18,34 @@ import (
 	"go.uber.org/zap"
 	"testing"
 )
+
+type uploadServer struct {
+	err     error
+	ctx     context.Context
+	request *pb.UploadUsingLinkRequest
+	done    bool
+	grpc.ServerStream
+}
+
+func (s *uploadServer) SendAndClose(in *pb.UploadUsingLinkResponse) error {
+	return nil
+}
+
+func (s *uploadServer) Recv() (*pb.UploadUsingLinkRequest, error) {
+	if !s.done {
+		s.done = true
+		return s.request, nil
+	}
+	return &pb.UploadUsingLinkRequest{}, io.EOF
+}
+
+func (s *uploadServer) Context() context.Context {
+	return s.ctx
+}
+
+func NewUploadUsingLinkMock(err error, ctx context.Context, req *pb.UploadUsingLinkRequest) *uploadServer {
+	return &uploadServer{err: err, ctx: ctx, request: req}
+}
 
 func TestWrite_Success(t *testing.T) {
 	ctrl, ctx := gomock.WithContext(context.Background(), t)
@@ -295,6 +326,7 @@ func Test_UploadUsingLink_Success(t *testing.T) {
 	data := new(bytes.Buffer)
 	for _, line := range jsonLines {
 		data.Write([]byte(line))
+		data.Write([]byte("\n"))
 	}
 
 	mLogClient := mock.NewMockClient(ctrl)
@@ -304,11 +336,12 @@ func Test_UploadUsingLink_Success(t *testing.T) {
 	defer func() { remoteLogClient = oldLogHTTPClient }()
 	remoteLogClient = func() (client.Client, error) { return mLogClient, nil }
 
-	in := &pb.UploadUsingLinkRequest{Link: link, Lines: jsonLines}
+	req := &pb.UploadUsingLinkRequest{Link: link, Lines: jsonLines}
+	in := NewUploadUsingLinkMock(nil, ctx, req)
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	h := NewLogProxyHandler(log.Sugar())
-	_, err := h.UploadUsingLink(ctx, in)
+	err := h.UploadUsingLink(in)
 	assert.Nil(t, err)
 }
 
@@ -330,6 +363,7 @@ func Test_UploadUsingLink_Failure(t *testing.T) {
 	data := new(bytes.Buffer)
 	for _, line := range jsonLines {
 		data.Write([]byte(line))
+		data.Write([]byte("\n"))
 	}
 
 	mLogClient := mock.NewMockClient(ctrl)
@@ -339,14 +373,16 @@ func Test_UploadUsingLink_Failure(t *testing.T) {
 	defer func() { remoteLogClient = oldLogHTTPClient }()
 	remoteLogClient = func() (client.Client, error) { return mLogClient, nil }
 
-	in := &pb.UploadUsingLinkRequest{Link: link, Lines: jsonLines}
+	req := &pb.UploadUsingLinkRequest{Link: link, Lines: jsonLines}
+	in := NewUploadUsingLinkMock(nil, ctx, req)
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	h := NewLogProxyHandler(log.Sugar())
-	_, err := h.UploadUsingLink(ctx, in)
+	err := h.UploadUsingLink(in)
 	assert.NotNil(t, err)
 }
 
+//
 func Test_UploadUsingLink_Failure_Client(t *testing.T) {
 	ctrl, ctx := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
@@ -366,10 +402,11 @@ func Test_UploadUsingLink_Failure_Client(t *testing.T) {
 	defer func() { remoteLogClient = oldLogHTTPClient }()
 	remoteLogClient = func() (client.Client, error) { return nil, errors.New("error while creating client") }
 
-	in := &pb.UploadUsingLinkRequest{Link: link, Lines: jsonLines}
+	req := &pb.UploadUsingLinkRequest{Link: link, Lines: jsonLines}
+	in := NewUploadUsingLinkMock(nil, ctx, req)
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	h := NewLogProxyHandler(log.Sugar())
-	_, err := h.UploadUsingLink(ctx, in)
+	err := h.UploadUsingLink(in)
 	assert.NotNil(t, err)
 }

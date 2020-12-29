@@ -197,14 +197,14 @@ func getLoggableCmd(cmd string) (string, error) {
 		echo := &syntax.Stmt{
 			Cmd: &syntax.CallExpr{
 				Args: []*syntax.Word{
-					&syntax.Word{
+					{
 						Parts: []syntax.WordPart{
 							&syntax.Lit{
 								Value: "echo",
 							},
 						},
 					},
-					&syntax.Word{
+					{
 						Parts: []syntax.WordPart{
 							&syntax.SglQuoted{
 								Dollar: false,

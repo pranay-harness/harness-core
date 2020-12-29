@@ -7,12 +7,18 @@ import (
 	"errors"
 	"io"
 
+	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
+	"go.uber.org/zap"
+
 	"github.com/wings-software/portal/product/ci/engine/consts"
 	grpcclient "github.com/wings-software/portal/product/ci/engine/grpc/client"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"github.com/wings-software/portal/product/log-service/client"
 	"github.com/wings-software/portal/product/log-service/stream"
-	"go.uber.org/zap"
+)
+
+const (
+	uploadBatch = 1000 // upload final logs to RPC server in chunks
 )
 
 var (
@@ -23,17 +29,22 @@ var (
 // It accepts a lite engine grpc client to send RPCs to it.
 type GrpcRemoteClient struct {
 	grpcClient grpcclient.LogProxyClient
+	log        *zap.SugaredLogger
 }
 
 // NewGrpcRemoteClient returns a client that can interact with the log service gRPC server.
 func NewGrpcRemoteClient() (*GrpcRemoteClient, error) {
-	log := zap.NewExample().Sugar()
-	client, err := newLogProxyClient(consts.LiteEnginePort, log)
+	l, err := zap.NewProduction()
+	if err != nil {
+		return &GrpcRemoteClient{}, err
+	}
+	client, err := newLogProxyClient(consts.LiteEnginePort, l.Sugar())
 	if err != nil {
 		return nil, err
 	}
 	return &GrpcRemoteClient{
 		grpcClient: client,
+		log:        l.Sugar(),
 	}, nil
 }
 
@@ -70,12 +81,40 @@ func (gw *GrpcRemoteClient) Close(ctx context.Context, key string) error {
 // UploadUsingLink uses a link to upload logs to the data store.
 func (gw *GrpcRemoteClient) UploadUsingLink(ctx context.Context, link string, r io.Reader) error {
 	var lines []string
-	scanner := bufio.NewScanner(r)
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
+	reader := bufio.NewReader(r)
+	stream, err := gw.grpcClient.Client().UploadUsingLink(ctx, grpc_retry.Disable())
+	if err != nil {
+		return err
 	}
-	in := &pb.UploadUsingLinkRequest{Link: link, Lines: lines}
-	_, err := gw.grpcClient.Client().UploadUsingLink(ctx, in)
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil && err != io.EOF {
+			gw.log.Errorw("could not parse line while trying to upload logs", zap.Error(err))
+			break
+		}
+
+		lines = append(lines, line)
+		if err != nil {
+			break
+		}
+		if len(lines)%uploadBatch == 0 {
+			in := &pb.UploadUsingLinkRequest{Link: link, Lines: lines}
+			if serr := stream.Send(in); serr != nil {
+				gw.log.Errorw("upload using link RPC failed", zap.Error(serr))
+			}
+			lines = []string{}
+		}
+	}
+	if len(lines) > 0 {
+		in := &pb.UploadUsingLinkRequest{Link: link, Lines: lines}
+		if serr := stream.Send(in); serr != nil {
+			gw.log.Errorw("unable to send some lines via RPC: ", zap.Error(serr))
+		}
+		lines = []string{}
+	}
+
+	// Close the stream and receive result
+	_, err = stream.CloseAndRecv()
 	if err != nil {
 		return err
 	}
@@ -85,9 +124,11 @@ func (gw *GrpcRemoteClient) UploadUsingLink(ctx context.Context, link string, r 
 // Write writes logs to the data stream.
 func (gw *GrpcRemoteClient) Write(ctx context.Context, key string, lines []*stream.Line) error {
 	var streamLines []string
+
 	for _, line := range lines {
 		jsonLine, err := json.Marshal(line)
 		if err != nil {
+			gw.log.Errorw("error while marshalling", "key", key, zap.Error(err))
 			return err
 		}
 		streamLines = append(streamLines, string(jsonLine))

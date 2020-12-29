@@ -20,7 +20,10 @@ func GetGrpcRemoteLogger(stepID string) (*logs.RemoteLogger, error) {
 	if err != nil {
 		return nil, err
 	}
-	writer := logs.NewRemoteWriter(grpcClient, key)
+	writer, err := logs.NewRemoteWriter(grpcClient, key)
+	if err != nil {
+		return nil, err
+	}
 	rl, err := logs.NewRemoteLogger(writer)
 	if err != nil {
 		return nil, err

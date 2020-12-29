@@ -4,7 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	logger "github.com/wings-software/portal/product/ci/logger/util"
 	"github.com/wings-software/portal/product/log-service/stream"
@@ -30,7 +33,7 @@ func NewLogProxyHandler(log *zap.SugaredLogger) pb.LogProxyServer {
 func (h *logProxyHandler) Write(ctx context.Context, in *pb.WriteRequest) (*pb.WriteResponse, error) {
 	lc, err := remoteLogClient()
 	if err != nil {
-		h.log.Errorw("Could not create a client to the log service", zap.Error(err))
+		h.log.Errorw("could not create a client to the log service", zap.Error(err))
 		return &pb.WriteResponse{}, err
 	}
 	var lines []*stream.Line
@@ -38,8 +41,8 @@ func (h *logProxyHandler) Write(ctx context.Context, in *pb.WriteRequest) (*pb.W
 		l := &stream.Line{}
 		err = json.Unmarshal([]byte(strLine), l)
 		if err != nil {
-			h.log.Errorw(fmt.Sprintf("Unable to marshal received lines. First error instance: %s", strLine))
-			return nil, fmt.Errorf("Could not unmarshal received lines. First error instance: %s", strLine)
+			h.log.Errorw(fmt.Sprintf("unable to marshal received lines, first error instance: %s", strLine))
+			return nil, fmt.Errorf("could not unmarshal received lines, first error instance: %s", strLine)
 		}
 		lines = append(lines, l)
 	}
@@ -68,23 +71,46 @@ func (h *logProxyHandler) UploadLink(ctx context.Context, in *pb.UploadLinkReque
 }
 
 // UploadUsingLink uploads using the link generated above.
-func (h *logProxyHandler) UploadUsingLink(ctx context.Context, in *pb.UploadUsingLinkRequest) (*pb.UploadUsingLinkResponse, error) {
+func (h *logProxyHandler) UploadUsingLink(stream pb.LogProxy_UploadUsingLinkServer) error {
 	var err error
 	lc, err := remoteLogClient()
 	if err != nil {
-		h.log.Errorw("Could not create a client to the log service", zap.Error(err))
-		return &pb.UploadUsingLinkResponse{}, err
+		h.log.Errorw("could not create a client to the log service", zap.Error(err))
+		return err
 	}
 	data := new(bytes.Buffer)
-	for _, line := range in.GetLines() {
-		data.Write([]byte(line))
+	link := ""
+	for {
+		msg, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			h.log.Errorw("received error from client stream while trying to receive log data to upload", zap.Error(err))
+			continue
+		}
+		link = msg.GetLink()
+		for _, line := range msg.GetLines() {
+			data.Write([]byte(line))
+			data.Write([]byte("\n"))
+		}
 	}
-	err = lc.UploadUsingLink(ctx, in.GetLink(), data)
+
+	if link == "" {
+		return errors.New("no link received from client")
+	}
+
+	err = lc.UploadUsingLink(stream.Context(), link, data)
 	if err != nil {
-		h.log.Errorw("Could not upload logs using upload link", zap.Error(err))
-		return &pb.UploadUsingLinkResponse{}, err
+		h.log.Errorw("could not upload logs using upload link", zap.Error(err))
+		return err
 	}
-	return &pb.UploadUsingLinkResponse{}, nil
+	err = stream.SendAndClose(&pb.UploadUsingLinkResponse{})
+	if err != nil {
+		h.log.Errorw("could not close upload protobuf stream", zap.Error(err))
+		return err
+	}
+	return nil
 }
 
 // Open opens the log stream.

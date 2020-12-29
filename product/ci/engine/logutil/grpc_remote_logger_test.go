@@ -20,6 +20,20 @@ type logProxyClient struct {
 	err error // if created with error, return error
 }
 
+// streaming client
+type logProxyUploadUsingLinkClient struct {
+	err error
+	grpc.ClientStream
+}
+
+func (lc *logProxyUploadUsingLinkClient) Send(in *pb.UploadUsingLinkRequest) error {
+	return nil
+}
+
+func (lc *logProxyUploadUsingLinkClient) CloseAndRecv() (*pb.UploadUsingLinkResponse, error) {
+	return &pb.UploadUsingLinkResponse{}, nil
+}
+
 func (lpc *logProxyClient) Open(ctx context.Context, in *pb.OpenRequest, opts ...grpc.CallOption) (*pb.OpenResponse, error) {
 	lpc.ops = append(lpc.ops, "open")
 	return &pb.OpenResponse{}, lpc.err
@@ -40,9 +54,9 @@ func (lpc *logProxyClient) Close(ctx context.Context, in *pb.CloseRequest, opts 
 	return &pb.CloseResponse{}, lpc.err
 }
 
-func (lpc *logProxyClient) UploadUsingLink(ctx context.Context, in *pb.UploadUsingLinkRequest, opts ...grpc.CallOption) (*pb.UploadUsingLinkResponse, error) {
+func (lpc *logProxyClient) UploadUsingLink(ctx context.Context, opts ...grpc.CallOption) (pb.LogProxy_UploadUsingLinkClient, error) {
 	lpc.ops = append(lpc.ops, "uploadusinglink")
-	return &pb.UploadUsingLinkResponse{}, lpc.err
+	return &logProxyUploadUsingLinkClient{}, lpc.err
 }
 
 func NewMockGrpcLogProxyClient(err error) *logProxyClient {
