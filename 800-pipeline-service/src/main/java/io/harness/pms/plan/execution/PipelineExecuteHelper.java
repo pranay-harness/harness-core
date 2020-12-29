@@ -7,7 +7,8 @@ import io.harness.engine.OrchestrationService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.plan.Plan;
-import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
+import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.merger.helpers.MergeHelper;
 import io.harness.pms.ngpipeline.inputset.helpers.ValidateAndMergeHelper;
@@ -26,9 +27,11 @@ import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
+@Slf4j
 public class PipelineExecuteHelper {
   private final PMSPipelineService pmsPipelineService;
   private final OrchestrationService orchestrationService;
@@ -39,7 +42,7 @@ public class PipelineExecuteHelper {
       @NotNull String projectIdentifier, @NotNull String pipelineIdentifier, String inputSetPipelineYaml,
       String eventPayload, ExecutionTriggerInfo triggerInfo) throws IOException {
     Optional<PipelineEntity> pipelineEntity =
-        pmsPipelineService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
+        pmsPipelineService.incrementRunSequence(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
     if (!pipelineEntity.isPresent()) {
       throw new InvalidRequestException(String.format("The given pipeline id [%s] does not exist", pipelineIdentifier));
     }
@@ -54,6 +57,7 @@ public class PipelineExecuteHelper {
       contextAttributes.put(SetupAbstractionKeys.inputSetYaml, inputSetPipelineYaml);
     }
     contextAttributes.put(SetupAbstractionKeys.pipelineIdentifier, pipelineIdentifier);
+    contextAttributes.put(SetupAbstractionKeys.runSequence, pipelineEntity.get().getRunSequence());
     return startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml, triggerInfo, contextAttributes);
   }
 
@@ -61,7 +65,7 @@ public class PipelineExecuteHelper {
       String projectIdentifier, String pipelineIdentifier, List<String> inputSetReferences,
       ExecutionTriggerInfo triggerInfo) throws IOException {
     Optional<PipelineEntity> pipelineEntity =
-        pmsPipelineService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
+        pmsPipelineService.incrementRunSequence(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
     if (!pipelineEntity.isPresent()) {
       throw new InvalidRequestException(String.format("The given pipeline id [%s] does not exist", pipelineIdentifier));
     }
@@ -72,14 +76,19 @@ public class PipelineExecuteHelper {
     Map<String, Object> contextAttributes = new HashMap<>();
     contextAttributes.put(SetupAbstractionKeys.inputSetYaml, mergedRuntimeInputYaml);
     contextAttributes.put(SetupAbstractionKeys.pipelineIdentifier, pipelineIdentifier);
+    contextAttributes.put(SetupAbstractionKeys.runSequence, pipelineEntity.get().getRunSequence());
 
     return startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml, triggerInfo, contextAttributes);
   }
 
   public PlanExecution startExecution(String accountId, String orgIdentifier, String projectIdentifier, String yaml,
       ExecutionTriggerInfo triggerInfo, Map<String, Object> contextAttributes) throws IOException {
-    contextAttributes.put(SetupAbstractionKeys.triggerInfo, triggerInfo);
-    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(yaml, contextAttributes);
+    ExecutionMetadata metadata =
+        ExecutionMetadata.newBuilder()
+            .setRunSequence((Integer) contextAttributes.getOrDefault(SetupAbstractionKeys.runSequence, 0))
+            .setTriggerInfo(triggerInfo)
+            .build();
+    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(yaml, contextAttributes, metadata);
     Plan plan = PlanExecutionUtils.extractPlan(resp);
     ImmutableMap.Builder<String, String> abstractionsBuilder =
         ImmutableMap.<String, String>builder()
@@ -94,7 +103,6 @@ public class PipelineExecuteHelper {
         }
       });
     }
-
-    return orchestrationService.startExecution(plan, abstractionsBuilder.build(), triggerInfo);
+    return orchestrationService.startExecution(plan, abstractionsBuilder.build(), metadata);
   }
 }

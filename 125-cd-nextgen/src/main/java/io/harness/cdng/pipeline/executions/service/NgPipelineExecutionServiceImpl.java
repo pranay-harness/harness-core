@@ -2,7 +2,7 @@ package io.harness.cdng.pipeline.executions.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.pms.contracts.ambiance.TriggerType.MANUAL;
+import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
@@ -34,8 +34,8 @@ import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummaryF
 import io.harness.ngpipeline.pipeline.executions.beans.ServiceExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.dto.PipelineExecutionInterruptDTO;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
-import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
-import io.harness.pms.contracts.ambiance.TriggeredBy;
+import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
+import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.beans.ExecutionGraph;
 import io.harness.repositories.pipeline.PipelineExecutionRepository;

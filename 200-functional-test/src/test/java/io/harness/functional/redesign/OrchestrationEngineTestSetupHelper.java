@@ -10,6 +10,7 @@ import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.functional.redesign.mixins.adviserobtainment.AdviserObtainmentTestMixin;
 import io.harness.functional.redesign.mixins.advisertype.AdviserTypeTestMixin;
 import io.harness.functional.redesign.mixins.ambiance.AmbianceTestMixin;
+import io.harness.functional.redesign.mixins.executionmetadata.ExecutionMetadataTestMixin;
 import io.harness.functional.redesign.mixins.facilitatorobtainment.FacilitatorObtainmentTestMixin;
 import io.harness.functional.redesign.mixins.facilitatortype.FacilitatorTypeTestMixin;
 import io.harness.functional.redesign.mixins.failuretype.FailureInfoTestMixin;
@@ -28,6 +29,7 @@ import io.harness.pms.contracts.data.StepOutcomeRef;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.contracts.refobjects.RefType;
@@ -84,6 +86,7 @@ public class OrchestrationEngineTestSetupHelper {
                       mapper.addMixIn(FailureInfo.class, FailureInfoTestMixin.class);
                       mapper.addMixIn(PlanNodeProto.class, PlanNodeProtoTestMixin.class);
                       mapper.addMixIn(StepOutcomeRef.class, StepOutcomeRefTestMixin.class);
+                      mapper.addMixIn(ExecutionMetadata.class, ExecutionMetadataTestMixin.class);
                       mapper.registerModule(new ProtobufModule());
                       return mapper;
                     }))

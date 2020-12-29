@@ -2,7 +2,7 @@ package io.harness.cdng.pipeline.helpers;
 
 import static io.harness.cdng.pipeline.plancreators.PipelinePlanCreator.EVENT_PAYLOAD_KEY;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.pms.contracts.ambiance.TriggerType.MANUAL;
+import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
 import io.harness.cdng.pipeline.beans.CDPipelineValidationInfo;
@@ -18,8 +18,9 @@ import io.harness.ngpipeline.inputset.helpers.InputSetMergeHelper;
 import io.harness.ngpipeline.pipeline.beans.resources.NGPipelineExecutionResponseDTO;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.plan.Plan;
-import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
-import io.harness.pms.contracts.ambiance.TriggeredBy;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
+import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
+import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.walktree.visitor.response.VisitorErrorResponse;
 import io.harness.walktree.visitor.response.VisitorErrorResponseWrapper;
 import io.harness.yaml.core.StageElement;
@@ -162,7 +163,10 @@ public class NGPipelineExecuteHelper {
           .put(SetupAbstractionKeys.userEmail, user.getExtraInfoOrDefault("email", ""));
     }
     return orchestrationService.startExecution(planForPipeline, abstractionsBuilder.build(),
-        ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).setTriggeredBy(user).build());
+        ExecutionMetadata.newBuilder()
+            .setRunSequence(0)
+            .setTriggerInfo(ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).setTriggeredBy(user).build())
+            .build());
   }
 
   private TriggeredBy getEmbeddedUser() {

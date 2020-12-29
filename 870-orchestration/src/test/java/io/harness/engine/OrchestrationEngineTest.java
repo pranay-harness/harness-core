@@ -1,8 +1,8 @@
 package io.harness.engine;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.pms.contracts.ambiance.TriggerType.MANUAL;
 import static io.harness.pms.contracts.execution.Status.SUCCEEDED;
+import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.PRASHANT;
@@ -21,10 +21,11 @@ import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
-import io.harness.pms.contracts.ambiance.TriggeredBy;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
+import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
+import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent;
@@ -74,6 +75,9 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
   private static final ExecutionTriggerInfo triggerInfo =
       ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).setTriggeredBy(triggeredBy).build();
 
+  private static final ExecutionMetadata metadata =
+      ExecutionMetadata.newBuilder().setRunSequence(0).setTriggerInfo(triggerInfo).build();
+
   @Before
   public void setUp() {
     adviserRegistry.register(TEST_ADVISER_TYPE, injector.getInstance(TestHttpResponseCodeSwitchAdviser.class));
@@ -101,7 +105,7 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
             .startingNodeId(testNodeId)
             .build();
 
-    PlanExecution response = orchestrationService.startExecution(oneNodePlan, prepareInputArgs(), triggerInfo);
+    PlanExecution response = orchestrationService.startExecution(oneNodePlan, prepareInputArgs(), metadata);
 
     engineTestHelper.waitForPlanCompletion(response.getUuid());
     response = engineTestHelper.getPlanExecutionStatus(response.getUuid());
@@ -130,7 +134,7 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
             .startingNodeId(testStartNodeId)
             .build();
 
-    PlanExecution response = orchestrationService.startExecution(oneNodePlan, prepareInputArgs(), triggerInfo);
+    PlanExecution response = orchestrationService.startExecution(oneNodePlan, prepareInputArgs(), metadata);
 
     engineTestHelper.waitForPlanCompletion(response.getUuid());
     response = engineTestHelper.getPlanExecutionStatus(response.getUuid());
@@ -181,7 +185,7 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
             .build();
 
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
-      PlanExecution response = orchestrationService.startExecution(oneNodePlan, prepareInputArgs(), triggerInfo);
+      PlanExecution response = orchestrationService.startExecution(oneNodePlan, prepareInputArgs(), metadata);
 
       engineTestHelper.waitForPlanCompletion(response.getUuid());
       response = engineTestHelper.getPlanExecutionStatus(response.getUuid());
@@ -198,7 +202,7 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
     final String exceptionStartMessage = "No node found with Id";
     Plan oneNodePlan = Plan.builder().startingNodeId(generateUuid()).build();
 
-    assertThatThrownBy(() -> orchestrationService.startExecution(oneNodePlan, prepareInputArgs(), triggerInfo))
+    assertThatThrownBy(() -> orchestrationService.startExecution(oneNodePlan, prepareInputArgs(), metadata))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageStartingWith(exceptionStartMessage);
   }
@@ -223,7 +227,7 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
             .startingNodeId(testNodeId)
             .build();
 
-    PlanExecution planExecution = orchestrationService.startExecution(oneNodePlan, prepareInputArgs(), triggerInfo);
+    PlanExecution planExecution = orchestrationService.startExecution(oneNodePlan, prepareInputArgs(), metadata);
     engineTestHelper.waitForPlanCompletion(planExecution.getUuid());
     planExecution = engineTestHelper.getPlanExecutionStatus(planExecution.getUuid());
 

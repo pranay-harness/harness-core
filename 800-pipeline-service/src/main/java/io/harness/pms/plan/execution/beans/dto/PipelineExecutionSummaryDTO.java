@@ -1,7 +1,7 @@
 package io.harness.pms.plan.execution.beans.dto;
 
-import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
 import io.harness.pms.contracts.execution.ExecutionErrorInfo;
+import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.execution.ExecutionStatus;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

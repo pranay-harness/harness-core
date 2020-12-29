@@ -1,13 +1,14 @@
 package io.harness.ng.orchestration;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.pms.contracts.ambiance.TriggerType.MANUAL;
+import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
-import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
-import io.harness.pms.contracts.ambiance.TriggeredBy;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
+import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
+import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.redesign.services.CustomExecutionProvider;
 import io.harness.redesign.services.CustomExecutionService;
@@ -44,7 +45,7 @@ public class NgOrchestrationResource {
   public RestResponse<PlanExecution> triggerHttpV2Plan(
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("appId") @NotNull String appId) {
     PlanExecution execution = orchestrationService.startExecution(
-        customExecutionProvider.provideHttpSwitchPlanV2(), getAbstractions(accountId, appId), getTriggerInfo());
+        customExecutionProvider.provideHttpSwitchPlanV2(), getAbstractions(accountId, appId), getMetadata());
     return new RestResponse<>(execution);
   }
 
@@ -54,7 +55,7 @@ public class NgOrchestrationResource {
   public RestResponse<PlanExecution> triggerHttpV3Plan(
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("appId") @NotNull String appId) {
     PlanExecution execution = orchestrationService.startExecution(
-        customExecutionProvider.provideHttpSwitchPlanV3(), getAbstractions(accountId, appId), getTriggerInfo());
+        customExecutionProvider.provideHttpSwitchPlanV3(), getAbstractions(accountId, appId), getMetadata());
     return new RestResponse<>(execution);
   }
 
@@ -65,7 +66,7 @@ public class NgOrchestrationResource {
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("appId") @NotNull String appId) {
     PlanExecution execution = orchestrationService.startExecution(
         customExecutionProvider.provideTaskChainPlan(OrchestrationFacilitatorType.TASK_CHAIN),
-        getAbstractions(accountId, appId), getTriggerInfo());
+        getAbstractions(accountId, appId), getMetadata());
     return new RestResponse<>(execution);
   }
 
@@ -76,7 +77,7 @@ public class NgOrchestrationResource {
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("appId") @NotNull String appId) {
     PlanExecution execution = orchestrationService.startExecution(
         customExecutionProvider.provideTaskChainPlan(OrchestrationFacilitatorType.TASK_CHAIN),
-        getAbstractions(accountId, appId), getTriggerInfo());
+        getAbstractions(accountId, appId), getMetadata());
     return new RestResponse<>(execution);
   }
 
@@ -108,6 +109,9 @@ public class NgOrchestrationResource {
         "Admin", "userEmail", "admin@harness.io");
   }
 
+  private ExecutionMetadata getMetadata() {
+    return ExecutionMetadata.newBuilder().setRunSequence(0).setTriggerInfo(getTriggerInfo()).build();
+  }
   private ExecutionTriggerInfo getTriggerInfo() {
     User user = UserThreadLocal.get();
     TriggeredBy userInfo = null;

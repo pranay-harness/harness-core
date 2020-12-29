@@ -11,4 +11,5 @@ public class SetupAbstractionKeys {
   public final String pipelineIdentifier = "pipelineIdentifier";
   public final String eventPayload = "eventPayload";
   public final String triggerInfo = "triggerInfo";
+  public final String runSequence = "runSequence";
 }

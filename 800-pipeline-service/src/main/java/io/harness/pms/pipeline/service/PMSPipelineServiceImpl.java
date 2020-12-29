@@ -6,7 +6,6 @@ import static io.harness.exception.WingsException.USER_SRE;
 import static java.lang.String.format;
 
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.steps.StepInfo;
@@ -266,6 +265,13 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     Update update = new Update();
     update.set(PipelineEntityKeys.executionSummaryInfo, executionSummaryInfo);
     pmsPipelineRepository.update(criteria, update);
+  }
+
+  @Override
+  public Optional<PipelineEntity> incrementRunSequence(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean deleted) {
+    return pmsPipelineRepository.incrementRunSequence(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, deleted);
   }
 
   @Override
