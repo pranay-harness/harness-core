@@ -2,11 +2,11 @@ package logutil
 
 import (
 	"github.com/wings-software/portal/commons/go/lib/logs"
-	logger "github.com/wings-software/portal/product/ci/logger/util"
+	"github.com/wings-software/portal/product/ci/common/external"
 )
 
 var (
-	getLogKey = logger.GetLogKey
+	getLogKey = external.GetLogKey
 )
 
 // GetGrpcRemoteLogger is a helper method that returns a logger than can communicate with the

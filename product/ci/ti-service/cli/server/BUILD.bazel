@@ -1,0 +1,19 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "go_default_library",
+    srcs = ["server.go"],
+    importpath = "github.com/wings-software/portal/product/ci/ti-service/cli/server",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//commons/go/lib/logs:go_default_library",
+        "//product/ci/ti-service/config:go_default_library",
+        "//product/ci/ti-service/db:go_default_library",
+        "//product/ci/ti-service/db/timescaledb:go_default_library",
+        "//product/ci/ti-service/handler:go_default_library",
+        "//product/ci/ti-service/xxxxxxxxgo_default_library",
+        "@com_github_joho_godotenv//:go_default_library",
+        "@in_gopkg_alecthomas_kingpin_v2//:go_default_library",
+        "@org_uber_go_zap//:go_default_library",
+    ],
+)

@@ -8,14 +8,14 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/wings-software/portal/product/ci/common/external"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
-	logger "github.com/wings-software/portal/product/ci/logger/util"
 	"github.com/wings-software/portal/product/log-service/stream"
 	"go.uber.org/zap"
 )
 
 var (
-	remoteLogClient = logger.GetRemoteHTTPClient
+	remoteLogClient = external.GetRemoteHTTPClient
 )
 
 // handler is used to implement EngineServer
