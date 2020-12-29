@@ -102,6 +102,7 @@ public class AlertRuleServiceImpl implements AlertRuleService {
                                      .filter(AlertRuleKeys.accountId, accountId)
                                      .filter(AlertRuleKeys.orgIdentifier, orgIdentifier)
                                      .filter(AlertRuleKeys.projectIdentifier, projectIdentifier)
+                                     .filter(AlertRuleKeys.enabled, true)
                                      .filter(AlertRuleKeys.enabledRisk, true)
                                      .field(AlertRuleKeys.threshold)
                                      .lessThanOrEq(riskValue)
@@ -150,6 +151,7 @@ public class AlertRuleServiceImpl implements AlertRuleService {
                                      .filter(AlertRuleKeys.accountId, accountId)
                                      .filter(AlertRuleKeys.orgIdentifier, orgIdentifier)
                                      .filter(AlertRuleKeys.projectIdentifier, projectIdentifier)
+                                     .filter(AlertRuleKeys.enabled, true)
                                      .filter(AlertRuleKeys.enabledVerifications, true)
                                      .asList();
 
