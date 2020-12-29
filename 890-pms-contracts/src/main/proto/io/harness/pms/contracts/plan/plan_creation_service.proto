@@ -6,6 +6,7 @@ option java_multiple_files = true;
 
 import "io/harness/pms/contracts/plan/plan_node_proto.proto";
 import "io/harness/pms/contracts/plan/graph_layout.proto";
+import "io/harness/pms/contracts/ambiance/trigger_info.proto";
 
 service PlanCreationService {
   rpc createPlan(PlanCreationBlobRequest) returns (PlanCreationBlobResponse);
@@ -32,13 +33,11 @@ message GraphLayoutInfo {
 
 message PlanCreationContextValue {
   oneof value {
-    Sample sample = 1;
+    string stringValue = 1;
+    io.harness.pms.contracts.ambiance.ExecutionTriggerInfo executionTriggerInfo = 2;
   }
 }
 
-message Sample {
-  string value = 1;
-}
 message YamlFieldBlob {
   string name = 1;
   bytes blob = 2;

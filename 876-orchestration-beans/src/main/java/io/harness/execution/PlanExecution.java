@@ -8,8 +8,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import io.harness.plan.Plan;
+import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.pipeline.ExecutionTriggerInfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.Duration;

@@ -1,6 +1,7 @@
 package io.harness.redesign.services;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.pms.contracts.ambiance.TriggerType.MANUAL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
@@ -12,8 +13,8 @@ import io.harness.execution.PlanExecution;
 import io.harness.generator.GraphVisualizer;
 import io.harness.interrupts.Interrupt;
 import io.harness.plan.Plan;
-import io.harness.pms.pipeline.ExecutionTriggerInfo;
-import io.harness.pms.pipeline.TriggerType;
+import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
+import io.harness.pms.contracts.ambiance.TriggeredBy;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.service.GraphGenerationService;
 
@@ -227,12 +228,20 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   }
 
   private ExecutionTriggerInfo getTriggerInfo(User user) {
-    EmbeddedUser embeddedUser =
-        EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build();
-    return ExecutionTriggerInfo.builder().triggeredBy(embeddedUser).triggerType(TriggerType.MANUAL).build();
+    TriggeredBy triggeredBy = TriggeredBy.newBuilder()
+                                  .setUuid(user.getUuid())
+                                  .putExtraInfo("email", user.getEmail())
+                                  .setIdentifier(user.getName())
+                                  .build();
+    return ExecutionTriggerInfo.newBuilder().setTriggeredBy(triggeredBy).setTriggerType(MANUAL).build();
   }
 
   private ExecutionTriggerInfo getTriggerInfo(EmbeddedUser embeddedUser) {
-    return ExecutionTriggerInfo.builder().triggerType(TriggerType.MANUAL).triggeredBy(embeddedUser).build();
+    TriggeredBy userInfo = TriggeredBy.newBuilder()
+                               .setUuid(embeddedUser.getUuid())
+                               .putExtraInfo("email", embeddedUser.getEmail())
+                               .setIdentifier(embeddedUser.getName())
+                               .build();
+    return ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).setTriggeredBy(userInfo).build();
   }
 }

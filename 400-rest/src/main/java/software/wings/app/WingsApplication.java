@@ -92,6 +92,7 @@ import io.harness.perpetualtask.internal.PerpetualTaskRecordHandler;
 import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
+import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.steps.StepType;
@@ -114,6 +115,7 @@ import io.harness.secrets.SecretMigrationEventListener;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
+import io.harness.serializer.json.ExecutionTriggerInfoSerializer;
 import io.harness.serializer.json.FailureInfoSerializer;
 import io.harness.serializer.json.StepTypeSerializer;
 import io.harness.service.DelegateServiceModule;
@@ -359,6 +361,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     // Todo: Discuss with Prashant on having an impl just like Morphia Converters
     module.addSerializer(StepType.class, new StepTypeSerializer());
     module.addSerializer(FailureInfo.class, new FailureInfoSerializer());
+    module.addSerializer(ExecutionTriggerInfo.class, new ExecutionTriggerInfoSerializer());
     mapper.registerModule(module);
     mapper.addMixIn(AssetsConfiguration.class, AssetsConfigurationMixin.class);
     final AnnotationAwareJsonSubtypeResolver subtypeResolver =

@@ -2,6 +2,7 @@ package io.harness.engine.interrupts.handlers;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
+import static io.harness.pms.contracts.ambiance.TriggerType.MANUAL;
 import static io.harness.pms.contracts.execution.Status.FAILED;
 import static io.harness.pms.contracts.execution.Status.INTERVENTION_WAITING;
 import static io.harness.pms.contracts.execution.Status.SUCCEEDED;
@@ -9,7 +10,6 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.PlanRepo;
@@ -22,8 +22,8 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.Interrupt;
-import io.harness.pms.pipeline.ExecutionTriggerInfo;
-import io.harness.pms.pipeline.TriggerType;
+import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
+import io.harness.pms.contracts.ambiance.TriggeredBy;
 import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.rule.Owner;
@@ -50,10 +50,10 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
   @Inject private StepRegistry stepRegistry;
   @Inject private PlanRepo planRepo;
 
-  private final EmbeddedUser embeddedUser =
-      EmbeddedUser.builder().email(PRASHANT).name(PRASHANT).uuid(generateUuid()).build();
+  private final TriggeredBy embeddedUser =
+      TriggeredBy.newBuilder().putExtraInfo("email", PRASHANT).setIdentifier(PRASHANT).setUuid(generateUuid()).build();
   private final ExecutionTriggerInfo triggerInfo =
-      ExecutionTriggerInfo.builder().triggerType(TriggerType.MANUAL).triggeredBy(embeddedUser).build();
+      ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).setTriggeredBy(embeddedUser).build();
 
   @Before
   public void setUp() {
@@ -161,6 +161,6 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
 
   private Map<String, String> getAbstractions() {
     return ImmutableMap.of("accountId", generateUuid(), "appId", generateUuid(), "userId", embeddedUser.getUuid(),
-        "userName", embeddedUser.getName(), "userEmail", embeddedUser.getEmail());
+        "userName", embeddedUser.getIdentifier(), "userEmail", embeddedUser.getExtraInfoOrThrow("email"));
   }
 }

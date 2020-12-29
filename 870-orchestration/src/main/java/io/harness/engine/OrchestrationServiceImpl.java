@@ -12,10 +12,10 @@ import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.plan.Plan;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.plan.PlanNodeProto;
-import io.harness.pms.pipeline.ExecutionTriggerInfo;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 
 import com.google.inject.Inject;

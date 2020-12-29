@@ -3,7 +3,6 @@ package io.harness.pms.sample.cd.creator;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
-import io.harness.pms.contracts.plan.Sample;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sample.cd.beans.DeploymentStage;
 import io.harness.pms.sample.cd.beans.DeploymentStageSpec;
@@ -110,8 +109,7 @@ public class DeploymentStagePlanCreator extends ChildrenPlanCreator<DeploymentSt
                         .skipExpressionChain(false)
                         .build();
     Map<String, PlanCreationContextValue> contextValueMap = new HashMap<>();
-    contextValueMap.put("dummy",
-        PlanCreationContextValue.newBuilder().setSample(Sample.newBuilder().setValue("dummyValue").build()).build());
+    contextValueMap.put("dummy", PlanCreationContextValue.newBuilder().setStringValue("dummyValue").build());
     responseMap.put(
         node.getUuid(), PlanCreationResponse.builder().node(node.getUuid(), node).contextMap(contextValueMap).build());
   }

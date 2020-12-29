@@ -1,6 +1,7 @@
 package io.harness.engine;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.pms.contracts.ambiance.TriggerType.MANUAL;
 import static io.harness.pms.contracts.execution.Status.SUCCEEDED;
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static io.harness.rule.OwnerRule.GARVIT;
@@ -11,7 +12,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.OrchestrationTestBase;
-import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
@@ -21,11 +21,11 @@ import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
+import io.harness.pms.contracts.ambiance.TriggeredBy;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.pipeline.ExecutionTriggerInfo;
-import io.harness.pms.pipeline.TriggerType;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviser;
@@ -69,10 +69,10 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
       AdviserType.newBuilder().setType("TEST_HTTP_RESPONSE_CODE_SWITCH").build();
   private static final StepType TEST_STEP_TYPE = StepType.newBuilder().setType("TEST_STEP_PLAN").build();
 
-  private static final EmbeddedUser embeddedUser =
-      EmbeddedUser.builder().email(PRASHANT).name(PRASHANT).uuid(generateUuid()).build();
+  private static final TriggeredBy triggeredBy =
+      TriggeredBy.newBuilder().putExtraInfo("email", PRASHANT).setIdentifier(PRASHANT).setUuid(generateUuid()).build();
   private static final ExecutionTriggerInfo triggerInfo =
-      ExecutionTriggerInfo.builder().triggerType(TriggerType.MANUAL).triggeredBy(embeddedUser).build();
+      ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).setTriggeredBy(triggeredBy).build();
 
   @Before
   public void setUp() {
@@ -240,7 +240,8 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
 
   private static Map<String, String> prepareInputArgs() {
     return ImmutableMap.of("accountId", "kmpySmUISimoRrJL6NL73w", "appId", "XEsfW6D_RJm1IaGpDidD3g", "userId",
-        embeddedUser.getUuid(), "userName", embeddedUser.getName(), "userEmail", embeddedUser.getEmail());
+        triggeredBy.getUuid(), "userName", triggeredBy.getIdentifier(), "userEmail",
+        triggeredBy.getExtraInfoOrThrow("email"));
   }
 
   private static class TestHttpResponseCodeSwitchAdviser implements Adviser {

@@ -7,7 +7,7 @@ import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.plan.Plan;
-import io.harness.pms.pipeline.ExecutionTriggerInfo;
+import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
 
 import java.util.Map;
 import javax.validation.Valid;

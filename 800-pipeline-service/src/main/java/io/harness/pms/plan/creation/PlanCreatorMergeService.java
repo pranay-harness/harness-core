@@ -1,15 +1,20 @@
 package io.harness.pms.plan.creation;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static java.lang.String.format;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
+import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.PlanCreationBlobRequest;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
+import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc.PlanCreationServiceBlockingStub;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.sdk.PmsSdkInstanceService;
+import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.utils.CompletableFutures;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
@@ -47,6 +52,11 @@ public class PlanCreatorMergeService {
   }
 
   public PlanCreationBlobResponse createPlan(@NotNull String content) throws IOException {
+    return createPlan(content, new HashMap<>());
+  }
+
+  public PlanCreationBlobResponse createPlan(@NotNull String content, Map<String, Object> contextAttributes)
+      throws IOException {
     Map<String, Map<String, Set<String>>> sdkInstances = pmsSdkInstanceService.getInstanceNameToSupportedTypes();
     Map<String, PlanCreatorServiceInfo> services = new HashMap<>();
     if (EmptyPredicate.isNotEmpty(planCreatorServices) && EmptyPredicate.isNotEmpty(sdkInstances)) {
@@ -61,19 +71,38 @@ public class PlanCreatorMergeService {
     YamlField pipelineField = YamlUtils.extractPipelineField(processedYaml);
     Map<String, YamlFieldBlob> dependencies = new HashMap<>();
     dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
-    PlanCreationBlobResponse finalResponse = createPlanForDependenciesRecursive(services, dependencies);
+    PlanCreationBlobResponse finalResponse =
+        createPlanForDependenciesRecursive(services, dependencies, contextAttributes);
     validatePlanCreationBlobResponse(finalResponse);
     return finalResponse;
   }
 
-  private PlanCreationBlobResponse createPlanForDependenciesRecursive(
-      Map<String, PlanCreatorServiceInfo> services, Map<String, YamlFieldBlob> initialDependencies) {
+  private Map<String, PlanCreationContextValue> createInitialPlanCreationContext(
+      Map<String, Object> contextAttributes) {
+    Map<String, PlanCreationContextValue> planCreationContextBuilder = new HashMap<>();
+    if (isNotEmpty(contextAttributes)) {
+      contextAttributes.forEach((key, val) -> {
+        if (val != null && String.class.isAssignableFrom(val.getClass())) {
+          planCreationContextBuilder.put(
+              key, PlanCreationContextValue.newBuilder().setStringValue((String) val).build());
+        }
+        if (val != null && ExecutionTriggerInfo.class.isAssignableFrom(val.getClass())) {
+          planCreationContextBuilder.put(
+              key, PlanCreationContextValue.newBuilder().setExecutionTriggerInfo((ExecutionTriggerInfo) val).build());
+        }
+      });
+    }
+    return planCreationContextBuilder;
+  }
+
+  private PlanCreationBlobResponse createPlanForDependenciesRecursive(Map<String, PlanCreatorServiceInfo> services,
+      Map<String, YamlFieldBlob> initialDependencies, Map<String, Object> contextAttributes) {
     PlanCreationBlobResponse.Builder finalResponseBuilder =
         PlanCreationBlobResponse.newBuilder().putAllDependencies(initialDependencies);
     if (EmptyPredicate.isEmpty(services) || EmptyPredicate.isEmpty(initialDependencies)) {
       return finalResponseBuilder.build();
     }
-
+    finalResponseBuilder.putAllContext(createInitialPlanCreationContext(contextAttributes));
     for (int i = 0; i < MAX_DEPTH && EmptyPredicate.isNotEmpty(finalResponseBuilder.getDependenciesMap()); i++) {
       PlanCreationBlobResponse currIterationResponse = createPlanForDependencies(services, finalResponseBuilder);
       PlanCreationBlobResponseUtils.addNodes(finalResponseBuilder, currIterationResponse.getNodesMap());
