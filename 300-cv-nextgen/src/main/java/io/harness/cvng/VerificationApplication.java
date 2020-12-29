@@ -4,6 +4,7 @@ import static io.harness.AuthorizationServiceHeader.BEARER;
 import static io.harness.AuthorizationServiceHeader.DEFAULT;
 import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
 import static io.harness.AuthorizationServiceHeader.MANAGER;
+import static io.harness.cvng.migration.beans.CVNGSchema.CVNGMigrationStatus.RUNNING;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.security.ServiceTokenGenerator.VERIFICATION_SERVICE_SECRET;
@@ -29,6 +30,9 @@ import io.harness.cvng.exception.BadRequestExceptionMapper;
 import io.harness.cvng.exception.ConstraintViolationExceptionMapper;
 import io.harness.cvng.exception.GenericExceptionMapper;
 import io.harness.cvng.exception.NotFoundExceptionMapper;
+import io.harness.cvng.migration.CVNGSchemaHandler;
+import io.harness.cvng.migration.beans.CVNGSchema;
+import io.harness.cvng.migration.beans.CVNGSchema.CVNGSchemaKeys;
 import io.harness.cvng.migration.service.CVNGMigrationService;
 import io.harness.cvng.statemachine.jobs.AnalysisOrchestrationJob;
 import io.harness.cvng.statemachine.jobs.DeploymentVerificationJobInstanceOrchestrationJob;
@@ -237,6 +241,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerExceptionMappers(environment.jersey());
     registerCVConfigCleanupIterator(injector);
     registerHealthChecks(environment, injector);
+    registerCVNGSchemaMigrationIterator(injector);
     log.info("Leaving startup maintenance mode");
     MaintenanceController.forceMaintenance(false);
 
@@ -445,6 +450,30 @@ public class VerificationApplication extends Application<VerificationConfigurati
         DEFAULT.getServiceId(), configuration.getNgManagerServiceConfig().getManagerServiceSecret());
     environment.jersey().register(new JWTAuthenticationFilter(predicate, null, serviceToSecretMapping));
     environment.jersey().register(injector.getInstance(CVNGAuthenticationFilter.class));
+  }
+
+  private void registerCVNGSchemaMigrationIterator(Injector injector) {
+    ScheduledThreadPoolExecutor migrationExecutor = new ScheduledThreadPoolExecutor(
+        2, new ThreadFactoryBuilder().setNameFormat("cvng-schema-migration-iterator").build());
+    CVNGSchemaHandler cvngSchemaMigrationHandler = injector.getInstance(CVNGSchemaHandler.class);
+
+    PersistenceIterator dataCollectionIterator =
+        MongoPersistenceIterator.<CVNGSchema, MorphiaFilterExpander<CVNGSchema>>builder()
+            .mode(PersistenceIterator.ProcessMode.PUMP)
+            .clazz(CVNGSchema.class)
+            .fieldName(CVNGSchemaKeys.cvngNextIteration)
+            .targetInterval(ofMinutes(30))
+            .acceptableNoAlertDelay(ofMinutes(5))
+            .executorService(migrationExecutor)
+            .semaphore(new Semaphore(3))
+            .handler(cvngSchemaMigrationHandler)
+            .schedulingType(REGULAR)
+            .filterExpander(query -> query.criteria(CVNGSchemaKeys.cvngMigrationStatus).notEqual(RUNNING))
+            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
+            .redistribute(true)
+            .build();
+    injector.injectMembers(dataCollectionIterator);
+    migrationExecutor.scheduleWithFixedDelay(() -> dataCollectionIterator.process(), 0, 15, TimeUnit.MINUTES);
   }
 
   private void initializeServiceSecretKeys() {
