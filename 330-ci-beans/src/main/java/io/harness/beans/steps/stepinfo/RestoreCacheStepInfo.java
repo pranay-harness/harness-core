@@ -6,6 +6,7 @@ import io.harness.beans.steps.TypeInfo;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.yaml.ParameterField;
 
 import software.wings.jersey.JsonViews;
 
@@ -28,7 +29,6 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("restoreCacheStepInfo")
 public class RestoreCacheStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
-  @JsonIgnore private String callbackId;
   @JsonView(JsonViews.Internal.class)
   @NotNull
   public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.RESTORE_CACHE).build();
@@ -40,12 +40,13 @@ public class RestoreCacheStepInfo implements CIStepInfo {
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
 
-  @NotNull private String key;
-  private boolean failIfNotExist;
+  @NotNull private ParameterField<String> key;
+  private ParameterField<Boolean> failIfNotExist;
 
   @Builder
   @ConstructorProperties({"name", "retry", "key", "failIfNotExist"})
-  public RestoreCacheStepInfo(String identifier, String name, Integer retry, String key, boolean failIfNotExist) {
+  public RestoreCacheStepInfo(String identifier, String name, Integer retry, ParameterField<String> key,
+      ParameterField<Boolean> failIfNotExist) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);

@@ -46,21 +46,23 @@ public class ECRStepInfo implements PluginCompatibleStep {
   private ContainerResource resources;
 
   // plugin settings
-  @NotNull private String registry;
-  @NotNull private String repo;
-  @NotNull private List<String> tags;
-  private String context;
-  private String dockerfile;
-  private String target;
-  private Map<String, String> labels;
-  private List<String> buildArgs;
+  @NotNull private ParameterField<String> registry;
+  @NotNull private ParameterField<String> repo;
+  @NotNull private ParameterField<List<String>> tags;
+  private ParameterField<String> context;
+  private ParameterField<String> dockerfile;
+  private ParameterField<String> target;
+  private ParameterField<Map<String, String>> labels;
+  private ParameterField<List<String>> buildArgs;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "image", "resources", "registry", "repo",
       "tags", "context", "dockerfile", "target", "labels", "buildArgs"})
   public ECRStepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
-      ParameterField<String> image, ContainerResource resources, String registry, String repo, List<String> tags,
-      String context, String dockerfile, String target, Map<String, String> labels, List<String> buildArgs) {
+      ParameterField<String> image, ContainerResource resources, ParameterField<String> registry,
+      ParameterField<String> repo, ParameterField<List<String>> tags, ParameterField<String> context,
+      ParameterField<String> dockerfile, ParameterField<String> target, ParameterField<Map<String, String>> labels,
+      ParameterField<List<String>> buildArgs) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);

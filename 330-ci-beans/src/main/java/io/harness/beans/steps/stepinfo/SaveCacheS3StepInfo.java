@@ -38,8 +38,6 @@ public class SaveCacheS3StepInfo implements PluginCompatibleStep {
   @JsonIgnore
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.SAVE_CACHE_S3.name()).build();
 
-  @JsonIgnore private String callbackId;
-  @JsonIgnore private Integer port;
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
@@ -49,24 +47,22 @@ public class SaveCacheS3StepInfo implements PluginCompatibleStep {
   private ContainerResource resources;
 
   // plugin settings
-  private String endpoint;
-  @NotNull private String key;
-  @NotNull private String bucket;
-  @NotNull private List<String> sourcePath;
-  private String target;
+  private ParameterField<String> endpoint;
+  @NotNull private ParameterField<String> key;
+  @NotNull private ParameterField<String> bucket;
+  @NotNull private ParameterField<List<String>> sourcePath;
+  private ParameterField<String> target;
 
   @Builder
-  @ConstructorProperties({"callbackId", "port", "identifier", "name", "retry", "connectorRef", "image", "resources",
-      "endpoint", "key", "bucket", "sourcePath", "target"})
-  public SaveCacheS3StepInfo(String callbackId, Integer port, String identifier, String name, Integer retry,
-      ParameterField<String> connectorRef, ParameterField<String> image, ContainerResource resources, String endpoint,
-      String key, String bucket, List<String> sourcePath, String target) {
-    this.callbackId = callbackId;
-    this.port = port;
+  @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "image", "resources", "endpoint", "key",
+      "bucket", "sourcePath", "target"})
+  public SaveCacheS3StepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
+      ParameterField<String> image, ContainerResource resources, ParameterField<String> endpoint,
+      ParameterField<String> key, ParameterField<String> bucket, ParameterField<List<String>> sourcePath,
+      ParameterField<String> target) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
-
     this.connectorRef = connectorRef;
     this.image = Optional.ofNullable(image).orElse(ParameterField.createValueField("plugins/s3-cache:latest"));
     this.resources = resources;

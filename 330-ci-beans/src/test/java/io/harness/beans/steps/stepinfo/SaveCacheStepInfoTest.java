@@ -8,6 +8,7 @@ import io.harness.CiBeansTestBase;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.category.element.UnitTests;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.StepElement;
 import io.harness.yaml.utils.YamlPipelineUtils;
@@ -42,11 +43,15 @@ public class SaveCacheStepInfoTest extends CiBeansTestBase {
 
     assertThat(saveCacheStepInfo)
         .isNotNull()
-        .isEqualTo(SaveCacheStepInfo.builder()
-                       .identifier("cacheResults")
-                       .name("stepName")
-                       .key("test_results")
-                       .paths(Arrays.asList("~/test_results.output", "~/test_results.error"))
-                       .build());
+        .isEqualToIgnoringGivenFields(SaveCacheStepInfo.builder()
+                                          .identifier("cacheResults")
+                                          .name("stepName")
+                                          .key(ParameterField.createValueField("test_results"))
+                                          .build(),
+            "key", "paths");
+    assertThat(saveCacheStepInfo.getKey().getValue()).isNotNull().isEqualTo("test_results");
+    assertThat(saveCacheStepInfo.getPaths().getValue())
+        .isNotNull()
+        .isEqualTo(Arrays.asList("~/test_results.output", "~/test_results.error"));
   }
 }

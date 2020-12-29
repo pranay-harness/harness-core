@@ -22,6 +22,19 @@ public class RunTimeInputHandler {
     }
   }
 
+  public boolean resolveBooleanParameter(ParameterField<Boolean> booleanParameterField, Boolean defaultValue) {
+    if (booleanParameterField == null || booleanParameterField.isExpression()
+        || booleanParameterField.getValue() == null) {
+      if (defaultValue != null) {
+        return defaultValue;
+      } else {
+        return false;
+      }
+    } else {
+      return (boolean) booleanParameterField.fetchFinalValue();
+    }
+  }
+
   public String resolveStringParameter(String fieldName, String stepType, String stepIdentifier,
       ParameterField<String> parameterField, boolean isMandatory) {
     if (parameterField == null || parameterField.getValue() == null) {

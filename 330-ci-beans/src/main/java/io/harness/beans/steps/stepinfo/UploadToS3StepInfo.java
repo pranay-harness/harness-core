@@ -47,18 +47,19 @@ public class UploadToS3StepInfo implements PluginCompatibleStep {
   private ContainerResource resources;
 
   // plugin settings
-  private String endpoint;
-  private String region;
-  @NotNull private String bucket;
-  @NotNull private String sourcePath;
-  @NotNull private String target;
+  private ParameterField<String> endpoint;
+  private ParameterField<String> region;
+  @NotNull private ParameterField<String> bucket;
+  @NotNull private ParameterField<String> sourcePath;
+  @NotNull private ParameterField<String> target;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "image", "resources", "endpoint", "region",
       "bucket", "sourcePath", "target"})
   public UploadToS3StepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
-      ParameterField<String> image, ContainerResource resources, String endpoint, String region, String bucket,
-      String sourcePath, String target) {
+      ParameterField<String> image, ContainerResource resources, ParameterField<String> endpoint,
+      ParameterField<String> region, ParameterField<String> bucket, ParameterField<String> sourcePath,
+      ParameterField<String> target) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
