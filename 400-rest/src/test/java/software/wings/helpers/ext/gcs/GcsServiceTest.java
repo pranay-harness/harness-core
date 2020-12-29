@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -100,12 +101,12 @@ public class GcsServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetArtifactPaths() throws IOException {
     Objects objects1 = new Objects();
-    objects1.setItems(Lists.newArrayList("obj1", "randomObj", "obj2", "obj3")
-                          .stream()
-                          .map(item -> {
+    String[] items = new String[] {"obj1", "randomObj", "obj2", "obj3"};
+    objects1.setItems(IntStream.rangeClosed(0, 3)
+                          .mapToObj(i -> {
                             StorageObject storageObject = new StorageObject();
-                            storageObject.setName(item);
-                            storageObject.setUpdated(new DateTime(new Date()));
+                            storageObject.setName(items[i]);
+                            storageObject.setUpdated(new DateTime(new Date().getTime() + i));
                             return storageObject;
                           })
                           .unordered()
@@ -114,7 +115,7 @@ public class GcsServiceTest extends WingsBaseTest {
 
     assertThat(gcsService.getArtifactPaths(gcpConfig, null, "bucketName"))
         .hasSize(4)
-        .isEqualTo(Lists.newArrayList("obj1", "randomObj", "obj2", "obj3"));
+        .isEqualTo(Lists.newArrayList("obj3", "obj2", "randomObj", "obj1"));
   }
 
   @Test
