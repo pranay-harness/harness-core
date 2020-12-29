@@ -25,7 +25,6 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.net.URISyntaxException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -34,7 +33,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.client.utils.URIBuilder;
 
 @Slf4j
 public class AlertRuleServiceImpl implements AlertRuleService {
@@ -245,13 +243,7 @@ public class AlertRuleServiceImpl implements AlertRuleService {
   }
 
   private String getRiskUrl(String accountId, String orgIdentifier, String projectIdentifier, Instant timeStamp) {
-    try {
-      URIBuilder uriBuilder = new URIBuilder(portalUrl + "ng/#/account/" + accountId + "/cv/org/" + orgIdentifier
-          + "/project/" + projectIdentifier + "/services");
-      uriBuilder.addParameter("timeStamp", String.valueOf(timeStamp.toEpochMilli()));
-      return uriBuilder.build().toString();
-    } catch (URISyntaxException e) {
-      throw new IllegalStateException(e);
-    }
+    return portalUrl + "ng/#/account/" + accountId + "/cv/org/" + orgIdentifier + "/project/" + projectIdentifier
+        + "/services?timeStamp=" + timeStamp.toEpochMilli();
   }
 }

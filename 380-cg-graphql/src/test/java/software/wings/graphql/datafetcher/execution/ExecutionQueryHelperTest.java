@@ -144,8 +144,8 @@ public class ExecutionQueryHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetEntityType() {
     assertThatThrownBy(() -> executionQueryHelper.getEntityType(null))
-            .isInstanceOf(InvalidRequestException.class)
-            .hasMessage("Please provide entity type");
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Please provide entity type");
 
     QLDeploymentTagType entityType = QLDeploymentTagType.APPLICATION;
     EntityType entityType1 = executionQueryHelper.getEntityType(entityType);
