@@ -179,7 +179,6 @@ public class StateMachineExecutor implements StateInspectionListener {
   public static final String APPLICATION_NAME = "APPLICATION_NAME";
   public static final String APPLICATION_URL = "APPLICATION_URL";
   public static final String DEBUG_LINE = "stateMachine processor: ";
-  private static final String STATE_PARAMS = "stateParams";
 
   @Getter private Subject<StateStatusUpdate> statusUpdateSubject = new Subject<>();
 
@@ -843,8 +842,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     }
   }
 
-  @VisibleForTesting
-  protected StateExecutionInstance handleExecutionEventAdvice(ExecutionContextImpl context,
+  private StateExecutionInstance handleExecutionEventAdvice(ExecutionContextImpl context,
       StateExecutionInstance stateExecutionInstance, ExecutionStatus status,
       ExecutionEventAdvice executionEventAdvice) {
     // NOTE: Pre-requisites for calling this function:
@@ -879,28 +877,9 @@ public class StateMachineExecutor implements StateInspectionListener {
         updateStatus(stateExecutionInstance, WAITING, brokeStatuses(), null, ops -> {
           ops.set(StateExecutionInstanceKeys.expiryTs, Long.MAX_VALUE);
           if (executionEventAdvice.getStateParams() != null) {
-            ops.set(STATE_PARAMS, executionEventAdvice.getStateParams());
+            ops.set("stateParams", executionEventAdvice.getStateParams());
           }
         });
-
-        // Open an alert
-        Environment environment = context.getEnv();
-        ManualInterventionNeededAlert manualInterventionNeededAlert =
-            ManualInterventionNeededAlert.builder()
-                .envId(environment != null ? environment.getUuid() : null)
-                .stateExecutionInstanceId(stateExecutionInstance.getUuid())
-                .executionId(context.getWorkflowExecutionId())
-                .name(context.getWorkflowExecutionName())
-                .build();
-        openAnAlert(context, manualInterventionNeededAlert);
-        sendManualInterventionNeededNotification(context);
-        break;
-      }
-      case WAITING_FOR_MANUAL_INTERVENTION: {
-        log.info(
-            "[TimeOut Op]: Updating expiryTs considering manualInterventionTimeout on WAITING_FOR_MANUAL_INTERVENTION Advice for stateExecutionInstance id: {}, name: {}",
-            stateExecutionInstance.getUuid(), stateExecutionInstance.getDisplayName());
-        updateStateExecutionInstanceForManualInterventions(stateExecutionInstance, status, executionEventAdvice);
 
         // Open an alert
         Environment environment = context.getEnv();
@@ -1009,41 +988,6 @@ public class StateMachineExecutor implements StateInspectionListener {
     ops.set(StateExecutionInstanceKeys.waitingForInputs, true);
     ops.set(StateExecutionInstanceKeys.actionOnTimeout, executionEventAdvice.getActionOnTimeout());
     ops.set(StateExecutionInstanceKeys.expiryTs, System.currentTimeMillis() + executionEventAdvice.getTimeout());
-
-    Query<StateExecutionInstance> query =
-        wingsPersistence.createQuery(StateExecutionInstance.class)
-            .filter(StateExecutionInstanceKeys.appId, stateExecutionInstance.getAppId())
-            .filter(StateExecutionInstanceKeys.uuid, stateExecutionInstance.getUuid());
-    UpdateResults updateResult = wingsPersistence.update(query, ops);
-    if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {
-      log.error("StateExecutionInstance status could not be updated - "
-              + "stateExecutionInstance: {},  status: {}",
-          stateExecutionInstance.getUuid(), status);
-    }
-
-    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated,
-        StateStatusUpdateInfo.buildFromStateExecutionInstance(stateExecutionInstance, false));
-  }
-
-  private void updateStateExecutionInstanceForManualInterventions(StateExecutionInstance stateExecutionInstance,
-      ExecutionStatus status, ExecutionEventAdvice executionEventAdvice) {
-    Long expiryTs = System.currentTimeMillis() + executionEventAdvice.getTimeout();
-    UpdateOperations<StateExecutionInstance> ops =
-        wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
-    stateExecutionInstance.setStatus(WAITING);
-    stateExecutionInstance.setWaitingForManualIntervention(true);
-    stateExecutionInstance.setActionAfterManualInterventionTimeout(
-        executionEventAdvice.getActionAfterManualInterventionTimeout());
-    stateExecutionInstance.setExpiryTs(expiryTs);
-    if (executionEventAdvice.getStateParams() != null) {
-      ops.set(STATE_PARAMS, executionEventAdvice.getStateParams());
-      stateExecutionInstance.setStateParams(executionEventAdvice.getStateParams());
-    }
-    ops.set(StateExecutionInstanceKeys.status, WAITING);
-    ops.set(StateExecutionInstanceKeys.waitingForManualIntervention, true);
-    ops.set(StateExecutionInstanceKeys.actionAfterManualInterventionTimeout,
-        executionEventAdvice.getActionAfterManualInterventionTimeout());
-    ops.set(StateExecutionInstanceKeys.expiryTs, expiryTs);
 
     Query<StateExecutionInstance> query =
         wingsPersistence.createQuery(StateExecutionInstance.class)
@@ -2090,7 +2034,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     ops.set("notifyElements", notifyElements);
 
     if (stateParams != null) {
-      ops.set(STATE_PARAMS, stateParams);
+      ops.set("stateParams", stateParams);
     }
 
     if (stateExecutionInstance.getEndTs() != null) {

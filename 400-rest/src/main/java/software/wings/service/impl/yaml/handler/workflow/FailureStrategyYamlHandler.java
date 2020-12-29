@@ -1,11 +1,6 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
-import static io.harness.interrupts.ExecutionInterruptType.END_EXECUTION;
-import static io.harness.interrupts.ExecutionInterruptType.IGNORE;
-import static io.harness.interrupts.ExecutionInterruptType.MARK_SUCCESS;
-import static io.harness.interrupts.ExecutionInterruptType.ROLLBACK;
 
 import static java.util.stream.Collectors.toList;
 
@@ -13,9 +8,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.FailureType;
 import io.harness.exception.HarnessException;
-import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
-import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.RepairActionCode;
 
 import software.wings.beans.ExecutionScope;
@@ -26,7 +19,6 @@ import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.utils.Utils;
 
 import com.google.inject.Singleton;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -41,23 +33,6 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
     ExecutionScope executionScope = Utils.getEnumFromString(ExecutionScope.class, yaml.getExecutionScope());
     RepairActionCode repairActionCodeAfterRetry =
         Utils.getEnumFromString(RepairActionCode.class, yaml.getRepairActionCodeAfterRetry());
-    ExecutionInterruptType actionAfterTimeout =
-        Utils.getEnumFromString(ExecutionInterruptType.class, yaml.getActionAfterTimeout());
-    Long manualInterventionTimeout = yaml.getManualInterventionTimeout();
-
-    boolean isManualIntervention = RepairActionCode.MANUAL_INTERVENTION.equals(repairActionCode);
-
-    if (isManualIntervention) {
-      if (manualInterventionTimeout == null || manualInterventionTimeout < 60000) {
-        throw new InvalidArgumentsException("\"manualInterventionTimeout\" should not be less than 1m (60000)");
-      }
-      List<ExecutionInterruptType> allowedActions =
-          Arrays.asList(ABORT_ALL, END_EXECUTION, IGNORE, MARK_SUCCESS, ROLLBACK);
-      if (!allowedActions.contains(actionAfterTimeout)) {
-        throw new InvalidArgumentsException(String.format(
-            "\"actionAfterTimeout\" should not be empty. Please provide valid value: %s", allowedActions));
-      }
-    }
 
     return FailureStrategy.builder()
         .executionScope(executionScope)
@@ -72,8 +47,6 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
                       .collect(toList())
                 : null)
         .specificSteps(yaml.getSpecificSteps())
-        .actionAfterTimeout(isManualIntervention ? actionAfterTimeout : null)
-        .manualInterventionTimeout(isManualIntervention ? manualInterventionTimeout : null)
         .build();
   }
 
@@ -86,7 +59,6 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
     String repairActionCode = Utils.getStringFromEnum(bean.getRepairActionCode());
     String repairActionCodeAfterRetry = Utils.getStringFromEnum(bean.getRepairActionCodeAfterRetry());
     String executionScope = Utils.getStringFromEnum(bean.getExecutionScope());
-    String actionAfterTimeout = Utils.getStringFromEnum(bean.getActionAfterTimeout());
 
     return FailureStrategy.Yaml.builder()
         .executionScope(executionScope)
@@ -96,8 +68,6 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
         .retryCount(bean.getRetryCount())
         .retryIntervals(bean.getRetryIntervals())
         .specificSteps(bean.getSpecificSteps())
-        .actionAfterTimeout(actionAfterTimeout)
-        .manualInterventionTimeout(bean.getManualInterventionTimeout())
         .build();
   }
 

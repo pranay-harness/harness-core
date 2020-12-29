@@ -117,15 +117,6 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
                                      .executionUuid(stateExecutionInstance.getExecutionUuid())
                                      .stateExecutionInstanceId(stateExecutionInstance.getUuid())
                                      .build();
-          }
-          if (stateExecutionInstance.isWaitingForManualIntervention()) {
-            executionInterrupt =
-                anExecutionInterrupt()
-                    .executionInterruptType(stateExecutionInstance.getActionAfterManualInterventionTimeout())
-                    .appId(stateExecutionInstance.getAppId())
-                    .executionUuid(stateExecutionInstance.getExecutionUuid())
-                    .stateExecutionInstanceId(stateExecutionInstance.getUuid())
-                    .build();
           } else {
             executionInterrupt = anExecutionInterrupt()
                                      .executionInterruptType(MARK_EXPIRED)
