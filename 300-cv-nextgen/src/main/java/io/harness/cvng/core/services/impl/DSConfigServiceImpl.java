@@ -52,6 +52,10 @@ public class DSConfigServiceImpl implements DSConfigService {
 
   @Override
   public void upsert(DSConfig dsConfig) {
+    List<CVConfig> existingMapping =
+        cvConfigService.getExistingMappedConfigs(dsConfig.getAccountId(), dsConfig.getOrgIdentifier(),
+            dsConfig.getProjectIdentifier(), dsConfig.getConnectorIdentifier(), dsConfig.getIdentifier());
+    dsConfig.validate(existingMapping);
     List<CVConfig> saved = cvConfigService.list(dsConfig.getAccountId(), dsConfig.getConnectorIdentifier(),
         dsConfig.getProductName(), dsConfig.getIdentifier());
     CVConfigUpdateResult cvConfigUpdateResult = dsConfig.getCVConfigUpdateResult(saved);

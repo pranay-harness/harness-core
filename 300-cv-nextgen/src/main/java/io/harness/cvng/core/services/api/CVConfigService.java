@@ -46,4 +46,7 @@ public interface CVConfigService {
       String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier);
   boolean doesAnyCVConfigExistsInProject(String accountId, String orgIdentifier, String projectIdentifier);
   int getNumberOfServicesSetup(String accountId, String orgIdentifier, String projectIdentifier);
+
+  List<CVConfig> getExistingMappedConfigs(
+      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String identifier);
 }

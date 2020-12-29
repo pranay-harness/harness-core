@@ -67,6 +67,11 @@ public class StackdriverDSConfig extends DSConfig {
         .build();
   }
 
+  @Override
+  public void validate(List<CVConfig> existingMapping) {
+    // do nothing
+  }
+
   private List<StackdriverCVConfig> toCVConfigs() {
     // group things under same service_env_category_dashboard into one config
     Map<Key, List<StackdriverDefinition>> keyToDefinitionMap = new HashMap<>();

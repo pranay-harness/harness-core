@@ -42,6 +42,11 @@ public class SplunkDSConfig extends DSConfig {
     }
   }
 
+  @Override
+  public void validate(List<CVConfig> existingMapping) {
+    // do nothing
+  }
+
   private SplunkCVConfig toCVConfig() {
     SplunkCVConfig splunkCVConfig = new SplunkCVConfig();
     fillCommonFields(splunkCVConfig);

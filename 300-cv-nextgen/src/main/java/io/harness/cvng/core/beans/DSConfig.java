@@ -25,6 +25,8 @@ public abstract class DSConfig {
 
   public abstract DataSourceType getType();
   public abstract CVConfigUpdateResult getCVConfigUpdateResult(List<CVConfig> existingCVConfigs);
+  public abstract void validate(List<CVConfig> existingMapping);
+
   @Value
   @Builder
   public static class CVConfigUpdateResult {
