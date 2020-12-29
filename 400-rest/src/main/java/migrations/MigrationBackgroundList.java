@@ -297,6 +297,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(180, BaseMigration.class))
         .add(Pair.of(181, GCPMarketplaceCustomerMigration.class))
         .add(Pair.of(182, CEViewsMigration.class))
+        .add(Pair.of(183, BaseMigration.class))
         .build();
   }
 }
