@@ -332,6 +332,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTest {
 
     AlertRule alertRule = AlertRule.builder()
                               .uuid(generateUuid())
+                              .enabled(true)
                               .name(generateUuid())
                               .accountId(generateUuid())
                               .orgIdentifier(generateUuid())
@@ -366,6 +367,58 @@ public class AlertRuleServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
+  public void testProcessRiskScore_ChannelIsNotNotified_EnabledFalse() {
+    List<String> services = Arrays.asList("ser1", "ser2", "ser3");
+    List<String> environments = Arrays.asList("prod");
+    List<ActivityType> activityTypes = Arrays.asList(POST_DEPLOYMENT);
+    List<VerificationStatus> verificationStatuses = Arrays.asList(VERIFICATION_PASSED);
+
+    VerificationsNotify verificationsNotify =
+        VerificationsNotify.builder().activityTypes(activityTypes).verificationStatuses(verificationStatuses).build();
+
+    NotificationMethod notificationMethod = NotificationMethod.builder()
+                                                .notificationSettingType(NotificationSettingType.Slack)
+                                                .slackWebhook("testWebHook")
+                                                .build();
+
+    AlertCondition alertCondition = AlertCondition.builder()
+                                        .enabledRisk(true)
+                                        .enabledVerifications(true)
+                                        .services(services)
+                                        .environments(environments)
+                                        .notify(RiskNotify.builder().threshold(40).build())
+                                        .verificationsNotify(verificationsNotify)
+                                        .build();
+
+    AlertRule alertRule = AlertRule.builder()
+                              .uuid(generateUuid())
+                              .enabled(false)
+                              .name(generateUuid())
+                              .accountId(generateUuid())
+                              .orgIdentifier(generateUuid())
+                              .projectIdentifier(generateUuid())
+                              .identifier(generateUuid())
+                              .alertCondition(alertCondition)
+                              .notificationMethod(notificationMethod)
+                              .build();
+    hPersistence.save(alertRule);
+
+    AlertRule retrievedAlertRule = hPersistence.get(AlertRule.class, alertRule.getUuid());
+    assertThat(retrievedAlertRule).isNotNull();
+
+    alertRuleService.processRiskScore(retrievedAlertRule.getAccountId(), retrievedAlertRule.getOrgIdentifier(),
+        retrievedAlertRule.getProjectIdentifier(), retrievedAlertRule.getAlertCondition().getServices().get(0),
+        retrievedAlertRule.getAlertCondition().getEnvironments().get(0), CVMonitoringCategory.PERFORMANCE,
+        Instant.now(), 1);
+
+    ArgumentCaptor<SlackChannel> applicationArgumentCaptor = ArgumentCaptor.forClass(SlackChannel.class);
+
+    verify(notificationClient, times(0)).sendNotificationAsync(applicationArgumentCaptor.capture());
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
   public void testProcessRiskScore_ServicesEnvironmentsNull_ChannelIsNotified() {
     List<ActivityType> activityTypes = Arrays.asList(POST_DEPLOYMENT);
     List<VerificationStatus> verificationStatuses = Arrays.asList(VERIFICATION_PASSED);
@@ -388,6 +441,8 @@ public class AlertRuleServiceImplTest extends CvNextGenTest {
                                                 .build();
 
     AlertRuleDTO alertRule = AlertRuleDTO.builder()
+                                 .uuid(generateUuid())
+                                 .enabled(true)
                                  .name(generateUuid())
                                  .accountId(generateUuid())
                                  .orgIdentifier(generateUuid())
@@ -444,6 +499,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTest {
 
     AlertRuleDTO alertRule = AlertRuleDTO.builder()
                                  .uuid(generateUuid())
+                                 .enabled(true)
                                  .name(generateUuid())
                                  .accountId(generateUuid())
                                  .orgIdentifier(generateUuid())
@@ -631,6 +687,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTest {
 
     AlertRule alertRule = AlertRule.builder()
                               .uuid(generateUuid())
+                              .enabled(true)
                               .name(generateUuid())
                               .accountId(generateUuid())
                               .orgIdentifier(generateUuid())
@@ -663,6 +720,58 @@ public class AlertRuleServiceImplTest extends CvNextGenTest {
     assertThat(applicationArgumentCaptor.getValue().getTemplateId()).isEqualTo(slack_test.getTemplateId());
     assertThat(applicationArgumentCaptor.getValue().getTemplateData()).isNotEmpty();
     assertThat(applicationArgumentCaptor.getValue().getUserGroupIds()).isEqualTo(slack_test.getUserGroupIds());
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testProcessDeploymentVerification_ChannelIsNotNotified_EnabledFalse() {
+    VerificationsNotify verificationsNotify = VerificationsNotify.builder()
+                                                  .activityTypes(Arrays.asList(POST_DEPLOYMENT))
+                                                  .verificationStatuses(Arrays.asList(VERIFICATION_PASSED))
+                                                  .build();
+
+    AlertCondition alertCondition = AlertCondition.builder()
+                                        .enabledRisk(true)
+                                        .enabledVerifications(true)
+                                        .services(Arrays.asList("ser1", "ser2", "ser3"))
+                                        .environments(Arrays.asList("prod"))
+                                        .notify(RiskNotify.builder().threshold(40).build())
+                                        .verificationsNotify(verificationsNotify)
+                                        .build();
+
+    NotificationMethod notificationMethod = NotificationMethod.builder()
+                                                .notificationSettingType(NotificationSettingType.Slack)
+                                                .slackWebhook("testWebHook")
+                                                .build();
+
+    AlertRule alertRule = AlertRule.builder()
+                              .uuid(generateUuid())
+                              .enabled(false)
+                              .name(generateUuid())
+                              .accountId(generateUuid())
+                              .orgIdentifier(generateUuid())
+                              .projectIdentifier(generateUuid())
+                              .identifier(generateUuid())
+                              .alertCondition(alertCondition)
+                              .notificationMethod(notificationMethod)
+                              .build();
+
+    hPersistence.save(alertRule);
+
+    AlertRule retrievedAlertRule = hPersistence.get(AlertRule.class, alertRule.getUuid());
+    assertThat(retrievedAlertRule).isNotNull();
+
+    alertRuleService.processDeploymentVerification(retrievedAlertRule.getAccountId(),
+        retrievedAlertRule.getOrgIdentifier(), retrievedAlertRule.getProjectIdentifier(),
+        retrievedAlertRule.getAlertCondition().getServices().get(0),
+        retrievedAlertRule.getAlertCondition().getEnvironments().get(0),
+        retrievedAlertRule.getAlertCondition().getVerificationsNotify().getActivityTypes().get(0),
+        retrievedAlertRule.getAlertCondition().getVerificationsNotify().getVerificationStatuses().get(0));
+
+    ArgumentCaptor<SlackChannel> applicationArgumentCaptor = ArgumentCaptor.forClass(SlackChannel.class);
+
+    verify(notificationClient, times(0)).sendNotificationAsync(applicationArgumentCaptor.capture());
   }
 
   @Test
