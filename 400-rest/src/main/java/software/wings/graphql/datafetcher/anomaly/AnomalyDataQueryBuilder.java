@@ -151,8 +151,6 @@ public class AnomalyDataQueryBuilder {
       case CloudProvider:
       case Node:
       case Pod:
-        log.error("Groupby clause not supported in K8S AnomalyDataQueryBuilder");
-        break;
       default:
         log.error("Groupby clause not supported in AnomalyDataQueryBuilder");
         throw new InvalidArgumentsException("Entity-Groupby clause not supported");
@@ -322,13 +320,6 @@ public class AnomalyDataQueryBuilder {
     // TODO: support all relavant groupby
     switch (groupBy) {
       // --- GCP ---
-      case billingAccountId:
-        filter.setBillingAccountId(CloudBillingIdFilter.builder()
-                                       .operator(QLIdOperator.NOT_NULL)
-                                       .variable(CloudBillingFilter.BILLING_GCP_BILLING_ACCOUNT_ID)
-                                       .values(values)
-                                       .build());
-        break;
       case projectId:
         filter.setProjectId(CloudBillingIdFilter.builder()
                                 .operator(QLIdOperator.NOT_NULL)
@@ -350,17 +341,7 @@ public class AnomalyDataQueryBuilder {
                               .values(values)
                               .build());
         break;
-      case projectNumber:
-        break;
-      // -- common --
-      case region:
-        filter.setRegion(CloudBillingIdFilter.builder()
-                             .operator(QLIdOperator.NOT_NULL)
-                             .variable(CloudBillingFilter.BILLING_REGION)
-                             .values(values)
-                             .build());
-        break;
-      case cloudProvider:
+      case sku:
         break;
       // -- aws --
       case awsLinkedAccount:
@@ -377,15 +358,15 @@ public class AnomalyDataQueryBuilder {
                                  .values(values)
                                  .build());
         break;
+      case billingAccountId:
       case awsUsageType:
       case awsInstanceType:
-      // -- others --
+      case cloudProvider:
       case labelsKey:
+      case projectNumber:
       case labelsValue:
       case tagsKey:
       case tagsValue:
-        log.error("Cloud Groupby clause not supported in AnomalyDataQueryBuilder");
-        break;
       default:
         log.error("Cloud Groupby clause not supported in AnomalyDataQueryBuilder");
         throw new InvalidArgumentsException("Entity-Groupby clause not supported");
