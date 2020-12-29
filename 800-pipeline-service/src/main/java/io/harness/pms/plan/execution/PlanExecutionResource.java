@@ -1,15 +1,16 @@
 package io.harness.pms.plan.execution;
 
-import static io.harness.pms.contracts.ambiance.TriggerType.MANUAL;
+import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.plan.Plan;
-import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
-import io.harness.pms.contracts.ambiance.TriggeredBy;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
+import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
+import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.ngpipeline.inputset.beans.resource.MergeInputSetRequestDTOPMS;
 import io.harness.pms.plan.creation.PlanCreatorMergeService;
 import io.harness.pms.plan.execution.beans.dto.InterruptDTO;
@@ -404,7 +405,10 @@ public class PlanExecutionResource {
     PlanExecution planExecution = orchestrationService.startExecution(plan,
         new HashMap<>(ImmutableMap.of(
             "accountId", "kmpySmUISimoRrJL6NL73w", "orgIdentifier", "harness", "projectIdentifier", "pipeline")),
-        ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).build());
+        ExecutionMetadata.newBuilder()
+            .setRunSequence(0)
+            .setTriggerInfo(ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).build())
+            .build());
     return Response.ok(planExecution, MediaType.APPLICATION_JSON_TYPE).build();
   }
 

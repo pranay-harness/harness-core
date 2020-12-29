@@ -11,7 +11,7 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ngpipeline.inputset.beans.resource.MergeInputSetRequestDTO;
 import io.harness.ngpipeline.pipeline.beans.resources.NGPipelineExecutionResponseDTO;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
-import io.harness.pms.contracts.ambiance.TriggeredBy;
+import io.harness.pms.contracts.plan.TriggeredBy;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;

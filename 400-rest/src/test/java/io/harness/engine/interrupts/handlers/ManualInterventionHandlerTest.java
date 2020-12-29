@@ -2,10 +2,10 @@ package io.harness.engine.interrupts.handlers;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
-import static io.harness.pms.contracts.ambiance.TriggerType.MANUAL;
 import static io.harness.pms.contracts.execution.Status.FAILED;
 import static io.harness.pms.contracts.execution.Status.INTERVENTION_WAITING;
 import static io.harness.pms.contracts.execution.Status.SUCCEEDED;
+import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,8 +22,9 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.Interrupt;
-import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
-import io.harness.pms.contracts.ambiance.TriggeredBy;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
+import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
+import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.rule.Owner;
@@ -50,10 +51,13 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
   @Inject private StepRegistry stepRegistry;
   @Inject private PlanRepo planRepo;
 
-  private final TriggeredBy embeddedUser =
+  private static final TriggeredBy embeddedUser =
       TriggeredBy.newBuilder().putExtraInfo("email", PRASHANT).setIdentifier(PRASHANT).setUuid(generateUuid()).build();
-  private final ExecutionTriggerInfo triggerInfo =
+  private static final ExecutionTriggerInfo triggerInfo =
       ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).setTriggeredBy(embeddedUser).build();
+
+  private static final ExecutionMetadata metadata =
+      ExecutionMetadata.newBuilder().setRunSequence(0).setTriggerInfo(triggerInfo).build();
 
   @Before
   public void setUp() {
@@ -65,7 +69,7 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldTestHandleInterrupt() {
     PlanExecution execution =
-        orchestrationService.startExecution(planRepo.planWithFailure(), getAbstractions(), triggerInfo);
+        orchestrationService.startExecution(planRepo.planWithFailure(), getAbstractions(), metadata);
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), INTERVENTION_WAITING);
     assertThat(execution).isNotNull();
   }
@@ -75,7 +79,7 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldTestHandleInterruptWithRetry() {
     PlanExecution execution =
-        orchestrationService.startExecution(planRepo.planWithFailure(), getAbstractions(), triggerInfo);
+        orchestrationService.startExecution(planRepo.planWithFailure(), getAbstractions(), metadata);
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), INTERVENTION_WAITING);
     List<NodeExecution> nodeExecutionList =
         nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(execution.getUuid());
@@ -106,7 +110,7 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldTestHandleInterruptWithMarkSuccess() {
     PlanExecution execution =
-        orchestrationService.startExecution(planRepo.planWithFailure(), getAbstractions(), triggerInfo);
+        orchestrationService.startExecution(planRepo.planWithFailure(), getAbstractions(), metadata);
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), INTERVENTION_WAITING);
     List<NodeExecution> nodeExecutionList =
         nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(execution.getUuid());
@@ -135,7 +139,7 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldTestHandleInterruptWithMarkFailed() {
     PlanExecution execution =
-        orchestrationService.startExecution(planRepo.planWithFailure(), getAbstractions(), triggerInfo);
+        orchestrationService.startExecution(planRepo.planWithFailure(), getAbstractions(), metadata);
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), INTERVENTION_WAITING);
     List<NodeExecution> nodeExecutionList =
         nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(execution.getUuid());

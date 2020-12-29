@@ -1,6 +1,6 @@
 package io.harness.pms.execution.utils;
 
-import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
+import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.plan.execution.SetupAbstractionKeys;
 
@@ -26,7 +26,7 @@ public class PlanCreationContextUtils {
   }
 
   public ExecutionTriggerInfo getTriggerInfo(Map<String, PlanCreationContextValue> globalContext) {
-    return globalContext.get(SetupAbstractionKeys.triggerInfo).getExecutionTriggerInfo();
+    return globalContext.get(SetupAbstractionKeys.triggerInfo).getMetadata().getTriggerInfo();
   }
 
   public String getEventPayload(Map<String, PlanCreationContextValue> globalContext) {

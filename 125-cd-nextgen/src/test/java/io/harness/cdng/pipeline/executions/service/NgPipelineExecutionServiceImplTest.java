@@ -1,6 +1,6 @@
 package io.harness.cdng.pipeline.executions.service;
 
-import static io.harness.pms.contracts.ambiance.TriggerType.MANUAL;
+import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.utils.PageTestUtils.getPage;
@@ -40,10 +40,10 @@ import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary.
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummaryFilter;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
 import io.harness.plan.Plan;
-import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
-import io.harness.pms.contracts.ambiance.TriggeredBy;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.beans.ExecutionGraph;
 import io.harness.repositories.pipeline.PipelineExecutionRepository;

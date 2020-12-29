@@ -1,7 +1,7 @@
 package io.harness.redesign.services;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.pms.contracts.ambiance.TriggerType.MANUAL;
+import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
@@ -13,8 +13,9 @@ import io.harness.execution.PlanExecution;
 import io.harness.generator.GraphVisualizer;
 import io.harness.interrupts.Interrupt;
 import io.harness.plan.Plan;
-import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
-import io.harness.pms.contracts.ambiance.TriggeredBy;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
+import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
+import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.service.GraphGenerationService;
 
@@ -43,121 +44,121 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   @Override
   public PlanExecution executeHttpSwitch() {
     return orchestrationService.startExecution(
-        customExecutionProvider.provideHttpSwitchPlan(), getAbstractions(), getTriggerInfo());
+        customExecutionProvider.provideHttpSwitchPlan(), getAbstractions(), getMetadata());
   }
 
   @Override
   public PlanExecution executeHttpFork() {
     return orchestrationService.startExecution(
-        customExecutionProvider.provideHttpForkPlan(), getAbstractions(), getTriggerInfo());
+        customExecutionProvider.provideHttpForkPlan(), getAbstractions(), getMetadata());
   }
 
   @Override
   public PlanExecution executeSectionPlan() {
     return orchestrationService.startExecution(
-        customExecutionProvider.provideHttpSectionPlan(), getAbstractions(), getTriggerInfo());
+        customExecutionProvider.provideHttpSectionPlan(), getAbstractions(), getMetadata());
   }
 
   @Override
   public PlanExecution executeRetryIgnorePlan() {
     return orchestrationService.startExecution(
-        customExecutionProvider.provideHttpRetryIgnorePlan(), getAbstractions(), getTriggerInfo());
+        customExecutionProvider.provideHttpRetryIgnorePlan(), getAbstractions(), getMetadata());
   }
 
   @Override
   public PlanExecution executeRetryAbortPlan() {
     return orchestrationService.startExecution(
-        customExecutionProvider.provideHttpRetryAbortPlan(), getAbstractions(), getTriggerInfo());
+        customExecutionProvider.provideHttpRetryAbortPlan(), getAbstractions(), getMetadata());
   }
 
   @Override
   public PlanExecution executeInterventionPlan() {
     return orchestrationService.startExecution(
-        customExecutionProvider.provideHttpInterventionPlan(), getAbstractions(), getTriggerInfo());
+        customExecutionProvider.provideHttpInterventionPlan(), getAbstractions(), getMetadata());
   }
 
   @Override
   public PlanExecution executeRollbackPlan() {
     return orchestrationService.startExecution(
-        customExecutionProvider.provideHttpRollbackPlan(), getAbstractions(), getTriggerInfo());
+        customExecutionProvider.provideHttpRollbackPlan(), getAbstractions(), getMetadata());
   }
 
   @Override
   public PlanExecution executeSimpleShellScriptPlan(String accountId, String appId) {
     return orchestrationService.startExecution(
-        customExecutionProvider.provideSimpleShellScriptPlan(), getAbstractions(accountId, appId), getTriggerInfo());
+        customExecutionProvider.provideSimpleShellScriptPlan(), getAbstractions(accountId, appId), getMetadata());
   }
 
   @Override
   public PlanExecution executeSimpleTimeoutPlan(String accountId, String appId) {
     return orchestrationService.startExecution(
-        customExecutionProvider.provideSimpleTimeoutPlan(), getAbstractions(accountId, appId), getTriggerInfo());
+        customExecutionProvider.provideSimpleTimeoutPlan(), getAbstractions(accountId, appId), getMetadata());
   }
 
   @Override
   public PlanExecution executeTaskChainPlanV1() {
     return orchestrationService.startExecution(
         customExecutionProvider.provideTaskChainPlan(OrchestrationFacilitatorType.TASK_CHAIN), getAbstractions(),
-        getTriggerInfo());
+        getMetadata());
   }
 
   @Override
   public PlanExecution executeSectionChainPlan() {
     return orchestrationService.startExecution(
-        customExecutionProvider.provideSectionChainPlan(), getAbstractions(), getTriggerInfo());
+        customExecutionProvider.provideSectionChainPlan(), getAbstractions(), getMetadata());
   }
 
   @Override
   public PlanExecution executeSectionChainPlanWithFailure() {
     return orchestrationService.startExecution(
-        customExecutionProvider.provideSectionChainPlanWithFailure(), getAbstractions(), getTriggerInfo());
+        customExecutionProvider.provideSectionChainPlanWithFailure(), getAbstractions(), getMetadata());
   }
 
   @Override
   public PlanExecution executeSectionChainPlanWithNoChildren() {
     return orchestrationService.startExecution(
-        customExecutionProvider.provideSectionChainPlanWithNoChildren(), getAbstractions(), getTriggerInfo());
+        customExecutionProvider.provideSectionChainPlanWithNoChildren(), getAbstractions(), getMetadata());
   }
 
   @Override
   public PlanExecution executeSectionChainRollbackPlan() {
     return orchestrationService.startExecution(
-        customExecutionProvider.provideSectionChainRollbackPlan(), getAbstractions(), getTriggerInfo());
+        customExecutionProvider.provideSectionChainRollbackPlan(), getAbstractions(), getMetadata());
   }
 
   @Override
   public PlanExecution testGraphPlan() {
     return orchestrationService.startExecution(
-        customExecutionProvider.provideGraphTestPlan(), getAbstractions(), getTriggerInfo());
+        customExecutionProvider.provideGraphTestPlan(), getAbstractions(), getMetadata());
   }
 
   @Override
   public PlanExecution executeSingleBarrierPlan() {
     return orchestrationService.startExecution(
-        customExecutionProvider.providePlanWithSingleBarrier(), getAbstractions(), getTriggerInfo());
+        customExecutionProvider.providePlanWithSingleBarrier(), getAbstractions(), getMetadata());
   }
 
   @Override
   public PlanExecution executeMultipleBarriersPlan() {
     return orchestrationService.startExecution(
-        customExecutionProvider.providePlanWithMultipleBarriers(), getAbstractions(), getTriggerInfo());
+        customExecutionProvider.providePlanWithMultipleBarriers(), getAbstractions(), getMetadata());
   }
 
   @Override
   public PlanExecution executeResourceRestraintPlan() {
     return orchestrationService.startExecution(
-        customExecutionProvider.provideResourceRestraintPlan(), getAbstractions(), getTriggerInfo());
+        customExecutionProvider.provideResourceRestraintPlan(), getAbstractions(), getMetadata());
   }
 
   @Override
   public PlanExecution executeResourceRestraintPlanForFunctionalTest(Plan plan, EmbeddedUser embeddedUser) {
-    return orchestrationService.startExecution(plan, getAbstractions(embeddedUser), getTriggerInfo(embeddedUser));
+    return orchestrationService.startExecution(plan, getAbstractions(embeddedUser), getMetadata(embeddedUser));
   }
 
   @Override
   public PlanExecution executeResourceRestraintWithWaitPlan() {
     return orchestrationService.startExecution(
-        customExecutionProvider.provideResourceRestraintWithWaitPlan(), getAbstractions(), getTriggerInfo());
+        customExecutionProvider.provideResourceRestraintWithWaitPlan(), getAbstractions(), getMetadata());
   }
 
   @Override
@@ -168,13 +169,13 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   @Override
   public PlanExecution executeSkipChildren() {
     return orchestrationService.startExecution(
-        customExecutionProvider.getSkipChildrenPlan(), getAbstractions(), getTriggerInfo());
+        customExecutionProvider.getSkipChildrenPlan(), getAbstractions(), getMetadata());
   }
 
   @Override
   public PlanExecution executeSkipNode() {
     return orchestrationService.startExecution(
-        customExecutionProvider.provideGraphTestPlanWithSkippedNodes(), getAbstractions(), getTriggerInfo());
+        customExecutionProvider.provideGraphTestPlanWithSkippedNodes(), getAbstractions(), getMetadata());
   }
 
   @Override
@@ -223,6 +224,23 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
         "userEmail", user.getEmail());
   }
 
+  private ExecutionMetadata getMetadata() {
+    return ExecutionMetadata.newBuilder().setRunSequence(0).setTriggerInfo(getTriggerInfo()).build();
+  }
+
+  private ExecutionMetadata getMetadata(EmbeddedUser embeddedUser) {
+    return ExecutionMetadata.newBuilder().setRunSequence(0).setTriggerInfo(getTriggerInfo(embeddedUser)).build();
+  }
+
+  private ExecutionTriggerInfo getTriggerInfo(EmbeddedUser embeddedUser) {
+    TriggeredBy userInfo = TriggeredBy.newBuilder()
+                               .setUuid(embeddedUser.getUuid())
+                               .putExtraInfo("email", embeddedUser.getEmail())
+                               .setIdentifier(embeddedUser.getName())
+                               .build();
+    return ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).setTriggeredBy(userInfo).build();
+  }
+
   private ExecutionTriggerInfo getTriggerInfo() {
     return getTriggerInfo(UserThreadLocal.get());
   }
@@ -234,14 +252,5 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
                                   .setIdentifier(user.getName())
                                   .build();
     return ExecutionTriggerInfo.newBuilder().setTriggeredBy(triggeredBy).setTriggerType(MANUAL).build();
-  }
-
-  private ExecutionTriggerInfo getTriggerInfo(EmbeddedUser embeddedUser) {
-    TriggeredBy userInfo = TriggeredBy.newBuilder()
-                               .setUuid(embeddedUser.getUuid())
-                               .putExtraInfo("email", embeddedUser.getEmail())
-                               .setIdentifier(embeddedUser.getName())
-                               .build();
-    return ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).setTriggeredBy(userInfo).build();
   }
 }

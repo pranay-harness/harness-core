@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.INVALID_RUNTIME_INPUT_YAML;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.TARGET_EXECUTION_REQUESTED;
-import static io.harness.pms.contracts.ambiance.TriggerType.WEBHOOK;
+import static io.harness.pms.contracts.plan.TriggerType.WEBHOOK;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
@@ -25,8 +25,8 @@ import io.harness.ngtriggers.beans.target.pipeline.PipelineTargetSpec;
 import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
 import io.harness.ngtriggers.helpers.WebhookEventToTriggerMapper;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
-import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
-import io.harness.pms.contracts.ambiance.TriggeredBy;
+import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
+import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.merger.helpers.MergeHelper;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.TriggerType;
@@ -35,7 +35,11 @@ import io.harness.pms.plan.execution.PipelineExecuteHelper;
 import io.harness.pms.plan.execution.SetupAbstractionKeys;
 
 import com.google.inject.Inject;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -119,8 +123,9 @@ public class TriggerWebhookExecutionHelper {
     try {
       NGTriggerEntity ngTriggerEntity = triggerDetails.getNgTriggerEntity();
       String targetIdentifier = ngTriggerEntity.getTargetIdentifier();
-      Optional<PipelineEntity> pipelineEntityToExecute = pmsPipelineService.get(ngTriggerEntity.getAccountId(),
-          ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(), targetIdentifier, false);
+      Optional<PipelineEntity> pipelineEntityToExecute =
+          pmsPipelineService.incrementRunSequence(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),
+              ngTriggerEntity.getProjectIdentifier(), targetIdentifier, false);
 
       if (!pipelineEntityToExecute.isPresent()) {
         throw new TriggerException("Unable to continue trigger execution. Pipeline with identifier: "
@@ -142,6 +147,8 @@ public class TriggerWebhookExecutionHelper {
         contextAttributes.put(SetupAbstractionKeys.inputSetYaml, sanitizedRuntimeInputYaml);
         pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineYamlBeforeMerge, sanitizedRuntimeInputYaml);
       }
+      contextAttributes.put(SetupAbstractionKeys.pipelineIdentifier, targetIdentifier);
+      contextAttributes.put(SetupAbstractionKeys.runSequence, pipelineEntityToExecute.get().getRunSequence());
 
       return pipelineExecuteHelper.startExecution(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),
           ngTriggerEntity.getProjectIdentifier(), pipelineYaml, triggerInfo, contextAttributes);

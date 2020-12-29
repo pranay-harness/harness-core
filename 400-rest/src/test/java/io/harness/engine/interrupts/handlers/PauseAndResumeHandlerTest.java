@@ -5,10 +5,10 @@ import static io.harness.interrupts.ExecutionInterruptType.PAUSE_ALL;
 import static io.harness.interrupts.ExecutionInterruptType.RESUME_ALL;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSING;
-import static io.harness.pms.contracts.ambiance.TriggerType.MANUAL;
 import static io.harness.pms.contracts.execution.Status.PAUSED;
 import static io.harness.pms.contracts.execution.Status.RUNNING;
 import static io.harness.pms.contracts.execution.Status.SUCCEEDED;
+import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -22,8 +22,9 @@ import io.harness.engine.interrupts.InterruptTestHelper;
 import io.harness.engine.interrupts.steps.SimpleAsyncStep;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
-import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
-import io.harness.pms.contracts.ambiance.TriggeredBy;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
+import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
+import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.rule.Owner;
@@ -49,10 +50,13 @@ public class PauseAndResumeHandlerTest extends WingsBaseTest {
   @Inject private InterruptService interruptService;
   @Inject private PlanRepo planRepo;
 
-  private final TriggeredBy embeddedUser =
+  private static final TriggeredBy embeddedUser =
       TriggeredBy.newBuilder().putExtraInfo("email", PRASHANT).setIdentifier(PRASHANT).setUuid(generateUuid()).build();
-  private final ExecutionTriggerInfo triggerInfo =
+  private static final ExecutionTriggerInfo triggerInfo =
       ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).setTriggeredBy(embeddedUser).build();
+
+  private static final ExecutionMetadata metadata =
+      ExecutionMetadata.newBuilder().setRunSequence(0).setTriggerInfo(triggerInfo).build();
 
   @Before
   public void setUp() {
@@ -65,7 +69,7 @@ public class PauseAndResumeHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldTestRegisterAndHandleInterrupt() {
     // Execute Plan And wait it to be in RUNNING status
-    PlanExecution execution = orchestrationService.startExecution(planRepo.planWithBigWait(), triggerInfo);
+    PlanExecution execution = orchestrationService.startExecution(planRepo.planWithBigWait(), metadata);
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), RUNNING);
 
     // Issue Pause Interrupt

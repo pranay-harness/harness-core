@@ -67,7 +67,7 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
             .accountId(accountId)
             .projectIdentifier(projectId)
             .orgIdentifier(orgId)
-            .executionTriggerInfo(planExecution.getExecutionTriggerInfo())
+            .executionTriggerInfo(planExecution.getMetadata().getTriggerInfo())
             .build();
     pmsExecutionSummaryRespository.save(pipelineExecutionSummaryEntity);
   }
