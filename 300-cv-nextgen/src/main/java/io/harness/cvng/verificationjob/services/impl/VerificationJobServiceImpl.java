@@ -11,7 +11,9 @@ import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob.RuntimeParameter.RuntimeParameterKeys;
 import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
+import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
+import io.harness.utils.PageUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -106,7 +108,21 @@ public class VerificationJobServiceImpl implements VerificationJobService {
   }
 
   @Override
-  public List<VerificationJobDTO> list(String accountId, String projectIdentifier, String orgIdentifier) {
+  public PageResponse<VerificationJobDTO> list(
+      String accountId, String projectId, String orgIdentifier, Integer offset, Integer pageSize, String filter) {
+    List<VerificationJobDTO> verificationJobDTOList = verificationJobDTOList(accountId, projectId, orgIdentifier);
+
+    List<VerificationJobDTO> verificationJobDTOS =
+        verificationJobDTOList.stream()
+            .filter(verificationJob
+                -> isEmpty(filter) || verificationJob.getJobName().toLowerCase().contains(filter.trim().toLowerCase()))
+            .collect(Collectors.toList());
+
+    return PageUtils.offsetAndLimit(verificationJobDTOS, offset, pageSize);
+  }
+
+  private List<VerificationJobDTO> verificationJobDTOList(
+      String accountId, String projectIdentifier, String orgIdentifier) {
     return hPersistence.createQuery(VerificationJob.class)
         .filter(VerificationJobKeys.accountId, accountId)
         .filter(VerificationJobKeys.orgIdentifier, orgIdentifier)
