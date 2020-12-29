@@ -67,7 +67,8 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
     dataCollectionDSLService.registerDatacollectionExecutorService(executorService);
     String code = readDSL("performance-pack.datacollection");
     Instant instant = Instant.ofEpochMilli(1599634954000L);
-    List<MetricPack> metricPacks = metricPackService.getMetricPacks(accountId, "project", DataSourceType.APP_DYNAMICS);
+    List<MetricPack> metricPacks =
+        metricPackService.getMetricPacks(accountId, "org", "project", DataSourceType.APP_DYNAMICS);
 
     AppDynamicsDataCollectionInfo appDynamicsDataCollectionInfo =
         AppDynamicsDataCollectionInfo.builder()
@@ -110,7 +111,8 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
     dataCollectionDSLService.registerDatacollectionExecutorService(executorService);
     String code = readDSL("performance-pack.datacollection");
     Instant instant = Instant.ofEpochMilli(1599634954000L);
-    List<MetricPack> metricPacks = metricPackService.getMetricPacks(accountId, "project", DataSourceType.APP_DYNAMICS);
+    List<MetricPack> metricPacks =
+        metricPackService.getMetricPacks(accountId, "org", "project", DataSourceType.APP_DYNAMICS);
 
     AppDynamicsDataCollectionInfo appDynamicsDataCollectionInfo =
         AppDynamicsDataCollectionInfo.builder()
@@ -154,7 +156,8 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
     dataCollectionDSLService.registerDatacollectionExecutorService(executorService);
     String code = readDSL("quality-pack.datacollection");
     Instant instant = Instant.ofEpochMilli(1607498018484L);
-    List<MetricPack> metricPacks = metricPackService.getMetricPacks(accountId, "project", DataSourceType.APP_DYNAMICS);
+    List<MetricPack> metricPacks =
+        metricPackService.getMetricPacks(accountId, "org", "project", DataSourceType.APP_DYNAMICS);
 
     AppDynamicsDataCollectionInfo appDynamicsDataCollectionInfo =
         AppDynamicsDataCollectionInfo.builder()
@@ -199,7 +202,8 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
     dataCollectionDSLService.registerDatacollectionExecutorService(executorService);
     String code = readDSL("quality-pack.datacollection");
     Instant instant = Instant.ofEpochMilli(1607498018484L);
-    List<MetricPack> metricPacks = metricPackService.getMetricPacks(accountId, "project", DataSourceType.APP_DYNAMICS);
+    List<MetricPack> metricPacks =
+        metricPackService.getMetricPacks(accountId, "org", "project", DataSourceType.APP_DYNAMICS);
 
     AppDynamicsDataCollectionInfo appDynamicsDataCollectionInfo =
         AppDynamicsDataCollectionInfo.builder()

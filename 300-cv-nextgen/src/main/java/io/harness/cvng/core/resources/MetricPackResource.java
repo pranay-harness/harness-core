@@ -38,9 +38,11 @@ public class MetricPackResource {
   @ExceptionMetered
   @ApiOperation(value = "get all metric packs for a connector type", nickname = "getMetricPacks")
   public RestResponse<List<MetricPackDTO>> getMetricPacks(@QueryParam("accountId") @NotNull String accountId,
+      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
       @QueryParam("dataSourceType") @NotNull DataSourceType dataSourceType) {
-    return new RestResponse<>(metricPackService.getMetricPacks(dataSourceType, accountId, projectIdentifier));
+    return new RestResponse<>(
+        metricPackService.getMetricPacks(dataSourceType, accountId, orgIdentifier, projectIdentifier));
   }
 
   @POST
@@ -48,11 +50,12 @@ public class MetricPackResource {
   @ExceptionMetered
   @ApiOperation(value = "saves a metric pack for a connector type", nickname = "saveMetricPacks")
   public RestResponse<Boolean> saveMetricPacks(@QueryParam("accountId") @NotNull String accountId,
+      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
       @QueryParam("dataSourceType") @NotNull DataSourceType dataSourceType,
       @NotNull @Valid @Body List<MetricPack> metricPacks) {
     return new RestResponse<>(
-        metricPackService.saveMetricPacks(accountId, projectIdentifier, dataSourceType, metricPacks));
+        metricPackService.saveMetricPacks(accountId, orgIdentifier, projectIdentifier, dataSourceType, metricPacks));
   }
 
   @GET
@@ -61,12 +64,12 @@ public class MetricPackResource {
   @ExceptionMetered
   @ApiOperation(value = "get custom thresholds for a given metric pack", nickname = "getMetricPackThresholds")
   public RestResponse<List<TimeSeriesThreshold>> getMetricPackThresholds(
-      @QueryParam("accountId") @NotNull String accountId,
+      @QueryParam("accountId") @NotNull String accountId, @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
       @QueryParam("metricPackIdentifier") @NotNull String metricPackIdentifier,
       @QueryParam("dataSourceType") @NotNull DataSourceType dataSourceType) {
-    return new RestResponse<>(
-        metricPackService.getMetricPackThresholds(accountId, projectIdentifier, metricPackIdentifier, dataSourceType));
+    return new RestResponse<>(metricPackService.getMetricPackThresholds(
+        accountId, orgIdentifier, projectIdentifier, metricPackIdentifier, dataSourceType));
   }
 
   @POST
@@ -76,10 +79,11 @@ public class MetricPackResource {
   @ApiOperation(value = "saves custom thresholds for a given metric pack", nickname = "saveMetricPackThresholds")
   public RestResponse<List<String>> saveMetricPackThresholds(@QueryParam("accountId") @NotNull String accountId,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("dataSourceType") @NotNull DataSourceType dataSourceType,
       @NotNull @Valid @Body List<TimeSeriesThreshold> timeSeriesThresholds) {
-    return new RestResponse<>(
-        metricPackService.saveMetricPackThreshold(accountId, projectIdentifier, dataSourceType, timeSeriesThresholds));
+    return new RestResponse<>(metricPackService.saveMetricPackThreshold(
+        accountId, orgIdentifier, projectIdentifier, dataSourceType, timeSeriesThresholds));
   }
 
   @DELETE
@@ -88,8 +92,10 @@ public class MetricPackResource {
   @ExceptionMetered
   @ApiOperation(value = "deletes custom thresholds for a given metric pack", nickname = "deleteMetricPackThresholds")
   public RestResponse<Boolean> deleteMetricPackThresholds(@QueryParam("accountId") @NotNull String accountId,
+      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
       @QueryParam("thresholdId") @NotNull String thresholdId) {
-    return new RestResponse<>(metricPackService.deleteMetricPackThresholds(accountId, projectIdentifier, thresholdId));
+    return new RestResponse<>(
+        metricPackService.deleteMetricPackThresholds(accountId, orgIdentifier, projectIdentifier, thresholdId));
   }
 }

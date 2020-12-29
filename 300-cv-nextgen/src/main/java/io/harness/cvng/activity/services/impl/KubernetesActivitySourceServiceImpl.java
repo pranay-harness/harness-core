@@ -57,7 +57,7 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
       Query<Activity> query =
           hPersistence.createQuery(Activity.class, excludeAuthority)
               .disableValidation()
-              .filter(ActivityKeys.accountIdentifier, accountId)
+              .filter(ActivityKeys.accountId, accountId)
               .filter(ActivityKeys.orgIdentifier, activitySource.getOrgIdentifier())
               .filter(ActivityKeys.projectIdentifier, activitySource.getProjectIdentifier())
               .filter(KubernetesActivityKeys.kubernetesActivityType, activity.getKubernetesActivityType())
@@ -68,7 +68,7 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
           hPersistence.createUpdateOperations(Activity.class)
               .disableValidation()
               .setOnInsert("className", KubernetesActivity.class.getName())
-              .setOnInsert(ActivityKeys.accountIdentifier, accountId)
+              .setOnInsert(ActivityKeys.accountId, accountId)
               .setOnInsert(ActivityKeys.uuid, generateUuid())
               .setOnInsert(ActivityKeys.orgIdentifier, activitySource.getOrgIdentifier())
               .setOnInsert(ActivityKeys.projectIdentifier, activitySource.getProjectIdentifier())

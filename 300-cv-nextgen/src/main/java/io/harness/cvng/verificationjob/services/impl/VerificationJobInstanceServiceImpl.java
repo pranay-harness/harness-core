@@ -687,8 +687,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     if (cvConfig instanceof MetricCVConfig) {
       // TODO: get rid of this. Adding it to unblock. We need to redesign how are we setting DSL.
       metricPackService.populateDataCollectionDsl(cvConfig.getType(), ((MetricCVConfig) cvConfig).getMetricPack());
-      metricPackService.populatePaths(cvConfig.getAccountId(), cvConfig.getProjectIdentifier(), cvConfig.getType(),
-          ((MetricCVConfig) cvConfig).getMetricPack());
+      metricPackService.populatePaths(cvConfig.getAccountId(), cvConfig.getOrgIdentifier(),
+          cvConfig.getProjectIdentifier(), cvConfig.getType(), ((MetricCVConfig) cvConfig).getMetricPack());
     }
   }
 

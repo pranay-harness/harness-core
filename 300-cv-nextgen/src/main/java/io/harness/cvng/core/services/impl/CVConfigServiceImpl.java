@@ -350,6 +350,22 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   @Override
+  public void deleteConfigsForProject(String accountId, String orgIdentifier, String projectIdentifier) {
+    List<CVConfig> cvConfigs = hPersistence.createQuery(CVConfig.class)
+                                   .filter(CVConfigKeys.accountId, accountId)
+                                   .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
+                                   .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
+                                   .asList();
+    cvConfigs.forEach(cvConfig -> delete(cvConfig.getUuid()));
+  }
+
+  @Override
+  public void deleteByProjectIdentifier(
+      Class<CVConfig> clazz, String accountId, String orgIdentifier, String projectIdentifier) {
+    Preconditions.checkState(clazz.equals(CVConfig.class), "Class should be of type CVConfig");
+    this.deleteConfigsForProject(accountId, orgIdentifier, projectIdentifier);
+  }
+  @Override
   public List<CVConfig> getExistingMappedConfigs(
       String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String identifier) {
     return hPersistence.createQuery(CVConfig.class, excludeAuthority)

@@ -230,7 +230,6 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
         accountId, orgIdentifier, projectIdentifier);
     assertThat(numberOfServices).isEqualTo(2);
   }
-
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)

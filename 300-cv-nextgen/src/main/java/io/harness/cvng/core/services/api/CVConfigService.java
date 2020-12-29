@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 
-public interface CVConfigService {
+public interface CVConfigService extends DeleteEntityByProjectHandler<CVConfig> {
   CVConfig save(CVConfig cvConfig);
   List<CVConfig> save(List<CVConfig> cvConfig);
   void update(CVConfig cvConfig);
@@ -46,7 +46,7 @@ public interface CVConfigService {
       String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier);
   boolean doesAnyCVConfigExistsInProject(String accountId, String orgIdentifier, String projectIdentifier);
   int getNumberOfServicesSetup(String accountId, String orgIdentifier, String projectIdentifier);
-
+  void deleteConfigsForProject(String accountId, String orgIdentifier, String projectIdentifier);
   List<CVConfig> getExistingMappedConfigs(
       String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String identifier);
 }

@@ -25,6 +25,7 @@ import io.harness.cvng.core.entities.DeletedCVConfig;
 import io.harness.cvng.core.entities.DeletedCVConfig.DeletedCVConfigKeys;
 import io.harness.cvng.core.jobs.CVConfigCleanupHandler;
 import io.harness.cvng.core.jobs.CVConfigDataCollectionHandler;
+import io.harness.cvng.core.jobs.EntityCRUDStreamConsumer;
 import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.exception.BadRequestExceptionMapper;
 import io.harness.cvng.exception.ConstraintViolationExceptionMapper;
@@ -151,6 +152,9 @@ public class VerificationApplication extends Application<VerificationConfigurati
   public static void configureObjectMapper(final ObjectMapper mapper) {
     mapper.setSubtypeResolver(new JsonSubtypeResolver(mapper.getSubtypeResolver()));
   }
+  private void createConsumerThreadsToListenToEvents(Injector injector) {
+    new Thread(injector.getInstance(EntityCRUDStreamConsumer.class)).start();
+  }
 
   @Override
   public void run(VerificationConfiguration configuration, Environment environment) {
@@ -219,6 +223,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
 
     modules.add(MorphiaModule.getInstance());
     modules.add(new CVServiceModule(configuration));
+    modules.add(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration()));
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(new VerificationManagerClientModule(configuration.getManagerClientConfig().getBaseUrl()));
     modules.add(new NextGenClientModule(configuration.getNgManagerServiceConfig()));
@@ -241,6 +246,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerExceptionMappers(environment.jersey());
     registerCVConfigCleanupIterator(injector);
     registerHealthChecks(environment, injector);
+    createConsumerThreadsToListenToEvents(injector);
     registerCVNGSchemaMigrationIterator(injector);
     log.info("Leaving startup maintenance mode");
     MaintenanceController.forceMaintenance(false);

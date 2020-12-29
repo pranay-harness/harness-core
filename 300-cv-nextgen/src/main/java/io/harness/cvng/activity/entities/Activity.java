@@ -11,6 +11,7 @@ import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -43,25 +44,25 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "activities")
 @HarnessEntity(exportable = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
-public abstract class Activity implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+public abstract class Activity implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
                  .name("deployment_query_idx")
-                 .field(ActivityKeys.accountIdentifier)
+                 .field(ActivityKeys.accountId)
                  .field(ActivityKeys.orgIdentifier)
                  .field(ActivityKeys.projectIdentifier)
                  .field(ActivityKeys.type)
                  .build(),
             CompoundMongoIndex.builder()
                 .name("deployment_tag_idx")
-                .field(ActivityKeys.accountIdentifier)
+                .field(ActivityKeys.accountId)
                 .field(ActivityKeys.type)
                 .field(ActivityKeys.verificationJobInstanceIds)
                 .build(),
             CompoundMongoIndex.builder()
                 .name("activities_query_index")
-                .field(ActivityKeys.accountIdentifier)
+                .field(ActivityKeys.accountId)
                 .field(ActivityKeys.orgIdentifier)
                 .field(ActivityKeys.projectIdentifier)
                 .field(ActivityKeys.activityStartTime)
@@ -74,7 +75,7 @@ public abstract class Activity implements PersistentEntity, UuidAware, CreatedAt
   private long lastUpdatedAt;
 
   @NotNull private ActivityType type;
-  @NotNull @FdIndex private String accountIdentifier;
+  @NotNull @FdIndex private String accountId;
   private String serviceIdentifier;
   @NotNull private String environmentIdentifier;
   @NotNull private String projectIdentifier;
@@ -95,7 +96,7 @@ public abstract class Activity implements PersistentEntity, UuidAware, CreatedAt
   public abstract void fillInVerificationJobInstanceDetails(VerificationJobInstance verificationJobInstance);
 
   public void addCommonFileds(ActivityDTO activityDTO) {
-    setAccountIdentifier(activityDTO.getAccountIdentifier());
+    setAccountId(activityDTO.getAccountIdentifier());
     setProjectIdentifier(activityDTO.getProjectIdentifier());
     setOrgIdentifier(activityDTO.getOrgIdentifier());
     setServiceIdentifier(activityDTO.getServiceIdentifier());
@@ -113,7 +114,7 @@ public abstract class Activity implements PersistentEntity, UuidAware, CreatedAt
   public abstract void validateActivityParams();
 
   public void validate() {
-    Preconditions.checkNotNull(accountIdentifier, generateErrorMessageFromParam(ActivityKeys.accountIdentifier));
+    Preconditions.checkNotNull(accountId, generateErrorMessageFromParam(ActivityKeys.accountId));
     Preconditions.checkNotNull(projectIdentifier, generateErrorMessageFromParam(ActivityKeys.projectIdentifier));
     Preconditions.checkNotNull(orgIdentifier, generateErrorMessageFromParam(ActivityKeys.orgIdentifier));
     Preconditions.checkNotNull(activityName, generateErrorMessageFromParam(ActivityKeys.activityName));

@@ -570,4 +570,18 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     int numberOfServices = cvConfigService.getNumberOfServicesSetup(accountId, orgIdentifier, projectIdentifier);
     assertThat(numberOfServices).isEqualTo(4);
   }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testDeleteConfigsForProject() {
+    List<CVConfig> cvConfigs = createCVConfigs(5);
+    cvConfigs.get(0).setProjectIdentifier("newProject");
+    save(cvConfigs);
+    cvConfigService.deleteConfigsForProject(accountId, orgIdentifier, projectIdentifier);
+    assertThat(cvConfigService.get(cvConfigs.get(0).getUuid())).isEqualTo(cvConfigs.get(0));
+    for (int i = 1; i < 5; i++) {
+      assertThat(cvConfigService.get(cvConfigs.get(i).getUuid())).isNull();
+    }
+  }
 }
