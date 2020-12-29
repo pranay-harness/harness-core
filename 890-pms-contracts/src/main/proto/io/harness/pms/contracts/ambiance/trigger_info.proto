@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.ambiance;
+
+option java_multiple_files = true;
+
+message ExecutionTriggerInfo {
+  TriggerType triggerType = 1;
+  TriggeredBy triggeredBy = 2;
+}
+
+message TriggeredBy {
+  string uuid = 1;
+  string identifier = 2;
+  map<string, string> extraInfo = 3;
+}
+
+enum TriggerType {
+  NOOP = 0;
+  MANUAL = 1;
+  WEBHOOK = 2;
+}

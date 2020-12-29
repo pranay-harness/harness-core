@@ -4,17 +4,7 @@ import io.harness.delegate.serializer.DelegateTasksRegistrars;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.OrchestrationKryoRegister;
 import io.harness.serializer.morphia.OrchestrationMorphiaRegistrar;
-import io.harness.serializer.morphia.converters.AdviserObtainmentMorphiaConverter;
-import io.harness.serializer.morphia.converters.AdviserTypeMorphiaConverter;
-import io.harness.serializer.morphia.converters.AmbianceMorphiaConverter;
-import io.harness.serializer.morphia.converters.ExecutableResponseMorphiaConverter;
-import io.harness.serializer.morphia.converters.FacilitatorObtainmentMorphiaConverter;
-import io.harness.serializer.morphia.converters.FacilitatorTypeMorphiaConverter;
-import io.harness.serializer.morphia.converters.FailureInfoMorphiaConverter;
-import io.harness.serializer.morphia.converters.LevelMorphiaConverter;
-import io.harness.serializer.morphia.converters.RefObjectMorphiaConverter;
-import io.harness.serializer.morphia.converters.RefTypeMorphiaConverter;
-import io.harness.serializer.morphia.converters.StepTypeMorphiaConverter;
+import io.harness.serializer.morphia.converters.*;
 import io.harness.serializer.spring.converters.advisers.obtainment.AdviserObtainmentReadConverter;
 import io.harness.serializer.spring.converters.advisers.obtainment.AdviserObtainmentWriteConverter;
 import io.harness.serializer.spring.converters.advisers.type.AdviserTypeReadConverter;
@@ -55,6 +45,10 @@ import io.harness.serializer.spring.converters.steps.StepTypeReadConverter;
 import io.harness.serializer.spring.converters.steps.StepTypeWriteConverter;
 import io.harness.serializer.spring.converters.sweepingoutput.SweepingOutputReadMongoConverter;
 import io.harness.serializer.spring.converters.sweepingoutput.SweepingOutputWriteMongoConverter;
+import io.harness.serializer.spring.converters.triggers.ExecutionTriggerInfoReadConverter;
+import io.harness.serializer.spring.converters.triggers.ExecutionTriggerInfoWriteConverter;
+import io.harness.serializer.spring.converters.triggers.TriggeredByReadConverter;
+import io.harness.serializer.spring.converters.triggers.TriggeredByWriteConverter;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -96,6 +90,8 @@ public class OrchestrationRegistrars {
           .add(RefTypeMorphiaConverter.class)
           .add(FailureInfoMorphiaConverter.class)
           .add(ExecutableResponseMorphiaConverter.class)
+          .add(ExecutionTriggerInfoMorphiaConverter.class)
+          .add(TriggeredByMorphiaConverter.class)
           .build();
 
   public static final List<Class<? extends Converter<?, ?>>> springConverters = ImmutableList.of(
@@ -112,5 +108,6 @@ public class OrchestrationRegistrars {
       NodeExecutionWriteConverter.class, FacilitatorResponseReadConverter.class,
       FacilitatorResponseWriteConverter.class, GraphLayoutReadConverter.class, GraphLayoutNodeWriteConverter.class,
       ExecutionErrorInfoReadConverter.class, ExecutionErrorInfoWriteConverter.class, LayoutNodeInfoReadConverter.class,
-      LayoutNodeInfoWriteConverter.class);
+      LayoutNodeInfoWriteConverter.class, ExecutionTriggerInfoReadConverter.class,
+      ExecutionTriggerInfoWriteConverter.class, TriggeredByReadConverter.class, TriggeredByWriteConverter.class);
 }

@@ -1,7 +1,6 @@
 package io.harness.cdng.pipeline.resources;
 
 import io.harness.NGCommonEntityConstants;
-import io.harness.beans.EmbeddedUser;
 import io.harness.cdng.pipeline.beans.CDPipelineValidationInfo;
 import io.harness.cdng.pipeline.beans.dto.CDPipelineValidationInfoDTO;
 import io.harness.cdng.pipeline.helpers.NGPipelineExecuteHelper;
@@ -12,6 +11,7 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ngpipeline.inputset.beans.resource.MergeInputSetRequestDTO;
 import io.harness.ngpipeline.pipeline.beans.resources.NGPipelineExecutionResponseDTO;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
+import io.harness.pms.contracts.ambiance.TriggeredBy;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
@@ -51,8 +51,11 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class CDNGPipelineExecutionResource {
   private final NGPipelineExecuteHelper ngPipelineExecuteHelper;
 
-  private static final EmbeddedUser EMBEDDED_USER =
-      EmbeddedUser.builder().uuid("lv0euRhKRCyiXWzS7pOg6g").email("admin@harness.io").name("Admin").build();
+  private static final TriggeredBy TRIGGERED_BY = TriggeredBy.newBuilder()
+                                                      .setUuid("lv0euRhKRCyiXWzS7pOg6g")
+                                                      .putExtraInfo("email", "admin@harness.io")
+                                                      .setIdentifier("Admin")
+                                                      .build();
 
   @GET
   @Path("/validate")
@@ -87,7 +90,7 @@ public class CDNGPipelineExecutionResource {
       @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
       @ApiParam(hidden = true, type = "") String inputSetPipelineYaml) {
     return ResponseDTO.newResponse(ngPipelineExecuteHelper.runPipelineWithInputSetPipelineYaml(accountId, orgIdentifier,
-        projectIdentifier, pipelineIdentifier, inputSetPipelineYaml, null, useFQNIfErrorResponse, EMBEDDED_USER));
+        projectIdentifier, pipelineIdentifier, inputSetPipelineYaml, null, useFQNIfErrorResponse, TRIGGERED_BY));
   }
 
   @POST
@@ -103,6 +106,6 @@ public class CDNGPipelineExecutionResource {
       @NotNull @Valid MergeInputSetRequestDTO mergeInputSetRequestDTO) {
     return ResponseDTO.newResponse(
         ngPipelineExecuteHelper.runPipelineWithInputSetReferencesList(accountId, orgIdentifier, projectIdentifier,
-            pipelineIdentifier, mergeInputSetRequestDTO.getInputSetReferences(), useFQNIfErrorResponse, EMBEDDED_USER));
+            pipelineIdentifier, mergeInputSetRequestDTO.getInputSetReferences(), useFQNIfErrorResponse, TRIGGERED_BY));
   }
 }

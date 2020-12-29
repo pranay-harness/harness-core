@@ -7,10 +7,10 @@ import io.harness.engine.OrchestrationService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.plan.Plan;
+import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.merger.helpers.MergeHelper;
 import io.harness.pms.ngpipeline.inputset.helpers.ValidateAndMergeHelper;
-import io.harness.pms.pipeline.ExecutionTriggerInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.plan.creation.PlanCreatorMergeService;
@@ -78,7 +78,8 @@ public class PipelineExecuteHelper {
 
   public PlanExecution startExecution(String accountId, String orgIdentifier, String projectIdentifier, String yaml,
       ExecutionTriggerInfo triggerInfo, Map<String, Object> contextAttributes) throws IOException {
-    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(yaml);
+    contextAttributes.put(SetupAbstractionKeys.triggerInfo, triggerInfo);
+    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(yaml, contextAttributes);
     Plan plan = PlanExecutionUtils.extractPlan(resp);
     ImmutableMap.Builder<String, String> abstractionsBuilder =
         ImmutableMap.<String, String>builder()
@@ -93,11 +94,6 @@ public class PipelineExecuteHelper {
         }
       });
     }
-
-    // TODO : Remove this from here trigger info will be available separately in ambiance
-    abstractionsBuilder.put(SetupAbstractionKeys.userId, triggerInfo.getTriggeredBy().getUuid())
-        .put(SetupAbstractionKeys.userName, triggerInfo.getTriggeredBy().getName())
-        .put(SetupAbstractionKeys.userEmail, triggerInfo.getTriggeredBy().getEmail());
 
     return orchestrationService.startExecution(plan, abstractionsBuilder.build(), triggerInfo);
   }

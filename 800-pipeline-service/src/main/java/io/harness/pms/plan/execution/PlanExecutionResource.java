@@ -1,15 +1,16 @@
 package io.harness.pms.plan.execution;
 
+import static io.harness.pms.contracts.ambiance.TriggerType.MANUAL;
+
 import io.harness.NGCommonEntityConstants;
-import io.harness.beans.EmbeddedUser;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.plan.Plan;
+import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
+import io.harness.pms.contracts.ambiance.TriggeredBy;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.ngpipeline.inputset.beans.resource.MergeInputSetRequestDTOPMS;
-import io.harness.pms.pipeline.ExecutionTriggerInfo;
-import io.harness.pms.pipeline.TriggerType;
 import io.harness.pms.plan.creation.PlanCreatorMergeService;
 import io.harness.pms.plan.execution.beans.dto.InterruptDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
@@ -47,8 +48,16 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Consumes({"application/json", "application/yaml"})
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 public class PlanExecutionResource {
-  public static final EmbeddedUser EMBEDDED_USER =
-      EmbeddedUser.builder().uuid("lv0euRhKRCyiXWzS7pOg6g").email("admin@harness.io").name("Admin").build();
+  public static final TriggeredBy EMBEDDED_USER = TriggeredBy.newBuilder()
+                                                      .setUuid("lv0euRhKRCyiXWzS7pOg6g")
+                                                      .putExtraInfo("email", "admin@harness.io")
+                                                      .setIdentifier("Admin")
+                                                      .build();
+  public static final TriggeredBy triggeredBy = TriggeredBy.newBuilder()
+                                                    .setUuid("lv0euRhKRCyiXWzS7pOg6g")
+                                                    .putExtraInfo("email", "admin@harness.io")
+                                                    .setIdentifier("Admin")
+                                                    .build();
   private static final String pipelineYaml = "pipeline:\n"
       + "        identifier: p1\n"
       + "        name: pipeline1\n"
@@ -395,7 +404,7 @@ public class PlanExecutionResource {
     PlanExecution planExecution = orchestrationService.startExecution(plan,
         new HashMap<>(ImmutableMap.of(
             "accountId", "kmpySmUISimoRrJL6NL73w", "orgIdentifier", "harness", "projectIdentifier", "pipeline")),
-        ExecutionTriggerInfo.builder().triggerType(TriggerType.MANUAL).build());
+        ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).build());
     return Response.ok(planExecution, MediaType.APPLICATION_JSON_TYPE).build();
   }
 
@@ -412,7 +421,7 @@ public class PlanExecutionResource {
       @ApiParam(hidden = true, type = "") String inputSetPipelineYaml) throws IOException {
     PlanExecution planExecution = pipelineExecuteHelper.runPipelineWithInputSetPipelineYaml(accountId, orgIdentifier,
         projectIdentifier, pipelineIdentifier, inputSetPipelineYaml, null,
-        ExecutionTriggerInfo.builder().triggerType(TriggerType.MANUAL).triggeredBy(EMBEDDED_USER).build());
+        ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).setTriggeredBy(triggeredBy).build());
     PlanExecutionResponseDto planExecutionResponseDto =
         PlanExecutionResponseDto.builder().planExecution(planExecution).build();
     return ResponseDTO.newResponse(planExecutionResponseDto);
@@ -430,7 +439,7 @@ public class PlanExecutionResource {
       @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
       @NotNull @Valid MergeInputSetRequestDTOPMS mergeInputSetRequestDTO) throws IOException {
     ExecutionTriggerInfo triggerInfo =
-        ExecutionTriggerInfo.builder().triggerType(TriggerType.MANUAL).triggeredBy(EMBEDDED_USER).build();
+        ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).setTriggeredBy(EMBEDDED_USER).build();
     PlanExecution planExecution = pipelineExecuteHelper.runPipelineWithInputSetReferencesList(accountId, orgIdentifier,
         projectIdentifier, pipelineIdentifier, mergeInputSetRequestDTO.getInputSetReferences(), triggerInfo);
     PlanExecutionResponseDto planExecutionResponseDto =

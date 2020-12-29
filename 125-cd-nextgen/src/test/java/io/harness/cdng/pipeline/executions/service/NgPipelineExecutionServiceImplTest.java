@@ -1,5 +1,6 @@
 package io.harness.cdng.pipeline.executions.service;
 
+import static io.harness.pms.contracts.ambiance.TriggerType.MANUAL;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.utils.PageTestUtils.getPage;
@@ -17,7 +18,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
-import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.executions.PipelineExecutionHelper;
@@ -40,12 +40,12 @@ import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary.
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummaryFilter;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
 import io.harness.plan.Plan;
+import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
+import io.harness.pms.contracts.ambiance.TriggeredBy;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.beans.ExecutionGraph;
-import io.harness.pms.pipeline.ExecutionTriggerInfo;
-import io.harness.pms.pipeline.TriggerType;
 import io.harness.repositories.pipeline.PipelineExecutionRepository;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
@@ -267,13 +267,13 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
             .pipelineName(ngPipeline.getName())
             .pipelineIdentifier(ngPipeline.getIdentifier())
             .executionStatus(ExecutionStatus.RUNNING)
-            .triggerInfo(ExecutionTriggerInfo.builder()
-                             .triggerType(TriggerType.MANUAL)
-                             .triggeredBy(EmbeddedUser.builder()
-                                              .uuid("lv0euRhKRCyiXWzS7pOg6g")
-                                              .email("admin@harness.io")
-                                              .name("Admin")
-                                              .build())
+            .triggerInfo(ExecutionTriggerInfo.newBuilder()
+                             .setTriggerType(MANUAL)
+                             .setTriggeredBy(TriggeredBy.newBuilder()
+                                                 .setUuid("lv0euRhKRCyiXWzS7pOg6g")
+                                                 .putExtraInfo("email", "admin@harness.io")
+                                                 .setIdentifier("Admin")
+                                                 .build())
                              .build())
             .planExecutionId(planExecution.getUuid())
             .startedAt(planExecution.getStartTs())

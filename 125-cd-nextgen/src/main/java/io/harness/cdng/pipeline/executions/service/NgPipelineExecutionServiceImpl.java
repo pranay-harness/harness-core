@@ -2,11 +2,11 @@ package io.harness.cdng.pipeline.executions.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.pms.contracts.ambiance.TriggerType.MANUAL;
 
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
 
-import io.harness.beans.EmbeddedUser;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.executions.PipelineExecutionHelper;
@@ -34,10 +34,10 @@ import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummaryF
 import io.harness.ngpipeline.pipeline.executions.beans.ServiceExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.dto.PipelineExecutionInterruptDTO;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
+import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
+import io.harness.pms.contracts.ambiance.TriggeredBy;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.beans.ExecutionGraph;
-import io.harness.pms.pipeline.ExecutionTriggerInfo;
-import io.harness.pms.pipeline.TriggerType;
 import io.harness.repositories.pipeline.PipelineExecutionRepository;
 import io.harness.service.GraphGenerationService;
 import io.harness.steps.StepOutcomeGroup;
@@ -58,8 +58,11 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 @Singleton
 public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionService {
-  private static final EmbeddedUser EMBEDDED_USER =
-      EmbeddedUser.builder().uuid("lv0euRhKRCyiXWzS7pOg6g").email("admin@harness.io").name("Admin").build();
+  private static final TriggeredBy EMBEDDED_USER = TriggeredBy.newBuilder()
+                                                       .setUuid("lv0euRhKRCyiXWzS7pOg6g")
+                                                       .putExtraInfo("email", "admin@harness.io")
+                                                       .setIdentifier("Admin")
+                                                       .build();
 
   @Inject private PipelineExecutionRepository pipelineExecutionRepository;
   @Inject private NodeExecutionService nodeExecutionService;
@@ -147,8 +150,7 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
             .pipelineName(ngPipeline.getName())
             .pipelineIdentifier(ngPipeline.getIdentifier())
             .executionStatus(ExecutionStatus.RUNNING)
-            .triggerInfo(
-                ExecutionTriggerInfo.builder().triggerType(TriggerType.MANUAL).triggeredBy(EMBEDDED_USER).build())
+            .triggerInfo(ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).setTriggeredBy(EMBEDDED_USER).build())
             .planExecutionId(planExecution.getUuid())
             .startedAt(planExecution.getStartTs())
             .inputSetYaml(inputSetYaml)

@@ -1,13 +1,13 @@
 package io.harness.ng.orchestration;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.pms.contracts.ambiance.TriggerType.MANUAL;
 
-import io.harness.beans.EmbeddedUser;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
-import io.harness.pms.pipeline.ExecutionTriggerInfo;
-import io.harness.pms.pipeline.TriggerType;
+import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
+import io.harness.pms.contracts.ambiance.TriggeredBy;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.redesign.services.CustomExecutionProvider;
 import io.harness.redesign.services.CustomExecutionService;
@@ -110,12 +110,20 @@ public class NgOrchestrationResource {
 
   private ExecutionTriggerInfo getTriggerInfo() {
     User user = UserThreadLocal.get();
-    EmbeddedUser embeddedUser = null;
+    TriggeredBy userInfo = null;
     if (user == null) {
-      embeddedUser = EmbeddedUser.builder().email("admin@harness.io").name("Admin").uuid(generateUuid()).build();
+      userInfo = TriggeredBy.newBuilder()
+                     .putExtraInfo("email", "admin@harness.io")
+                     .setIdentifier("Admin")
+                     .setUuid(generateUuid())
+                     .build();
     } else {
-      embeddedUser = EmbeddedUser.builder().email(user.getEmail()).name(user.getName()).uuid(user.getUuid()).build();
+      userInfo = TriggeredBy.newBuilder()
+                     .putExtraInfo("email", user.getEmail())
+                     .setIdentifier(user.getName())
+                     .setUuid(user.getUuid())
+                     .build();
     }
-    return ExecutionTriggerInfo.builder().triggerType(TriggerType.MANUAL).triggeredBy(embeddedUser).build();
+    return ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).setTriggeredBy(userInfo).build();
   }
 }

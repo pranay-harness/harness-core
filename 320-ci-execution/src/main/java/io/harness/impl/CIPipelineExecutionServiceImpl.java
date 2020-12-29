@@ -2,8 +2,8 @@ package io.harness.impl;
 
 import static io.harness.beans.executionargs.ExecutionArgs.EXEC_ARGS;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static io.harness.pms.contracts.ambiance.TriggerType.MANUAL;
 
-import io.harness.beans.EmbeddedUser;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.ci.beans.entities.CIBuild;
 import io.harness.core.ci.services.CIBuildServiceImpl;
@@ -13,8 +13,8 @@ import io.harness.executionplan.service.ExecutionPlanCreatorService;
 import io.harness.logging.AutoLogContext;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.plan.Plan;
-import io.harness.pms.pipeline.ExecutionTriggerInfo;
-import io.harness.pms.pipeline.TriggerType;
+import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
+import io.harness.pms.contracts.ambiance.TriggeredBy;
 import io.harness.util.CIExecutionAutoLogContext;
 
 import com.google.inject.Inject;
@@ -58,10 +58,13 @@ public class CIPipelineExecutionServiceImpl implements CIPipelineExecutionServic
 
       log.info("Started pipeline execution from execution source: {}", ciExecutionArgs.getExecutionSource().getType());
       PlanExecution planExecution = orchestrationService.startExecution(plan, setupAbstractions,
-          ExecutionTriggerInfo.builder()
-              .triggeredBy(
-                  EmbeddedUser.builder().email("harsh.jain@harness.io").name("harsh jain").uuid("harsh").build())
-              .triggerType(TriggerType.MANUAL)
+          ExecutionTriggerInfo.newBuilder()
+              .setTriggeredBy(TriggeredBy.newBuilder()
+                                  .putExtraInfo("email", "harsh.jain@harness.io")
+                                  .setIdentifier("harsh jain")
+                                  .setUuid("harsh")
+                                  .build())
+              .setTriggerType(MANUAL)
               .build());
       log.info("Submitted pipeline execution for build Number {} with planExecutionId: {}",
           ciExecutionArgs.getBuildNumberDetails().getBuildNumber(), planExecution.getUuid());

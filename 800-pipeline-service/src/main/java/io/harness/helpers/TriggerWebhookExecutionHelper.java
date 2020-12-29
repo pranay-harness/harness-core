@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.INVALID_RUNTIME_INPUT_YAML;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.TARGET_EXECUTION_REQUESTED;
+import static io.harness.pms.contracts.ambiance.TriggerType.WEBHOOK;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
@@ -24,8 +25,9 @@ import io.harness.ngtriggers.beans.target.pipeline.PipelineTargetSpec;
 import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
 import io.harness.ngtriggers.helpers.WebhookEventToTriggerMapper;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
+import io.harness.pms.contracts.ambiance.ExecutionTriggerInfo;
+import io.harness.pms.contracts.ambiance.TriggeredBy;
 import io.harness.pms.merger.helpers.MergeHelper;
-import io.harness.pms.pipeline.ExecutionTriggerInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.TriggerType;
 import io.harness.pms.pipeline.service.PMSPipelineService;
@@ -111,9 +113,9 @@ public class TriggerWebhookExecutionHelper {
 
   private PlanExecution resolveRuntimeInputAndSubmitExecutionRequest(
       TriggerDetails triggerDetails, Map<String, Object> contextAttributes) {
-    EmbeddedUser embeddedUser = EmbeddedUser.builder().email("").name("trigger").uuid("systemUser").build();
+    TriggeredBy embeddedUser = TriggeredBy.newBuilder().setIdentifier("trigger").setUuid("systemUser").build();
     ExecutionTriggerInfo triggerInfo =
-        ExecutionTriggerInfo.builder().triggerType(TriggerType.WEBHOOK).triggeredBy(embeddedUser).build();
+        ExecutionTriggerInfo.newBuilder().setTriggerType(WEBHOOK).setTriggeredBy(embeddedUser).build();
     try {
       NGTriggerEntity ngTriggerEntity = triggerDetails.getNgTriggerEntity();
       String targetIdentifier = ngTriggerEntity.getTargetIdentifier();
