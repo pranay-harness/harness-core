@@ -270,7 +270,7 @@ public class ActivityServiceImpl implements ActivityService {
     List<DeploymentActivity> deploymentActivities =
         (List<DeploymentActivity>) (List<?>) hPersistence
             .createQuery(Activity.class, Collections.singleton(HQuery.QueryChecks.COUNT))
-            .filter(ActivityKeys.accountIdentifier, accountId)
+            .filter(ActivityKeys.accountId, accountId)
             .filter(ActivityKeys.orgIdentifier, orgIdentifier)
             .filter(ActivityKeys.projectIdentifier, projectIdentifier)
             .filter(ActivityKeys.serviceIdentifier, serviceIdentifier)
@@ -286,7 +286,7 @@ public class ActivityServiceImpl implements ActivityService {
       String accountId, String orgIdentifier, String projectIdentifier) {
     List<DeploymentActivity> activities =
         (List<DeploymentActivity>) (List<?>) hPersistence.createQuery(Activity.class, excludeAuthority)
-            .filter(ActivityKeys.accountIdentifier, accountId)
+            .filter(ActivityKeys.accountId, accountId)
             .filter(ActivityKeys.orgIdentifier, orgIdentifier)
             .filter(ActivityKeys.projectIdentifier, projectIdentifier)
             .filter(ActivityKeys.type, ActivityType.DEPLOYMENT)
@@ -318,7 +318,7 @@ public class ActivityServiceImpl implements ActivityService {
   public String getDeploymentTagFromActivity(String accountId, String verificationJobInstanceId) {
     DeploymentActivity deploymentActivity =
         (DeploymentActivity) hPersistence.createQuery(Activity.class, excludeAuthority)
-            .filter(ActivityKeys.accountIdentifier, accountId)
+            .filter(ActivityKeys.accountId, accountId)
             .filter(ActivityKeys.type, ActivityType.DEPLOYMENT)
             .field(ActivityKeys.verificationJobInstanceIds)
             .hasThisOne(verificationJobInstanceId)
@@ -334,7 +334,7 @@ public class ActivityServiceImpl implements ActivityService {
   public List<ActivityDashboardDTO> listActivitiesInTimeRange(String accountId, String orgIdentifier,
       String projectIdentifier, String environmentIdentifier, Instant startTime, Instant endTime) {
     Query<Activity> activityQuery = hPersistence.createQuery(Activity.class, excludeAuthority)
-                                        .filter(ActivityKeys.accountIdentifier, accountId)
+                                        .filter(ActivityKeys.accountId, accountId)
                                         .filter(ActivityKeys.orgIdentifier, orgIdentifier)
                                         .filter(ActivityKeys.projectIdentifier, projectIdentifier)
                                         .field(ActivityKeys.activityStartTime)
@@ -430,7 +430,7 @@ public class ActivityServiceImpl implements ActivityService {
     }
 
     List<Activity> activities = hPersistence.createQuery(Activity.class, excludeAuthority)
-                                    .filter(ActivityKeys.accountIdentifier, accountId)
+                                    .filter(ActivityKeys.accountId, accountId)
                                     .filter(ActivityKeys.orgIdentifier, orgIdentifier)
                                     .filter(ActivityKeys.projectIdentifier, projectIdentifier)
                                     .field(ActivityKeys.type)
@@ -457,7 +457,7 @@ public class ActivityServiceImpl implements ActivityService {
 
   private String getServiceNameFromActivity(Activity activity) {
     return nextGenService
-        .getService(activity.getServiceIdentifier(), activity.getAccountIdentifier(), activity.getOrgIdentifier(),
+        .getService(activity.getServiceIdentifier(), activity.getAccountId(), activity.getOrgIdentifier(),
             activity.getProjectIdentifier())
         .getName();
   }
@@ -483,7 +483,7 @@ public class ActivityServiceImpl implements ActivityService {
     if (isEmpty(activity.getVerificationJobRuntimeDetails())) {
       // check to see if any other jobs are currently running
       List<VerificationJobInstance> runningInstances = verificationJobInstanceService.getRunningOrQueuedJobInstances(
-          activity.getAccountIdentifier(), activity.getOrgIdentifier(), activity.getProjectIdentifier(),
+          activity.getAccountId(), activity.getOrgIdentifier(), activity.getProjectIdentifier(),
           activity.getEnvironmentIdentifier(), activity.getServiceIdentifier(), VerificationJobType.HEALTH,
           activity.getActivityStartTime().plus(Duration.ofMinutes(HEALTH_VERIFICATION_RETRIGGER_BUFFER_MINS)));
       if (isNotEmpty(runningInstances)) {
@@ -493,14 +493,14 @@ public class ActivityServiceImpl implements ActivityService {
         return null;
       }
       verificationJobs.addAll(
-          verificationJobService.getHealthVerificationJobs(activity.getAccountIdentifier(), activity.getOrgIdentifier(),
+          verificationJobService.getHealthVerificationJobs(activity.getAccountId(), activity.getOrgIdentifier(),
               activity.getProjectIdentifier(), activity.getEnvironmentIdentifier(), activity.getServiceIdentifier()));
     } else {
       activity.getVerificationJobRuntimeDetails().forEach(jobDetail -> {
         String jobIdentifier = jobDetail.getVerificationJobIdentifier();
         Preconditions.checkNotNull(jobIdentifier, "Job Identifier must be present in the jobs to trigger");
         VerificationJob verificationJob =
-            verificationJobService.getVerificationJob(activity.getAccountIdentifier(), jobIdentifier);
+            verificationJobService.getVerificationJob(activity.getAccountId(), jobIdentifier);
         Preconditions.checkNotNull(verificationJob, "No Job exists for verificationJobIdentifier: '%s'", jobIdentifier);
         verificationJobs.add(verificationJob);
         if (isNotEmpty(jobDetail.getRuntimeValues())) {
@@ -534,7 +534,7 @@ public class ActivityServiceImpl implements ActivityService {
       Activity activity, VerificationJob verificationJob) {
     return VerificationJobInstance.builder()
         .verificationJobIdentifier(verificationJob.getIdentifier())
-        .accountId(activity.getAccountIdentifier())
+        .accountId(activity.getAccountId())
         .executionStatus(ExecutionStatus.QUEUED)
         .deploymentStartTime(activity.getActivityStartTime())
         .resolvedJob(verificationJob)

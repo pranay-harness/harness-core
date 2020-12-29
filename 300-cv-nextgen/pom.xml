@@ -62,6 +62,16 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>950-events-api</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>950-events-api-proto</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>960-notification-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

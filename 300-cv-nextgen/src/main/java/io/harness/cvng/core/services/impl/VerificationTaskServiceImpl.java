@@ -141,6 +141,17 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
   }
 
   @Override
+  public List<String> getVerificationTaskIds(String cvConfigId) {
+    return hPersistence.createQuery(VerificationTask.class)
+        .filter(VerificationTaskKeys.cvConfigId, cvConfigId)
+        .project(VerificationTaskKeys.uuid, true)
+        .asList()
+        .stream()
+        .map(verificationTask -> verificationTask.getUuid())
+        .collect(Collectors.toList());
+  }
+
+  @Override
   public String findBaselineVerificationTaskId(
       String currentVerificationTaskId, VerificationJobInstance verificationJobInstance) {
     Preconditions.checkState(verificationJobInstance.getResolvedJob() instanceof TestVerificationJob,

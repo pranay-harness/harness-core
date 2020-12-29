@@ -56,6 +56,7 @@ public class MetricPack implements PersistentEntity, UuidAware, CreatedAtAware, 
         .add(CompoundMongoIndex.builder()
                  .name("insert_idx")
                  .field(MetricPackKeys.accountId)
+                 .field(MetricPackKeys.orgIdentifier)
                  .field(MetricPackKeys.projectIdentifier)
                  .build())
         .build();
@@ -65,6 +66,7 @@ public class MetricPack implements PersistentEntity, UuidAware, CreatedAtAware, 
   private long createdAt;
   private long lastUpdatedAt;
   private String accountId;
+  @NotEmpty private String orgIdentifier;
   @NotEmpty private String projectIdentifier;
   @NotNull private DataSourceType dataSourceType;
   @Trimmed @NotEmpty private String identifier;
@@ -94,6 +96,7 @@ public class MetricPack implements PersistentEntity, UuidAware, CreatedAtAware, 
     return MetricPackDTO.builder()
         .uuid(getUuid())
         .accountId(getAccountId())
+        .orgIdentifier(getOrgIdentifier())
         .projectIdentifier(getProjectIdentifier())
         .dataSourceType(getDataSourceType())
         .identifier(getIdentifier())

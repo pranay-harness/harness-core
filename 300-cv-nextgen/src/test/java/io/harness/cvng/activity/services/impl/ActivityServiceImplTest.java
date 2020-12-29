@@ -834,7 +834,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
             .build();
     realVerificationJobService.save(healthVerificationJob);
     realVerificationJobInstanceService.create(VerificationJobInstance.builder()
-                                                  .accountId(kubernetesActivity.getAccountIdentifier())
+                                                  .accountId(kubernetesActivity.getAccountId())
                                                   .resolvedJob(healthVerificationJob)
                                                   .executionStatus(ExecutionStatus.RUNNING)
                                                   .startTime(Instant.now())
@@ -872,7 +872,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
             .build();
     realVerificationJobService.save(healthVerificationJob);
     realVerificationJobInstanceService.create(VerificationJobInstance.builder()
-                                                  .accountId(kubernetesActivity.getAccountIdentifier())
+                                                  .accountId(kubernetesActivity.getAccountId())
                                                   .resolvedJob(healthVerificationJob)
                                                   .executionStatus(ExecutionStatus.SUCCESS)
                                                   .startTime(Instant.now())
@@ -920,7 +920,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
 
   private KubernetesActivity getKubernetesActivity() {
     KubernetesActivity activity = KubernetesActivity.builder().build();
-    activity.setAccountIdentifier(accountId);
+    activity.setAccountId(accountId);
     activity.setProjectIdentifier(projectIdentifier);
     activity.setOrgIdentifier(orgIdentifier);
     activity.setActivityStartTime(Instant.now());

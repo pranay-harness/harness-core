@@ -609,7 +609,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     cvConfig.setTierName("tierName");
     cvConfig.setOrgIdentifier("orgIdentifier");
     cvConfig.setMetricPack(
-        metricPackService.getMetricPacks(accountId, "projectId", DataSourceType.APP_DYNAMICS).get(0));
+        metricPackService.getMetricPacks(accountId, "org", "projectId", DataSourceType.APP_DYNAMICS).get(0));
     return cvConfig;
   }
 

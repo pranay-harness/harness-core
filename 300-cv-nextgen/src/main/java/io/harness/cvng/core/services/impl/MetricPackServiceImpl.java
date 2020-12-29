@@ -82,24 +82,27 @@ public class MetricPackServiceImpl implements MetricPackService {
   @Inject private HPersistence hPersistence;
 
   @Override
-  public List<MetricPackDTO> getMetricPacks(DataSourceType dataSourceType, String accountId, String projectIdentifier) {
-    return getMetricPacks(accountId, projectIdentifier, dataSourceType)
+  public List<MetricPackDTO> getMetricPacks(
+      DataSourceType dataSourceType, String accountId, String orgIdentifier, String projectIdentifier) {
+    return getMetricPacks(accountId, orgIdentifier, projectIdentifier, dataSourceType)
         .stream()
         .map(MetricPack::toDTO)
         .collect(Collectors.toList());
   }
 
   @Override
-  public List<MetricPack> getMetricPacks(String accountId, String projectIdentifier, DataSourceType dataSourceType) {
+  public List<MetricPack> getMetricPacks(
+      String accountId, String orgIdentifier, String projectIdentifier, DataSourceType dataSourceType) {
     List<MetricPack> metricPacksFromDb = hPersistence.createQuery(MetricPack.class, excludeAuthority)
                                              .filter(MetricPackKeys.accountId, accountId)
                                              .filter(MetricPackKeys.projectIdentifier, projectIdentifier)
+                                             .filter(MetricPackKeys.orgIdentifier, orgIdentifier)
                                              .filter(MetricPackKeys.dataSourceType, dataSourceType)
                                              .asList();
     // TODO: ideally we would like to do this as a listener to creation of the project.
     if (isEmpty(metricPacksFromDb)) {
       final Map<String, MetricPack> metricPackDefinitionsFromYaml =
-          getMetricPackDefinitionsFromYaml(accountId, projectIdentifier, dataSourceType);
+          getMetricPackDefinitionsFromYaml(accountId, orgIdentifier, projectIdentifier, dataSourceType);
       final ArrayList<MetricPack> metricPacks = Lists.newArrayList(metricPackDefinitionsFromYaml.values());
       hPersistence.save(metricPacks);
       return metricPacks;
@@ -114,7 +117,7 @@ public class MetricPackServiceImpl implements MetricPackService {
   }
 
   private Map<String, MetricPack> getMetricPackDefinitionsFromYaml(
-      String accountId, String projectIdentifier, DataSourceType dataSourceType) {
+      String accountId, String orgIdentifier, String projectIdentifier, DataSourceType dataSourceType) {
     Map<String, MetricPack> metricPacks = new HashMap<>();
 
     // TODO: when new datasource is on boarded we should stub this out to its own piece so that the switch statements do
@@ -136,7 +139,7 @@ public class MetricPackServiceImpl implements MetricPackService {
       try {
         final String metricPackYaml =
             Resources.toString(MetricPackService.class.getResource(metricPackPath), Charsets.UTF_8);
-        MetricPack metricPack = buildPack(metricPackYaml, accountId, projectIdentifier, dataSourceType);
+        MetricPack metricPack = buildPack(metricPackYaml, accountId, orgIdentifier, projectIdentifier, dataSourceType);
         metricPacks.put(metricPack.getIdentifier(), metricPack);
       } catch (IOException e) {
         throw new IllegalStateException("Error reading metric packs", e);
@@ -145,11 +148,12 @@ public class MetricPackServiceImpl implements MetricPackService {
     return metricPacks;
   }
 
-  private MetricPack buildPack(String metricPackYaml, String accountId, String projectIdentifier,
+  private MetricPack buildPack(String metricPackYaml, String accountId, String orgIdentifier, String projectIdentifier,
       DataSourceType dataSourceType) throws IOException {
     YamlUtils yamlUtils = new YamlUtils();
     final MetricPack metricPack = yamlUtils.read(metricPackYaml, new TypeReference<MetricPack>() {});
     metricPack.setAccountId(accountId);
+    metricPack.setOrgIdentifier(orgIdentifier);
     metricPack.setProjectIdentifier(projectIdentifier);
     metricPack.setDataSourceType(dataSourceType);
     metricPack.getMetrics().forEach(metricDefinition -> metricDefinition.setThresholds(Collections.emptyList()));
@@ -157,14 +161,14 @@ public class MetricPackServiceImpl implements MetricPackService {
   }
 
   @Override
-  public boolean saveMetricPacks(
-      String accountId, String projectIdentifier, DataSourceType dataSourceType, List<MetricPack> metricPacks) {
+  public boolean saveMetricPacks(String accountId, String orgIdentifier, String projectIdentifier,
+      DataSourceType dataSourceType, List<MetricPack> metricPacks) {
     if (isEmpty(metricPacks)) {
       return false;
     }
 
     final Map<String, MetricPack> metricPackDefinitions =
-        getMetricPackDefinitionsFromYaml(accountId, projectIdentifier, dataSourceType);
+        getMetricPackDefinitionsFromYaml(accountId, orgIdentifier, projectIdentifier, dataSourceType);
 
     metricPacks.stream()
         .filter(metricPack -> metricPackDefinitions.containsKey(metricPack.getIdentifier()))
@@ -191,11 +195,12 @@ public class MetricPackServiceImpl implements MetricPackService {
   }
 
   @Override
-  public List<TimeSeriesThreshold> getMetricPackThresholds(
-      String accountId, String projectIdentifier, String metricPackIdentifier, DataSourceType dataSourceType) {
+  public List<TimeSeriesThreshold> getMetricPackThresholds(String accountId, String orgIdentifier,
+      String projectIdentifier, String metricPackIdentifier, DataSourceType dataSourceType) {
     List<TimeSeriesThreshold> timeSeriesThresholdsFromDb =
         hPersistence.createQuery(TimeSeriesThreshold.class, excludeAuthority)
             .filter(TimeSeriesThresholdKeys.accountId, accountId)
+            .filter(TimeSeriesThresholdKeys.orgIdentifier, orgIdentifier)
             .filter(TimeSeriesThresholdKeys.projectIdentifier, projectIdentifier)
             .filter(TimeSeriesThresholdKeys.metricPackIdentifier, metricPackIdentifier)
             .filter(TimeSeriesThresholdKeys.dataSourceType, dataSourceType)
@@ -203,16 +208,18 @@ public class MetricPackServiceImpl implements MetricPackService {
 
     // TODO: this should be done at the time of project creation
     if (isEmpty(timeSeriesThresholdsFromDb)) {
-      return createDefaultIgnoreThresholds(accountId, projectIdentifier, metricPackIdentifier, dataSourceType);
+      return createDefaultIgnoreThresholds(
+          accountId, orgIdentifier, projectIdentifier, metricPackIdentifier, dataSourceType);
     }
 
     return timeSeriesThresholdsFromDb;
   }
 
-  private List<TimeSeriesThreshold> createDefaultIgnoreThresholds(
-      String accountId, String projectIdentifier, String metricPackIdentifier, DataSourceType dataSourceType) {
+  private List<TimeSeriesThreshold> createDefaultIgnoreThresholds(String accountId, String orgIdentifier,
+      String projectIdentifier, String metricPackIdentifier, DataSourceType dataSourceType) {
     MetricPack metricPack = hPersistence.createQuery(MetricPack.class, excludeAuthority)
                                 .filter(MetricPackKeys.accountId, accountId)
+                                .filter(MetricPackKeys.orgIdentifier, orgIdentifier)
                                 .filter(MetricPackKeys.projectIdentifier, projectIdentifier)
                                 .filter(MetricPackKeys.identifier, metricPackIdentifier)
                                 .filter(MetricPackKeys.dataSourceType, dataSourceType)
@@ -227,6 +234,7 @@ public class MetricPackServiceImpl implements MetricPackService {
       thresholds.forEach(threshold
           -> timeSeriesThresholds.add(TimeSeriesThreshold.builder()
                                           .accountId(accountId)
+                                          .orgIdentifier(orgIdentifier)
                                           .projectIdentifier(projectIdentifier)
                                           .dataSourceType(dataSourceType)
                                           .metricType(metricDefinition.getType())
@@ -236,15 +244,16 @@ public class MetricPackServiceImpl implements MetricPackService {
                                           .criteria(threshold)
                                           .build()));
     });
-    saveMetricPackThreshold(accountId, projectIdentifier, dataSourceType, timeSeriesThresholds);
+    saveMetricPackThreshold(accountId, orgIdentifier, projectIdentifier, dataSourceType, timeSeriesThresholds);
     return timeSeriesThresholds;
   }
 
   @Override
-  public List<String> saveMetricPackThreshold(String accountId, String projectIdentifier, DataSourceType dataSourceType,
-      List<TimeSeriesThreshold> timeSeriesThresholds) {
+  public List<String> saveMetricPackThreshold(String accountId, String orgIdentifier, String projectIdentifier,
+      DataSourceType dataSourceType, List<TimeSeriesThreshold> timeSeriesThresholds) {
     timeSeriesThresholds.forEach(timeSeriesThreshold -> {
       timeSeriesThreshold.setAccountId(accountId);
+      timeSeriesThreshold.setOrgIdentifier(orgIdentifier);
       timeSeriesThreshold.setProjectIdentifier(projectIdentifier);
       timeSeriesThreshold.setDataSourceType(dataSourceType);
     });
@@ -252,14 +261,16 @@ public class MetricPackServiceImpl implements MetricPackService {
   }
 
   @Override
-  public boolean deleteMetricPackThresholds(String accountId, String projectIdentifier, String thresholdId) {
+  public boolean deleteMetricPackThresholds(
+      String accountId, String orgIdentifier, String projectIdentifier, String thresholdId) {
     return hPersistence.delete(TimeSeriesThreshold.class, thresholdId);
   }
 
   @Override
-  public void populatePaths(
-      String accountId, String projectIdentifier, DataSourceType dataSourceType, MetricPack metricPack) {
-    final List<MetricPack> metricPacksForProject = getMetricPacks(accountId, projectIdentifier, dataSourceType);
+  public void populatePaths(String accountId, String orgIdentifier, String projectIdentifier,
+      DataSourceType dataSourceType, MetricPack metricPack) {
+    final List<MetricPack> metricPacksForProject =
+        getMetricPacks(accountId, orgIdentifier, projectIdentifier, dataSourceType);
     final MetricPack metricPackForProject =
         metricPacksForProject.stream()
             .filter(metricPackProject -> metricPackProject.getIdentifier().equals(metricPack.getIdentifier()))

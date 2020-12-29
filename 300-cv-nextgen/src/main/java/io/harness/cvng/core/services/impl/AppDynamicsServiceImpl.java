@@ -63,7 +63,8 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
         "ConnectorConfig should be of type AppDynamics");
     AppDynamicsConnectorDTO appDynamicsConnectorDTO = (AppDynamicsConnectorDTO) connectorDTO.get().getConnectorConfig();
     metricPacks.forEach(metricPack
-        -> metricPackService.populatePaths(accountId, projectIdentifier, DataSourceType.APP_DYNAMICS, metricPack));
+        -> metricPackService.populatePaths(
+            accountId, orgIdentifier, projectIdentifier, DataSourceType.APP_DYNAMICS, metricPack));
     List<MetricPackDTO> metricPackDTOS = metricPacks.stream().map(MetricPack::toDTO).collect(Collectors.toList());
     return requestExecutor
         .execute(verificationManagerClient.getAppDynamicsMetricData(accountId, orgIdentifier, projectIdentifier,

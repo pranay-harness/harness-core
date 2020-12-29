@@ -1,5 +1,7 @@
 package io.harness.cvng;
 
+import static io.harness.EntityCRUDEventsConstants.PROJECT_ENTITY;
+
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.activity.services.impl.ActivityServiceImpl;
@@ -33,6 +35,8 @@ import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.NextGenServiceImpl;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.client.VerificationManagerServiceImpl;
+import io.harness.cvng.core.jobs.ConsumerMessageProcessor;
+import io.harness.cvng.core.jobs.ProjectChangeEventMessageProcessor;
 import io.harness.cvng.core.services.api.AppDynamicsService;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.CVConfigTransformer;
@@ -40,6 +44,7 @@ import io.harness.cvng.core.services.api.CVSetupService;
 import io.harness.cvng.core.services.api.DSConfigService;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
+import io.harness.cvng.core.services.api.DeleteEntityByProjectHandler;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.LogRecordService;
@@ -58,6 +63,7 @@ import io.harness.cvng.core.services.impl.CVConfigServiceImpl;
 import io.harness.cvng.core.services.impl.CVSetupServiceImpl;
 import io.harness.cvng.core.services.impl.DSConfigServiceImpl;
 import io.harness.cvng.core.services.impl.DataCollectionTaskServiceImpl;
+import io.harness.cvng.core.services.impl.DefaultDeleteEntityByProjectHandler;
 import io.harness.cvng.core.services.impl.DeletedCVConfigServiceImpl;
 import io.harness.cvng.core.services.impl.HostRecordServiceImpl;
 import io.harness.cvng.core.services.impl.LogRecordServiceImpl;
@@ -96,6 +102,7 @@ import io.harness.ff.FeatureFlagModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
+import io.harness.redis.RedisConfig;
 import io.harness.threading.ThreadPool;
 import io.harness.version.VersionInfoManager;
 
@@ -120,9 +127,10 @@ import org.apache.commons.io.IOUtils;
  * @author Raghu
  */
 public class CVServiceModule extends AbstractModule {
-  private VerificationConfiguration configuration;
-  public CVServiceModule(VerificationConfiguration configuration) {
-    this.configuration = configuration;
+  private VerificationConfiguration verificationConfiguration;
+
+  public CVServiceModule(VerificationConfiguration verificationConfiguration) {
+    this.verificationConfiguration = verificationConfiguration;
   }
 
   /* (non-Javadoc)
@@ -221,10 +229,18 @@ public class CVServiceModule extends AbstractModule {
       bind(CVNGMigrationService.class).to(CVNGMigrationServiceImpl.class).in(Singleton.class);
       bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
       bind(StackdriverService.class).to(StackdriverServiceImpl.class);
+      bind(RedisConfig.class)
+          .annotatedWith(Names.named("lock"))
+          .toInstance(verificationConfiguration.getEventsFrameworkConfiguration().getRedisConfig());
+      bind(ConsumerMessageProcessor.class)
+          .annotatedWith(Names.named(PROJECT_ENTITY))
+          .to(ProjectChangeEventMessageProcessor.class);
       bind(String.class)
           .annotatedWith(Names.named("portalUrl"))
-          .toInstance(configuration.getPortalUrl().endsWith("/") ? configuration.getPortalUrl()
-                                                                 : configuration.getPortalUrl() + "/");
+          .toInstance(verificationConfiguration.getPortalUrl().endsWith("/")
+                  ? verificationConfiguration.getPortalUrl()
+                  : verificationConfiguration.getPortalUrl() + "/");
+      bind(DeleteEntityByProjectHandler.class).to(DefaultDeleteEntityByProjectHandler.class);
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
     }

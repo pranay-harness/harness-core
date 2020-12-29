@@ -386,7 +386,7 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
                                                 .build();
     Activity activity = deploymentActivity;
     activity.setActivityName("baselineActivity");
-    activity.setAccountIdentifier(accountId);
+    activity.setAccountId(accountId);
     activity.setVerificationJobInstanceIds(Arrays.asList(baselineVerificationJobInstanceId));
     activity.setType(ActivityType.DEPLOYMENT);
     activityService.createActivity(activity);
@@ -406,7 +406,7 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
         DeploymentActivity.builder().verificationStartTime(currentTime.toEpochMilli()).deploymentTag("Build2").build();
     Activity currentActivity = currentDeploymentActivity;
     currentActivity.setActivityName("currentActivity");
-    currentActivity.setAccountIdentifier(accountId);
+    currentActivity.setAccountId(accountId);
     currentActivity.setVerificationJobInstanceIds(Arrays.asList(verificationJobInstanceId));
     currentActivity.setType(ActivityType.DEPLOYMENT);
     activityService.createActivity(currentActivity);
@@ -439,7 +439,7 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
         DeploymentActivity.builder().verificationStartTime(currentTime.toEpochMilli()).deploymentTag("Build1").build();
     Activity activity = deploymentActivity;
     activity.setActivityName("activity");
-    activity.setAccountIdentifier(accountId);
+    activity.setAccountId(accountId);
     activity.setVerificationJobInstanceIds(Arrays.asList(verificationJobInstanceId));
     activity.setType(ActivityType.DEPLOYMENT);
     activityService.createActivity(activity);
@@ -472,7 +472,7 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTest {
         DeploymentActivity.builder().verificationStartTime(currentTime.toEpochMilli()).deploymentTag("Build1").build();
     Activity activity = deploymentActivity;
     activity.setActivityName("randomActivity");
-    activity.setAccountIdentifier(accountId);
+    activity.setAccountId(accountId);
     activity.setVerificationJobInstanceIds(Arrays.asList(generateUuid()));
     activity.setType(ActivityType.DEPLOYMENT);
     activityService.createActivity(activity);

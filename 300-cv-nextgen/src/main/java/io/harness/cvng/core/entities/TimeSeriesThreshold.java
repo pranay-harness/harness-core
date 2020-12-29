@@ -52,6 +52,7 @@ public class TimeSeriesThreshold implements PersistentEntity, UuidAware, Created
   private long createdAt;
   private long lastUpdatedAt;
   @NotNull private String accountId;
+  @NotNull private String orgIdentifier;
   @NotNull private String projectIdentifier;
   @NotNull private DataSourceType dataSourceType;
   @NotNull private String metricPackIdentifier;
@@ -64,6 +65,7 @@ public class TimeSeriesThreshold implements PersistentEntity, UuidAware, Created
   public TimeSeriesThresholdDTO toDTO() {
     return TimeSeriesThresholdDTO.builder()
         .accountId(accountId)
+        .orgIdentifier(orgIdentifier)
         .projectIdentifier(projectIdentifier)
         .dataSourceType(dataSourceType)
         .metricPackIdentifier(metricPackIdentifier)
