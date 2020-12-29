@@ -26,8 +26,10 @@ public class RestoreCacheStepProtobufSerializer implements ProtobufStepSerialize
     }
 
     RestoreCacheStep.Builder restoreCacheBuilder = RestoreCacheStep.newBuilder();
-    restoreCacheBuilder.setKey(restoreCacheStepInfo.getKey());
-    restoreCacheBuilder.setFailIfNotExist(restoreCacheStepInfo.isFailIfNotExist());
+    restoreCacheBuilder.setKey(RunTimeInputHandler.resolveStringParameter(
+        "Key", "RestoreCache", restoreCacheStepInfo.getIdentifier(), restoreCacheStepInfo.getKey(), true));
+    restoreCacheBuilder.setFailIfNotExist(
+        RunTimeInputHandler.resolveBooleanParameter(restoreCacheStepInfo.getFailIfNotExist(), false));
 
     String skipCondition = SkipConditionUtils.getSkipCondition(step);
     return UnitStep.newBuilder()

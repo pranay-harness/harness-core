@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.beans.steps.stepinfo.DockerStepInfo;
 import io.harness.beans.steps.stepinfo.ECRStepInfo;
 import io.harness.beans.steps.stepinfo.GCRStepInfo;
 import io.harness.beans.steps.stepinfo.RestoreCacheGCSStepInfo;
@@ -29,16 +30,16 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldGetGCRStepInfoEnvVariables() {
-    GCRStepInfo dockerStepInfo = GCRStepInfo.builder()
-                                     .registry("gcr.io")
-                                     .repo("harness")
-                                     .tags(asList("tag1", "tag2"))
-                                     .dockerfile("Dockerfile")
-                                     .context("context")
-                                     .target("target")
-                                     .buildArgs(asList("arg1", "arg2"))
-                                     .labels(Collections.singletonMap("label", "label1"))
-                                     .build();
+    GCRStepInfo gcrStepInfo = GCRStepInfo.builder()
+                                  .registry(ParameterField.createValueField("gcr.io"))
+                                  .repo(ParameterField.createValueField("harness"))
+                                  .tags(ParameterField.createValueField(asList("tag1", "tag2")))
+                                  .dockerfile(ParameterField.createValueField("Dockerfile"))
+                                  .context(ParameterField.createValueField("context"))
+                                  .target(ParameterField.createValueField("target"))
+                                  .buildArgs(ParameterField.createValueField(asList("arg1", "arg2")))
+                                  .labels(ParameterField.createValueField(Collections.singletonMap("label", "label1")))
+                                  .build();
 
     Map<String, String> expected = new HashMap<>();
     expected.put("PLUGIN_REGISTRY", "gcr.io");
@@ -49,25 +50,26 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_TARGET", "target");
     expected.put("PLUGIN_BUILD_ARGS", "arg1,arg2");
     expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
-    //    Map<String, String> pluginCompatiblePublishStepEnvVariables =
-    //        PluginSettingUtils.getPluginCompatibleEnvVariables(dockerStepInfo);
-    //    assertThat(pluginCompatiblePublishStepEnvVariables).isEqualTo(expected);
+    Map<String, String> pluginCompatiblePublishStepEnvVariables =
+        PluginSettingUtils.getPluginCompatibleEnvVariables(gcrStepInfo, "identifier");
+    assertThat(pluginCompatiblePublishStepEnvVariables).isEqualTo(expected);
   }
 
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldGetECRStepInfoStepEnvVariables() {
-    ECRStepInfo dockerStepInfo = ECRStepInfo.builder()
-                                     .registry("https://aws_account_id.dkr.ecr.region.amazonaws.com.")
-                                     .repo("harness")
-                                     .tags(asList("tag1", "tag2"))
-                                     .dockerfile("Dockerfile")
-                                     .context("context")
-                                     .target("target")
-                                     .buildArgs(asList("arg1", "arg2"))
-                                     .labels(Collections.singletonMap("label", "label1"))
-                                     .build();
+    ECRStepInfo ecrStepInfo =
+        ECRStepInfo.builder()
+            .registry(ParameterField.createValueField("https://aws_account_id.dkr.ecr.region.amazonaws.com."))
+            .repo(ParameterField.createValueField("harness"))
+            .tags(ParameterField.createValueField(asList("tag1", "tag2")))
+            .dockerfile(ParameterField.createValueField("Dockerfile"))
+            .context(ParameterField.createValueField("context"))
+            .target(ParameterField.createValueField("target"))
+            .buildArgs(ParameterField.createValueField(asList("arg1", "arg2")))
+            .labels(ParameterField.createValueField(Collections.singletonMap("label", "label1")))
+            .build();
 
     Map<String, String> expected = new HashMap<>();
     expected.put("PLUGIN_REGISTRY", "https://aws_account_id.dkr.ecr.region.amazonaws.com.");
@@ -78,35 +80,36 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_TARGET", "target");
     expected.put("PLUGIN_BUILD_ARGS", "arg1,arg2");
     expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
-    //    Map<String, String> pluginCompatiblePublishStepEnvVariables =
-    //        PluginSettingUtils.getPluginCompatibleEnvVariables(dockerStepInfo);
-    //    assertThat(pluginCompatiblePublishStepEnvVariables).isEqualTo(expected);
+    Map<String, String> pluginCompatiblePublishStepEnvVariables =
+        PluginSettingUtils.getPluginCompatibleEnvVariables(ecrStepInfo, "identifier");
+    assertThat(pluginCompatiblePublishStepEnvVariables).isEqualTo(expected);
   }
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldGetDockerStepInfoEnvVariables() {
-    //    DockerStepInfo dockerStepInfo = DockerStepInfo.builder()
-    //                                        .repo("harness")
-    //                                        .tags(asList("tag1", "tag2"))
-    //                                        .dockerfile("Dockerfile")
-    //                                        .context("context")
-    //                                        .target("target")
-    //                                        .buildArgs(asList("arg1", "arg2"))
-    //                                        .labels(Collections.singletonMap("label", "label1"))
-    //                                        .build();
-    //
-    //    Map<String, String> expected = new HashMap<>();
-    //    expected.put("PLUGIN_REPO", "harness");
-    //    expected.put("PLUGIN_TAGS", "tag1,tag2");
-    //    expected.put("PLUGIN_DOCKERFILE", "Dockerfile");
-    //    expected.put("PLUGIN_CONTEXT", "context");
-    //    expected.put("PLUGIN_TARGET", "target");
-    //    expected.put("PLUGIN_BUILD_ARGS", "arg1,arg2");
-    //    expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
-    //    Map<String, String> pluginCompatiblePublishStepEnvVariables =
-    //        PluginSettingUtils.getPluginCompatibleEnvVariables(dockerStepInfo);
-    //    assertThat(pluginCompatiblePublishStepEnvVariables).isEqualTo(expected);
+    DockerStepInfo dockerStepInfo =
+        DockerStepInfo.builder()
+            .repo(ParameterField.createValueField("harness"))
+            .tags(ParameterField.createValueField(asList("tag1", "tag2")))
+            .dockerfile(ParameterField.createValueField("Dockerfile"))
+            .context(ParameterField.createValueField("context"))
+            .target(ParameterField.createValueField("target"))
+            .buildArgs(ParameterField.createValueField(asList("arg1", "arg2")))
+            .labels(ParameterField.createValueField(Collections.singletonMap("label", "label1")))
+            .build();
+
+    Map<String, String> expected = new HashMap<>();
+    expected.put("PLUGIN_REPO", "harness");
+    expected.put("PLUGIN_TAGS", "tag1,tag2");
+    expected.put("PLUGIN_DOCKERFILE", "Dockerfile");
+    expected.put("PLUGIN_CONTEXT", "context");
+    expected.put("PLUGIN_TARGET", "target");
+    expected.put("PLUGIN_BUILD_ARGS", "arg1,arg2");
+    expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
+    Map<String, String> pluginCompatiblePublishStepEnvVariables =
+        PluginSettingUtils.getPluginCompatibleEnvVariables(dockerStepInfo, "identifier");
+    assertThat(pluginCompatiblePublishStepEnvVariables).isEqualTo(expected);
   }
 
   @Test
@@ -135,11 +138,11 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
   @Category(UnitTests.class)
   public void shouldGetSaveCacheS3StepInfoEnvVariables() {
     SaveCacheS3StepInfo saveCacheS3StepInfo = SaveCacheS3StepInfo.builder()
-                                                  .key("key")
-                                                  .target("target")
-                                                  .bucket("bucket")
-                                                  .sourcePath(asList("path1", "path2"))
-                                                  .endpoint("endpoint")
+                                                  .key(ParameterField.createValueField("key"))
+                                                  .target(ParameterField.createValueField("target"))
+                                                  .bucket(ParameterField.createValueField("bucket"))
+                                                  .sourcePath(ParameterField.createValueField(asList("path1", "path2")))
+                                                  .endpoint(ParameterField.createValueField("endpoint"))
                                                   .build();
     Map<String, String> expected = new HashMap<>();
     expected.put("PLUGIN_PATH", "target");
@@ -199,11 +202,11 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
   @Category(UnitTests.class)
   public void shouldGetUploadToS3StepInfoEnvVariables() {
     UploadToS3StepInfo uploadToS3StepInfo = UploadToS3StepInfo.builder()
-                                                .endpoint("endpoint")
-                                                .region("region")
-                                                .bucket("bucket")
-                                                .sourcePath("sources")
-                                                .target("target")
+                                                .endpoint(ParameterField.createValueField("endpoint"))
+                                                .region(ParameterField.createValueField("region"))
+                                                .bucket(ParameterField.createValueField("bucket"))
+                                                .sourcePath(ParameterField.createValueField("sources"))
+                                                .target(ParameterField.createValueField("target"))
                                                 .build();
     Map<String, String> expected = new HashMap<>();
     expected.put("PLUGIN_ENDPOINT", "endpoint");
@@ -221,11 +224,12 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldGetUploadToGCSStepInfoEnvVariables() {
-    UploadToGCSStepInfo uploadToS3StepInfo = UploadToGCSStepInfo.builder()
-                                                 .bucket("bucket")
-                                                 .sourcePath("/step-exec/workspace/pom.xml")
-                                                 .target("dir/pom.xml")
-                                                 .build();
+    UploadToGCSStepInfo uploadToS3StepInfo =
+        UploadToGCSStepInfo.builder()
+            .bucket(ParameterField.createValueField("bucket"))
+            .sourcePath(ParameterField.createValueField("/step-exec/workspace/pom.xml"))
+            .target(ParameterField.createValueField("dir/pom.xml"))
+            .build();
     Map<String, String> expected = new HashMap<>();
     expected.put("PLUGIN_SOURCE", "/step-exec/workspace/pom.xml");
     expected.put("PLUGIN_TARGET", "bucket/dir/pom.xml");

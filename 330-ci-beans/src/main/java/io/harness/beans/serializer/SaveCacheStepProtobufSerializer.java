@@ -26,8 +26,10 @@ public class SaveCacheStepProtobufSerializer implements ProtobufStepSerializer<S
     }
 
     SaveCacheStep.Builder saveCacheBuilder = SaveCacheStep.newBuilder();
-    saveCacheBuilder.addAllPaths(saveCacheStepInfo.getPaths());
-    saveCacheBuilder.setKey(saveCacheStepInfo.getKey());
+    saveCacheBuilder.addAllPaths(RunTimeInputHandler.resolveListParameter(
+        "paths", "SaveCache", step.getIdentifier(), saveCacheStepInfo.getPaths(), true));
+    saveCacheBuilder.setKey(RunTimeInputHandler.resolveStringParameter(
+        "key", "SaveCache", step.getIdentifier(), saveCacheStepInfo.getKey(), true));
 
     String skipCondition = SkipConditionUtils.getSkipCondition(step);
     return UnitStep.newBuilder()

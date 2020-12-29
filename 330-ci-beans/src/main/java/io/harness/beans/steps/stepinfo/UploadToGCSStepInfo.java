@@ -38,8 +38,6 @@ public class UploadToGCSStepInfo implements PluginCompatibleStep {
   @JsonIgnore
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.UPLOAD_GCS.name()).build();
 
-  @JsonIgnore private String callbackId;
-  @JsonIgnore private Integer port;
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
@@ -49,15 +47,16 @@ public class UploadToGCSStepInfo implements PluginCompatibleStep {
   private ContainerResource resources;
 
   // plugin settings
-  @NotNull private String bucket;
-  @NotNull private String sourcePath;
-  @NotNull private String target;
+  @NotNull private ParameterField<String> bucket;
+  @NotNull private ParameterField<String> sourcePath;
+  @NotNull private ParameterField<String> target;
 
   @Builder
   @ConstructorProperties(
       {"identifier", "name", "retry", "connectorRef", "image", "resources", "bucket", "sourcePath", "target"})
   public UploadToGCSStepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
-      ParameterField<String> image, ContainerResource resources, String bucket, String sourcePath, String target) {
+      ParameterField<String> image, ContainerResource resources, ParameterField<String> bucket,
+      ParameterField<String> sourcePath, ParameterField<String> target) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
