@@ -3,9 +3,11 @@ package io.harness.core;
 import static io.harness.rule.OwnerRule.ALEXEI;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.RecasterTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.exceptions.RecasterException;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableList;
@@ -136,6 +138,59 @@ public class RecastComplexValuesTest extends RecasterTestBase {
     for (ITest test : recastedDummyListOfInterfaces.iTests) {
       assertThat(test instanceof ITestImpl).isTrue();
     }
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestRecastWithListOfInterfacesWithoutRegisteringTheClass() {
+    ITest iTest = new ITestImpl("someType");
+    ITest iTest1 = new ITestImpl("someType1");
+    ITest iTest2 = new ITestImpl("someType2");
+    List<ITest> iTests = Arrays.asList(iTest, iTest1, iTest2);
+
+    Document document =
+        new Document()
+            .append("__recast", "io.harness.core.RecastComplexValuesTest$DummyListOfInterfaces")
+            .append("iTests",
+                ImmutableList.of(
+                    new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType"),
+                    new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType1"),
+                    new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType2")));
+
+    Recast recast = new Recast(recaster, ImmutableSet.of());
+
+    DummyListOfInterfaces recastedDummyListOfInterfaces = recast.fromDocument(document, DummyListOfInterfaces.class);
+    assertThat(recastedDummyListOfInterfaces).isNotNull();
+    assertThat(recastedDummyListOfInterfaces.iTests).isEqualTo(iTests);
+    for (ITest test : recastedDummyListOfInterfaces.iTests) {
+      assertThat(test instanceof ITestImpl).isTrue();
+    }
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestRecastWithListOfInterfacesWithoutRegisteringTheClassException() {
+    ITest iTest = new ITestImpl("someType");
+    ITest iTest1 = new ITestImpl("someType1");
+    ITest iTest2 = new ITestImpl("someType2");
+
+    Document document =
+        new Document()
+            .append("__recast", DummyListOfSetOfInterfaces.class.getName())
+            .append("list",
+                ImmutableList.of(ImmutableSet.of(
+                    new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType"),
+                    new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType1"),
+                    new Document().append("__recast", ITestImpl.class.getName()).append("type", "someType2"))));
+
+    Recast recast = new Recast(recaster, ImmutableSet.of());
+
+    assertThatThrownBy(() -> recast.fromDocument(document, DummyListOfInterfaces.class))
+        .isInstanceOf(RecasterException.class)
+        .hasMessageContaining(
+            "io.harness.core.RecastComplexValuesTest$DummyListOfSetOfInterfaces class cannot be mapped to io.harness.core.RecastComplexValuesTest$DummyListOfInterfaces");
   }
 
   @Test

@@ -14,6 +14,7 @@ java_library(
         "//890-pms-contracts/src/main/proto:890_pms_contracts_java_proto",
         "//950-walktree-visitor:module",
         "//960-persistence:module",
+        "//960-recaster:module",
         "//980-commons:module",
     ],
 )

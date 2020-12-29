@@ -4,11 +4,13 @@ import static java.lang.String.format;
 
 import io.harness.beans.CastedClass;
 import io.harness.beans.CastedField;
+import io.harness.exceptions.CastedFieldException;
 import io.harness.exceptions.RecasterException;
 import io.harness.fieldrecaster.DefaultFieldRecaster;
 import io.harness.fieldrecaster.FieldRecaster;
 import io.harness.fieldrecaster.SimpleValueFieldRecaster;
 
+import com.google.protobuf.Message;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +23,7 @@ import org.bson.Document;
 @Slf4j
 public class Recaster {
   public static final String RECAST_CLASS_KEY = "__recast";
+  public static final String ENCODED_PROTO = "__encodedProto";
 
   private final Map<String, CastedClass> castedClasses = new ConcurrentHashMap<>();
   private final Transformer transformer;
@@ -66,13 +69,33 @@ public class Recaster {
       log.warn("Null reference was passed in document");
       return null;
     }
+
+    if (!document.containsKey(RECAST_CLASS_KEY)) {
+      throw new RecasterException(
+          format("The document does not contain a %s key. Determining entity type is impossible.", RECAST_CLASS_KEY));
+    }
+
     T entity;
     entity = objectFactory.createInstance(entityClass, document);
+
+    if (!entityClass.isAssignableFrom(entity.getClass())) {
+      throw new RecasterException(
+          format("%s class cannot be mapped to %s", document.get(RECAST_CLASS_KEY), entityClass.getName()));
+    }
+
     entity = fromDocument(document, entity);
     return entity;
   }
 
+  @SuppressWarnings("unchecked")
   public <T> T fromDocument(final Document document, T entity) {
+    if (entity instanceof Message) {
+      if (!document.containsKey(ENCODED_PROTO)) {
+        throw new RecasterException(
+            format("The proto document does not contain a %s key. Decoding proto is impossible.", ENCODED_PROTO));
+      }
+      return (T) transformer.decode(entity.getClass(), document.get(ENCODED_PROTO), null);
+    }
     if (entity instanceof Map) {
       Map<String, Object> map = (Map<String, Object>) entity;
       for (String key : document.keySet()) {
@@ -81,19 +104,21 @@ public class Recaster {
       }
     } else if (entity instanceof Collection) {
       Collection<Object> collection = (Collection<Object>) entity;
-      for (Object o : (List) document) {
+      for (Object o : (List<Object>) document) {
         collection.add((o instanceof Document) ? fromDocument((Document) o) : o);
       }
     } else {
       final CastedClass castedClass = getCastedClass(entity);
-      try {
-        for (final CastedField cf : castedClass.getPersistenceFields()) {
+      for (final CastedField cf : castedClass.getPersistenceFields()) {
+        try {
           readCastedField(document, cf, entity);
+        } catch (final Exception e) {
+          log.error("Cannot map [{}] to [{}] class", document.get(RECAST_CLASS_KEY), entity.getClass(), e);
+          throw new CastedFieldException(
+              format("Cannot map [%s] to [%s] class for field [%s]", document.get(RECAST_CLASS_KEY), entity.getClass(),
+                  cf.getField().getName()),
+              e);
         }
-      } catch (final Exception e1) {
-        // TODO(Alexei) define custom exception
-        log.error("Cannot map [{}] to [{}] class", document.get(RECAST_CLASS_KEY), entity.getClass(), e1);
-        throw new RuntimeException();
       }
     }
 
@@ -130,11 +155,17 @@ public class Recaster {
     final CastedClass cc = getCastedClass(entity);
     document.put(RECAST_CLASS_KEY, entity.getClass().getName());
 
+    if (entity instanceof Message) {
+      Object encodedProto = transformer.encode(entity);
+      return document.append(ENCODED_PROTO, encodedProto);
+    }
+
     for (final CastedField cf : cc.getPersistenceFields()) {
       try {
         writeCastedField(entity, cf, document, involvedObjects);
       } catch (Exception e) {
-        throw new RecasterException("Error mapping field:" + cf.getFullName(), e);
+        throw new CastedFieldException(format("Cannot map [%s] to [%s] class for field [%s]",
+            document.get(RECAST_CLASS_KEY), entity.getClass(), cf.getField().getName()));
       }
     }
 

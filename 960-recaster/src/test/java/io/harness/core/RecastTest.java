@@ -3,9 +3,11 @@ package io.harness.core;
 import static io.harness.rule.OwnerRule.ALEXEI;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.RecasterTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.exceptions.RecasterException;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableSet;
@@ -32,6 +34,25 @@ public class RecastTest extends RecasterTestBase {
   @Before
   public void setup() {
     recaster = new Recaster();
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestRecasterWithNull() {
+    Recast recast = new Recast(recaster, ImmutableSet.of());
+    DummyLong recastedDummyLong = recast.fromDocument(null, DummyLong.class);
+    assertThat(recastedDummyLong).isNull();
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestRecasterWithEmptyDocument() {
+    Recast recast = new Recast(recaster, ImmutableSet.of());
+    assertThatThrownBy(() -> recast.fromDocument(new Document(), DummyLong.class))
+        .isInstanceOf(RecasterException.class)
+        .hasMessageContaining("The document does not contain a __recast key. Determining entity type is impossible.");
   }
 
   @Test
