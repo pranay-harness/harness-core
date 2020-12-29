@@ -2,21 +2,21 @@
 package cloudFunction
 
 import (
+	"cloud.google.com/go/bigquery"
+	"cloud.google.com/go/scheduler/apiv1"
+	"cloud.google.com/go/storage"
 	"context"
 	"encoding/json"
+	"fmt"
+	"google.golang.org/api/iterator"
+	schedulerpb "google.golang.org/genproto/googleapis/cloud/scheduler/v1"
 	"io/ioutil"
 	"log"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
-	"fmt"
-	"os"
 	"time"
-	"cloud.google.com/go/scheduler/apiv1"
-	schedulerpb "google.golang.org/genproto/googleapis/cloud/scheduler/v1"
-	"cloud.google.com/go/bigquery"
-	"cloud.google.com/go/storage"
-	"google.golang.org/api/iterator"
 )
 
 // GCSEvent is the payload of a GCS event. Please refer to the docs for
@@ -60,8 +60,8 @@ func CreateTable(ctx context.Context, e GCSEvent) error {
 	ctxBack := context.Background()
 	projectId := os.Getenv("GCP_PROJECT")
 	if len(projectId) == 0 {
-    projectId = "ce-prod-274307"
-  }
+		projectId = "ce-prod-274307"
+	}
 	client, bigQueryErr := bigquery.NewClient(ctxBack, projectId)
 	if bigQueryErr != nil {
 		log.Fatal("error creating client: {}", bigQueryErr.Error())
@@ -71,144 +71,143 @@ func CreateTable(ctx context.Context, e GCSEvent) error {
 		log.Fatal("error creating Storage client: {}", errStorage.Error())
 	}
 	PathSlice := strings.Split(e.Name, "/")
-	awsRoleIdWithaccountIdSlice:= strings.Split(PathSlice[0], ":")
-	accountId := strings.ToLower(awsRoleIdWithaccountIdSlice[len(awsRoleIdWithaccountIdSlice) - 1])
+	awsRoleIdWithaccountIdSlice := strings.Split(PathSlice[0], ":")
+	accountId := strings.ToLower(awsRoleIdWithaccountIdSlice[len(awsRoleIdWithaccountIdSlice)-1])
 	inValidRegex, _ := regexp.Compile("[^a-z0-9_]")
-  if inValidRegex.MatchString(accountId) {
-    accountId = inValidRegex.ReplaceAllString(accountId, "_")
-  }
+	if inValidRegex.MatchString(accountId) {
+		accountId = inValidRegex.ReplaceAllString(accountId, "_")
+	}
 	datasetName := "BillingReport_" + accountId
 	// 4th from left is definite to be the date folder
-  DateFolderSlice := strings.Split(PathSlice[3], "-")
-  TableDateSuffix := DateFolderSlice[0][:4] + "_" + DateFolderSlice[0][4:6]
+	DateFolderSlice := strings.Split(PathSlice[3], "-")
+	TableDateSuffix := DateFolderSlice[0][:4] + "_" + DateFolderSlice[0][4:6]
 	tableName := "awsCurTable_" + TableDateSuffix
 
-
-  if !strings.HasSuffix(e.Name, ".json") {
-    fmt.Println("Not a JSON file. Exiting :", e.Name)
-    return nil
-  }
+	if !strings.HasSuffix(e.Name, ".json") {
+		fmt.Println("Not a JSON file. Exiting :", e.Name)
+		return nil
+	}
 	fmt.Println("Processing JSON from path:", e.Name)
-  rc, readerClientErr := storageClient.Bucket(e.Bucket).Object(e.Name).NewReader(ctxBack)
-  // log.Printf("Printing Event Context %+v\n", e)
-  if readerClientErr != nil {
-    log.Fatal(readerClientErr)
-  }
-  defer rc.Close()
-  fmt.Println("Reading data from manifest")
-  body, readingErr := ioutil.ReadAll(rc)
-  if readingErr != nil {
-    log.Fatal(readingErr)
-  }
-  var jsonData manifestJSON
-  if readingErr = json.Unmarshal(body, &jsonData); readingErr != nil {
-    log.Fatal("Could not Deserialise Manifest File: {}", readingErr.Error())
-  }
+	rc, readerClientErr := storageClient.Bucket(e.Bucket).Object(e.Name).NewReader(ctxBack)
+	// log.Printf("Printing Event Context %+v\n", e)
+	if readerClientErr != nil {
+		log.Fatal(readerClientErr)
+	}
+	defer rc.Close()
+	fmt.Println("Reading data from manifest")
+	body, readingErr := ioutil.ReadAll(rc)
+	if readingErr != nil {
+		log.Fatal(readingErr)
+	}
+	var jsonData manifestJSON
+	if readingErr = json.Unmarshal(body, &jsonData); readingErr != nil {
+		log.Fatal("Could not Deserialise Manifest File: {}", readingErr.Error())
+	}
 
-  createDataSet := true
-  datasetsIterator := client.Datasets(ctxBack)
-  for {
-    dataset, err := datasetsIterator.Next()
-    if err == iterator.Done {
-      break
-    }
-    if dataset.DatasetID == "BillingReport_"+accountId {
-      createDataSet = false
-      break
-    }
-  }
+	createDataSet := true
+	datasetsIterator := client.Datasets(ctxBack)
+	for {
+		dataset, err := datasetsIterator.Next()
+		if err == iterator.Done {
+			break
+		}
+		if dataset.DatasetID == "BillingReport_"+accountId {
+			createDataSet = false
+			break
+		}
+	}
 
-  if createDataSet {
-    dataSetMetaData := &bigquery.DatasetMetadata{
-      Location: "US",
-    }
-    if dataSetCreationErr := client.Dataset("BillingReport_"+accountId).Create(ctxBack, dataSetMetaData); dataSetCreationErr != nil {
-      fmt.Println("Error Creating DataSet:", dataSetCreationErr.Error())
-    }
-  }
+	if createDataSet {
+		dataSetMetaData := &bigquery.DatasetMetadata{
+			Location: "US",
+		}
+		if dataSetCreationErr := client.Dataset("BillingReport_"+accountId).Create(ctxBack, dataSetMetaData); dataSetCreationErr != nil {
+			fmt.Println("Error Creating DataSet:", dataSetCreationErr.Error())
+		}
+	}
 
-  CloudFunctionsDataset := client.Dataset(datasetName)
-  CloudFunctionsDataset.Table(tableName).Delete(ctxBack)
-  if tableCreateErr := CloudFunctionsDataset.Table(tableName).Create(ctxBack, &bigquery.TableMetadata{Schema: getSchema(jsonData)}); tableCreateErr != nil {
-    fmt.Println("Error Creating table. This error can be ignored.", tableCreateErr.Error())
-  }
+	CloudFunctionsDataset := client.Dataset(datasetName)
+	CloudFunctionsDataset.Table(tableName).Delete(ctxBack)
+	if tableCreateErr := CloudFunctionsDataset.Table(tableName).Create(ctxBack, &bigquery.TableMetadata{Schema: getSchema(jsonData)}); tableCreateErr != nil {
+		fmt.Println("Error Creating table. This error can be ignored.", tableCreateErr.Error())
+	}
 
-  // CloudScheduler Code
-  fmt.Println("Processing CloudScheduler code")
-  ctxBack = context.Background()
-  c, err := scheduler.NewCloudSchedulerClient(ctxBack)
-  if err != nil {
-    fmt.Println(err)
-    return err
-  }
-  msgData := make(map[string]string)
-  msgData["accountId"] = accountId
-  msgData["bucket"] = e.Bucket
-  msgData["fileName"] = e.Name
-  msgData["datasetName"] = datasetName
-  msgData["tableName"] = tableName
-  msgData["projectId"] = projectId
-  msgData["tableSuffix"] = TableDateSuffix
-  msgDataJson, _ := json.Marshal(msgData)
-  msgDataString := string(msgDataJson)
+	// CloudScheduler Code
+	fmt.Println("Processing CloudScheduler code")
+	ctxBack = context.Background()
+	c, err := scheduler.NewCloudSchedulerClient(ctxBack)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	msgData := make(map[string]string)
+	msgData["accountId"] = accountId
+	msgData["bucket"] = e.Bucket
+	msgData["fileName"] = e.Name
+	msgData["datasetName"] = datasetName
+	msgData["tableName"] = tableName
+	msgData["projectId"] = projectId
+	msgData["tableSuffix"] = TableDateSuffix
+	msgDataJson, _ := json.Marshal(msgData)
+	msgDataString := string(msgDataJson)
 
-  triggerTime := time.Now().UTC()
-  triggerTime = triggerTime.Add(10 * time.Minute) // after 10 mins
-  schedule := fmt.Sprintf("%d %d %d %d *", triggerTime.Minute(), triggerTime.Hour(), triggerTime.Day(), int(triggerTime.Month()))
+	triggerTime := time.Now().UTC()
+	triggerTime = triggerTime.Add(10 * time.Minute) // after 10 mins
+	schedule := fmt.Sprintf("%d %d %d %d *", triggerTime.Minute(), triggerTime.Hour(), triggerTime.Day(), int(triggerTime.Month()))
 
-  topic := fmt.Sprintf("projects/%s/topics/ce-awsdata-scheduler", projectId)
-  fmt.Println("Topic: ", topic)
-  fmt.Println("msgDataString:", msgDataString)
-  var pubsubtarget = &schedulerpb.PubsubTarget {
-    TopicName: topic,
-    Data: []byte(msgDataString),
-  }
+	topic := fmt.Sprintf("projects/%s/topics/ce-awsdata-scheduler", projectId)
+	fmt.Println("Topic: ", topic)
+	fmt.Println("msgDataString:", msgDataString)
+	var pubsubtarget = &schedulerpb.PubsubTarget{
+		TopicName: topic,
+		Data:      []byte(msgDataString),
+	}
 
-  var jobTarget = &schedulerpb.Job_PubsubTarget {
-    PubsubTarget: pubsubtarget,
-  }
-  paths := strings.Split(e.Name, "/")
-  // It is quite definite that 4th from left will be the month folder always.
-  month := paths[3]
-  var name string
-  if strings.HasSuffix(paths[4], ".json") {
-    name = fmt.Sprintf("projects/%s/locations/us-central1/jobs/ce-awsdata-%s-%s", projectId, accountId, month)
-  } else if strings.HasSuffix(paths[5], ".json") {
-    subfolder := paths[4]
-    name = fmt.Sprintf("projects/%s/locations/us-central1/jobs/ce-awsdata-%s-%s-%s", projectId, accountId, month, subfolder)
-  }
-  description := fmt.Sprintf("Scheduler for %s", accountId)
-  var job = &schedulerpb.Job {
-    Name: name,
-    Description: description,
-    Target: jobTarget,
-    Schedule: schedule,
-  }
+	var jobTarget = &schedulerpb.Job_PubsubTarget{
+		PubsubTarget: pubsubtarget,
+	}
+	paths := strings.Split(e.Name, "/")
+	// It is quite definite that 4th from left will be the month folder always.
+	month := paths[3]
+	var name string
+	if strings.HasSuffix(paths[4], ".json") {
+		name = fmt.Sprintf("projects/%s/locations/us-central1/jobs/ce-awsdata-%s-%s", projectId, accountId, month)
+	} else if strings.HasSuffix(paths[5], ".json") {
+		subfolder := paths[4]
+		name = fmt.Sprintf("projects/%s/locations/us-central1/jobs/ce-awsdata-%s-%s-%s", projectId, accountId, month, subfolder)
+	}
+	description := fmt.Sprintf("Scheduler for %s", accountId)
+	var job = &schedulerpb.Job{
+		Name:        name,
+		Description: description,
+		Target:      jobTarget,
+		Schedule:    schedule,
+	}
 
-  // https://godoc.org/google.golang.org/genproto/googleapis/cloud/scheduler/v1#DeleteJobRequest
-  req1 := &schedulerpb.DeleteJobRequest{
-    Name: name,
-  }
-  err = c.DeleteJob(ctxBack, req1)
-  if err != nil {
-    fmt.Printf("Error while trying to delete older schedules. This can be ignored. %s\n", err)
-  }
+	// https://godoc.org/google.golang.org/genproto/googleapis/cloud/scheduler/v1#DeleteJobRequest
+	req1 := &schedulerpb.DeleteJobRequest{
+		Name: name,
+	}
+	err = c.DeleteJob(ctxBack, req1)
+	if err != nil {
+		fmt.Printf("Error while trying to delete older schedules. This can be ignored. %s\n", err)
+	}
 
-  req := &schedulerpb.CreateJobRequest{
-    Parent: fmt.Sprintf("projects/%s/locations/us-central1", projectId),
-    Job: job,
-  }
-  _, err = c.CreateJob(ctxBack, req)
-  if err != nil {
-    fmt.Printf("%s\n", err)
-    return err
-  }
+	req := &schedulerpb.CreateJobRequest{
+		Parent: fmt.Sprintf("projects/%s/locations/us-central1", projectId),
+		Job:    job,
+	}
+	_, err = c.CreateJob(ctxBack, req)
+	if err != nil {
+		fmt.Printf("%s\n", err)
+		return err
+	}
 
-  // Delete manifest only when scheduler is set
-  if DeleteObjectErr := storageClient.Bucket(e.Bucket).Object(e.Name).Delete(ctxBack); DeleteObjectErr != nil {
-    fmt.Println("Error Deleting Json Manifest File Post Processing:", DeleteObjectErr.Error())
-  }
-  fmt.Println("Processed and deleted JSON:", e.Name)
+	// Delete manifest only when scheduler is set
+	if DeleteObjectErr := storageClient.Bucket(e.Bucket).Object(e.Name).Delete(ctxBack); DeleteObjectErr != nil {
+		fmt.Println("Error Deleting Json Manifest File Post Processing:", DeleteObjectErr.Error())
+	}
+	fmt.Println("Processed and deleted JSON:", e.Name)
 	return nil
 }
 
@@ -229,7 +228,7 @@ func getSchema(jsonData manifestJSON) bigquery.Schema {
 			mapOfNames[nameReferenceForMapCount] = 1
 		} else {
 			// Handle the case-insesitive nature of BQ columns
-			log.Print("Name: " + name + " Occurence? ", NoOfOccurences)
+			log.Print("Name: "+name+" Occurence? ", NoOfOccurences)
 			mapOfNames[nameReferenceForMapCount] = NoOfOccurences + 1
 			name = name + "_" + strconv.Itoa(NoOfOccurences)
 		}
@@ -265,5 +264,3 @@ func getMappedDataColumn(dataType string) bigquery.FieldType {
 	}
 	return modifiedDataType
 }
-
-

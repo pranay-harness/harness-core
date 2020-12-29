@@ -17,7 +17,7 @@ func Test_GetRemoteWriter_Success(t *testing.T) {
 	defer ctrl.Finish()
 
 	mclient := mock.NewMockClient(ctrl)
-	rw := NewRemoteWriter(mclient, "key")
+	rw, _ := NewRemoteWriter(mclient, "key")
 	assert.NotEqual(t, rw, nil)
 }
 
@@ -27,7 +27,7 @@ func Test_RemoteWriter_Open_Success(t *testing.T) {
 
 	mclient := mock.NewMockClient(ctrl)
 	mclient.EXPECT().Open(context.Background(), "key").Return(nil)
-	rw := NewRemoteWriter(mclient, "key")
+	rw, _ := NewRemoteWriter(mclient, "key")
 	err := rw.Open()
 	assert.Equal(t, err, nil)
 }
@@ -49,17 +49,16 @@ func Test_RemoteWriter_Open_Failure(t *testing.T) {
 	mclient.EXPECT().UploadUsingLink(context.Background(), strLink, gomock.Any())
 	mclient.EXPECT().Close(context.Background(), key)
 
-	rw := NewRemoteWriter(mclient, key)
+	rw, _ := NewRemoteWriter(mclient, key)
 	err := rw.Open()
 	assert.NotEqual(t, err, nil)
 
 	// Opening of the stream has failed but we can still use the writer
-	rw.SetInterval(time.Duration(100))
+	rw.SetInterval(time.Duration(100) * time.Second)
 	rw.Write([]byte(msg1))
 	rw.Write([]byte(msg2))
 	rw.Write([]byte(msg3))
-	err = rw.flush() // Force write to the remote
-	assert.NotEqual(t, err, nil)
+	rw.flush() // Force write to the remote
 	assert.Equal(t, len(rw.history), 3)
 
 	err = rw.Close()
@@ -83,12 +82,12 @@ func Test_RemoteWriter_Limits(t *testing.T) {
 	mclient.EXPECT().Write(context.Background(), key, gomock.Any())
 	mclient.EXPECT().Write(context.Background(), key, gomock.Any())
 
-	rw := NewRemoteWriter(mclient, key)
+	rw, _ := NewRemoteWriter(mclient, key)
 	err := rw.Open()
 	assert.Nil(t, err)
 
 	// Opening of the stream has failed but we can still use the writer
-	rw.SetInterval(time.Duration(100))
+	rw.SetInterval(time.Duration(100) * time.Second)
 	rw.SetLimit(30)
 	rw.Write([]byte(msg1))
 	err = rw.flush()
@@ -115,8 +114,8 @@ func Test_RemoteWriter_WriteSingleLine(t *testing.T) {
 
 	mclient := mock.NewMockClient(ctrl)
 	mclient.EXPECT().Write(context.Background(), key, gomock.Any())
-	rw := NewRemoteWriter(mclient, key)
-	rw.SetInterval(time.Duration(100))
+	rw, _ := NewRemoteWriter(mclient, key)
+	rw.SetInterval(time.Duration(100) * time.Second)
 	rw.Write([]byte(msg))
 	rw.flush() // Force write to the remote
 
@@ -138,8 +137,8 @@ func Test_RemoteWriter_WriteMultiple(t *testing.T) {
 	mclient := mock.NewMockClient(ctrl)
 	mclient.EXPECT().Write(context.Background(), key, gomock.Any())
 	mclient.EXPECT().Write(context.Background(), key, gomock.Any())
-	rw := NewRemoteWriter(mclient, key)
-	rw.SetInterval(time.Duration(100))
+	rw, _ := NewRemoteWriter(mclient, key)
+	rw.SetInterval(time.Duration(100) * time.Second)
 	rw.Write([]byte(msg1))
 	rw.flush() // Force write to the remote
 	rw.Write([]byte(msg2))
@@ -172,8 +171,8 @@ func Test_RemoteWriter_MultipleCharacters(t *testing.T) {
 	mclient := mock.NewMockClient(ctrl)
 	mclient.EXPECT().Write(context.Background(), key, gomock.Any())
 	mclient.EXPECT().Write(context.Background(), key, gomock.Any())
-	rw := NewRemoteWriter(mclient, key)
-	rw.SetInterval(time.Duration(100))
+	rw, _ := NewRemoteWriter(mclient, key)
+	rw.SetInterval(time.Duration(100) * time.Second)
 
 	// Write character by character followed by new line
 	for _, c := range msg1 {
@@ -212,8 +211,8 @@ func Test_RemoteWriter_JSON(t *testing.T) {
 
 	mclient := mock.NewMockClient(ctrl)
 	mclient.EXPECT().Write(context.Background(), key, gomock.Any())
-	rw := NewRemoteWriter(mclient, key)
-	rw.SetInterval(time.Duration(100))
+	rw, _ := NewRemoteWriter(mclient, key)
+	rw.SetInterval(time.Duration(100) * time.Second)
 
 	rw.Write([]byte(msg1))
 	rw.flush()
@@ -243,8 +242,8 @@ func Test_RemoteWriter_Close(t *testing.T) {
 	mclient.EXPECT().UploadLink(context.Background(), key).Return(link, nil)
 	mclient.EXPECT().UploadUsingLink(context.Background(), strLink, gomock.Any())
 	mclient.EXPECT().Close(context.Background(), key)
-	rw := NewRemoteWriter(mclient, key)
-	rw.SetInterval(time.Duration(100))
+	rw, _ := NewRemoteWriter(mclient, key)
+	rw.SetInterval(time.Duration(100) * time.Second)
 
 	rw.Write([]byte(msg1))
 	rw.flush()
