@@ -137,10 +137,12 @@ public class PublishStepProtobufSerializer implements ProtobufStepSerializer<Pub
     switch (connector.getType()) {
       case ECR:
         EcrConnector ecrConnector = (EcrConnector) connector;
-        RunTimeInputHandler.resolveStringParameter("Location", "ECR", identifier, ecrConnector.getLocation(), true);
+        return RunTimeInputHandler.resolveStringParameter(
+            "Location", "ECR", identifier, ecrConnector.getLocation(), true);
       case GCR:
         GcrConnector gcrConnector = (GcrConnector) connector;
-        RunTimeInputHandler.resolveStringParameter("Location", "GCR", identifier, gcrConnector.getLocation(), true);
+        return RunTimeInputHandler.resolveStringParameter(
+            "Location", "GCR", identifier, gcrConnector.getLocation(), true);
       case ARTIFACTORY:
         ArtifactoryConnector artifactoryConnector = (ArtifactoryConnector) connector;
         return RunTimeInputHandler.resolveStringParameter(
