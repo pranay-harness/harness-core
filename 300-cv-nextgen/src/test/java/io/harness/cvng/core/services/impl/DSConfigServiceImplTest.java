@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.RAGHU;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTest;
@@ -86,7 +87,7 @@ public class DSConfigServiceImplTest extends CvNextGenTest {
   public void testList_multiple() {
     AppDynamicsDSConfig dataSourceCVConfig = createAppDynamicsDataSourceCVConfig("app", "monitoringSourceIdentifier1");
     dsConfigService.upsert(dataSourceCVConfig);
-    dataSourceCVConfig = createAppDynamicsDataSourceCVConfig("app", "monitoringSourceIdentifier2");
+    dataSourceCVConfig = createAppDynamicsDataSourceCVConfig("app1", "monitoringSourceIdentifier2");
     dsConfigService.upsert(dataSourceCVConfig);
     List<? extends DSConfig> dataSourceCVConfigs =
         dsConfigService.list(accountId, connectorIdentifier, dataSourceCVConfig.getProductName());
@@ -94,6 +95,19 @@ public class DSConfigServiceImplTest extends CvNextGenTest {
     Set<String> identifiers = new HashSet<>();
     dataSourceCVConfigs.forEach(dsConfig -> identifiers.add(dsConfig.getIdentifier()));
     assertThat(identifiers).isEqualTo(Sets.newHashSet("monitoringSourceIdentifier1", "monitoringSourceIdentifier2"));
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testVerifyExistingConfigs() {
+    AppDynamicsDSConfig dataSourceCVConfig = createAppDynamicsDataSourceCVConfig("app", "monitoringSourceIdentifier1");
+    dsConfigService.upsert(dataSourceCVConfig);
+    AppDynamicsDSConfig dataSourceCVConfig1 = createAppDynamicsDataSourceCVConfig("app", "monitoringSourceIdentifier2");
+    assertThatThrownBy(() -> dsConfigService.upsert(dataSourceCVConfig1))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("appdynamics app/tier app/manager")
+        .hasMessageContaining("has already been onboarded for env harnessProd and service manager");
   }
 
   @Test

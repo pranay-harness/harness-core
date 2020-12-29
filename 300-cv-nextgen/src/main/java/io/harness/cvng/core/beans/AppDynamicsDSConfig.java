@@ -7,6 +7,7 @@ import io.harness.cvng.core.entities.MetricPack;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,6 +61,22 @@ public class AppDynamicsDSConfig extends DSConfig {
         .updated(updatedConfigs)
         .added(added.stream().map(key -> currentCVConfigsMap.get(key)).collect(Collectors.toList()))
         .build();
+  }
+
+  @Override
+  public void validate(List<CVConfig> existingMapping) {
+    existingMapping.forEach(appDynamicsCVConfig
+        -> getAppConfigs().forEach(
+            appdynamicsConfig -> appdynamicsConfig.getServiceMappings().forEach(serviceMapping -> {
+              String applicationName = ((AppDynamicsCVConfig) appDynamicsCVConfig).getApplicationName();
+              String tierName = ((AppDynamicsCVConfig) appDynamicsCVConfig).getTierName();
+              Preconditions.checkState(
+                  !(appDynamicsCVConfig.getEnvIdentifier().equals(appdynamicsConfig.getEnvIdentifier())
+                      && applicationName.equals(appdynamicsConfig.getApplicationName())
+                      && tierName.equals(serviceMapping.getTierName())),
+                  "appdynamics app/tier %s/%s has already been onboarded for env %s and service %s", applicationName,
+                  tierName, appDynamicsCVConfig.getEnvIdentifier(), tierName);
+            })));
   }
 
   @Data
