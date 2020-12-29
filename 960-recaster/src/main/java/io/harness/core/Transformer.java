@@ -5,7 +5,6 @@ import static java.lang.String.format;
 import io.harness.beans.CastedField;
 import io.harness.exceptions.RecasterException;
 import io.harness.transformers.DefaultRecastTransformer;
-import io.harness.transformers.ProtoRecastTransformer;
 import io.harness.transformers.RecastTransformer;
 import io.harness.transformers.simplevalue.BooleanRecastTransformer;
 import io.harness.transformers.simplevalue.ByteRecastTransformer;
@@ -24,6 +23,7 @@ import io.harness.transformers.simplevalue.LocalDateTimeRecastTransformer;
 import io.harness.transformers.simplevalue.LocalTimeRecastTransformer;
 import io.harness.transformers.simplevalue.LongRecastTransformer;
 import io.harness.transformers.simplevalue.MapRecastTransformer;
+import io.harness.transformers.simplevalue.ProtoRecastTransformer;
 import io.harness.transformers.simplevalue.SimpleValueTransformer;
 import io.harness.transformers.simplevalue.StringRecastTransformer;
 
