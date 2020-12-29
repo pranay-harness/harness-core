@@ -1,12 +1,20 @@
 package io.harness.beans.yaml;
 
+import static io.harness.rule.OwnerRule.ALEKSANDAR;
+
 import io.harness.CiBeansTestBase;
+import io.harness.category.element.UnitTests;
+import io.harness.rule.Owner;
+
+import java.io.IOException;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class CIPipelineYamlTest extends CiBeansTestBase {
-  //  @Test
-  //  @Owner(developers = ALEKSANDAR)
-  //  @Category(UnitTests.class)
-  //  public void testCiPipelineConversion() throws IOException {
+  @Test
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void testCiPipelineConversion() throws IOException {}
   //    ClassLoader classLoader = this.getClass().getClassLoader();
   //    List<String> paths = Arrays.asList("rspec.xml", "reports.xml");
   //    JunitTestReport junitTestReport =

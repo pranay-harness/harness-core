@@ -1,5 +1,7 @@
 package io.harness.beans.serializer;
 
+import static io.harness.common.NGExpressionUtils.matchesInputSetPattern;
+
 import static java.lang.String.format;
 
 import io.harness.exception.ngexception.CIStageExecutionUserException;
@@ -47,7 +49,8 @@ public class RunTimeInputHandler {
       }
     }
 
-    if (parameterField.isExpression()) {
+    // It only checks input set pattern. Variable can be resolved on lite engine.
+    if (matchesInputSetPattern(parameterField.getValue())) {
       if (isMandatory) {
         throw new CIStageExecutionUserException(
             format("Failed to resolve mandatory field %s in step type %s with identifier %s", fieldName, stepType,
