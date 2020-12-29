@@ -133,6 +133,7 @@ public class PublishStepProtobufSerializer implements ProtobufStepSerializer<Pub
         throw new IllegalArgumentException(String.format(TYPE_NOT_SUPPORTED, connector.getType()));
     }
   }
+
   private String getImageDestinationUrl(ArtifactConnector connector, String image, String tag, String identifier) {
     switch (connector.getType()) {
       case ECR:
