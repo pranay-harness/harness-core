@@ -473,9 +473,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
 
         Map<String, Object> stateParams = fetchStateParams(orchestrationWorkflow, state, executionEvent);
         return anExecutionEventAdvice()
-            .withTimeout(failureStrategy.getManualInterventionTimeout())
-            .withActionAfterManualInterventionTimeout(failureStrategy.getActionAfterTimeout())
-            .withExecutionInterruptType(ExecutionInterruptType.WAITING_FOR_MANUAL_INTERVENTION)
+            .withExecutionInterruptType(ExecutionInterruptType.PAUSE)
             .withStateParams(stateParams)
             .build();
       }
