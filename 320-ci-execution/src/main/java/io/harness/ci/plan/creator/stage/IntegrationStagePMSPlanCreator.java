@@ -17,6 +17,7 @@ import io.harness.beans.stages.IntegrationStageStepParametersPMS;
 import io.harness.ci.integrationstage.CILiteEngineIntegrationStageModifier;
 import io.harness.ci.integrationstage.IntegrationStageUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.ngexception.CIStageExecutionUserException;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
@@ -72,24 +73,14 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
     final String podName = generatePodName(stageElementConfig.getIdentifier());
     YamlField executionField = ctx.getCurrentField().getNode().getField(SPEC).getNode().getField(EXECUTION);
 
-    // YamlNode ciCodeBaseNode = YamlUtils.findParentNode(ctx.getCurrentField().getNode(), CI_CODE_BASE);
-    // TODO above method is not returning parent currently, using direct traversal
-    YamlNode ciCodeBaseNode = ctx.getCurrentField()
-                                  .getNode()
-                                  .getParentNode()
-                                  .getParentNode()
-                                  .getParentNode()
-                                  .getField(PROPERTIES)
-                                  .getNode()
-                                  .getField(CI)
-                                  .getNode()
-                                  .getField(CI_CODE_BASE)
-                                  .getNode();
-    CodeBase ciCodeBase = IntegrationStageUtils.getCiCodeBase(ciCodeBaseNode);
-    // TODO retrieval is not supported yet
-    //    Object obj = ctx.getGlobalContext().get("webhookEventRepoType");
-    //    Object obj1 = ctx.getGlobalContext().get("webhookEventType");
-    //    Object obj2 = ctx.getGlobalContext().get(SetupAbstractionKeys.eventPayload);
+    CodeBase ciCodeBase = null;
+    try {
+      YamlNode properties = YamlUtils.getGivenYamlNodeFromParentPath(ctx.getCurrentField().getNode(), PROPERTIES);
+      YamlNode ciCodeBaseNode = properties.getField(CI).getNode().getField(CI_CODE_BASE).getNode();
+      ciCodeBase = IntegrationStageUtils.getCiCodeBase(ciCodeBaseNode);
+    } catch (Exception ex) {
+      throw new CIStageExecutionUserException("Failed to retrieve ciCodeBase from pipeline");
+    }
 
     ExecutionElementConfig executionElementConfig;
 

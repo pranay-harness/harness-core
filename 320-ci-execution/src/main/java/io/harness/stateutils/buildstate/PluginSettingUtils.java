@@ -158,7 +158,8 @@ public class PluginSettingUtils {
   private static Map<String, String> getDockerStepInfoEnvVariables(DockerStepInfo stepInfo, String identifier) {
     Map<String, String> map = new HashMap<>();
 
-    setMandatoryEnvironmentVariable(map, PLUGIN_REPO, stepInfo.getRepo().getValue());
+    setMandatoryEnvironmentVariable(
+        map, PLUGIN_REPO, resolveStringParameter("repo", "DockerHub", identifier, stepInfo.getRepo(), true));
     setMandatoryEnvironmentVariable(map, PLUGIN_TAGS,
         listToStringSlice(resolveListParameter("tags", "DockerHub", identifier, stepInfo.getTags(), true)));
 
