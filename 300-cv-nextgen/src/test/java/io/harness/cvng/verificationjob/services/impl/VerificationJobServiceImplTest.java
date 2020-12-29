@@ -123,7 +123,7 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testList_empty() {
-    assertThat(verificationJobService.list(accountId, generateUuid(), generateUuid())).isEmpty();
+    assertThat(verificationJobService.list(accountId, generateUuid(), generateUuid(), 0, 2, generateUuid()).isEmpty());
   }
 
   @Test
@@ -132,10 +132,29 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
   public void testList_notEmpty() {
     VerificationJobDTO verificationJobDTO = createDTOWithRuntimeParams();
     verificationJobService.upsert(accountId, verificationJobDTO);
-    List<VerificationJobDTO> verificationJobDTOList = verificationJobService.list(
-        accountId, verificationJobDTO.getProjectIdentifier(), verificationJobDTO.getOrgIdentifier());
-    assertThat(verificationJobDTOList).hasSize(1);
-    assertThat(verificationJobDTOList.get(0)).isEqualTo(verificationJobDTO);
+    List<VerificationJobDTO> verificationJobDTOList = verificationJobService
+                                                          .list(accountId, verificationJobDTO.getProjectIdentifier(),
+                                                              verificationJobDTO.getOrgIdentifier(), 0, 10, "job-Name")
+                                                          .getContent();
+
+    assertThat(verificationJobDTOList).isNotNull();
+    assertThat(verificationJobDTOList.size()).isEqualTo(1);
+
+    assertThat(verificationJobDTOList.get(0).getIdentifier()).isEqualTo("test-verification-harness");
+    assertThat(verificationJobDTOList.get(0).getJobName()).isEqualTo("job-Name");
+
+    // With filter call
+    verificationJobDTOList = verificationJobService
+                                 .list(accountId, verificationJobDTO.getProjectIdentifier(),
+                                     verificationJobDTO.getOrgIdentifier(), 0, 10, "job-")
+                                 .getContent();
+    assertThat(verificationJobDTOList.size()).isEqualTo(1);
+
+    verificationJobDTOList = verificationJobService
+                                 .list(accountId, verificationJobDTO.getProjectIdentifier(),
+                                     verificationJobDTO.getOrgIdentifier(), 0, 10, "qwert")
+                                 .getContent();
+    assertThat(verificationJobDTOList.size()).isEqualTo(0);
   }
 
   private VerificationJobDTO createDTO() {
@@ -158,6 +177,7 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     TestVerificationJobDTO testVerificationJobDTO = (TestVerificationJobDTO) createDTO();
     testVerificationJobDTO.setEnvIdentifier("${envIdentifier}");
     testVerificationJobDTO.setServiceIdentifier("${serviceIdentifier}");
+    testVerificationJobDTO.setJobName("job-Name");
     return testVerificationJobDTO;
   }
   @Test
