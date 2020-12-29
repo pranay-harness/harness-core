@@ -24,7 +24,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
@@ -162,22 +161,6 @@ public class OverviewAnomaliesDataFetcher extends AbstractAnomalyDataFetcher<QLB
       }
       anomalyBuilder.entity(entityDataBuilder.build());
       qlAnomalyDataList.add(anomalyBuilder.build());
-    }
-
-    Iterator<QLAnomalyData> iter = qlAnomalyDataList.iterator();
-    int counter = 0;
-    QLAnomalyData current;
-    Long currentDate = null;
-    while (iter.hasNext()) {
-      current = iter.next();
-      if (currentDate == null || current.getTime() > currentDate) {
-        counter = 1;
-        currentDate = current.getTime();
-      } else if (counter < ANOMALIES_LIMIT_PER_DAY) {
-        counter++;
-      } else {
-        iter.remove();
-      }
     }
 
     return qlAnomalyDataList;
