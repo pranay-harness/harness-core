@@ -35,6 +35,8 @@ import io.harness.cvng.K8InfoDataServiceImpl;
 import io.harness.cvng.connectiontask.CVNGConnectorValidationDelegateTask;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.impl.DataCollectionServiceImpl;
+import io.harness.delegate.DelegateConfigurationServiceProvider;
+import io.harness.delegate.DelegatePropertiesServiceProvider;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.git.NGGitServiceImpl;
@@ -49,6 +51,8 @@ import io.harness.delegate.k8s.K8sScaleRequestHandler;
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.message.MessageServiceImpl;
 import io.harness.delegate.message.MessengerType;
+import io.harness.delegate.provider.DelegateConfigurationServiceProviderImpl;
+import io.harness.delegate.provider.DelegatePropertiesServiceProviderImpl;
 import io.harness.delegate.service.DelegateAgentService;
 import io.harness.delegate.service.DelegateAgentServiceImpl;
 import io.harness.delegate.service.DelegateCVActivityLogServiceImpl;
@@ -679,6 +683,8 @@ public class DelegateModule extends AbstractModule {
 
     bind(DelegateAgentService.class).to(DelegateAgentServiceImpl.class);
     bind(DelegatePropertyService.class).to(DelegatePropertyServiceImpl.class);
+    bind(DelegatePropertiesServiceProvider.class).to(DelegatePropertiesServiceProviderImpl.class);
+    bind(DelegateConfigurationServiceProvider.class).to(DelegateConfigurationServiceProviderImpl.class);
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
     bind(DelegateFileManager.class).to(DelegateFileManagerImpl.class).asEagerSingleton();
     bind(ServiceCommandExecutorService.class).to(ServiceCommandExecutorServiceImpl.class);

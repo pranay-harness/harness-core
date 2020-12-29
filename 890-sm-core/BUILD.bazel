@@ -11,6 +11,7 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
+        "//920-delegate-agent-beans:module",
         "//930-delegate-tasks:module",
         "//940-secret-manager-client:module",
         "//954-connector-beans:module",

@@ -119,6 +119,8 @@ public class Account extends Base implements PersistentRegularIterable {
 
   @FdIndex @Getter @Setter private boolean isHarnessSupportAccessAllowed = true;
 
+  @Getter @Setter private AccountPreferences accountPreferences;
+
   @FdIndex private Long serviceGuardDataCollectionIteration;
   @FdIndex private Long serviceGuardDataAnalysisIteration;
   @FdIndex private Long workflowDataCollectionIteration;

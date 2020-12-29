@@ -21,3 +21,9 @@ message HttpsCertRequirement {
   }
   CertRequirement cert_requirement = 1;
 }
+
+message SecretManagerCacheTTLQuery {}
+
+message SecretManagerCacheTTL {
+  int64 expireCacheTTL = 1;
+}

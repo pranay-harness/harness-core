@@ -472,4 +472,21 @@ public class AccountResource {
     authService.validateDelegateToken(accountId, substringAfter(delegateToken, "Delegate "));
     return new RestResponse<>(true);
   }
+
+  @POST
+  @Path("updateDelegateSecretsCacheTtl")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> updateDelegateSecretsCacheTTLAccountPreference(
+      @QueryParam("accountId") String accountId, @QueryParam("timeInHours") long timeInHours) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      log.info("Setting DelegateSecretsCacheExpiryTTL Value to {}", timeInHours);
+      // RestResponse<Boolean> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to enable
+      // account"); if (response == null) {
+      RestResponse<Boolean> response =
+          new RestResponse<>(accountService.updateDelegateSecretsCacheTTLAccountPreference(accountId, timeInHours));
+      //}
+      return response;
+    }
+  }
 }
