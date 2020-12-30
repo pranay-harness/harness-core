@@ -28,9 +28,8 @@ public class IntegrationStageConfig implements StageInfoConfig {
   List<CustomVariable> variables;
   private ParameterField<List<String>> sharedPaths;
   ExecutionElementConfig execution;
-  private ParameterField<String> workspace;
   private Infrastructure infrastructure;
   private List<DependencyElement> serviceDependencies;
-  private ParameterField<Boolean> enableCloneRepo;
+  private ParameterField<Boolean> cloneCodebase;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
 }

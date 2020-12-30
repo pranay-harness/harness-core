@@ -43,7 +43,7 @@ public class UploadToGCSStepInfo implements PluginCompatibleStep {
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
 
   @NotNull private ParameterField<String> connectorRef;
-  @JsonIgnore @NotNull private ParameterField<String> image;
+  @JsonIgnore @NotNull private ParameterField<String> containerImage;
   private ContainerResource resources;
 
   // plugin settings
@@ -53,18 +53,16 @@ public class UploadToGCSStepInfo implements PluginCompatibleStep {
 
   @Builder
   @ConstructorProperties(
-      {"identifier", "name", "retry", "connectorRef", "image", "resources", "bucket", "sourcePath", "target"})
+      {"identifier", "name", "retry", "connectorRef", "containerImage", "resources", "bucket", "sourcePath", "target"})
   public UploadToGCSStepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
-      ParameterField<String> image, ContainerResource resources, ParameterField<String> bucket,
+      ParameterField<String> containerImage, ContainerResource resources, ParameterField<String> bucket,
       ParameterField<String> sourcePath, ParameterField<String> target) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
-
     this.connectorRef = connectorRef;
-    this.image = Optional.ofNullable(image).orElse(ParameterField.createValueField("plugins/gcs"));
+    this.containerImage = Optional.ofNullable(containerImage).orElse(ParameterField.createValueField("plugins/gcs"));
     this.resources = resources;
-
     this.bucket = bucket;
     this.sourcePath = sourcePath;
     this.target = target;

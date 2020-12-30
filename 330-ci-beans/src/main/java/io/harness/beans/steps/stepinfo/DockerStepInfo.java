@@ -44,7 +44,7 @@ public class DockerStepInfo implements PluginCompatibleStep {
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
   @NotNull private ParameterField<String> connectorRef;
-  @JsonIgnore @NotNull private ParameterField<String> image;
+  @JsonIgnore @NotNull private ParameterField<String> containerImage;
   private ContainerResource resources;
 
   // plugin settings
@@ -57,10 +57,10 @@ public class DockerStepInfo implements PluginCompatibleStep {
   private ParameterField<List<String>> buildArgs;
 
   @Builder
-  @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "image", "resources", "repo", "tags",
+  @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "containerImage", "resources", "repo", "tags",
       "context", "dockerfile", "target", "labels", "buildArgs"})
   public DockerStepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
-      ParameterField<String> image, ContainerResource resources, ParameterField<String> repo,
+      ParameterField<String> containerImage, ContainerResource resources, ParameterField<String> repo,
       ParameterField<List<String>> tags, ParameterField<String> context, ParameterField<String> dockerfile,
       ParameterField<String> target, ParameterField<Map<String, String>> labels,
       ParameterField<List<String>> buildArgs) {
@@ -68,7 +68,8 @@ public class DockerStepInfo implements PluginCompatibleStep {
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
     this.connectorRef = connectorRef;
-    this.image = Optional.ofNullable(image).orElse(ParameterField.createValueField("plugins/kaniko:latest"));
+    this.containerImage =
+        Optional.ofNullable(containerImage).orElse(ParameterField.createValueField("plugins/kaniko:latest"));
     this.resources = resources;
     this.repo = repo;
     this.tags = tags;

@@ -83,12 +83,12 @@ public class CIServiceBuilder {
     Integer cpu = ciExecutionServiceConfig.getDefaultCPULimit();
     Integer memory = ciExecutionServiceConfig.getDefaultMemoryLimit();
 
-    if (resource != null && resource.getLimit() != null) {
-      if (resource.getLimit().getCpu() != null) {
-        cpu = QuantityUtils.getCpuQuantityValueInUnit(resource.getLimit().getCpu(), DecimalQuantityUnit.m);
+    if (resource != null && resource.getLimits() != null) {
+      if (resource.getLimits().getCpu() != null) {
+        cpu = QuantityUtils.getCpuQuantityValueInUnit(resource.getLimits().getCpu(), DecimalQuantityUnit.m);
       }
-      if (resource.getLimit().getMemory() != null) {
-        memory = QuantityUtils.getMemoryQuantityValueInUnit(resource.getLimit().getMemory(), BinaryQuantityUnit.Mi);
+      if (resource.getLimits().getMemory() != null) {
+        memory = QuantityUtils.getMemoryQuantityValueInUnit(resource.getLimits().getMemory(), BinaryQuantityUnit.Mi);
       }
     }
     return ContainerResourceParams.builder()

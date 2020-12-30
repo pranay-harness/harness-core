@@ -41,7 +41,6 @@ public class RunStepInfo implements CIStepInfo {
   @NotNull private ParameterField<String> command;
   private ParameterField<List<String>> output;
   private ParameterField<Map<String, String>> environment;
-  private String skipCondition;
   private List<UnitTestReport> reports;
 
   @NotNull private ParameterField<String> image;
@@ -49,10 +48,10 @@ public class RunStepInfo implements CIStepInfo {
   private ContainerResource resources;
 
   @Builder
-  @ConstructorProperties({"identifier", "name", "retry", "command", "output", "skipCondition", "reports", "environment",
-      "image", "connector", "resources"})
+  @ConstructorProperties(
+      {"identifier", "name", "retry", "command", "output", "reports", "environment", "image", "connector", "resources"})
   public RunStepInfo(String identifier, String name, Integer retry, ParameterField<String> command,
-      ParameterField<List<String>> output, String skipCondition, List<UnitTestReport> reports,
+      ParameterField<List<String>> output, List<UnitTestReport> reports,
       ParameterField<Map<String, String>> environment, ParameterField<String> image, ParameterField<String> connector,
       ContainerResource resources) {
     this.identifier = identifier;
@@ -61,7 +60,6 @@ public class RunStepInfo implements CIStepInfo {
 
     this.command = command;
     this.environment = environment;
-    this.skipCondition = skipCondition;
     this.reports = reports;
     this.output = output;
     this.image = image;

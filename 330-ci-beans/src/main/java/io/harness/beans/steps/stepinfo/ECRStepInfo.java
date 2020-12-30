@@ -42,12 +42,13 @@ public class ECRStepInfo implements PluginCompatibleStep {
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
   @NotNull private ParameterField<String> connectorRef;
-  @JsonIgnore @NotNull private ParameterField<String> image;
+  @JsonIgnore @NotNull private ParameterField<String> containerImage;
   private ContainerResource resources;
 
   // plugin settings
-  @NotNull private ParameterField<String> registry;
-  @NotNull private ParameterField<String> repo;
+  @NotNull private ParameterField<String> account;
+  @NotNull private ParameterField<String> region;
+  @NotNull private ParameterField<String> imageName;
   @NotNull private ParameterField<List<String>> tags;
   private ParameterField<String> context;
   private ParameterField<String> dockerfile;
@@ -56,21 +57,23 @@ public class ECRStepInfo implements PluginCompatibleStep {
   private ParameterField<List<String>> buildArgs;
 
   @Builder
-  @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "image", "resources", "registry", "repo",
-      "tags", "context", "dockerfile", "target", "labels", "buildArgs"})
+  @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "containerImage", "resources", "account",
+      "region", "imageName", "tags", "context", "dockerfile", "target", "labels", "buildArgs"})
   public ECRStepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
-      ParameterField<String> image, ContainerResource resources, ParameterField<String> registry,
-      ParameterField<String> repo, ParameterField<List<String>> tags, ParameterField<String> context,
-      ParameterField<String> dockerfile, ParameterField<String> target, ParameterField<Map<String, String>> labels,
-      ParameterField<List<String>> buildArgs) {
+      ParameterField<String> containerImage, ContainerResource resources, ParameterField<String> account,
+      ParameterField<String> region, ParameterField<String> imageName, ParameterField<List<String>> tags,
+      ParameterField<String> context, ParameterField<String> dockerfile, ParameterField<String> target,
+      ParameterField<Map<String, String>> labels, ParameterField<List<String>> buildArgs) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
     this.connectorRef = connectorRef;
-    this.image = Optional.ofNullable(image).orElse(ParameterField.createValueField("plugins/kaniko-ecr:latest"));
+    this.containerImage =
+        Optional.ofNullable(containerImage).orElse(ParameterField.createValueField("plugins/kaniko-ecr:latest"));
     this.resources = resources;
-    this.registry = registry;
-    this.repo = repo;
+    this.account = account;
+    this.region = region;
+    this.imageName = imageName;
     this.tags = tags;
     this.context = context;
     this.dockerfile = dockerfile;

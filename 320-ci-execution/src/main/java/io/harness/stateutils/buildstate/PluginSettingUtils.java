@@ -48,7 +48,9 @@ public class PluginSettingUtils {
   public static final String PLUGIN_REBUILD = "PLUGIN_REBUILD";
   public static final String PLUGIN_FILENAME = "PLUGIN_FILENAME";
   public static final String PLUGIN_ROOT = "PLUGIN_ROOT";
+
   public static final String TAR = ".tar";
+  public static final String ECR_REGISTRY_PATTERN = "%s.dkr.ecr.%s.amazonaws.com";
 
   public static Map<String, String> getPluginCompatibleEnvVariables(PluginCompatibleStep stepInfo, String identifier) {
     switch (stepInfo.getNonYamlInfo().getStepInfoType()) {
@@ -78,10 +80,18 @@ public class PluginSettingUtils {
   private static Map<String, String> getGCRStepInfoEnvVariables(GCRStepInfo stepInfo, String identifier) {
     Map<String, String> map = new HashMap<>();
 
-    setMandatoryEnvironmentVariable(map, PLUGIN_REGISTRY,
-        resolveStringParameter("registry", "BuildAndPushGCR", identifier, stepInfo.getRegistry(), true));
-    setMandatoryEnvironmentVariable(
-        map, PLUGIN_REPO, resolveStringParameter("repo", "BuildAndPushGCR", identifier, stepInfo.getRepo(), true));
+    String host = resolveStringParameter("host", "BuildAndPushGCR", identifier, stepInfo.getHost(), true);
+    String projectID =
+        resolveStringParameter("projectID", "BuildAndPushGCR", identifier, stepInfo.getProjectID(), true);
+    String registry = null;
+    if (isNotEmpty(host) && isNotEmpty(projectID)) {
+      registry = format("%s/%s", trimTrailingCharacter(host, '/'), trimLeadingCharacter(projectID, '/'));
+    }
+    setMandatoryEnvironmentVariable(map, PLUGIN_REGISTRY, registry);
+
+    setMandatoryEnvironmentVariable(map, PLUGIN_REPO,
+        resolveStringParameter("imageName", "BuildAndPushGCR", identifier, stepInfo.getImageName(), true));
+
     setMandatoryEnvironmentVariable(map, PLUGIN_TAGS,
         listToStringSlice(resolveListParameter("tags", "BuildAndPushGCR", identifier, stepInfo.getTags(), true)));
 
@@ -117,11 +127,17 @@ public class PluginSettingUtils {
 
   private static Map<String, String> getECRStepInfoEnvVariables(ECRStepInfo stepInfo, String identifier) {
     Map<String, String> map = new HashMap<>();
+    String account = resolveStringParameter("account", "BuildAndPushECR", identifier, stepInfo.getAccount(), true);
+    String region = resolveStringParameter("region", "BuildAndPushECR", identifier, stepInfo.getRegion(), true);
+    String registry = null;
+    if (isNotEmpty(account) && isNotEmpty(region)) {
+      registry = format(ECR_REGISTRY_PATTERN, account, region);
+    }
 
-    setMandatoryEnvironmentVariable(map, PLUGIN_REGISTRY,
-        resolveStringParameter("registry", "BuildAndPushECR", identifier, stepInfo.getRegistry(), true));
-    setMandatoryEnvironmentVariable(
-        map, PLUGIN_REPO, resolveStringParameter("repo", "BuildAndPushECR", identifier, stepInfo.getRepo(), true));
+    setMandatoryEnvironmentVariable(map, PLUGIN_REGISTRY, registry);
+
+    setMandatoryEnvironmentVariable(map, PLUGIN_REPO,
+        resolveStringParameter("imageName", "BuildAndPushECR", identifier, stepInfo.getImageName(), true));
     setMandatoryEnvironmentVariable(map, PLUGIN_TAGS,
         listToStringSlice(resolveListParameter("tags", "BuildAndPushECR", identifier, stepInfo.getTags(), true)));
 

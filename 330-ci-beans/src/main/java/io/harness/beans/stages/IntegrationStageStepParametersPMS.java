@@ -32,7 +32,6 @@ public class IntegrationStageStepParametersPMS implements StepParameters {
   List<DependencyElement> dependencies;
   ParameterField<List<String>> sharedPaths;
   ParameterField<String> skipCondition;
-  ParameterField<String> workingDirectory;
   ParameterField<Boolean> enableCloneRepo;
   String childNodeID;
 
@@ -57,13 +56,12 @@ public class IntegrationStageStepParametersPMS implements StepParameters {
         .description(stageElementConfig.getDescription())
         .infrastructure(integrationStageConfig.getInfrastructure())
         .dependencies(integrationStageConfig.getServiceDependencies())
-        .workingDirectory(integrationStageConfig.getWorkspace())
         .type(stageElementConfig.getType())
         .skipCondition(integrationStageConfig.getSkipCondition())
         .variables(variablesMap)
         .childNodeID(childNodeID)
         .sharedPaths(integrationStageConfig.getSharedPaths())
-        .enableCloneRepo(integrationStageConfig.getEnableCloneRepo())
+        .enableCloneRepo(integrationStageConfig.getCloneCodebase())
         .build();
   }
 }

@@ -32,7 +32,7 @@ public class LiteEngineTaskStepGenerator {
 
     IntegrationStageConfig integrationStageConfig = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
 
-    boolean gitClone = RunTimeInputHandler.resolveGitClone(integrationStageConfig.getEnableCloneRepo());
+    boolean gitClone = RunTimeInputHandler.resolveGitClone(integrationStageConfig.getCloneCodebase());
     if (isFirstPod) {
       return LiteEngineTaskStepInfo.builder()
           .identifier(LITE_ENGINE_TASK + liteEngineCounter)

@@ -31,8 +31,9 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
   @Category(UnitTests.class)
   public void shouldGetGCRStepInfoEnvVariables() {
     GCRStepInfo gcrStepInfo = GCRStepInfo.builder()
-                                  .registry(ParameterField.createValueField("gcr.io"))
-                                  .repo(ParameterField.createValueField("harness"))
+                                  .host(ParameterField.createValueField("gcr.io/"))
+                                  .projectID(ParameterField.createValueField("/ci"))
+                                  .imageName(ParameterField.createValueField("harness"))
                                   .tags(ParameterField.createValueField(asList("tag1", "tag2")))
                                   .dockerfile(ParameterField.createValueField("Dockerfile"))
                                   .context(ParameterField.createValueField("context"))
@@ -42,7 +43,7 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
                                   .build();
 
     Map<String, String> expected = new HashMap<>();
-    expected.put("PLUGIN_REGISTRY", "gcr.io");
+    expected.put("PLUGIN_REGISTRY", "gcr.io/ci");
     expected.put("PLUGIN_REPO", "harness");
     expected.put("PLUGIN_TAGS", "tag1,tag2");
     expected.put("PLUGIN_DOCKERFILE", "Dockerfile");
@@ -59,20 +60,20 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldGetECRStepInfoStepEnvVariables() {
-    ECRStepInfo ecrStepInfo =
-        ECRStepInfo.builder()
-            .registry(ParameterField.createValueField("https://aws_account_id.dkr.ecr.region.amazonaws.com."))
-            .repo(ParameterField.createValueField("harness"))
-            .tags(ParameterField.createValueField(asList("tag1", "tag2")))
-            .dockerfile(ParameterField.createValueField("Dockerfile"))
-            .context(ParameterField.createValueField("context"))
-            .target(ParameterField.createValueField("target"))
-            .buildArgs(ParameterField.createValueField(asList("arg1", "arg2")))
-            .labels(ParameterField.createValueField(Collections.singletonMap("label", "label1")))
-            .build();
+    ECRStepInfo ecrStepInfo = ECRStepInfo.builder()
+                                  .account(ParameterField.createValueField("6874654867"))
+                                  .region(ParameterField.createValueField("eu-central-1"))
+                                  .imageName(ParameterField.createValueField("harness"))
+                                  .tags(ParameterField.createValueField(asList("tag1", "tag2")))
+                                  .dockerfile(ParameterField.createValueField("Dockerfile"))
+                                  .context(ParameterField.createValueField("context"))
+                                  .target(ParameterField.createValueField("target"))
+                                  .buildArgs(ParameterField.createValueField(asList("arg1", "arg2")))
+                                  .labels(ParameterField.createValueField(Collections.singletonMap("label", "label1")))
+                                  .build();
 
     Map<String, String> expected = new HashMap<>();
-    expected.put("PLUGIN_REGISTRY", "https://aws_account_id.dkr.ecr.region.amazonaws.com.");
+    expected.put("PLUGIN_REGISTRY", "6874654867.dkr.ecr.eu-central-1.amazonaws.com");
     expected.put("PLUGIN_REPO", "harness");
     expected.put("PLUGIN_TAGS", "tag1,tag2");
     expected.put("PLUGIN_DOCKERFILE", "Dockerfile");
