@@ -24,6 +24,7 @@ import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
+import io.harness.product.ci.scm.proto.ParseWebhookResponse;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
@@ -55,7 +56,8 @@ public class WebhookEventToTriggerMapperTest extends CategoryTest {
     RuntimeException runtimeException = new RuntimeException("fake");
     doThrow(runtimeException).when(webhookEventPayloadParser).parseEvent(event);
 
-    ParsePayloadResponse parsePayloadResponse = webhookEventToTriggerMapper.parseEventData(event);
+    ParsePayloadResponse parsePayloadResponse =
+        webhookEventToTriggerMapper.convertWebhookResponse(event, ParseWebhookResponse.newBuilder().build());
     assertThat(parsePayloadResponse.isExceptionOccured()).isTrue();
     assertThat(parsePayloadResponse.getException()).isEqualTo(runtimeException);
   }

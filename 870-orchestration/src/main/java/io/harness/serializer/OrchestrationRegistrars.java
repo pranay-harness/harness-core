@@ -17,6 +17,7 @@ import io.harness.serializer.morphia.converters.LevelMorphiaConverter;
 import io.harness.serializer.morphia.converters.RefObjectMorphiaConverter;
 import io.harness.serializer.morphia.converters.RefTypeMorphiaConverter;
 import io.harness.serializer.morphia.converters.StepTypeMorphiaConverter;
+import io.harness.serializer.morphia.converters.TriggerPayloadMorphiaConverter;
 import io.harness.serializer.morphia.converters.TriggeredByMorphiaConverter;
 import io.harness.serializer.spring.converters.advisers.obtainment.AdviserObtainmentReadConverter;
 import io.harness.serializer.spring.converters.advisers.obtainment.AdviserObtainmentWriteConverter;
@@ -30,6 +31,8 @@ import io.harness.serializer.spring.converters.executableresponse.ExecutableResp
 import io.harness.serializer.spring.converters.executableresponse.ExecutableResponseWriteConverter;
 import io.harness.serializer.spring.converters.executionmetadata.ExecutionMetadataReadConverter;
 import io.harness.serializer.spring.converters.executionmetadata.ExecutionMetadataWriteConverter;
+import io.harness.serializer.spring.converters.executionmetadata.TriggerPayloadReadConverter;
+import io.harness.serializer.spring.converters.executionmetadata.TriggerPayloadWriteConverter;
 import io.harness.serializer.spring.converters.facilitators.obtainment.FacilitatorObtainmentReadConverter;
 import io.harness.serializer.spring.converters.facilitators.obtainment.FacilitatorObtainmentWriteConverter;
 import io.harness.serializer.spring.converters.facilitators.response.FacilitatorResponseReadConverter;
@@ -108,6 +111,7 @@ public class OrchestrationRegistrars {
           .add(ExecutionTriggerInfoMorphiaConverter.class)
           .add(TriggeredByMorphiaConverter.class)
           .add(ExecutionMetadataMorphiaConverter.class)
+          .add(TriggerPayloadMorphiaConverter.class)
           .build();
 
   public static final List<Class<? extends Converter<?, ?>>> springConverters = ImmutableList.of(
@@ -126,5 +130,6 @@ public class OrchestrationRegistrars {
       ExecutionErrorInfoReadConverter.class, ExecutionErrorInfoWriteConverter.class, LayoutNodeInfoReadConverter.class,
       LayoutNodeInfoWriteConverter.class, ExecutionTriggerInfoReadConverter.class,
       ExecutionTriggerInfoWriteConverter.class, TriggeredByReadConverter.class, TriggeredByWriteConverter.class,
-      ExecutionMetadataReadConverter.class, ExecutionMetadataWriteConverter.class);
+      ExecutionMetadataReadConverter.class, ExecutionMetadataWriteConverter.class, TriggerPayloadReadConverter.class,
+      TriggerPayloadWriteConverter.class);
 }

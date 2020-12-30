@@ -5,8 +5,12 @@ package io.harness.pms.contracts.plan;
 option java_multiple_files = true;
 
 import "io/harness/pms/contracts/plan/trigger_info.proto";
+import "io/harness/pms/contracts/triggers/trigger_payload.proto";
 
 message ExecutionMetadata {
   int32 runSequence = 1;
   ExecutionTriggerInfo triggerInfo = 2;
+  io.harness.pms.contracts.triggers.TriggerPayload triggerPayload = 3;
+  string pipelineIdentifier = 4;
+  string inputSetYaml = 5;
 }
