@@ -26,7 +26,8 @@ public enum ConnectorType implements EntitySubtype {
   @JsonProperty("Jira") JIRA("Jira"),
   @JsonProperty("Nexus") NEXUS("Nexus"),
   @JsonProperty("Github") GITHUB("Github"),
-  @JsonProperty("Gitlab") GITLAB("Gitlab");
+  @JsonProperty("Gitlab") GITLAB("Gitlab"),
+  @JsonProperty("Bitbucket") BITBUCKET("Bitbucket");
 
   private final String displayName;
 

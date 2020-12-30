@@ -8,6 +8,11 @@ import io.harness.connector.entities.embedded.artifactoryconnector.ArtifactoryUs
 import io.harness.connector.entities.embedded.awsconnector.AwsAccessKeyCredential;
 import io.harness.connector.entities.embedded.awsconnector.AwsConfig;
 import io.harness.connector.entities.embedded.awsconnector.AwsIamCredential;
+import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketConnector;
+import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketHttpAuthentication;
+import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketSshAuthentication;
+import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketUsernamePassword;
+import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketUsernamePasswordApiAccess;
 import io.harness.connector.entities.embedded.docker.DockerConnector;
 import io.harness.connector.entities.embedded.docker.DockerUserNamePasswordAuthentication;
 import io.harness.connector.entities.embedded.gcpconnector.GcpConfig;
@@ -68,6 +73,7 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(ConnectorFilter.class);
     set.add(GithubConnector.class);
     set.add(GitlabConnector.class);
+    set.add(BitbucketConnector.class);
   }
 
   @Override
@@ -104,5 +110,13 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     h.put("connector.entities.embedded.gitlabconnector.GitlabHttpAuthentication", GitlabHttpAuthentication.class);
     h.put("connector.entities.embedded.gitlabconnector.GitlabUsernamePassword", GitlabUsernamePassword.class);
     h.put("connector.entities.embedded.gitlabconnector.GitlabUsernameToken", GitlabUsernameToken.class);
+
+    h.put("connector.entities.embedded.bitbucketconnector.BitbucketUsernamePasswordApiAccess",
+        BitbucketUsernamePasswordApiAccess.class);
+    h.put(
+        "connector.entities.embedded.bitbucketconnector.BitbucketSshAuthentication", BitbucketSshAuthentication.class);
+    h.put("connector.entities.embedded.bitbucketconnector.BitbucketHttpAuthentication",
+        BitbucketHttpAuthentication.class);
+    h.put("connector.entities.embedded.bitbucketconnector.BitbucketUsernamePassword", BitbucketUsernamePassword.class);
   }
 }

@@ -26,7 +26,7 @@
       "then": {
         "properties": {
           "spec": {
-            "$ref": "#/definitions/GithubHttpCredentials"
+            "$ref": "#/definitions/BitbucketHttpCredentials"
           }
         }
       }
@@ -42,7 +42,7 @@
       "then": {
         "properties": {
           "spec": {
-            "$ref": "#/definitions/GithubSshCredentials"
+            "$ref": "#/definitions/BitbucketSshCredentials"
           }
         }
       }

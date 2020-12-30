@@ -25,6 +25,7 @@ public class GithubAuthenticationDTO {
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
   @Valid
+  @NotNull
   GithubCredentialsDTO credentials;
 
   @Builder
