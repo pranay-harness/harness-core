@@ -21,6 +21,8 @@ import io.harness.rule.Owner;
 
 import software.wings.beans.ConfigFile;
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
+import software.wings.core.ssh.executors.FileBasedWinRmExecutor;
+import software.wings.core.ssh.executors.WinRmExecutorHelper;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 
@@ -35,6 +37,7 @@ import org.mockito.MockitoAnnotations;
 
 public class DefaultWinRmExecutorTest extends CategoryTest {
   @Mock DefaultWinRmExecutor defaultWinRmExecutor;
+  @Mock FileBasedWinRmExecutor fileBasedWinRmExecutor;
   @Mock DelegateLogService logService;
   @Mock WinRmSessionConfig config;
   @Mock DelegateFileManager delegateFileManager;
@@ -50,12 +53,14 @@ public class DefaultWinRmExecutorTest extends CategoryTest {
                                                       .build();
 
   private DefaultWinRmExecutor spyDefaultWinRmExecutor;
+  private FileBasedWinRmExecutor spyFileBasedWinRmExecutor;
   String simpleCommand, reallyLongCommand;
 
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
     spyDefaultWinRmExecutor = new DefaultWinRmExecutor(logService, delegateFileManager, true, config, true);
+    spyFileBasedWinRmExecutor = new FileBasedWinRmExecutor(logService, delegateFileManager, true, config, true);
     simpleCommand = "$test=\"someruntimepath\"\n"
         + "echo $test\n"
         + "if($test){\n"
@@ -73,21 +78,21 @@ public class DefaultWinRmExecutorTest extends CategoryTest {
   @Owner(developers = DINESH)
   @Category(UnitTests.class)
   public void shouldCopyConfigFile() {
-    doReturn(CommandExecutionStatus.SUCCESS).when(defaultWinRmExecutor).copyConfigFiles(configFileMetaData);
+    doReturn(CommandExecutionStatus.SUCCESS).when(fileBasedWinRmExecutor).copyConfigFiles(configFileMetaData);
   }
 
   @Test
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void testConstructPSScriptWithCommands() {
-    List<List<String>> result1 =
-        spyDefaultWinRmExecutor.constructPSScriptWithCommands(simpleCommand, "tempPSScript.ps1");
+    List<List<String>> result1 = WinRmExecutorHelper.constructPSScriptWithCommands(
+        simpleCommand, "tempPSScript.ps1", DefaultWinRmExecutor.POWERSHELL);
     assertThat(result1.size()).isEqualTo(1);
 
-    List<List<String>> result2 =
-        spyDefaultWinRmExecutor.constructPSScriptWithCommands(reallyLongCommand, "tempPSScript.ps1");
+    List<List<String>> result2 = WinRmExecutorHelper.constructPSScriptWithCommands(
+        reallyLongCommand, "tempPSScript.ps1", DefaultWinRmExecutor.POWERSHELL);
     assertThat(result2.size()).isEqualTo(2);
-    verify(config, times(1)).isUseNoProfile();
+    verify(config, times(2)).isUseNoProfile();
   }
 
   @Test
@@ -95,15 +100,15 @@ public class DefaultWinRmExecutorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testConstructPSScriptWithCommandsWithoutProfile() {
     when(config.isUseNoProfile()).thenReturn(true);
-    List<List<String>> result1 =
-        spyDefaultWinRmExecutor.constructPSScriptWithCommands(simpleCommand, "tempPSScript.ps1");
+    List<List<String>> result1 = WinRmExecutorHelper.constructPSScriptWithCommands(
+        simpleCommand, "tempPSScript.ps1", DefaultWinRmExecutor.POWERSHELL);
     assertThat(result1.size()).isEqualTo(1);
 
-    List<List<String>> result2 =
-        spyDefaultWinRmExecutor.constructPSScriptWithCommands(reallyLongCommand, "tempPSScript.ps1");
+    List<List<String>> result2 = WinRmExecutorHelper.constructPSScriptWithCommands(
+        reallyLongCommand, "tempPSScript.ps1", DefaultWinRmExecutor.POWERSHELL);
     assertThat(result2.size()).isEqualTo(2);
 
-    verify(config, times(1)).isUseNoProfile();
+    verify(config, times(2)).isUseNoProfile();
   }
 
   @Test
@@ -112,7 +117,7 @@ public class DefaultWinRmExecutorTest extends CategoryTest {
   public void testCleanUpFilesDisableEncodingFFOn() {
     DefaultWinRmExecutor defaultWinRmExecutorFFOn =
         new DefaultWinRmExecutor(logService, delegateFileManager, true, config, true);
-    defaultWinRmExecutorFFOn.cleanupFiles(winRmSession, "PSFileName.ps1");
+    WinRmExecutorHelper.cleanupFiles(winRmSession, "PSFileName.ps1", DefaultWinRmExecutor.POWERSHELL, true);
     verify(winRmSession, times(1)).executeCommandString(any(), any(), any(), eq(false));
   }
 
@@ -122,7 +127,8 @@ public class DefaultWinRmExecutorTest extends CategoryTest {
   public void testpsWrappedCommandWithEncodingWithProfile() {
     when(config.isUseNoProfile()).thenReturn(true);
     spyDefaultWinRmExecutor = new DefaultWinRmExecutor(logService, delegateFileManager, true, config, true);
-    String poweshellCommand = spyDefaultWinRmExecutor.psWrappedCommandWithEncoding(simpleCommand);
+    String poweshellCommand =
+        WinRmExecutorHelper.psWrappedCommandWithEncoding(simpleCommand, DefaultWinRmExecutor.POWERSHELL_NO_PROFILE);
     assertThat(poweshellCommand.contains("NoProfile")).isTrue();
   }
 
@@ -131,7 +137,8 @@ public class DefaultWinRmExecutorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testpsWrappedCommandWithEncodingWithoutProfile() {
     when(config.isUseNoProfile()).thenReturn(false);
-    String poweshellCommand = spyDefaultWinRmExecutor.psWrappedCommandWithEncoding(simpleCommand);
+    String poweshellCommand =
+        WinRmExecutorHelper.psWrappedCommandWithEncoding(simpleCommand, DefaultWinRmExecutor.POWERSHELL);
     assertThat(poweshellCommand.contains("NoProfile")).isFalse();
   }
 
@@ -139,7 +146,7 @@ public class DefaultWinRmExecutorTest extends CategoryTest {
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void testCopyFiles() {
-    assertThatThrownBy(() -> spyDefaultWinRmExecutor.copyFiles("", new ArrayList<>()))
+    assertThatThrownBy(() -> spyFileBasedWinRmExecutor.copyFiles("", new ArrayList<>()))
         .isInstanceOf(NotImplementedException.class)
         .hasMessageContaining(DefaultWinRmExecutor.NOT_IMPLEMENTED);
   }
@@ -148,7 +155,7 @@ public class DefaultWinRmExecutorTest extends CategoryTest {
   @Owner(developers = INDER)
   @Category(UnitTests.class)
   public void testCopyConfigCommand() {
-    String command = spyDefaultWinRmExecutor.getCopyConfigCommand(configFileMetaData, "This is a test");
+    String command = spyFileBasedWinRmExecutor.getCopyConfigCommand(configFileMetaData, "This is a test");
     assertThat(command).isEqualTo("#### Convert Base64 string back to config file ####\n"
         + "\n"
         + "$DecodedString = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(\""
@@ -166,7 +173,7 @@ public class DefaultWinRmExecutorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCopyConfigCommandBehindFF() {
     String command =
-        spyDefaultWinRmExecutor.getCopyConfigCommandBehindFF(configFileMetaData, "This is a test".getBytes());
+        spyFileBasedWinRmExecutor.getCopyConfigCommandBehindFF(configFileMetaData, "This is a test".getBytes());
     assertThat(command).isEqualTo("$fileName = \"" + configFileMetaData.getDestinationDirectoryPath() + "\\"
         + configFileMetaData.getFilename() + "\"\n"
         + "$commandString = {" + new String("This is a test".getBytes()) + "}"

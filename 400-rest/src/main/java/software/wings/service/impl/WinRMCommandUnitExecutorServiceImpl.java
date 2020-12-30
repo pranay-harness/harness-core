@@ -25,6 +25,7 @@ import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.InitPowerShellCommandUnit;
 import software.wings.beans.command.ShellCommandExecutionContext;
+import software.wings.core.ssh.executors.FileBasedWinRmExecutor;
 import software.wings.core.winrm.executors.WinRmExecutor;
 import software.wings.core.winrm.executors.WinRmExecutorFactory;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
@@ -75,9 +76,12 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
     WinRmSessionConfig winRmSessionConfig = context.winrmSessionConfig(commandUnit.getName(), commandPath);
     WinRmExecutor winRmExecutor =
         winRmExecutorFactory.getExecutor(winRmSessionConfig, context.isDisableWinRMCommandEncodingFFSet());
+    FileBasedWinRmExecutor fileBasedWinRmExecutor = winRmExecutorFactory.getFiledBasedWinRmExecutor(
+        winRmSessionConfig, context.isDisableWinRMCommandEncodingFFSet());
 
     ShellCommandExecutionContext shellCommandExecutionContext = new ShellCommandExecutionContext(context);
     shellCommandExecutionContext.setExecutor(winRmExecutor);
+    shellCommandExecutionContext.setFileBasedScriptExecutor(fileBasedWinRmExecutor);
 
     injector.injectMembers(commandUnit);
 

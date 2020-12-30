@@ -43,11 +43,9 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.output.NullOutputStream;
-import org.apache.commons.lang3.tuple.Pair;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
@@ -307,23 +305,6 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
     executionDataBuilder.sweepingOutputEnvVariables(envVariablesMap);
     saveExecutionLog(message, ERROR, commandExecutionStatus);
     log.error("Exception in script execution ", e);
-  }
-
-  @Override
-  public CommandExecutionStatus scpOneFile(String remoteFilePath, FileProvider fileProvider) {
-    CommandExecutionStatus commandExecutionStatus = FAILURE;
-    try {
-      Pair<String, Long> fileInfo = fileProvider.getInfo();
-      OutputStream out = new FileOutputStream(remoteFilePath + "/" + fileInfo.getKey());
-      fileProvider.downloadToStream(out);
-      out.flush();
-      out.close();
-      commandExecutionStatus = SUCCESS;
-      saveExecutionLog("File successfully downloaded to " + remoteFilePath);
-    } catch (ExecutionException | IOException e) {
-      log.error("Command execution failed with error", e);
-    }
-    return commandExecutionStatus;
   }
 
   private void saveExecutionLog(String line, LogLevel level) {

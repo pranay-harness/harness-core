@@ -35,7 +35,7 @@ import io.harness.rule.Repeat;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;
-import software.wings.core.ssh.executors.ScriptExecutor.ExecutorType;
+import software.wings.core.BaseScriptExecutor;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.rules.SshRule;
@@ -94,7 +94,8 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    */
   @Rule public SshRule sshRule = new SshRule(sshRoot);
   private SshSessionConfig.Builder configBuilder;
-  private ScriptExecutor executor;
+  private BaseScriptExecutor executor;
+  private FileBasedScriptExecutor fileBasedScriptExecutor;
   @Mock private DelegateFileManager fileService;
   @Mock private DelegateLogService logService;
 
@@ -117,6 +118,8 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
                         .withAccountId(ACCOUNT_ID)
                         .withCommandUnitName("test");
     executor = new ScriptSshExecutor(fileService, logService, true, configBuilder.but().build());
+    fileBasedScriptExecutor =
+        new FileBasedSshScriptExecutor(fileService, logService, true, configBuilder.but().build());
   }
 
   /**
@@ -258,7 +261,8 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
         .thenReturn(fileInputStream);
     executor = new ScriptSshExecutor(fileService, logService, true, configBuilder.but().build());
 
-    assertThat(executor.copyGridFsFiles("/", CONFIGS, asList(Pair.of(FILE_ID, null)))).isEqualTo(SUCCESS);
+    assertThat(fileBasedScriptExecutor.copyGridFsFiles("/", CONFIGS, asList(Pair.of(FILE_ID, null))))
+        .isEqualTo(SUCCESS);
 
     assertThat(new File(sshRoot.getRoot(), "text.txt")).hasSameTextualContentAs(file).canRead().canWrite();
   }
@@ -288,7 +292,8 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
         .thenReturn(fileInputStream);
     executor = new ScriptSshExecutor(fileService, logService, true, configBuilder.but().build());
 
-    assertThat(executor.copyGridFsFiles("/", CONFIGS, asList(Pair.of(FILE_ID, "text1.txt")))).isEqualTo(SUCCESS);
+    assertThat(fileBasedScriptExecutor.copyGridFsFiles("/", CONFIGS, asList(Pair.of(FILE_ID, "text1.txt"))))
+        .isEqualTo(SUCCESS);
 
     assertThat(new File(sshRoot.getRoot(), "text1.txt")).hasSameTextualContentAs(file).canRead().canWrite();
   }
@@ -309,7 +314,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
 
     executor = new ScriptSshExecutor(fileService, logService, true, configBuilder.but().build());
 
-    assertThat(executor.copyFiles("/tmp/", asList(file.getAbsolutePath()))).isEqualTo(SUCCESS);
+    assertThat(fileBasedScriptExecutor.copyFiles("/tmp/", asList(file.getAbsolutePath()))).isEqualTo(SUCCESS);
 
     assertThat(new File(sshRoot.getRoot(), file.getName())).hasSameTextualContentAs(file).canRead().canWrite();
   }

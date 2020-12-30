@@ -21,6 +21,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Service;
 import software.wings.beans.infrastructure.Host;
+import software.wings.core.ssh.executors.FileBasedWinRmExecutor;
 import software.wings.core.winrm.executors.WinRmExecutor;
 import software.wings.delegatetasks.DelegateConfigService;
 import software.wings.delegatetasks.DelegateFileManager;
@@ -37,6 +38,7 @@ import org.mockito.Mock;
 public class CopyConfigCommandUnitTest extends WingsBaseTest {
   @InjectMocks CopyConfigCommandUnit copyConfigCommandUnit = new CopyConfigCommandUnit();
   @Mock WinRmExecutor winRmExecutor;
+  @Mock FileBasedWinRmExecutor fileBasedWinRmExecutor;
   @Mock private DelegateConfigService delegateConfigService;
   @Mock private DelegateFileManager delegateFileManager;
   @Mock private Service service;

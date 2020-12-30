@@ -1,5 +1,6 @@
 package software.wings.core.winrm.executors;
 
+import software.wings.core.ssh.executors.FileBasedWinRmExecutor;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 
@@ -19,5 +20,9 @@ public class WinRmExecutorFactory {
       WinRmSessionConfig config, boolean disableCommandEncoding, boolean shouldSaveExecutionLogs) {
     return new DefaultWinRmExecutor(
         logService, delegateFileManager, shouldSaveExecutionLogs, config, disableCommandEncoding);
+  }
+
+  public FileBasedWinRmExecutor getFiledBasedWinRmExecutor(WinRmSessionConfig config, boolean disableCommandEncoding) {
+    return new FileBasedWinRmExecutor(logService, delegateFileManager, true, config, disableCommandEncoding);
   }
 }

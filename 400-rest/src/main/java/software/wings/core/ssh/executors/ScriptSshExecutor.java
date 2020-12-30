@@ -1,19 +1,12 @@
 package software.wings.core.ssh.executors;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.eraro.ErrorCode.ERROR_IN_GETTING_CHANNEL_STREAMS;
 import static io.harness.eraro.ErrorCode.INVALID_EXECUTION_ID;
 import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
-import static io.harness.eraro.ErrorCode.UNKNOWN_EXECUTOR_TYPE_ERROR;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.threading.Morpheus.sleep;
 
-import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SUDO_APP_USER;
-import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SU_APP_USER;
-import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.BASTION_HOST;
-import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.KEY_AUTH;
-import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.PASSWORD_AUTH;
 import static software.wings.utils.SshHelperUtils.normalizeError;
 
 import static java.lang.String.format;
@@ -29,8 +22,6 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
 import io.harness.stream.BoundedInputStream;
 
-import software.wings.beans.HostConnectionAttributes;
-import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.command.ShellExecutionData.ShellExecutionDataBuilder;
 import software.wings.delegatetasks.DelegateFileManager;
@@ -43,10 +34,8 @@ import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -56,14 +45,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * Created by anubhaw on 2/10/16.
@@ -72,7 +57,6 @@ import org.apache.commons.lang3.tuple.Pair;
 @Slf4j
 public class ScriptSshExecutor extends AbstractScriptExecutor {
   public static final int CHUNK_SIZE = 10 * 1024; // 10KB
-  public static final int ALLOWED_BYTES = 1024 * 1024; // 1MB
   /**
    * The constant DEFAULT_SUDO_PROMPT_PATTERN.
    */
@@ -86,7 +70,6 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
    */
   private static final int MAX_BYTES_READ_PER_CHANNEL =
       1024 * 1024 * 1024; // TODO: Read from config. 1 GB per channel for now.
-  private static ConcurrentMap<String, Session> sessions = new ConcurrentHashMap<>();
 
   private Pattern sudoPasswordPromptPattern = Pattern.compile(DEFAULT_SUDO_PROMPT_PATTERN);
   private Pattern lineBreakPattern = Pattern.compile(LINE_BREAK_PATTERN);
@@ -109,25 +92,6 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
     this.config = (SshSessionConfig) config;
   }
 
-  /**
-   * Evict and disconnect cached session.
-   *
-   * @param executionId the execution id
-   * @param hostName    the host name
-   */
-  public static void evictAndDisconnectCachedSession(String executionId, String hostName) {
-    log.info("Clean up session for executionId : {}, hostName: {} ", executionId, hostName);
-    String key = executionId + "~" + hostName.trim();
-    Session session = sessions.remove(key);
-    if (session != null && session.isConnected()) {
-      log.info("Found cached session. disconnecting the session");
-      session.disconnect();
-      log.info("Session disconnected successfully");
-    } else {
-      log.info("No cached session found for executionId : {}, hostName: {} ", executionId, hostName);
-    }
-  }
-
   @Override
   public CommandExecutionStatus executeCommandString(String command, StringBuffer output, boolean displayCommand) {
     CommandExecutionStatus commandExecutionStatus = FAILURE;
@@ -135,7 +99,7 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
     long start = System.currentTimeMillis();
     try {
       saveExecutionLog(format("Initializing SSH connection to %s ....", config.getHost()));
-      channel = getCachedSession(this.config).openChannel("exec");
+      channel = SshSessionManager.getCachedSession(this.config, this.logService).openChannel("exec");
       log.info("Session fetched in " + (System.currentTimeMillis() - start) + " ms");
 
       ((ChannelExec) channel).setPty(true);
@@ -209,7 +173,7 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
     Map<String, String> envVariablesMap = new HashMap<>();
     try {
       saveExecutionLog(format("Initializing SSH connection to %s ....", config.getHost()));
-      channel = getCachedSession(this.config).openChannel("exec");
+      channel = SshSessionManager.getCachedSession(this.config, this.logService).openChannel("exec");
       log.info("Session fetched in " + (System.currentTimeMillis() - start) + " ms");
 
       ((ChannelExec) channel).setPty(true);
@@ -261,7 +225,7 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
             if (commandExecutionStatus == SUCCESS && envVariablesFilename != null) {
               BufferedReader br = null;
               try {
-                channel = getCachedSession(this.config).openChannel("sftp");
+                channel = SshSessionManager.getCachedSession(this.config, this.logService).openChannel("sftp");
                 channel.connect(config.getSocketConnectTimeout());
                 ((ChannelSftp) channel).cd(directoryPath);
                 BoundedInputStream stream =
@@ -392,180 +356,6 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
 
   private boolean textEndsAtNewLineChar(String text, String lastLine) {
     return lastLine.charAt(lastLine.length() - 1) != text.charAt(text.length() - 1);
-  }
-
-  private Session getSession(SshSessionConfig config) {
-    return getSession(config,
-        new ExecutionLogCallback(logService, config.getAccountId(), config.getAppId(), config.getExecutionId(),
-            config.getCommandUnitName()));
-  }
-
-  private Session getSession(SshSessionConfig config, ExecutionLogCallback executionLogCallback) {
-    if (config.getExecutorType() == null) {
-      if (config.getBastionHostConfig() != null) {
-        config.setExecutorType(BASTION_HOST);
-      } else {
-        if (config.getAccessType() == HostConnectionAttributes.AccessType.KEY
-            || config.getAccessType() == KEY_SU_APP_USER || config.getAccessType() == KEY_SUDO_APP_USER) {
-          config.setExecutorType(KEY_AUTH);
-        } else {
-          config.setExecutorType(PASSWORD_AUTH);
-        }
-      }
-    }
-
-    try {
-      switch (config.getExecutorType()) {
-        case PASSWORD_AUTH:
-        case KEY_AUTH:
-          return SshSessionFactory.getSSHSession(config, executionLogCallback);
-        case BASTION_HOST:
-          return SshSessionFactory.getSSHSessionWithJumpbox(config, executionLogCallback);
-        default:
-          throw new WingsException(
-              UNKNOWN_EXECUTOR_TYPE_ERROR, new Throwable("Unknown executor type: " + config.getExecutorType()));
-      }
-    } catch (JSchException jschEx) {
-      throw new WingsException(normalizeError(jschEx), normalizeError(jschEx).name(), jschEx);
-    }
-  }
-
-  /**
-   * Gets cached session.
-   *
-   * @param config the config
-   * @return the cached session
-   */
-  public synchronized Session getCachedSession(SshSessionConfig config) {
-    String key = config.getExecutionId() + "~" + config.getHost().trim();
-    log.info("Fetch session for executionId : {}, hostName: {} ", config.getExecutionId(), config.getHost());
-
-    Session cachedSession = sessions.computeIfAbsent(key, s -> {
-      log.info("No session found. Create new session for executionId : {}, hostName: {}", config.getExecutionId(),
-          config.getHost());
-      return getSession(this.config);
-    });
-
-    // Unnecessary but required test before session reuse.
-    // test channel. http://stackoverflow.com/questions/16127200/jsch-how-to-keep-the-session-alive-and-up
-    try {
-      ChannelExec testChannel = (ChannelExec) cachedSession.openChannel("exec");
-      testChannel.setCommand("true");
-      testChannel.connect(this.config.getSocketConnectTimeout());
-      testChannel.disconnect();
-      log.info("Session connection test successful");
-    } catch (Exception exception) {
-      log.error("Session connection test failed. Reopen new session", exception);
-      cachedSession = sessions.merge(key, cachedSession, (session1, session2) -> getSession(this.config));
-    }
-    return cachedSession;
-  }
-
-  @Override
-  public CommandExecutionStatus scpOneFile(String remoteFilePath, AbstractScriptExecutor.FileProvider fileProvider) {
-    CommandExecutionStatus commandExecutionStatus = FAILURE;
-    Channel channel = null;
-    try {
-      Pair<String, Long> fileInfo = fileProvider.getInfo();
-      //      String command = "scp -r -d -t '" + remoteFilePath + "'";
-      String command = format("mkdir -p \"%s\" && scp -r -d -t '%s'", remoteFilePath, remoteFilePath);
-      channel = getCachedSession(config).openChannel("exec");
-      ((ChannelExec) channel).setCommand(command);
-
-      // get I/O streams for remote scp
-      try (OutputStream out = channel.getOutputStream(); InputStream in = channel.getInputStream()) {
-        saveExecutionLog(format("Connecting to %s ....", config.getHost()));
-        channel.connect(config.getSocketConnectTimeout());
-
-        if (checkAck(in) != 0) {
-          saveExecutionLogError("SCP connection initiation failed");
-          return FAILURE;
-        } else {
-          saveExecutionLog(format("Connection to %s established", config.getHost()));
-        }
-
-        // send "C0644 filesize filename", where filename should not include '/'
-        command = "C0644 " + fileInfo.getValue() + " " + fileInfo.getKey() + "\n";
-
-        out.write(command.getBytes(UTF_8));
-        out.flush();
-        if (checkAck(in) != 0) {
-          saveExecutionLogError("SCP connection initiation failed");
-          return commandExecutionStatus;
-        }
-        saveExecutionLog("Begin file transfer " + fileInfo.getKey() + " to " + config.getHost() + ":" + remoteFilePath);
-        fileProvider.downloadToStream(out);
-        out.write(new byte[1], 0, 1);
-        out.flush();
-
-        if (checkAck(in) != 0) {
-          saveExecutionLogError("File transfer to " + config.getHost() + ":" + remoteFilePath + " failed");
-          return commandExecutionStatus;
-        }
-        commandExecutionStatus = SUCCESS;
-        saveExecutionLog("File successfully transferred to " + config.getHost() + ":" + remoteFilePath);
-        channel.disconnect();
-      }
-    } catch (IOException | ExecutionException | JSchException ex) {
-      if (ex instanceof FileNotFoundException) {
-        saveExecutionLogError("File not found");
-      } else if (ex instanceof JSchException) {
-        log.error("Command execution failed with error", ex);
-        saveExecutionLogError("Command execution failed with error " + normalizeError((JSchException) ex));
-      } else {
-        throw new WingsException(ERROR_IN_GETTING_CHANNEL_STREAMS, ex);
-      }
-      return commandExecutionStatus;
-    } finally {
-      if (channel != null && !channel.isClosed()) {
-        log.info("Disconnect channel if still open post execution command");
-        channel.disconnect();
-      }
-    }
-    return commandExecutionStatus;
-  }
-
-  /**
-   * Check ack.
-   *
-   * @param in the in
-   * @return the int
-   * @throws IOException Signals that an I/O exception has occurred.
-   */
-  int checkAck(InputStream in) throws IOException {
-    int b = in.read();
-    // b may be 0 for success,
-    //          1 for error,
-    //          2 for fatal error,
-    //          -1
-    if (b == 0) {
-      return b;
-    } else if (b == -1) {
-      return b;
-    } else { // error or echoed string on session initiation from remote host
-      StringBuilder sb = new StringBuilder();
-      if (b > 2) {
-        sb.append((char) b);
-      }
-
-      int c;
-      int totalBytesRead = 0;
-      do {
-        c = in.read();
-        if (c == -1) {
-          break;
-        }
-        totalBytesRead++;
-        sb.append((char) c);
-      } while (c != '\n' || totalBytesRead <= ALLOWED_BYTES);
-
-      if (b <= 2) {
-        saveExecutionLogError(sb.toString());
-        return 1;
-      }
-      log.error(sb.toString());
-      return 0;
-    }
   }
 
   @VisibleForTesting

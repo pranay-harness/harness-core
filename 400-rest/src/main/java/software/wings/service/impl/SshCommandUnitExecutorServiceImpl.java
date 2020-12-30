@@ -23,12 +23,13 @@ import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ShellCommandExecutionContext;
 import software.wings.beans.infrastructure.Host;
+import software.wings.core.BaseScriptExecutor;
 import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.core.local.executors.ShellExecutorFactory;
-import software.wings.core.ssh.executors.ScriptExecutor;
-import software.wings.core.ssh.executors.ScriptSshExecutor;
+import software.wings.core.ssh.executors.FileBasedScriptExecutor;
 import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.core.ssh.executors.SshSessionConfig;
+import software.wings.core.ssh.executors.SshSessionManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.utils.SshHelperUtils;
@@ -67,7 +68,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
 
   @Override
   public void cleanup(String activityId, Host host) {
-    ScriptSshExecutor.evictAndDisconnectCachedSession(activityId, host.getHostName());
+    SshSessionManager.evictAndDisconnectCachedSession(activityId, host.getHostName());
   }
 
   /**
@@ -87,7 +88,8 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
             .build());
 
     CommandExecutionStatus commandExecutionStatus = FAILURE;
-    ScriptExecutor executor;
+    BaseScriptExecutor executor;
+    FileBasedScriptExecutor fileBasedScriptExecutor;
     if (context.isExecuteOnDelegate()) {
       ShellExecutorConfig shellExecutorConfig = ShellExecutorConfig.builder()
                                                     .accountId(context.getAccountId())
@@ -97,13 +99,16 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
                                                     .environment(context.getEnvVariables())
                                                     .build();
       executor = shellExecutorFactory.getExecutor(shellExecutorConfig);
+      fileBasedScriptExecutor = shellExecutorFactory.getFileBasedExecutor(shellExecutorConfig);
     } else {
       SshSessionConfig sshSessionConfig = SshHelperUtils.createSshSessionConfig(commandUnit.getName(), context);
       executor = sshExecutorFactory.getExecutor(sshSessionConfig);
+      fileBasedScriptExecutor = sshExecutorFactory.getFileBasedExecutor(sshSessionConfig);
     }
 
     ShellCommandExecutionContext shellCommandExecutionContext = new ShellCommandExecutionContext(context);
     shellCommandExecutionContext.setExecutor(executor);
+    shellCommandExecutionContext.setFileBasedScriptExecutor(fileBasedScriptExecutor);
 
     injector.injectMembers(commandUnit);
 
