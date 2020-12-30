@@ -5,8 +5,13 @@ import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.ci.plan.creator.execution.CIPipelineModuleInfo;
 import io.harness.ci.plan.creator.execution.CIStageModuleInfo;
+import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
+import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.plan.TriggerType;
+import io.harness.pms.contracts.triggers.ParsedPayload;
 import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.execution.beans.PipelineModuleInfo;
@@ -14,6 +19,7 @@ import io.harness.pms.sdk.execution.beans.StageModuleInfo;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.states.LiteEngineTaskStep;
+import io.harness.util.WebhookTriggerProcessorUtils;
 import io.harness.yaml.extended.ci.codebase.Build;
 import io.harness.yaml.extended.ci.codebase.BuildType;
 import io.harness.yaml.extended.ci.codebase.impl.BranchBuildSpec;
@@ -48,12 +54,17 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
         if (build != null && build.getType().equals(BuildType.TAG)) {
           tag = (String) ((TagBuildSpec) build.getSpec()).getTag().fetchFinalValue();
         }
-      } catch (Exception exception) {
-        log.error("Failed to retrieve branch and tag for filtering");
+      } catch (Exception ex) {
+        log.error("Failed to retrieve branch and tag for filtering", ex);
       }
     }
-    // TODO retrieve executionSource here
-    ExecutionSource executionSource = null; // = nodeExecutionProto.getAmbiance().;
+
+    ExecutionSource executionSource = null;
+    try {
+      executionSource = getWebhookExecutionSource(nodeExecutionProto.getAmbiance().getMetadata());
+    } catch (Exception ex) {
+      log.error("Failed to retrieve branch and tag for filtering", ex);
+    }
     return CIPipelineModuleInfo.builder()
         .branch(branch)
         .tag(tag)
@@ -61,13 +72,25 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
         .build();
   }
 
-  private boolean isLiteEngineNodeAndCompleted(PlanNodeProto node) {
-    return Objects.equals(node.getStepType().getType(), LiteEngineTaskStep.STEP_TYPE.getType());
-  }
-
   @Override
   public StageModuleInfo getStageLevelModuleInfo(NodeExecutionProto nodeExecutionProto) {
-    // This one is for displaying tool tip
     return CIStageModuleInfo.builder().build();
+  }
+
+  private ExecutionSource getWebhookExecutionSource(ExecutionMetadata executionMetadata) {
+    ExecutionTriggerInfo executionTriggerInfo = executionMetadata.getTriggerInfo();
+    if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK) {
+      ParsedPayload parsedPayload = executionMetadata.getTriggerPayload().getParsedPayload();
+      if (parsedPayload != null) {
+        return WebhookTriggerProcessorUtils.convertWebhookResponse(parsedPayload);
+      } else {
+        throw new CIStageExecutionException("Parsed payload is empty for webhook execution");
+      }
+    }
+    return null;
+  }
+
+  private boolean isLiteEngineNodeAndCompleted(PlanNodeProto node) {
+    return Objects.equals(node.getStepType().getType(), LiteEngineTaskStep.STEP_TYPE.getType());
   }
 }

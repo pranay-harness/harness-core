@@ -163,8 +163,6 @@ public class BuildJobEnvInfoBuilder {
     List<PVCParams> pvcParamsList = new ArrayList<>();
 
     for (String volumeName : volumeToMountPath.keySet()) {
-      // TODO: Fix the claim name to make it unique for different stages in a build and same build number across
-      // different account
       String claimName = String.format("%s-%s", podName, volumeName);
       pvcParamsList.add(PVCParams.builder()
                             .claimName(claimName)
