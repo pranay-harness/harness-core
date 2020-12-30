@@ -73,12 +73,11 @@ public class IntegrationStageStepPMS implements ChildExecutable<IntegrationStage
   }
 
   private BuildNumberDetails getBuildNumberDetails(Ambiance ambiance) {
-    // Todo Add proper build number
     return BuildNumberDetails.builder()
         .accountIdentifier(AmbianceHelper.getAccountId(ambiance))
         .orgIdentifier(AmbianceHelper.getOrgIdentifier(ambiance))
         .projectIdentifier(AmbianceHelper.getProjectIdentifier(ambiance))
-        .buildNumber(10l)
+        .buildNumber((long) ambiance.getMetadata().getRunSequence())
         .build();
   }
 }

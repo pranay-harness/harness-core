@@ -5,14 +5,17 @@ import io.harness.beans.execution.ManualExecutionSource;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.ci.beans.entities.BuildNumberDetails;
+import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.contracts.plan.TriggerType;
+import io.harness.pms.contracts.triggers.ParsedPayload;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.util.WebhookTriggerProcessorUtils;
 import io.harness.yaml.extended.ci.codebase.Build;
 import io.harness.yaml.extended.ci.codebase.BuildType;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
@@ -36,7 +39,7 @@ public class CILiteEngineIntegrationStageModifier implements StageExecutionModif
   @Override
   public ExecutionElementConfig modifyExecutionPlan(ExecutionElementConfig execution,
       StageElementConfig stageElementConfig, PlanCreationContext context, String podName, CodeBase ciCodeBase) {
-    log.info("Modifying execution plan to add lite entine step for integration stage {}",
+    log.info("Modifying execution plan to add lite engine step for integration stage {}",
         stageElementConfig.getIdentifier());
 
     PlanCreationContextValue planCreationContextValue = context.getGlobalContext().get("metadata");
@@ -71,6 +74,13 @@ public class CILiteEngineIntegrationStageModifier implements StageExecutionModif
               RunTimeInputHandler.resolveStringParameter("branch", "Git Clone", identifier, branch, false);
           return ManualExecutionSource.builder().branch(branchString).build();
         }
+      }
+    } else if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK) {
+      ParsedPayload parsedPayload = executionMetadata.getTriggerPayload().getParsedPayload();
+      if (parsedPayload != null) {
+        return WebhookTriggerProcessorUtils.convertWebhookResponse(parsedPayload);
+      } else {
+        throw new CIStageExecutionException("Parsed payload is empty for webhook execution");
       }
     }
 

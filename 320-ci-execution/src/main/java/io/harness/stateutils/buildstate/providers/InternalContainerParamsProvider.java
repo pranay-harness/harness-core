@@ -57,7 +57,6 @@ import org.apache.commons.lang3.StringUtils;
  */
 
 @Singleton
-// TODO: fetch constants from config file.
 public class InternalContainerParamsProvider {
   @Inject CIExecutionServiceConfig ciExecutionServiceConfig;
 
