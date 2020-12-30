@@ -9,6 +9,7 @@ import io.harness.data.validator.EntityName;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.StepSpecType;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
+import io.harness.yaml.core.timeout.Timeout;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -27,7 +28,7 @@ public class StepElementConfig {
   @EntityIdentifier String identifier;
   @EntityName String name;
   String description;
-  String timeout;
+  Timeout timeout;
   List<FailureStrategyConfig> failureStrategies;
 
   String type;
@@ -38,7 +39,7 @@ public class StepElementConfig {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
 
   @Builder
-  public StepElementConfig(String uuid, String identifier, String name, String description, String timeout,
+  public StepElementConfig(String uuid, String identifier, String name, String description, Timeout timeout,
       List<FailureStrategyConfig> failureStrategies, String type, StepSpecType stepSpecType,
       ParameterField<String> skipCondition) {
     this.uuid = uuid;

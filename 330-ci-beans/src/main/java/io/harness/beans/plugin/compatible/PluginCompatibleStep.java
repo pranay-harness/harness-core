@@ -7,6 +7,6 @@ import io.harness.pms.yaml.ParameterField;
 public interface PluginCompatibleStep extends CIStepInfo {
   // Common for all plugin compatible step types
   ParameterField<String> getConnectorRef();
-  ParameterField<String> getImage();
+  ParameterField<String> getContainerImage();
   ContainerResource getResources();
 }

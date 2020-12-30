@@ -1,7 +1,7 @@
 pipeline:
   name: My Deployment Pipeline
   identifier: myPipeline1
-  description:
+  description: Sample Project Build and Test Pipeline
   properties:
     ci:
       codebase:
@@ -20,8 +20,7 @@ pipeline:
             spec:
               connectorRef: cidelegate
               namespace: harness-delegate
-          enableCloneRepo: true # default is true
-          workspace: /harness #optional - default value is /harness
+          cloneCodebase: true # default is true
           sharedPaths:
             - myPath
             - myPath2
@@ -47,7 +46,8 @@ pipeline:
                 connectorRef: "np-quotecenter" #(optional)
                 image: "us.gcr.io/platform-205701/mysql:12" #latest if version not provided
                 resources:
-                  limit:
+                  limits:
+                    memory: 2Gi
                     cpu: 250m
           execution:
             steps:
@@ -56,7 +56,7 @@ pipeline:
                   name: stepName
                   description: myDescription
                   type: Run
-                  timeout: 90
+                  timeout: 90s
                   skipCondition: someExpression # some JEXL expression
                   spec:
                     image: "us.gcr.io/platform-205701/mysql:12"
@@ -74,15 +74,13 @@ pipeline:
                       - var1
                       - var2
                     resources:
-                      limit:
+                      limits:
                         memory: 64Mi
-                        cpu: 250m
-
-
+                        cpu: "2"
               - step:
                   name: slack plugin wrapper
                   identifier: mySlackPluginWrapper
-                  timeout: 90
+                  timeout: 20m
                   type: Plugin
                   spec:
                     connectorRef: "gcr-NA"
@@ -91,7 +89,7 @@ pipeline:
                       webhook: https://hooks.slack.com/services/...
                       channel: dev
                     resources:
-                      limit:
+                      limits:
                         memory: 64Mi
                         cpu: 250m
 
@@ -100,7 +98,7 @@ pipeline:
                   identifier: saveCacheGCS
                   name: Save Cache to GCS
                   type: SaveCacheGCS
-                  timeout: 90
+                  timeout: 3h
                   spec:
                     key: "{{checksum filePath1 }}-{{checksum filePath2 }}"
                     sourcePaths:
@@ -110,7 +108,7 @@ pipeline:
                     bucket: bucket
                     target: pathOnBucket
                     resources:
-                      limit:
+                      limits:
                         memory: 64Mi
                         cpu: 250m
 
@@ -119,7 +117,7 @@ pipeline:
                   identifier: saveCacheS3
                   name: Save Cache to S3
                   type: SaveCacheS3
-                  timeout: 90
+                  timeout: 2h
                   spec:
                     key: "{{checksum filePath1 }}-{{checksum filePath2 }}"
                     sourcePaths:
@@ -129,19 +127,16 @@ pipeline:
                     endpoint:    #(optional) for S3 compatible object stores
                     region: us-east1
                     bucket: bucket
-                    target: pathOnBucket    #(optional)
-
+                    target: pathOnBucket    #(optional
                     resources:
-                      limit:
+                      limits:
                         memory: 64Mi
                         cpu: 250m
-
-
               - step:
                   identifier: restoreCacheS3
                   name: Restore Cache from S3
                   type: RestoreCacheS3
-                  timeout: 90
+                  timeout: 90s
                   spec:
                     connectorRef: myS3
                     key: "{{checksum filePath1 }}-{{checksum filePath2 }}"
@@ -150,33 +145,28 @@ pipeline:
                     target: pathOnBucket
                     endpoint:    #(optional) for S3 compatible object stores
                     resources:
-                      limit:
+                      limits:
                         memory: 64Mi
                         cpu: 250m
-
-
               - step:
                   identifier: restoreCacheGCS
                   name: Restore Cache form GCS
                   type: RestoreCacheGCS
-
                   spec:
                     key: "{{checksum filePath1 }}-{{checksum filePath2 }}"
                     connectorRef: myGCS
                     bucket: bucket
                     target: pathOnBucket
                     resources:
-                      limit:
+                      limits:
                         memory: 64Mi
                         cpu: 250m
-
-
               - step:
                   name: Build and push to DcokerHub
                   identifier: docker
                   type: BuildAndPushDockerHub
                   description: build and push an image to DcokerHub
-                  timeout: 90
+                  timeout: 90s
                   spec:
                     connectorRef: my_docker_Connector # only show docker connectors in UI dropdown
                     repo: myImage #url to the image, without a tag
@@ -193,11 +183,9 @@ pipeline:
                       key2: value2
                     target: someTarget # (optional) Build the specified stage as defined inside the Dockerfile
                     resources:
-                      limit:
+                      limits:
                         memory: 64Mi
                         cpu: 250m
-
-
               - step:
                   name: build and Push to ECR
                   identifier: ecr
@@ -207,7 +195,7 @@ pipeline:
                     connectorRef: my_ECR_Connector # only show ECR connectors in UI dropdown
                     region: us-east-1 # region
                     account: accontID # aws accont
-                    image: imageName # image name
+                    imageName: imageName # image name
                     dockerfile: # (optional) by default it will use the dockerfile in the root of the codebase
                     tags:
                       - latest
@@ -221,11 +209,9 @@ pipeline:
                       - arg2
                     target: someTarget # (optional) Build the specified stage as defined inside the Dockerfile
                     resources:
-                      limit:
+                      limits:
                         memory: 64Mi
                         cpu: 250m
-
-
               - step:
                   name: build and Upload to GCR
                   identifier: gcr
@@ -233,8 +219,9 @@ pipeline:
                   description: build and push an image to GCR
                   spec:
                     connectorRef: my_GCR_Connector # only show GCR connectors in UI dropdown
-                    registry: us.gcr/myProject
-                    image: myImage #Image Name without a tage
+                    host: us.gcr
+                    projectID: myProj
+                    imageName: myImage #Image Name without a tage
                     dockerfile: # (optional) by default it will use the dockerfile in the root of the codebase
                     tags:
                       - latest
@@ -248,10 +235,9 @@ pipeline:
                       key2: value2
                     target: someTarget # (optional) Build the specified stage as defined inside the Dockerfile
                     resources:
-                      limit:
+                      limits:
                         memory: 64Mi
                         cpu: 250m
-
               - step:
                   name: Upload Artifacts to S3
                   identifier: s3Upload
@@ -265,11 +251,9 @@ pipeline:
                     target: someTarget # (optional) Build the specified stage as defined inside the Dockerfile
                     sourcePath: somePath
                     resources:
-                      limit:
+                      limits:
                         memory: 64Mi
                         cpu: 250m
-
-
               - step:
                   name: Upload Artifacts to GCS
                   identifier: gcsUpload
@@ -281,10 +265,9 @@ pipeline:
                     target: someTarget # (optional) Build the specified stage as defined inside the Dockerfile
                     sourcePath: somePath
                     resources:
-                      limit:
+                      limits:
                         memory: 64Mi
                         cpu: 250m
-
     - stage:
         identifier: stage2
         name: stage2
@@ -292,8 +275,7 @@ pipeline:
         spec:
           infrastructure:
             useFromStage: stage1
-          enablecloneRepo: false # default is true
-          workspace: /harness #optional - default value is /harness
+          cloneCodebase: false # default is true
           sharedPaths:
             - myPath
             - myPath2
@@ -304,4 +286,3 @@ pipeline:
             - name: param1
               type: Text
               value: value1
-

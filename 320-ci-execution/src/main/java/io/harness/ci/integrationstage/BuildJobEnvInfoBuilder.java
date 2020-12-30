@@ -106,7 +106,7 @@ public class BuildJobEnvInfoBuilder {
     if (infrastructure.getType() == Infrastructure.Type.KUBERNETES_DIRECT) {
       return K8BuildJobEnvInfo.builder()
           .podsSetupInfo(getCIPodsSetupInfo(stageElementConfig, ciExecutionArgs, steps, isFirstPod, podName))
-          .workDir(getWorkingDirectory(stageElementConfig))
+          .workDir(CICommonPodConstants.STEP_EXEC_WORKING_DIR)
           .publishArtifactStepIds(getPublishArtifactStepIds(stageElementConfig))
           .stepConnectorRefs(getStepConnectorRefs(stageElementConfig))
           .build();
@@ -121,7 +121,7 @@ public class BuildJobEnvInfoBuilder {
 
     Set<Integer> usedPorts = new HashSet<>();
     PortFinder portFinder = PortFinder.builder().startingPort(PORT_STARTING_RANGE).usedPorts(usedPorts).build();
-    String workDirPath = getWorkingDirectoryPath(getWorkingDirectory(stageElementConfig));
+    String workDirPath = getWorkingDirectoryPath(CICommonPodConstants.STEP_EXEC_WORKING_DIR);
     List<ContainerDefinitionInfo> serviceContainerDefinitionInfos =
         CIServiceBuilder.createServicesContainerDefinition(stageElementConfig, portFinder, ciExecutionServiceConfig);
     List<ContainerDefinitionInfo> stepContainerDefinitionInfos =
@@ -278,10 +278,11 @@ public class BuildJobEnvInfoBuilder {
         .commands(StepContainerUtils.getCommand())
         .args(StepContainerUtils.getArguments(port))
         .envVars(envVarMap)
-        .containerImageDetails(ContainerImageDetails.builder()
-                                   .imageDetails(getImageInfo(RunTimeInputHandler.resolveStringParameter(
-                                       "Image", "Plugin", identifier, stepInfo.getImage(), true)))
-                                   .build())
+        .containerImageDetails(
+            ContainerImageDetails.builder()
+                .imageDetails(getImageInfo(RunTimeInputHandler.resolveStringParameter("containerImage",
+                    stepInfo.getStepType().getType(), identifier, stepInfo.getContainerImage(), true)))
+                .build())
         .containerResourceParams(getStepContainerResource(stepInfo.getResources()))
         .ports(Collections.singletonList(port))
         .containerType(CIContainerType.PLUGIN)
@@ -607,8 +608,8 @@ public class BuildJobEnvInfoBuilder {
 
   private Integer getContainerMemoryLimit(ContainerResource resource) {
     Integer memoryLimit = ciExecutionServiceConfig.getDefaultMemoryLimit();
-    if (resource != null && resource.getLimit() != null && resource.getLimit().getMemory() != null) {
-      MemoryQuantity memoryLimitMemoryQuantity = resource.getLimit().getMemory();
+    if (resource != null && resource.getLimits() != null && resource.getLimits().getMemory() != null) {
+      MemoryQuantity memoryLimitMemoryQuantity = resource.getLimits().getMemory();
       memoryLimit = QuantityUtils.getMemoryQuantityValueInUnit(memoryLimitMemoryQuantity, BinaryQuantityUnit.Mi);
     }
     return memoryLimit;
@@ -616,8 +617,8 @@ public class BuildJobEnvInfoBuilder {
 
   private Integer getContainerCpuLimit(ContainerResource resource) {
     Integer cpuLimit = ciExecutionServiceConfig.getDefaultCPULimit();
-    if (resource != null && resource.getLimit() != null && resource.getLimit().getCpu() != null) {
-      CpuQuantity cpuLimitQuantity = resource.getLimit().getCpu();
+    if (resource != null && resource.getLimits() != null && resource.getLimits().getCpu() != null) {
+      CpuQuantity cpuLimitQuantity = resource.getLimits().getCpu();
       cpuLimit = QuantityUtils.getCpuQuantityValueInUnit(cpuLimitQuantity, DecimalQuantityUnit.m);
     }
     return cpuLimit;
@@ -737,16 +738,6 @@ public class BuildJobEnvInfoBuilder {
         return getContainerCpuLimit(((PluginCompatibleStep) ciStepInfo).getResources());
       default:
         return zeroCpu;
-    }
-  }
-
-  private String getWorkingDirectory(StageElementConfig stageElementConfig) {
-    IntegrationStageConfig integrationStageConfig = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
-
-    if ((integrationStageConfig.getWorkspace() != null) && !integrationStageConfig.getWorkspace().isExpression()) {
-      return (String) integrationStageConfig.getWorkspace().fetchFinalValue();
-    } else {
-      return CICommonPodConstants.STEP_EXEC_WORKING_DIR;
     }
   }
 

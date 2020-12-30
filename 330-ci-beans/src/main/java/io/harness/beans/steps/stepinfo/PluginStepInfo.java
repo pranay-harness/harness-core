@@ -40,8 +40,8 @@ public class PluginStepInfo implements CIStepInfo {
   @NotNull private ParameterField<String> image;
   private ParameterField<String> connector;
   private ContainerResource resources;
-  @Builder
 
+  @Builder
   @ConstructorProperties({"identifier", "name", "retry", "settings", "image", "connector", "resources"})
   public PluginStepInfo(String identifier, String name, Integer retry, ParameterField<Map<String, String>> settings,
       ParameterField<String> image, ParameterField<String> connector, ContainerResource resources) {

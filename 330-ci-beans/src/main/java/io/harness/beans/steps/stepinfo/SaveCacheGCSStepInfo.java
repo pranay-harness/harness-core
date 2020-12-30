@@ -44,7 +44,7 @@ public class SaveCacheGCSStepInfo implements PluginCompatibleStep {
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
 
   @NotNull private ParameterField<String> connectorRef;
-  @JsonIgnore @NotNull private ParameterField<String> image;
+  @JsonIgnore @NotNull private ParameterField<String> containerImage;
   private ContainerResource resources;
 
   // plugin settings
@@ -54,18 +54,18 @@ public class SaveCacheGCSStepInfo implements PluginCompatibleStep {
   private ParameterField<String> target;
 
   @Builder
-  @ConstructorProperties({"identifier", "name", "retry", "timeout", "connectorRef", "image", "resources", "key",
-      "bucket", "sourcePath", "target"})
+  @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "containerImage", "resources", "key", "bucket",
+      "sourcePath", "target"})
   public SaveCacheGCSStepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
-      ParameterField<String> image, ContainerResource resources, ParameterField<String> key,
+      ParameterField<String> containerImage, ContainerResource resources, ParameterField<String> key,
       ParameterField<String> bucket, ParameterField<List<String>> sourcePath, ParameterField<String> target) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
 
     this.connectorRef = connectorRef;
-    this.image =
-        Optional.ofNullable(image).orElse(ParameterField.createValueField("homerovalle/drone-gcs-cache:latest"));
+    this.containerImage = Optional.ofNullable(containerImage)
+                              .orElse(ParameterField.createValueField("homerovalle/drone-gcs-cache:latest"));
     this.resources = resources;
     this.key = key;
     this.bucket = bucket;

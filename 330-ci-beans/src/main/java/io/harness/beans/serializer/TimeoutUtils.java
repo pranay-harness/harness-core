@@ -1,22 +1,16 @@
 package io.harness.beans.serializer;
 
-import static java.lang.String.format;
-
-import io.harness.exception.ngexception.CIStageExecutionException;
+import io.harness.yaml.core.timeout.Timeout;
 
 import lombok.experimental.UtilityClass;
-import org.springframework.util.StringUtils;
 
 @UtilityClass
 public class TimeoutUtils {
-  public static final char TIMEOUT_SUFFIX = 's';
-
-  public long parseTimeoutString(String timeout, long defaultTimeout) {
-    try {
-      long timeoutLong = Long.parseLong(StringUtils.trimTrailingCharacter(timeout, TIMEOUT_SUFFIX));
-      return timeoutLong > 0 ? timeoutLong : defaultTimeout;
-    } catch (NumberFormatException e) {
-      throw new CIStageExecutionException(format("Timout format is incorrect: %s", timeout), e);
+  public long getTimeoutInSeconds(Timeout timeout, long defaultTimeoutInSeconds) {
+    if (timeout == null) {
+      return defaultTimeoutInSeconds;
     }
+    long timeoutLong = timeout.getNumericValue() * timeout.getUnit().getCoefficient();
+    return timeoutLong > 0 ? timeoutLong : defaultTimeoutInSeconds;
   }
 }

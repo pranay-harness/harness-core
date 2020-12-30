@@ -50,7 +50,7 @@ public class PublishStepProtobufSerializerTest extends CiBeansTestBase {
   public void shouldSerializeFilePatternArtifact() throws InvalidProtocolBufferException {
     FilePatternArtifact filePatternArtifact =
         FilePatternArtifact.builder()
-            .filePattern(FILE_PATTERN)
+            .filePattern(ParameterField.createValueField(FILE_PATTERN))
             .connector(ArtifactoryConnector.builder()
                            .connectorRef(ParameterField.createValueField(ARTIFACTORY_CONNECTOR))
                            .artifactPath(ParameterField.createValueField(ARTIFACT_PATH))

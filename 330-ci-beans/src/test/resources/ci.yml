@@ -34,13 +34,6 @@ pipeline:
             value: account.secret
         execution:
           steps:
-            - step:
-                identifier: gitClone
-                type: GitClone
-                spec:
-                  gitConnector: gitGlobal
-                  path: portal
-                  branch: master
             - parallel:
                 - step:
                     identifier: runLint
@@ -48,6 +41,8 @@ pipeline:
                     spec:
                       retry: 2
                       command: ./run lint
+                      image: "maven:latest"
+                      connectorRef: dockerConnector
                 - step:
                     identifier: runAllUnitTests
                     type: Run

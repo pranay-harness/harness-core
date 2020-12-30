@@ -90,9 +90,9 @@ public class PublishStepProtobufSerializer implements ProtobufStepSerializer<Pub
                                     .setLocationType(getLocationType(dockerFileArtifact.getConnector().getType()))
                                     .setDestinationUrl(getImageDestinationUrl(dockerFileArtifact.getConnector(),
                                         RunTimeInputHandler.resolveStringParameter(
-                                            "Image", "DockerHub", identifier, dockerFileArtifact.getImage(), true),
+                                            "image", "DockerHub", identifier, dockerFileArtifact.getImage(), true),
                                         RunTimeInputHandler.resolveStringParameter(
-                                            "Tag", "DockerHub", identifier, dockerFileArtifact.getTag(), true),
+                                            "tag", "DockerHub", identifier, dockerFileArtifact.getTag(), true),
                                         identifier))
                                     .build());
     return imageBuilder.build();
@@ -100,7 +100,8 @@ public class PublishStepProtobufSerializer implements ProtobufStepSerializer<Pub
 
   private UploadFile resolveFilePattern(FilePatternArtifact filePatternArtifact, String identifier) {
     UploadFile.Builder uploadFileBuilder = UploadFile.newBuilder();
-    uploadFileBuilder.setFilePattern(filePatternArtifact.getFilePattern());
+    uploadFileBuilder.setFilePattern(RunTimeInputHandler.resolveStringParameter(
+        "filePattern", "FilePatternArtifact", identifier, filePatternArtifact.getFilePattern(), true));
     uploadFileBuilder.setDestination(
         Destination.newBuilder()
             .setConnector(getConnector(filePatternArtifact, identifier))

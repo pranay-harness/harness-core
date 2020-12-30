@@ -38,7 +38,6 @@ public class TestIntelligenceStepInfo implements CIStepInfo {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(CIStepInfoType.TEST_INTELLIGENCE.name()).build();
 
-  @JsonIgnore private String callbackId;
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
@@ -50,14 +49,12 @@ public class TestIntelligenceStepInfo implements CIStepInfo {
   @NotNull private String image;
   private String connector;
   private ContainerResource resources;
-  private int port;
 
   @Builder
-  @ConstructorProperties({"callbackId", "identifier", "name", "retry", "goals", "language", "buildTool", "image",
-      "connector", "resources", "port"})
-  public TestIntelligenceStepInfo(String callbackId, String identifier, String name, Integer retry, String goals,
-      String language, String buildTool, String image, String connector, ContainerResource resources, int port) {
-    this.callbackId = callbackId;
+  @ConstructorProperties(
+      {"identifier", "name", "retry", "goals", "language", "buildTool", "image", "connector", "resources"})
+  public TestIntelligenceStepInfo(String identifier, String name, Integer retry, String goals, String language,
+      String buildTool, String image, String connector, ContainerResource resources) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -67,7 +64,6 @@ public class TestIntelligenceStepInfo implements CIStepInfo {
     this.image = image;
     this.connector = connector;
     this.resources = resources;
-    this.port = port;
   }
 
   @Override
