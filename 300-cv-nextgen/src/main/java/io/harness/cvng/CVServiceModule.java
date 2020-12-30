@@ -119,6 +119,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 
 /**
@@ -126,6 +127,7 @@ import org.apache.commons.io.IOUtils;
  *
  * @author Raghu
  */
+@Slf4j
 public class CVServiceModule extends AbstractModule {
   private VerificationConfiguration verificationConfiguration;
 
@@ -145,6 +147,7 @@ public class CVServiceModule extends AbstractModule {
             new ThreadFactoryBuilder()
                 .setNameFormat("default-cv-nextgen-executor-%d")
                 .setPriority(Thread.MIN_PRIORITY)
+                .setUncaughtExceptionHandler((t, e) -> log.error("error while processing task", e))
                 .build()));
     try {
       VersionInfoManager versionInfoManager = new VersionInfoManager(
