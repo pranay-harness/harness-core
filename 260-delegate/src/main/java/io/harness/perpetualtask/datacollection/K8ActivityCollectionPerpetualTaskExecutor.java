@@ -1,5 +1,8 @@
 package io.harness.perpetualtask.datacollection;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.cvng.beans.K8ActivityDataCollectionInfo;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO;
@@ -33,6 +36,7 @@ import io.kubernetes.client.openapi.models.V1Event;
 import io.kubernetes.client.openapi.models.V1EventList;
 import io.kubernetes.client.util.CallGeneratorParams;
 import java.time.Instant;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -68,47 +72,54 @@ public class K8ActivityCollectionPerpetualTaskExecutor implements PerpetualTaskE
       SharedInformerFactory factory = new SharedInformerFactory();
       KubernetesActivitySourceDTO activitySourceDTO =
           (KubernetesActivitySourceDTO) dataCollectionInfo.getActivitySourceDTO();
-      activitySourceDTO.getActivitySourceConfigs().forEach(activitySourceConfig -> {
-        KubernetesConfig kubernetesConfig = k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(
-            kubernetesClusterConfig, activitySourceConfig.getNamespace());
-        ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig);
-        CoreV1Api coreV1Api = new CoreV1Api(apiClient);
-        SharedIndexInformer<V1Event> nodeInformer = factory.sharedIndexInformerFor(
-            (CallGeneratorParams generatorParams)
-                -> coreV1Api.listNamespacedEventCall(activitySourceConfig.getNamespace(), null, null, null, null, null,
-                    null, generatorParams.resourceVersion, generatorParams.timeoutSeconds, generatorParams.watch, null),
-            V1Event.class, V1EventList.class);
+      KubernetesConfig kubernetesConfig =
+          k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(kubernetesClusterConfig, null);
+      ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig).setVerifyingSsl(false);
+      CoreV1Api coreV1Api = new CoreV1Api(apiClient);
+      SharedIndexInformer<V1Event> nodeInformer = factory.sharedIndexInformerFor(
+          (CallGeneratorParams generatorParams)
+              -> coreV1Api.listEventForAllNamespacesCall(null, null, null, null, null, null,
+                  generatorParams.resourceVersion, generatorParams.timeoutSeconds, generatorParams.watch, null),
+          V1Event.class, V1EventList.class);
+      nodeInformer.addEventHandler(new ResourceEventHandler<V1Event>() {
+        @Override
+        public void onAdd(V1Event v1Event) {
+          String namespace = v1Event.getInvolvedObject().getNamespace();
+          String workLoadName = v1Event.getInvolvedObject().getName();
 
-        nodeInformer.addEventHandler(new ResourceEventHandler<V1Event>() {
-          @Override
-          public void onAdd(V1Event v1Event) {
-            if (v1Event.getInvolvedObject().getName().contains(activitySourceConfig.getWorkloadName())) {
-              kubernetesActivitiesStoreService.save(taskParams.getAccountId(),
-                  KubernetesActivityDTO.builder()
-                      .message(v1Event.getMessage())
-                      .eventDetails(v1Event.toString())
-                      .activitySourceConfigId(activitySourceConfigId)
-                      .name(v1Event.getInvolvedObject().getUid())
-                      .activityStartTime(v1Event.getFirstTimestamp().getMillis())
-                      .activityEndTime(v1Event.getLastTimestamp().getMillis())
-                      .kubernetesActivityType(ActivityType.INFRASTRUCTURE)
-                      .eventType(KubernetesEventType.valueOf(v1Event.getType()))
-                      .serviceIdentifier(activitySourceConfig.getServiceIdentifier())
-                      .environmentIdentifier(activitySourceConfig.getEnvIdentifier())
-                      .build());
+          activitySourceDTO.getActivitySourceConfigs().forEach(activitySourceConfig -> {
+            if ((isEmpty(activitySourceConfig.getNamespaceRegex())
+                    && activitySourceConfig.getNamespace().equals(namespace))
+                || (isNotEmpty(activitySourceConfig.getNamespaceRegex())
+                    && Pattern.compile(activitySourceConfig.getNamespaceRegex()).matcher(namespace).matches())) {
+              if (workLoadName.contains(activitySourceConfig.getWorkloadName())) {
+                kubernetesActivitiesStoreService.save(taskParams.getAccountId(),
+                    KubernetesActivityDTO.builder()
+                        .message(v1Event.getMessage())
+                        .eventDetails(v1Event.toString())
+                        .activitySourceConfigId(activitySourceConfigId)
+                        .name(v1Event.getInvolvedObject().getUid())
+                        .activityStartTime(v1Event.getFirstTimestamp().getMillis())
+                        .activityEndTime(v1Event.getLastTimestamp().getMillis())
+                        .kubernetesActivityType(ActivityType.INFRASTRUCTURE)
+                        .eventType(KubernetesEventType.valueOf(v1Event.getType()))
+                        .serviceIdentifier(activitySourceConfig.getServiceIdentifier())
+                        .environmentIdentifier(activitySourceConfig.getEnvIdentifier())
+                        .build());
+              }
             }
-          }
+          });
+        }
 
-          @Override
-          public void onUpdate(V1Event v1Event, V1Event apiType1) {
-            // no updates
-          }
+        @Override
+        public void onUpdate(V1Event v1Event, V1Event apiType1) {
+          // no updates
+        }
 
-          @Override
-          public void onDelete(V1Event v1Event, boolean b) {
-            // no deletes
-          }
-        });
+        @Override
+        public void onDelete(V1Event v1Event, boolean b) {
+          // no deletes
+        }
       });
 
       factory.startAllRegisteredInformers();

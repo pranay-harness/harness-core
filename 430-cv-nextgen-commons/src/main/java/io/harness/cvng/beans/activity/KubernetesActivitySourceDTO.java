@@ -31,5 +31,6 @@ public class KubernetesActivitySourceDTO extends ActivitySourceDTO {
     @NotNull String envIdentifier;
     @NotNull String namespace;
     @NotNull String workloadName;
+    String namespaceRegex;
   }
 }
