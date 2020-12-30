@@ -244,6 +244,273 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "BitbucketApiAccess": {
+      "type": "object",
+      "required": [
+        "spec",
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "UsernamePassword"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "UsernamePassword"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/BitbucketUsernamePasswordApiAccess"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "BitbucketApiAccessSpecDTO": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "BitbucketAuthentication": {
+      "type": "object",
+      "required": [
+        "spec",
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "Http",
+            "Ssh"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Http"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/BitbucketHttpCredentials"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Ssh"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/BitbucketSshCredentials"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "BitbucketConnector": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "authentication",
+            "type",
+            "url"
+          ],
+          "properties": {
+            "apiAccess": {
+              "$ref": "#/definitions/BitbucketApiAccess"
+            },
+            "authentication": {
+              "$ref": "#/definitions/BitbucketAuthentication"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "Account",
+                "Repo"
+              ]
+            },
+            "url": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "BitbucketCredentialsDTO": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "BitbucketHttpCredentials": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/BitbucketCredentialsDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "UsernamePassword"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "UsernamePassword"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/BitbucketUsernamePassword"
+              }
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "BitbucketHttpCredentialsSpecDTO": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "BitbucketSshCredentials": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/BitbucketCredentialsDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "spec"
+          ],
+          "properties": {
+            "spec": {
+              "$ref": "#/definitions/GitlabSshCredentialsSpec"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "BitbucketUsernamePassword": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/BitbucketHttpCredentialsSpecDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "passwordRef"
+          ],
+          "properties": {
+            "passwordRef": {
+              "type": "string"
+            },
+            "username": {
+              "type": "string"
+            },
+            "usernameRef": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "usernameRef"
+              ]
+            },
+            {
+              "required": [
+                "username"
+              ]
+            }
+          ]
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "BitbucketUsernamePasswordApiAccess": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/BitbucketApiAccessSpecDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "passwordRef"
+          ],
+          "properties": {
+            "passwordRef": {
+              "type": "string"
+            },
+            "username": {
+              "type": "string"
+            },
+            "usernameRef": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "usernameRef"
+              ]
+            },
+            {
+              "required": [
+                "username"
+              ]
+            }
+          ]
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "Connector": {
       "type": "object",
       "properties": {
@@ -309,7 +576,8 @@
             "Jira",
             "Nexus",
             "Github",
-            "Gitlab"
+            "Gitlab",
+            "Bitbucket"
           ]
         }
       },
@@ -343,6 +611,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/JiraConnector"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Bitbucket"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/BitbucketConnector"
               }
             }
           }
@@ -1037,6 +1321,7 @@
     "GithubAuthentication": {
       "type": "object",
       "required": [
+        "spec",
         "type"
       ],
       "properties": {
@@ -1130,14 +1415,15 @@
         {
           "type": "object",
           "required": [
+            "spec",
             "type"
           ],
           "properties": {
             "type": {
               "type": "string",
               "enum": [
-                "UsernameAndPassword",
-                "UsernameAndToken"
+                "UsernamePassword",
+                "UsernameToken"
               ]
             }
           }
@@ -1146,7 +1432,7 @@
           "if": {
             "properties": {
               "type": {
-                "const": "UsernameAndToken"
+                "const": "UsernameToken"
               }
             }
           },
@@ -1162,7 +1448,7 @@
           "if": {
             "properties": {
               "type": {
-                "const": "UsernameAndPassword"
+                "const": "UsernamePassword"
               }
             }
           },
@@ -1335,6 +1621,7 @@
     "GitlabAuthentication": {
       "type": "object",
       "required": [
+        "spec",
         "type"
       ],
       "properties": {
@@ -1428,14 +1715,15 @@
         {
           "type": "object",
           "required": [
+            "spec",
             "type"
           ],
           "properties": {
             "type": {
               "type": "string",
               "enum": [
-                "UsernameAndPassword",
-                "UsernameAndToken"
+                "UsernamePassword",
+                "UsernameToken"
               ]
             }
           }
@@ -1444,14 +1732,14 @@
           "if": {
             "properties": {
               "type": {
-                "const": "UsernameAndPassword"
+                "const": "UsernameToken"
               }
             }
           },
           "then": {
             "properties": {
               "spec": {
-                "$ref": "#/definitions/GitlabUsernamePassword"
+                "$ref": "#/definitions/GitlabUsernameToken"
               }
             }
           }
@@ -1460,14 +1748,14 @@
           "if": {
             "properties": {
               "type": {
-                "const": "UsernameAndToken"
+                "const": "UsernamePassword"
               }
             }
           },
           "then": {
             "properties": {
               "spec": {
-                "$ref": "#/definitions/GitlabUsernameToken"
+                "$ref": "#/definitions/GitlabUsernamePassword"
               }
             }
           }

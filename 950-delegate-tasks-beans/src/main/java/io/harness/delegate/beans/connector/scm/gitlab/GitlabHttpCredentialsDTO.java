@@ -23,6 +23,7 @@ public class GitlabHttpCredentialsDTO implements GitlabCredentialsDTO {
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
   @Valid
+  @NotNull
   GitlabHttpCredentialsSpecDTO httpCredentialsSpec;
 
   @Builder

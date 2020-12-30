@@ -1,4 +1,4 @@
-package io.harness.delegate.beans.connector.scm.github;
+package io.harness.delegate.beans.connector.scm.bitbucket;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -16,19 +16,19 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@ApiModel("GithubHttpCredentials")
-public class GithubHttpCredentialsDTO implements GithubCredentialsDTO {
-  @NotNull GithubHttpAuthenticationType type;
-
+@ApiModel("BitbucketHttpCredentials")
+public class BitbucketHttpCredentialsDTO implements BitbucketCredentialsDTO {
+  @NotNull BitbucketHttpAuthenticationType type;
   @JsonProperty("spec")
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
   @Valid
   @NotNull
-  GithubHttpCredentialsSpecDTO httpCredentialsSpec;
+  BitbucketHttpCredentialsSpecDTO httpCredentialsSpec;
 
   @Builder
-  public GithubHttpCredentialsDTO(GithubHttpAuthenticationType type, GithubHttpCredentialsSpecDTO httpCredentialsSpec) {
+  public BitbucketHttpCredentialsDTO(
+      BitbucketHttpAuthenticationType type, BitbucketHttpCredentialsSpecDTO httpCredentialsSpec) {
     this.type = type;
     this.httpCredentialsSpec = httpCredentialsSpec;
   }

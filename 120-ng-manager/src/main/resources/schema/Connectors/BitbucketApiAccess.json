@@ -8,8 +8,7 @@
     "type": {
       "type": "string",
       "enum": [
-        "Http",
-        "Ssh"
+        "UsernamePassword"
       ]
     }
   },
@@ -19,30 +18,14 @@
       "if": {
         "properties": {
           "type": {
-            "const": "Http"
+            "const": "UsernamePassword"
           }
         }
       },
       "then": {
         "properties": {
           "spec": {
-            "$ref": "#/definitions/GithubHttpCredentials"
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "type": {
-            "const": "Ssh"
-          }
-        }
-      },
-      "then": {
-        "properties": {
-          "spec": {
-            "$ref": "#/definitions/GithubSshCredentials"
+            "$ref": "#/definitions/BitbucketUsernamePasswordApiAccess"
           }
         }
       }
