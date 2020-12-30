@@ -58,6 +58,7 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 import software.wings.core.BaseScriptExecutor;
+import software.wings.core.ssh.executors.FileBasedScriptExecutor;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackageFileInfo;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsService;
@@ -99,6 +100,7 @@ public class ScpCommandUnitTest extends WingsBaseTest {
 
   @InjectMocks private ScpCommandUnit scpCommandUnit = new ScpCommandUnit();
   @Mock BaseScriptExecutor baseExecutor;
+  @Mock FileBasedScriptExecutor fileBasedScriptExecutor;
   @Mock AzureArtifactsService azureArtifactsService;
   @Mock EncryptionService encryptionService;
   @Mock JenkinsUtils jenkinsUtils;
@@ -364,8 +366,8 @@ public class ScpCommandUnitTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldDownloadArtifactFromAmazonS3IfMetadataOnly() {
-    when(baseExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(), anyString(),
-             anyString(), anyString()))
+    when(fileBasedScriptExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(),
+             anyString(), anyString(), anyString()))
         .thenReturn(CommandExecutionStatus.SUCCESS);
     CommandExecutionStatus status = scpCommandUnit.executeInternal(contextForS3);
     assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
@@ -375,8 +377,8 @@ public class ScpCommandUnitTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldDownloadArtifactFromArtifactoryIfMetadataOnly() {
-    when(baseExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(), anyString(),
-             anyString(), anyString()))
+    when(fileBasedScriptExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(),
+             anyString(), anyString(), anyString()))
         .thenReturn(CommandExecutionStatus.SUCCESS);
     CommandExecutionStatus status = scpCommandUnit.executeInternal(contextForArtifactory);
     assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
@@ -386,8 +388,8 @@ public class ScpCommandUnitTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldNotDownloadArtifactFromArtifactoryForRpmType() {
-    when(baseExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(), anyString(),
-             anyString(), anyString()))
+    when(fileBasedScriptExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(),
+             anyString(), anyString(), anyString()))
         .thenReturn(CommandExecutionStatus.SUCCESS);
     CommandExecutionStatus status = scpCommandUnit.executeInternal(contextForArtifactoryRpm);
     assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
@@ -399,8 +401,8 @@ public class ScpCommandUnitTest extends WingsBaseTest {
   public void shouldDownloadArtifactFromAzureArtifactsIfMetadataOnly() {
     when(azureArtifactsService.listFiles(any(AzureArtifactsConfig.class), any(), any(), anyMap(), eq(false)))
         .thenReturn(Collections.singletonList(new AzureArtifactsPackageFileInfo(ARTIFACT_FILE_NAME, 10)));
-    when(baseExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(), anyString(),
-             anyString(), anyString()))
+    when(fileBasedScriptExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(),
+             anyString(), anyString(), anyString()))
         .thenReturn(CommandExecutionStatus.SUCCESS);
     CommandExecutionStatus status = scpCommandUnit.executeInternal(contextForAzureArtifacts);
     assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
@@ -414,11 +416,11 @@ public class ScpCommandUnitTest extends WingsBaseTest {
     when(jenkinsUtils.getJenkins(any())).thenReturn(jenkins);
     when(jenkins.getFileSize(anyString(), anyString(), eq(JENKINS_ARTIFACT_FILENAME_1))).thenReturn(123L);
     when(jenkins.getFileSize(anyString(), anyString(), eq(JENKINS_ARTIFACT_FILENAME_2))).thenReturn(2323L);
-    when(baseExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(), anyString(),
-             anyString(), anyString()))
+    when(fileBasedScriptExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(),
+             anyString(), anyString(), anyString()))
         .thenReturn(CommandExecutionStatus.SUCCESS);
-    when(baseExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(), anyString(),
-             anyString(), anyString()))
+    when(fileBasedScriptExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(),
+             anyString(), anyString(), anyString()))
         .thenReturn(CommandExecutionStatus.SUCCESS);
     CommandExecutionStatus status = scpCommandUnit.executeInternal(contextForJenkins);
     assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
@@ -443,11 +445,11 @@ public class ScpCommandUnitTest extends WingsBaseTest {
     when(bambooService.getFileSize(any(), any(), eq("todolist.war"),
              eq("http://localhost:9095/artifact/TOD-TOD/JOB1/build-11/artifacts/todolist.war")))
         .thenReturn(345L);
-    when(baseExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(), anyString(),
-             anyString(), anyString()))
+    when(fileBasedScriptExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(),
+             anyString(), anyString(), anyString()))
         .thenReturn(CommandExecutionStatus.SUCCESS);
-    when(baseExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(), anyString(),
-             anyString(), anyString()))
+    when(fileBasedScriptExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(),
+             anyString(), anyString(), anyString()))
         .thenReturn(CommandExecutionStatus.SUCCESS);
     CommandExecutionStatus status = scpCommandUnit.executeInternal(contextForBambooArtifacts);
     assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
@@ -458,8 +460,8 @@ public class ScpCommandUnitTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldDownloadArtifactFromNexusIfMetadataOnly() {
     when(nexusService.getFileSize(any(), any(), eq("todolist.tar"), eq(NEXUS_URL))).thenReturn(1234L);
-    when(baseExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(), anyString(),
-             anyString(), anyString()))
+    when(fileBasedScriptExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(),
+             anyString(), anyString(), anyString()))
         .thenReturn(CommandExecutionStatus.SUCCESS);
     CommandExecutionStatus status = scpCommandUnit.executeInternal(contextForNexusArtifacts);
     assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
@@ -470,8 +472,8 @@ public class ScpCommandUnitTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldReturnSuccessIfArtifactFileMetadataIfEmpty() {
     when(nexusService.getFileSize(any(), any(), eq("todolist.tar"), eq(NEXUS_URL))).thenReturn(1234L);
-    when(baseExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(), anyString(),
-             anyString(), anyString()))
+    when(fileBasedScriptExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(),
+             anyString(), anyString(), anyString()))
         .thenReturn(CommandExecutionStatus.SUCCESS);
     ExecutionLogCallback mockCallBack = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallBack).saveExecutionLog(anyString(), any());
@@ -504,8 +506,8 @@ public class ScpCommandUnitTest extends WingsBaseTest {
              any(NexusConfig.class), anyListOf(EncryptedDataDetail.class), any(), any(), any(), any(), any(), any()))
         .thenReturn(buildDetailsList);
     when(nexusService.getFileSize(any(), any(), eq("todolist.tar"), eq(NEXUS_URL))).thenReturn(1234L);
-    when(baseExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(), anyString(),
-             anyString(), anyString()))
+    when(fileBasedScriptExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(),
+             anyString(), anyString(), anyString()))
         .thenReturn(CommandExecutionStatus.SUCCESS);
     ExecutionLogCallback mockCallBack = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallBack).saveExecutionLog(anyString(), any());

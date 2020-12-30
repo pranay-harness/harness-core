@@ -17,9 +17,9 @@ import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SUDO_
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SU_APP_USER;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.KERBEROS;
-import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.BASTION_HOST;
-import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.KEY_AUTH;
-import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.PASSWORD_AUTH;
+import static software.wings.core.ssh.executors.ExecutorType.BASTION_HOST;
+import static software.wings.core.ssh.executors.ExecutorType.KEY_AUTH;
+import static software.wings.core.ssh.executors.ExecutorType.PASSWORD_AUTH;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 
 import io.harness.eraro.ErrorCode;
@@ -32,7 +32,7 @@ import software.wings.beans.KerberosConfig;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionContext;
-import software.wings.core.ssh.executors.ScriptExecutor.ExecutorType;
+import software.wings.core.ssh.executors.ExecutorType;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.core.ssh.executors.SshSessionConfig.Builder;
 

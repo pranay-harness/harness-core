@@ -49,6 +49,7 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
 
   private ScriptProcessExecutor scriptProcessExecutor;
+  private FileBasedProcessScriptExecutor fileBasedProcessScriptExecutor;
   private ShellExecutorConfig shellExecutorConfig;
 
   @Test
@@ -67,6 +68,8 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
                               .environment(env)
                               .build();
     scriptProcessExecutor = new ScriptProcessExecutor(delegateFileManager, logService, true, shellExecutorConfig);
+    fileBasedProcessScriptExecutor =
+        new FileBasedProcessScriptExecutor(delegateFileManager, logService, true, shellExecutorConfig);
     on(scriptProcessExecutor).set("logService", logService);
     on(scriptProcessExecutor).set("delegateFileManager", delegateFileManager);
 
@@ -168,6 +171,8 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
   public void testScpOneFileSuccess() throws IOException {
     scriptProcessExecutor =
         new ScriptProcessExecutor(delegateFileManager, logService, true, ShellExecutorConfig.builder().build());
+    fileBasedProcessScriptExecutor = new FileBasedProcessScriptExecutor(
+        delegateFileManager, logService, true, ShellExecutorConfig.builder().build());
     on(scriptProcessExecutor).set("logService", logService);
     on(scriptProcessExecutor).set("delegateFileManager", delegateFileManager);
 
@@ -188,7 +193,7 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
         }
       }
     };
-    CommandExecutionStatus commandExecutionStatus = scriptProcessExecutor.scpOneFile("/tmp", fileProvider);
+    CommandExecutionStatus commandExecutionStatus = fileBasedProcessScriptExecutor.scpOneFile("/tmp", fileProvider);
     assertThat(commandExecutionStatus).isEqualTo(SUCCESS);
     File tempFile = new File("/tmp/" + fileProvider.getInfo().getKey());
     boolean exists = tempFile.exists();
@@ -204,6 +209,8 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
   public void testScpOneFileFails() {
     scriptProcessExecutor =
         new ScriptProcessExecutor(delegateFileManager, logService, true, ShellExecutorConfig.builder().build());
+    fileBasedProcessScriptExecutor = new FileBasedProcessScriptExecutor(
+        delegateFileManager, logService, true, ShellExecutorConfig.builder().build());
     on(scriptProcessExecutor).set("logService", logService);
     on(scriptProcessExecutor).set("delegateFileManager", delegateFileManager);
 
@@ -220,7 +227,8 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
         }
       }
     };
-    CommandExecutionStatus commandExecutionStatus = scriptProcessExecutor.scpOneFile("/randomdir", fileProvider);
+    CommandExecutionStatus commandExecutionStatus =
+        fileBasedProcessScriptExecutor.scpOneFile("/randomdir", fileProvider);
     assertThat(commandExecutionStatus).isEqualTo(FAILURE);
   }
 }

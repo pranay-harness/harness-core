@@ -6,7 +6,6 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.HostConnectionAttributes.AuthenticationScheme;
 import software.wings.beans.KerberosConfig;
-import software.wings.core.ssh.executors.ScriptExecutor.ExecutorType;
 import software.wings.settings.SettingVariableTypes;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

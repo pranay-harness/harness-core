@@ -12,12 +12,12 @@ import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.exception.CommandExecutionException;
 
 import software.wings.beans.delegation.ShellScriptParameters;
+import software.wings.core.BaseScriptExecutor;
 import software.wings.core.local.executors.ShellExecutorFactory;
-import software.wings.core.ssh.executors.ScriptExecutor;
 import software.wings.core.ssh.executors.ScriptProcessExecutor;
-import software.wings.core.ssh.executors.ScriptSshExecutor;
 import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.core.ssh.executors.SshSessionConfig;
+import software.wings.core.ssh.executors.SshSessionManager;
 import software.wings.core.winrm.executors.WinRmExecutor;
 import software.wings.core.winrm.executors.WinRmExecutorFactory;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
@@ -60,7 +60,8 @@ public class ShellScriptTaskHandler {
       case SSH: {
         try {
           SshSessionConfig expectedSshConfig = parameters.sshSessionConfig(encryptionService);
-          ScriptExecutor executor = sshExecutorFactory.getExecutor(expectedSshConfig, parameters.isSaveExecutionLogs());
+          BaseScriptExecutor executor =
+              sshExecutorFactory.getExecutor(expectedSshConfig, parameters.isSaveExecutionLogs());
           List<String> items = new ArrayList<>();
           if (parameters.getOutputVars() != null && StringUtils.isNotEmpty(parameters.getOutputVars().trim())) {
             items = Arrays.asList(parameters.getOutputVars().split("\\s*,\\s*"));
@@ -70,7 +71,7 @@ public class ShellScriptTaskHandler {
         } catch (Exception e) {
           throw new CommandExecutionException("Bash Script Failed to execute", e);
         } finally {
-          ScriptSshExecutor.evictAndDisconnectCachedSession(parameters.getActivityId(), parameters.getHost());
+          SshSessionManager.evictAndDisconnectCachedSession(parameters.getActivityId(), parameters.getHost());
         }
       }
       case WINRM: {

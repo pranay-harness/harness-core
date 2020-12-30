@@ -17,9 +17,9 @@ import static software.wings.beans.command.CommandExecutionContext.Builder.aComm
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.ScpCommandUnit.Builder.aScpCommandUnit;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
-import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.BASTION_HOST;
-import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.KEY_AUTH;
-import static software.wings.core.ssh.executors.ScriptExecutor.ExecutorType.PASSWORD_AUTH;
+import static software.wings.core.ssh.executors.ExecutorType.BASTION_HOST;
+import static software.wings.core.ssh.executors.ExecutorType.KEY_AUTH;
+import static software.wings.core.ssh.executors.ExecutorType.PASSWORD_AUTH;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
@@ -70,6 +70,7 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.Host.Builder;
 import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.core.local.executors.ShellExecutorFactory;
+import software.wings.core.ssh.executors.FileBasedSshScriptExecutor;
 import software.wings.core.ssh.executors.ScriptProcessExecutor;
 import software.wings.core.ssh.executors.ScriptSshExecutor;
 import software.wings.core.ssh.executors.SshExecutorFactory;
@@ -132,6 +133,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    */
   @Mock private SshExecutorFactory sshExecutorFactory;
   @Mock private ScriptSshExecutor scriptSshExecutor;
+  @Mock private FileBasedSshScriptExecutor fileBasedSshScriptExecutor;
   @Mock private ScriptProcessExecutor scriptProcessExecutor;
   @Mock private ShellExecutorFactory shellExecutorFactory;
 
@@ -407,13 +409,14 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
                                      .build();
 
     when(sshExecutorFactory.getExecutor(any(SshSessionConfig.class))).thenReturn(scriptSshExecutor);
+    when(sshExecutorFactory.getFileBasedExecutor(any(SshSessionConfig.class))).thenReturn(fileBasedSshScriptExecutor);
     ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder().metadataOnly(false).build();
     sshCommandUnitExecutorService.execute(commandUnit,
         commandExecutionContextBuider.but()
             .hostConnectionAttributes(HOST_CONN_ATTR_PWD)
             .artifactStreamAttributes(artifactStreamAttributes)
             .build());
-    verify(scriptSshExecutor)
+    verify(fileBasedSshScriptExecutor)
         .copyGridFsFiles(commandUnit.getDestinationDirectoryPath(), ARTIFACTS,
             Lists.newArrayList(org.apache.commons.lang3.tuple.Pair.of(FILE_ID, null)));
   }
@@ -438,8 +441,10 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     commandUnit.setCommand(command);
 
     when(sshExecutorFactory.getExecutor(any(SshSessionConfig.class))).thenReturn(scriptSshExecutor);
+    when(sshExecutorFactory.getFileBasedExecutor(any(SshSessionConfig.class))).thenReturn(fileBasedSshScriptExecutor);
     when(scriptSshExecutor.executeCommandString(anyString(), anyBoolean())).thenReturn(CommandExecutionStatus.SUCCESS);
-    when(scriptSshExecutor.copyFiles(anyString(), anyListOf(String.class))).thenReturn(CommandExecutionStatus.SUCCESS);
+    when(fileBasedSshScriptExecutor.copyFiles(anyString(), anyListOf(String.class)))
+        .thenReturn(CommandExecutionStatus.SUCCESS);
 
     sshCommandUnitExecutorService.execute(
         commandUnit, commandExecutionContextBuider.but().hostConnectionAttributes(HOST_CONN_ATTR_PWD).build());
@@ -447,7 +452,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
 
     String actualLauncherScript =
         new File(System.getProperty("java.io.tmpdir"), "harnesslauncherACTIVITY_ID.sh").getAbsolutePath();
-    verify(scriptSshExecutor).copyFiles("/tmp/ACTIVITY_ID", asList(actualLauncherScript));
+    verify(fileBasedSshScriptExecutor).copyFiles("/tmp/ACTIVITY_ID", asList(actualLauncherScript));
     assertThat(new File(actualLauncherScript))
         .hasContent(
             CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedLaunchScript.sh"))));
@@ -455,7 +460,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     String expectedExecCommandUnitScript =
         new File(System.getProperty("java.io.tmpdir"), "harness" + DigestUtils.md5Hex("dolsACTIVITY_ID"))
             .getAbsolutePath();
-    verify(scriptSshExecutor).copyFiles("/tmp/ACTIVITY_ID", asList(expectedExecCommandUnitScript));
+    verify(fileBasedSshScriptExecutor).copyFiles("/tmp/ACTIVITY_ID", asList(expectedExecCommandUnitScript));
     verify(scriptSshExecutor).executeCommandString("chmod 0700 /tmp/ACTIVITY_ID/*", false);
 
     assertThat(new File(expectedExecCommandUnitScript)).hasContent("ls");
@@ -523,8 +528,10 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     commandUnit.setCommand(command);
 
     when(sshExecutorFactory.getExecutor(any(SshSessionConfig.class))).thenReturn(scriptSshExecutor);
+    when(sshExecutorFactory.getFileBasedExecutor(any(SshSessionConfig.class))).thenReturn(fileBasedSshScriptExecutor);
     when(scriptSshExecutor.executeCommandString(anyString(), anyBoolean())).thenReturn(CommandExecutionStatus.SUCCESS);
-    when(scriptSshExecutor.copyFiles(anyString(), anyListOf(String.class))).thenReturn(CommandExecutionStatus.SUCCESS);
+    when(fileBasedSshScriptExecutor.copyFiles(anyString(), anyListOf(String.class)))
+        .thenReturn(CommandExecutionStatus.SUCCESS);
     sshCommandUnitExecutorService.execute(
         commandUnit, commandExecutionContextBuider.but().hostConnectionAttributes(HOST_CONN_ATTR_PWD).build());
 
@@ -535,7 +542,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
         new File(System.getProperty("java.io.tmpdir"), "harness" + DigestUtils.md5Hex("start1startscriptACTIVITY_ID"))
             .getAbsolutePath();
 
-    verify(scriptSshExecutor)
+    verify(fileBasedSshScriptExecutor)
         .copyFiles("/tmp/ACTIVITY_ID", asList(expectedExecCommandUnitScript, expectedSubExecCommandUnitScript));
 
     assertThat(new File(expectedExecCommandUnitScript)).hasContent("ls");

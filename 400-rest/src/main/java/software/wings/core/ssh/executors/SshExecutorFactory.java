@@ -1,5 +1,6 @@
 package software.wings.core.ssh.executors;
 
+import software.wings.core.BaseScriptExecutor;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 
@@ -20,11 +21,15 @@ public class SshExecutorFactory {
    * @param sshSessionConfig the executor type
    * @return the executor
    */
-  public ScriptExecutor getExecutor(SshSessionConfig sshSessionConfig) {
+  public BaseScriptExecutor getExecutor(SshSessionConfig sshSessionConfig) {
     return new ScriptSshExecutor(fileService, logService, true, sshSessionConfig);
   }
 
-  public ScriptExecutor getExecutor(SshSessionConfig sshSessionConfig, boolean shouldSaveExecutionLogs) {
+  public BaseScriptExecutor getExecutor(SshSessionConfig sshSessionConfig, boolean shouldSaveExecutionLogs) {
     return new ScriptSshExecutor(fileService, logService, shouldSaveExecutionLogs, sshSessionConfig);
+  }
+
+  public FileBasedScriptExecutor getFileBasedExecutor(SshSessionConfig sshSessionConfig) {
+    return new FileBasedSshScriptExecutor(fileService, logService, true, sshSessionConfig);
   }
 }

@@ -6,6 +6,7 @@ import io.harness.logging.CommandExecutionStatus;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
 import software.wings.core.BaseScriptExecutor;
+import software.wings.core.ssh.executors.FileBasedScriptExecutor;
 
 import java.util.List;
 import lombok.EqualsAndHashCode;
@@ -14,6 +15,7 @@ import org.apache.commons.lang3.tuple.Pair;
 @EqualsAndHashCode(callSuper = true)
 public class ShellCommandExecutionContext extends CommandExecutionContext {
   private BaseScriptExecutor executor;
+  private FileBasedScriptExecutor fileBasedScriptExecutor;
 
   public ShellCommandExecutionContext(CommandExecutionContext other) {
     super(other);
@@ -21,23 +23,24 @@ public class ShellCommandExecutionContext extends CommandExecutionContext {
 
   public CommandExecutionStatus copyGridFsFiles(
       String destinationDirectoryPath, FileBucket fileBucket, List<Pair<String, String>> fileNamesIds) {
-    return executor.copyGridFsFiles(evaluateVariable(destinationDirectoryPath), fileBucket, fileNamesIds);
+    return fileBasedScriptExecutor.copyGridFsFiles(
+        evaluateVariable(destinationDirectoryPath), fileBucket, fileNamesIds);
   }
 
   public CommandExecutionStatus copyConfigFiles(ConfigFileMetaData configFileMetaData) {
     configFileMetaData.setDestinationDirectoryPath(evaluateVariable(configFileMetaData.getDestinationDirectoryPath()));
-    return executor.copyConfigFiles(configFileMetaData);
+    return fileBasedScriptExecutor.copyConfigFiles(configFileMetaData);
   }
 
   public CommandExecutionStatus copyFiles(String destinationDirectoryPath, List<String> files) {
-    return executor.copyFiles(evaluateVariable(destinationDirectoryPath), files);
+    return fileBasedScriptExecutor.copyFiles(evaluateVariable(destinationDirectoryPath), files);
   }
 
   public CommandExecutionStatus copyFiles(String destinationDirectoryPath,
       ArtifactStreamAttributes artifactStreamAttributes, String accountId, String appId, String activityId,
       String commandUnitName, String hostName) {
-    return executor.copyFiles(evaluateVariable(destinationDirectoryPath), artifactStreamAttributes, accountId, appId,
-        activityId, commandUnitName, hostName);
+    return fileBasedScriptExecutor.copyFiles(evaluateVariable(destinationDirectoryPath), artifactStreamAttributes,
+        accountId, appId, activityId, commandUnitName, hostName);
   }
 
   public CommandExecutionStatus executeCommandString(String commandString) {
@@ -54,5 +57,9 @@ public class ShellCommandExecutionContext extends CommandExecutionContext {
 
   public void setExecutor(BaseScriptExecutor executor) {
     this.executor = executor;
+  }
+
+  public void setFileBasedScriptExecutor(FileBasedScriptExecutor fileBasedScriptExecutor) {
+    this.fileBasedScriptExecutor = fileBasedScriptExecutor;
   }
 }
