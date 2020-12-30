@@ -3,6 +3,7 @@ package io.harness.delegate.beans.executioncapability;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import java.time.Duration;
 import lombok.Builder;
 import lombok.Value;
 
@@ -43,5 +44,15 @@ public class SocketConnectivityExecutionCapability implements ExecutionCapabilit
 
   private boolean shouldUseOriginalUrl() {
     return isBlank(scheme) || isBlank(hostName);
+  }
+
+  @Override
+  public Duration getMaxValidityPeriod() {
+    return Duration.ofHours(6);
+  }
+
+  @Override
+  public Duration getPeriodUntilNextValidation() {
+    return Duration.ofHours(4);
   }
 }

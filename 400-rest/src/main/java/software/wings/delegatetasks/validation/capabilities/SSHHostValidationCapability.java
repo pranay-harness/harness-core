@@ -9,6 +9,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.SettingAttribute;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,5 +41,15 @@ public class SSHHostValidationCapability implements ExecutionCapability {
       return "localhost";
     }
     return validationInfo.getPublicDns();
+  }
+
+  @Override
+  public Duration getMaxValidityPeriod() {
+    return Duration.ofHours(6);
+  }
+
+  @Override
+  public Duration getPeriodUntilNextValidation() {
+    return Duration.ofHours(4);
   }
 }

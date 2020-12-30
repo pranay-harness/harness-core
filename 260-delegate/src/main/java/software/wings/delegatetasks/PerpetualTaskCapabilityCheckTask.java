@@ -1,5 +1,7 @@
 package software.wings.delegatetasks;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static java.util.stream.Collectors.toList;
 
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -58,7 +60,10 @@ public class PerpetualTaskCapabilityCheckTask extends AbstractDelegateRunnableTa
 
       checkResponses.add(capabilityCheck.performCapabilityCheck(delegateCapability));
     });
-    boolean validated = checkResponses.stream().anyMatch(CapabilityResponse::isValidated);
+    boolean validated = false;
+    if (isNotEmpty(checkResponses)) {
+      validated = checkResponses.stream().allMatch(CapabilityResponse::isValidated);
+    }
     return PerpetualTaskCapabilityCheckResponse.builder().ableToExecutePerpetualTask(validated).build();
   }
 }

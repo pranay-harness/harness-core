@@ -8,6 +8,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.helpers.ext.mail.SmtpConfig;
 
+import java.time.Duration;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -30,5 +31,15 @@ public class SmtpCapability implements ExecutionCapability {
   @Override
   public String fetchCapabilityBasis() {
     return smtpConfig.getHost() + ":" + smtpConfig.getPort();
+  }
+
+  @Override
+  public Duration getMaxValidityPeriod() {
+    return Duration.ofHours(6);
+  }
+
+  @Override
+  public Duration getPeriodUntilNextValidation() {
+    return Duration.ofHours(4);
   }
 }

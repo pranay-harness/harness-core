@@ -8,6 +8,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.PcfConfig;
 
+import java.time.Duration;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -31,5 +32,15 @@ public class PcfConnectivityCapability implements ExecutionCapability {
   @Override
   public String fetchCapabilityBasis() {
     return "Pcf:" + pcfConfig.getEndpointUrl();
+  }
+
+  @Override
+  public Duration getMaxValidityPeriod() {
+    return Duration.ofHours(6);
+  }
+
+  @Override
+  public Duration getPeriodUntilNextValidation() {
+    return Duration.ofHours(4);
   }
 }

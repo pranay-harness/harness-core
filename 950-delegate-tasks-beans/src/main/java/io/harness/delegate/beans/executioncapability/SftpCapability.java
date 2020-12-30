@@ -3,9 +3,8 @@ package io.harness.delegate.beans.executioncapability;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.executioncapability.CapabilityType;
-import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 
+import java.time.Duration;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
@@ -25,5 +24,15 @@ public class SftpCapability implements ExecutionCapability {
   @Override
   public String fetchCapabilityBasis() {
     return sftpUrl;
+  }
+
+  @Override
+  public Duration getMaxValidityPeriod() {
+    return Duration.ofHours(6);
+  }
+
+  @Override
+  public Duration getPeriodUntilNextValidation() {
+    return Duration.ofHours(4);
   }
 }

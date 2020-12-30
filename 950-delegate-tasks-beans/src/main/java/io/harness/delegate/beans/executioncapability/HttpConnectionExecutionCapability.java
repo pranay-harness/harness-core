@@ -2,6 +2,7 @@ package io.harness.delegate.beans.executioncapability;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import java.time.Duration;
 import lombok.Builder;
 import lombok.Value;
 import org.apache.http.client.utils.URIBuilder;
@@ -44,5 +45,15 @@ public class HttpConnectionExecutionCapability implements ExecutionCapability {
       uriBuilder.setCustomQuery(query);
     }
     return uriBuilder.toString();
+  }
+
+  @Override
+  public Duration getMaxValidityPeriod() {
+    return Duration.ofHours(6);
+  }
+
+  @Override
+  public Duration getPeriodUntilNextValidation() {
+    return Duration.ofHours(4);
   }
 }

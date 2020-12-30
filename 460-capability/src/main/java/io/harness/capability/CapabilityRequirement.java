@@ -5,7 +5,6 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.persistence.PersistentEntity;
 
-import com.google.protobuf.Any;
 import java.util.Date;
 import lombok.Builder;
 import lombok.Data;

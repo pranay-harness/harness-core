@@ -9,6 +9,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 
+import java.time.Duration;
 import java.util.List;
 import lombok.Builder;
 import lombok.ToString;
@@ -36,5 +37,15 @@ public class GitConnectionCapability implements ExecutionCapability {
   @Override
   public String fetchCapabilityBasis() {
     return "GIT:" + gitConfig.getRepoUrl();
+  }
+
+  @Override
+  public Duration getMaxValidityPeriod() {
+    return Duration.ofHours(6);
+  }
+
+  @Override
+  public Duration getPeriodUntilNextValidation() {
+    return Duration.ofHours(4);
   }
 }
