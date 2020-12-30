@@ -3,6 +3,7 @@ package io.harness.pms.plan.execution.handlers;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.GraphLayoutNode;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.utils.AmbianceUtils;
@@ -40,7 +41,8 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
     String orgId = AmbianceUtils.getOrgIdentifier(ambiance);
     String planExecutionId = ambiance.getPlanExecutionId();
     PlanExecution planExecution = planExecutionService.get(planExecutionId);
-    String pipelineId = ambiance.getSetupAbstractionsOrDefault(SetupAbstractionKeys.pipelineIdentifier, null);
+    ExecutionMetadata metadata = planExecution.getMetadata();
+    String pipelineId = metadata.getPipelineIdentifier();
     Optional<PipelineEntity> pipelineEntity = pmsPipelineService.get(accountId, orgId, projectId, pipelineId, false);
     if (!pipelineEntity.isPresent()) {
       return;
@@ -56,11 +58,12 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
     PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity =
         PipelineExecutionSummaryEntity.builder()
             .layoutNodeMap(layoutNodeDTOMap)
+            .runSequence(metadata.getRunSequence())
             .pipelineIdentifier(pipelineId)
             .startingNodeId(startingNodeId)
             .planExecutionId(planExecutionId)
             .name(pipelineEntity.get().getName())
-            .inputSetYaml(ambiance.getSetupAbstractionsMap().get(SetupAbstractionKeys.inputSetYaml))
+            .inputSetYaml(metadata.getInputSetYaml())
             .status(ExecutionStatus.NOT_STARTED)
             .startTs(planExecution.getStartTs())
             .startingNodeId(startingNodeId)

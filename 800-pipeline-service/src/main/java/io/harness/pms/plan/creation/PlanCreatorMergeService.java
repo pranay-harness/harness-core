@@ -51,11 +51,10 @@ public class PlanCreatorMergeService {
   }
 
   public PlanCreationBlobResponse createPlan(@NotNull String content) throws IOException {
-    return createPlan(content, new HashMap<>(), ExecutionMetadata.newBuilder().build());
+    return createPlan(content, ExecutionMetadata.newBuilder().build());
   }
 
-  public PlanCreationBlobResponse createPlan(
-      @NotNull String content, Map<String, Object> contextAttributes, ExecutionMetadata metadata) throws IOException {
+  public PlanCreationBlobResponse createPlan(@NotNull String content, ExecutionMetadata metadata) throws IOException {
     Map<String, Map<String, Set<String>>> sdkInstances = pmsSdkInstanceService.getInstanceNameToSupportedTypes();
     Map<String, PlanCreatorServiceInfo> services = new HashMap<>();
     if (EmptyPredicate.isNotEmpty(planCreatorServices) && EmptyPredicate.isNotEmpty(sdkInstances)) {
@@ -70,23 +69,13 @@ public class PlanCreatorMergeService {
     YamlField pipelineField = YamlUtils.extractPipelineField(processedYaml);
     Map<String, YamlFieldBlob> dependencies = new HashMap<>();
     dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
-    PlanCreationBlobResponse finalResponse =
-        createPlanForDependenciesRecursive(services, dependencies, contextAttributes, metadata);
+    PlanCreationBlobResponse finalResponse = createPlanForDependenciesRecursive(services, dependencies, metadata);
     validatePlanCreationBlobResponse(finalResponse);
     return finalResponse;
   }
 
-  private Map<String, PlanCreationContextValue> createInitialPlanCreationContext(
-      Map<String, Object> contextAttributes, ExecutionMetadata metadata) {
+  private Map<String, PlanCreationContextValue> createInitialPlanCreationContext(ExecutionMetadata metadata) {
     Map<String, PlanCreationContextValue> planCreationContextBuilder = new HashMap<>();
-    if (isNotEmpty(contextAttributes)) {
-      contextAttributes.forEach((key, val) -> {
-        if (val != null && String.class.isAssignableFrom(val.getClass())) {
-          planCreationContextBuilder.put(
-              key, PlanCreationContextValue.newBuilder().setStringValue((String) val).build());
-        }
-      });
-    }
     if (metadata != null) {
       planCreationContextBuilder.put("metadata", PlanCreationContextValue.newBuilder().setMetadata(metadata).build());
     }
@@ -94,14 +83,13 @@ public class PlanCreatorMergeService {
   }
 
   private PlanCreationBlobResponse createPlanForDependenciesRecursive(Map<String, PlanCreatorServiceInfo> services,
-      Map<String, YamlFieldBlob> initialDependencies, Map<String, Object> contextAttributes,
-      ExecutionMetadata metadata) {
+      Map<String, YamlFieldBlob> initialDependencies, ExecutionMetadata metadata) {
     PlanCreationBlobResponse.Builder finalResponseBuilder =
         PlanCreationBlobResponse.newBuilder().putAllDependencies(initialDependencies);
     if (EmptyPredicate.isEmpty(services) || EmptyPredicate.isEmpty(initialDependencies)) {
       return finalResponseBuilder.build();
     }
-    finalResponseBuilder.putAllContext(createInitialPlanCreationContext(contextAttributes, metadata));
+    finalResponseBuilder.putAllContext(createInitialPlanCreationContext(metadata));
     for (int i = 0; i < MAX_DEPTH && EmptyPredicate.isNotEmpty(finalResponseBuilder.getDependenciesMap()); i++) {
       PlanCreationBlobResponse currIterationResponse = createPlanForDependencies(services, finalResponseBuilder);
       PlanCreationBlobResponseUtils.addNodes(finalResponseBuilder, currIterationResponse.getNodesMap());

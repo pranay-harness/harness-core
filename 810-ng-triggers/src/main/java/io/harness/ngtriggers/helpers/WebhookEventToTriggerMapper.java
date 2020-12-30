@@ -20,6 +20,7 @@ import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
 import io.harness.ngtriggers.utils.WebhookTriggerFilterUtil;
+import io.harness.product.ci.scm.proto.ParseWebhookResponse;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -38,11 +39,12 @@ public class WebhookEventToTriggerMapper {
   private final WebhookEventPayloadParser webhookEventPayloadParser;
   private final NGTriggerElementMapper ngTriggerElementMapper;
 
-  public WebhookEventMappingResponse mapWebhookEventToTriggers(TriggerWebhookEvent triggerWebhookEvent) {
+  public WebhookEventMappingResponse mapWebhookEventToTriggers(
+      TriggerWebhookEvent triggerWebhookEvent, ParseWebhookResponse webhookResponse) {
     WebhookPayloadData webhookPayloadData;
 
     // 1. Parse Payload
-    ParsePayloadResponse parsePayloadResponse = parseEventData(triggerWebhookEvent);
+    ParsePayloadResponse parsePayloadResponse = convertWebhookResponse(triggerWebhookEvent, webhookResponse);
     if (parsePayloadResponse.isExceptionOccured()) {
       return WebhookEventMappingResponse.builder()
           .webhookEventResponse(WebhookEventResponseHelper.prepareResponseForScmException(parsePayloadResponse))
@@ -91,10 +93,12 @@ public class WebhookEventToTriggerMapper {
 
   // Add error handling
   @VisibleForTesting
-  ParsePayloadResponse parseEventData(TriggerWebhookEvent triggerWebhookEvent) {
+  ParsePayloadResponse convertWebhookResponse(
+      TriggerWebhookEvent triggerWebhookEvent, ParseWebhookResponse webhookResponse) {
     ParsePayloadResponseBuilder builder = ParsePayloadResponse.builder().originalEvent(triggerWebhookEvent);
     try {
-      WebhookPayloadData webhookPayloadData = webhookEventPayloadParser.parseEvent(triggerWebhookEvent);
+      WebhookPayloadData webhookPayloadData =
+          webhookEventPayloadParser.convertWebhookResponse(webhookResponse, triggerWebhookEvent);
       builder.webhookPayloadData(webhookPayloadData).build();
     } catch (Exception e) {
       log.error("Exception while invoking SCM service for webhook trigger payload parsing", e);

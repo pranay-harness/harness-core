@@ -20,9 +20,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -47,18 +45,20 @@ public class PipelineExecuteHelper {
       throw new InvalidRequestException(String.format("The given pipeline id [%s] does not exist", pipelineIdentifier));
     }
 
-    Map<String, Object> contextAttributes = new HashMap<>();
-    contextAttributes.put(SetupAbstractionKeys.eventPayload, eventPayload);
     String pipelineYaml;
+    ExecutionMetadata.Builder executionMetadataBuilder = ExecutionMetadata.newBuilder()
+                                                             .setTriggerInfo(triggerInfo)
+                                                             .setRunSequence(pipelineEntity.get().getRunSequence());
+
     if (EmptyPredicate.isEmpty(inputSetPipelineYaml)) {
       pipelineYaml = pipelineEntity.get().getYaml();
     } else {
       pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), inputSetPipelineYaml);
-      contextAttributes.put(SetupAbstractionKeys.inputSetYaml, inputSetPipelineYaml);
+      executionMetadataBuilder.setInputSetYaml(inputSetPipelineYaml);
     }
-    contextAttributes.put(SetupAbstractionKeys.pipelineIdentifier, pipelineIdentifier);
-    contextAttributes.put(SetupAbstractionKeys.runSequence, pipelineEntity.get().getRunSequence());
-    return startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml, triggerInfo, contextAttributes);
+    executionMetadataBuilder.setPipelineIdentifier(pipelineIdentifier);
+
+    return startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml, executionMetadataBuilder.build());
   }
 
   public PlanExecution runPipelineWithInputSetReferencesList(String accountId, String orgIdentifier,
@@ -70,25 +70,21 @@ public class PipelineExecuteHelper {
       throw new InvalidRequestException(String.format("The given pipeline id [%s] does not exist", pipelineIdentifier));
     }
 
+    ExecutionMetadata.Builder executionMetadataBuilder = ExecutionMetadata.newBuilder()
+                                                             .setTriggerInfo(triggerInfo)
+                                                             .setRunSequence(pipelineEntity.get().getRunSequence());
     String mergedRuntimeInputYaml = validateAndMergeHelper.getMergeInputSetFromPipelineTemplate(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetReferences);
     String pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), mergedRuntimeInputYaml);
-    Map<String, Object> contextAttributes = new HashMap<>();
-    contextAttributes.put(SetupAbstractionKeys.inputSetYaml, mergedRuntimeInputYaml);
-    contextAttributes.put(SetupAbstractionKeys.pipelineIdentifier, pipelineIdentifier);
-    contextAttributes.put(SetupAbstractionKeys.runSequence, pipelineEntity.get().getRunSequence());
+    executionMetadataBuilder.setPipelineIdentifier(pipelineIdentifier);
+    executionMetadataBuilder.setInputSetYaml(mergedRuntimeInputYaml);
 
-    return startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml, triggerInfo, contextAttributes);
+    return startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml, executionMetadataBuilder.build());
   }
 
   public PlanExecution startExecution(String accountId, String orgIdentifier, String projectIdentifier, String yaml,
-      ExecutionTriggerInfo triggerInfo, Map<String, Object> contextAttributes) throws IOException {
-    ExecutionMetadata metadata =
-        ExecutionMetadata.newBuilder()
-            .setRunSequence((Integer) contextAttributes.getOrDefault(SetupAbstractionKeys.runSequence, 0))
-            .setTriggerInfo(triggerInfo)
-            .build();
-    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(yaml, contextAttributes, metadata);
+      ExecutionMetadata executionMetadata) throws IOException {
+    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(yaml, executionMetadata);
     Plan plan = PlanExecutionUtils.extractPlan(resp);
     ImmutableMap.Builder<String, String> abstractionsBuilder =
         ImmutableMap.<String, String>builder()
@@ -96,13 +92,6 @@ public class PipelineExecuteHelper {
             .put(SetupAbstractionKeys.orgIdentifier, orgIdentifier)
             .put(SetupAbstractionKeys.projectIdentifier, projectIdentifier);
 
-    if (isNotEmpty(contextAttributes)) {
-      contextAttributes.forEach((key, val) -> {
-        if (val != null && String.class.isAssignableFrom(val.getClass())) {
-          abstractionsBuilder.put(key, (String) val);
-        }
-      });
-    }
-    return orchestrationService.startExecution(plan, abstractionsBuilder.build(), metadata);
+    return orchestrationService.startExecution(plan, abstractionsBuilder.build(), executionMetadata);
   }
 }

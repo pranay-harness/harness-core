@@ -41,6 +41,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id @org.mongodb.morphia.annotations.Id private String uuid;
 
+  @NotEmpty int runSequence;
   @NotEmpty String accountId;
   @NotEmpty String orgIdentifier;
   @Trimmed @NotEmpty String projectIdentifier;

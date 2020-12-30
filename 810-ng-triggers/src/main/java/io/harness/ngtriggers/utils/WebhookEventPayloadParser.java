@@ -41,8 +41,7 @@ public class WebhookEventPayloadParser {
     return convertWebhookResponse(parseWebhookResponse, triggerWebhookEvent);
   }
 
-  @VisibleForTesting
-  ParseWebhookResponse invokeScmService(TriggerWebhookEvent triggerWebhookEvent) {
+  public ParseWebhookResponse invokeScmService(TriggerWebhookEvent triggerWebhookEvent) {
     Set<String> headerKeys = triggerWebhookEvent.getHeaders().stream().map(HeaderConfig::getKey).collect(toSet());
 
     GitProvider gitProvider = obtainWebhookSource(headerKeys);

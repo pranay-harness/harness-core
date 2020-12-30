@@ -6,7 +6,6 @@ import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalSta
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.TARGET_EXECUTION_REQUESTED;
 import static io.harness.pms.contracts.plan.TriggerType.WEBHOOK;
 
-import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.TriggerException;
 import io.harness.execution.PlanExecution;
@@ -25,20 +24,20 @@ import io.harness.ngtriggers.beans.target.pipeline.PipelineTargetSpec;
 import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
 import io.harness.ngtriggers.helpers.WebhookEventToTriggerMapper;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.TriggeredBy;
+import io.harness.pms.contracts.triggers.ParsedPayload;
+import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.merger.helpers.MergeHelper;
 import io.harness.pms.pipeline.PipelineEntity;
-import io.harness.pms.pipeline.TriggerType;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.plan.execution.PipelineExecuteHelper;
-import io.harness.pms.plan.execution.SetupAbstractionKeys;
+import io.harness.product.ci.scm.proto.ParseWebhookResponse;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,8 +54,9 @@ public class TriggerWebhookExecutionHelper {
   public static final String WEBHOOK_EVENT_PAYLOAD_EVENT_TYPE = "webhookEventType";
 
   public WebhookEventProcessingResult handleTriggerWebhookEvent(TriggerWebhookEvent triggerWebhookEvent) {
+    ParseWebhookResponse parseWebhookResponse = webhookEventPayloadParser.invokeScmService(triggerWebhookEvent);
     WebhookEventMappingResponse webhookEventMappingResponse =
-        webhookEventToTriggerMapper.mapWebhookEventToTriggers(triggerWebhookEvent);
+        webhookEventToTriggerMapper.mapWebhookEventToTriggers(triggerWebhookEvent, parseWebhookResponse);
 
     WebhookEventProcessingResultBuilder resultBuilder = WebhookEventProcessingResult.builder();
     List<WebhookEventResponse> eventResponses = new ArrayList<>();
@@ -65,7 +65,8 @@ public class TriggerWebhookExecutionHelper {
       resultBuilder.mappedToTriggers(true);
       if (isNotEmpty(webhookEventMappingResponse.getTriggers())) {
         for (TriggerDetails triggerDetails : webhookEventMappingResponse.getTriggers()) {
-          eventResponses.add(triggerPipelineExecution(triggerWebhookEvent, triggerDetails));
+          eventResponses.add(triggerPipelineExecution(triggerWebhookEvent, triggerDetails,
+              getTriggerPayload(parseWebhookResponse, triggerWebhookEvent.getPayload())));
         }
       }
     } else {
@@ -76,25 +77,28 @@ public class TriggerWebhookExecutionHelper {
     return resultBuilder.responses(eventResponses).build();
   }
 
+  private TriggerPayload getTriggerPayload(ParseWebhookResponse parseWebhookResponse, String jsonPayload) {
+    if (parseWebhookResponse.hasPr()) {
+      return TriggerPayload.newBuilder()
+          .setJsonPayload(jsonPayload)
+          .setParsedPayload(ParsedPayload.newBuilder().setPr(parseWebhookResponse.getPr()).build())
+          .build();
+    }
+    return TriggerPayload.newBuilder()
+        .setJsonPayload(jsonPayload)
+        .setParsedPayload(ParsedPayload.newBuilder().setPush(parseWebhookResponse.getPush()).build())
+        .build();
+  }
+
   private WebhookEventResponse triggerPipelineExecution(
-      TriggerWebhookEvent triggerWebhookEvent, TriggerDetails triggerDetails) {
+      TriggerWebhookEvent triggerWebhookEvent, TriggerDetails triggerDetails, TriggerPayload triggerPayload) {
     String runtimeInputYaml = null;
     NGTriggerEntity ngTriggerEntity = triggerDetails.getNgTriggerEntity();
     try {
       runtimeInputYaml =
           ((PipelineTargetSpec) triggerDetails.getNgTriggerConfig().getTarget().getSpec()).getRuntimeInputYaml();
 
-      Map<String, Object> contextAttributes = new HashMap<>();
-
-      contextAttributes.put(SetupAbstractionKeys.eventPayload, triggerWebhookEvent.getPayload());
-      WebhookEventHeaderData webhookEventHeaderData =
-          webhookEventPayloadParser.obtainWebhookSourceKeyData(triggerWebhookEvent.getHeaders());
-      if (webhookEventHeaderData.isDataFound()) {
-        contextAttributes.put(WEBHOOK_EVENT_PAYLOAD_EVENT_REPO_TYPE, webhookEventHeaderData.getSourceKey());
-        contextAttributes.put(WEBHOOK_EVENT_PAYLOAD_EVENT_TYPE, webhookEventHeaderData.getSourceKeyVal().get(0));
-      }
-
-      PlanExecution response = resolveRuntimeInputAndSubmitExecutionRequest(triggerDetails, contextAttributes);
+      PlanExecution response = resolveRuntimeInputAndSubmitExecutionRequest(triggerDetails, triggerPayload);
       TargetExecutionSummary targetExecutionSummary =
           WebhookEventResponseHelper.prepareTargetExecutionSummary(response, triggerDetails, runtimeInputYaml);
 
@@ -116,7 +120,7 @@ public class TriggerWebhookExecutionHelper {
   }
 
   private PlanExecution resolveRuntimeInputAndSubmitExecutionRequest(
-      TriggerDetails triggerDetails, Map<String, Object> contextAttributes) {
+      TriggerDetails triggerDetails, TriggerPayload triggerPayload) {
     TriggeredBy embeddedUser = TriggeredBy.newBuilder().setIdentifier("trigger").setUuid("systemUser").build();
     ExecutionTriggerInfo triggerInfo =
         ExecutionTriggerInfo.newBuilder().setTriggerType(WEBHOOK).setTriggeredBy(embeddedUser).build();
@@ -134,9 +138,15 @@ public class TriggerWebhookExecutionHelper {
                 + ", For Trigger: " + ngTriggerEntity.getIdentifier() + " does not exists. ",
             USER);
       }
-      contextAttributes.put(SetupAbstractionKeys.pipelineIdentifier, pipelineEntityToExecute.get().getIdentifier());
 
       String runtimeInputYaml = readRuntimeInputFromConfig(triggerDetails.getNgTriggerConfig());
+
+      ExecutionMetadata.Builder executionMetaDataBuilder =
+          ExecutionMetadata.newBuilder()
+              .setTriggerInfo(triggerInfo)
+              .setRunSequence(pipelineEntityToExecute.get().getRunSequence())
+              .setTriggerPayload(triggerPayload)
+              .setPipelineIdentifier(pipelineEntityToExecute.get().getIdentifier());
 
       String pipelineYaml;
       if (EmptyPredicate.isEmpty(runtimeInputYaml)) {
@@ -144,14 +154,12 @@ public class TriggerWebhookExecutionHelper {
       } else {
         String pipelineYamlBeforeMerge = pipelineEntityToExecute.get().getYaml();
         String sanitizedRuntimeInputYaml = MergeHelper.sanitizeRuntimeInput(pipelineYamlBeforeMerge, runtimeInputYaml);
-        contextAttributes.put(SetupAbstractionKeys.inputSetYaml, sanitizedRuntimeInputYaml);
+        executionMetaDataBuilder.setInputSetYaml(sanitizedRuntimeInputYaml);
         pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineYamlBeforeMerge, sanitizedRuntimeInputYaml);
       }
-      contextAttributes.put(SetupAbstractionKeys.pipelineIdentifier, targetIdentifier);
-      contextAttributes.put(SetupAbstractionKeys.runSequence, pipelineEntityToExecute.get().getRunSequence());
 
       return pipelineExecuteHelper.startExecution(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),
-          ngTriggerEntity.getProjectIdentifier(), pipelineYaml, triggerInfo, contextAttributes);
+          ngTriggerEntity.getProjectIdentifier(), pipelineYaml, executionMetaDataBuilder.build());
     } catch (Exception e) {
       throw new TriggerException("Failed while requesting Pipeline Execution" + e.getMessage(), USER);
     }
