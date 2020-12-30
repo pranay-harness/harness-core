@@ -1,12 +1,23 @@
 package io.harness.ci.integrationstage;
 
+import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.execution.ManualExecutionSource;
 import io.harness.beans.executionargs.CIExecutionArgs;
+import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
+import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
+import io.harness.pms.contracts.plan.PlanCreationContextValue;
+import io.harness.pms.contracts.plan.TriggerType;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
+import io.harness.pms.yaml.ParameterField;
+import io.harness.yaml.extended.ci.codebase.Build;
+import io.harness.yaml.extended.ci.codebase.BuildType;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
+import io.harness.yaml.extended.ci.codebase.impl.BranchBuildSpec;
+import io.harness.yaml.extended.ci.codebase.impl.TagBuildSpec;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -27,24 +38,43 @@ public class CILiteEngineIntegrationStageModifier implements StageExecutionModif
       StageElementConfig stageElementConfig, PlanCreationContext context, String podName, CodeBase ciCodeBase) {
     log.info("Modifying execution plan to add lite entine step for integration stage {}",
         stageElementConfig.getIdentifier());
-    //    CIExecutionArgs ciExecutionArgs =
-    //        (CIExecutionArgs) context.getAttribute(ExecutionArgs.EXEC_ARGS)
-    //            .orElseThrow(()
-    //                             -> new InvalidRequestException(
-    //                                 "Execution arguments are empty for pipeline execution " +
-    //                                 context.getAccountId()));
 
-    //    NgPipeline pipeline =
-    //        (NgPipeline) context.getAttribute(CI_PIPELINE_CONFIG)
-    //            .orElseThrow(()
-    //                             -> new InvalidRequestException(
-    //                                 "Pipeline config is empty for pipeline execution " + context.getAccountId()));
+    PlanCreationContextValue planCreationContextValue = context.getGlobalContext().get("metadata");
+    ExecutionMetadata executionMetadata = planCreationContextValue.getMetadata();
 
-    CIExecutionArgs ciExecutionArgs = CIExecutionArgs.builder()
-                                          .executionSource(ManualExecutionSource.builder().branch("master").build())
-                                          .buildNumberDetails(BuildNumberDetails.builder().buildNumber(10l).build())
-                                          .build();
+    CIExecutionArgs ciExecutionArgs =
+        CIExecutionArgs.builder()
+            .executionSource(
+                buildExecutionSource(executionMetadata, stageElementConfig.getIdentifier(), ciCodeBase.getBuild()))
+            .buildNumberDetails(
+                BuildNumberDetails.builder().buildNumber((long) executionMetadata.getRunSequence()).build())
+            .build();
+
+    log.info("Build execution args for integration stage  {}", stageElementConfig.getIdentifier());
     return getCILiteEngineTaskExecution(stageElementConfig, ciExecutionArgs, ciCodeBase, podName, execution.getUuid());
+  }
+
+  private ExecutionSource buildExecutionSource(
+      ExecutionMetadata executionMetadata, String identifier, ParameterField<Build> parameterFieldBuild) {
+    ExecutionTriggerInfo executionTriggerInfo = executionMetadata.getTriggerInfo();
+
+    if (executionTriggerInfo.getTriggerType() == TriggerType.MANUAL) {
+      Build build = RunTimeInputHandler.resolveBuild(parameterFieldBuild);
+      if (build != null) {
+        if (build.getType().equals(BuildType.TAG)) {
+          ParameterField<String> tag = ((TagBuildSpec) build.getSpec()).getTag();
+          String buildString = RunTimeInputHandler.resolveStringParameter("tag", "Git Clone", identifier, tag, false);
+          return ManualExecutionSource.builder().tag(buildString).build();
+        } else if (build.getType().equals(BuildType.BRANCH)) {
+          ParameterField<String> branch = ((BranchBuildSpec) build.getSpec()).getBranch();
+          String branchString =
+              RunTimeInputHandler.resolveStringParameter("branch", "Git Clone", identifier, branch, false);
+          return ManualExecutionSource.builder().branch(branchString).build();
+        }
+      }
+    }
+
+    return null;
   }
 
   private ExecutionElementConfig getCILiteEngineTaskExecution(StageElementConfig integrationStage,
