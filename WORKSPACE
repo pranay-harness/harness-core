@@ -2021,6 +2021,13 @@ go_repository(
     version = "v1.7.0",
 )
 
+go_repository(
+    name = "com_github_drone_go_scm",
+    importpath = "github.com/drone/go-scm",
+    sum = "h1:kDHu38a11loKf6uaBu75TmY1YPwsSaZdseET738Oy0o=",
+    version = "v1.8.0",
+)
+
 load("//tools/bazel/sonarqube:repositories.bzl", "bazel_sonarqube_repositories")
 
 bazel_sonarqube_repositories()
