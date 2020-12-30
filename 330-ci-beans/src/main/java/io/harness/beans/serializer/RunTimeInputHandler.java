@@ -6,6 +6,7 @@ import static java.lang.String.format;
 
 import io.harness.exception.ngexception.CIStageExecutionUserException;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.yaml.extended.ci.codebase.Build;
 
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,14 @@ public class RunTimeInputHandler {
       return true;
     } else {
       return (boolean) cloneRepository.fetchFinalValue();
+    }
+  }
+
+  public Build resolveBuild(ParameterField<Build> buildDetails) {
+    if (buildDetails == null || buildDetails.isExpression() || buildDetails.getValue() == null) {
+      return null;
+    } else {
+      return buildDetails.getValue();
     }
   }
 

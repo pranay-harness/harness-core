@@ -9,5 +9,7 @@ import lombok.Data;
 @Data
 @Builder
 public class CIPipelineModuleInfo implements PipelineModuleInfo {
-  private CIWebhookInfoDTO ciWebhookInfoDTO;
+  private CIWebhookInfoDTO ciExecutionInfoDTO;
+  private String branch;
+  private String tag;
 }
