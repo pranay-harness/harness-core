@@ -1,9 +1,8 @@
 package io.harness.delegate.beans.executioncapability;
 
-import io.harness.delegate.beans.executioncapability.CapabilityType;
-import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.k8s.model.HelmVersion;
 
+import java.time.Duration;
 import lombok.Builder;
 import lombok.Value;
 
@@ -22,5 +21,15 @@ public class HelmInstallationCapability implements ExecutionCapability {
   @Override
   public String fetchCapabilityBasis() {
     return criteria;
+  }
+
+  @Override
+  public Duration getMaxValidityPeriod() {
+    return Duration.ofHours(6);
+  }
+
+  @Override
+  public Duration getPeriodUntilNextValidation() {
+    return Duration.ofHours(4);
   }
 }

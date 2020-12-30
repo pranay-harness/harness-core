@@ -5,8 +5,6 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.PersistentEntity;
-import io.harness.persistence.UpdatedAtAware;
-import io.harness.persistence.UuidAware;
 
 import com.google.common.collect.ImmutableList;
 import java.util.Date;
@@ -34,16 +32,21 @@ public final class CapabilitySubjectPermission implements PersistentEntity {
         .build();
   }
 
+  // ID for individual entry
+  @Id private String uuid;
   @FdIndex private String accountId;
-  @FdIndex private String capabilityId;
 
   // The only valid entity type is delegate right now
   private String delegateId;
+  @FdIndex private String capabilityId;
 
-  // ID for individual entry
-  @Id private String uuid;
+  // Moment in time until the existing check of the capability can be considered as valid
+  @FdIndex private long maxValidUntil;
 
-  // result will be considered stale at this time
+  // Moment in time after which the capability should be re-validated again
+  @FdIndex private long revalidateAfter;
+
+  // This is when mongo will delete the record
   @FdTtlIndex private Date validUntil;
 
   // Capability result: whether it is valid or not

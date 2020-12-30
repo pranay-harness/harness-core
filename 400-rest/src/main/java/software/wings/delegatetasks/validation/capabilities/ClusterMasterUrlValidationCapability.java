@@ -12,6 +12,7 @@ import software.wings.beans.KubernetesClusterConfig;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.settings.SettingValue;
 
+import java.time.Duration;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
@@ -43,5 +44,15 @@ public class ClusterMasterUrlValidationCapability implements ExecutionCapability
     } else {
       throw new InvalidRequestException("No capability Basis Supported for : " + value.getSettingType());
     }
+  }
+
+  @Override
+  public Duration getMaxValidityPeriod() {
+    return Duration.ofHours(6);
+  }
+
+  @Override
+  public Duration getPeriodUntilNextValidation() {
+    return Duration.ofHours(4);
   }
 }

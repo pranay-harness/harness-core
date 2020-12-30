@@ -1,5 +1,6 @@
 package io.harness.delegate.beans.executioncapability;
 
+import java.time.Duration;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Value;
@@ -25,5 +26,15 @@ public class SelectorCapability implements ExecutionCapability {
   @Override
   public String fetchCapabilityBasis() {
     return String.join(", ", selectors);
+  }
+
+  @Override
+  public Duration getMaxValidityPeriod() {
+    return null;
+  }
+
+  @Override
+  public Duration getPeriodUntilNextValidation() {
+    return null;
   }
 }
