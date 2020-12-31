@@ -10,14 +10,15 @@ import (
 )
 
 const (
-	accountIDEnv = "HARNESS_ACCOUNT_ID"
-	orgIDEnv     = "HARNESS_ORG_ID"
-	projectIDEnv = "HARNESS_PROJECT_ID"
-	buildIDEnv   = "HARNESS_BUILD_ID"
-	stageIDEnv   = "HARNESS_STAGE_ID"
-	tiSvcEp      = "HARNESS_TI_SERVICE_ENDPOINT"
-	logSvcEp     = "HARNESS_LOG_SERVICE_ENDPOINT"
-	logSvcToken  = "HARNESS_LOG_SERVICE_TOKEN"
+	accountIDEnv  = "HARNESS_ACCOUNT_ID"
+	orgIDEnv      = "HARNESS_ORG_ID"
+	projectIDEnv  = "HARNESS_PROJECT_ID"
+	buildIDEnv    = "HARNESS_BUILD_ID"
+	stageIDEnv    = "HARNESS_STAGE_ID"
+	pipelineIDEnv = "HARNESS_PIPELINE_ID"
+	tiSvcEp       = "HARNESS_TI_SERVICE_ENDPOINT"
+	logSvcEp      = "HARNESS_LOG_SERVICE_ENDPOINT"
+	logSvcToken   = "HARNESS_LOG_SERVICE_TOKEN"
 )
 
 func GetHTTPRemoteLogger(stepID string) (*logs.RemoteLogger, error) {
@@ -46,9 +47,9 @@ func GetRemoteHTTPClient() (client.Client, error) {
 	if !ok {
 		return nil, fmt.Errorf("log service endpoint variable not set %s", logSvcEp)
 	}
-	account, ok := os.LookupEnv(accountIDEnv)
-	if !ok {
-		return nil, fmt.Errorf("account ID endpoint variable not set %s", accountIDEnv)
+	account, err := GetAccountId()
+	if err != nil {
+		return nil, err
 	}
 	token, ok := os.LookupEnv(logSvcToken)
 	if !ok {
@@ -59,27 +60,31 @@ func GetRemoteHTTPClient() (client.Client, error) {
 
 // GetLogKey returns a stringified key for log service using various identifiers
 func GetLogKey(stepID string) (string, error) {
-	account, ok := os.LookupEnv(accountIDEnv)
-	if !ok {
-		return "", fmt.Errorf("account ID endpoint variable not set %s", accountIDEnv)
+	account, err := GetAccountId()
+	if err != nil {
+		return "", err
 	}
-	org, ok := os.LookupEnv(orgIDEnv)
-	if !ok {
-		return "", fmt.Errorf("project ID endpoint variable not set %s", orgIDEnv)
+	org, err := GetOrgId()
+	if err != nil {
+		return "", err
 	}
-	project, ok := os.LookupEnv(projectIDEnv)
-	if !ok {
-		return "", fmt.Errorf("project ID endpoint variable not set %s", projectIDEnv)
+	project, err := GetProjectId()
+	if err != nil {
+		return "", err
 	}
-	build, ok := os.LookupEnv(buildIDEnv)
-	if !ok {
-		return "", fmt.Errorf("build ID endpoint variable not set %s", buildIDEnv)
+	pipeline, err := GetPipelineId()
+	if err != nil {
+		return "", err
 	}
-	stage, ok := os.LookupEnv(stageIDEnv)
-	if !ok {
-		return "", fmt.Errorf("stage ID endpoint variable not set %s", stageIDEnv)
+	build, err := GetBuildId()
+	if err != nil {
+		return "", err
 	}
-	key := fmt.Sprintf("%s/%s/%s/%s/%s/%s", account, org, project, build, stage, stepID)
+	stage, err := GetStageId()
+	if err != nil {
+		return "", err
+	}
+	key := fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s", account, org, project, pipeline, build, stage, stepID)
 	return key, nil
 }
 
@@ -99,7 +104,7 @@ func GetTiHTTPClient() (ticlient.Client, error) {
 func GetAccountId() (string, error) {
 	account, ok := os.LookupEnv(accountIDEnv)
 	if !ok {
-		return "", fmt.Errorf("account ID endpoint variable not set %s", accountIDEnv)
+		return "", fmt.Errorf("account ID environment variable not set %s", accountIDEnv)
 	}
 	return account, nil
 }
@@ -107,7 +112,7 @@ func GetAccountId() (string, error) {
 func GetOrgId() (string, error) {
 	org, ok := os.LookupEnv(orgIDEnv)
 	if !ok {
-		return "", fmt.Errorf("project ID endpoint variable not set %s", orgIDEnv)
+		return "", fmt.Errorf("project ID environment variable not set %s", orgIDEnv)
 	}
 	return org, nil
 }
@@ -115,15 +120,23 @@ func GetOrgId() (string, error) {
 func GetProjectId() (string, error) {
 	project, ok := os.LookupEnv(projectIDEnv)
 	if !ok {
-		return "", fmt.Errorf("project ID endpoint variable not set %s", projectIDEnv)
+		return "", fmt.Errorf("project ID environment variable not set %s", projectIDEnv)
 	}
 	return project, nil
+}
+
+func GetPipelineId() (string, error) {
+	pipeline, ok := os.LookupEnv(pipelineIDEnv)
+	if !ok {
+		return "", fmt.Errorf("pipeline ID environment variable not set %s", pipelineIDEnv)
+	}
+	return pipeline, nil
 }
 
 func GetBuildId() (string, error) {
 	build, ok := os.LookupEnv(buildIDEnv)
 	if !ok {
-		return "", fmt.Errorf("build ID endpoint variable not set %s", buildIDEnv)
+		return "", fmt.Errorf("build ID environment variable not set %s", buildIDEnv)
 	}
 	return build, nil
 }
@@ -131,7 +144,7 @@ func GetBuildId() (string, error) {
 func GetStageId() (string, error) {
 	stage, ok := os.LookupEnv(stageIDEnv)
 	if !ok {
-		return "", fmt.Errorf("stage ID endpoint variable not set %s", stageIDEnv)
+		return "", fmt.Errorf("stage ID environment variable not set %s", stageIDEnv)
 	}
 	return stage, nil
 }

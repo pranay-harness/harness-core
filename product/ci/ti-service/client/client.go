@@ -19,5 +19,5 @@ func (e *Error) Error() string {
 // Client defines a TI service client.
 type Client interface {
 	// Write test cases to DB
-	Write(ctx context.Context, org, project, build, stage, step, report string, tests []*types.TestCase) error
+	Write(ctx context.Context, org, project, pipeline, build, stage, step, report string, tests []*types.TestCase) error
 }

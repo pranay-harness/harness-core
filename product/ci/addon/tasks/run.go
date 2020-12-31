@@ -262,6 +262,10 @@ func (r *runTask) collectTestReports(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+		pipeline, err := external.GetPipelineId()
+		if err != nil {
+			return err
+		}
 		build, err := external.GetBuildId()
 		if err != nil {
 			return err
@@ -295,7 +299,7 @@ func (r *runTask) collectTestReports(ctx context.Context) error {
 		}
 
 		// Write tests to TI service
-		err = client.Write(ctx, org, project, build, stage, r.id, reportStr, tests)
+		err = client.Write(ctx, org, project, pipeline, build, stage, r.id, reportStr, tests)
 		if err != nil {
 			r.log.Errorw("could not write tests to TI service", zap.Error(err))
 			return err

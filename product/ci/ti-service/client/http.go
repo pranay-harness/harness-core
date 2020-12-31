@@ -21,7 +21,7 @@ import (
 var _ Client = (*HTTPClient)(nil)
 
 const (
-	dbEndpoint = "/reports/write?accountId=%s&orgId=%s&projectId=%s&buildId=%s&stageId=%s&stepId=%s&report=%s"
+	dbEndpoint = "/reports/write?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&report=%s"
 )
 
 // defaultClient is the default http.Client.
@@ -63,8 +63,8 @@ type HTTPClient struct {
 }
 
 // Write writes test results to the TI server
-func (c *HTTPClient) Write(ctx context.Context, org, project, build, stage, step, report string, tests []*types.TestCase) error {
-	path := fmt.Sprintf(dbEndpoint, c.AccountID, org, project, build, stage, step, report)
+func (c *HTTPClient) Write(ctx context.Context, org, project, pipeline, build, stage, step, report string, tests []*types.TestCase) error {
+	path := fmt.Sprintf(dbEndpoint, c.AccountID, org, project, pipeline, build, stage, step, report)
 	_, err := c.do(ctx, c.Endpoint+path, "POST", &tests, nil)
 	return err
 }
