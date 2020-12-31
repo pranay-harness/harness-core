@@ -180,7 +180,6 @@ import software.wings.beans.alert.NoEligibleDelegatesAlert;
 import software.wings.beans.alert.NoInstalledDelegatesAlert;
 import software.wings.cdn.CdnConfig;
 import software.wings.core.managerConfiguration.ConfigurationController;
-import software.wings.delegatetasks.cv.RateLimitExceededException;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
@@ -2091,7 +2090,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     if (rankLimitReached(rank)) {
-      throw new RateLimitExceededException("Rate limit reached for tasks with rank " + rank.name());
+      // noop - we will add RateLimitException later
     }
   }
 
