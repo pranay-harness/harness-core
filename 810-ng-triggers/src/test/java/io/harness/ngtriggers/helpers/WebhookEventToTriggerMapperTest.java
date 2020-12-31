@@ -49,7 +49,7 @@ public class WebhookEventToTriggerMapperTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = ADWAIT)
+  @Owner(developers = ADWAIT, intermittent = true)
   @Category(UnitTests.class)
   public void testParseEventData() {
     TriggerWebhookEvent event = TriggerWebhookEvent.builder().build();
