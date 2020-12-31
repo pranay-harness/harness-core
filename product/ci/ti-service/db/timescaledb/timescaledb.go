@@ -42,14 +42,15 @@ func New(username, password, host, port, dbName string, log *zap.SugaredLogger) 
 }
 
 // Write writes test cases to DB
-func (tdb *TimeScaleDb) Write(ctx context.Context, table, accountId, orgId, projectId, buildId, stageId, stepId, report string, tests ...*types.TestCase) error {
+func (tdb *TimeScaleDb) Write(ctx context.Context, table, accountId, orgId, projectId, pipelineId,
+	buildId, stageId, stepId, report string, tests ...*types.TestCase) error {
 	query := fmt.Sprintf(
 		`
 		INSERT INTO %s
-		(time, account_id, org_id, project_id, build_id, stage_id, step_id, report, name, suite_name,
+		(time, account_id, org_id, project_id, pipeline_id, build_id, stage_id, step_id, report, name, suite_name,
 		class_name, duration_ms, status, message, type, description, stdout, stderr)
 		VALUES
-		(Now(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`, table)
+		(Now(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`, table)
 
 	var merror error
 
@@ -57,7 +58,7 @@ func (tdb *TimeScaleDb) Write(ctx context.Context, table, accountId, orgId, proj
 		timeMs := test.Duration.Milliseconds()
 		status := test.Result.Status
 
-		_, err := tdb.Conn.Exec(query, accountId, orgId, projectId, buildId, stageId, stepId, report, test.Name, test.SuiteName, test.ClassName, timeMs, status,
+		_, err := tdb.Conn.Exec(query, accountId, orgId, projectId, pipelineId, buildId, stageId, stepId, report, test.Name, test.SuiteName, test.ClassName, timeMs, status,
 			test.Result.Message, test.Result.Type, test.Result.Desc, test.SystemOut, test.SystemErr)
 		if err != nil {
 			// Log the error but continue
@@ -69,12 +70,12 @@ func (tdb *TimeScaleDb) Write(ctx context.Context, table, accountId, orgId, proj
 }
 
 // Summary provides test case summary by querying the DB
-func (tdb *TimeScaleDb) Summary(ctx context.Context, table, accountId, orgId, projectId, buildId, report string) (types.SummaryResponse, error) {
+func (tdb *TimeScaleDb) Summary(ctx context.Context, table, accountId, orgId, projectId, pipelineId, buildId, report string) (types.SummaryResponse, error) {
 	query := fmt.Sprintf(`
 		SELECT duration_ms, status, name FROM %s WHERE account_id = $1
-		AND org_id = $2 AND project_id = $3 AND build_id = $4 AND report = $5;`, table)
+		AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND report = $6;`, table)
 
-	rows, err := tdb.Conn.QueryContext(ctx, query, accountId, orgId, projectId, buildId, report)
+	rows, err := tdb.Conn.QueryContext(ctx, query, accountId, orgId, projectId, pipelineId, buildId, report)
 	if err != nil {
 		tdb.Log.Errorw("could not query database for test summary", zap.Error(err))
 		return types.SummaryResponse{}, err
@@ -104,7 +105,7 @@ func (tdb *TimeScaleDb) Summary(ctx context.Context, table, accountId, orgId, pr
 
 // GetTestCases returns test cases after querying the DB
 func (tdb *TimeScaleDb) GetTestCases(
-	ctx context.Context, table, accountID, orgId, projectId, buildId,
+	ctx context.Context, table, accountID, orgId, projectId, pipelineId, buildId,
 	report, suiteName, sortAttribute, status, order, limit, offset string) (types.TestCases, error) {
 	statusFilter := "'failed', 'error', 'passed', 'skipped'"
 	defaultSortAttribute := "name"
@@ -152,10 +153,10 @@ func (tdb *TimeScaleDb) GetTestCases(
 		SELECT name, suite_name, class_name, duration_ms, status, message,
 		description, type, stdout, stderr, COUNT(*) OVER() AS full_count
 		FROM %s
-		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND build_id = $4 AND report = $5 AND suite_name = $6 AND status IN (%s)
+		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND report = $6 AND suite_name = $7 AND status IN (%s)
 		ORDER BY %s %s, %s %s
-		LIMIT $7 OFFSET $8;`, table, statusFilter, sortAttribute, order, defaultSortAttribute, defaultOrder)
-	rows, err := tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, buildId, report, suiteName, limit, offset)
+		LIMIT $8 OFFSET $9;`, table, statusFilter, sortAttribute, order, defaultSortAttribute, defaultOrder)
+	rows, err := tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, pipelineId, buildId, report, suiteName, limit, offset)
 	if err != nil {
 		tdb.Log.Errorw("could not query database for test cases", zap.Error(err))
 		return types.TestCases{}, err
@@ -191,7 +192,7 @@ func (tdb *TimeScaleDb) GetTestCases(
 
 // GetTestSuites returns test suites after querying the DB
 func (tdb *TimeScaleDb) GetTestSuites(
-	ctx context.Context, table, accountID, orgId, projectId, buildId,
+	ctx context.Context, table, accountID, orgId, projectId, pipelineId, buildId,
 	report, sortAttribute, status, order, limit, offset string) (types.TestSuites, error) {
 	defaultSortAttribute := "suite_name"
 	defaultOrder := asc
@@ -237,11 +238,11 @@ func (tdb *TimeScaleDb) GetTestSuites(
 		SUM(CASE WHEN status = 'failed' OR status = 'error' THEN 1 ELSE 0 END) * 100 / COUNT(*) AS fail_pct,
 		COUNT(*) OVER() AS full_count
 		FROM %s
-		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND build_id = $4 AND report = $5 AND status IN (%s)
+		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND report = $6 AND status IN (%s)
 		GROUP BY suite_name
 		ORDER BY %s %s, %s %s
-		LIMIT $6 OFFSET $7;`, table, statusFilter, sortAttribute, order, defaultSortAttribute, defaultOrder)
-	rows, err := tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, buildId, report, limit, offset)
+		LIMIT $7 OFFSET $8;`, table, statusFilter, sortAttribute, order, defaultSortAttribute, defaultOrder)
+	rows, err := tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, pipelineId, buildId, report, limit, offset)
 	if err != nil {
 		tdb.Log.Errorw("could not query database for test suites", "error_msg", err)
 		return types.TestSuites{}, err

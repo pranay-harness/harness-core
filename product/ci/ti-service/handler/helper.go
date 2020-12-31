@@ -9,6 +9,7 @@ const (
 	accountIDParam   = "accountId"
 	orgIdParam       = "orgId"
 	projectIdParam   = "projectId"
+	pipelineIdParam  = "pipelineId"
 	buildIdParam     = "buildId"
 	stageIdParam     = "stageId"
 	stepIdParam      = "stepId"

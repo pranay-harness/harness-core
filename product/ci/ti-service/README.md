@@ -70,6 +70,7 @@ CREATE TABLE tests(
   account_id TEXT NOT NULL,
   org_id TEXT NOT NULL,
   project_id TEXT NOT NULL,
+  pipeline_id TEXT NOT NULL,
   build_id TEXT NOT NULL,
   stage_id TEXT NOT NULL,
   step_id TEXT NOT NULL,
