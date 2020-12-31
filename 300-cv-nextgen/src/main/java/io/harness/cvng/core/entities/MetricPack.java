@@ -10,9 +10,7 @@ import io.harness.cvng.beans.MetricPackDTO.MetricDefinitionDTO;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CompoundMongoIndex;
-import io.harness.mongo.index.Field;
 import io.harness.mongo.index.MongoIndex;
-import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -39,9 +37,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
-@NgUniqueIndex(
-    name = "unique_Idx", fields = { @Field("projectIdentifier")
-                                    , @Field("dataSourceType"), @Field("identifier") })
 @Data
 @Builder
 @NoArgsConstructor
@@ -54,10 +49,13 @@ public class MetricPack implements PersistentEntity, UuidAware, CreatedAtAware, 
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("insert_idx")
+                 .name("idx")
+                 .unique(true)
                  .field(MetricPackKeys.accountId)
                  .field(MetricPackKeys.orgIdentifier)
                  .field(MetricPackKeys.projectIdentifier)
+                 .field(MetricPackKeys.dataSourceType)
+                 .field(MetricPackKeys.identifier)
                  .build())
         .build();
   }
