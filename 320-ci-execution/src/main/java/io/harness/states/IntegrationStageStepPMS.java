@@ -48,9 +48,9 @@ public class IntegrationStageStepPMS implements ChildExecutable<IntegrationStage
     if (infrastructure.getType() == Infrastructure.Type.KUBERNETES_DIRECT) {
       K8sDirectInfraYaml k8sDirectInfraYaml = (K8sDirectInfraYaml) infrastructure;
 
+      int buildNumber = ambiance.getMetadata().getRunSequence();
       K8PodDetails k8PodDetails = K8PodDetails.builder()
                                       .clusterName(k8sDirectInfraYaml.getSpec().getConnectorRef())
-                                      .buildNumberDetails(getBuildNumberDetails(ambiance))
                                       .stageID(integrationStageStepParametersPMS.getIdentifier())
                                       .accountId(AmbianceHelper.getAccountId(ambiance))
                                       .namespace(k8sDirectInfraYaml.getSpec().getNamespace())

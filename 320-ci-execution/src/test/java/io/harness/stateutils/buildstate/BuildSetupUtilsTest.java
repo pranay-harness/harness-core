@@ -13,7 +13,6 @@ import static org.mockito.Mockito.when;
 
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.category.element.UnitTests;
-import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.ci.beans.entities.LogServiceConfig;
 import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
@@ -22,6 +21,7 @@ import io.harness.executionplan.CIExecutionPlanTestHelper;
 import io.harness.executionplan.CIExecutionTest;
 import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.rule.Owner;
@@ -59,9 +59,16 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldFetBuildSetupTaskParams() {
+    int buildID = 1;
     Map<String, String> setupAbstractions = new HashMap<>();
-    setupAbstractions.put("accountId", "foo");
-    Ambiance ambiance = Ambiance.newBuilder().putAllSetupAbstractions(setupAbstractions).build();
+    setupAbstractions.put("accountId", "account");
+    setupAbstractions.put("projectIdentifier", "project");
+    setupAbstractions.put("orgIdentifier", "org");
+    ExecutionMetadata executionMetadata =
+        ExecutionMetadata.newBuilder().setRunSequence(buildID).setPipelineIdentifier("pipeline").build();
+    Ambiance ambiance =
+        Ambiance.newBuilder().putAllSetupAbstractions(setupAbstractions).setMetadata(executionMetadata).build();
+
     HashMap<String, String> taskIds = new HashMap<>();
     when(connectorUtils.getConnectorDetails(any(), eq(GIT_CONNECTOR)))
         .thenReturn(ciExecutionPlanTestHelper.getGitConnector());
@@ -75,11 +82,7 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
     when(logServiceUtils.getLogServiceToken(any())).thenReturn("token");
     when(pmsEngineExpressionService.renderExpression(any(), any())).thenReturn(CLUSTER_NAME);
     when(executionSweepingOutputResolver.resolve(any(), any()))
-        .thenReturn(K8PodDetails.builder()
-                        .clusterName("cluster")
-                        .namespace("namespace")
-                        .buildNumberDetails(BuildNumberDetails.builder().buildNumber(1L).build())
-                        .build());
+        .thenReturn(K8PodDetails.builder().clusterName("cluster").namespace("namespace").stageID("stage").build());
 
     CIBuildSetupTaskParams buildSetupTaskParams = buildSetupUtils.getBuildSetupTaskParams(
         ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackId(), ambiance, taskIds);
@@ -92,9 +95,15 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void shouldFetBuildSetupTaskParamsWithAccountConnector() {
+    int buildID = 1;
     Map<String, String> setupAbstractions = new HashMap<>();
-    setupAbstractions.put("accountId", "foo");
-    Ambiance ambiance = Ambiance.newBuilder().putAllSetupAbstractions(setupAbstractions).build();
+    setupAbstractions.put("accountId", "account");
+    setupAbstractions.put("projectIdentifier", "project");
+    setupAbstractions.put("orgIdentifier", "org");
+    ExecutionMetadata executionMetadata =
+        ExecutionMetadata.newBuilder().setRunSequence(buildID).setPipelineIdentifier("pipeline").build();
+    Ambiance ambiance =
+        Ambiance.newBuilder().putAllSetupAbstractions(setupAbstractions).setMetadata(executionMetadata).build();
 
     HashMap<String, String> taskIds = new HashMap<>();
     when(connectorUtils.getConnectorDetails(any(), eq(GIT_CONNECTOR)))
@@ -109,11 +118,7 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
     when(logServiceUtils.getLogServiceToken(any())).thenReturn("token");
     when(pmsEngineExpressionService.renderExpression(any(), any())).thenReturn(CLUSTER_NAME);
     when(executionSweepingOutputResolver.resolve(any(), any()))
-        .thenReturn(K8PodDetails.builder()
-                        .clusterName("cluster")
-                        .namespace("namespace")
-                        .buildNumberDetails(BuildNumberDetails.builder().buildNumber(1L).build())
-                        .build());
+        .thenReturn(K8PodDetails.builder().clusterName("cluster").namespace("namespace").stageID("stage").build());
 
     CIBuildSetupTaskParams buildSetupTaskParams = buildSetupUtils.getBuildSetupTaskParams(
         ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackIdReponameSet(), ambiance,
