@@ -19,13 +19,13 @@ import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogCallback;
 import io.harness.logging.Misc;
 import io.harness.stream.BoundedInputStream;
 
 import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.command.ShellExecutionData.ShellExecutionDataBuilder;
 import software.wings.delegatetasks.DelegateFileManager;
-import software.wings.delegatetasks.DelegateLogService;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -78,14 +78,13 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
 
   /**
    * Instantiates a new abstract ssh executor.
-   *
-   * @param delegateFileManager the file service
-   * @param logService          the log service
+   *  @param delegateFileManager the file service
+   * @param logCallback          the log service
    */
   @Inject
-  public ScriptSshExecutor(DelegateFileManager delegateFileManager, DelegateLogService logService,
+  public ScriptSshExecutor(DelegateFileManager delegateFileManager, LogCallback logCallback,
       boolean shouldSaveExecutionLogs, ScriptExecutionContext config) {
-    super(delegateFileManager, logService, shouldSaveExecutionLogs);
+    super(delegateFileManager, logCallback, shouldSaveExecutionLogs);
     if (isEmpty(((SshSessionConfig) config).getExecutionId())) {
       throw new WingsException(INVALID_EXECUTION_ID);
     }
@@ -99,7 +98,7 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
     long start = System.currentTimeMillis();
     try {
       saveExecutionLog(format("Initializing SSH connection to %s ....", config.getHost()));
-      channel = SshSessionManager.getCachedSession(this.config, this.logService).openChannel("exec");
+      channel = SshSessionManager.getCachedSession(this.config, this.logCallback).openChannel("exec");
       log.info("Session fetched in " + (System.currentTimeMillis() - start) + " ms");
 
       ((ChannelExec) channel).setPty(true);
@@ -173,7 +172,7 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
     Map<String, String> envVariablesMap = new HashMap<>();
     try {
       saveExecutionLog(format("Initializing SSH connection to %s ....", config.getHost()));
-      channel = SshSessionManager.getCachedSession(this.config, this.logService).openChannel("exec");
+      channel = SshSessionManager.getCachedSession(this.config, this.logCallback).openChannel("exec");
       log.info("Session fetched in " + (System.currentTimeMillis() - start) + " ms");
 
       ((ChannelExec) channel).setPty(true);
@@ -225,7 +224,7 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
             if (commandExecutionStatus == SUCCESS && envVariablesFilename != null) {
               BufferedReader br = null;
               try {
-                channel = SshSessionManager.getCachedSession(this.config, this.logService).openChannel("sftp");
+                channel = SshSessionManager.getCachedSession(this.config, this.logCallback).openChannel("sftp");
                 channel.connect(config.getSocketConnectTimeout());
                 ((ChannelSftp) channel).cd(directoryPath);
                 BoundedInputStream stream =

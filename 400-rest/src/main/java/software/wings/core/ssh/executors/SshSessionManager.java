@@ -10,10 +10,9 @@ import static software.wings.core.ssh.executors.ExecutorType.PASSWORD_AUTH;
 import static software.wings.utils.SshHelperUtils.normalizeError;
 
 import io.harness.exception.WingsException;
+import io.harness.logging.LogCallback;
 
 import software.wings.beans.HostConnectionAttributes;
-import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.delegatetasks.DelegateLogService;
 
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSchException;
@@ -30,16 +29,17 @@ public class SshSessionManager {
    * Gets cached session.
    *
    * @param config the config
+   * @param logCallback
    * @return the cached session
    */
-  public static synchronized Session getCachedSession(SshSessionConfig config, DelegateLogService delegateLogService) {
+  public static synchronized Session getCachedSession(SshSessionConfig config, LogCallback logCallback) {
     String key = config.getExecutionId() + "~" + config.getHost().trim();
     log.info("Fetch session for executionId : {}, hostName: {} ", config.getExecutionId(), config.getHost());
 
     Session cachedSession = sessions.computeIfAbsent(key, s -> {
       log.info("No session found. Create new session for executionId : {}, hostName: {}", config.getExecutionId(),
           config.getHost());
-      return getSession(config, delegateLogService);
+      return getSession(config, logCallback);
     });
 
     // Unnecessary but required test before session reuse.
@@ -52,19 +52,12 @@ public class SshSessionManager {
       log.info("Session connection test successful");
     } catch (Exception exception) {
       log.error("Session connection test failed. Reopen new session", exception);
-      cachedSession =
-          sessions.merge(key, cachedSession, (session1, session2) -> getSession(config, delegateLogService));
+      cachedSession = sessions.merge(key, cachedSession, (session1, session2) -> getSession(config, logCallback));
     }
     return cachedSession;
   }
 
-  private static Session getSession(SshSessionConfig config, DelegateLogService delegateLogService) {
-    return getSession(config,
-        new ExecutionLogCallback(delegateLogService, config.getAccountId(), config.getAppId(), config.getExecutionId(),
-            config.getCommandUnitName()));
-  }
-
-  private static Session getSession(SshSessionConfig config, ExecutionLogCallback executionLogCallback) {
+  private static Session getSession(SshSessionConfig config, LogCallback executionLogCallback) {
     if (config.getExecutorType() == null) {
       if (config.getBastionHostConfig() != null) {
         config.setExecutorType(BASTION_HOST);

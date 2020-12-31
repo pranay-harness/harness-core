@@ -4,7 +4,6 @@ import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.rule.OwnerRule.PUNEET;
 
-import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.COMMAND_UNIT_NAME;
@@ -12,9 +11,8 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
-
-import software.wings.delegatetasks.DelegateLogService;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -24,7 +22,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 public class ExecutionLogWriterTest extends CategoryTest {
-  @Mock private DelegateLogService logService;
+  @Mock private LogCallback logCallback;
 
   @Before
   public void setup() {
@@ -41,7 +39,7 @@ public class ExecutionLogWriterTest extends CategoryTest {
                                         .commandUnitName(COMMAND_UNIT_NAME)
                                         .executionId(WORKFLOW_EXECUTION_ID)
                                         .hostName("localhost")
-                                        .logService(logService)
+                                        .logCallback(logCallback)
                                         .stringBuilder(new StringBuilder(1024))
                                         .logLevel(INFO)
                                         .build();
@@ -54,16 +52,6 @@ public class ExecutionLogWriterTest extends CategoryTest {
     String newLine = "\n";
     testWriter.write(newLine.toCharArray(), 0, 1);
 
-    Mockito.verify(logService)
-        .save(ACCOUNT_ID,
-            aLog()
-                .appId(APP_ID)
-                .activityId(WORKFLOW_EXECUTION_ID)
-                .logLevel(INFO)
-                .commandUnitName(COMMAND_UNIT_NAME)
-                .hostName("localhost")
-                .logLine(logLineFirstSegment + logLineSecondSegment)
-                .executionResult(RUNNING)
-                .build());
+    Mockito.verify(logCallback).saveExecutionLog(logLineFirstSegment + logLineSecondSegment, INFO, RUNNING);
   }
 }

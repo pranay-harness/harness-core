@@ -7,20 +7,18 @@ import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.logging.LogLevel.WARN;
 
-import static software.wings.beans.Log.Builder.aLog;
-
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.service.DelegateAgentFileService;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogCallback;
 
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
 import software.wings.delegatetasks.DelegateFileManager;
-import software.wings.delegatetasks.DelegateLogService;
 
 import com.google.inject.Inject;
 import java.io.File;
@@ -38,7 +36,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 @Slf4j
 public abstract class FileBasedAbstractScriptExecutor implements FileBasedScriptExecutor {
-  protected DelegateLogService logService;
+  protected LogCallback logCallback;
   /**
    * The File service.
    */
@@ -48,14 +46,13 @@ public abstract class FileBasedAbstractScriptExecutor implements FileBasedScript
 
   /**
    * Instantiates a new abstract ssh executor.
-   *
-   * @param delegateFileManager the file service
-   * @param logService          the log service
+   *  @param delegateFileManager the file service
+   * @param logCallback          the log service
    */
   @Inject
   public FileBasedAbstractScriptExecutor(
-      DelegateFileManager delegateFileManager, DelegateLogService logService, boolean shouldSaveExecutionLogs) {
-    this.logService = logService;
+      DelegateFileManager delegateFileManager, LogCallback logCallback, boolean shouldSaveExecutionLogs) {
+    this.logCallback = logCallback;
     this.delegateFileManager = delegateFileManager;
     this.shouldSaveExecutionLogs = shouldSaveExecutionLogs;
   }
@@ -186,16 +183,7 @@ public abstract class FileBasedAbstractScriptExecutor implements FileBasedScript
 
   protected void saveExecutionLog(String line, CommandExecutionStatus commandExecutionStatus) {
     if (shouldSaveExecutionLogs) {
-      logService.save(getAccountId(),
-          aLog()
-              .appId(getAppId())
-              .activityId(getExecutionId())
-              .logLevel(INFO)
-              .commandUnitName(getCommandUnitName())
-              .hostName(getHost())
-              .logLine(line)
-              .executionResult(commandExecutionStatus)
-              .build());
+      logCallback.saveExecutionLog(line, INFO, commandExecutionStatus);
     }
   }
 
@@ -214,31 +202,13 @@ public abstract class FileBasedAbstractScriptExecutor implements FileBasedScript
 
   protected void saveExecutionLogWarn(String line) {
     if (shouldSaveExecutionLogs) {
-      logService.save(getAccountId(),
-          aLog()
-              .appId(getAppId())
-              .activityId(getExecutionId())
-              .logLevel(WARN)
-              .commandUnitName(getCommandUnitName())
-              .hostName(getHost())
-              .logLine(line)
-              .executionResult(RUNNING)
-              .build());
+      logCallback.saveExecutionLog(line, WARN, RUNNING);
     }
   }
 
   protected void saveExecutionLogError(String line) {
     if (shouldSaveExecutionLogs) {
-      logService.save(getAccountId(),
-          aLog()
-              .appId(getAppId())
-              .activityId(getExecutionId())
-              .logLevel(ERROR)
-              .commandUnitName(getCommandUnitName())
-              .hostName(getHost())
-              .logLine(line)
-              .executionResult(RUNNING)
-              .build());
+      logCallback.saveExecutionLog(line, ERROR, RUNNING);
     }
   }
 }

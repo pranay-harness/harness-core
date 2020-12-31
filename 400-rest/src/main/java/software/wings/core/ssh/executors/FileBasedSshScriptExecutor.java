@@ -13,9 +13,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogCallback;
 
 import software.wings.delegatetasks.DelegateFileManager;
-import software.wings.delegatetasks.DelegateLogService;
 
 import com.google.inject.Inject;
 import com.jcraft.jsch.Channel;
@@ -37,14 +37,13 @@ public class FileBasedSshScriptExecutor extends FileBasedAbstractScriptExecutor 
 
   /**
    * Instantiates a new abstract ssh executor.
-   *
-   * @param delegateFileManager the file service
-   * @param logService          the log service
+   *  @param delegateFileManager the file service
+   * @param logCallback          the log service
    */
   @Inject
-  public FileBasedSshScriptExecutor(DelegateFileManager delegateFileManager, DelegateLogService logService,
+  public FileBasedSshScriptExecutor(DelegateFileManager delegateFileManager, LogCallback logCallback,
       boolean shouldSaveExecutionLogs, ScriptExecutionContext config) {
-    super(delegateFileManager, logService, shouldSaveExecutionLogs);
+    super(delegateFileManager, logCallback, shouldSaveExecutionLogs);
     if (isEmpty(((SshSessionConfig) config).getExecutionId())) {
       throw new WingsException(INVALID_EXECUTION_ID);
     }
@@ -59,7 +58,7 @@ public class FileBasedSshScriptExecutor extends FileBasedAbstractScriptExecutor 
       Pair<String, Long> fileInfo = fileProvider.getInfo();
       //      String command = "scp -r -d -t '" + remoteFilePath + "'";
       String command = format("mkdir -p \"%s\" && scp -r -d -t '%s'", remoteFilePath, remoteFilePath);
-      channel = SshSessionManager.getCachedSession(config, logService).openChannel("exec");
+      channel = SshSessionManager.getCachedSession(config, logCallback).openChannel("exec");
       ((ChannelExec) channel).setCommand(command);
 
       // get I/O streams for remote scp
