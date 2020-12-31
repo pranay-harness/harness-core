@@ -2,9 +2,9 @@ package software.wings.beans.infrastructure.instance;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 
 import software.wings.beans.Base;
@@ -16,6 +16,8 @@ import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.beans.infrastructure.instance.key.PcfInstanceKey;
 import software.wings.beans.infrastructure.instance.key.PodInstanceKey;
 
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -31,36 +33,84 @@ import org.mongodb.morphia.annotations.Entity;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@CdIndex(name = "instance_index1", fields = { @Field("appId")
-                                              , @Field("isDeleted"), @Field("deletedAt") })
-@CdIndex(name = "instance_index2",
-    fields = { @Field("appId")
-               , @Field("infraMappingId"), @Field("isDeleted"), @Field("deletedAt") })
-@CdIndex(name = "instance_index3",
-    fields = { @Field("accountId")
-               , @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt") })
-@CdIndex(name = "instance_index5",
-    fields = { @Field("appId")
-               , @Field("serviceId"), @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt") })
-@CdIndex(name = "instance_index6", fields = { @Field("accountId")
-                                              , @Field("isDeleted") })
-@CdIndex(name = "instance_index7", fields = { @Field("accountId")
-                                              , @Field("createdAt"), @Field("deletedAt") })
-@CdIndex(name = "instance_index8", fields = { @Field("appId")
-                                              , @Field("serviceId"), @Field("isDeleted") })
-@CdIndex(name = "instance_index9", fields = { @Field("accountId")
-                                              , @Field("isDeleted"), @Field("deletedAt") })
-@CdIndex(name = "instance_index10", fields = { @Field("accountId")
-                                               , @Field("infraMappingId") })
-@CdIndex(name = "instance_index11",
-    fields = { @Field("infraMappingId")
-               , @Field("appId"), @Field("createdAt"), @Field("isDeleted") })
-@CdIndex(name = "instance_index12", fields = { @Field("accountId")
-                                               , @Field("createdAt"), @Field("isDeleted") })
 @FieldNameConstants(innerTypeName = "InstanceKeys")
 @Entity(value = "instance", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class Instance extends Base implements AccountAccess, ApplicationAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("instance_index1")
+                 .field(InstanceKeys.appId)
+                 .field(InstanceKeys.isDeleted)
+                 .field(InstanceKeys.deletedAt)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("instance_index2")
+                 .field(InstanceKeys.appId)
+                 .field(InstanceKeys.infraMappingId)
+                 .field(InstanceKeys.isDeleted)
+                 .field(InstanceKeys.deletedAt)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("instance_index3")
+                 .field(InstanceKeys.accountId)
+                 .field(InstanceKeys.createdAt)
+                 .field(InstanceKeys.isDeleted)
+                 .field(InstanceKeys.deletedAt)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("instance_index5")
+                 .field(InstanceKeys.appId)
+                 .field(InstanceKeys.serviceId)
+                 .field(InstanceKeys.createdAt)
+                 .field(InstanceKeys.isDeleted)
+                 .field(InstanceKeys.deletedAt)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("instance_index6")
+                 .field(InstanceKeys.accountId)
+                 .field(InstanceKeys.isDeleted)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("instance_index7")
+                 .field(InstanceKeys.accountId)
+                 .field(InstanceKeys.createdAt)
+                 .field(InstanceKeys.deletedAt)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("instance_index8")
+                 .field(InstanceKeys.appId)
+                 .field(InstanceKeys.serviceId)
+                 .field(InstanceKeys.isDeleted)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("instance_index9")
+                 .field(InstanceKeys.accountId)
+                 .field(InstanceKeys.isDeleted)
+                 .field(InstanceKeys.deletedAt)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("instance_index10")
+                 .field(InstanceKeys.accountId)
+                 .field(InstanceKeys.infraMappingId)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("instance_index11")
+                 .field(InstanceKeys.infraMappingId)
+                 .field(InstanceKeys.appId)
+                 .field(InstanceKeys.createdAt)
+                 .field(InstanceKeys.isDeleted)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("instance_index12")
+                 .field(InstanceKeys.accountId)
+                 .field(InstanceKeys.createdAt)
+                 .field(InstanceKeys.isDeleted)
+                 .build())
+        .build();
+  }
+
   @NotEmpty private InstanceType instanceType;
   private HostInstanceKey hostInstanceKey;
   private ContainerInstanceKey containerInstanceKey;
