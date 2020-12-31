@@ -93,6 +93,7 @@ public class CIExecutionConstants {
   public static final String HARNESS_ORG_ID_VARIABLE = "HARNESS_ORG_ID";
   public static final String HARNESS_BUILD_ID_VARIABLE = "HARNESS_BUILD_ID";
   public static final String HARNESS_STAGE_ID_VARIABLE = "HARNESS_STAGE_ID";
+  public static final String HARNESS_PIPELINE_ID_VARIABLE = "HARNESS_PIPELINE_ID";
 
   public static final String ENDPOINT_MINIO_VARIABLE_VALUE = "35.224.85.116:9000";
   public static final String BUCKET_MINIO_VARIABLE_VALUE = "test";

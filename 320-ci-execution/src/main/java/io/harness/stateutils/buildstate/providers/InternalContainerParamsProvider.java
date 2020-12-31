@@ -13,6 +13,7 @@ import static io.harness.common.CIExecutionConstants.GRPC_SERVICE_PORT_PREFIX;
 import static io.harness.common.CIExecutionConstants.HARNESS_ACCOUNT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_BUILD_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_ORG_ID_VARIABLE;
+import static io.harness.common.CIExecutionConstants.HARNESS_PIPELINE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_PROJECT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_STAGE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_WORKSPACE;
@@ -42,6 +43,8 @@ import io.harness.delegate.beans.ci.pod.ContainerResourceParams;
 import io.harness.delegate.beans.ci.pod.ContainerSecrets;
 import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector;
 import io.harness.k8s.model.ImageDetails;
+import io.harness.ngpipeline.common.AmbianceHelper;
+import io.harness.pms.contracts.ambiance.Ambiance;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -87,7 +90,7 @@ public class InternalContainerParamsProvider {
       Map<String, ConnectorDetails> publishArtifactConnectors, K8PodDetails k8PodDetails,
       String serializedLiteEngineTaskStepInfo, String serviceToken, Integer stageCpuRequest, Integer stageMemoryRequest,
       List<Integer> serviceGrpcPortList, Map<String, String> logEnvVars, Map<String, String> tiEnvVars,
-      Map<String, String> volumeToMountPath, String workDirPath) {
+      Map<String, String> volumeToMountPath, String workDirPath, Ambiance ambiance) {
     Map<String, String> map = new HashMap<>();
     map.putAll(volumeToMountPath);
     map.put(LITE_ENGINE_VOLUME, LITE_ENGINE_PATH);
@@ -102,7 +105,7 @@ public class InternalContainerParamsProvider {
     return CIK8ContainerParams.builder()
         .name(LITE_ENGINE_CONTAINER_NAME)
         .containerResourceParams(getLiteEngineResourceParams(stageCpuRequest, stageMemoryRequest))
-        .envVars(getLiteEngineEnvVars(k8PodDetails, serviceToken, logEnvVars, tiEnvVars, workDirPath))
+        .envVars(getLiteEngineEnvVars(k8PodDetails, serviceToken, logEnvVars, tiEnvVars, workDirPath, ambiance))
         .containerType(CIContainerType.LITE_ENGINE)
         .containerSecrets(ContainerSecrets.builder().connectorDetailsMap(publishArtifactConnectors).build())
         .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
@@ -120,12 +123,13 @@ public class InternalContainerParamsProvider {
   }
 
   private Map<String, String> getLiteEngineEnvVars(K8PodDetails k8PodDetails, String serviceToken,
-      Map<String, String> logEnvVars, Map<String, String> tiEnvVars, String workDirPath) {
+      Map<String, String> logEnvVars, Map<String, String> tiEnvVars, String workDirPath, Ambiance ambiance) {
     Map<String, String> envVars = new HashMap<>();
-    final String accountID = k8PodDetails.getBuildNumberDetails().getAccountIdentifier();
-    final String projectID = k8PodDetails.getBuildNumberDetails().getProjectIdentifier();
-    final String orgID = k8PodDetails.getBuildNumberDetails().getOrgIdentifier();
-    final Long buildNumber = k8PodDetails.getBuildNumberDetails().getBuildNumber();
+    final String accountID = AmbianceHelper.getAccountId(ambiance);
+    final String orgID = AmbianceHelper.getOrgIdentifier(ambiance);
+    final String projectID = AmbianceHelper.getProjectIdentifier(ambiance);
+    final String pipelineID = ambiance.getMetadata().getPipelineIdentifier();
+    final int buildNumber = ambiance.getMetadata().getRunSequence();
     final String stageID = k8PodDetails.getStageID();
 
     // Add log service environment variables
@@ -145,7 +149,8 @@ public class InternalContainerParamsProvider {
     envVars.put(HARNESS_ACCOUNT_ID_VARIABLE, accountID);
     envVars.put(HARNESS_PROJECT_ID_VARIABLE, projectID);
     envVars.put(HARNESS_ORG_ID_VARIABLE, orgID);
-    envVars.put(HARNESS_BUILD_ID_VARIABLE, buildNumber.toString());
+    envVars.put(HARNESS_PIPELINE_ID_VARIABLE, pipelineID);
+    envVars.put(HARNESS_BUILD_ID_VARIABLE, String.valueOf(buildNumber));
     envVars.put(HARNESS_STAGE_ID_VARIABLE, stageID);
     return envVars;
   }

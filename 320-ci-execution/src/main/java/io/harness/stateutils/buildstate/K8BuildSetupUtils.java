@@ -9,6 +9,7 @@ import static io.harness.common.CIExecutionConstants.GIT_URL_SUFFIX;
 import static io.harness.common.CIExecutionConstants.HARNESS_ACCOUNT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_BUILD_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_ORG_ID_VARIABLE;
+import static io.harness.common.CIExecutionConstants.HARNESS_PIPELINE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_PROJECT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_STAGE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_WORKSPACE;
@@ -110,7 +111,7 @@ public class K8BuildSetupUtils {
     String workDir = ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getWorkDir();
     CIK8PodParams<CIK8ContainerParams> podParams = getPodParams(ngAccess, k8PodDetails, liteEngineTaskStepInfo,
         liteEngineTaskStepInfo.isUsePVC(), liteEngineTaskStepInfo.getCiCodebase(),
-        liteEngineTaskStepInfo.isSkipGitClone(), workDir, taskIds, AmbianceHelper.getAccountId(ambiance));
+        liteEngineTaskStepInfo.isSkipGitClone(), workDir, taskIds, ambiance);
 
     log.info("Created pod params for pod name [{}]", podSetupInfo.getName());
     return CIK8BuildTaskParams.builder().k8sConnector(k8sConnector).cik8PodParams(podParams).build();
@@ -127,7 +128,7 @@ public class K8BuildSetupUtils {
 
   public CIK8PodParams<CIK8ContainerParams> getPodParams(NGAccess ngAccess, K8PodDetails k8PodDetails,
       LiteEngineTaskStepInfo liteEngineTaskStepInfo, boolean usePVC, CodeBase ciCodebase, boolean skipGitClone,
-      String workDir, Map<String, String> taskIds, String accountId) {
+      String workDir, Map<String, String> taskIds, Ambiance ambiance) {
     PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo());
     ConnectorDetails harnessInternalImageRegistryConnectorDetails =
         connectorUtils.getConnectorDetails(ngAccess, ciExecutionServiceConfig.getDefaultInternalImageConnector());
@@ -135,7 +136,7 @@ public class K8BuildSetupUtils {
     Map<String, String> gitEnvVars = getGitEnvVariables(gitConnector, ciCodebase);
 
     List<CIK8ContainerParams> containerParamsList = getContainerParamsList(k8PodDetails, podSetupInfo, ngAccess,
-        harnessInternalImageRegistryConnectorDetails, gitEnvVars, liteEngineTaskStepInfo, taskIds, accountId);
+        harnessInternalImageRegistryConnectorDetails, gitEnvVars, liteEngineTaskStepInfo, taskIds, ambiance);
 
     CIK8ContainerParams setupAddOnContainerParams =
         internalContainerParamsProvider.getSetupAddonContainerParams(harnessInternalImageRegistryConnectorDetails,
@@ -166,11 +167,12 @@ public class K8BuildSetupUtils {
 
   public List<CIK8ContainerParams> getContainerParamsList(K8PodDetails k8PodDetails, PodSetupInfo podSetupInfo,
       NGAccess ngAccess, ConnectorDetails harnessInternalImageRegistryConnectorDetails, Map<String, String> gitEnvVars,
-      LiteEngineTaskStepInfo liteEngineTaskStepInfo, Map<String, String> taskIds, String accountId) {
-    Map<String, String> logEnvVars = getLogServiceEnvVariables(k8PodDetails);
+      LiteEngineTaskStepInfo liteEngineTaskStepInfo, Map<String, String> taskIds, Ambiance ambiance) {
+    String accountId = AmbianceHelper.getAccountId(ambiance);
+    Map<String, String> logEnvVars = getLogServiceEnvVariables(k8PodDetails, accountId);
     Map<String, String> tiEnvVars = getTIServiceEnvVariables();
-    Map<String, String> commonEnvVars =
-        getCommonStepEnvVariables(k8PodDetails, logEnvVars, tiEnvVars, gitEnvVars, podSetupInfo.getWorkDirPath());
+    Map<String, String> commonEnvVars = getCommonStepEnvVariables(
+        k8PodDetails, logEnvVars, tiEnvVars, gitEnvVars, podSetupInfo.getWorkDirPath(), ambiance);
     Map<String, ConnectorConversionInfo> stepConnectors =
         ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getStepConnectorRefs();
     Set<String> publishArtifactStepIds =
@@ -180,7 +182,7 @@ public class K8BuildSetupUtils {
         createLiteEngineContainerParams(ngAccess, harnessInternalImageRegistryConnectorDetails, stepConnectors,
             publishArtifactStepIds, liteEngineTaskStepInfo, k8PodDetails, podSetupInfo.getStageCpuRequest(),
             podSetupInfo.getStageMemoryRequest(), podSetupInfo.getServiceGrpcPortList(), logEnvVars, tiEnvVars,
-            podSetupInfo.getVolumeToMountPath(), podSetupInfo.getWorkDirPath(), taskIds, accountId);
+            podSetupInfo.getVolumeToMountPath(), podSetupInfo.getWorkDirPath(), taskIds, ambiance);
 
     List<CIK8ContainerParams> containerParams = new ArrayList<>();
     containerParams.add(liteEngineContainerParams);
@@ -241,7 +243,7 @@ public class K8BuildSetupUtils {
       LiteEngineTaskStepInfo liteEngineTaskStepInfo, K8PodDetails k8PodDetails, Integer stageCpuRequest,
       Integer stageMemoryRequest, List<Integer> serviceGrpcPortList, Map<String, String> logEnvVars,
       Map<String, String> tiEnvVars, Map<String, String> volumeToMountPath, String workDirPath,
-      Map<String, String> taskIds, String accountId) {
+      Map<String, String> taskIds, Ambiance ambiance) {
     Map<String, ConnectorDetails> stepConnectorDetails = new HashMap<>();
     if (isNotEmpty(publishArtifactStepIds)) {
       for (String publishArtifactStepId : publishArtifactStepIds) {
@@ -250,12 +252,12 @@ public class K8BuildSetupUtils {
         stepConnectorDetails.put(publishArtifactConnector.getIdentifier(), publishArtifactConnector);
       }
     }
-
+    String accountId = AmbianceHelper.getAccountId(ambiance);
     String serializedLiteEngineStepInfo = getSerializedLiteEngineStepInfo(liteEngineTaskStepInfo, taskIds, accountId);
     String serviceToken = serviceTokenUtils.getServiceToken();
     return internalContainerParamsProvider.getLiteEngineContainerParams(connectorDetails, stepConnectorDetails,
         k8PodDetails, serializedLiteEngineStepInfo, serviceToken, stageCpuRequest, stageMemoryRequest,
-        serviceGrpcPortList, logEnvVars, tiEnvVars, volumeToMountPath, workDirPath);
+        serviceGrpcPortList, logEnvVars, tiEnvVars, volumeToMountPath, workDirPath, ambiance);
   }
 
   private String getSerializedLiteEngineStepInfo(
@@ -300,9 +302,8 @@ public class K8BuildSetupUtils {
   }
 
   @NotNull
-  private Map<String, String> getLogServiceEnvVariables(K8PodDetails k8PodDetails) {
+  private Map<String, String> getLogServiceEnvVariables(K8PodDetails k8PodDetails, String accountID) {
     Map<String, String> envVars = new HashMap<>();
-    final String accountID = k8PodDetails.getBuildNumberDetails().getAccountIdentifier();
     final String logServiceBaseUrl = logServiceUtils.getLogServiceConfig().getBaseUrl();
 
     // Make a call to the log service and get back the token
@@ -323,12 +324,13 @@ public class K8BuildSetupUtils {
 
   @NotNull
   private Map<String, String> getCommonStepEnvVariables(K8PodDetails k8PodDetails, Map<String, String> logEnvVars,
-      Map<String, String> tiEnvVars, Map<String, String> gitEnvVars, String workDirPath) {
+      Map<String, String> tiEnvVars, Map<String, String> gitEnvVars, String workDirPath, Ambiance ambiance) {
     Map<String, String> envVars = new HashMap<>();
-    final String accountID = k8PodDetails.getBuildNumberDetails().getAccountIdentifier();
-    final String projectID = k8PodDetails.getBuildNumberDetails().getProjectIdentifier();
-    final String orgID = k8PodDetails.getBuildNumberDetails().getOrgIdentifier();
-    final Long buildNumber = k8PodDetails.getBuildNumberDetails().getBuildNumber();
+    final String accountID = AmbianceHelper.getAccountId(ambiance);
+    final String orgID = AmbianceHelper.getOrgIdentifier(ambiance);
+    final String projectID = AmbianceHelper.getProjectIdentifier(ambiance);
+    final String pipelineID = ambiance.getMetadata().getPipelineIdentifier();
+    final int buildNumber = ambiance.getMetadata().getRunSequence();
     final String stageID = k8PodDetails.getStageID();
 
     // Add log service environment variables
@@ -343,7 +345,8 @@ public class K8BuildSetupUtils {
     envVars.put(HARNESS_ACCOUNT_ID_VARIABLE, accountID);
     envVars.put(HARNESS_PROJECT_ID_VARIABLE, projectID);
     envVars.put(HARNESS_ORG_ID_VARIABLE, orgID);
-    envVars.put(HARNESS_BUILD_ID_VARIABLE, buildNumber.toString());
+    envVars.put(HARNESS_PIPELINE_ID_VARIABLE, pipelineID);
+    envVars.put(HARNESS_BUILD_ID_VARIABLE, String.valueOf(buildNumber));
     envVars.put(HARNESS_STAGE_ID_VARIABLE, stageID);
     return envVars;
   }

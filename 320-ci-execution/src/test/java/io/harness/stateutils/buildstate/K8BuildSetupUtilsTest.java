@@ -27,7 +27,6 @@ import static org.mockito.Mockito.when;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.category.element.UnitTests;
-import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.ci.beans.entities.LogServiceConfig;
 import io.harness.ci.beans.entities.TIServiceConfig;
 import io.harness.delegate.beans.ci.pod.CIK8ContainerParams;
@@ -46,6 +45,8 @@ import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.SecretType;
@@ -98,7 +99,7 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     String accountID = "account";
     String orgID = "org";
     String projectID = "project";
-    Long buildID = 1L;
+    int buildID = 1;
     String stageID = "stage";
     String namespace = "default";
 
@@ -120,20 +121,22 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     when(connectorUtils.getConnectorDetailsWithConversionInfo(any(), any()))
         .thenReturn(ConnectorDetails.builder().identifier("connectorId").build());
 
-    BuildNumberDetails buildNumberDetails = BuildNumberDetails.builder()
-                                                .accountIdentifier(accountID)
-                                                .orgIdentifier(orgID)
-                                                .projectIdentifier(projectID)
-                                                .buildNumber(buildID)
-                                                .build();
+    Map<String, String> setupAbstractions = new HashMap<>();
+    setupAbstractions.put("accountId", "account");
+    setupAbstractions.put("projectIdentifier", "project");
+    setupAbstractions.put("orgIdentifier", "org");
+    ExecutionMetadata executionMetadata =
+        ExecutionMetadata.newBuilder().setRunSequence(buildID).setPipelineIdentifier("pipeline").build();
+    Ambiance ambiance =
+        Ambiance.newBuilder().putAllSetupAbstractions(setupAbstractions).setMetadata(executionMetadata).build();
+
     NGAccess ngAccess =
         BaseNGAccess.builder().accountIdentifier(accountID).orgIdentifier(orgID).projectIdentifier(projectID).build();
-    K8PodDetails k8PodDetails =
-        K8PodDetails.builder().namespace(namespace).buildNumberDetails(buildNumberDetails).stageID(stageID).build();
+    K8PodDetails k8PodDetails = K8PodDetails.builder().namespace(namespace).stageID(stageID).build();
 
     CIK8PodParams<CIK8ContainerParams> podParams = k8BuildSetupUtils.getPodParams(ngAccess, k8PodDetails,
         ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackId(), true, null, true,
-        "workspace", null, accountID);
+        "workspace", null, ambiance);
 
     List<SecretVariableDetails> secretVariableDetails =
         new ArrayList<>(ciExecutionPlanTestHelper.getSecretVariableDetails());
@@ -165,7 +168,7 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     stepEnvVars.put(HARNESS_ACCOUNT_ID_VARIABLE, accountID);
     stepEnvVars.put(HARNESS_ORG_ID_VARIABLE, orgID);
     stepEnvVars.put(HARNESS_PROJECT_ID_VARIABLE, projectID);
-    stepEnvVars.put(HARNESS_BUILD_ID_VARIABLE, buildID.toString());
+    stepEnvVars.put(HARNESS_BUILD_ID_VARIABLE, String.valueOf(buildID));
     stepEnvVars.put(HARNESS_STAGE_ID_VARIABLE, stageID);
     stepEnvVars.putAll(ciExecutionPlanTestHelper.getEnvVariables(true));
 
@@ -202,7 +205,6 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     String accountID = "account";
     String orgID = "org";
     String projectID = "project";
-    Long buildID = 1L;
     String stageID = "stage";
     String namespace = "default";
 
@@ -212,16 +214,9 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     when(logServiceUtils.getLogServiceConfig()).thenReturn(logServiceConfig);
     when(logServiceUtils.getLogServiceToken(eq(accountID))).thenThrow(new GeneralException("Could not retrieve token"));
 
-    BuildNumberDetails buildNumberDetails = BuildNumberDetails.builder()
-                                                .accountIdentifier(accountID)
-                                                .orgIdentifier(orgID)
-                                                .projectIdentifier(projectID)
-                                                .buildNumber(buildID)
-                                                .build();
     NGAccess ngAccess =
         BaseNGAccess.builder().accountIdentifier(accountID).orgIdentifier(orgID).projectIdentifier(projectID).build();
-    K8PodDetails k8PodDetails =
-        K8PodDetails.builder().namespace(namespace).buildNumberDetails(buildNumberDetails).stageID(stageID).build();
+    K8PodDetails k8PodDetails = K8PodDetails.builder().namespace(namespace).stageID(stageID).build();
     //
     //    assertThatThrownBy(()
     //                           -> k8BuildSetupUtils.getPodParams(ngAccess, k8PodDetails,
