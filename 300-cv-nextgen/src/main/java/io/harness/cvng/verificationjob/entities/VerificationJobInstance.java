@@ -6,6 +6,7 @@ import io.harness.cvng.beans.DataCollectionExecutionStatus;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobType;
+import io.harness.cvng.verificationjob.entities.VerificationJob.RuntimeParameter.RuntimeParameterKeys;
 import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -67,6 +68,10 @@ public class VerificationJobInstance
       String.format("%s.%s", VerificationJobInstanceKeys.resolvedJob, VerificationJobKeys.projectIdentifier);
   public static String ORG_IDENTIFIER_KEY =
       String.format("%s.%s", VerificationJobInstanceKeys.resolvedJob, VerificationJobKeys.orgIdentifier);
+  public static String ENV_IDENTIFIER_KEY = String.format("%s.%s.%s", VerificationJobInstanceKeys.resolvedJob,
+      VerificationJobKeys.envIdentifier, RuntimeParameterKeys.value);
+  public static String SERVICE_IDENTIFIER_KEY = String.format("%s.%s.%s", VerificationJobInstanceKeys.resolvedJob,
+      VerificationJobKeys.serviceIdentifier, RuntimeParameterKeys.value);
   public static String VERIFICATION_JOB_IDENTIFIER_KEY =
       String.format("%s.%s", VerificationJobInstanceKeys.resolvedJob, VerificationJobKeys.identifier);
   @Id private String uuid;

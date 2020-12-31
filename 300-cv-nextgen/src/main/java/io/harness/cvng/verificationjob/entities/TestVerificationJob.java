@@ -18,11 +18,13 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 
 @Data
 @FieldNameConstants(innerTypeName = "TestVerificationJobKeys")
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@SuperBuilder
 public class TestVerificationJob extends VerificationJob {
   private RuntimeParameter sensitivity;
   private String baselineVerificationJobInstanceId;

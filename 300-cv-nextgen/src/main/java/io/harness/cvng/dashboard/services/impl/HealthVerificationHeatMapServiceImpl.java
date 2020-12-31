@@ -111,9 +111,8 @@ public class HealthVerificationHeatMapServiceImpl implements HealthVerificationH
             .filter(HealthVerificationHeatMapKeys.aggregationLevel, AggregationLevel.ACTIVITY)
             .asList();
     if (isEmpty(heatMaps)) {
-      Arrays.asList(CVMonitoringCategory.values()).forEach(category -> {
-        categoryRisks.add(CategoryRisk.builder().category(category).risk(-1.0).build());
-      });
+      Arrays.asList(CVMonitoringCategory.values())
+          .forEach(category -> categoryRisks.add(CategoryRisk.builder().category(category).risk(-1.0).build()));
       return categoryRisks;
     }
 

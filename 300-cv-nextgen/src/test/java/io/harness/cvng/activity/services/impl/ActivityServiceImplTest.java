@@ -802,6 +802,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
                                         .duration(RuntimeParameter.builder().isRuntimeParam(false).value("30m").build())
                                         .dataSources(Lists.newArrayList(DataSourceType.APP_DYNAMICS))
                                         .type(VerificationJobType.HEALTH)
+                                        .identifier(generateUuid())
                                         .build());
     kubernetesActivity.setVerificationJobRuntimeDetails(null);
 
@@ -869,6 +870,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
             .duration(RuntimeParameter.builder().isRuntimeParam(false).value("30m").build())
             .dataSources(Lists.newArrayList(DataSourceType.APP_DYNAMICS))
             .type(VerificationJobType.HEALTH)
+            .identifier(generateUuid())
             .build();
     realVerificationJobService.save(healthVerificationJob);
     realVerificationJobInstanceService.create(VerificationJobInstance.builder()

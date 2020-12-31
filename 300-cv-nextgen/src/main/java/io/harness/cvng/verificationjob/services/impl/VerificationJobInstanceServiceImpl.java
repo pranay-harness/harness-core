@@ -1,8 +1,13 @@
 package io.harness.cvng.verificationjob.services.impl;
 
 import static io.harness.cvng.CVConstants.DEPLOYMENT_RISK_SCORE_FAILURE_THRESHOLD;
+import static io.harness.cvng.activity.CVActivityConstants.HEALTH_VERIFICATION_RETRIGGER_BUFFER_MINS;
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.QUEUED;
 import static io.harness.cvng.core.utils.DateTimeUtils.roundDownTo1MinBoundary;
+import static io.harness.cvng.verificationjob.entities.VerificationJobInstance.ENV_IDENTIFIER_KEY;
+import static io.harness.cvng.verificationjob.entities.VerificationJobInstance.ORG_IDENTIFIER_KEY;
+import static io.harness.cvng.verificationjob.entities.VerificationJobInstance.PROJECT_IDENTIFIER_KEY;
+import static io.harness.cvng.verificationjob.entities.VerificationJobInstance.SERVICE_IDENTIFIER_KEY;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -60,11 +65,13 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -74,6 +81,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
@@ -127,17 +135,53 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
 
   @Override
   public List<String> create(List<VerificationJobInstance> verificationJobInstances) {
-    if (isNotEmpty(verificationJobInstances)) {
-      List<String> jobInstanceIds = new ArrayList<>();
-      verificationJobInstances.forEach(verificationJobInstance -> {
-        String uuid = generateUuid();
-        verificationJobInstance.setUuid(uuid);
-        jobInstanceIds.add(uuid);
-      });
-      hPersistence.save(verificationJobInstances);
-      return jobInstanceIds;
+    if (isEmpty(verificationJobInstances)) {
+      return Collections.emptyList();
     }
-    return Collections.emptyList();
+    Set<String> jobInstanceIds = new HashSet<>();
+    verificationJobInstances.stream()
+        .filter(verificationJobInstance
+            -> VerificationJobType.HEALTH.equals(verificationJobInstance.getResolvedJob().getType()))
+        .forEach(verificationJobInstance -> {
+          String jobInstanceId = generateUuid();
+          Query<VerificationJobInstance> query =
+              hPersistence.createQuery(VerificationJobInstance.class, excludeAuthority)
+                  .filter(VerificationJobInstanceKeys.accountId, verificationJobInstance.getAccountId())
+                  .filter(ORG_IDENTIFIER_KEY, verificationJobInstance.getResolvedJob().getOrgIdentifier())
+                  .filter(PROJECT_IDENTIFIER_KEY, verificationJobInstance.getResolvedJob().getProjectIdentifier())
+                  .filter(ENV_IDENTIFIER_KEY, verificationJobInstance.getResolvedJob().getEnvIdentifier())
+                  .filter(SERVICE_IDENTIFIER_KEY, verificationJobInstance.getResolvedJob().getServiceIdentifier())
+                  .field(VerificationJobInstanceKeys.startTime)
+                  .greaterThanOrEq(verificationJobInstance.getStartTime().minus(
+                      Duration.ofMinutes(HEALTH_VERIFICATION_RETRIGGER_BUFFER_MINS)))
+                  .field(VerificationJobInstanceKeys.startTime)
+                  .lessThanOrEq(verificationJobInstance.getStartTime());
+          VerificationJobInstance savedInstance = hPersistence.upsert(query,
+              hPersistence.createUpdateOperations(VerificationJobInstance.class)
+                  .setOnInsert(VerificationJobInstanceKeys.uuid, jobInstanceId)
+                  .setOnInsert(VerificationJobInstanceKeys.accountId, verificationJobInstance.getAccountId())
+                  .setOnInsert(
+                      VerificationJobInstanceKeys.executionStatus, verificationJobInstance.getExecutionStatus())
+                  .setOnInsert(VerificationJobInstanceKeys.verificationJobIdentifier,
+                      verificationJobInstance.getVerificationJobIdentifier())
+                  .setOnInsert(VerificationJobInstanceKeys.startTime, verificationJobInstance.getStartTime())
+                  .setOnInsert(VerificationJobInstanceKeys.preActivityVerificationStartTime,
+                      verificationJobInstance.getPreActivityVerificationStartTime())
+                  .setOnInsert(VerificationJobInstanceKeys.postActivityVerificationStartTime,
+                      verificationJobInstance.getPostActivityVerificationStartTime())
+                  .setOnInsert(VerificationJobInstanceKeys.resolvedJob, verificationJobInstance.getResolvedJob()),
+              new FindAndModifyOptions().upsert(true));
+          // only the activity which inserted should have verification associated.
+          if (jobInstanceId.equals(savedInstance.getUuid())) {
+            jobInstanceIds.add(savedInstance.getUuid());
+          }
+        });
+    jobInstanceIds.addAll(hPersistence.save(
+        verificationJobInstances.stream()
+            .filter(verificationJobInstance
+                -> !VerificationJobType.HEALTH.equals(verificationJobInstance.getResolvedJob().getType()))
+            .collect(Collectors.toList())));
+    return jobInstanceIds.stream().collect(Collectors.toList());
   }
 
   @Override
@@ -332,8 +376,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         hPersistence.createQuery(VerificationJobInstance.class)
             .filter(VerificationJobInstanceKeys.accountId, accountId)
             .filter(VerificationJobInstanceKeys.executionStatus, ExecutionStatus.SUCCESS)
-            .filter(VerificationJobInstance.PROJECT_IDENTIFIER_KEY, projectIdentifier)
-            .filter(VerificationJobInstance.ORG_IDENTIFIER_KEY, orgIdentifier)
+            .filter(PROJECT_IDENTIFIER_KEY, projectIdentifier)
+            .filter(ORG_IDENTIFIER_KEY, orgIdentifier)
             .filter(VerificationJobInstance.VERIFICATION_JOB_IDENTIFIER_KEY, verificationJobIdentifier)
             .filter(VerificationJobInstance.VERIFICATION_JOB_TYPE_KEY, VerificationJobType.TEST)
             .order(Sort.descending(VerificationJobInstanceKeys.createdAt))
