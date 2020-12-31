@@ -4,10 +4,10 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogCallback;
 
 import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.delegatetasks.DelegateFileManager;
-import software.wings.delegatetasks.DelegateLogService;
 
 import com.google.inject.Inject;
 import java.io.FileOutputStream;
@@ -23,14 +23,13 @@ public class FileBasedProcessScriptExecutor extends FileBasedAbstractScriptExecu
 
   /**
    * Instantiates a new abstract ssh executor.
-   *
-   * @param delegateFileManager the file service
-   * @param logService          the log service
+   *  @param delegateFileManager the file service
+   * @param logCallback          the log service
    */
   @Inject
-  public FileBasedProcessScriptExecutor(DelegateFileManager delegateFileManager, DelegateLogService logService,
+  public FileBasedProcessScriptExecutor(DelegateFileManager delegateFileManager, LogCallback logCallback,
       boolean shouldSaveExecutionLogs, ScriptExecutionContext shellExecutorConfig) {
-    super(delegateFileManager, logService, shouldSaveExecutionLogs);
+    super(delegateFileManager, logCallback, shouldSaveExecutionLogs);
     this.config = (ShellExecutorConfig) shellExecutorConfig;
   }
 

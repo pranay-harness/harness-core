@@ -2,18 +2,15 @@ package software.wings.utils;
 
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
 
-import static software.wings.beans.Log.Builder.aLog;
-
+import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
-
-import software.wings.delegatetasks.DelegateLogService;
 
 import java.io.Writer;
 import lombok.Builder;
 
 @Builder
 public class ExecutionLogWriter extends Writer {
-  private final DelegateLogService logService;
+  private final LogCallback logCallback;
   @SuppressWarnings("PMD.AvoidStringBufferField") // This buffer is getting cleared on every newline.
   private final StringBuilder stringBuilder;
   private final LogLevel logLevel;
@@ -45,16 +42,7 @@ public class ExecutionLogWriter extends Writer {
   private void logAndFlush() {
     String logLine = stringBuilder.toString();
     if (!logLine.isEmpty()) {
-      logService.save(accountId,
-          aLog()
-              .appId(appId)
-              .activityId(executionId)
-              .logLevel(logLevel)
-              .commandUnitName(commandUnitName)
-              .hostName(hostName)
-              .logLine(logLine.trim())
-              .executionResult(RUNNING)
-              .build());
+      logCallback.saveExecutionLog(logLine.trim(), logLevel, RUNNING);
       stringBuilder.setLength(0);
     }
   }

@@ -6,7 +6,6 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 
-import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.LogColor.Gray;
 import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
@@ -19,14 +18,13 @@ import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionResultBuilder;
 import io.harness.eraro.ResponseMessage;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 
-import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.command.ShellExecutionData.ShellExecutionDataBuilder;
 import software.wings.core.ssh.executors.WinRmExecutorHelper;
 import software.wings.delegatetasks.DelegateFileManager;
-import software.wings.delegatetasks.DelegateLogService;
 import software.wings.utils.ExecutionLogWriter;
 
 import java.io.StringWriter;
@@ -46,16 +44,16 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
   private static final String ERROR_WHILE_EXECUTING_COMMAND = "Error while executing command";
   public static final String POWERSHELL_NO_PROFILE = "Powershell -NoProfile ";
   public static final String POWERSHELL = "Powershell ";
-  protected DelegateLogService logService;
+  protected LogCallback logCallback;
   private final WinRmSessionConfig config;
   protected DelegateFileManager delegateFileManager;
   private final boolean disableCommandEncoding;
   private final boolean shouldSaveExecutionLogs;
   private final String powershell;
 
-  DefaultWinRmExecutor(DelegateLogService logService, DelegateFileManager delegateFileManager,
+  DefaultWinRmExecutor(LogCallback logCallback, DelegateFileManager delegateFileManager,
       boolean shouldSaveExecutionLogs, WinRmSessionConfig config, boolean disableCommandEncoding) {
-    this.logService = logService;
+    this.logCallback = logCallback;
     this.delegateFileManager = delegateFileManager;
     this.shouldSaveExecutionLogs = shouldSaveExecutionLogs;
     this.config = config;
@@ -87,9 +85,8 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
   public CommandExecutionStatus executeCommandString(String command, StringBuffer output, boolean displayCommand) {
     CommandExecutionStatus commandExecutionStatus;
     saveExecutionLog(format("Initializing WinRM connection to %s ...", config.getHostname()), INFO);
-    ExecutionLogCallback executionLogCallback = getExecutionLogCallback(config.getCommandUnitName());
 
-    try (WinRmSession session = new WinRmSession(config, executionLogCallback);
+    try (WinRmSession session = new WinRmSession(config, this.logCallback);
          ExecutionLogWriter outputWriter = getExecutionLogWriter(INFO);
          ExecutionLogWriter errorWriter = getExecutionLogWriter(ERROR)) {
       saveExecutionLog(format("Connected to %s", config.getHostname()), INFO);
@@ -156,7 +153,6 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
     ShellExecutionDataBuilder executionDataBuilder = ShellExecutionData.builder();
     CommandExecutionResultBuilder commandExecutionResult = CommandExecutionResult.builder();
     CommandExecutionStatus commandExecutionStatus;
-    ExecutionLogCallback executionLogCallback = getExecutionLogCallback(config.getCommandUnitName());
 
     saveExecutionLog(format("Initializing WinRM connection to %s ...", config.getHostname()), INFO);
     String envVariablesOutputFile = null;
@@ -167,7 +163,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
           + "harness-" + this.config.getExecutionId() + ".out";
     }
 
-    try (WinRmSession session = new WinRmSession(config, executionLogCallback);
+    try (WinRmSession session = new WinRmSession(config, this.logCallback);
          ExecutionLogWriter outputWriter = getExecutionLogWriter(INFO);
          ExecutionLogWriter errorWriter = getExecutionLogWriter(ERROR)) {
       saveExecutionLog(format("Connected to %s", config.getHostname()), INFO);
@@ -279,22 +275,8 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
 
   private void saveExecutionLog(String line, LogLevel level, CommandExecutionStatus commandExecutionStatus) {
     if (shouldSaveExecutionLogs) {
-      logService.save(config.getAccountId(),
-          aLog()
-              .appId(config.getAppId())
-              .activityId(config.getExecutionId())
-              .logLevel(level)
-              .commandUnitName(config.getCommandUnitName())
-              .hostName(config.getHostname())
-              .logLine(line)
-              .executionResult(commandExecutionStatus)
-              .build());
+      logCallback.saveExecutionLog(line, level, commandExecutionStatus);
     }
-  }
-
-  public ExecutionLogCallback getExecutionLogCallback(String commandUnit) {
-    return new ExecutionLogCallback(
-        logService, config.getAccountId(), config.getAppId(), config.getExecutionId(), commandUnit);
   }
 
   private ExecutionLogWriter getExecutionLogWriter(LogLevel logLevel) {
@@ -303,8 +285,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
         .appId(config.getAppId())
         .commandUnitName(config.getCommandUnitName())
         .executionId(config.getExecutionId())
-        .hostName(config.getHostname())
-        .logService(logService)
+        .logCallback(logCallback)
         .stringBuilder(new StringBuilder(1024))
         .logLevel(logLevel)
         .build();

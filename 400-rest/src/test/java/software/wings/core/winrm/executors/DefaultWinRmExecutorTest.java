@@ -17,6 +17,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 
 import software.wings.beans.ConfigFile;
@@ -24,7 +25,6 @@ import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
 import software.wings.core.ssh.executors.FileBasedWinRmExecutor;
 import software.wings.core.ssh.executors.WinRmExecutorHelper;
 import software.wings.delegatetasks.DelegateFileManager;
-import software.wings.delegatetasks.DelegateLogService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +38,7 @@ import org.mockito.MockitoAnnotations;
 public class DefaultWinRmExecutorTest extends CategoryTest {
   @Mock DefaultWinRmExecutor defaultWinRmExecutor;
   @Mock FileBasedWinRmExecutor fileBasedWinRmExecutor;
-  @Mock DelegateLogService logService;
+  @Mock LogCallback logCallback;
   @Mock WinRmSessionConfig config;
   @Mock DelegateFileManager delegateFileManager;
   @Mock WinRmSession winRmSession;
@@ -59,8 +59,8 @@ public class DefaultWinRmExecutorTest extends CategoryTest {
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
-    spyDefaultWinRmExecutor = new DefaultWinRmExecutor(logService, delegateFileManager, true, config, true);
-    spyFileBasedWinRmExecutor = new FileBasedWinRmExecutor(logService, delegateFileManager, true, config, true);
+    spyDefaultWinRmExecutor = new DefaultWinRmExecutor(logCallback, delegateFileManager, true, config, true);
+    spyFileBasedWinRmExecutor = new FileBasedWinRmExecutor(logCallback, delegateFileManager, true, config, true);
     simpleCommand = "$test=\"someruntimepath\"\n"
         + "echo $test\n"
         + "if($test){\n"
@@ -116,7 +116,7 @@ public class DefaultWinRmExecutorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCleanUpFilesDisableEncodingFFOn() {
     DefaultWinRmExecutor defaultWinRmExecutorFFOn =
-        new DefaultWinRmExecutor(logService, delegateFileManager, true, config, true);
+        new DefaultWinRmExecutor(logCallback, delegateFileManager, true, config, true);
     WinRmExecutorHelper.cleanupFiles(winRmSession, "PSFileName.ps1", DefaultWinRmExecutor.POWERSHELL, true);
     verify(winRmSession, times(1)).executeCommandString(any(), any(), any(), eq(false));
   }
@@ -126,7 +126,7 @@ public class DefaultWinRmExecutorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testpsWrappedCommandWithEncodingWithProfile() {
     when(config.isUseNoProfile()).thenReturn(true);
-    spyDefaultWinRmExecutor = new DefaultWinRmExecutor(logService, delegateFileManager, true, config, true);
+    spyDefaultWinRmExecutor = new DefaultWinRmExecutor(logCallback, delegateFileManager, true, config, true);
     String poweshellCommand =
         WinRmExecutorHelper.psWrappedCommandWithEncoding(simpleCommand, DefaultWinRmExecutor.POWERSHELL_NO_PROFILE);
     assertThat(poweshellCommand.contains("NoProfile")).isTrue();

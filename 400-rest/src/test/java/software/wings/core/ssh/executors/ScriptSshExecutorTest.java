@@ -7,10 +7,10 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 
 import software.wings.delegatetasks.DelegateFileManager;
-import software.wings.delegatetasks.DelegateLogService;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -27,7 +27,7 @@ public class ScriptSshExecutorTest extends CategoryTest {
   private static final String ENV_VAR_VALUE = "/some/valid/path";
 
   @Mock private DelegateFileManager delegateFileManager;
-  @Mock private DelegateLogService delegateLogService;
+  @Mock private LogCallback logCallback;
   @Mock private SshSessionConfig sshSessionConfig;
 
   private ScriptSshExecutor scriptSshExecutor;
@@ -36,7 +36,7 @@ public class ScriptSshExecutorTest extends CategoryTest {
   public void setup() throws Exception {
     when(sshSessionConfig.getExecutionId()).thenReturn("ID");
     scriptSshExecutor =
-        PowerMockito.spy(new ScriptSshExecutor(delegateFileManager, delegateLogService, true, sshSessionConfig));
+        PowerMockito.spy(new ScriptSshExecutor(delegateFileManager, logCallback, true, sshSessionConfig));
     PowerMockito.doReturn(ENV_VAR_VALUE).when(scriptSshExecutor, "getEnvVarValue", "Path");
     PowerMockito.doReturn(ENV_VAR_VALUE).when(scriptSshExecutor, "getEnvVarValue", "HOME");
   }

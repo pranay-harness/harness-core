@@ -11,7 +11,6 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 
-import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
 
 import static com.google.common.collect.Sets.newHashSet;
@@ -21,13 +20,13 @@ import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.command.CommandExecutionResult.CommandExecutionResultBuilder;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 
 import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.command.ShellExecutionData.ShellExecutionDataBuilder;
 import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.delegatetasks.DelegateFileManager;
-import software.wings.delegatetasks.DelegateLogService;
 
 import com.google.inject.Inject;
 import java.io.BufferedReader;
@@ -59,14 +58,13 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
   private ScriptType scriptType;
   /**
    * Instantiates a new abstract ssh executor.
-   *
-   * @param delegateFileManager the file service
-   * @param logService          the log service
+   *  @param delegateFileManager the file service
+   * @param logCallback          the log service
    */
   @Inject
-  public ScriptProcessExecutor(DelegateFileManager delegateFileManager, DelegateLogService logService,
+  public ScriptProcessExecutor(DelegateFileManager delegateFileManager, LogCallback logCallback,
       boolean shouldSaveExecutionLogs, ScriptExecutionContext shellExecutorConfig) {
-    super(delegateFileManager, logService, shouldSaveExecutionLogs);
+    super(delegateFileManager, logCallback, shouldSaveExecutionLogs);
     this.config = (ShellExecutorConfig) shellExecutorConfig;
     this.scriptType = ((ShellExecutorConfig) shellExecutorConfig).getScriptType();
   }
@@ -313,16 +311,7 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
 
   private void saveExecutionLog(String line, LogLevel level, CommandExecutionStatus commandExecutionStatus) {
     if (shouldSaveExecutionLogs) {
-      logService.save(config.getAccountId(),
-          aLog()
-              .appId(config.getAppId())
-              .activityId(config.getExecutionId())
-              .logLevel(level)
-              .commandUnitName(config.getCommandUnitName())
-              .hostName("localhost")
-              .logLine(line)
-              .executionResult(commandExecutionStatus)
-              .build());
+      logCallback.saveExecutionLog(line, level, commandExecutionStatus);
     }
   }
 

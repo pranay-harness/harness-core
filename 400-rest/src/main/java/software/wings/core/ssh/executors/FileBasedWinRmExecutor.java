@@ -6,7 +6,6 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 
-import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.utils.WinRmHelperUtils.buildErrorDetailsFromWinRmClientException;
 
 import static java.lang.String.format;
@@ -16,15 +15,14 @@ import io.harness.data.encoding.EncodingUtils;
 import io.harness.delegate.service.DelegateAgentFileService;
 import io.harness.eraro.ResponseMessage;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.CopyConfigCommandUnit;
-import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.core.winrm.executors.WinRmSession;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.delegatetasks.DelegateFileManager;
-import software.wings.delegatetasks.DelegateLogService;
 import software.wings.utils.ExecutionLogWriter;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -42,16 +40,16 @@ public class FileBasedWinRmExecutor implements FileBasedScriptExecutor {
   public static final String NOT_IMPLEMENTED = "Not implemented";
   private static final String ERROR_WHILE_EXECUTING_COMMAND = "Error while executing command";
 
-  protected DelegateLogService logService;
+  protected LogCallback logCallback;
   private final WinRmSessionConfig config;
   protected DelegateFileManager delegateFileManager;
   private boolean disableCommandEncoding;
   private boolean shouldSaveExecutionLogs;
   private final String powershell;
 
-  public FileBasedWinRmExecutor(DelegateLogService logService, DelegateFileManager delegateFileManager,
+  public FileBasedWinRmExecutor(LogCallback logCallback, DelegateFileManager delegateFileManager,
       boolean shouldSaveExecutionLogs, WinRmSessionConfig config, boolean disableCommandEncoding) {
-    this.logService = logService;
+    this.logCallback = logCallback;
     this.delegateFileManager = delegateFileManager;
     this.shouldSaveExecutionLogs = shouldSaveExecutionLogs;
     this.config = config;
@@ -96,9 +94,8 @@ public class FileBasedWinRmExecutor implements FileBasedScriptExecutor {
 
   private CommandExecutionStatus downloadConfigFile(CopyConfigCommandUnit.ConfigFileMetaData configFileMetaData) {
     CommandExecutionStatus commandExecutionStatus = FAILURE;
-    ExecutionLogCallback executionLogCallback = getExecutionLogCallback(config.getCommandUnitName());
 
-    try (WinRmSession session = new WinRmSession(config, executionLogCallback);
+    try (WinRmSession session = new WinRmSession(config, this.logCallback);
          ExecutionLogWriter outputWriter = getExecutionLogWriter(INFO);
          ExecutionLogWriter errorWriter = getExecutionLogWriter(ERROR)) {
       saveExecutionLog(format("Connected to %s", config.getHostname()), INFO);
@@ -163,22 +160,8 @@ public class FileBasedWinRmExecutor implements FileBasedScriptExecutor {
 
   private void saveExecutionLog(String line, LogLevel level, CommandExecutionStatus commandExecutionStatus) {
     if (shouldSaveExecutionLogs) {
-      logService.save(config.getAccountId(),
-          aLog()
-              .appId(config.getAppId())
-              .activityId(config.getExecutionId())
-              .logLevel(level)
-              .commandUnitName(config.getCommandUnitName())
-              .hostName(config.getHostname())
-              .logLine(line)
-              .executionResult(commandExecutionStatus)
-              .build());
+      logCallback.saveExecutionLog(line, level, commandExecutionStatus);
     }
-  }
-
-  public ExecutionLogCallback getExecutionLogCallback(String commandUnit) {
-    return new ExecutionLogCallback(
-        logService, config.getAccountId(), config.getAppId(), config.getExecutionId(), commandUnit);
   }
 
   private ExecutionLogWriter getExecutionLogWriter(LogLevel logLevel) {
@@ -187,8 +170,7 @@ public class FileBasedWinRmExecutor implements FileBasedScriptExecutor {
         .appId(config.getAppId())
         .commandUnitName(config.getCommandUnitName())
         .executionId(config.getExecutionId())
-        .hostName(config.getHostname())
-        .logService(logService)
+        .logCallback(logCallback)
         .stringBuilder(new StringBuilder(1024))
         .logLevel(logLevel)
         .build();

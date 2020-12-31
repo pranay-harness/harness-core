@@ -6,15 +6,13 @@ import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.logging.LogLevel.WARN;
 
-import static software.wings.beans.Log.Builder.aLog;
-
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogCallback;
 
 import software.wings.core.BaseScriptExecutor;
 import software.wings.delegatetasks.DelegateFileManager;
-import software.wings.delegatetasks.DelegateLogService;
 
 import com.google.inject.Inject;
 import java.io.BufferedReader;
@@ -47,7 +45,7 @@ public abstract class AbstractScriptExecutor implements BaseScriptExecutor {
   /**
    * The Log service.
    */
-  protected DelegateLogService logService;
+  protected LogCallback logCallback;
   /**
    * The File service.
    */
@@ -57,14 +55,13 @@ public abstract class AbstractScriptExecutor implements BaseScriptExecutor {
 
   /**
    * Instantiates a new abstract ssh executor.
-   *
-   * @param delegateFileManager the file service
-   * @param logService          the log service
+   *  @param delegateFileManager the file service
+   * @param logCallback          the log service
    */
   @Inject
   public AbstractScriptExecutor(
-      DelegateFileManager delegateFileManager, DelegateLogService logService, boolean shouldSaveExecutionLogs) {
-    this.logService = logService;
+      DelegateFileManager delegateFileManager, LogCallback logCallback, boolean shouldSaveExecutionLogs) {
+    this.logCallback = logCallback;
     this.delegateFileManager = delegateFileManager;
     this.shouldSaveExecutionLogs = shouldSaveExecutionLogs;
   }
@@ -156,46 +153,19 @@ public abstract class AbstractScriptExecutor implements BaseScriptExecutor {
 
   protected void saveExecutionLog(String line, CommandExecutionStatus commandExecutionStatus) {
     if (shouldSaveExecutionLogs) {
-      logService.save(getAccountId(),
-          aLog()
-              .appId(getAppId())
-              .activityId(getExecutionId())
-              .logLevel(INFO)
-              .commandUnitName(getCommandUnitName())
-              .hostName(getHost())
-              .logLine(line)
-              .executionResult(commandExecutionStatus)
-              .build());
+      logCallback.saveExecutionLog(line, INFO, commandExecutionStatus);
     }
   }
 
   protected void saveExecutionLogError(String line) {
     if (shouldSaveExecutionLogs) {
-      logService.save(getAccountId(),
-          aLog()
-              .appId(getAppId())
-              .activityId(getExecutionId())
-              .logLevel(ERROR)
-              .commandUnitName(getCommandUnitName())
-              .hostName(getHost())
-              .logLine(line)
-              .executionResult(RUNNING)
-              .build());
+      logCallback.saveExecutionLog(line, ERROR, RUNNING);
     }
   }
 
   protected void saveExecutionLogWarn(String line) {
     if (shouldSaveExecutionLogs) {
-      logService.save(getAccountId(),
-          aLog()
-              .appId(getAppId())
-              .activityId(getExecutionId())
-              .logLevel(WARN)
-              .commandUnitName(getCommandUnitName())
-              .hostName(getHost())
-              .logLine(line)
-              .executionResult(RUNNING)
-              .build());
+      logCallback.saveExecutionLog(line, WARN, RUNNING);
     }
   }
 
