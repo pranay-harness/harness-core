@@ -64,8 +64,8 @@ public abstract class VerificationJob
     this.type = getType();
   }
   @Id private String uuid;
-  private String identifier;
-  private String jobName;
+  @NotNull private String identifier;
+  @NotNull private String jobName;
   private long createdAt;
   private long lastUpdatedAt;
   private String projectIdentifier;
