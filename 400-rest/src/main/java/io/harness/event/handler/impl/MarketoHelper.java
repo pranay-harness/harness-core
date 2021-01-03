@@ -172,7 +172,7 @@ public class MarketoHelper {
     }
 
     if (userInvite != null && isNotEmpty(userInvite.getFreemiumProducts())) {
-      lead.setFreemium_Products__c(Strings.join(userInvite.getFreemiumProducts(), ","));
+      lead.setFreemium_Products__c(Strings.join(userInvite.getFreemiumProducts(), ";"));
     }
 
     if (userInvite != null && userInvite.getFreemiumAssistedOption() != null) {
