@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.jexl3.JexlException;
 
 @OwnedBy(CDC)
 @Singleton
@@ -24,14 +26,19 @@ public class ArtifactStreamHelper {
   @Inject private ManagerExpressionEvaluator evaluator;
 
   public void resolveArtifactStreamRuntimeValues(ArtifactStream artifactStream, Map<String, Object> runtimeValues) {
-    if (artifactStream instanceof NexusArtifactStream) {
-      String repositoryFormat = ((NexusArtifactStream) artifactStream).getRepositoryFormat();
-      if (repositoryFormat.equals(RepositoryFormat.maven.name())) {
-        resolveRuntimeValuesForMaven((NexusArtifactStream) artifactStream, runtimeValues);
-      } else if (repositoryFormat.equals(RepositoryFormat.npm.name())
-          || repositoryFormat.equals(RepositoryFormat.nuget.name())) {
-        resolveRuntimeValuesForNpmNuGet((NexusArtifactStream) artifactStream, runtimeValues);
+    try {
+      if (artifactStream instanceof NexusArtifactStream) {
+        String repositoryFormat = ((NexusArtifactStream) artifactStream).getRepositoryFormat();
+        if (repositoryFormat.equals(RepositoryFormat.maven.name())) {
+          resolveRuntimeValuesForMaven((NexusArtifactStream) artifactStream, runtimeValues);
+        } else if (repositoryFormat.equals(RepositoryFormat.npm.name())
+            || repositoryFormat.equals(RepositoryFormat.nuget.name())) {
+          resolveRuntimeValuesForNpmNuGet((NexusArtifactStream) artifactStream, runtimeValues);
+        }
       }
+    } catch (JexlException e) {
+      throw new InvalidRequestException(
+          "Unable to resolve variables from the given values for artifact source: " + artifactStream.getName(), e);
     }
   }
 
