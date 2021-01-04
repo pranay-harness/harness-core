@@ -1,4 +1,5 @@
 package io.harness.yaml.extended.ci.codebase;
+
 import static io.harness.yaml.extended.ci.codebase.BuildTypeConstants.BRANCH_TYPE;
 import static io.harness.yaml.extended.ci.codebase.BuildTypeConstants.TAG_TYPE;
 
