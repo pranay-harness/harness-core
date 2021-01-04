@@ -15,4 +15,4 @@ connector:
     type: Http
     spec:
       username: "githubUsername"
-      passwordRef: "secretRef:harnessAccountPassword"
+      passwordRef: "account.harnessAccountPassword"

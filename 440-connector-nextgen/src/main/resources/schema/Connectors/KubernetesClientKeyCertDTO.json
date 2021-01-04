@@ -12,19 +12,23 @@
       ],
       "properties": {
         "caCertRef": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^(account.)?(org.)?(\\.)?[a-zA-Z0-9_$]*$"
         },
         "clientCertRef": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^(account.)?(org.)?(\\.)?[a-zA-Z0-9_$]*$"
         },
         "clientKeyAlgo": {
           "type": "string"
         },
         "clientKeyPassphraseRef": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^(account.)?(org.)?(\\.)?[a-zA-Z0-9_$]*$"
         },
         "clientKeyRef": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^(account.)?(org.)?(\\.)?[a-zA-Z0-9_$]*$"
         }
       }
     }

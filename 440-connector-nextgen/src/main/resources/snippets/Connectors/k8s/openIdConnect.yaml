@@ -22,8 +22,8 @@ connector:
             # Login credentials for a user assigned to the provider app
             oidcUsername: "admin"
             # Login credentials for a user assigned to the provider app
-            oidcPasswordRef: "account.k8s_oidc_password"
+            oidcPasswordRef: "k8s_oidc_password"
             # The client secret for the app. Optional
-            oidcSecretRef: "account.secret"
+            oidcSecretRef: "org.secret"
             # OIDC scopes are used by an application during authentication to authorize access to a user's details, like name and picture. Optional
             oidcScopes: "picture"

@@ -1,14 +1,15 @@
-# Name of the connector Required
-name: "My k8s Cluster"
-# Non-changeable identifier of the connector, can not contain spaces or special chars. REQUIRED
-identifier: "my_k8s_cluster"
-# Org ID
-orgIdentifier: "Devops"
-# Project ID
-projectIdentifer: "Harness Sample App"
-type: K8sCluster
-spec:
-  credential:
-    type: InheritFromDelegate
-    spec:
-      delegateName: "K8s_in_cluster"
+connector:
+  # Name of the connector Required
+  name: "My k8s Cluster"
+  # Non-changeable identifier of the connector, can not contain spaces or special chars. REQUIRED
+  identifier: "my_k8s_cluster"
+  # Org ID
+  orgIdentifier: "Devops"
+  # Project ID
+  projectIdentifer: "Harness Sample App"
+  type: K8sCluster
+  spec:
+    credential:
+      type: InheritFromDelegate
+      spec:
+        delegateName: "K8s_in_cluster"

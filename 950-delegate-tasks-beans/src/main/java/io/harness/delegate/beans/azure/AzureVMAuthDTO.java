@@ -1,5 +1,7 @@
 package io.harness.delegate.beans.azure;
 
+import static io.harness.yamlSchema.NGSecretReferenceConstants.SECRET_REF_PATTERN;
+
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -14,6 +16,7 @@ import io.swagger.annotations.ApiModelProperty;
 import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -26,7 +29,11 @@ public class AzureVMAuthDTO implements DecryptableEntity, ExecutionCapabilityDem
   private String userName;
 
   private String secretRefFieldName = "secretRef";
-  @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData secretRef;
+  @ApiModelProperty(dataType = "string")
+  @NotNull
+  @SecretReference
+  @Pattern(regexp = SECRET_REF_PATTERN)
+  SecretRefData secretRef;
 
   @JsonProperty("type") private io.harness.delegate.beans.azure.AzureVMAuthType azureVmAuthType;
 
