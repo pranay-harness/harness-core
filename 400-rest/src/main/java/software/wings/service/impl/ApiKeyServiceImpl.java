@@ -19,8 +19,6 @@ import static software.wings.app.ManagerCacheRegistrar.APIKEY_RESTRICTION_CACHE;
 import static java.lang.System.currentTimeMillis;
 import static java.util.function.Function.identity;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
-import static org.mindrot.jbcrypt.BCrypt.checkpw;
-import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -30,6 +28,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.GeneralException;
 import io.harness.exception.UnauthorizedException;
+import io.harness.hash.HashUtils;
 import io.harness.persistence.HQuery;
 import io.harness.security.SimpleEncryption;
 
@@ -69,7 +68,6 @@ import javax.cache.Cache;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
-import org.mindrot.jbcrypt.BCrypt;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -111,7 +109,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
             .name(apiKeyEntry.getName())
             .createdAt(currentTimeMillis())
             .encryptedKey(getSimpleEncryption(accountId).encryptChars(apiKey.toCharArray()))
-            .hashOfKey(hashpw(apiKey, BCrypt.gensalt()))
+            .sha256Hash(HashUtils.calculateSha256(apiKey))
             .accountId(accountId)
             .build();
     String id = duplicateCheck(
@@ -307,11 +305,13 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
   private ApiKeyEntry getByKeyFromDB(String key, String accountId, boolean details) {
     PageRequest<ApiKeyEntry> pageRequest = aPageRequest().addFilter(ApiKeyEntryKeys.accountId, EQ, accountId).build();
-    Optional<ApiKeyEntry> apiKeyEntryOptional = wingsPersistence.query(ApiKeyEntry.class, pageRequest)
-                                                    .getResponse()
-                                                    .stream()
-                                                    .filter(apiKeyEntry -> checkpw(key, apiKeyEntry.getHashOfKey()))
-                                                    .findFirst();
+    String hashOfIncomingKey = HashUtils.calculateSha256(key);
+    Optional<ApiKeyEntry> apiKeyEntryOptional =
+        wingsPersistence.query(ApiKeyEntry.class, pageRequest)
+            .getResponse()
+            .stream()
+            .filter(apiKeyEntry -> hashOfIncomingKey.equals(apiKeyEntry.getSha256Hash()))
+            .findFirst();
     ApiKeyEntry apiKeyEntry = apiKeyEntryOptional.orElse(null);
     if (apiKeyEntry == null) {
       return null;
