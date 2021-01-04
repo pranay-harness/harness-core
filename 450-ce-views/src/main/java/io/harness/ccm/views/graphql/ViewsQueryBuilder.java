@@ -193,6 +193,7 @@ public class ViewsQueryBuilder {
       List<QLCEViewFieldInput> groupByEntity, List<ViewField> customFields, SelectQuery selectQuery) {
     boolean isClusterConditionOrFilterPresent = false;
     boolean isPodFilterPresent = false;
+    boolean isLabelsOperationPresent = false;
     for (ViewRule rule : rules) {
       for (ViewCondition condition : rule.getViewConditions()) {
         ViewIdCondition viewIdCondition = (ViewIdCondition) condition;
@@ -203,6 +204,17 @@ public class ViewsQueryBuilder {
           if (ImmutableSet.of("namespace", "workloadName").contains(fieldId)) {
             isPodFilterPresent = true;
           }
+        }
+
+        if (viewFieldIdentifier.equals(ViewFieldIdentifier.COMMON)) {
+          String fieldId = viewIdCondition.getViewField().getFieldId();
+          if (ImmutableSet.of("product", "region").contains(fieldId)) {
+            isClusterConditionOrFilterPresent = true;
+          }
+        }
+
+        if (viewFieldIdentifier.equals(ViewFieldIdentifier.LABEL)) {
+          isLabelsOperationPresent = true;
         }
       }
     }
@@ -216,6 +228,10 @@ public class ViewsQueryBuilder {
           isPodFilterPresent = true;
         }
       }
+
+      if (viewFieldIdentifier.equals(ViewFieldIdentifier.LABEL)) {
+        isLabelsOperationPresent = true;
+      }
     }
 
     for (QLCEViewFieldInput groupBy : groupByEntity) {
@@ -224,6 +240,17 @@ public class ViewsQueryBuilder {
         if (ImmutableSet.of("namespace", "workloadName").contains(groupBy.getFieldId())) {
           isPodFilterPresent = true;
         }
+      }
+
+      if (groupBy.getIdentifier().equals(ViewFieldIdentifier.COMMON)) {
+        String fieldId = groupBy.getFieldId();
+        if (ImmutableSet.of("product", "region").contains(fieldId)) {
+          isClusterConditionOrFilterPresent = true;
+        }
+      }
+
+      if (groupBy.getIdentifier().equals(ViewFieldIdentifier.LABEL)) {
+        isLabelsOperationPresent = true;
       }
     }
 
@@ -237,10 +264,20 @@ public class ViewsQueryBuilder {
             isPodFilterPresent = true;
           }
         }
+
+        if (viewField.getIdentifier().equals(ViewFieldIdentifier.COMMON)) {
+          if (ImmutableSet.of("product", "region").contains(viewField.getFieldId())) {
+            isClusterConditionOrFilterPresent = true;
+          }
+        }
+
+        if (viewField.getIdentifier().equals(ViewFieldIdentifier.LABEL)) {
+          isLabelsOperationPresent = true;
+        }
       }
     }
 
-    if (isClusterConditionOrFilterPresent) {
+    if (!isLabelsOperationPresent && isClusterConditionOrFilterPresent) {
       List<String> instancetypeList = ImmutableList.of(K8S_NODE, ECS_TASK_FARGATE, ECS_CONTAINER_INSTANCE);
 
       if (isPodFilterPresent) {
@@ -493,6 +530,7 @@ public class ViewsQueryBuilder {
                                  .collect(Collectors.toList())
                            : Collections.emptyList();
   }
+
   protected QLCEViewTimeTruncGroupBy getGroupByTime(List<QLCEViewGroupBy> groupBy) {
     if (groupBy != null) {
       Optional<QLCEViewTimeTruncGroupBy> first = groupBy.stream()
