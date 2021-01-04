@@ -1,5 +1,6 @@
 package io.harness.cvng;
 
+import static io.harness.EntityCRUDEventsConstants.CONNECTOR_ENTITY;
 import static io.harness.EntityCRUDEventsConstants.PROJECT_ENTITY;
 
 import io.harness.cvng.activity.services.api.ActivityService;
@@ -35,6 +36,7 @@ import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.NextGenServiceImpl;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.client.VerificationManagerServiceImpl;
+import io.harness.cvng.core.jobs.ConnectorChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ConsumerMessageProcessor;
 import io.harness.cvng.core.jobs.ProjectChangeEventMessageProcessor;
 import io.harness.cvng.core.services.api.AppDynamicsService;
@@ -238,6 +240,9 @@ public class CVServiceModule extends AbstractModule {
       bind(ConsumerMessageProcessor.class)
           .annotatedWith(Names.named(PROJECT_ENTITY))
           .to(ProjectChangeEventMessageProcessor.class);
+      bind(ConsumerMessageProcessor.class)
+          .annotatedWith(Names.named(CONNECTOR_ENTITY))
+          .to(ConnectorChangeEventMessageProcessor.class);
       bind(String.class)
           .annotatedWith(Names.named("portalUrl"))
           .toInstance(verificationConfiguration.getPortalUrl().endsWith("/")

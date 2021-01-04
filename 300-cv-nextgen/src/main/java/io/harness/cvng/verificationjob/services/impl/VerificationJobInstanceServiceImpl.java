@@ -252,6 +252,36 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   }
 
   @Override
+  public List<VerificationJobInstance> filterRunningVerificationJobInstances(List<String> verificationJobInstanceIds) {
+    if (verificationJobInstanceIds.isEmpty()) {
+      return Collections.emptyList();
+    }
+    return hPersistence.createQuery(VerificationJobInstance.class, excludeAuthority)
+        .field(VerificationJobInstanceKeys.uuid)
+        .in(verificationJobInstanceIds)
+        .filter(VerificationJobInstanceKeys.executionStatus, ExecutionStatus.RUNNING)
+        .asList();
+  }
+
+  @Override
+  public void resetPerpetualTask(VerificationJobInstance verificationJobInstance, CVConfig cvConfig) {
+    Preconditions.checkNotNull(verificationJobInstance);
+    VerificationJob verificationJob = verificationJobInstance.getResolvedJob();
+    Preconditions.checkNotNull(verificationJob);
+    Preconditions.checkNotNull(cvConfig);
+
+    String dataCollectionWorkerId =
+        getDataCollectionWorkerId(verificationJobInstance, cvConfig.getConnectorIdentifier());
+    Map<String, String> params = new HashMap<>();
+    params.put(DataCollectionTaskKeys.dataCollectionWorkerId, dataCollectionWorkerId);
+    params.put(CVConfigKeys.connectorIdentifier, cvConfig.getConnectorIdentifier());
+    verificationManagerService.resetDataCollectionTask(verificationJobInstance.getAccountId(),
+        verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier(),
+        verificationJobInstance.getConnectorsToPerpetualTaskIdsMap().get(cvConfig.getConnectorIdentifier()),
+        DataCollectionConnectorBundle.builder().params(params).dataCollectionType(DataCollectionType.CV).build());
+  }
+
+  @Override
   public void createDataCollectionTasks(VerificationJobInstance verificationJobInstance) {
     VerificationJob verificationJob = verificationJobInstance.getResolvedJob();
     Preconditions.checkNotNull(verificationJob);
@@ -259,19 +289,21 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     Preconditions.checkState(isNotEmpty(cvConfigs), "No config is matching the criteria");
     Set<String> connectorIdentifiers =
         cvConfigs.stream().map(CVConfig::getConnectorIdentifier).collect(Collectors.toSet());
-    List<String> perpetualTaskIds = new ArrayList<>();
+    Map<String, String> connectorToPerpetualTaskIdsMap = new HashMap<>();
     connectorIdentifiers.forEach(connectorIdentifier -> {
       String dataCollectionWorkerId = getDataCollectionWorkerId(verificationJobInstance, connectorIdentifier);
       Map<String, String> params = new HashMap<>();
       params.put(DataCollectionTaskKeys.dataCollectionWorkerId, dataCollectionWorkerId);
       params.put(CVConfigKeys.connectorIdentifier, connectorIdentifier);
-      perpetualTaskIds.add(verificationManagerService.createDataCollectionTask(verificationJobInstance.getAccountId(),
-          verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier(),
-          DataCollectionConnectorBundle.builder().params(params).dataCollectionType(DataCollectionType.CV).build()));
+      String perpetualTaskId =
+          verificationManagerService.createDataCollectionTask(verificationJobInstance.getAccountId(),
+              verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier(),
+              DataCollectionConnectorBundle.builder().params(params).dataCollectionType(DataCollectionType.CV).build());
+      connectorToPerpetualTaskIdsMap.put(connectorIdentifier, perpetualTaskId);
     });
     createDataCollectionTasks(verificationJobInstance, verificationJob, cvConfigs);
     markRunning(verificationJobInstance.getUuid());
-    setPerpetualTaskIds(verificationJobInstance, perpetualTaskIds);
+    setPerpetualTaskIds(verificationJobInstance, connectorToPerpetualTaskIdsMap);
   }
 
   @Override
@@ -299,6 +331,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     UpdateOperations<VerificationJobInstance> updateOperations =
         hPersistence.createUpdateOperations(VerificationJobInstance.class);
     updateOperations.unset(VerificationJobInstanceKeys.perpetualTaskIds);
+    updateOperations.unset(VerificationJobInstanceKeys.connectorsToPerpetualTaskIdsMap);
     hPersistence.update(entity, updateOperations);
   }
 
@@ -736,13 +769,12 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     }
   }
 
-  private void setPerpetualTaskIds(VerificationJobInstance verificationJobInstance, List<String> perpetualTaskIds) {
-    UpdateOperations<VerificationJobInstance> verificationTaskUpdateOperations =
-        hPersistence.createUpdateOperations(VerificationJobInstance.class);
-    verificationTaskUpdateOperations.set(VerificationJobInstanceKeys.perpetualTaskIds, perpetualTaskIds);
+  private void setPerpetualTaskIds(
+      VerificationJobInstance verificationJobInstance, Map<String, String> connectorToPerpetualTaskIdsMap) {
     hPersistence.update(verificationJobInstance,
         hPersistence.createUpdateOperations(VerificationJobInstance.class)
-            .set(VerificationJobInstanceKeys.perpetualTaskIds, perpetualTaskIds));
+            .set(VerificationJobInstanceKeys.perpetualTaskIds, connectorToPerpetualTaskIdsMap.values())
+            .set(VerificationJobInstanceKeys.connectorsToPerpetualTaskIdsMap, connectorToPerpetualTaskIdsMap));
   }
 
   private void markRunning(String verificationTaskId) {

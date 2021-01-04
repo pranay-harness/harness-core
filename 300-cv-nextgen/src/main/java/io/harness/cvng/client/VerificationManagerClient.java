@@ -37,6 +37,11 @@ public interface VerificationManagerClient {
       @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
       @Body DataCollectionConnectorBundle bundle);
 
+  @POST(CV_DATA_COLLECTION_PATH + "/reset-task")
+  Call<RestResponse<Void>> resetDataCollectionPerpetualTask(@Query("accountId") String accountId,
+      @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
+      @Query("taskId") String taskId, @Body DataCollectionConnectorBundle bundle);
+
   @DELETE(CV_DATA_COLLECTION_PATH + "/delete-task")
   Call<RestResponse<Void>> deleteDataCollectionPerpetualTask(
       @Query("accountId") String accountId, @Query("taskId") String taskId);

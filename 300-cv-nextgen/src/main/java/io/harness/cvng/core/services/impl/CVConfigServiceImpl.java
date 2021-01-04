@@ -19,6 +19,7 @@ import io.harness.cvng.core.services.api.DeletedCVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
 import io.harness.cvng.dashboard.services.api.AnomalyService;
+import io.harness.encryption.Scope;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
@@ -121,6 +122,27 @@ public class CVConfigServiceImpl implements CVConfigService {
         .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
         .filter(CVConfigKeys.identifier, monitoringSourceIdentifier)
         .forEach(cvConfig -> delete(cvConfig.getUuid()));
+  }
+
+  @Override
+  public List<CVConfig> findByConnectorIdentifier(String accountId, String orgIdentifier, String projectIdentifier,
+      String connectorIdentifierWithoutScopePrefix, Scope scope) {
+    Preconditions.checkNotNull(accountId);
+    Preconditions.checkNotNull(connectorIdentifierWithoutScopePrefix);
+    String connectorIdentifier = connectorIdentifierWithoutScopePrefix;
+    if (scope == Scope.ACCOUNT || scope == Scope.ORG) {
+      connectorIdentifier = scope.getYamlRepresentation() + "." + connectorIdentifierWithoutScopePrefix;
+    }
+    Query<CVConfig> query = hPersistence.createQuery(CVConfig.class, excludeAuthority)
+                                .filter(CVConfigKeys.accountId, accountId)
+                                .filter(CVConfigKeys.connectorIdentifier, connectorIdentifier);
+    if (scope == Scope.ORG) {
+      query = query.filter(CVConfigKeys.orgIdentifier, orgIdentifier);
+    }
+    if (scope == Scope.PROJECT) {
+      query = query.filter(CVConfigKeys.projectIdentifier, projectIdentifier);
+    }
+    return query.asList();
   }
 
   @Override

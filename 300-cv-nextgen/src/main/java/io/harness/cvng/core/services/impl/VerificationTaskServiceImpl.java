@@ -1,6 +1,8 @@
 
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
+
 import io.harness.cvng.CVConstants;
 import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.entities.VerificationTask.VerificationTaskKeys;
@@ -163,5 +165,18 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
     }
     String cvConfigId = getCVConfigId(currentVerificationTaskId);
     return getVerificationTaskId(verificationJobInstance.getAccountId(), cvConfigId, baselineVerificationJobInstanceId);
+  }
+
+  @Override
+  public List<String> getAllVerificationJobInstanceIdsForCVConfig(String cvConfigId) {
+    return hPersistence.createQuery(VerificationTask.class, excludeAuthority)
+        .filter(VerificationTaskKeys.cvConfigId, cvConfigId)
+        .field(VerificationTaskKeys.verificationJobInstanceId)
+        .exists()
+        .project(VerificationTaskKeys.verificationJobInstanceId, true)
+        .asList()
+        .stream()
+        .map(verificationTask -> verificationTask.getVerificationJobInstanceId())
+        .collect(Collectors.toList());
   }
 }

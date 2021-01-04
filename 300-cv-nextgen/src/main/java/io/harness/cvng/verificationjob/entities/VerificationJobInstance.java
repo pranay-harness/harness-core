@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
@@ -93,6 +94,7 @@ public class VerificationJobInstance
   // this stuff is only required for deployment verification
   private Duration dataCollectionDelay;
   private List<String> perpetualTaskIds;
+  private Map<String, String> connectorsToPerpetualTaskIdsMap;
   private Set<String> oldVersionHosts;
   private Set<String> newVersionHosts;
   private Integer newHostsTrafficSplitPercentage;

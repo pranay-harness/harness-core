@@ -7,6 +7,9 @@ import io.kubernetes.client.openapi.ApiException;
 import java.util.List;
 
 public interface CVDataCollectionTaskService {
+  void resetTask(String accountId, String orgIdentifier, String projectIdentifier, String taskId,
+      DataCollectionConnectorBundle bundle);
+
   String create(String accountId, String orgIdentifier, String projectIdentifier, DataCollectionConnectorBundle bundle);
   void delete(String accountId, String taskId);
 

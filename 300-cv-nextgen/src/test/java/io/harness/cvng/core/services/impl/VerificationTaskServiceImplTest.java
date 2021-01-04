@@ -167,4 +167,18 @@ public class VerificationTaskServiceImplTest extends CvNextGenTest {
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("No verification task mapping exist for verificationJobInstanceId " + verificationJobInstanceId);
   }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetAllVerificationJobInstanceIdsForCVConfig() {
+    String cvConfigId = generateUuid();
+    String verificationJobInstanceId1 = generateUuid();
+    verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId1);
+    verificationTaskService.create(accountId, cvConfigId);
+    String verificationJobInstanceId2 = generateUuid();
+    verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId2);
+    assertThat(new HashSet<>(verificationTaskService.getAllVerificationJobInstanceIdsForCVConfig(cvConfigId)))
+        .isEqualTo(Sets.newHashSet(verificationJobInstanceId1, verificationJobInstanceId2));
+  }
 }
