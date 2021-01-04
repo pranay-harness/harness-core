@@ -29,8 +29,8 @@ public class FeatureFlagStreamConsumer implements Runnable {
   public void run() {
     log.info("Started the consumer for feature flag stream");
     try {
-      while (true) {
-        List<Message> messages = redisConsumer.read(10, TimeUnit.SECONDS);
+      while (!Thread.currentThread().isInterrupted()) {
+        List<Message> messages = redisConsumer.read(30, TimeUnit.SECONDS);
         for (Message message : messages) {
           String messageId = message.getId();
           try {
@@ -43,7 +43,7 @@ public class FeatureFlagStreamConsumer implements Runnable {
         }
       }
     } catch (Exception ex) {
-      log.info("The consumer for feature flag stream ended", ex);
+      log.error("Feature flag stream consumer unexpectedly stopped", ex);
     }
   }
 }

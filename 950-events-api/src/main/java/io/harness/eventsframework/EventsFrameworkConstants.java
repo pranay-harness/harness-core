@@ -31,6 +31,6 @@ public final class EventsFrameworkConstants {
   public static final int ENTITY_CRUD_MAX_TOPIC_SIZE = 100000;
   public static final int FEATURE_FLAG_MAX_TOPIC_SIZE = 100000;
 
-  public static final Duration ENTITY_CRUD_MAX_PROCESSING_TIME = Duration.ofMinutes(1);
-  public static final Duration FEATURE_FLAG_MAX_PROCESSING_TIME = Duration.ofMinutes(1);
+  public static final Duration ENTITY_CRUD_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
+  public static final Duration FEATURE_FLAG_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
 }

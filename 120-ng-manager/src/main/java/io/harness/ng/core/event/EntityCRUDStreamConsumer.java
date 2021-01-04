@@ -42,7 +42,7 @@ public class EntityCRUDStreamConsumer implements Runnable {
   public void run() {
     log.info("Started the consumer for entity crud stream");
     try {
-      while (true) {
+      while (!Thread.currentThread().isInterrupted()) {
         List<Message> messages = redisConsumer.read(10, TimeUnit.SECONDS);
         for (Message message : messages) {
           String messageId = message.getId();
@@ -56,7 +56,7 @@ public class EntityCRUDStreamConsumer implements Runnable {
         }
       }
     } catch (Exception ex) {
-      log.error("The consumer for entity crud stream ended", ex);
+      log.error("Entity crud stream consumer unexpectedly stopped", ex);
     }
   }
 
