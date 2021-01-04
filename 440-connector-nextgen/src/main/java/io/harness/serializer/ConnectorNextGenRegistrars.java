@@ -1,5 +1,6 @@
 package io.harness.serializer;
 
+import io.harness.filter.serializer.FiltersRegistrars;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.ConnectorNextGenKryoRegistrar;
 import io.harness.serializer.morphia.ConnectorMorphiaClassesRegistrar;
@@ -26,6 +27,7 @@ public class ConnectorNextGenRegistrars {
           .addAll(DelegateServiceDriverRegistrars.morphiaRegistrars)
           .addAll(NGCoreClientRegistrars.morphiaRegistrars)
           .addAll(YamlBeansModuleRegistrars.morphiaRegistrars)
+          .addAll(FiltersRegistrars.morphiaRegistrars)
           .add(ConnectorMorphiaClassesRegistrar.class)
           .build();
 

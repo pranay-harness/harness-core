@@ -16,8 +16,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.connector.apis.dto.ConnectorCatalogueResponseDTO;
 import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorFilterPropertiesDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
-import io.harness.connector.apis.dto.ConnectorListFilter;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.apis.dto.stats.ConnectorStatistics;
 import io.harness.connector.entities.Connector;
@@ -84,12 +84,6 @@ public class ConnectorServiceImpl implements ConnectorService {
   public Optional<ConnectorResponseDTO> get(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     return defaultConnectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-  }
-
-  @Override
-  public Page<ConnectorResponseDTO> list(
-      int page, int size, String accountIdentifier, ConnectorListFilter connectorFilter) {
-    return defaultConnectorService.list(page, size, accountIdentifier, connectorFilter);
   }
 
   @Override
@@ -240,6 +234,14 @@ public class ConnectorServiceImpl implements ConnectorService {
   public ConnectorStatistics getConnectorStatistics(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, Scope scope) {
     return defaultConnectorService.getConnectorStatistics(accountIdentifier, orgIdentifier, projectIdentifier, scope);
+  }
+
+  @Override
+  public Page<ConnectorResponseDTO> list(int page, int size, String accountIdentifier,
+      ConnectorFilterPropertiesDTO filterProperties, String orgIdentifier, String projectIdentifier,
+      String filterIdentifier, String searchTerm, Boolean includeAllConnectorsAccessibleAtScope) {
+    return defaultConnectorService.list(page, size, accountIdentifier, filterProperties, orgIdentifier,
+        projectIdentifier, filterIdentifier, searchTerm, includeAllConnectorsAccessibleAtScope);
   }
 
   @Override

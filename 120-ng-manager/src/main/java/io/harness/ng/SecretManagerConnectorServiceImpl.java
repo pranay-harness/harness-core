@@ -7,8 +7,8 @@ import static io.harness.exception.WingsException.USER;
 
 import io.harness.connector.apis.dto.ConnectorCatalogueResponseDTO;
 import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorFilterPropertiesDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
-import io.harness.connector.apis.dto.ConnectorListFilter;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.apis.dto.stats.ConnectorStatistics;
 import io.harness.connector.entities.Connector.ConnectorKeys;
@@ -53,12 +53,6 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
     this.defaultConnectorService = defaultConnectorService;
     this.ngSecretManagerService = ngSecretManagerService;
     this.connectorRepository = connectorRepository;
-  }
-
-  @Override
-  public Page<ConnectorResponseDTO> list(
-      int page, int size, String accountIdentifier, ConnectorListFilter connectorFilter) {
-    throw new UnsupportedOperationException("This operation is not supported for secret manager");
   }
 
   @Override
@@ -212,6 +206,14 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   public ConnectorStatistics getConnectorStatistics(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, Scope scope) {
     return defaultConnectorService.getConnectorStatistics(accountIdentifier, orgIdentifier, projectIdentifier, scope);
+  }
+
+  @Override
+  public Page<ConnectorResponseDTO> list(int page, int size, String accountIdentifier,
+      ConnectorFilterPropertiesDTO filterProperties, String orgIdentifier, String projectIdentifier,
+      String filterIdentifier, String searchTerm, Boolean includeAllConnectorsAccessibleAtScope) {
+    return defaultConnectorService.list(page, size, accountIdentifier, filterProperties, orgIdentifier,
+        projectIdentifier, filterIdentifier, searchTerm, includeAllConnectorsAccessibleAtScope);
   }
 
   @Override

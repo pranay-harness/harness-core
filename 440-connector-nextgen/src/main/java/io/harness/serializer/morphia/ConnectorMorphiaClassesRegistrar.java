@@ -1,7 +1,7 @@
 package io.harness.serializer.morphia;
 
 import io.harness.connector.entities.Connector;
-import io.harness.connector.entities.ConnectorFilter;
+import io.harness.connector.entities.ConnectorFilterProperties;
 import io.harness.connector.entities.embedded.appdynamicsconnector.AppDynamicsConnector;
 import io.harness.connector.entities.embedded.artifactoryconnector.ArtifactoryConnector;
 import io.harness.connector.entities.embedded.artifactoryconnector.ArtifactoryUserNamePasswordAuthentication;
@@ -70,7 +70,6 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(ArtifactoryConnector.class);
     set.add(JiraConnector.class);
     set.add(NexusConnector.class);
-    set.add(ConnectorFilter.class);
     set.add(GithubConnector.class);
     set.add(GitlabConnector.class);
     set.add(BitbucketConnector.class);
@@ -97,20 +96,18 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
         ArtifactoryUserNamePasswordAuthentication.class);
     h.put("connector.entities.embedded.nexusconnector.NexusUserNamePasswordAuthentication",
         NexusUserNamePasswordAuthentication.class);
-
     h.put("connector.entities.embedded.githubconnector.GithubAppApiAccess", GithubApiAccess.class);
     h.put("connector.entities.embedded.githubconnector.GithubTokenApiAccess", GithubTokenApiAccess.class);
     h.put("connector.entities.embedded.githubconnector.GithubSshAuthentication", GithubSshAuthentication.class);
     h.put("connector.entities.embedded.githubconnector.GithubHttpAuthentication", GithubHttpAuthentication.class);
     h.put("connector.entities.embedded.githubconnector.GithubUsernamePassword", GithubUsernamePassword.class);
     h.put("connector.entities.embedded.githubconnector.GithubUsernameToken", GithubUsernameToken.class);
-
     h.put("connector.entities.embedded.gitlabconnector.GitlabTokenApiAccess", GitlabTokenApiAccess.class);
     h.put("connector.entities.embedded.gitlabconnector.GitlabSshAuthentication", GitlabSshAuthentication.class);
     h.put("connector.entities.embedded.gitlabconnector.GitlabHttpAuthentication", GitlabHttpAuthentication.class);
     h.put("connector.entities.embedded.gitlabconnector.GitlabUsernamePassword", GitlabUsernamePassword.class);
     h.put("connector.entities.embedded.gitlabconnector.GitlabUsernameToken", GitlabUsernameToken.class);
-
+    h.put("connector.entities.ConnectorFilterProperties", ConnectorFilterProperties.class);
     h.put("connector.entities.embedded.bitbucketconnector.BitbucketUsernamePasswordApiAccess",
         BitbucketUsernamePasswordApiAccess.class);
     h.put(

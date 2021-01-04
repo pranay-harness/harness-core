@@ -1,186 +1,130 @@
 package io.harness.connector.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.encryption.Scope.ACCOUNT;
+import static io.harness.encryption.Scope.ORG;
+import static io.harness.encryption.Scope.PROJECT;
+import static io.harness.filter.FilterType.CONNECTOR;
 import static io.harness.springdata.SpringDataMongoUtils.populateInFilter;
-import static io.harness.utils.PageUtils.getPageRequest;
 
-import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
-import io.harness.beans.SortOrder;
-import io.harness.beans.SortOrder.OrderType;
-import io.harness.connector.apis.dto.ConnectorFilterDTO;
-import io.harness.connector.apis.dto.ConnectorListFilter;
+import io.harness.connector.apis.dto.ConnectorFilterPropertiesDTO;
 import io.harness.connector.entities.Connector.ConnectorKeys;
-import io.harness.connector.entities.ConnectorFilter;
-import io.harness.connector.entities.ConnectorFilter.ConnectorFilterKeys;
-import io.harness.connector.mappers.ConnectorFilterMapper;
 import io.harness.connector.services.ConnectorFilterService;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.exception.DuplicateFieldException;
+import io.harness.encryption.ScopeHelper;
 import io.harness.exception.InvalidRequestException;
-import io.harness.ng.beans.PageRequest;
-import io.harness.repositories.filters.ConnectorFilterRepository;
-import io.harness.utils.FullyQualifiedIdentifierHelper;
+import io.harness.filter.dto.FilterDTO;
+import io.harness.filter.dto.FilterPropertiesDTO;
+import io.harness.filter.service.FilterService;
+import io.harness.ng.core.mapper.TagMapper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import lombok.AllArgsConstructor;
-import org.springframework.dao.DuplicateKeyException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.util.StringUtils;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class ConnectorFilterServiceImpl implements ConnectorFilterService {
-  private ConnectorFilterRepository filterRepository;
-  private ConnectorFilterMapper connectorFilterMapper;
+  FilterService filterService;
 
   public static final String CREDENTIAL_TYPE_KEY = "credentialType";
   public static final String INHERIT_FROM_DELEGATE_STRING = "INHERIT_FROM_DELEGATE";
 
   @Override
-  public ConnectorFilterDTO create(String accountId, ConnectorFilterDTO filter) {
-    ConnectorFilter filterEntity = connectorFilterMapper.toConnectorFilter(filter, accountId);
-    try {
-      return connectorFilterMapper.writeDTO(filterRepository.save(filterEntity));
-    } catch (DuplicateKeyException ex) {
-      throw new DuplicateFieldException(format("Connector Filter %s already exists", filter.getIdentifier()));
+  public Criteria createCriteriaFromConnectorListQueryParams(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String filterIdentifier, String searchTerm, FilterPropertiesDTO filterProperties,
+      Boolean includeAllConnectorsAccessibleAtScope) {
+    if (isNotBlank(filterIdentifier) && filterProperties != null) {
+      throw new InvalidRequestException("Can not apply both filter properties and saved filter together");
     }
-  }
-
-  @Override
-  public ConnectorFilterDTO update(String accountId, ConnectorFilterDTO filter) {
-    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
-        accountId, filter.getOrgIdentifier(), filter.getProjectIdentifier(), filter.getIdentifier());
-    Optional<ConnectorFilter> existingConnectorFilter =
-        filterRepository.findByFullyQualifiedIdentifier(fullyQualifiedIdentifier);
-    if (!existingConnectorFilter.isPresent()) {
-      throw new InvalidRequestException(
-          format("No connector filter exists with the  Identifier %s", filter.getIdentifier()));
-    }
-    ConnectorFilter filterEntity = connectorFilterMapper.toConnectorFilter(filter, accountId);
-    filterEntity.setId(existingConnectorFilter.get().getId());
-    filterEntity.setVersion(existingConnectorFilter.get().getVersion());
-    ConnectorFilter updatedConnectorFilter = filterRepository.save(filterEntity);
-    return connectorFilterMapper.writeDTO(updatedConnectorFilter);
-  }
-
-  @Override
-  public boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
-    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
-        accountId, orgIdentifier, projectIdentifier, identifier);
-    long deletedCount = filterRepository.deleteByFullyQualifiedIdentifier(fullyQualifiedIdentifier);
-    if (deletedCount == 1) {
-      return true;
-    }
-    throwNoConnectorFilterExistsException(orgIdentifier, projectIdentifier, identifier);
-    return false;
-  }
-
-  private void throwNoConnectorFilterExistsException(
-      String orgIdentifier, String projectIdentifier, String identifier) {
-    throw new InvalidRequestException(format("No Connector Filter exists with the identifier %s in org %s, project %s",
-        identifier, orgIdentifier, projectIdentifier));
-  }
-
-  @Override
-  public ConnectorFilterDTO get(String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
-    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
-        accountId, orgIdentifier, projectIdentifier, identifier);
-    Optional<ConnectorFilter> connectorFilter =
-        filterRepository.findByFullyQualifiedIdentifier(fullyQualifiedIdentifier);
-    if (!connectorFilter.isPresent()) {
-      throwNoConnectorFilterExistsException(orgIdentifier, projectIdentifier, identifier);
-    }
-    return connectorFilterMapper.writeDTO(connectorFilter.get());
-  }
-
-  @Override
-  public Page<ConnectorFilterDTO> list(
-      int page, int size, String accountId, String orgIdentifier, String projectIdentifier, List<String> filterIds) {
-    Pageable pageable = getPageRequest(
-        PageRequest.builder()
-            .pageIndex(page)
-            .pageSize(size)
-            .sortOrders(Collections.singletonList(
-                SortOrder.Builder.aSortOrder().withField(ConnectorFilterKeys.createdAt, OrderType.DESC).build()))
-            .build());
-    Criteria criteria = new Criteria();
-    if (isNotEmpty(filterIds)) {
-      criteria.and(ConnectorFilterKeys.identifier).in(filterIds);
-    }
-    criteria.and(ConnectorFilterKeys.accountIdentifier).in(accountId);
-    criteria.and(ConnectorFilterKeys.orgIdentifier).in(orgIdentifier);
-    criteria.and(ConnectorFilterKeys.projectIdentifier).in(projectIdentifier);
-    return filterRepository.findAll(criteria, pageable).map(connectorFilterMapper::writeDTO);
-  }
-
-  public Criteria createCriteriaFromConnectorListQueryParams(
-      String accountIdentifier, ConnectorListFilter connectorFilterQueryParams) {
     Criteria criteria = new Criteria();
     criteria.and(ConnectorKeys.accountIdentifier).is(accountIdentifier);
+    if (includeAllConnectorsAccessibleAtScope != null && includeAllConnectorsAccessibleAtScope) {
+      addCriteriaToReturnAllConnectorsAccessible(criteria, orgIdentifier, projectIdentifier);
+    } else {
+      criteria.and(ConnectorKeys.orgIdentifier).is(orgIdentifier);
+      criteria.and(ConnectorKeys.projectIdentifier).is(projectIdentifier);
+    }
     criteria.orOperator(where(ConnectorKeys.deleted).exists(false), where(ConnectorKeys.deleted).is(false));
-    if (connectorFilterQueryParams == null) {
+    if (isNotBlank(searchTerm)) {
+      populateSearchTermFilter(criteria, searchTerm);
+    }
+    if (isEmpty(filterIdentifier) && filterProperties == null) {
       return criteria;
     }
-    if (isNotBlank(connectorFilterQueryParams.getFilterIdentifier())) {
-      populateSavedConnectorFilter(criteria, connectorFilterQueryParams.getFilterIdentifier(), accountIdentifier,
-          connectorFilterQueryParams.getFilterOrgIdentifier(), connectorFilterQueryParams.getFilterProjectIdentifier());
+
+    if (isNotBlank(filterIdentifier)) {
+      populateSavedConnectorFilter(
+          criteria, filterIdentifier, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm);
     } else {
-      ConnectorFilterDTO connectorFilter = createConnectorFilter(connectorFilterQueryParams);
-      populateInFilter(criteria, ConnectorKeys.orgIdentifier, connectorFilterQueryParams.getOrgIdentifier());
-      populateInFilter(criteria, ConnectorKeys.projectIdentifier, connectorFilterQueryParams.getProjectIdentifier());
-      populateConnectorFiltersInTheCriteria(criteria, connectorFilter);
+      populateConnectorFiltersInTheCriteria(criteria, (ConnectorFilterPropertiesDTO) filterProperties, searchTerm);
     }
     return criteria;
   }
 
-  private ConnectorFilterDTO createConnectorFilter(ConnectorListFilter connectorFilterQueryParams) {
-    return ConnectorFilterDTO.builder()
-        .connectorIdentifiers(connectorFilterQueryParams.getConnectorIdentifier())
-        .categories(connectorFilterQueryParams.getCategory())
-        .connectivityStatuses(connectorFilterQueryParams.getConnectivityStatus())
-        .descriptions(connectorFilterQueryParams.getDescription())
-        .inheritingCredentialsFromDelegate(connectorFilterQueryParams.getInheritingCredentialsFromDelegate())
-        .scopes(connectorFilterQueryParams.getScope())
-        .connectorNames(connectorFilterQueryParams.getName())
-        .types(connectorFilterQueryParams.getType())
-        .searchTerm(connectorFilterQueryParams.getSearchTerm())
-        .build();
+  private void addCriteriaToReturnAllConnectorsAccessible(
+      Criteria criteria, String orgIdentifier, String projectIdentifier) {
+    if (isNotBlank(projectIdentifier)) {
+      Criteria orCriteria = new Criteria().orOperator(
+          Criteria.where(ConnectorKeys.scope).is(PROJECT).and(ConnectorKeys.projectIdentifier).is(projectIdentifier),
+          Criteria.where(ConnectorKeys.scope).is(ORG).and(ConnectorKeys.orgIdentifier).is(orgIdentifier),
+          Criteria.where(ConnectorKeys.scope).is(ACCOUNT));
+      criteria.andOperator(orCriteria);
+    } else if (isNotBlank(orgIdentifier)) {
+      Criteria orCriteria = new Criteria().orOperator(
+          Criteria.where(ConnectorKeys.scope).is(ORG).and(ConnectorKeys.orgIdentifier).is(orgIdentifier),
+          Criteria.where(ConnectorKeys.scope).is(ACCOUNT));
+      criteria.andOperator(orCriteria);
+    } else {
+      criteria.and(ConnectorKeys.scope).is(ACCOUNT);
+    }
   }
 
   private void populateSavedConnectorFilter(Criteria criteria, String filterIdentifier, String accountIdentifier,
-      String orgIdentifier, String projectIdentifier) {
-    ConnectorFilterDTO connectorFilter = get(accountIdentifier, orgIdentifier, projectIdentifier, filterIdentifier);
-    criteria.and(ConnectorKeys.orgIdentifier).is(connectorFilter.getOrgIdentifier());
-    criteria.and(ConnectorKeys.projectIdentifier).is(connectorFilter.getProjectIdentifier());
-    populateConnectorFiltersInTheCriteria(criteria, connectorFilter);
+      String orgIdentifier, String projectIdentifier, String searchTerm) {
+    FilterDTO connectorFilterDTO =
+        filterService.get(accountIdentifier, orgIdentifier, projectIdentifier, filterIdentifier, CONNECTOR);
+    if (connectorFilterDTO == null) {
+      throw new InvalidRequestException(String.format("Could not find a connector filter with the identifier %s, in %s",
+          ScopeHelper.getScopeMessageForLogs(accountIdentifier, orgIdentifier, projectIdentifier)));
+    }
+    populateConnectorFiltersInTheCriteria(
+        criteria, (ConnectorFilterPropertiesDTO) connectorFilterDTO.getFilterProperties(), searchTerm);
   }
 
-  private void populateConnectorFiltersInTheCriteria(Criteria criteria, ConnectorFilterDTO connectorFilter) {
+  private void populateConnectorFiltersInTheCriteria(
+      Criteria criteria, ConnectorFilterPropertiesDTO connectorFilter, String searchTerm) {
     if (connectorFilter == null) {
       return;
     }
-    populateInFilter(criteria, ConnectorKeys.scope, connectorFilter.getScopes());
     populateInFilter(criteria, ConnectorKeys.categories, connectorFilter.getCategories());
     populateInFilter(criteria, ConnectorKeys.type, connectorFilter.getTypes());
-    populateSearchTermFilter(criteria, connectorFilter.getSearchTerm());
     populateInFilter(criteria, ConnectorKeys.name, connectorFilter.getConnectorNames());
     populateInFilter(criteria, ConnectorKeys.identifier, connectorFilter.getConnectorIdentifiers());
-    populateDescriptionFilter(criteria, connectorFilter.getDescriptions(), connectorFilter.getSearchTerm());
+    populateDescriptionFilter(criteria, connectorFilter.getDescription(), searchTerm);
     populateInFilter(criteria, ConnectorKeys.connectionStatus, connectorFilter.getConnectivityStatuses());
     populateInheritCredentialsFromDelegateFilter(criteria, connectorFilter.getInheritingCredentialsFromDelegate());
+    populateTagsFilter(criteria, connectorFilter.getTags());
+  }
+
+  private void populateTagsFilter(Criteria criteria, Map<String, String> tags) {
+    if (isEmpty(tags)) {
+      return;
+    }
+    criteria.and(ConnectorKeys.tags).in(TagMapper.convertToList(tags));
   }
 
   private void populateInheritCredentialsFromDelegateFilter(
@@ -208,9 +152,13 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
     return StringUtils.collectionToDelimitedString(wordsToBeMatched, "|");
   }
 
-  private void populateDescriptionFilter(Criteria criteria, List<String> descriptions, String searchTerm) {
-    if (isNotEmpty(descriptions) && isBlank(searchTerm)) {
-      String pattern = getPatternForMatchingAnyOneOf(descriptions);
+  private void populateDescriptionFilter(Criteria criteria, String description, String searchTerm) {
+    if (isBlank(description)) {
+      return;
+    }
+    String[] descriptionsWords = description.split(" ");
+    if (isNotEmpty(descriptionsWords) && isBlank(searchTerm)) {
+      String pattern = getPatternForMatchingAnyOneOf(Arrays.asList(descriptionsWords));
       Criteria descriptionCriteria = Criteria.where(ConnectorKeys.description)
                                          .regex(pattern, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS);
       criteria.andOperator(descriptionCriteria);

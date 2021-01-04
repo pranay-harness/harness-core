@@ -21,4 +21,5 @@ public class NGCommonEntityConstants {
   public static final String CONNECTOR_IDENTIFIER_KEY = "connectorIdentifier";
   public static final String REPO_URL = "repoURL";
   public static final String PLAN_KEY = "planExecutionId";
+  public static final String TYPE_KEY = "type";
 }
