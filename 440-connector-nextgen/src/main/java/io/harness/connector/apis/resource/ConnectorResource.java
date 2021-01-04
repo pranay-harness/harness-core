@@ -8,7 +8,7 @@ import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.connector.apis.dto.ConnectorCatalogueResponseDTO;
 import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorListFilter;
+import io.harness.connector.apis.dto.ConnectorFilterPropertiesDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.apis.dto.stats.ConnectorStatistics;
 import io.harness.connector.services.ConnectorService;
@@ -52,6 +52,7 @@ import org.hibernate.validator.constraints.NotEmpty;
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 public class ConnectorResource {
+  private static final String INCLUDE_ALL_CONNECTORS_ACCESSIBLE = "includeAllConnectorsAvailableAtScope";
   private final ConnectorService connectorService;
   private static final String CATEGORY_KEY = "category";
 
@@ -107,9 +108,15 @@ public class ConnectorResource {
       @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
       @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size,
       @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      ConnectorListFilter connectorListFilter) {
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGResourceFilterConstants.FILTER_KEY) String filterIdentifier,
+      @QueryParam(INCLUDE_ALL_CONNECTORS_ACCESSIBLE) Boolean includeAllConnectorsAccessibleAtScope,
+      ConnectorFilterPropertiesDTO connectorListFilter) {
     return ResponseDTO.newResponse(
-        getNGPageResponse(connectorService.list(page, size, accountIdentifier, connectorListFilter)));
+        getNGPageResponse(connectorService.list(page, size, accountIdentifier, connectorListFilter, orgIdentifier,
+            projectIdentifier, filterIdentifier, searchTerm, includeAllConnectorsAccessibleAtScope)));
   }
 
   @POST

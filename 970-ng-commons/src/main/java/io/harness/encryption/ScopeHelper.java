@@ -16,4 +16,17 @@ public class ScopeHelper {
     }
     return null;
   }
+
+  public static String getScopeMessageForLogs(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    StringBuilder scopeMessage = new StringBuilder();
+    scopeMessage.append("account " + accountIdentifier);
+    if (orgIdentifier != null) {
+      scopeMessage.append(", org " + orgIdentifier);
+    }
+    if (projectIdentifier != null) {
+      scopeMessage.append(", project " + projectIdentifier);
+    }
+    return scopeMessage.toString();
+  }
 }

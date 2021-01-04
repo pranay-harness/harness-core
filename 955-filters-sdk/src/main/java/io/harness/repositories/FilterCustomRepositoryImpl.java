@@ -1,7 +1,7 @@
-package io.harness.repositories.filters;
+package io.harness.repositories;
 
 import io.harness.annotation.HarnessRepo;
-import io.harness.connector.entities.ConnectorFilter;
+import io.harness.filter.entity.Filter;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,19 +13,19 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 
 @HarnessRepo
-public class ConnectorFilterCustomRepositoryImpl implements ConnectorFilterCustomRepository {
+public class FilterCustomRepositoryImpl implements FilterCustomRepository {
   private final MongoTemplate mongoTemplate;
 
   @Autowired
-  public ConnectorFilterCustomRepositoryImpl(MongoTemplate mongoTemplate) {
+  public FilterCustomRepositoryImpl(MongoTemplate mongoTemplate) {
     this.mongoTemplate = mongoTemplate;
   }
 
   @Override
-  public Page<ConnectorFilter> findAll(Criteria criteria, Pageable pageable) {
+  public Page<Filter> findAll(Criteria criteria, Pageable pageable) {
     Query query = new Query(criteria).with(pageable);
-    List<ConnectorFilter> connectorFilters = mongoTemplate.find(query, ConnectorFilter.class);
-    return PageableExecutionUtils.getPage(connectorFilters, pageable,
-        () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), ConnectorFilter.class));
+    List<Filter> filters = mongoTemplate.find(query, Filter.class);
+    return PageableExecutionUtils.getPage(
+        filters, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), Filter.class));
   }
 }

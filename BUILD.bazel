@@ -97,6 +97,7 @@ modules = [
     "//970-ng-commons",
     "//980-commons",
     "//990-commons-test",
+    "//955-filters-sdk",
 ]
 
 filegroup(

@@ -1,15 +1,17 @@
-package io.harness.connector.apis.resource;
+package io.harness.filter.resource;
 
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
-import io.harness.connector.apis.dto.ConnectorFilterDTO;
-import io.harness.connector.services.ConnectorFilterService;
+import io.harness.filter.FilterType;
+import io.harness.filter.dto.FilterDTO;
+import io.harness.filter.service.FilterService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
@@ -31,8 +33,8 @@ import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
-@Api("/connectorFilters")
-@Path("/connectorFilters")
+@Api("/filters")
+@Path("/filters")
 @Produces({"application/json", "text/yaml", "text/html"})
 @Consumes({"application/json", "text/yaml", "text/html", "text/plain"})
 @ApiResponses(value =
@@ -41,55 +43,58 @@ import org.hibernate.validator.constraints.NotEmpty;
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
-public class ConnectorFilterResource {
-  private ConnectorFilterService connectorFilterService;
+@NextGenManagerAuth
+public class FilterResource {
+  private FilterService filterService;
 
   @GET
   @Path("{identifier}")
-  @ApiOperation(value = "Get Connector Filter", nickname = "getConnectorFilter")
-  public ResponseDTO<ConnectorFilterDTO> get(
-      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+  @ApiOperation(value = "Get Filter", nickname = "getFilter")
+  public ResponseDTO<FilterDTO> get(@NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @NotEmpty @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier) {
+      @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.TYPE_KEY) FilterType type) {
     return ResponseDTO.newResponse(
-        connectorFilterService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier));
+        filterService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier, type));
   }
 
   @GET
-  @ApiOperation(value = "Get Connector Filter", nickname = "getConnectorFilterList")
-  public ResponseDTO<PageResponse<ConnectorFilterDTO>> list(
+  @ApiOperation(value = "Get Filter", nickname = "getFilterList")
+  public ResponseDTO<PageResponse<FilterDTO>> list(
       @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
       @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size,
-      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.TYPE_KEY) FilterType type) {
     return ResponseDTO.newResponse(getNGPageResponse(
-        connectorFilterService.list(page, size, accountIdentifier, orgIdentifier, projectIdentifier, null)));
+        filterService.list(page, size, accountIdentifier, orgIdentifier, projectIdentifier, null, type)));
   }
 
   @POST
-  @ApiOperation(value = "Creates a Connector Filter", nickname = "postConnectorFilter")
-  public ResponseDTO<ConnectorFilterDTO> create(@Valid @NotNull ConnectorFilterDTO connectorFilter,
-      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
-    return ResponseDTO.newResponse(connectorFilterService.create(accountIdentifier, connectorFilter));
+  @ApiOperation(value = "Create a Filter", nickname = "postFilter")
+  public ResponseDTO<FilterDTO> create(@Valid @NotNull FilterDTO filterDTO,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
+    return ResponseDTO.newResponse(filterService.create(accountIdentifier, filterDTO));
   }
 
   @PUT
-  @ApiOperation(value = "Updates a Connector Filter", nickname = "updateConnectorFilter")
-  public ResponseDTO<ConnectorFilterDTO> update(@NotNull @Valid ConnectorFilterDTO connectorFilter,
+  @ApiOperation(value = "Update a Filter", nickname = "updateFilter")
+  public ResponseDTO<FilterDTO> update(@NotNull @Valid FilterDTO filterDTO,
       @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
-    return ResponseDTO.newResponse(connectorFilterService.update(accountIdentifier, connectorFilter));
+    return ResponseDTO.newResponse(filterService.update(accountIdentifier, filterDTO));
   }
 
   @DELETE
   @Path("{identifier}")
-  @ApiOperation(value = "Delete a connector filter", nickname = "deleteConnectorFilter")
+  @ApiOperation(value = "Delete a filter", nickname = "deleteFilter")
   public ResponseDTO<Boolean> delete(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @NotEmpty @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier) {
+      @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.TYPE_KEY) FilterType type) {
     return ResponseDTO.newResponse(
-        connectorFilterService.delete(accountIdentifier, orgIdentifier, projectIdentifier, identifier));
+        filterService.delete(accountIdentifier, orgIdentifier, projectIdentifier, identifier, type));
   }
 }

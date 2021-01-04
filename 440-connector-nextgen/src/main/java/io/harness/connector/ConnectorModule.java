@@ -55,6 +55,7 @@ import io.harness.connector.validator.JiraConnectorValidator;
 import io.harness.connector.validator.KubernetesConnectionValidator;
 import io.harness.connector.validator.NexusConnectorValidator;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.filter.FiltersModule;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.AbstractModule;
@@ -67,7 +68,7 @@ public class ConnectorModule extends AbstractModule {
   @Override
   protected void configure() {
     registerRequiredBindings();
-
+    install(FiltersModule.getInstance());
     MapBinder<String, ConnectionValidator> connectorValidatorMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ConnectionValidator.class);
     connectorValidatorMapBinder.addBinding(ConnectorType.KUBERNETES_CLUSTER.getDisplayName())

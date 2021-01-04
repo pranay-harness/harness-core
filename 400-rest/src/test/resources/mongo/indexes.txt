@@ -130,7 +130,6 @@ configFiles {"name": "appId_1", "background": true} {"appId": 1}
 configFiles {"name": "app_template_entityId", "background": true} {"appId": 1, "templateId": 1, "entityId": 1}
 configFiles {"name": "createdAt_1", "background": true} {"createdAt": 1}
 configFiles {"name": "entityId_1_templateId_1_relativeFilePath_1_OType_1_instances_1_OExpression_1", "unique": true} {"entityId": 1, "templateId": 1, "relativeFilePath": 1, "configOverrideType": 1, "instances": 1, "configOverrideExpression": 1}
-connectorFilters {"name": "unique_filter_idx", "unique": true} {"accountIdentifier": 1, "identifier": 1}
 connectors {"name": "unique_fullyQualifiedIdentifier", "unique": true} {"fullyQualifiedIdentifier": 1}
 containerDeploymentInfo {"name": "appId_1", "background": true} {"appId": 1}
 containerDeploymentInfo {"name": "containerSvcNameNoRevision_1", "background": true} {"containerSvcNameNoRevision": 1}
@@ -275,6 +274,8 @@ exportExecutionsRequests {"name": "status_nextIteration", "background": true} {"
 externalServiceAuthTokens {"name": "appId_1", "background": true} {"appId": 1}
 externalServiceAuthTokens {"name": "createdAt_1", "background": true} {"createdAt": 1}
 featureFlag {"name": "name_1", "background": true} {"name": 1}
+filters {"name": "accountIdIndex", "background": true} {"accountIdentifier": 1}
+filters {"name": "unique_accountId_organizationId_projectId_type", "unique": true} {"fullyQualifiedIdentifier": 1, "filterType": 1}
 gcpBillingAccount {"name": "no_dup", "unique": true} {"accountId": 1, "organizationSettingId": 1}
 gcpBillingJobEntity {"name": "accountId_1", "background": true} {"accountId": 1}
 gcpBillingJobEntity {"name": "nextIteration_1", "background": true} {"nextIteration": 1}

@@ -4,7 +4,6 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.mongo.index.CompoundMongoIndex;
-import io.harness.mongo.index.Field;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
@@ -13,7 +12,6 @@ import io.harness.ngtriggers.beans.target.TargetType;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
-import java.util.Map;
 import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
