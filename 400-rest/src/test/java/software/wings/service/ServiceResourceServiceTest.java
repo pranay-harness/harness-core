@@ -13,6 +13,7 @@ import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.INDER;
+import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
@@ -59,6 +60,7 @@ import static software.wings.security.UserThreadLocal.userGuard;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.stencils.StencilCategory.CONTAINERS;
 import static software.wings.utils.ArtifactType.AWS_LAMBDA;
+import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.ArtifactType.JAR;
 import static software.wings.utils.ArtifactType.WAR;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_CUSTOM_KEYWORD;
@@ -208,6 +210,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import de.danielbechler.diff.ObjectDifferBuilder;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -220,6 +223,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import javax.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -252,7 +256,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                                                           .withCommand(commandBuilder.but().build());
   private ServiceBuilder serviceBuilder = getServiceBuilder();
 
-  PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest();
+  PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest(SERVICE_ID);
 
   @Inject private WingsPersistence wingsPersistence;
   @Mock private LimitCheckerFactory limitCheckerFactory;
@@ -294,7 +298,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock private CustomDeploymentTypeService customDeploymentTypeService;
 
-  @Inject @InjectMocks private ServiceResourceService srs;
+  @Inject @InjectMocks private ServiceResourceServiceImpl srs;
 
   @Inject @InjectMocks private CommandHelper commandHelper;
   @Inject @InjectMocks private ResourceLookupService resourceLookupService;
@@ -339,7 +343,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(mockWingsPersistence.createQuery(ContainerTask.class))
         .thenReturn(wingsPersistence.createQuery(ContainerTask.class));
 
-    PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest();
+    PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest(SERVICE_ID);
 
     when(mockWingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
         .thenReturn(aPageResponse()
@@ -587,6 +591,26 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     srs.clone(APP_ID, SERVICE_ID, originalService);
   }
 
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testFailCloneWhenServiceNameIsNull() {
+    Service originalService = Service.builder().build();
+    assertThatThrownBy(() -> spyServiceResourceService.clone(APP_ID, SERVICE_ID, originalService))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Service Name can not be empty");
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testFailCloneWhenServiceNameIsEmpty() {
+    Service originalService = Service.builder().name(" ").build();
+    assertThatThrownBy(() -> spyServiceResourceService.clone(APP_ID, SERVICE_ID, originalService))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Service Name can not be empty");
+  }
+
   @Test(expected = ConstraintViolationException.class)
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
@@ -625,7 +649,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldCloneService() throws IOException {
-    PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest();
+    PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest(SERVICE_ID);
 
     when(mockWingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class)))
         .thenAnswer(invocation -> {
@@ -634,23 +658,10 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
           return command;
         });
 
-    Graph commandGraph = getGraph();
-
-    Command command = aCommand().withGraph(commandGraph).build();
-    command.transformGraph();
-    command.setVersion(1L);
+    Command command = getCommand();
 
     when(mockWingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
-        .thenReturn(aPageResponse()
-                        .withResponse(asList(aServiceCommand()
-                                                 .withUuid("SERVICE_COMMAND_ID")
-                                                 .withDefaultVersion(1)
-                                                 .withTargetToAllEnv(true)
-                                                 .withName("START")
-                                                 .withCommand(command)
-                                                 .build()))
-                        .build());
-
+        .thenReturn(getPageResponse(command));
     when(commandService.getCommand(APP_ID, "SERVICE_COMMAND_ID", 1)).thenReturn(command);
 
     Service originalService =
@@ -667,10 +678,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(helmQuery.filter(anyString(), anyObject())).thenReturn(helmQuery);
     when(helmQuery.get()).thenReturn(null);
 
-    Service savedClonedService = originalService.cloneInternal();
-    savedClonedService.setName("Clone Service");
-    savedClonedService.setDescription("clone description");
-    savedClonedService.setUuid("CLONED_SERVICE_ID");
+    Service savedClonedService = getClonedService(originalService);
     when(mockWingsPersistence.saveAndGet(eq(Service.class), any(Service.class))).thenReturn(savedClonedService);
     when(applicationManifestService.getManifestByServiceId(anyString(), anyString())).thenReturn(null);
 
@@ -678,15 +686,10 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         .when(spyServiceResourceService)
         .addCommand(eq(APP_ID), eq("CLONED_SERVICE_ID"), any(ServiceCommand.class), eq(true));
 
-    ConfigFile configFile = ConfigFile.builder().build();
-    configFile.setAppId(APP_ID);
-    configFile.setUuid("CONFIG_FILE_ID");
+    ConfigFile configFile = getConfigFile();
     when(configService.getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID)).thenReturn(asList(configFile));
-    when(configService.download(APP_ID, "CONFIG_FILE_ID")).thenReturn(folder.newFile("abc.txt"));
 
-    ServiceVariable serviceVariable = ServiceVariable.builder().build();
-    serviceVariable.setAppId(APP_ID);
-    serviceVariable.setUuid(SERVICE_VARIABLE_ID);
+    ServiceVariable serviceVariable = getServiceVariable();
     when(serviceVariableService.getServiceVariablesForEntity(APP_ID, SERVICE_ID, OBTAIN_VALUE))
         .thenReturn(asList(serviceVariable));
 
@@ -695,6 +698,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
+
+    when(configService.download(APP_ID, "CONFIG_FILE_ID")).thenReturn(folder.newFile("abc.txt"));
 
     Service clonedService = spyServiceResourceService.clone(
         APP_ID, SERVICE_ID, Service.builder().name("Clone Service").description("clone description").build());
@@ -741,6 +746,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(lambdaQuery.get()).thenReturn(lambdaSpec);
     when(mockWingsPersistence.saveAndGet(eq(LambdaSpecification.class), any(LambdaSpecification.class)))
         .thenReturn(lambdaSpec);
+
     spyServiceResourceService.clone(
         APP_ID, SERVICE_ID, Service.builder().name("Clone Service").description("clone description").build());
 
@@ -748,6 +754,363 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(mockWingsPersistence, times(1)).saveAndGet(eq(LambdaSpecification.class), lambdaArgumentCaptor.capture());
     LambdaSpecification lambdaSpecification = lambdaArgumentCaptor.getValue();
     assertThat(lambdaSpecification.getDefaults().getRuntime()).isEqualTo("default-runtTime");
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldCloneServiceWithoutConfigFile() throws IOException {
+    PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest(SERVICE_ID);
+
+    when(mockWingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class)))
+        .thenAnswer(invocation -> {
+          ServiceCommand command = invocation.getArgumentAt(1, ServiceCommand.class);
+          command.setUuid(ID_KEY);
+          return command;
+        });
+
+    Command command = getCommand();
+
+    when(mockWingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
+        .thenReturn(getPageResponse(command));
+    when(commandService.getCommand(APP_ID, "SERVICE_COMMAND_ID", 1)).thenReturn(command);
+
+    Service originalService =
+        serviceBuilder.serviceCommands(asList(aServiceCommand().withUuid("SERVICE_COMMAND_ID").build())).build();
+    when(mockWingsPersistence.getWithAppId(Service.class, APP_ID, SERVICE_ID)).thenReturn(originalService);
+
+    Query<PcfServiceSpecification> pcfSpecificationQuery = mock(Query.class);
+    when(mockWingsPersistence.createQuery(PcfServiceSpecification.class)).thenReturn(pcfSpecificationQuery);
+    when(pcfSpecificationQuery.filter(anyString(), anyObject())).thenReturn(pcfSpecificationQuery);
+    when(pcfSpecificationQuery.get()).thenReturn(null);
+
+    Query<HelmChartSpecification> helmQuery = mock(Query.class);
+    when(mockWingsPersistence.createQuery(HelmChartSpecification.class)).thenReturn(helmQuery);
+    when(helmQuery.filter(anyString(), anyObject())).thenReturn(helmQuery);
+    when(helmQuery.get()).thenReturn(null);
+
+    Service savedClonedService = getClonedService(originalService);
+    when(mockWingsPersistence.saveAndGet(eq(Service.class), any(Service.class))).thenReturn(savedClonedService);
+    when(applicationManifestService.getManifestByServiceId(anyString(), anyString())).thenReturn(null);
+
+    doReturn(savedClonedService)
+        .when(spyServiceResourceService)
+        .addCommand(eq(APP_ID), eq("CLONED_SERVICE_ID"), any(ServiceCommand.class), eq(true));
+
+    ConfigFile configFile = getConfigFile();
+    when(configService.getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID)).thenReturn(asList(configFile));
+
+    ServiceVariable serviceVariable = getServiceVariable();
+    when(serviceVariableService.getServiceVariablesForEntity(APP_ID, SERVICE_ID, OBTAIN_VALUE))
+        .thenReturn(asList(serviceVariable));
+
+    when(serviceTemplateService.list(any(PageRequest.class), any(Boolean.class), any()))
+        .thenReturn(aPageResponse().withResponse(asList(aServiceTemplate().build())).build());
+
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
+
+    File invalidFile = getFile();
+    when(configService.download(APP_ID, "CONFIG_FILE_ID")).thenReturn(invalidFile);
+
+    Service clonedService = spyServiceResourceService.clone(
+        APP_ID, SERVICE_ID, Service.builder().name("Clone Service").description("clone description").build());
+
+    assertThat(clonedService)
+        .isNotNull()
+        .isInstanceOf(Service.class)
+        .hasFieldOrPropertyWithValue("name", "Clone Service")
+        .hasFieldOrPropertyWithValue("description", "clone description")
+        .hasFieldOrPropertyWithValue("artifactType", originalService.getArtifactType())
+        .hasFieldOrPropertyWithValue("appContainer", originalService.getAppContainer());
+
+    verify(mockWingsPersistence).getWithAppId(Service.class, APP_ID, SERVICE_ID);
+    verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
+    verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
+    verify(serviceVariableService).getServiceVariablesForEntity(APP_ID, SERVICE_ID, OBTAIN_VALUE);
+    verify(serviceVariableService).save(any(ServiceVariable.class));
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldCloneServiceWithDockerArtifactType() throws IOException {
+    PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest(SERVICE_ID);
+    PageRequest<ServiceCommand> clonedServiceCommandPageRequest = getServiceCommandPageRequest("CLONED_SERVICE_ID");
+
+    when(mockWingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class)))
+        .thenAnswer(invocation -> {
+          ServiceCommand command = invocation.getArgumentAt(1, ServiceCommand.class);
+          command.setUuid(ID_KEY);
+          return command;
+        });
+
+    Command command = getCommand();
+
+    when(mockWingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
+        .thenReturn(getPageResponse(command));
+    when(mockWingsPersistence.query(ServiceCommand.class, clonedServiceCommandPageRequest))
+        .thenReturn(getPageResponse(command));
+    when(commandService.getCommand(APP_ID, "SERVICE_COMMAND_ID", 1)).thenReturn(command);
+
+    Service originalService =
+        serviceBuilder.serviceCommands(asList(aServiceCommand().withUuid("SERVICE_COMMAND_ID").build()))
+            .artifactType(DOCKER)
+            .build();
+    when(mockWingsPersistence.getWithAppId(Service.class, APP_ID, SERVICE_ID)).thenReturn(originalService);
+
+    Query<PcfServiceSpecification> pcfSpecificationQuery = mock(Query.class);
+    when(mockWingsPersistence.createQuery(PcfServiceSpecification.class)).thenReturn(pcfSpecificationQuery);
+    when(pcfSpecificationQuery.filter(anyString(), anyObject())).thenReturn(pcfSpecificationQuery);
+    when(pcfSpecificationQuery.get()).thenReturn(null);
+
+    Query<HelmChartSpecification> helmQuery = mock(Query.class);
+    when(mockWingsPersistence.createQuery(HelmChartSpecification.class)).thenReturn(helmQuery);
+    when(helmQuery.filter(anyString(), anyObject())).thenReturn(helmQuery);
+    when(helmQuery.get()).thenReturn(null);
+
+    Service savedClonedService = getClonedService(originalService);
+    when(mockWingsPersistence.saveAndGet(eq(Service.class), any(Service.class))).thenReturn(savedClonedService);
+    when(applicationManifestService.getManifestByServiceId(anyString(), anyString())).thenReturn(null);
+    when(mockWingsPersistence.getWithAppId(Service.class, APP_ID, "CLONED_SERVICE_ID")).thenReturn(savedClonedService);
+
+    doReturn(savedClonedService)
+        .when(spyServiceResourceService)
+        .addCommand(eq(APP_ID), eq("CLONED_SERVICE_ID"), any(ServiceCommand.class), eq(true));
+
+    ConfigFile configFile = getConfigFile();
+    when(configService.getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID)).thenReturn(asList(configFile));
+    when(configService.download(APP_ID, "CONFIG_FILE_ID")).thenReturn(folder.newFile("abc.txt"));
+
+    ServiceVariable serviceVariable = ServiceVariable.builder().build();
+    serviceVariable.setAppId(APP_ID);
+    serviceVariable.setUuid(SERVICE_VARIABLE_ID);
+    when(serviceVariableService.getServiceVariablesForEntity(APP_ID, SERVICE_ID, OBTAIN_VALUE))
+        .thenReturn(asList(serviceVariable));
+
+    when(serviceTemplateService.list(any(PageRequest.class), any(Boolean.class), any()))
+        .thenReturn(aPageResponse().withResponse(asList(aServiceTemplate().build())).build());
+
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
+
+    ContainerTask containerTask = null;
+    List<ContainerTask> containerTaskList = Arrays.asList(containerTask);
+    PageRequest<ContainerTask> pageRequest = getContainerTaskPageRequest(SERVICE_ID);
+    PageResponse<ContainerTask> pageResponse = mock(PageResponse.class);
+    when(mockWingsPersistence.query(ContainerTask.class, pageRequest))
+        .thenReturn(aPageResponse().withResponse(Collections.emptyList()).build());
+    when(pageResponse.getResponse()).thenReturn(containerTaskList);
+
+    Service clonedService = spyServiceResourceService.clone(
+        APP_ID, SERVICE_ID, Service.builder().name("Clone Service").description("clone description").build());
+
+    assertThat(clonedService)
+        .isNotNull()
+        .isInstanceOf(Service.class)
+        .hasFieldOrPropertyWithValue("name", "Clone Service")
+        .hasFieldOrPropertyWithValue("description", "clone description")
+        .hasFieldOrPropertyWithValue("artifactType", originalService.getArtifactType())
+        .hasFieldOrPropertyWithValue("appContainer", originalService.getAppContainer());
+
+    verify(mockWingsPersistence).getWithAppId(Service.class, APP_ID, SERVICE_ID);
+    verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldCloneServiceWithContainerTask() throws IOException {
+    PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest(SERVICE_ID);
+    PageRequest<ServiceCommand> clonedServiceCommandPageRequest = getServiceCommandPageRequest("CLONED_SERVICE_ID");
+
+    when(mockWingsPersistence.saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class)))
+        .thenAnswer(invocation -> {
+          ServiceCommand command = invocation.getArgumentAt(1, ServiceCommand.class);
+          command.setUuid(ID_KEY);
+          return command;
+        });
+
+    Command command = getCommand();
+
+    when(mockWingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
+        .thenReturn(getPageResponse(command));
+    when(mockWingsPersistence.query(ServiceCommand.class, clonedServiceCommandPageRequest))
+        .thenReturn(getPageResponse(command));
+    when(commandService.getCommand(APP_ID, "SERVICE_COMMAND_ID", 1)).thenReturn(command);
+
+    Service originalService =
+        serviceBuilder.serviceCommands(asList(aServiceCommand().withUuid("SERVICE_COMMAND_ID").build()))
+            .artifactType(DOCKER)
+            .build();
+    when(mockWingsPersistence.getWithAppId(Service.class, APP_ID, SERVICE_ID)).thenReturn(originalService);
+
+    Query<PcfServiceSpecification> pcfSpecificationQuery = mock(Query.class);
+    when(mockWingsPersistence.createQuery(PcfServiceSpecification.class)).thenReturn(pcfSpecificationQuery);
+    when(pcfSpecificationQuery.filter(anyString(), anyObject())).thenReturn(pcfSpecificationQuery);
+    when(pcfSpecificationQuery.get()).thenReturn(null);
+
+    Query<HelmChartSpecification> helmQuery = mock(Query.class);
+    when(mockWingsPersistence.createQuery(HelmChartSpecification.class)).thenReturn(helmQuery);
+    when(helmQuery.filter(anyString(), anyObject())).thenReturn(helmQuery);
+    when(helmQuery.get()).thenReturn(getHelmChartSpecification());
+    when(mockWingsPersistence.saveAndGet(eq(HelmChartSpecification.class), any(HelmChartSpecification.class)))
+        .thenReturn(getHelmChartSpecification());
+
+    Service savedClonedService = getClonedService(originalService);
+    when(mockWingsPersistence.saveAndGet(eq(Service.class), any(Service.class))).thenReturn(savedClonedService);
+    when(applicationManifestService.getManifestByServiceId(anyString(), anyString())).thenReturn(null);
+    when(mockWingsPersistence.getWithAppId(Service.class, APP_ID, "CLONED_SERVICE_ID")).thenReturn(savedClonedService);
+
+    doReturn(savedClonedService)
+        .when(spyServiceResourceService)
+        .addCommand(eq(APP_ID), eq("CLONED_SERVICE_ID"), any(ServiceCommand.class), eq(true));
+
+    ConfigFile configFile = getConfigFile();
+    when(configService.getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID)).thenReturn(asList(configFile));
+    when(configService.download(APP_ID, "CONFIG_FILE_ID")).thenReturn(folder.newFile("abc.txt"));
+
+    ServiceVariable serviceVariable = ServiceVariable.builder().build();
+    serviceVariable.setAppId(APP_ID);
+    serviceVariable.setUuid(SERVICE_VARIABLE_ID);
+    when(serviceVariableService.getServiceVariablesForEntity(APP_ID, SERVICE_ID, OBTAIN_VALUE))
+        .thenReturn(asList(serviceVariable));
+
+    when(serviceTemplateService.list(any(PageRequest.class), any(Boolean.class), any()))
+        .thenReturn(aPageResponse().withResponse(asList(aServiceTemplate().build())).build());
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_SERVICE)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_SERVICE));
+
+    ContainerTask containerTask = getContainerTask(SERVICE_ID);
+    List<ContainerTask> containerTaskList = Arrays.asList(containerTask);
+    PageRequest<ContainerTask> pageRequest = getContainerTaskPageRequest(SERVICE_ID);
+    PageResponse<ContainerTask> pageResponse = mock(PageResponse.class);
+    when(mockWingsPersistence.query(ContainerTask.class, pageRequest)).thenReturn(pageResponse);
+    when(pageResponse.getResponse()).thenReturn(containerTaskList);
+
+    Query<Service> serviceQuery = mock(Query.class);
+    when(mockWingsPersistence.createQuery(Service.class)).thenReturn(serviceQuery);
+    when(serviceQuery.filter(anyString(), anyObject())).thenReturn(serviceQuery);
+    Key<Service> key = new Key(Service.class, "services", "CLONED_SERVICE_ID");
+    when(serviceQuery.getKey()).thenReturn(key);
+
+    ContainerTask clonedContainerTask = getContainerTask("CLONED_SERVICE_ID");
+    when(mockWingsPersistence.getWithAppId(Service.class, APP_ID, "CLONED_SERVICE_ID")).thenReturn(originalService);
+    when(mockWingsPersistence.saveAndGet(ContainerTask.class, clonedContainerTask)).thenReturn(clonedContainerTask);
+
+    Service clonedService = spyServiceResourceService.clone(
+        APP_ID, SERVICE_ID, Service.builder().name("Clone Service").description("clone description").build());
+
+    assertThat(clonedService)
+        .isNotNull()
+        .isInstanceOf(Service.class)
+        .hasFieldOrPropertyWithValue("name", "Clone Service")
+        .hasFieldOrPropertyWithValue("description", "clone description")
+        .hasFieldOrPropertyWithValue("artifactType", originalService.getArtifactType())
+        .hasFieldOrPropertyWithValue("appContainer", originalService.getAppContainer());
+
+    verify(mockWingsPersistence, times(2)).getWithAppId(Service.class, APP_ID, SERVICE_ID);
+    verify(configService, times(3)).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
+  }
+
+  public HelmChartSpecification getHelmChartSpecification() {
+    HelmChartSpecification specification = HelmChartSpecification.builder()
+                                               .chartName("chartName")
+                                               .chartUrl("chartUrl")
+                                               .chartVersion("v1")
+                                               .serviceId(SERVICE_ID)
+                                               .build();
+    specification.setAccountId(ACCOUNT_ID);
+    specification.setAppId(APP_ID);
+    return specification;
+  }
+
+  @NotNull
+  private ContainerTask getContainerTask(String serviceId) {
+    ContainerTask containerTask = new KubernetesContainerTask();
+    containerTask.setServiceId(serviceId);
+    return containerTask;
+  }
+
+  @NotNull
+  private File getFile() throws IOException {
+    File invalidFile = folder.newFile("invalid_file");
+    invalidFile.setReadable(false);
+    invalidFile.setWritable(false);
+    return invalidFile;
+  }
+
+  @NotNull
+  private Command getCommand() {
+    Graph commandGraph = getGraph();
+
+    Command command = aCommand().withGraph(commandGraph).build();
+    command.transformGraph();
+    command.setVersion(1L);
+    return command;
+  }
+
+  @NotNull
+  private ConfigFile getConfigFile() {
+    ConfigFile configFile = ConfigFile.builder().build();
+    configFile.setAppId(APP_ID);
+    configFile.setUuid("CONFIG_FILE_ID");
+    return configFile;
+  }
+
+  @NotNull
+  private Service getClonedService(Service originalService) {
+    Service savedClonedService = originalService.cloneInternal();
+    savedClonedService.setName("Clone Service");
+    savedClonedService.setDescription("clone description");
+    savedClonedService.setUuid("CLONED_SERVICE_ID");
+    return savedClonedService;
+  }
+
+  @NotNull
+  private ServiceVariable getServiceVariable() {
+    ServiceVariable serviceVariable = ServiceVariable.builder().build();
+    serviceVariable.setAppId(APP_ID);
+    serviceVariable.setUuid(SERVICE_VARIABLE_ID);
+    return serviceVariable;
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testCloneCommandWithDockerArtifactType() {
+    Service service = serviceBuilder.serviceCommands(asList(aServiceCommand().withUuid("SERVICE_COMMAND_ID").build()))
+                          .artifactType(DOCKER)
+                          .build();
+    when(mockWingsPersistence.getWithAppId(Service.class, APP_ID, SERVICE_ID)).thenReturn(service);
+
+    ServiceCommand serviceCommand = ServiceCommand.Builder.aServiceCommand()
+                                        .withAccountId(ACCOUNT_ID)
+                                        .withAppId(APP_ID)
+                                        .withName("service-command-name")
+                                        .withServiceId(SERVICE_ID)
+                                        .withCommand(Command.Builder.aCommand()
+                                                         .withCommandType(CommandType.OTHER)
+                                                         .withName("command-name")
+                                                         .withAccountId(ACCOUNT_ID)
+                                                         .build())
+                                        .build();
+    assertThatThrownBy(() -> spyServiceResourceService.cloneCommand(APP_ID, SERVICE_ID, "command-name", serviceCommand))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Docker commands can not be cloned");
+  }
+
+  @NotNull
+  private PageResponse getPageResponse(Command command) {
+    return aPageResponse()
+        .withResponse(asList(aServiceCommand()
+                                 .withUuid("SERVICE_COMMAND_ID")
+                                 .withDefaultVersion(1)
+                                 .withTargetToAllEnv(true)
+                                 .withName("START")
+                                 .withCommand(command)
+                                 .build()))
+        .build();
   }
 
   private Graph getGraph() {
@@ -989,7 +1352,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     oldCommand.setVersion(1L);
 
-    PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest();
+    PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest(SERVICE_ID);
 
     when(mockWingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
         .thenReturn(aPageResponse()
@@ -1271,11 +1634,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldNotUpdateCommandNothingChanged() {
-    Graph oldCommandGraph = getGraph();
-
-    Command oldCommand = aCommand().withGraph(oldCommandGraph).build();
-    oldCommand.transformGraph();
-    oldCommand.setVersion(1L);
+    Command oldCommand = getCommand();
 
     prepareServiceCommandMocks();
 
@@ -1398,11 +1757,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldNotUpdateVersionWhenNothingChanged() {
-    Graph oldCommandGraph = getGraph();
-
-    Command oldCommand = aCommand().withGraph(oldCommandGraph).build();
-    oldCommand.transformGraph();
-    oldCommand.setVersion(1L);
+    Command oldCommand = getCommand();
 
     prepareServiceCommandMocks();
 
@@ -1466,11 +1821,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldUpdateCommandNameAndTypeChanged() {
-    Graph oldCommandGraph = getGraph();
-
-    Command oldCommand = aCommand().withGraph(oldCommandGraph).build();
-    oldCommand.transformGraph();
-    oldCommand.setVersion(1L);
+    Command oldCommand = getCommand();
     oldCommand.setGraph(null);
     oldCommand.setName("START");
     oldCommand.setCommandType(CommandType.START);
@@ -1600,7 +1951,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     when(commandService.getCommand(APP_ID, ID_KEY, 1)).thenReturn(oldCommand);
 
-    PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest();
+    PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest(SERVICE_ID);
 
     when(mockWingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
         .thenReturn(aPageResponse().withResponse(serviceCommands).build());
@@ -1756,7 +2107,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                 .build()))
                         .build());
 
-    PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest();
+    PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest(SERVICE_ID);
 
     when(mockWingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
         .thenReturn(getServiceCommandPageResponse());
@@ -1813,7 +2164,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                 .build()))
                         .build());
 
-    PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest();
+    PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest(SERVICE_ID);
 
     when(mockWingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
         .thenReturn(getServiceCommandPageResponse());
@@ -2128,12 +2479,16 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     assertThat(result.getAdvancedConfig()).isNull();
   }
 
-  private PageRequest getServiceCommandPageRequest() {
+  private PageRequest getServiceCommandPageRequest(String serviceId) {
     return aPageRequest()
         .withLimit(PageRequest.UNLIMITED)
         .addFilter("appId", EQ, APP_ID)
-        .addFilter("serviceId", EQ, SERVICE_ID)
+        .addFilter("serviceId", EQ, serviceId)
         .build();
+  }
+
+  private PageRequest<ContainerTask> getContainerTaskPageRequest(String serviceId) {
+    return aPageRequest().addFilter("appId", EQ, APP_ID).addFilter("serviceId", EQ, SERVICE_ID).build();
   }
 
   @Test
