@@ -4,8 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.EntityType;
 import io.harness.exception.InvalidRequestException;
+import io.harness.yaml.YamlSchemaRoot;
 import io.harness.yaml.utils.YamlSchemaUtils;
-import io.harness.yamlSchema.YamlSchemaRoot;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -53,8 +53,7 @@ public class YamlSchemaValidator {
   /**
    * Finds all classes with {@link YamlSchemaRoot} in classpath and store its schema in schemas map.
    */
-  public void populateSchemaInStaticMap(String schemaBasePath) {
-    final Set<Class<?>> rootClasses = YamlSchemaUtils.getClasses(null, YamlSchemaUtils.class);
+  public void populateSchemaInStaticMap(String schemaBasePath, Set<Class<?>> rootClasses) {
     if (isNotEmpty(rootClasses)) {
       JsonSchemaFactory factory =
           JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7)).build();
@@ -62,8 +61,8 @@ public class YamlSchemaValidator {
         final EntityType entityType = rootClass.getAnnotation(YamlSchemaRoot.class).value();
         final String schemaPathFromEntityType = YamlSchemaUtils.getSchemaPathForEntityType(entityType, schemaBasePath);
         try {
-          final String schema = IOUtils.resourceToString(
-              schemaPathFromEntityType, StandardCharsets.UTF_8, YamlSchemaValidator.class.getClassLoader());
+          final String schema =
+              IOUtils.resourceToString(schemaPathFromEntityType, StandardCharsets.UTF_8, rootClass.getClassLoader());
           if (isNotEmpty(schema)) {
             final JsonSchema jsonSchema = factory.getSchema(schema);
             schemas.put(entityType, jsonSchema);

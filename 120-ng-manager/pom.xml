@@ -238,11 +238,8 @@
             </plugin>
             <plugin>
                 <groupId>software.wings</groupId>
-                <artifactId>900-yaml-sdk</artifactId>
+                <artifactId>899-yaml-schema-plugin</artifactId>
                 <version>0.0.1-SNAPSHOT</version>
-                <configuration>
-                    <generationFolder>schema</generationFolder>
-                </configuration>
                 <executions>
                     <execution>
                         <goals>

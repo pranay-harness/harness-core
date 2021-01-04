@@ -1,8 +1,7 @@
 package io.harness.yaml.schema;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.yaml.YamlSdkConfiguration;
 import io.harness.yaml.schema.beans.YamlSchemaConfiguration;
 
 import java.io.File;
@@ -10,6 +9,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.List;
+import lombok.SneakyThrows;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -26,7 +26,7 @@ public class YamlSchemaMojo extends AbstractMojo {
   /**
    * The base path where the schema will be stored in resources.
    */
-  @Parameter(defaultValue = "schema") public String generationFolder;
+  public String generationFolder = YamlSdkConfiguration.schemaBasePath;
 
   /**
    * The Maven project.
@@ -43,24 +43,26 @@ public class YamlSchemaMojo extends AbstractMojo {
    *
    * @throws MojoExecutionException An exception in case of errors and unexpected behavior
    */
+  @SneakyThrows
   public void execute() throws MojoExecutionException {
     if (IsRunningOnJenkins()) {
       return;
     }
     classLoader = getClassLoader();
+
     Thread.currentThread().setContextClassLoader(classLoader);
-    YamlSchemaGenerator generator = new YamlSchemaGenerator();
-    String path = project.getBuild().getSourceDirectory() + "/../resources";
-    path = isEmpty(generationFolder) ? path : path + File.separator + generationFolder;
+    JacksonClassHelper jacksonClassHelper = new JacksonClassHelper();
+    SwaggerGenerator swaggerGenerator = new SwaggerGenerator();
+    YamlSchemaGenerator generator = new YamlSchemaGenerator(jacksonClassHelper, swaggerGenerator);
     YamlSchemaConfiguration yamlSchemaConfiguration =
-        YamlSchemaConfiguration.builder().generatedPathRoot(path).classLoader(classLoader).build();
+        YamlSchemaConfiguration.builder().generatedPathRoot(generationFolder).classLoader(classLoader).build();
 
     generator.generateYamlSchemaFiles(yamlSchemaConfiguration);
   }
 
   private boolean IsRunningOnJenkins() {
     final String platform = System.getProperty("PLATFORM");
-    return isNotEmpty(platform) && platform.equals("jenkins");
+    return EmptyPredicate.isNotEmpty(platform) && platform.equals("jenkins");
   }
 
   /**

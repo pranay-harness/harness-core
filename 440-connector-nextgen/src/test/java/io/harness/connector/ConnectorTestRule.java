@@ -22,10 +22,11 @@ import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.serializer.ConnectorNextGenRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.OrchestrationBeansRegistrars;
+import io.harness.serializer.PersistenceRegistrars;
 import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
+import io.harness.yaml.YamlSdkModule;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -77,26 +78,23 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
     modules.add(new SpringPersistenceTestModule());
     modules.add(new ConnectorModule());
     modules.add(KryoModule.getInstance());
+    modules.add(YamlSdkModule.getInstance());
     modules.add(new EntitySetupUsageClientModule(
         ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret", "Service"));
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
-        return ImmutableSet.<Class<? extends KryoRegistrar>>builder().build();
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+            .addAll(ConnectorNextGenRegistrars.kryoRegistrars)
+            .build();
       }
 
       @Provides
       @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
-        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder().build();
-      }
-
-      @Provides
-      @Singleton
-      Set<Class<? extends TypeConverter>> morphiaConverters() {
-        return ImmutableSet.<Class<? extends TypeConverter>>builder()
-            .addAll(OrchestrationBeansRegistrars.morphiaConverters)
+        return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
+            .addAll(ConnectorNextGenRegistrars.morphiaRegistrars)
             .build();
       }
 
@@ -105,6 +103,14 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
       List<Class<? extends Converter<?, ?>>> springConverters() {
         return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
             .addAll(ConnectorNextGenRegistrars.springConverters)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      Set<Class<? extends TypeConverter>> morphiaConverters() {
+        return ImmutableSet.<Class<? extends TypeConverter>>builder()
+            .addAll(PersistenceRegistrars.morphiaConverters)
             .build();
       }
     });

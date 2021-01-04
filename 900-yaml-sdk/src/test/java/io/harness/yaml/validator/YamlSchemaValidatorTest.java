@@ -12,6 +12,7 @@ import io.harness.CategoryTest;
 import io.harness.EntityType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.harness.yaml.YamlSdkConfiguration;
 import io.harness.yaml.schema.TestClass;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
@@ -48,7 +49,9 @@ public class YamlSchemaValidatorTest extends CategoryTest {
     final String type1Incorrect = getYamlResource("validator/testType1Incorrect.yaml");
     final String type2Incorrect = getYamlResource("validator/testYamlType2Incorrect.yaml");
     intializeAndMockInputStream();
-    yamlSchemaValidator.populateSchemaInStaticMap(null);
+    Set<Class<?>> classes = new HashSet<>();
+    classes.add(TestClass.ClassWhichContainsInterface.class);
+    yamlSchemaValidator.populateSchemaInStaticMap(YamlSdkConfiguration.schemaBasePath, classes);
 
     final Set<String> type1Val = yamlSchemaValidator.validate(type1, EntityType.CONNECTORS);
     assertThat(type1Val).isEmpty();
@@ -69,7 +72,7 @@ public class YamlSchemaValidatorTest extends CategoryTest {
     mockStatic(IOUtils.class);
     Set<Class<?>> classes = new HashSet<>();
     classes.add(TestClass.ClassWhichContainsInterface.class);
-    when(YamlSchemaUtils.getClasses(any(), any())).thenReturn(classes);
+    when(YamlSchemaUtils.getClasses(any())).thenReturn(classes);
     when(IOUtils.resourceToString(any(), any(), any())).thenReturn(schema);
   }
 

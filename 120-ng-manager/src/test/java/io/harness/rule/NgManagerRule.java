@@ -26,6 +26,7 @@ import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
+import io.harness.yaml.YamlSdkModule;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -81,6 +82,7 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
     modules.add(KryoModule.getInstance());
+    modules.add(YamlSdkModule.getInstance());
     modules.add(new EventsFrameworkModule(EventsFrameworkConfiguration.builder()
                                               .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
                                               .build()));

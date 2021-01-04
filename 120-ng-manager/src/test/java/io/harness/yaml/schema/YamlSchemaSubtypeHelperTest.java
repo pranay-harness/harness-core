@@ -11,7 +11,7 @@ import io.harness.EntityType;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.rule.Owner;
-import io.harness.yaml.YamlSdkConstants;
+import io.harness.yaml.YamlSdkConfiguration;
 import io.harness.yaml.utils.YamlConstants;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -51,7 +51,7 @@ public class YamlSchemaSubtypeHelperTest extends CategoryTest {
   }
 
   String getConnectorSchema() throws IOException {
-    return IOUtils.resourceToString(YamlSdkConstants.schemaBasePath + File.separator
+    return IOUtils.resourceToString(YamlSdkConfiguration.schemaBasePath + File.separator
             + EntityType.CONNECTORS.getYamlName() + File.separator + YamlConstants.SCHEMA_FILE_NAME,
         StandardCharsets.UTF_8, YamlSchemaSubtypeHelper.class.getClassLoader());
   }
@@ -74,6 +74,6 @@ public class YamlSchemaSubtypeHelperTest extends CategoryTest {
   public void throwExceptionForSubtypesWithoutSupport() {
     assertThatThrownBy(()
                            -> yamlSchemaSubtypeHelper.getSchemaForSubtype(
-                               EntityType.PIPELINES, ConnectorType.KUBERNETES_CLUSTER, "schmema"));
+                               EntityType.PIPELINES, ConnectorType.KUBERNETES_CLUSTER, "schema"));
   }
 }

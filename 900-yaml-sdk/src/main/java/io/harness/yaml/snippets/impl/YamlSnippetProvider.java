@@ -11,7 +11,6 @@ import io.harness.yaml.snippets.helper.YamlSnippetHelper;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
@@ -78,9 +77,8 @@ public class YamlSnippetProvider {
       throw new InvalidRequestException("Yaml snippet not found for given identifier");
     }
     try {
-      final InputStream inputStream =
-          getClass().getClassLoader().getResourceAsStream(yamlSnippetMetaData.getResourcePath());
-      return IOUtils.toString(inputStream, StandardCharsets.UTF_8.name());
+      return IOUtils.resourceToString(yamlSnippetMetaData.getResourcePath(), StandardCharsets.UTF_8,
+          yamlSnippetMetaData.getClass().getClassLoader());
     } catch (Exception e) {
       throw new InvalidRequestException("Couldn't find snippet for given identifier.", e);
     }

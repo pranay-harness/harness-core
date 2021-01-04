@@ -4,8 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.EntityType;
 import io.harness.exception.InvalidRequestException;
+import io.harness.yaml.YamlSchemaRoot;
 import io.harness.yaml.utils.YamlSchemaUtils;
-import io.harness.yamlSchema.YamlSchemaRoot;
 
 import com.google.inject.Singleton;
 import java.io.IOException;
@@ -22,15 +22,14 @@ import org.apache.commons.io.IOUtils;
 public class YamlSchemaHelper {
   static Map<EntityType, String> entityTypeSchemaMap = new HashMap<>();
 
-  public void initializeSchemaMaps(String schemaBasePath) {
-    final Set<Class<?>> classes = YamlSchemaUtils.getClasses(null, YamlSchemaRoot.class);
+  public void initializeSchemaMaps(String schemaBasePath, Set<Class<?>> classes) {
     if (isNotEmpty(classes)) {
       classes.forEach(clazz -> {
         final EntityType entityType = clazz.getAnnotation(YamlSchemaRoot.class).value();
         final String schemaPathForEntityType = YamlSchemaUtils.getSchemaPathForEntityType(entityType, schemaBasePath);
         try {
-          final String schema = IOUtils.resourceToString(
-              schemaPathForEntityType, StandardCharsets.UTF_8, this.getClass().getClassLoader());
+          final String schema =
+              IOUtils.resourceToString(schemaPathForEntityType, StandardCharsets.UTF_8, clazz.getClassLoader());
           if (isNotEmpty(schema)) {
             entityTypeSchemaMap.put(entityType, schema);
           }

@@ -3,6 +3,7 @@ package io.harness.yaml.schema;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import com.google.inject.Singleton;
 import io.swagger.converter.ModelConverters;
 import io.swagger.models.Model;
 import io.swagger.models.Swagger;
@@ -11,6 +12,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Singleton
 public class SwaggerGenerator {
   /**
    * @param baseClass Class for which and all its descendants swagger definitions will be generated.
