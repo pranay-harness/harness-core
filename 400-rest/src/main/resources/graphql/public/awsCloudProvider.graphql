@@ -6,6 +6,7 @@ input AwsCloudProviderInput {
   manualCredentials: AwsManualCredentials
 
   crossAccountAttributes: AwsCrossAccountAttributes
+  defaultRegion: String
 }
 
 enum AwsCredentialsType {
@@ -38,6 +39,7 @@ input UpdateAwsCloudProviderInput {
   manualCredentials: UpdateAwsManualCredentials
 
   crossAccountAttributes: UpdateAwsCrossAccountAttributes
+  defaultRegion: String
 }
 
 input UpdateEc2IamCredentials {

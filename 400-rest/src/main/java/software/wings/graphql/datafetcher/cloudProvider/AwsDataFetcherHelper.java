@@ -88,6 +88,11 @@ public class AwsDataFetcherHelper {
         configBuilder.crossAccountAttributes(builder.build());
       });
     }
+
+    if (input.getDefaultRegion() != null && input.getDefaultRegion().isPresent()) {
+      input.getDefaultRegion().getValue().ifPresent(configBuilder::defaultRegion);
+    }
+
     settingAttributeBuilder.withValue(configBuilder.build());
 
     if (input.getName().isPresent() && input.getName().getValue().isPresent()) {
@@ -161,6 +166,10 @@ public class AwsDataFetcherHelper {
 
         config.setCrossAccountAttributes(awsCrossAccountAttributes);
       });
+    }
+
+    if (input.getDefaultRegion() != null && input.getDefaultRegion().isPresent()) {
+      input.getDefaultRegion().getValue().ifPresent(config::setDefaultRegion);
     }
 
     settingAttribute.setValue(config);
