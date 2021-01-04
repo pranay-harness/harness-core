@@ -2,6 +2,11 @@ package io.harness.ng.core.api.impl;
 
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
+import static io.harness.eventsframework.EventsFrameworkConstants.ACTION_METADATA;
+import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
+import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_TYPE_METADATA;
+import static io.harness.eventsframework.EventsFrameworkConstants.PROJECT_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkConstants.UPDATE_ACTION;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.ng.core.SecretManagementModule.SECRET_FILE_SERVICE;
@@ -9,6 +14,12 @@ import static io.harness.ng.core.SecretManagementModule.SECRET_TEXT_SERVICE;
 import static io.harness.ng.core.SecretManagementModule.SSH_SECRET_SERVICE;
 import static io.harness.remote.client.RestClientUtils.getResponse;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
+import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.api.ProducerShutdownException;
+import io.harness.eventsframework.entity_crud.secret.SecretEntityChangeDTO;
+import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
 import io.harness.ng.beans.PageResponse;
@@ -39,6 +50,7 @@ import com.google.common.io.ByteStreams;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.google.protobuf.StringValue;
 import java.io.InputStream;
 import java.util.EnumMap;
 import java.util.Map;
@@ -59,6 +71,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
   private final NGSecretServiceV2 ngSecretService;
   private final FileUploadLimit fileUploadLimit;
   private final SecretEntityReferenceHelper secretEntityReferenceHelper;
+  private final AbstractProducer eventProducer;
   private final Map<SecretType, SecretModifyService> secretTypeToServiceMap;
 
   @Inject
@@ -67,11 +80,12 @@ public class SecretCrudServiceImpl implements SecretCrudService {
       @Named(SECRET_FILE_SERVICE) SecretModifyService secretFileService,
       @Named(SSH_SECRET_SERVICE) SecretModifyService sshSecretService,
       SecretEntityReferenceHelper secretEntityReferenceHelper, FileUploadLimit fileUploadLimit,
-      NGSecretServiceV2 ngSecretService) {
+      NGSecretServiceV2 ngSecretService, @Named(ENTITY_CRUD) AbstractProducer eventProducer) {
     this.secretManagerClient = secretManagerClient;
     this.fileUploadLimit = fileUploadLimit;
     this.secretEntityReferenceHelper = secretEntityReferenceHelper;
     this.ngSecretService = ngSecretService;
+    this.eventProducer = eventProducer;
     secretTypeToServiceMap = new EnumMap<>(ImmutableMap.of(SecretType.SecretText, secretTextService,
         SecretType.SecretFile, secretFileService, SecretType.SSHKey, sshSecretService));
   }
@@ -209,6 +223,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
       updatedSecret = ngSecretService.update(accountIdentifier, dto, false);
     }
     if (remoteUpdateSuccess && updatedSecret != null) {
+      publishEvent(updatedSecret, UPDATE_ACTION);
       return getResponseWrapper(updatedSecret);
     }
     if (!remoteUpdateSuccess) {
@@ -230,6 +245,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
       updatedSecret = ngSecretService.update(accountIdentifier, dto, true);
     }
     if (remoteUpdateSuccess && updatedSecret != null) {
+      publishEvent(updatedSecret, UPDATE_ACTION);
       return getResponseWrapper(updatedSecret);
     }
     if (!remoteUpdateSuccess) {
@@ -237,6 +253,28 @@ public class SecretCrudServiceImpl implements SecretCrudService {
     } else {
       throw new SecretManagementException(
           SECRET_MANAGEMENT_ERROR, "Unable to update secret locally, data might be inconsistent", USER);
+    }
+  }
+
+  private void publishEvent(Secret secret, String action) {
+    try {
+      SecretEntityChangeDTO.Builder secretEntityChangeDTOBuilder =
+          SecretEntityChangeDTO.newBuilder()
+              .setAccountIdentifier(StringValue.of(secret.getAccountIdentifier()))
+              .setIdentifier(StringValue.of(secret.getIdentifier()));
+      if (isNotBlank(secret.getOrgIdentifier())) {
+        secretEntityChangeDTOBuilder.setOrgIdentifier(StringValue.of(secret.getOrgIdentifier()));
+      }
+      if (isNotBlank(secret.getProjectIdentifier())) {
+        secretEntityChangeDTOBuilder.setProjectIdentifier(StringValue.of(secret.getProjectIdentifier()));
+      }
+      eventProducer.send(Message.newBuilder()
+                             .putAllMetadata(ImmutableMap.of("accountId", secret.getAccountIdentifier(),
+                                 ENTITY_TYPE_METADATA, PROJECT_ENTITY, ACTION_METADATA, action))
+                             .setData(secretEntityChangeDTOBuilder.build().toByteString())
+                             .build());
+    } catch (ProducerShutdownException e) {
+      log.error("Failed to send event to events framework secret Identifier: " + secret.getIdentifier(), e);
     }
   }
 
@@ -288,7 +326,9 @@ public class SecretCrudServiceImpl implements SecretCrudService {
     boolean success = getResponse(secretManagerClient.updateSecretFile(
         dto.getIdentifier(), accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier(), file, metadata));
     if (success) {
-      return getResponseWrapper(ngSecretService.update(accountIdentifier, dto, false));
+      Secret updatedSecret = ngSecretService.update(accountIdentifier, dto, false);
+      publishEvent(updatedSecret, UPDATE_ACTION);
+      return getResponseWrapper(updatedSecret);
     }
     throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Unable to update secret file remotely", USER);
   }

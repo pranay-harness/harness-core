@@ -10,12 +10,16 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.api.ProducerShutdownException;
+import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.api.NGSecretServiceV2;
@@ -44,6 +48,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Answers;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -58,12 +63,13 @@ public class SecretCrudServiceImplTest extends CategoryTest {
   private final FileUploadLimit fileUploadLimit = new FileUploadLimit();
   @Mock private SecretEntityReferenceHelper secretEntityReferenceHelper;
   @Mock private SecretCrudServiceImpl secretCrudService;
+  @Mock private AbstractProducer eventProducer;
 
   @Before
   public void setup() {
     initMocks(this);
     secretCrudService = new SecretCrudServiceImpl(secretManagerClient, secretTextService, secretFileService, sshService,
-        secretEntityReferenceHelper, fileUploadLimit, ngSecretServiceV2);
+        secretEntityReferenceHelper, fileUploadLimit, ngSecretServiceV2, eventProducer);
   }
 
   @Test
@@ -125,9 +131,17 @@ public class SecretCrudServiceImplTest extends CategoryTest {
   public void testUpdate() {
     SecretDTOV2 secretDTOV2 = SecretDTOV2.builder().type(SecretType.SecretText).build();
     when(secretTextService.update(any(), any())).thenReturn(true);
-    when(ngSecretServiceV2.update(any(), any(), eq(false))).thenReturn(Secret.builder().build());
+    when(ngSecretServiceV2.update(any(), any(), eq(false)))
+        .thenReturn(Secret.builder().identifier("secret").accountIdentifier("account").build());
 
     SecretResponseWrapper updatedSecret = secretCrudService.update("account", secretDTOV2);
+
+    ArgumentCaptor<Message> producerMessage = ArgumentCaptor.forClass(Message.class);
+    try {
+      verify(eventProducer, times(1)).send(producerMessage.capture());
+    } catch (ProducerShutdownException e) {
+      e.printStackTrace();
+    }
 
     assertThat(updatedSecret).isNotNull();
   }
@@ -186,10 +200,18 @@ public class SecretCrudServiceImplTest extends CategoryTest {
                                   .build();
     when(secretManagerClient.updateSecretFile(any(), any(), any(), any(), any(), any()).execute())
         .thenReturn(Response.success(new RestResponse<>(true)));
-    when(ngSecretServiceV2.update(any(), any(), eq(false))).thenReturn(Secret.builder().build());
+    when(ngSecretServiceV2.update(any(), any(), eq(false)))
+        .thenReturn(Secret.builder().identifier("secret").accountIdentifier("account").build());
 
     SecretResponseWrapper updatedFile =
         secretCrudService.updateFile("account", secretDTOV2, new StringInputStream("string"));
+
+    ArgumentCaptor<Message> producerMessage = ArgumentCaptor.forClass(Message.class);
+    try {
+      verify(eventProducer, times(1)).send(producerMessage.capture());
+    } catch (ProducerShutdownException e) {
+      e.printStackTrace();
+    }
 
     assertThat(updatedFile).isNotNull();
     verify(secretManagerClient, atLeastOnce()).getSecret(any(), any(), any(), any());
