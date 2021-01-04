@@ -8,6 +8,8 @@ import io.harness.cvng.alert.beans.AlertRuleDTO;
 import io.harness.cvng.alert.beans.AlertRuleDTO.NotificationMethod;
 import io.harness.cvng.alert.entities.AlertRule;
 import io.harness.cvng.alert.entities.AlertRule.AlertRuleKeys;
+import io.harness.cvng.alert.entities.AlertRuleAnomaly;
+import io.harness.cvng.alert.services.AlertRuleAnomalyService;
 import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.alert.util.ActivityType;
 import io.harness.cvng.alert.util.VerificationStatus;
@@ -25,6 +27,8 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -42,6 +46,8 @@ public class AlertRuleServiceImpl implements AlertRuleService {
   @Inject private HPersistence hPersistence;
   @Inject private NotificationClient notificationClient;
   @Inject @Named("portalUrl") String portalUrl;
+  @Inject private AlertRuleAnomalyService alertRuleAnomalyService;
+  @Inject private Clock clock;
 
   @Override
   public PageResponse<AlertRuleDTO> listAlertRules(String accountId, String orgIdentifier, String projectIdentifier,
@@ -97,6 +103,13 @@ public class AlertRuleServiceImpl implements AlertRuleService {
   public void processRiskScore(String accountId, String orgIdentifier, String projectIdentifier,
       String serviceIdentifier, String envIdentifier, CVMonitoringCategory category, Instant timeStamp,
       double riskScore) {
+    Preconditions.checkNotNull(accountId, "accountId can not be null");
+    Preconditions.checkNotNull(orgIdentifier, "orgIdentifier can not be null");
+    Preconditions.checkNotNull(projectIdentifier, "projectIdentifier can not be null");
+    Preconditions.checkNotNull(serviceIdentifier, "serviceIdentifier can not be null");
+    Preconditions.checkNotNull(envIdentifier, "envIdentifier can not be null");
+    Preconditions.checkNotNull(category, "category can not be null");
+
     double riskValue = BigDecimal.valueOf(riskScore * 100).setScale(2, RoundingMode.HALF_UP).doubleValue();
     List<AlertRule> alertRules = hPersistence.createQuery(AlertRule.class)
                                      .filter(AlertRuleKeys.accountId, accountId)
@@ -138,8 +151,30 @@ public class AlertRuleServiceImpl implements AlertRuleService {
                 .append(riskValue)
                 .append("\nCheck at: ")
                 .append(uiUrl);
-            notifyChannel(accountId, rule.getNotificationMethod(), alertMessage.toString());
+
+            AlertRuleAnomaly alertRuleAnomaly = alertRuleAnomalyService.openAnomaly(
+                accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier, category);
+            log.info(
+                "Alert rule anomaly open for accountId {}, orgIdentifier {}. projectIdentifier {}, serviceIdentifier {}, envIdentifier {}, category {}",
+                accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier, category);
+
+            if (alertRuleAnomaly.getLastNotificationSentAt() == null
+                || alertRuleAnomaly.getLastNotificationSentAt().isBefore(clock.instant().minus(Duration.ofHours(1)))) {
+              notifyChannel(accountId, rule.getNotificationMethod(), alertMessage.toString());
+
+              alertRuleAnomalyService.updateLastNotificationSentAt(
+                  accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier, category);
+              log.info(
+                  "Notification sent, alert rule anomaly updated last notification sent for accountId {}, orgIdentifier {}. projectIdentifier {}, serviceIdentifier {}, envIdentifier {}, category {}",
+                  accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier, category);
+            }
           });
+    } else {
+      alertRuleAnomalyService.closeAnomaly(
+          accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier, category);
+      log.info(
+          "Alert rule anomaly closed for accountId {}, orgIdentifier {}. projectIdentifier {}, serviceIdentifier {}, envIdentifier {}, category {}",
+          accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier, category);
     }
   }
 

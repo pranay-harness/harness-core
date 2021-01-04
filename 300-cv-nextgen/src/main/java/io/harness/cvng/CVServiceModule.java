@@ -4,7 +4,9 @@ import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.activity.services.impl.ActivityServiceImpl;
 import io.harness.cvng.activity.services.impl.KubernetesActivitySourceServiceImpl;
+import io.harness.cvng.alert.services.AlertRuleAnomalyService;
 import io.harness.cvng.alert.services.api.AlertRuleService;
+import io.harness.cvng.alert.services.impl.AlertRuleAnomalyServiceImpl;
 import io.harness.cvng.alert.services.impl.AlertRuleServiceImpl;
 import io.harness.cvng.analysis.services.api.AnalysisService;
 import io.harness.cvng.analysis.services.api.DeploymentAnalysisService;
@@ -241,6 +243,7 @@ public class CVServiceModule extends AbstractModule {
       bind(ConsumerMessageProcessor.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.CONNECTOR_ENTITY))
           .to(ConnectorChangeEventMessageProcessor.class);
+      bind(AlertRuleAnomalyService.class).to(AlertRuleAnomalyServiceImpl.class);
       bind(String.class)
           .annotatedWith(Names.named("portalUrl"))
           .toInstance(verificationConfiguration.getPortalUrl().endsWith("/")

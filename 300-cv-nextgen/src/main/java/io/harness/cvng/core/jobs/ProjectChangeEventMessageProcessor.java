@@ -3,6 +3,7 @@ package io.harness.cvng.core.jobs;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.ActivitySource;
 import io.harness.cvng.alert.entities.AlertRule;
+import io.harness.cvng.alert.entities.AlertRuleAnomaly;
 import io.harness.cvng.cd10.entities.CD10Mapping;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
@@ -41,7 +42,7 @@ public class ProjectChangeEventMessageProcessor implements ConsumerMessageProces
     ENTITIES_MAP.put(CVConfig.class, CVConfigService.class);
     final List<Class<? extends PersistentEntity>> deleteEntitiesWithDefaultHandler =
         Arrays.asList(VerificationJob.class, Activity.class, AlertRule.class, CD10Mapping.class, MetricPack.class,
-            ActivitySource.class, HeatMap.class, TimeSeriesThreshold.class);
+            ActivitySource.class, HeatMap.class, TimeSeriesThreshold.class, AlertRuleAnomaly.class);
     deleteEntitiesWithDefaultHandler.forEach(entity -> ENTITIES_MAP.put(entity, DeleteEntityByProjectHandler.class));
   }
   @Inject private HPersistence hPersistence;
