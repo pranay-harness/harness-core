@@ -11,13 +11,9 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.AsmVisitorWrapper;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
-import net.bytebuddy.utility.JavaModule;
-import org.junit.Test;
-// import org.junit.jupiter.api.Test; //TODO: support different unit test frameworks.
+import org.junit.jupiter.api.Test;
 
 /**
  * Instrument the target classes
@@ -47,25 +43,27 @@ public class ByteBuddyInstr extends Instr {
         new AgentBuilder.Default()
             .with(new TracerLogger())
             .type(matcher)
-            .transform(new AgentBuilder.Transformer() {
-              @Override
-              public DynamicType.Builder<?> transform(DynamicType.Builder<?> builder, TypeDescription typeDescription,
-                  ClassLoader classLoader, JavaModule module) {
-                builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().method(
-                    ElementMatchers.isMethod().and(ElementMatchers.isAnnotatedWith(Test.class)), testMethodAdvice));
-                builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().method(
-                    ElementMatchers.isMethod().and(ElementMatchers.not(ElementMatchers.isAnnotatedWith(Test.class))),
-                    methodAdvice));
-                builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().constructor(
-                    ElementMatchers.isConstructor().and(ElementMatchers.isAnnotatedWith(Test.class)),
-                    testConstructorAdvice));
-                builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().constructor(
-                    ElementMatchers.isConstructor().and(
-                        ElementMatchers.not(ElementMatchers.isAnnotatedWith(Test.class))),
-                    constructorAdvice));
+            .transform((builder, typeDescription, classLoader, module) -> {
+              builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().method(
+                  ElementMatchers.isMethod().and(ElementMatchers.isAnnotatedWith(org.junit.Test.class)
+                                                     .or(ElementMatchers.isAnnotatedWith(Test.class))),
+                  testMethodAdvice));
+              builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().method(
+                  ElementMatchers.isMethod().and(
+                      ElementMatchers.not(ElementMatchers.isAnnotatedWith(org.junit.Test.class)
+                                              .or(ElementMatchers.isAnnotatedWith(Test.class)))),
+                  methodAdvice));
+              builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().constructor(
+                  ElementMatchers.isConstructor().and(ElementMatchers.isAnnotatedWith(org.junit.Test.class)
+                                                          .or(ElementMatchers.isAnnotatedWith(Test.class))),
+                  testConstructorAdvice));
+              builder = builder.visit(new AsmVisitorWrapper.ForDeclaredMethods().constructor(
+                  ElementMatchers.isConstructor().and(
+                      ElementMatchers.not(ElementMatchers.isAnnotatedWith(org.junit.Test.class)
+                                              .or(ElementMatchers.isAnnotatedWith(Test.class)))),
+                  constructorAdvice));
 
-                return builder;
-              }
+              return builder;
             })
             .installOn(instrumentation);
   }

@@ -28,15 +28,15 @@ import io.harness.callgraph.util.StackNode;
 import io.harness.callgraph.util.log.Logger;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class CallRecorder {
   private static final Logger logger = new Logger(CallRecorder.class);
   /**
    * Collect the call graph per thread.
    */
-  static final Map<Long, CallGraph> GRAPHS = new HashMap<>();
+  static final Map<Long, CallGraph> GRAPHS = new ConcurrentHashMap<>();
   public static void beforeMethod(StackNode node) {
     try {
       logger.trace(">> {}", node);
