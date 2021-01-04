@@ -39,6 +39,11 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, Ac
   @SchemaIgnore @FdIndex private long createdAt;
   // Will be used by ECS delegate, when hostName is mentioned in TaskSpec.
   @NotEmpty @FdIndex private String accountId;
+
+  // Will be used for NG to uniquely identify the delegate during the installation process, together with the accountId.
+  // It will be populated by the backend and will be available as a property in the delegate installation files.
+  @FdIndex private String sessionIdentifier;
+
   @Default private Status status = Status.ENABLED;
   private String description;
   private String ip;

@@ -612,4 +612,22 @@ public class DelegateServiceImplTest extends WingsBaseTest {
 
     verify(emailNotificationService, atLeastOnce()).send(emailData);
   }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testObtainDelegateIdShouldReturnNull() {
+    assertThat(delegateService.obtainDelegateId(generateUuid(), generateUuid())).isNull();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testObtainDelegateIdShouldReturnDelegateId() {
+    Delegate delegate = createDelegateBuilder().sessionIdentifier("sessionId").build();
+    String delegateId = wingsPersistence.save(delegate);
+
+    assertThat(delegateService.obtainDelegateId(delegate.getAccountId(), delegate.getSessionIdentifier()))
+        .isEqualTo(delegateId);
+  }
 }

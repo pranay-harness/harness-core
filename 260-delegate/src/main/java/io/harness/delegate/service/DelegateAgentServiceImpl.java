@@ -264,6 +264,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private static final String DUPLICATE_DELEGATE_ERROR_MESSAGE =
       "Duplicate delegate with same delegateId:%s and connectionId:%s exists";
 
+  private final String delegateSessionIdentifier = System.getenv().get("DELEGATE_SESSION_IDENTIFIER");
+
   public static final String JAVA_VERSION = "java.version";
 
   private static volatile String delegateId;
@@ -441,6 +443,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       DelegateParamsBuilder builder = DelegateParams.builder()
                                           .ip(getLocalHostAddress())
                                           .accountId(accountId)
+                                          .sessionIdentifier(delegateSessionIdentifier)
                                           .hostName(HOST_NAME)
                                           .delegateName(delegateName)
                                           .delegateGroupName(DELEGATE_GROUP_NAME)
