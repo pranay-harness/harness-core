@@ -21,9 +21,15 @@ import org.redisson.api.StreamMessageId;
 public class RedisProducer extends AbstractProducer {
   private final RStream<String, String> stream;
   private final RedissonClient redissonClient;
+  // This is used when the consumer for the event are no longer accepting due to some failure and
+  // the messages are continuously being accumulated in Redis. To come up with this number, it is
+  // very important to understand the alerting on the consumers and the scale estimations of a
+  // particular use-case which is pushing to the topic
+  private final int maxTopicSize;
 
-  public RedisProducer(String topicName, @NotNull RedisConfig redisConfig) {
+  public RedisProducer(String topicName, @NotNull RedisConfig redisConfig, int maxTopicSize) {
     super(topicName);
+    this.maxTopicSize = maxTopicSize;
     this.redissonClient = RedisUtils.getClient(redisConfig);
     this.stream = RedisUtils.getStream(topicName, redissonClient);
   }
@@ -33,7 +39,7 @@ public class RedisProducer extends AbstractProducer {
     Map<String, String> redisData = new HashMap<>(message.getMetadataMap());
     redisData.put(REDIS_STREAM_INTERNAL_KEY, Base64.getEncoder().encodeToString(message.getData().toByteArray()));
     try {
-      StreamMessageId messageId = stream.addAll(redisData, 10000, false);
+      StreamMessageId messageId = stream.addAll(redisData, maxTopicSize, false);
       return messageId.toString();
     } catch (RedissonShutdownException e) {
       throw new ProducerShutdownException("Producer for topic: " + getTopicName() + " is shutdown.");
@@ -45,7 +51,7 @@ public class RedisProducer extends AbstractProducer {
     redissonClient.shutdown();
   }
 
-  public static RedisProducer of(String topicName, @NotNull RedisConfig redisConfig) {
-    return new RedisProducer(topicName, redisConfig);
+  public static RedisProducer of(String topicName, @NotNull RedisConfig redisConfig, int maxTopicLength) {
+    return new RedisProducer(topicName, redisConfig, maxTopicLength);
   }
 }

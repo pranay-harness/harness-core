@@ -1,10 +1,5 @@
 package io.harness.ng;
 
-import static io.harness.EntityCRUDEventsConstants.ACTION_METADATA;
-import static io.harness.EntityCRUDEventsConstants.CONNECTOR_ENTITY;
-import static io.harness.EntityCRUDEventsConstants.ENTITY_CRUD;
-import static io.harness.EntityCRUDEventsConstants.ENTITY_TYPE_METADATA;
-import static io.harness.EntityCRUDEventsConstants.UPDATE_ACTION;
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
@@ -28,6 +23,7 @@ import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.encryption.Scope;
+import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.AbstractProducer;
 import io.harness.eventsframework.entity_crud.connector.ConnectorEntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
@@ -62,8 +58,8 @@ public class ConnectorServiceImpl implements ConnectorService {
   public ConnectorServiceImpl(@Named(DEFAULT_CONNECTOR_SERVICE) ConnectorService defaultConnectorService,
       @Named(SECRET_MANAGER_CONNECTOR_SERVICE) ConnectorService secretManagerConnectorService,
       ConnectorActivityService connectorActivityService, ConnectorHeartbeatService connectorHeartbeatService,
-      ConnectorRepository connectorRepository, @Named(ENTITY_CRUD) AbstractProducer eventProducer,
-      KryoSerializer kryoSerializer) {
+      ConnectorRepository connectorRepository,
+      @Named(EventsFrameworkConstants.ENTITY_CRUD) AbstractProducer eventProducer, KryoSerializer kryoSerializer) {
     this.defaultConnectorService = defaultConnectorService;
     this.secretManagerConnectorService = secretManagerConnectorService;
     this.connectorActivityService = connectorActivityService;
@@ -128,11 +124,13 @@ public class ConnectorServiceImpl implements ConnectorService {
       if (isNotBlank(savedConnector.getProjectIdentifier())) {
         connectorUpdateDTOBuilder.setProjectIdentifier(StringValue.of(savedConnector.getProjectIdentifier()));
       }
-      eventProducer.send(Message.newBuilder()
-                             .putAllMetadata(ImmutableMap.of("accountId", accountIdentifier, ENTITY_TYPE_METADATA,
-                                 CONNECTOR_ENTITY, ACTION_METADATA, UPDATE_ACTION))
-                             .setData(connectorUpdateDTOBuilder.build().toByteString())
-                             .build());
+      eventProducer.send(
+          Message.newBuilder()
+              .putAllMetadata(ImmutableMap.of("accountId", accountIdentifier,
+                  EventsFrameworkConstants.ENTITY_TYPE_METADATA, EventsFrameworkConstants.CONNECTOR_ENTITY,
+                  EventsFrameworkConstants.ACTION_METADATA, EventsFrameworkConstants.UPDATE_ACTION))
+              .setData(connectorUpdateDTOBuilder.build().toByteString())
+              .build());
     } catch (Exception ex) {
       log.info("Exception while publishing the event of connector update for {}",
           String.format(CONNECTOR_STRING, savedConnector.getIdentifier(), accountIdentifier,

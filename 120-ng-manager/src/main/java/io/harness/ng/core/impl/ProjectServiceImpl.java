@@ -1,12 +1,5 @@
 package io.harness.ng.core.impl;
 
-import static io.harness.EntityCRUDEventsConstants.ACTION_METADATA;
-import static io.harness.EntityCRUDEventsConstants.CREATE_ACTION;
-import static io.harness.EntityCRUDEventsConstants.DELETE_ACTION;
-import static io.harness.EntityCRUDEventsConstants.ENTITY_CRUD;
-import static io.harness.EntityCRUDEventsConstants.ENTITY_TYPE_METADATA;
-import static io.harness.EntityCRUDEventsConstants.PROJECT_ENTITY;
-import static io.harness.EntityCRUDEventsConstants.UPDATE_ACTION;
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER;
@@ -20,6 +13,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.AbstractProducer;
 import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
@@ -74,7 +68,7 @@ public class ProjectServiceImpl implements ProjectService {
 
   @Inject
   public ProjectServiceImpl(ProjectRepository projectRepository, OrganizationService organizationService,
-      @Named(ENTITY_CRUD) AbstractProducer eventProducer, NgUserService ngUserService) {
+      @Named(EventsFrameworkConstants.ENTITY_CRUD) AbstractProducer eventProducer, NgUserService ngUserService) {
     this.projectRepository = projectRepository;
     this.organizationService = organizationService;
     this.eventProducer = eventProducer;
@@ -101,7 +95,7 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   private void performActionsPostProjectCreation(Project project) {
-    publishEvent(project, CREATE_ACTION);
+    publishEvent(project, EventsFrameworkConstants.CREATE_ACTION);
     createUserProjectMap(project);
   }
 
@@ -155,7 +149,7 @@ public class ProjectServiceImpl implements ProjectService {
       project.setModules(moduleTypeList);
       validate(project);
       Project updatedProject = projectRepository.save(project);
-      publishEvent(existingProject, UPDATE_ACTION);
+      publishEvent(existingProject, EventsFrameworkConstants.UPDATE_ACTION);
       return updatedProject;
     }
     throw new InvalidRequestException(
@@ -167,7 +161,8 @@ public class ProjectServiceImpl implements ProjectService {
     try {
       eventProducer.send(Message.newBuilder()
                              .putAllMetadata(ImmutableMap.of("accountId", project.getAccountIdentifier(),
-                                 ENTITY_TYPE_METADATA, PROJECT_ENTITY, ACTION_METADATA, action))
+                                 EventsFrameworkConstants.ENTITY_TYPE_METADATA, EventsFrameworkConstants.PROJECT_ENTITY,
+                                 EventsFrameworkConstants.ACTION_METADATA, action))
                              .setData(getProjectPayload(project))
                              .build());
     } catch (ProducerShutdownException e) {
@@ -246,7 +241,7 @@ public class ProjectServiceImpl implements ProjectService {
                        .orgIdentifier(orgIdentifier)
                        .identifier(projectIdentifier)
                        .build(),
-          DELETE_ACTION);
+          EventsFrameworkConstants.DELETE_ACTION);
     }
     return delete;
   }

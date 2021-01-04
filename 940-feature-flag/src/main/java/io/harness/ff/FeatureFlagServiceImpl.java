@@ -18,6 +18,7 @@ import io.harness.beans.FeatureFlag.FeatureFlagKeys;
 import io.harness.beans.FeatureFlag.Scope;
 import io.harness.beans.FeatureName;
 import io.harness.configuration.DeployMode;
+import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.AbstractProducer;
 import io.harness.eventsframework.featureflag.FeatureFlagChangeDTO;
 import io.harness.eventsframework.producer.Message;
@@ -50,8 +51,10 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Slf4j
 public class FeatureFlagServiceImpl implements FeatureFlagService {
   @Inject private HPersistence persistence;
-  public static final String FEATURE_FLAG_STREAM = "featureFlagStream";
-  @Inject(optional = true) @Nullable @Named(FEATURE_FLAG_STREAM) private AbstractProducer eventProducer;
+  @Inject(optional = true)
+  @Nullable
+  @Named(EventsFrameworkConstants.FEATURE_FLAG_STREAM)
+  private AbstractProducer eventProducer;
 
   private long lastEpoch;
   private final Map<FeatureName, FeatureFlag> cache = new HashMap<>();

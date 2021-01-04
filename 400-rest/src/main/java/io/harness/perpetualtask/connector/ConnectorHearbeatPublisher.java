@@ -1,10 +1,5 @@
 package io.harness.perpetualtask.connector;
 
-import static io.harness.EntityCRUDEventsConstants.ACTION_METADATA;
-import static io.harness.EntityCRUDEventsConstants.ACTIVITY_ENTITY;
-import static io.harness.EntityCRUDEventsConstants.CREATE_ACTION;
-import static io.harness.EntityCRUDEventsConstants.ENTITY_CRUD;
-import static io.harness.EntityCRUDEventsConstants.ENTITY_TYPE_METADATA;
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
 import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.CONNECTORS;
@@ -12,6 +7,7 @@ import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.CONN
 import static software.wings.utils.Utils.emptyIfNull;
 
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
+import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.AbstractProducer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
@@ -35,8 +31,8 @@ public class ConnectorHearbeatPublisher {
   IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper;
 
   @Inject
-  public ConnectorHearbeatPublisher(
-      @Named(ENTITY_CRUD) AbstractProducer abstractProducer, IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper) {
+  public ConnectorHearbeatPublisher(@Named(EventsFrameworkConstants.ENTITY_CRUD) AbstractProducer abstractProducer,
+      IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper) {
     this.abstractProducer = abstractProducer;
     this.identifierRefProtoDTOHelper = identifierRefProtoDTOHelper;
   }
@@ -52,11 +48,13 @@ public class ConnectorHearbeatPublisher {
     }
     EntityActivityCreateDTO ngActivityDTO = createConnectivityCheckActivityDTO(heartbeatDelegateResponse);
     try {
-      abstractProducer.send(Message.newBuilder()
-                                .putAllMetadata(ImmutableMap.of("accountId", accountId, ENTITY_TYPE_METADATA,
-                                    ACTIVITY_ENTITY, ACTION_METADATA, CREATE_ACTION))
-                                .setData(ngActivityDTO.toByteString())
-                                .build());
+      abstractProducer.send(
+          Message.newBuilder()
+              .putAllMetadata(ImmutableMap.of("accountId", accountId, EventsFrameworkConstants.ENTITY_TYPE_METADATA,
+                  EventsFrameworkConstants.ACTIVITY_ENTITY, EventsFrameworkConstants.ACTION_METADATA,
+                  EventsFrameworkConstants.CREATE_ACTION))
+              .setData(ngActivityDTO.toByteString())
+              .build());
     } catch (Exception ex) {
       log.error("{} Exception while pushing the heartbeat result {}", CONNECTOR_HEARTBEAT_LOG_PREFIX,
           String.format(CONNECTOR_STRING, heartbeatDelegateResponse.getIdentifier(),

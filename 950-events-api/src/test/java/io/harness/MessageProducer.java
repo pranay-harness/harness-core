@@ -16,7 +16,7 @@ public class MessageProducer implements Runnable {
   private final String color;
 
   public MessageProducer(String channel, RedisConfig redisConfig, String color) {
-    this.client = RedisProducer.of(channel, redisConfig);
+    this.client = RedisProducer.of(channel, redisConfig, 10000);
     this.color = color;
   }
 

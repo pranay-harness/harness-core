@@ -4,6 +4,7 @@ import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.redis.RedisConfig;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
@@ -14,8 +15,9 @@ import org.redisson.api.StreamMessageId;
 
 @Slf4j
 public class RedisConsumer extends RedisAbstractConsumer {
-  public RedisConsumer(String topicName, String groupName, @NotNull RedisConfig redisConfig) {
-    super(topicName, groupName, redisConfig);
+  public RedisConsumer(
+      String topicName, String groupName, @NotNull RedisConfig redisConfig, Duration maxProcessingTime) {
+    super(topicName, groupName, redisConfig, maxProcessingTime);
   }
 
   private List<Message> getUnackedMessages() throws ConsumerShutdownException {
@@ -24,8 +26,8 @@ public class RedisConsumer extends RedisAbstractConsumer {
       String groupName = getGroupName();
       PendingResult pendingResult = stream.getPendingInfo(groupName);
       if (pendingResult.getTotal() != 0) {
-        Map<StreamMessageId, Map<String, String>> messages =
-            stream.claim(groupName, getName(), 10, TimeUnit.MINUTES, pendingResult.getLowestId());
+        Map<StreamMessageId, Map<String, String>> messages = stream.claim(
+            groupName, getName(), maxProcessingTime.toMillis(), TimeUnit.MILLISECONDS, pendingResult.getLowestId());
         if (messages.size() != 0)
           // Claim will return the claimed messages after which have been undelivered for a specific time
           result = RedisUtils.getMessageObject(messages);
@@ -46,7 +48,8 @@ public class RedisConsumer extends RedisAbstractConsumer {
     }
   }
 
-  public static RedisConsumer of(String topicName, String groupName, @NotNull RedisConfig redisConfig) {
-    return new RedisConsumer(topicName, groupName, redisConfig);
+  public static RedisConsumer of(
+      String topicName, String groupName, @NotNull RedisConfig redisConfig, Duration maxProcessingTime) {
+    return new RedisConsumer(topicName, groupName, redisConfig, maxProcessingTime);
   }
 }

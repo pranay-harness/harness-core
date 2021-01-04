@@ -1,8 +1,5 @@
 package io.harness.cvng;
 
-import static io.harness.EntityCRUDEventsConstants.CONNECTOR_ENTITY;
-import static io.harness.EntityCRUDEventsConstants.PROJECT_ENTITY;
-
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.activity.services.impl.ActivityServiceImpl;
@@ -100,6 +97,7 @@ import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceServi
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.cvng.verificationjob.services.impl.VerificationJobInstanceServiceImpl;
 import io.harness.cvng.verificationjob.services.impl.VerificationJobServiceImpl;
+import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.ff.FeatureFlagModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
@@ -238,10 +236,10 @@ public class CVServiceModule extends AbstractModule {
           .annotatedWith(Names.named("lock"))
           .toInstance(verificationConfiguration.getEventsFrameworkConfiguration().getRedisConfig());
       bind(ConsumerMessageProcessor.class)
-          .annotatedWith(Names.named(PROJECT_ENTITY))
+          .annotatedWith(Names.named(EventsFrameworkConstants.PROJECT_ENTITY))
           .to(ProjectChangeEventMessageProcessor.class);
       bind(ConsumerMessageProcessor.class)
-          .annotatedWith(Names.named(CONNECTOR_ENTITY))
+          .annotatedWith(Names.named(EventsFrameworkConstants.CONNECTOR_ENTITY))
           .to(ConnectorChangeEventMessageProcessor.class);
       bind(String.class)
           .annotatedWith(Names.named("portalUrl"))

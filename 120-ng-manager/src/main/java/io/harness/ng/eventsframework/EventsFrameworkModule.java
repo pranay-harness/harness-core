@@ -1,10 +1,9 @@
 package io.harness.ng.eventsframework;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
-import static io.harness.EntityCRUDEventsConstants.ENTITY_CRUD;
-import static io.harness.ff.FeatureFlagServiceImpl.FEATURE_FLAG_STREAM;
 
 import io.harness.eventsframework.EventsFrameworkConfiguration;
+import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.AbstractConsumer;
 import io.harness.eventsframework.api.AbstractProducer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
@@ -19,14 +18,6 @@ import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public class EventsFrameworkModule extends AbstractModule {
-  public static final String SETUP_USAGE_CREATE = "setup_usage_create";
-  public static final String SETUP_USAGE_DELETE = "setup_usage_delete";
-  public static final String ENTITY_ACTIVITY_CREATE = "entity_activity_create";
-
-  private static final String DUMMY_TOPIC_NAME = "dummy_topic_name";
-  private static final String DUMMY_GROUP_NAME = "dummy_group_name";
-  private static final String DUMMY_NAME = "dummy_name";
-
   private final EventsFrameworkConfiguration eventsFrameworkConfiguration;
 
   @Override
@@ -34,24 +25,29 @@ public class EventsFrameworkModule extends AbstractModule {
     RedisConfig redisConfig = this.eventsFrameworkConfiguration.getRedisConfig();
     if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
       bind(AbstractProducer.class)
-          .annotatedWith(Names.named(ENTITY_CRUD))
-          .toInstance(NoOpProducer.of(DUMMY_TOPIC_NAME));
+          .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
+          .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
       bind(AbstractConsumer.class)
-          .annotatedWith(Names.named(ENTITY_CRUD))
-          .toInstance(NoOpConsumer.of(DUMMY_TOPIC_NAME, DUMMY_GROUP_NAME));
+          .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
+          .toInstance(
+              NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
       bind(AbstractConsumer.class)
-          .annotatedWith(Names.named(FEATURE_FLAG_STREAM))
-          .toInstance(NoOpConsumer.of(DUMMY_TOPIC_NAME, DUMMY_GROUP_NAME));
+          .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
+          .toInstance(
+              NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
     } else {
       bind(AbstractProducer.class)
-          .annotatedWith(Names.named(ENTITY_CRUD))
-          .toInstance(RedisProducer.of(ENTITY_CRUD, redisConfig));
+          .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
+          .toInstance(RedisProducer.of(
+              EventsFrameworkConstants.ENTITY_CRUD, redisConfig, EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE));
       bind(AbstractConsumer.class)
-          .annotatedWith(Names.named(ENTITY_CRUD))
-          .toInstance(RedisConsumer.of(ENTITY_CRUD, NG_MANAGER.getServiceId(), redisConfig));
+          .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
+          .toInstance(RedisConsumer.of(EventsFrameworkConstants.ENTITY_CRUD, NG_MANAGER.getServiceId(), redisConfig,
+              EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME));
       bind(AbstractConsumer.class)
-          .annotatedWith(Names.named(FEATURE_FLAG_STREAM))
-          .toInstance(RedisConsumer.of(FEATURE_FLAG_STREAM, NG_MANAGER.getServiceId(), redisConfig));
+          .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
+          .toInstance(RedisConsumer.of(EventsFrameworkConstants.FEATURE_FLAG_STREAM, NG_MANAGER.getServiceId(),
+              redisConfig, EventsFrameworkConstants.FEATURE_FLAG_MAX_PROCESSING_TIME));
     }
   }
 }

@@ -1,12 +1,5 @@
 package io.harness.ng.core.impl;
 
-import static io.harness.EntityCRUDEventsConstants.ACTION_METADATA;
-import static io.harness.EntityCRUDEventsConstants.CREATE_ACTION;
-import static io.harness.EntityCRUDEventsConstants.DELETE_ACTION;
-import static io.harness.EntityCRUDEventsConstants.ENTITY_CRUD;
-import static io.harness.EntityCRUDEventsConstants.ENTITY_TYPE_METADATA;
-import static io.harness.EntityCRUDEventsConstants.ORGANIZATION_ENTITY;
-import static io.harness.EntityCRUDEventsConstants.UPDATE_ACTION;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.core.remote.OrganizationMapper.toOrganization;
@@ -16,6 +9,7 @@ import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.AbstractProducer;
 import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.entity_crud.organization.OrganizationEntityChangeDTO;
@@ -60,7 +54,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
   @Inject
   public OrganizationServiceImpl(OrganizationRepository organizationRepository,
-      @Named(ENTITY_CRUD) AbstractProducer eventProducer, NgUserService ngUserService) {
+      @Named(EventsFrameworkConstants.ENTITY_CRUD) AbstractProducer eventProducer, NgUserService ngUserService) {
     this.organizationRepository = organizationRepository;
     this.eventProducer = eventProducer;
     this.ngUserService = ngUserService;
@@ -84,17 +78,19 @@ public class OrganizationServiceImpl implements OrganizationService {
   }
 
   private void performActionsPostOrganizationCreation(Organization organization) {
-    publishEvent(organization, CREATE_ACTION);
+    publishEvent(organization, EventsFrameworkConstants.CREATE_ACTION);
     createUserProjectMap(organization);
   }
 
   private void publishEvent(Organization organization, String action) {
     try {
-      eventProducer.send(Message.newBuilder()
-                             .putAllMetadata(ImmutableMap.of("accountId", organization.getAccountIdentifier(),
-                                 ENTITY_TYPE_METADATA, ORGANIZATION_ENTITY, ACTION_METADATA, action))
-                             .setData(getOrganizationPayload(organization))
-                             .build());
+      eventProducer.send(
+          Message.newBuilder()
+              .putAllMetadata(ImmutableMap.of("accountId", organization.getAccountIdentifier(),
+                  EventsFrameworkConstants.ENTITY_TYPE_METADATA, EventsFrameworkConstants.ORGANIZATION_ENTITY,
+                  EventsFrameworkConstants.ACTION_METADATA, action))
+              .setData(getOrganizationPayload(organization))
+              .build());
     } catch (ProducerShutdownException e) {
       log.error("Failed to send event to events framework orgIdentifier: " + organization.getIdentifier(), e);
     }
@@ -154,7 +150,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
       validate(organization);
       Organization updatedOrganization = organizationRepository.save(organization);
-      publishEvent(existingOrganization, UPDATE_ACTION);
+      publishEvent(existingOrganization, EventsFrameworkConstants.UPDATE_ACTION);
       return updatedOrganization;
     }
     throw new InvalidRequestException(String.format("Organisation with identifier [%s] not found", identifier), USER);
@@ -201,7 +197,7 @@ public class OrganizationServiceImpl implements OrganizationService {
     if (delete) {
       publishEvent(
           Organization.builder().accountIdentifier(accountIdentifier).identifier(organizationIdentifier).build(),
-          DELETE_ACTION);
+          EventsFrameworkConstants.DELETE_ACTION);
     }
     return delete;
   }

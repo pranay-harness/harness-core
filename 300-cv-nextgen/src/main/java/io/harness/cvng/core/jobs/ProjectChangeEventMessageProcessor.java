@@ -1,11 +1,5 @@
 package io.harness.cvng.core.jobs;
 
-import static io.harness.EntityCRUDEventsConstants.ACTION_METADATA;
-import static io.harness.EntityCRUDEventsConstants.CREATE_ACTION;
-import static io.harness.EntityCRUDEventsConstants.DELETE_ACTION;
-import static io.harness.EntityCRUDEventsConstants.ENTITY_TYPE_METADATA;
-import static io.harness.EntityCRUDEventsConstants.PROJECT_ENTITY;
-
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.ActivitySource;
 import io.harness.cvng.alert.entities.AlertRule;
@@ -17,6 +11,7 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DeleteEntityByProjectHandler;
 import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
+import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
 import io.harness.persistence.HPersistence;
@@ -63,12 +58,12 @@ public class ProjectChangeEventMessageProcessor implements ConsumerMessageProces
     }
 
     Map<String, String> metadataMap = message.getMessage().getMetadataMap();
-    if (metadataMap.containsKey(ACTION_METADATA)) {
-      switch (metadataMap.get(ACTION_METADATA)) {
-        case CREATE_ACTION:
+    if (metadataMap.containsKey(EventsFrameworkConstants.ACTION_METADATA)) {
+      switch (metadataMap.get(EventsFrameworkConstants.ACTION_METADATA)) {
+        case EventsFrameworkConstants.CREATE_ACTION:
           processCreateAction(projectEntityChangeDTO);
           return;
-        case DELETE_ACTION:
+        case EventsFrameworkConstants.DELETE_ACTION:
           processDeleteAction(projectEntityChangeDTO);
           return;
         default:
@@ -88,7 +83,8 @@ public class ProjectChangeEventMessageProcessor implements ConsumerMessageProces
 
   private boolean validateMessage(Message message) {
     return message != null && message.hasMessage() && message.getMessage().getMetadataMap() != null
-        && message.getMessage().getMetadataMap().containsKey(ENTITY_TYPE_METADATA)
-        && PROJECT_ENTITY.equals(message.getMessage().getMetadataMap().get(ENTITY_TYPE_METADATA));
+        && message.getMessage().getMetadataMap().containsKey(EventsFrameworkConstants.ENTITY_TYPE_METADATA)
+        && EventsFrameworkConstants.PROJECT_ENTITY.equals(
+            message.getMessage().getMetadataMap().get(EventsFrameworkConstants.ENTITY_TYPE_METADATA));
   }
 }

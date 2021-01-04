@@ -1,10 +1,5 @@
 package software.wings.service.impl;
 
-import static io.harness.EntityCRUDEventsConstants.ACCOUNT_ENTITY;
-import static io.harness.EntityCRUDEventsConstants.ACTION_METADATA;
-import static io.harness.EntityCRUDEventsConstants.CREATE_ACTION;
-import static io.harness.EntityCRUDEventsConstants.ENTITY_CRUD;
-import static io.harness.EntityCRUDEventsConstants.ENTITY_TYPE_METADATA;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -61,6 +56,7 @@ import io.harness.event.model.Event;
 import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
 import io.harness.event.publisher.EventPublisher;
+import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.AbstractProducer;
 import io.harness.eventsframework.entity_crud.account.AccountEntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
@@ -257,7 +253,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private AccountDao accountDao;
   @Inject private AccountDataRetentionService accountDataRetentionService;
   @Inject private PersistentLocker persistentLocker;
-  @Inject @Named(ENTITY_CRUD) private AbstractProducer eventProducer;
+  @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private AbstractProducer eventProducer;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private GovernanceFeature governanceFeature;
@@ -307,7 +303,7 @@ public class AccountServiceImpl implements AccountService {
       publishAccountChangeEvent(account);
       // TODO {karan} remove this if condition when NG is enabled globally for new accounts
       if (fromDataGen) {
-        publishAccountChangeEventViaEventFramework(account, CREATE_ACTION);
+        publishAccountChangeEventViaEventFramework(account, EventsFrameworkConstants.CREATE_ACTION);
       }
 
       log.info("Successfully created account.");
@@ -319,8 +315,9 @@ public class AccountServiceImpl implements AccountService {
     try {
       eventProducer.send(
           Message.newBuilder()
-              .putAllMetadata(ImmutableMap.of(
-                  "accountId", account.getUuid(), ENTITY_TYPE_METADATA, ACCOUNT_ENTITY, ACTION_METADATA, action))
+              .putAllMetadata(
+                  ImmutableMap.of("accountId", account.getUuid(), EventsFrameworkConstants.ENTITY_TYPE_METADATA,
+                      EventsFrameworkConstants.ACCOUNT_ENTITY, EventsFrameworkConstants.ACTION_METADATA, action))
               .setData(AccountEntityChangeDTO.newBuilder().setAccountId(account.getUuid()).build().toByteString())
               .build());
     } catch (Exception ex) {

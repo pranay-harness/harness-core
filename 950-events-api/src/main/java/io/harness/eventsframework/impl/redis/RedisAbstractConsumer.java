@@ -5,6 +5,7 @@ import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.redis.RedisConfig;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
@@ -18,20 +19,24 @@ import org.redisson.client.RedisException;
 public abstract class RedisAbstractConsumer extends AbstractConsumer {
   protected RStream<String, String> stream;
   protected RedissonClient redissonClient;
+  protected Duration maxProcessingTime;
 
-  public RedisAbstractConsumer(String topicName, String groupName, @NotNull RedisConfig redisConfig) {
+  public RedisAbstractConsumer(
+      String topicName, String groupName, @NotNull RedisConfig redisConfig, Duration maxProcessingTime) {
     super(topicName, groupName);
-    initConsumerGroup(redisConfig);
+    initConsumerGroup(redisConfig, maxProcessingTime);
   }
 
-  public RedisAbstractConsumer(String topicName, String groupName, String consumerName, RedisConfig redisConfig) {
+  public RedisAbstractConsumer(
+      String topicName, String groupName, String consumerName, RedisConfig redisConfig, Duration maxProcessingTime) {
     super(topicName, groupName, consumerName);
-    initConsumerGroup(redisConfig);
+    initConsumerGroup(redisConfig, maxProcessingTime);
   }
 
-  private void initConsumerGroup(RedisConfig redisConfig) {
+  private void initConsumerGroup(RedisConfig redisConfig, Duration maxProcessingTime) {
     this.redissonClient = RedisUtils.getClient(redisConfig);
     this.stream = RedisUtils.getStream(getTopicName(), redissonClient);
+    this.maxProcessingTime = maxProcessingTime;
     createConsumerGroup();
   }
 
