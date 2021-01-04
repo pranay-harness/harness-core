@@ -8,18 +8,18 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import io.harness.AmbianceUtils;
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.expressions.NodeExecutionsCache;
-import io.harness.engine.outcomes.OutcomeService;
+import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.execution.NodeExecution;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.ambiance.Level;
-import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.pms.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.utils.AmbianceTestUtils;
 import io.harness.utils.steps.TestStepParameters;
@@ -39,7 +39,7 @@ import org.mockito.junit.MockitoRule;
 
 public class NodeExecutionValueTest extends OrchestrationTestBase {
   @Mock NodeExecutionService nodeExecutionService;
-  @Mock OutcomeService outcomeService;
+  @Mock PmsOutcomeService pmsOutcomeService;
 
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -101,12 +101,6 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
     when(nodeExecutionService.get(nodeExecution4.getUuid())).thenReturn(nodeExecution4);
     when(nodeExecutionService.get(nodeExecution5.getUuid())).thenReturn(nodeExecution5);
     when(nodeExecutionService.get(nodeExecution6.getUuid())).thenReturn(nodeExecution6);
-    when(nodeExecutionService.extractResolvedStepParameters(nodeExecution1)).thenReturn(prepareStepParameters("ao"));
-    when(nodeExecutionService.extractResolvedStepParameters(nodeExecution2)).thenReturn(prepareStepParameters("bo"));
-    when(nodeExecutionService.extractResolvedStepParameters(nodeExecution3)).thenReturn(prepareStepParameters("co"));
-    when(nodeExecutionService.extractStepParameters(nodeExecution4)).thenReturn(prepareStepParameters("di1"));
-    when(nodeExecutionService.extractResolvedStepParameters(nodeExecution5)).thenReturn(prepareStepParameters("do2"));
-    when(nodeExecutionService.extractResolvedStepParameters(nodeExecution6)).thenReturn(prepareStepParameters("eo"));
 
     String planExecutionId = ambiance.getPlanExecutionId();
     when(nodeExecutionService.fetchChildrenNodeExecutions(planExecutionId, null))
@@ -128,7 +122,7 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
     NodeExecutionChildFunctor functor =
         NodeExecutionChildFunctor.builder()
             .nodeExecutionsCache(new NodeExecutionsCache(nodeExecutionService, newAmbiance))
-            .outcomeService(outcomeService)
+            .pmsOutcomeService(pmsOutcomeService)
             .ambiance(newAmbiance)
             .build();
     NodeExecutionMap nodeExecutionMap = (NodeExecutionMap) functor.bind();
@@ -148,7 +142,7 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
     NodeExecutionAncestorFunctor functor =
         NodeExecutionAncestorFunctor.builder()
             .nodeExecutionsCache(new NodeExecutionsCache(nodeExecutionService, newAmbiance))
-            .outcomeService(outcomeService)
+            .pmsOutcomeService(pmsOutcomeService)
             .ambiance(newAmbiance)
             .groupAliases(ImmutableMap.of("stage", "STAGE"))
             .build();
@@ -170,7 +164,7 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
     NodeExecutionQualifiedFunctor functor =
         NodeExecutionQualifiedFunctor.builder()
             .nodeExecutionsCache(new NodeExecutionsCache(nodeExecutionService, ambiance))
-            .outcomeService(outcomeService)
+            .pmsOutcomeService(pmsOutcomeService)
             .ambiance(ambiance)
             .build();
     NodeExecutionMap nodeExecutionMap = (NodeExecutionMap) functor.bind();

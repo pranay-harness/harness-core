@@ -9,7 +9,6 @@ import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.GraphVertex;
@@ -17,11 +16,12 @@ import io.harness.beans.converter.GraphVertexConverter;
 import io.harness.beans.internal.EdgeListInternal;
 import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.engine.outcomes.OutcomeService;
+import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
-import io.harness.pms.execution.ExecutionMode;
+import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.sdk.core.data.Outcome;
+import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -34,11 +34,10 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Redesign
 @OwnedBy(HarnessTeam.CDC)
 @Singleton
 public class OrchestrationAdjacencyListGenerator {
-  @Inject private OutcomeService outcomeService;
+  @Inject private PmsOutcomeService pmsOutcomeService;
 
   public OrchestrationAdjacencyListInternal generateAdjacencyList(
       String startingNodeExId, List<NodeExecution> nodeExecutions, boolean isOutcomePresent) {
@@ -208,7 +207,8 @@ public class OrchestrationAdjacencyListGenerator {
 
         List<Outcome> outcomes = new ArrayList<>();
         if (isOutcomePresent) {
-          outcomes = outcomeService.findAllByRuntimeId(nodeExecution.getAmbiance().getPlanExecutionId(), currentNodeId);
+          outcomes = PmsOutcomeMapper.convertJsonToOutcome(
+              pmsOutcomeService.findAllByRuntimeId(nodeExecution.getAmbiance().getPlanExecutionId(), currentNodeId));
         }
 
         GraphVertex graphVertex = GraphVertexConverter.convertFrom(nodeExecution, outcomes);

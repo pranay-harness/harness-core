@@ -11,8 +11,8 @@ import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.artifact.steps.ArtifactStep;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
 import io.harness.cdng.manifest.state.ManifestStep;
-import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.cdng.manifest.yaml.ManifestsOutcome;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome.ArtifactsOutcomeBuilder;
@@ -23,8 +23,10 @@ import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.ngpipeline.common.AmbianceHelper;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.steps.executables.TaskChainExecutable;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
@@ -32,10 +34,8 @@ import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
-import io.harness.pms.steps.StepType;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.tasks.ResponseData;
-import io.harness.tasks.Task;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -80,9 +80,9 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
       return TaskChainResponse.builder().chainEnd(true).passThroughData(passThroughData).build();
     }
 
-    Task task = artifactStep.getTask(ambiance, artifactsWithCorrespondingOverrides.get(0));
+    TaskRequest taskRequest = artifactStep.getTaskRequest(ambiance, artifactsWithCorrespondingOverrides.get(0));
     return TaskChainResponse.builder()
-        .task(task)
+        .taskRequest(taskRequest)
         .chainEnd(artifactsWithCorrespondingOverrides.size() == 1)
         .passThroughData(passThroughData)
         .build();
@@ -104,10 +104,10 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
     ((ServiceStepPassThroughData) passThroughData).setStepOutcomes(stepOutcomes);
 
     int nextIndex = currentIndex + 1;
-    Task task = artifactStep.getTask(ambiance, artifactsWithCorrespondingOverrides.get(nextIndex));
+    TaskRequest taskRequest = artifactStep.getTaskRequest(ambiance, artifactsWithCorrespondingOverrides.get(nextIndex));
     serviceStepPassThroughData.setCurrentIndex(nextIndex);
     return TaskChainResponse.builder()
-        .task(task)
+        .taskRequest(taskRequest)
         .chainEnd(artifactsWithCorrespondingOverrides.size() == nextIndex)
         .passThroughData(passThroughData)
         .build();
@@ -171,20 +171,21 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
 
       // Handle ManifestOutcome
       Optional<Outcome> manifestOutcome =
-          outcomes.stream().filter(outcome -> outcome instanceof ManifestOutcome).findFirst();
-      handleManifestOutcome((ManifestOutcome) manifestOutcome.orElse(
-                                ManifestOutcome.builder().manifestAttributes(Collections.emptyList()).build()),
+          outcomes.stream().filter(outcome -> outcome instanceof ManifestsOutcome).findFirst();
+      handleManifestOutcome((ManifestsOutcome) manifestOutcome.orElse(
+                                ManifestsOutcome.builder().manifestOutcomeList(Collections.emptyList()).build()),
           outcomeBuilder);
     }
 
     return outcomeBuilder.build();
   }
 
-  private void handleManifestOutcome(ManifestOutcome outcome, ServiceOutcomeBuilder outcomeBuilder) {
-    List<ManifestAttributes> manifestAttributesList =
-        isNotEmpty(outcome.getManifestAttributes()) ? outcome.getManifestAttributes() : Collections.emptyList();
+  private void handleManifestOutcome(ManifestsOutcome outcome, ServiceOutcomeBuilder outcomeBuilder) {
+    List<ManifestOutcome> manifestOutcomeList =
+        isNotEmpty(outcome.getManifestOutcomeList()) ? outcome.getManifestOutcomeList() : Collections.emptyList();
 
-    outcomeBuilder.manifests(manifestAttributesList);
+    manifestOutcomeList.forEach(
+        manifestOutcome -> outcomeBuilder.manifest(manifestOutcome.getIdentifier(), manifestOutcome));
   }
 
   private void handleArtifactOutcome(ArtifactsOutcomeBuilder artifactsBuilder, ArtifactOutcome artifactOutcome) {

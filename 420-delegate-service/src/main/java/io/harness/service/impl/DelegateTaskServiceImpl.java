@@ -1,19 +1,37 @@
 package io.harness.service.impl;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import static java.lang.System.currentTimeMillis;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.DelegateSyncTaskResponse;
+import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.task.TaskLogContext;
+import io.harness.exception.InvalidArgumentsException;
+import io.harness.logging.AutoLogContext;
+import io.harness.logging.DelegateDriverLogContext;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
+import io.harness.serializer.KryoSerializer;
+import io.harness.service.intfc.DelegateCallbackRegistry;
+import io.harness.service.intfc.DelegateCallbackService;
 import io.harness.service.intfc.DelegateTaskService;
+import io.harness.version.VersionInfoManager;
+import io.harness.waiter.WaitNotifyEngine;
 
+import software.wings.beans.TaskType;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.query.Query;
 
 @Singleton
@@ -21,6 +39,10 @@ import org.mongodb.morphia.query.Query;
 @Slf4j
 public class DelegateTaskServiceImpl implements DelegateTaskService {
   @Inject private HPersistence persistence;
+  @Inject private VersionInfoManager versionInfoManager;
+  @Inject private WaitNotifyEngine waitNotifyEngine;
+  @Inject private DelegateCallbackRegistry delegateCallbackRegistry;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Override
   public void touchExecutingTasks(String accountId, String delegateId, List<String> delegateTaskIds) {
@@ -48,6 +70,98 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
             persistence.createUpdateOperations(DelegateTask.class)
                 .set(DelegateTaskKeys.expiry, now + delegateTask.getData().getTimeout()));
       }
+    }
+  }
+
+  @Override
+  public void processDelegateResponse(
+      String accountId, String delegateId, String taskId, DelegateTaskResponse response) {
+    if (response == null) {
+      throw new InvalidArgumentsException(Pair.of("args", "response cannot be null"));
+    }
+
+    log.info("Response received for task with responseCode [{}]", response.getResponseCode());
+
+    Query<DelegateTask> taskQuery = persistence.createQuery(DelegateTask.class)
+                                        .filter(DelegateTaskKeys.accountId, response.getAccountId())
+                                        .filter(DelegateTaskKeys.uuid, taskId);
+
+    DelegateTask delegateTask = taskQuery.get();
+
+    if (delegateTask != null) {
+      try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
+               TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
+        if (!StringUtils.equals(delegateTask.getVersion(), getVersion())) {
+          log.warn("Version mismatch for task. [managerVersion {}, taskVersion {}]", getVersion(),
+              delegateTask.getVersion());
+        }
+
+        // TODO: Add here the Observer pattern implementation for assignDelegateService
+      }
+    } else {
+      log.warn("No delegate task found");
+    }
+  }
+
+  private String getVersion() {
+    return versionInfoManager.getVersionInfo().getVersion();
+  }
+
+  @Override
+  public void handleResponse(DelegateTask delegateTask, Query<DelegateTask> taskQuery, DelegateTaskResponse response) {
+    if (delegateTask.getDriverId() == null) {
+      handleInprocResponse(delegateTask, response);
+    } else {
+      handleDriverResponse(delegateTask, response);
+    }
+
+    if (taskQuery != null) {
+      persistence.deleteOnServer(taskQuery);
+    }
+  }
+
+  @VisibleForTesting
+  void handleDriverResponse(DelegateTask delegateTask, DelegateTaskResponse response) {
+    if (delegateTask == null || response == null) {
+      return;
+    }
+
+    DelegateCallbackService delegateCallbackService =
+        delegateCallbackRegistry.obtainDelegateCallbackService(delegateTask.getDriverId());
+    if (delegateCallbackService == null) {
+      return;
+    }
+
+    try (DelegateDriverLogContext driverLogContext =
+             new DelegateDriverLogContext(delegateTask.getDriverId(), OVERRIDE_ERROR);
+         TaskLogContext taskLogContext = new TaskLogContext(delegateTask.getUuid(), OVERRIDE_ERROR)) {
+      if (delegateTask.getData().isAsync()) {
+        log.info("Publishing async task response...");
+        delegateCallbackService.publishAsyncTaskResponse(
+            delegateTask.getUuid(), kryoSerializer.asDeflatedBytes(response.getResponse()));
+      } else {
+        log.info("Publishing sync task response...");
+        delegateCallbackService.publishSyncTaskResponse(
+            delegateTask.getUuid(), kryoSerializer.asDeflatedBytes(response.getResponse()));
+      }
+    } catch (Exception ex) {
+      log.error("Failed publishing task response for task", ex);
+    }
+  }
+
+  private void handleInprocResponse(DelegateTask delegateTask, DelegateTaskResponse response) {
+    if (delegateTask.getData().isAsync()) {
+      String waitId = delegateTask.getWaitId();
+      if (waitId != null) {
+        waitNotifyEngine.doneWith(waitId, response.getResponse());
+      } else {
+        log.error("Async task has no wait ID");
+      }
+    } else {
+      persistence.save(DelegateSyncTaskResponse.builder()
+                           .uuid(delegateTask.getUuid())
+                           .responseData(kryoSerializer.asDeflatedBytes(response.getResponse()))
+                           .build());
     }
   }
 }

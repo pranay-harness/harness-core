@@ -21,6 +21,7 @@ const (
 	defaultPluginTimeout    int64         = 14400 // 4 hour
 	defaultPluginNumRetries int32         = 1
 	pluginCmdExitWaitTime   time.Duration = time.Duration(0)
+	imageSecretEnv                        = "HARNESS_IMAGE_SECRET" // Docker image secret for plugin image
 )
 
 var (
@@ -60,7 +61,6 @@ func NewPluginTask(step *pb.UnitStep, log *zap.SugaredLogger, w io.Writer) Plugi
 		id:                step.GetId(),
 		displayName:       step.GetDisplayName(),
 		image:             r.GetImage(),
-		imageSecretEnv:    r.GetImageSecretEnv(),
 		timeoutSecs:       timeoutSecs,
 		numRetries:        numRetries,
 		cmdContextFactory: exec.OsCommandContextGracefulWithLog(log),
@@ -119,8 +119,8 @@ func (e *pluginTask) execute(ctx context.Context, retryCount int32) error {
 }
 
 func (e *pluginTask) getEntrypoint(ctx context.Context) ([]string, error) {
-	imageSecretEnv, _ := os.LookupEnv(e.imageSecretEnv)
-	return e.combinedEntrypoint(getImgMetadata(ctx, e.id, e.image, imageSecretEnv, e.log))
+	imageSecret, _ := os.LookupEnv(imageSecretEnv)
+	return e.combinedEntrypoint(getImgMetadata(ctx, e.id, e.image, imageSecret, e.log))
 }
 
 func (e *pluginTask) combinedEntrypoint(ep, cmds []string, err error) ([]string, error) {

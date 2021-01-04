@@ -49,6 +49,8 @@ public class VMPricingServiceImpl implements VMPricingService {
       return vmComputePricingInfo;
     } else if (ImmutableSet.of("n2-standard-16").contains(instanceType)) {
       return getCustomComputeVMPricingInfo(instanceType, region, cloudProvider);
+    } else if (ImmutableSet.of("n2-standard-2").contains(instanceType)) {
+      return getCustomComputeN2VMPricingInfo(instanceType, region, cloudProvider);
     } else {
       refreshCache(region, COMPUTE_SERVICE, cloudProvider);
       return getVMPricingInfoFromCache(instanceType, region, cloudProvider);
@@ -66,6 +68,22 @@ public class VMPricingServiceImpl implements VMPricingService {
             .networkPrice(0.0)
             .cpusPerVm(16)
             .memPerVm(64)
+            .build();
+    vmPricingInfoCache.put(getVMCacheKey(instanceType, region, cloudProvider), vmComputePricingInfo);
+    return vmComputePricingInfo;
+  }
+
+  private VMComputePricingInfo getCustomComputeN2VMPricingInfo(
+      String instanceType, String region, CloudProvider cloudProvider) {
+    VMComputePricingInfo vmComputePricingInfo =
+        VMComputePricingInfo.builder()
+            .category(COMPUTE_CATEGORY)
+            .type(instanceType)
+            .onDemandPrice(0.097118)
+            .spotPrice(getZonePriceList(0.02354, region, ImmutableList.of("a", "b", "c")))
+            .networkPrice(0.0)
+            .cpusPerVm(2)
+            .memPerVm(8)
             .build();
     vmPricingInfoCache.put(getVMCacheKey(instanceType, region, cloudProvider), vmComputePricingInfo);
     return vmComputePricingInfo;

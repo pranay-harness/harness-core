@@ -1,8 +1,8 @@
 package io.harness.skip.skipper.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.pms.steps.SkipType.NOOP;
-import static io.harness.pms.steps.SkipType.SKIP_TREE;
+import static io.harness.pms.contracts.steps.SkipType.NOOP;
+import static io.harness.pms.contracts.steps.SkipType.SKIP_TREE;
 import static io.harness.rule.OwnerRule.ALEXEI;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,7 +13,7 @@ import io.harness.beans.GraphVertex;
 import io.harness.beans.internal.EdgeListInternal;
 import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.category.element.UnitTests;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.Lists;

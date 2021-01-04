@@ -276,9 +276,9 @@ public class TimeSeriesServiceImpl implements TimeSeriesService {
 
     List<TimeSeriesMetricDefinition> timeSeriesMetricDefinitions = new ArrayList<>();
     // add project level thresholds
-    List<TimeSeriesThreshold> metricPackThresholds =
-        metricPackService.getMetricPackThresholds(metricCVConfig.getAccountId(), metricCVConfig.getProjectIdentifier(),
-            metricCVConfig.getMetricPack().getIdentifier(), metricCVConfig.getType());
+    List<TimeSeriesThreshold> metricPackThresholds = metricPackService.getMetricPackThresholds(
+        metricCVConfig.getAccountId(), metricCVConfig.getOrgIdentifier(), metricCVConfig.getProjectIdentifier(),
+        metricCVConfig.getMetricPack().getIdentifier(), metricCVConfig.getType());
     metricPackThresholds.forEach(timeSeriesThreshold
         -> timeSeriesMetricDefinitions.add(TimeSeriesMetricDefinition.builder()
                                                .metricName(timeSeriesThreshold.getMetricName())

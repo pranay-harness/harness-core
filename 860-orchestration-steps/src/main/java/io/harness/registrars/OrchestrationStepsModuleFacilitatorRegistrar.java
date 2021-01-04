@@ -3,26 +3,24 @@ package io.harness.registrars;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.sdk.core.facilitator.Facilitator;
-import io.harness.registries.registrar.FacilitatorRegistrar;
 import io.harness.steps.barriers.BarrierFacilitator;
 import io.harness.steps.resourcerestraint.ResourceRestraintFacilitator;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import java.util.Set;
-import org.apache.commons.lang3.tuple.Pair;
+import java.util.HashMap;
+import java.util.Map;
+import lombok.experimental.UtilityClass;
 
 @OwnedBy(CDC)
-public class OrchestrationStepsModuleFacilitatorRegistrar implements FacilitatorRegistrar {
-  @Inject private Injector injector;
+@UtilityClass
+public class OrchestrationStepsModuleFacilitatorRegistrar {
+  public Map<FacilitatorType, Class<? extends Facilitator>> getEngineFacilitators() {
+    Map<FacilitatorType, Class<? extends Facilitator>> engineFacilitators = new HashMap<>();
 
-  @Override
-  public void register(Set<Pair<FacilitatorType, Facilitator>> facilitatorClasses) {
-    facilitatorClasses.add(
-        Pair.of(BarrierFacilitator.FACILITATOR_TYPE, injector.getInstance(BarrierFacilitator.class)));
-    facilitatorClasses.add(Pair.of(
-        ResourceRestraintFacilitator.FACILITATOR_TYPE, injector.getInstance(ResourceRestraintFacilitator.class)));
+    engineFacilitators.put(BarrierFacilitator.FACILITATOR_TYPE, BarrierFacilitator.class);
+    engineFacilitators.put(ResourceRestraintFacilitator.FACILITATOR_TYPE, ResourceRestraintFacilitator.class);
+
+    return engineFacilitators;
   }
 }

@@ -67,7 +67,8 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
     dataCollectionDSLService.registerDatacollectionExecutorService(executorService);
     String code = readDSL("performance-pack.datacollection");
     Instant instant = Instant.ofEpochMilli(1599634954000L);
-    List<MetricPack> metricPacks = metricPackService.getMetricPacks(accountId, "project", DataSourceType.APP_DYNAMICS);
+    List<MetricPack> metricPacks =
+        metricPackService.getMetricPacks(accountId, "org", "project", DataSourceType.APP_DYNAMICS);
 
     AppDynamicsDataCollectionInfo appDynamicsDataCollectionInfo =
         AppDynamicsDataCollectionInfo.builder()
@@ -79,7 +80,8 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
                             .get()
                             .toDTO())
             .build();
-    Map<String, Object> params = appDynamicsDataCollectionInfo.getDslEnvVariables();
+    Map<String, Object> params =
+        appDynamicsDataCollectionInfo.getDslEnvVariables(AppDynamicsConnectorDTO.builder().build());
 
     Map<String, String> headers = new HashMap<>();
     headers.put("Authorization", "Basic **"); // Replace this with the actual value when capturing the request.
@@ -109,7 +111,8 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
     dataCollectionDSLService.registerDatacollectionExecutorService(executorService);
     String code = readDSL("performance-pack.datacollection");
     Instant instant = Instant.ofEpochMilli(1599634954000L);
-    List<MetricPack> metricPacks = metricPackService.getMetricPacks(accountId, "project", DataSourceType.APP_DYNAMICS);
+    List<MetricPack> metricPacks =
+        metricPackService.getMetricPacks(accountId, "org", "project", DataSourceType.APP_DYNAMICS);
 
     AppDynamicsDataCollectionInfo appDynamicsDataCollectionInfo =
         AppDynamicsDataCollectionInfo.builder()
@@ -122,7 +125,8 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
                             .toDTO())
             .build();
     appDynamicsDataCollectionInfo.setCollectHostData(true);
-    Map<String, Object> params = appDynamicsDataCollectionInfo.getDslEnvVariables();
+    Map<String, Object> params =
+        appDynamicsDataCollectionInfo.getDslEnvVariables(AppDynamicsConnectorDTO.builder().build());
 
     Map<String, String> headers = new HashMap<>();
     headers.put("Authorization", "Basic **"); // Replace this with the actual value when capturing the request.
@@ -146,13 +150,14 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
   public void testExecute_appDyanmicsQualityPackForServiceGuard() throws IOException {
     String filePath = "appdynamics/quality-service-guard.json";
     HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
-    //		 HOVERFLY_RULE.capture(filePath);
+    //    		 HOVERFLY_RULE.capture(filePath);
 
     DataCollectionDSLService dataCollectionDSLService = new DataCollectionServiceImpl();
     dataCollectionDSLService.registerDatacollectionExecutorService(executorService);
     String code = readDSL("quality-pack.datacollection");
-    Instant instant = Instant.ofEpochMilli(1599634954000L);
-    List<MetricPack> metricPacks = metricPackService.getMetricPacks(accountId, "project", DataSourceType.APP_DYNAMICS);
+    Instant instant = Instant.ofEpochMilli(1607498018484L);
+    List<MetricPack> metricPacks =
+        metricPackService.getMetricPacks(accountId, "org", "project", DataSourceType.APP_DYNAMICS);
 
     AppDynamicsDataCollectionInfo appDynamicsDataCollectionInfo =
         AppDynamicsDataCollectionInfo.builder()
@@ -166,12 +171,13 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
                     .get()
                     .toDTO())
             .build();
-    Map<String, Object> params = appDynamicsDataCollectionInfo.getDslEnvVariables();
+    Map<String, Object> params =
+        appDynamicsDataCollectionInfo.getDslEnvVariables(AppDynamicsConnectorDTO.builder().build());
 
     Map<String, String> headers = new HashMap<>();
     headers.put("Authorization", "Basic **"); // Replace this with the actual value when capturing the request.
     RuntimeParameters runtimeParameters = RuntimeParameters.builder()
-                                              .startTime(instant.minusSeconds(60))
+                                              .startTime(instant.minusSeconds(600))
                                               .endTime(instant)
                                               .commonHeaders(headers)
                                               .otherEnvVariables(params)
@@ -190,13 +196,14 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
   public void testExecute_appDyanmicsQualityPackWithHosts() throws IOException {
     String filePath = "appdynamics/quality-verification-task-collect-hosts.json";
     HOVERFLY_RULE.simulate(SimulationSource.file(Paths.get("src/test/resources/hoverfly/" + filePath)));
-    //		 rule.capture(filePath);
+    //		HOVERFLY_RULE.capture(filePath);
 
     DataCollectionDSLService dataCollectionDSLService = new DataCollectionServiceImpl();
     dataCollectionDSLService.registerDatacollectionExecutorService(executorService);
     String code = readDSL("quality-pack.datacollection");
-    Instant instant = Instant.ofEpochMilli(1599634954000L);
-    List<MetricPack> metricPacks = metricPackService.getMetricPacks(accountId, "project", DataSourceType.APP_DYNAMICS);
+    Instant instant = Instant.ofEpochMilli(1607498018484L);
+    List<MetricPack> metricPacks =
+        metricPackService.getMetricPacks(accountId, "org", "project", DataSourceType.APP_DYNAMICS);
 
     AppDynamicsDataCollectionInfo appDynamicsDataCollectionInfo =
         AppDynamicsDataCollectionInfo.builder()
@@ -211,12 +218,13 @@ public class AppDynamicsDataCollectionDSLTest extends HoverflyCVNextGenTest {
                     .toDTO())
             .build();
     appDynamicsDataCollectionInfo.setCollectHostData(true);
-    Map<String, Object> params = appDynamicsDataCollectionInfo.getDslEnvVariables();
+    Map<String, Object> params =
+        appDynamicsDataCollectionInfo.getDslEnvVariables(AppDynamicsConnectorDTO.builder().build());
 
     Map<String, String> headers = new HashMap<>();
     headers.put("Authorization", "Basic **"); // Replace this with the actual value when capturing the request.
     RuntimeParameters runtimeParameters = RuntimeParameters.builder()
-                                              .startTime(instant.minusSeconds(60))
+                                              .startTime(instant.minusSeconds(600))
                                               .endTime(instant)
                                               .commonHeaders(headers)
                                               .otherEnvVariables(params)

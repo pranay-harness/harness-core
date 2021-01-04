@@ -1,5 +1,6 @@
 package software.wings.functional.terraform;
 
+import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.YOGESH;
 
@@ -29,6 +30,7 @@ import io.harness.generator.Randomizer;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.WorkflowGenerator;
 import io.harness.rule.Owner;
+import io.harness.testframework.restutils.WorkflowRestUtils;
 
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -101,36 +103,35 @@ public class TerraformFunctionalTest extends AbstractFunctionalTest {
         () -> environmentGenerator.ensurePredefined(seed, owners, EnvironmentGenerator.Environments.GENERIC_TEST));
     assertThat(environment).isNotNull();
 
-    if (!featureFlagService.isEnabled(FeatureName.EXPORT_TF_PLAN, application.getAccountId())) {
-      featureFlagService.enableAccount(FeatureName.EXPORT_TF_PLAN, application.getAccountId());
-    }
+    enableFeatureFlag(FeatureName.EXPORT_TF_PLAN, application.getAccountId());
   }
 
   @Test
-  @Owner(developers = YOGESH, intermittent = true)
+  @Owner(developers = YOGESH)
   @Category(FunctionalTests.class)
   public void createTerraformPlanForApply() throws IOException {
     InfrastructureProvisioner terraformProvisioner = createTerraformProvisioner(true, false);
 
     Workflow workflow = createCanaryWorkflow(environment.getUuid());
-    workflow = workflowGenerator.ensureWorkflow(seed, owners, workflow);
+    workflow = createAndAssertWorkflow(workflow);
     workflowService.updatePreDeployment(application.getAppId(), workflow.getUuid(),
         addPreDeploymentRunPlanOnlyPhaseStep(terraformProvisioner, false, false));
 
     WorkflowExecution workflowExecution =
         runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), getExecutionArgs(workflow));
     logStateExecutionInstanceErrors(workflowExecution);
+    getFailedWorkflowExecutionLogs(workflowExecution);
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
   @Test
-  @Owner(developers = YOGESH, intermittent = true)
+  @Owner(developers = YOGESH)
   @Category(FunctionalTests.class)
   public void applyApprovedPlanThenDestroy() throws IOException {
     InfrastructureProvisioner terraformProvisioner = createTerraformProvisioner(true, false);
 
     Workflow workflow = createCanaryWorkflow(environment.getUuid());
-    workflow = workflowGenerator.ensureWorkflow(seed, owners, workflow);
+    workflow = createAndAssertWorkflow(workflow);
     workflowService.updatePreDeployment(
         application.getAppId(), workflow.getUuid(), addPreDeploymentPhaseStep(terraformProvisioner, true, false));
     workflowService.updatePostDeployment(
@@ -139,34 +140,36 @@ public class TerraformFunctionalTest extends AbstractFunctionalTest {
     WorkflowExecution workflowExecution =
         runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), getExecutionArgs(workflow));
     logStateExecutionInstanceErrors(workflowExecution);
+    getFailedWorkflowExecutionLogs(workflowExecution);
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
   @Test
-  @Owner(developers = YOGESH, intermittent = true)
+  @Owner(developers = YOGESH)
   @Category(FunctionalTests.class)
   public void createTerraformPlanForDestroy() throws IOException {
     InfrastructureProvisioner terraformProvisioner = createTerraformProvisioner(true, false);
 
     Workflow workflow = createCanaryWorkflow(environment.getUuid());
-    workflow = workflowGenerator.ensureWorkflow(seed, owners, workflow);
+    workflow = createAndAssertWorkflow(workflow);
     workflowService.updatePostDeployment(
         application.getAppId(), workflow.getUuid(), addPostDeploymentRunPlanOnlyPhaseStep(terraformProvisioner, false));
 
     WorkflowExecution workflowExecution =
         runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), getExecutionArgs(workflow));
     logStateExecutionInstanceErrors(workflowExecution);
+    getFailedWorkflowExecutionLogs(workflowExecution);
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
   @Test
-  @Owner(developers = YOGESH, intermittent = true)
+  @Owner(developers = YOGESH)
   @Category(FunctionalTests.class)
   public void workflowWithCommitId() throws IOException {
     InfrastructureProvisioner terraformProvisioner = createTerraformProvisioner(false, false);
 
     Workflow workflow = createCanaryWorkflow(environment.getUuid());
-    workflow = workflowGenerator.ensureWorkflow(seed, owners, workflow);
+    workflow = createAndAssertWorkflow(workflow);
     workflowService.updatePreDeployment(
         application.getAppId(), workflow.getUuid(), addPreDeploymentPhaseStep(terraformProvisioner, true, false));
     workflowService.updatePostDeployment(
@@ -175,17 +178,18 @@ public class TerraformFunctionalTest extends AbstractFunctionalTest {
     WorkflowExecution workflowExecution =
         runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), getExecutionArgs(workflow));
     logStateExecutionInstanceErrors(workflowExecution);
+    getFailedWorkflowExecutionLogs(workflowExecution);
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
   @Test
-  @Owner(developers = YOGESH, intermittent = true)
+  @Owner(developers = YOGESH)
   @Category(FunctionalTests.class)
   public void workflowWithEnvVars() throws IOException {
     InfrastructureProvisioner terraformProvisioner = createTerraformProvisioner(true, true);
 
     Workflow workflow = createCanaryWorkflow(environment.getUuid());
-    workflow = workflowGenerator.ensureWorkflow(seed, owners, workflow);
+    workflow = createAndAssertWorkflow(workflow);
     workflowService.updatePreDeployment(
         application.getAppId(), workflow.getUuid(), addPreDeploymentPhaseStep(terraformProvisioner, true, true));
     workflowService.updatePostDeployment(
@@ -194,6 +198,7 @@ public class TerraformFunctionalTest extends AbstractFunctionalTest {
     WorkflowExecution workflowExecution =
         runWorkflow(bearerToken, application.getUuid(), environment.getUuid(), getExecutionArgs(workflow));
     logStateExecutionInstanceErrors(workflowExecution);
+    getFailedWorkflowExecutionLogs(workflowExecution);
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
@@ -332,6 +337,7 @@ public class TerraformFunctionalTest extends AbstractFunctionalTest {
             .variables(getVariables(addEnvVars))
             .environmentVariables(addEnvVars ? getEnvironmentVariables() : null)
             .mappingBlueprints(Arrays.asList())
+            .kmsId(application.getAccountId())
             .build();
 
     return infrastructureProvisionerGenerator.ensureInfrastructureProvisioner(
@@ -384,5 +390,14 @@ public class TerraformFunctionalTest extends AbstractFunctionalTest {
     executionArgs.setWorkflowType(workflow.getWorkflowType());
     executionArgs.setOrchestrationId(workflow.getUuid());
     return executionArgs;
+  }
+
+  private Workflow createAndAssertWorkflow(Workflow workflow) {
+    Workflow savedWorkflow =
+        WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), application.getUuid(), workflow);
+    assertThat(savedWorkflow).isNotNull();
+    assertThat(savedWorkflow.getUuid()).isNotEmpty();
+    assertThat(savedWorkflow.getWorkflowType()).isEqualTo(ORCHESTRATION);
+    return savedWorkflow;
   }
 }

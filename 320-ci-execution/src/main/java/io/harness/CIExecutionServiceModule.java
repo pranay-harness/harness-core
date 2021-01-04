@@ -7,27 +7,20 @@ import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.impl.CIPipelineExecutionService;
 import io.harness.impl.CIPipelineExecutionServiceImpl;
-import io.harness.registrars.ExecutionRegistrar;
-import io.harness.registries.registrar.OrchestrationEventHandlerRegistrar;
-import io.harness.registries.registrar.StepRegistrar;
-import io.harness.states.CIDelegateTaskExecutor;
-import io.harness.tasks.TaskExecutor;
-import io.harness.tasks.TaskMode;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 
-import ci.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.multibindings.MapBinder;
+import java.util.Optional;
 
 public class CIExecutionServiceModule extends AbstractModule {
   private CIExecutionServiceConfig ciExecutionServiceConfig;
+  private final Boolean withPMS;
 
   @Inject
-  public CIExecutionServiceModule(CIExecutionServiceConfig ciExecutionServiceConfig) {
+  public CIExecutionServiceModule(CIExecutionServiceConfig ciExecutionServiceConfig, Boolean withPMS) {
     this.ciExecutionServiceConfig = ciExecutionServiceConfig;
+    this.withPMS = withPMS;
   }
 
   @Override
@@ -37,30 +30,16 @@ public class CIExecutionServiceModule extends AbstractModule {
     install(OrchestrationVisualizationModule.getInstance());
     install(ExecutionPlanModule.getInstance());
 
-    MapBinder<String, OrchestrationEventHandlerRegistrar> orchestrationEventHandlerRegistrarMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, OrchestrationEventHandlerRegistrar.class);
-    orchestrationEventHandlerRegistrarMapBinder.addBinding(OrchestrationExecutionEventHandlerRegistrar.class.getName())
-        .to(OrchestrationExecutionEventHandlerRegistrar.class);
-
-    install(NGPipelineCommonsModule.getInstance());
+    install(
+        NGPipelineCommonsModule.getInstance(OrchestrationModuleConfig.builder()
+                                                .serviceName("CI")
+                                                .withPMS(Optional.ofNullable(withPMS).orElse(false))
+                                                .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+                                                .publisherName(OrchestrationNotifyEventListener.ORCHESTRATION)
+                                                .maxPoolSize(10)
+                                                .build()));
     bind(CIBuildService.class).to(CIBuildServiceImpl.class);
     this.bind(CIExecutionServiceConfig.class).toInstance(this.ciExecutionServiceConfig);
     bind(CIPipelineExecutionService.class).to(CIPipelineExecutionServiceImpl.class);
-    MapBinder<String, StepRegistrar> stepRegistrarMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, StepRegistrar.class);
-    stepRegistrarMapBinder.addBinding(ExecutionRegistrar.class.getName()).to(ExecutionRegistrar.class);
-    MapBinder<String, TaskExecutor> taskExecutorMap =
-        MapBinder.newMapBinder(binder(), String.class, TaskExecutor.class);
-    taskExecutorMap.addBinding(TaskMode.DELEGATE_TASK_V3.name()).to(CIDelegateTaskExecutor.class);
-  }
-
-  @Provides
-  @Singleton
-  public OrchestrationModuleConfig orchestrationModuleConfig() {
-    return OrchestrationModuleConfig.builder()
-        .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
-        .publisherName(OrchestrationNotifyEventListener.ORCHESTRATION)
-        .maxPoolSize(10)
-        .build();
   }
 }

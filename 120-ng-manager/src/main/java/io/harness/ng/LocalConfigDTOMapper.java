@@ -14,7 +14,7 @@ public class LocalConfigDTOMapper {
       String accountIdentifier, ConnectorDTO connectorRequestDTO, LocalConnectorDTO localConnectorDTO) {
     ConnectorInfoDTO connector = connectorRequestDTO.getConnectorInfo();
     return LocalConfigDTO.builder()
-        .isDefault(localConnectorDTO.isDefault())
+        .isDefault(false)
         .encryptionType(EncryptionType.LOCAL)
 
         .name(connector.getName())
@@ -24,6 +24,7 @@ public class LocalConfigDTOMapper {
         .tags(connector.getTags())
         .identifier(connector.getIdentifier())
         .description(connector.getDescription())
+        .harnessManaged(localConnectorDTO.isHarnessManaged())
         .build();
   }
 }

@@ -31,7 +31,9 @@ import static io.harness.delegate.message.MessageConstants.DELEGATE_SEND_VERSION
 import static io.harness.delegate.message.MessageConstants.DELEGATE_SHUTDOWN_PENDING;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_SHUTDOWN_STARTED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_STARTED;
+import static io.harness.delegate.message.MessageConstants.DELEGATE_START_GRPC;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_STOP_ACQUIRING;
+import static io.harness.delegate.message.MessageConstants.DELEGATE_STOP_GRPC;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_SWITCH_STORAGE;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_UPGRADE_NEEDED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_UPGRADE_PENDING;
@@ -109,7 +111,8 @@ import io.harness.delegate.task.validation.DelegateConnectionResultDetail;
 import io.harness.exception.UnexpectedException;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.filesystem.FileIo;
-import io.harness.grpc.DelegateServiceGrpcLiteClient;
+import io.harness.grpc.DelegateServiceGrpcAgentClient;
+import io.harness.grpc.util.RestartableServiceManager;
 import io.harness.logging.AutoLogContext;
 import io.harness.logstreaming.DelegateAgentLogStreamingClient;
 import io.harness.logstreaming.LogStreamingTaskClient;
@@ -266,6 +269,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private static volatile String delegateId;
 
   @Inject private DelegateConfiguration delegateConfiguration;
+  @Inject private RestartableServiceManager restartableServiceManager;
 
   @Inject private DelegateAgentManagerClient delegateAgentManagerClient;
 
@@ -280,6 +284,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @Inject @Named("asyncExecutor") private ExecutorService asyncExecutor;
   @Inject @Named("artifactExecutor") private ExecutorService artifactExecutor;
   @Inject @Named("timeoutExecutor") private ExecutorService timeoutEnforcement;
+  @Inject @Named("grpcServiceExecutor") private ExecutorService grpcServiceExecutor;
   @Inject private ExecutorService syncExecutor;
 
   @Inject private SignalService signalService;
@@ -297,7 +302,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @Inject(optional = true) @Nullable private PerpetualTaskWorker perpetualTaskWorker;
   @Inject(optional = true) @Nullable private DelegateAgentLogStreamingClient delegateAgentLogStreamingClient;
   @Inject DelegateTaskFactory delegateTaskFactory;
-  @Inject(optional = true) @Nullable private DelegateServiceGrpcLiteClient delegateServiceGrpcLiteClient;
+  @Inject(optional = true) @Nullable private DelegateServiceGrpcAgentClient delegateServiceGrpcAgentClient;
   @Inject private KryoSerializer kryoSerializer;
 
   private final AtomicBoolean waiter = new AtomicBoolean(true);
@@ -391,6 +396,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         startLocalHeartbeat();
       } else {
         log.info("Delegate process started");
+        if (delegateConfiguration.isGrpcServiceEnabled()) {
+          restartableServiceManager.start();
+          Runtime.getRuntime().addShutdownHook(new Thread(() -> restartableServiceManager.stop()));
+        }
       }
 
       boolean kubectlInstalled = installKubectl(delegateConfiguration);
@@ -813,6 +822,21 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
   }
 
+  private void stopGrpcService() {
+    if (delegateConfiguration.isGrpcServiceEnabled() && restartableServiceManager.isRunning()) {
+      grpcServiceExecutor.submit(() -> { restartableServiceManager.stop(); });
+    }
+  }
+
+  private void startGrpcService() {
+    if (delegateConfiguration.isGrpcServiceEnabled() && acquireTasks.get() && !restartableServiceManager.isRunning()) {
+      grpcServiceExecutor.submit(() -> {
+        restartableServiceManager.start();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> restartableServiceManager.stop()));
+      });
+    }
+  }
+
   private void updateTasks() {
     if (perpetualTaskWorker != null) {
       perpetualTaskWorker.updateTasks();
@@ -1102,6 +1126,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           } else if (DELEGATE_SEND_VERSION_HEADER.equals(message.getMessage())) {
             DelegateAgentManagerClientFactory.setSendVersionHeader(Boolean.parseBoolean(message.getParams().get(0)));
             delegateAgentManagerClient = injector.getInstance(DelegateAgentManagerClient.class);
+          } else if (DELEGATE_START_GRPC.equals(message.getMessage())) {
+            startGrpcService();
+          } else if (DELEGATE_STOP_GRPC.equals(message.getMessage())) {
+            stopGrpcService();
           }
         }), 0, 1, TimeUnit.SECONDS);
   }
@@ -1911,12 +1939,12 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             .appId(appId)
             .activityId(activityId);
 
-    if (isNotBlank(delegateTaskPackage.getDelegateCallbackToken()) && delegateServiceGrpcLiteClient != null) {
+    if (isNotBlank(delegateTaskPackage.getDelegateCallbackToken()) && delegateServiceGrpcAgentClient != null) {
       taskClientBuilder.taskProgressClient(TaskProgressClient.builder()
                                                .accountId(delegateTaskPackage.getAccountId())
                                                .taskId(delegateTaskPackage.getDelegateTaskId())
                                                .delegateCallbackToken(delegateTaskPackage.getDelegateCallbackToken())
-                                               .delegateServiceGrpcLiteClient(delegateServiceGrpcLiteClient)
+                                               .delegateServiceGrpcAgentClient(delegateServiceGrpcAgentClient)
                                                .kryoSerializer(kryoSerializer)
                                                .build());
     }
@@ -2338,8 +2366,14 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
     Map<String, char[]> decryptedRecords = delegateDecryptionService.decrypt(encryptionConfigListMap);
     Map<String, char[]> secretUuidToValues = new HashMap<>();
-    secretDetails.forEach(
-        (key, value) -> secretUuidToValues.put(key, decryptedRecords.get(value.getEncryptedRecord().getUuid())));
+
+    secretDetails.forEach((key, value) -> {
+      char[] secretValue = decryptedRecords.get(value.getEncryptedRecord().getUuid());
+      secretUuidToValues.put(key, secretValue);
+
+      // Adds secret values from the 3 phase decryption to the list of task secrets to be masked
+      delegateTaskPackage.getSecrets().add(String.valueOf(secretValue));
+    });
 
     DelegateExpressionEvaluator delegateExpressionEvaluator =
         new DelegateExpressionEvaluator(secretUuidToValues, delegateTaskPackage.getData().getExpressionFunctorToken());

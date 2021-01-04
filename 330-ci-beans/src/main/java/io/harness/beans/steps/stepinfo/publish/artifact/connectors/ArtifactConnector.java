@@ -1,5 +1,7 @@
 package io.harness.beans.steps.stepinfo.publish.artifact.connectors;
 
+import io.harness.pms.yaml.ParameterField;
+
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Getter;
@@ -36,7 +38,7 @@ public interface ArtifactConnector {
     }
   }
 
-  String getConnectorRef();
+  ParameterField<String> getConnectorRef();
 
   Type getType();
 }

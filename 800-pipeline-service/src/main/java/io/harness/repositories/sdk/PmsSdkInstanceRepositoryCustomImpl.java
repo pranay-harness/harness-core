@@ -1,8 +1,9 @@
 package io.harness.repositories.sdk;
 
+import io.harness.pms.contracts.steps.StepInfo;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.PmsSdkInstance;
 import io.harness.pms.sdk.PmsSdkInstance.PmsSdkInstanceKeys;
-import io.harness.pms.steps.StepInfo;
 
 import com.google.inject.Inject;
 import java.time.Duration;
@@ -30,11 +31,12 @@ public class PmsSdkInstanceRepositoryCustomImpl implements PmsSdkInstanceReposit
   private final MongoTemplate mongoTemplate;
 
   @Override
-  public void updatePmsSdkInstance(
-      String name, Map<String, Set<String>> supportedTypes, List<StepInfo> supportedSteps) {
+  public void updatePmsSdkInstance(String name, Map<String, Set<String>> supportedTypes, List<StepInfo> supportedSteps,
+      List<StepType> supportedStepTypes) {
     Query query = Query.query(Criteria.where(PmsSdkInstanceKeys.name).is(name));
     Update update = Update.update(PmsSdkInstanceKeys.supportedTypes, supportedTypes)
-                        .set(PmsSdkInstanceKeys.supportedSteps, supportedSteps);
+                        .set(PmsSdkInstanceKeys.supportedSteps, supportedSteps)
+                        .set(PmsSdkInstanceKeys.supportedStepTypes, supportedStepTypes);
     RetryPolicy<Object> retryPolicy = getRetryPolicy("[Retrying]: Failed updating PMS SDK instance; attempt: {}",
         "[Failed]: Failed updating PMS SDK instance; attempt: {}");
     Failsafe.with(retryPolicy).get(() -> mongoTemplate.findAndModify(query, update, PmsSdkInstance.class));

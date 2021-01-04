@@ -1,12 +1,18 @@
 package io.harness.repositories.pipeline;
 
+import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Query.query;
+
 import io.harness.pms.pipeline.PipelineEntity;
+import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.PMSPipelineFilterHelper;
+import io.harness.springdata.SpringDataMongoUtils;
 
 import com.google.inject.Inject;
 import com.mongodb.client.result.UpdateResult;
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,8 +38,11 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
 
   @Override
   public PipelineEntity update(Criteria criteria, PipelineEntity pipelineEntity) {
+    return update(criteria, PMSPipelineFilterHelper.getUpdateOperations(pipelineEntity));
+  }
+
+  public PipelineEntity update(Criteria criteria, Update update) {
     Query query = new Query(criteria);
-    Update update = PMSPipelineFilterHelper.getUpdateOperations(pipelineEntity);
     RetryPolicy<Object> retryPolicy = getRetryPolicy(
         "[Retrying]: Failed updating Pipeline; attempt: {}", "[Failed]: Failed updating Pipeline; attempt: {}");
     return Failsafe.with(retryPolicy)
@@ -41,7 +50,6 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
                  -> mongoTemplate.findAndModify(
                      query, update, new FindAndModifyOptions().returnNew(true), PipelineEntity.class));
   }
-
   private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {
     return new RetryPolicy<>()
         .handle(OptimisticLockingFailureException.class)
@@ -60,6 +68,21 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
         "[Retrying]: Failed deleting Pipeline; attempt: {}", "[Failed]: Failed deleting Pipeline; attempt: {}");
     return Failsafe.with(retryPolicy)
         .get(() -> mongoTemplate.updateFirst(query, updateOperationsForDelete, PipelineEntity.class));
+  }
+
+  @Override
+  public Optional<PipelineEntity> incrementRunSequence(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean deleted) {
+    Query query = query(where(PipelineEntityKeys.accountId).is(accountId))
+                      .addCriteria(where(PipelineEntityKeys.orgIdentifier).is(orgIdentifier))
+                      .addCriteria(where(PipelineEntityKeys.projectIdentifier).is(projectIdentifier))
+                      .addCriteria(where(PipelineEntityKeys.identifier).is(pipelineIdentifier))
+                      .addCriteria(where(PipelineEntityKeys.deleted).is(deleted));
+    Update update = new Update();
+    update.inc(PipelineEntityKeys.runSequence);
+    PipelineEntity pipelineEntity =
+        mongoTemplate.findAndModify(query, update, SpringDataMongoUtils.returnNewOptions, PipelineEntity.class);
+    return Optional.ofNullable(pipelineEntity);
   }
 
   @Override

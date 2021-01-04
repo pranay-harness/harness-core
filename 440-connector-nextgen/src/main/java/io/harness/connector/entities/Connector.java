@@ -11,6 +11,7 @@ import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.common.beans.NGTag;
+import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.persistence.PersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -71,5 +72,7 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
   public static final class ConnectorKeys {
     public static final String connectionStatus =
         ConnectorKeys.connectivityDetails + "." + ConnectorConnectivityDetailsKeys.status;
+    public static final String tagKey = ConnectorKeys.tags + "." + NGTagKeys.key;
+    public static final String tagValue = ConnectorKeys.tags + "." + NGTagKeys.value;
   }
 }

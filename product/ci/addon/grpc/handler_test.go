@@ -73,7 +73,7 @@ func TestExecuteRunStep(t *testing.T) {
 			Id: "step1",
 			Step: &pb.UnitStep_Run{
 				Run: &pb.RunStep{
-					Commands: []string{"ls"},
+					Command: "ls",
 				},
 			},
 		},

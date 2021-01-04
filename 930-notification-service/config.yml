@@ -88,3 +88,7 @@ notificationClient:
 
 seedDataConfiguration:
   shouldOverrideAllPredefinedTemplates: true
+
+grpcClient:
+  target: localhost:9880
+  authority: localhost

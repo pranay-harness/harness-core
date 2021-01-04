@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.execution;
+
+option java_multiple_files = true;
+
+import "io/harness/pms/contracts/execution/tasks/task_request.proto";
+
+message ExecutableResponse {
+  oneof response {
+    AsyncExecutableResponse async = 1;
+    ChildExecutableResponse child = 2;
+    ChildrenExecutableResponse children = 3;
+    ChildChainExecutableResponse childChain = 4;
+    TaskExecutableResponse task = 5;
+    TaskChainExecutableResponse taskChain = 6;
+  }
+  string metadata = 7;
+}
+
+message AsyncExecutableResponse {
+  repeated string callbackIds = 1;
+}
+
+message ChildExecutableResponse {
+  string childNodeId = 1;
+}
+
+message ChildrenExecutableResponse {
+  message Child {
+    string childNodeId = 1;
+  }
+  repeated Child children = 1;
+}
+
+message ChildChainExecutableResponse {
+  string nextChildId = 1;
+  string previousChildId = 2;
+  bytes passThroughData = 3;
+  bool lastLink = 4;
+  bool suspend = 6;
+}
+
+message TaskChainExecutableResponse {
+  string taskId = 1;
+  io.harness.pms.contracts.execution.tasks.TaskCategory taskCategory = 2;
+  bool chainEnd = 3;
+  bytes passThroughData = 4;
+}
+
+message TaskExecutableResponse {
+  string taskId = 1;
+  io.harness.pms.contracts.execution.tasks.TaskCategory taskCategory = 2;
+}

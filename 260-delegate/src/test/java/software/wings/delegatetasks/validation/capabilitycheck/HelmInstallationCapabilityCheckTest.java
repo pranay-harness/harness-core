@@ -5,14 +5,17 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
+import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
+import io.harness.delegate.task.executioncapability.HelmInstallationCapabilityCheck;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
-import software.wings.delegatetasks.validation.capabilities.HelmInstallationCapability;
 
 import com.google.inject.Inject;
 import org.junit.Test;
@@ -20,6 +23,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class HelmInstallationCapabilityCheckTest extends WingsBaseTest {
   @Mock private K8sGlobalConfigService k8sGlobalConfigService;
   @Inject @InjectMocks private HelmInstallationCapabilityCheck helmInstallationCapabilityCheck;

@@ -17,6 +17,16 @@ message PublishArtifactsStep {
   repeated BuildPublishImage images = 2;
 }
 
+message Report {
+  enum Type {
+    UNKNOWN = 0;
+    JUNIT = 1;
+  }
+  Type type = 2;
+  // List of paths to collect reports from. Can be regex as well.
+  repeated string paths = 3;
+}
+
 message TestIntelligenceStep {
   string goals = 1;
   string language = 2;   // repo language for running tests. Java | Python | Go etc.
@@ -26,18 +36,17 @@ message TestIntelligenceStep {
 }
 
 message RunStep {
-  repeated string commands = 1;
+  string command = 1;
   StepContext context = 2;
   repeated string envVarOutputs = 3;  // produced output variables
   uint32 container_port = 4;          // Port of the container on which run step needs to be executed
+  repeated Report reports = 5;
 }
 
 message PluginStep {
   string image = 1;
   StepContext context = 2;
-  uint32 container_port = 3;    // Port of the container on which plugin step needs to be executed
-  string image_secret_env = 4;  // Name of environment variable that stores the docker image secret.
-                                // If not set, plugin is public.
+  uint32 container_port = 3;  // Port of the container on which plugin step needs to be executed
 }
 
 message SaveCacheStep {

@@ -1,6 +1,6 @@
 package io.harness.delegate.task.azure.appservice.webapp.request;
 
-import static io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceTaskType.LIST_WEB_APP_DEPLOYMENT_DATA;
+import static io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceTaskType.LIST_WEB_APP_INSTANCES_DATA;
 
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters;
 
@@ -17,7 +17,7 @@ public class AzureWebAppListWebAppInstancesParameters extends AzureAppServiceTas
       String subscriptionId, String commandName, int timeoutIntervalInMin, String resourceGroupName,
       AzureAppServiceType appServiceType, String appName, String slotName) {
     super(appId, accountId, activityId, subscriptionId, resourceGroupName, appName, commandName, timeoutIntervalInMin,
-        LIST_WEB_APP_DEPLOYMENT_DATA, appServiceType);
+        LIST_WEB_APP_INSTANCES_DATA, appServiceType);
     this.slotName = slotName;
   }
 }

@@ -1,6 +1,6 @@
 package io.harness.functional.redesign.mixins.stepType;
 
-import io.harness.pms.steps.StepType;
+import io.harness.pms.contracts.steps.StepType;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;

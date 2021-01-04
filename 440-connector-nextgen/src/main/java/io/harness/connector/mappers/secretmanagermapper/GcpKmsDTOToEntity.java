@@ -18,6 +18,7 @@ public class GcpKmsDTOToEntity implements ConnectorDTOToEntityMapper<GcpKmsConne
         .keyRing(connectorDTO.getKeyRing())
         .keyName(connectorDTO.getKeyName())
         .isDefault(connectorDTO.isDefault())
+        .harnessManaged(connectorDTO.isHarnessManaged())
         .build();
   }
 

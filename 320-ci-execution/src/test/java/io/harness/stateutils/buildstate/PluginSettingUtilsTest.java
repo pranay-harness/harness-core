@@ -16,9 +16,9 @@ import io.harness.beans.steps.stepinfo.UploadToGCSStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToS3StepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionTest;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
-import com.google.common.collect.ImmutableMap;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,28 +30,29 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldGetGCRStepInfoEnvVariables() {
-    GCRStepInfo dockerStepInfo = GCRStepInfo.builder()
-                                     .registry("gcr.io")
-                                     .repo("harness")
-                                     .tags(asList("tag1", "tag2"))
-                                     .dockerFile("Dockerfile")
-                                     .context("context")
-                                     .target("target")
-                                     .buildArgs(ImmutableMap.of("arg1", "argValue1", "arg2", "argValue2"))
-                                     .labels(Collections.singletonMap("label", "label1"))
-                                     .build();
+    GCRStepInfo gcrStepInfo = GCRStepInfo.builder()
+                                  .host(ParameterField.createValueField("gcr.io/"))
+                                  .projectID(ParameterField.createValueField("/ci"))
+                                  .imageName(ParameterField.createValueField("harness"))
+                                  .tags(ParameterField.createValueField(asList("tag1", "tag2")))
+                                  .dockerfile(ParameterField.createValueField("Dockerfile"))
+                                  .context(ParameterField.createValueField("context"))
+                                  .target(ParameterField.createValueField("target"))
+                                  .buildArgs(ParameterField.createValueField(asList("arg1", "arg2")))
+                                  .labels(ParameterField.createValueField(Collections.singletonMap("label", "label1")))
+                                  .build();
 
     Map<String, String> expected = new HashMap<>();
-    expected.put("PLUGIN_REGISTRY", "gcr.io");
+    expected.put("PLUGIN_REGISTRY", "gcr.io/ci");
     expected.put("PLUGIN_REPO", "harness");
     expected.put("PLUGIN_TAGS", "tag1,tag2");
     expected.put("PLUGIN_DOCKERFILE", "Dockerfile");
     expected.put("PLUGIN_CONTEXT", "context");
     expected.put("PLUGIN_TARGET", "target");
-    expected.put("PLUGIN_BUILD_ARGS", "arg1=argValue1,arg2=argValue2");
+    expected.put("PLUGIN_BUILD_ARGS", "arg1,arg2");
     expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
     Map<String, String> pluginCompatiblePublishStepEnvVariables =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(dockerStepInfo);
+        PluginSettingUtils.getPluginCompatibleEnvVariables(gcrStepInfo, "identifier");
     assertThat(pluginCompatiblePublishStepEnvVariables).isEqualTo(expected);
   }
 
@@ -59,43 +60,45 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldGetECRStepInfoStepEnvVariables() {
-    ECRStepInfo dockerStepInfo = ECRStepInfo.builder()
-                                     .registry("https://aws_account_id.dkr.ecr.region.amazonaws.com.")
-                                     .repo("harness")
-                                     .tags(asList("tag1", "tag2"))
-                                     .dockerFile("Dockerfile")
-                                     .context("context")
-                                     .target("target")
-                                     .buildArgs(ImmutableMap.of("arg1", "argValue1", "arg2", "argValue2"))
-                                     .labels(Collections.singletonMap("label", "label1"))
-                                     .build();
+    ECRStepInfo ecrStepInfo = ECRStepInfo.builder()
+                                  .account(ParameterField.createValueField("6874654867"))
+                                  .region(ParameterField.createValueField("eu-central-1"))
+                                  .imageName(ParameterField.createValueField("harness"))
+                                  .tags(ParameterField.createValueField(asList("tag1", "tag2")))
+                                  .dockerfile(ParameterField.createValueField("Dockerfile"))
+                                  .context(ParameterField.createValueField("context"))
+                                  .target(ParameterField.createValueField("target"))
+                                  .buildArgs(ParameterField.createValueField(asList("arg1", "arg2")))
+                                  .labels(ParameterField.createValueField(Collections.singletonMap("label", "label1")))
+                                  .build();
 
     Map<String, String> expected = new HashMap<>();
-    expected.put("PLUGIN_REGISTRY", "https://aws_account_id.dkr.ecr.region.amazonaws.com.");
+    expected.put("PLUGIN_REGISTRY", "6874654867.dkr.ecr.eu-central-1.amazonaws.com");
     expected.put("PLUGIN_REPO", "harness");
     expected.put("PLUGIN_TAGS", "tag1,tag2");
     expected.put("PLUGIN_DOCKERFILE", "Dockerfile");
     expected.put("PLUGIN_CONTEXT", "context");
     expected.put("PLUGIN_TARGET", "target");
-    expected.put("PLUGIN_BUILD_ARGS", "arg1=argValue1,arg2=argValue2");
+    expected.put("PLUGIN_BUILD_ARGS", "arg1,arg2");
     expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
     Map<String, String> pluginCompatiblePublishStepEnvVariables =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(dockerStepInfo);
+        PluginSettingUtils.getPluginCompatibleEnvVariables(ecrStepInfo, "identifier");
     assertThat(pluginCompatiblePublishStepEnvVariables).isEqualTo(expected);
   }
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldGetDockerStepInfoEnvVariables() {
-    DockerStepInfo dockerStepInfo = DockerStepInfo.builder()
-                                        .repo("harness")
-                                        .tags(asList("tag1", "tag2"))
-                                        .dockerFile("Dockerfile")
-                                        .context("context")
-                                        .target("target")
-                                        .buildArgs(ImmutableMap.of("arg1", "argValue1", "arg2", "argValue2"))
-                                        .labels(Collections.singletonMap("label", "label1"))
-                                        .build();
+    DockerStepInfo dockerStepInfo =
+        DockerStepInfo.builder()
+            .repo(ParameterField.createValueField("harness"))
+            .tags(ParameterField.createValueField(asList("tag1", "tag2")))
+            .dockerfile(ParameterField.createValueField("Dockerfile"))
+            .context(ParameterField.createValueField("context"))
+            .target(ParameterField.createValueField("target"))
+            .buildArgs(ParameterField.createValueField(asList("arg1", "arg2")))
+            .labels(ParameterField.createValueField(Collections.singletonMap("label", "label1")))
+            .build();
 
     Map<String, String> expected = new HashMap<>();
     expected.put("PLUGIN_REPO", "harness");
@@ -103,10 +106,10 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_DOCKERFILE", "Dockerfile");
     expected.put("PLUGIN_CONTEXT", "context");
     expected.put("PLUGIN_TARGET", "target");
-    expected.put("PLUGIN_BUILD_ARGS", "arg1=argValue1,arg2=argValue2");
+    expected.put("PLUGIN_BUILD_ARGS", "arg1,arg2");
     expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
     Map<String, String> pluginCompatiblePublishStepEnvVariables =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(dockerStepInfo);
+        PluginSettingUtils.getPluginCompatibleEnvVariables(dockerStepInfo, "identifier");
     assertThat(pluginCompatiblePublishStepEnvVariables).isEqualTo(expected);
   }
 
@@ -114,8 +117,12 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldGetRestoreCacheS3StepInfoEnvVariables() {
-    RestoreCacheS3StepInfo restoreCacheS3StepInfo =
-        RestoreCacheS3StepInfo.builder().key("key").target("target").bucket("bucket").endpoint("endpoint").build();
+    RestoreCacheS3StepInfo restoreCacheS3StepInfo = RestoreCacheS3StepInfo.builder()
+                                                        .key(ParameterField.createValueField("key"))
+                                                        .target(ParameterField.createValueField("target"))
+                                                        .bucket(ParameterField.createValueField("bucket"))
+                                                        .endpoint(ParameterField.createValueField("endpoint"))
+                                                        .build();
     Map<String, String> expected = new HashMap<>();
     expected.put("PLUGIN_PATH", "target");
     expected.put("PLUGIN_ROOT", "bucket");
@@ -123,7 +130,7 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_FILENAME", "key.tar");
     expected.put("PLUGIN_RESTORE", "true");
     Map<String, String> pluginCompatibleCacheStepEnvVariables =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(restoreCacheS3StepInfo);
+        PluginSettingUtils.getPluginCompatibleEnvVariables(restoreCacheS3StepInfo, "identifier");
     assertThat(pluginCompatibleCacheStepEnvVariables).isEqualTo(expected);
   }
 
@@ -132,11 +139,11 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
   @Category(UnitTests.class)
   public void shouldGetSaveCacheS3StepInfoEnvVariables() {
     SaveCacheS3StepInfo saveCacheS3StepInfo = SaveCacheS3StepInfo.builder()
-                                                  .key("key")
-                                                  .target("target")
-                                                  .bucket("bucket")
-                                                  .sourcePath(asList("path1", "path2"))
-                                                  .endpoint("endpoint")
+                                                  .key(ParameterField.createValueField("key"))
+                                                  .target(ParameterField.createValueField("target"))
+                                                  .bucket(ParameterField.createValueField("bucket"))
+                                                  .sourcePath(ParameterField.createValueField(asList("path1", "path2")))
+                                                  .endpoint(ParameterField.createValueField("endpoint"))
                                                   .build();
     Map<String, String> expected = new HashMap<>();
     expected.put("PLUGIN_PATH", "target");
@@ -146,7 +153,7 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_FILENAME", "key.tar");
     expected.put("PLUGIN_REBUILD", "true");
     Map<String, String> pluginCompatibleCacheStepEnvVariables =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(saveCacheS3StepInfo);
+        PluginSettingUtils.getPluginCompatibleEnvVariables(saveCacheS3StepInfo, "identifier");
     assertThat(pluginCompatibleCacheStepEnvVariables).isEqualTo(expected);
   }
 
@@ -154,15 +161,18 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldGetRestoreCacheGCSStepInfoEnvVariables() {
-    RestoreCacheGCSStepInfo restoreCacheGCSStepInfo =
-        RestoreCacheGCSStepInfo.builder().key("key").target("target").bucket("bucket").build();
+    RestoreCacheGCSStepInfo restoreCacheGCSStepInfo = RestoreCacheGCSStepInfo.builder()
+                                                          .key(ParameterField.createValueField("key"))
+                                                          .target(ParameterField.createValueField("target"))
+                                                          .bucket(ParameterField.createValueField("bucket"))
+                                                          .build();
     Map<String, String> expected = new HashMap<>();
     expected.put("PLUGIN_PATH", "target");
     expected.put("PLUGIN_BUCKET", "bucket");
     expected.put("PLUGIN_FILENAME", "key.tar");
     expected.put("PLUGIN_RESTORE", "true");
     Map<String, String> pluginCompatibleCacheStepEnvVariables =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(restoreCacheGCSStepInfo);
+        PluginSettingUtils.getPluginCompatibleEnvVariables(restoreCacheGCSStepInfo, "identifier");
     assertThat(pluginCompatibleCacheStepEnvVariables).isEqualTo(expected);
   }
 
@@ -170,12 +180,13 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldGetSaveCacheGCSStepInfoEnvVariables() {
-    SaveCacheGCSStepInfo saveCacheGCSStepInfo = SaveCacheGCSStepInfo.builder()
-                                                    .key("key")
-                                                    .target("target")
-                                                    .bucket("bucket")
-                                                    .sourcePath(asList("path1", "path2"))
-                                                    .build();
+    SaveCacheGCSStepInfo saveCacheGCSStepInfo =
+        SaveCacheGCSStepInfo.builder()
+            .key(ParameterField.createValueField("key"))
+            .target(ParameterField.createValueField("target"))
+            .bucket(ParameterField.createValueField("bucket"))
+            .sourcePath(ParameterField.createValueField(asList("path1", "path2")))
+            .build();
     Map<String, String> expected = new HashMap<>();
     expected.put("PLUGIN_PATH", "target");
     expected.put("PLUGIN_MOUNT", "path1,path2");
@@ -183,7 +194,7 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_FILENAME", "key.tar");
     expected.put("PLUGIN_REBUILD", "true");
     Map<String, String> pluginCompatibleCacheStepEnvVariables =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(saveCacheGCSStepInfo);
+        PluginSettingUtils.getPluginCompatibleEnvVariables(saveCacheGCSStepInfo, "identifier");
     assertThat(pluginCompatibleCacheStepEnvVariables).isEqualTo(expected);
   }
 
@@ -192,11 +203,11 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
   @Category(UnitTests.class)
   public void shouldGetUploadToS3StepInfoEnvVariables() {
     UploadToS3StepInfo uploadToS3StepInfo = UploadToS3StepInfo.builder()
-                                                .endpoint("endpoint")
-                                                .region("region")
-                                                .bucket("bucket")
-                                                .sourcePath("sources")
-                                                .target("target")
+                                                .endpoint(ParameterField.createValueField("endpoint"))
+                                                .region(ParameterField.createValueField("region"))
+                                                .bucket(ParameterField.createValueField("bucket"))
+                                                .sourcePath(ParameterField.createValueField("sources"))
+                                                .target(ParameterField.createValueField("target"))
                                                 .build();
     Map<String, String> expected = new HashMap<>();
     expected.put("PLUGIN_ENDPOINT", "endpoint");
@@ -206,7 +217,7 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_TARGET", "target");
 
     Map<String, String> pluginCompatibleUploadStepEnvVariables =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(uploadToS3StepInfo);
+        PluginSettingUtils.getPluginCompatibleEnvVariables(uploadToS3StepInfo, "identifier");
     assertThat(pluginCompatibleUploadStepEnvVariables).isEqualTo(expected);
   }
 
@@ -214,17 +225,18 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldGetUploadToGCSStepInfoEnvVariables() {
-    UploadToGCSStepInfo uploadToS3StepInfo = UploadToGCSStepInfo.builder()
-                                                 .bucket("bucket")
-                                                 .sourcePath("/step-exec/workspace/pom.xml")
-                                                 .target("dir/pom.xml")
-                                                 .build();
+    UploadToGCSStepInfo uploadToS3StepInfo =
+        UploadToGCSStepInfo.builder()
+            .bucket(ParameterField.createValueField("bucket"))
+            .sourcePath(ParameterField.createValueField("/step-exec/workspace/pom.xml"))
+            .target(ParameterField.createValueField("dir/pom.xml"))
+            .build();
     Map<String, String> expected = new HashMap<>();
     expected.put("PLUGIN_SOURCE", "/step-exec/workspace/pom.xml");
     expected.put("PLUGIN_TARGET", "bucket/dir/pom.xml");
 
     Map<String, String> pluginCompatibleUploadStepEnvVariables =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(uploadToS3StepInfo);
+        PluginSettingUtils.getPluginCompatibleEnvVariables(uploadToS3StepInfo, "identifier");
     assertThat(pluginCompatibleUploadStepEnvVariables).isEqualTo(expected);
   }
 }

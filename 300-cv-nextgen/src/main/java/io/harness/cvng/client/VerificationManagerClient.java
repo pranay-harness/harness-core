@@ -37,6 +37,11 @@ public interface VerificationManagerClient {
       @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
       @Body DataCollectionConnectorBundle bundle);
 
+  @POST(CV_DATA_COLLECTION_PATH + "/reset-task")
+  Call<RestResponse<Void>> resetDataCollectionPerpetualTask(@Query("accountId") String accountId,
+      @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
+      @Query("taskId") String taskId, @Body DataCollectionConnectorBundle bundle);
+
   @DELETE(CV_DATA_COLLECTION_PATH + "/delete-task")
   Call<RestResponse<Void>> deleteDataCollectionPerpetualTask(
       @Query("accountId") String accountId, @Query("taskId") String taskId);
@@ -61,8 +66,8 @@ public interface VerificationManagerClient {
   @POST("appdynamics/metric-data")
   Call<RestResponse<Set<AppdynamicsValidationResponse>>> getAppDynamicsMetricData(@Query("accountId") String accountId,
       @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
-      @Query("appdAppId") long appdAppId, @Query("appdTierId") long appdTierId,
-      @Query("requestGuid") String requestGuid, @Body AppdynamicsMetricPackDataValidationRequest validationRequest);
+      @Query("appName") String appName, @Query("tierName") String tierName, @Query("requestGuid") String requestGuid,
+      @Body AppdynamicsMetricPackDataValidationRequest validationRequest);
 
   @POST("appdynamics/applications-ng")
   Call<RestResponse<List<AppDynamicsApplication>>> getAppDynamicsApplications(@Query("accountId") String accountId,

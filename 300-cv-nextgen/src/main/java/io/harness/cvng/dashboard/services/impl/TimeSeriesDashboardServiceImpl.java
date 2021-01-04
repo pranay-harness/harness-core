@@ -211,6 +211,10 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
         } else if (timeSeriesGroupValue.getPercentValue() != null) {
           timeSeriesMetricDataDTO.addMetricData(timeSeriesGroupValue.getPercentValue(),
               timeSeriesGroupValue.getTimeStamp().toEpochMilli(), timeSeriesGroupValue.getRiskScore());
+        } else {
+          // if there is no percent for error then zero fill
+          timeSeriesMetricDataDTO.addMetricData(
+              0, timeSeriesGroupValue.getTimeStamp().toEpochMilli(), timeSeriesGroupValue.getRiskScore());
         }
       });
     });

@@ -24,6 +24,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.verification.VerificationModeFactory.atLeastOnce;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
@@ -41,7 +43,9 @@ import software.wings.WingsBaseTest;
 import software.wings.api.TerraformExecutionData;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitOperationContext;
+import software.wings.beans.KmsConfig;
 import software.wings.beans.delegation.TerraformProvisionParameters;
+import software.wings.service.impl.security.kms.TerraformPlanEncryptDecryptHelper;
 import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
@@ -67,12 +71,14 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class TerraformProvisionTaskTest extends WingsBaseTest {
   @Mock private EncryptionService mockEncryptionService;
   @Mock private GitClient gitClient;
   @Mock private DelegateLogService logService;
   @Mock private GitClientHelper gitClientHelper;
   @Mock private DelegateFileManager delegateFileManager;
+  @Mock private TerraformPlanEncryptDecryptHelper planEncryptDecryptHelper;
 
   private static final String GIT_BRANCH = "test/git_branch";
   private static final String GIT_REPO_DIRECTORY = "repository/terraformTest";
@@ -82,6 +88,9 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   private Map<String, EncryptedDataDetail> encryptedEnvironmentVariables;
   private EncryptedDataDetail encryptedDataDetail;
   private List<EncryptedDataDetail> sourceRepoEncryptionDetails;
+  private final EncryptedRecordData encryptedPlanContent =
+      EncryptedRecordData.builder().name("planName").encryptedValue("encryptedPlan".toCharArray()).build();
+  private final byte[] planContent = "terraformPlanContent".getBytes();
 
   TerraformProvisionTask terraformProvisionTask =
       new TerraformProvisionTask(DelegateTaskPackage.builder()
@@ -99,6 +108,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     on(terraformProvisionTask).set("logService", logService);
     on(terraformProvisionTask).set("gitClientHelper", gitClientHelper);
     on(terraformProvisionTask).set("delegateFileManager", delegateFileManager);
+    on(terraformProvisionTask).set("planEncryptDecryptHelper", planEncryptDecryptHelper);
 
     gitConfig = GitConfig.builder().branch(GIT_BRANCH).build();
     gitConfig.setReference(COMMIT_REFERENCE);
@@ -128,6 +138,8 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
         .getLatestCommitSHAFromLocalRepo(any(GitOperationContext.class));
     doReturn(new ArrayList<String>()).when(terraformProvisionTaskSpy).getWorkspacesList(anyString(), anyLong());
     doReturn(new char[] {'v', 'a', 'l', '2'}).when(mockEncryptionService).getDecryptedValue(encryptedDataDetail, false);
+    doReturn(planContent).when(planEncryptDecryptHelper).getDecryptedTerraformPlan(any(), any());
+    doReturn(true).when(planEncryptDecryptHelper).deleteTfPlanFromVault(any(), any());
 
     when(delegateFileManager.upload(any(DelegateFile.class), any(InputStream.class))).thenReturn(new DelegateFile());
   }
@@ -198,14 +210,15 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   public void TC1_testApplyUsingApprovedPlan() throws IOException, TimeoutException, InterruptedException {
     setupForApply();
 
-    byte[] terraformPlan = "terraformPlan".getBytes();
     TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(false, false,
-        terraformPlan, TerraformProvisionParameters.TerraformCommandUnit.Apply,
+        encryptedPlanContent, TerraformProvisionParameters.TerraformCommandUnit.Apply,
         TerraformProvisionParameters.TerraformCommand.APPLY, false, false);
     TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
     verifyCommandExecuted(
         "terraform init", "terraform workspace", "terraform refresh", "terraform apply", "terraform output");
     verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.APPLY);
+    // verify that plan is getting deleted after getting applied
+    Mockito.verify(planEncryptDecryptHelper, times(1)).deleteTfPlanFromVault(any(), any());
   }
 
   /**
@@ -217,9 +230,8 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   public void TC2_testApplyUsingApprovedPlan() throws IOException, TimeoutException, InterruptedException {
     setupForApply();
 
-    byte[] terraformPlan = "terraformPlan".getBytes();
     TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(false, false,
-        terraformPlan, TerraformProvisionParameters.TerraformCommandUnit.Apply,
+        encryptedPlanContent, TerraformProvisionParameters.TerraformCommandUnit.Apply,
         TerraformProvisionParameters.TerraformCommand.APPLY, false, true);
     TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
     verifyCommandExecuted("terraform init", "terraform workspace", "terraform apply", "terraform output");
@@ -242,11 +254,13 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     doReturn(terraformPlan)
         .when(terraformProvisionTaskSpy)
         .getTerraformPlanFile(anyString(), any(TerraformProvisionParameters.class));
+    doReturn(encryptedPlanContent).when(planEncryptDecryptHelper).encryptTerraformPlan(any(), any(), any());
     TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
+    Mockito.verify(planEncryptDecryptHelper, times(1)).encryptTerraformPlan(any(), any(), any());
     verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.APPLY);
     verifyCommandExecuted(
         "terraform init", "terraform workspace", "terraform refresh", "terraform plan", "terraform show");
-    assertThat(terraformExecutionData.getTfPlanFile()).isEqualTo(terraformPlan);
+    assertThat(terraformExecutionData.getEncryptedTfPlan()).isEqualTo(encryptedPlanContent);
   }
 
   /**
@@ -265,11 +279,12 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     doReturn(terraformPlan)
         .when(terraformProvisionTaskSpy)
         .getTerraformPlanFile(anyString(), any(TerraformProvisionParameters.class));
+    doReturn(encryptedPlanContent).when(planEncryptDecryptHelper).encryptTerraformPlan(any(), any(), any());
     TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
     verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.APPLY);
     verifyCommandExecuted(
         "terraform init", "terraform workspace", "terraform refresh", "terraform plan", "terraform show");
-    assertThat(terraformExecutionData.getTfPlanFile()).isEqualTo(terraformPlan);
+    assertThat(terraformExecutionData.getEncryptedTfPlan()).isEqualTo(encryptedPlanContent);
   }
 
   @Test
@@ -283,9 +298,12 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     TerraformProvisionParameters terraformProvisionParameters =
         TerraformProvisionParameters.builder()
             .workspace(workspacePath)
-            .terraformPlan(planContent)
+            .encryptedTfPlan(encryptedPlanContent)
             .command(TerraformProvisionParameters.TerraformCommand.APPLY)
+            .secretManagerConfig(KmsConfig.builder().build())
             .build();
+    doReturn(planContent).when(planEncryptDecryptHelper).getDecryptedTerraformPlan(any(), any());
+
     terraformProvisionTask.saveTerraformPlanContentToFile(terraformProvisionParameters, scriptDirectory);
     List<FileData> fileDataList = FileIo.getFilesUnderPath(scriptDirectory);
     assertThat(fileDataList.size()).isEqualTo(1);
@@ -293,6 +311,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
 
     byte[] retrievedTerraformPlanContent =
         terraformProvisionTask.getTerraformPlanFile(scriptDirectory, terraformProvisionParameters);
+    Mockito.verify(planEncryptDecryptHelper).getDecryptedTerraformPlan(any(), any());
     assertThat(retrievedTerraformPlanContent).isEqualTo(planContent);
 
     FileIo.deleteDirectoryAndItsContentIfExists(scriptDirectory);
@@ -351,9 +370,8 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   public void TC1_destroyUsingPlan() throws InterruptedException, TimeoutException, IOException {
     setupForDestroyTests();
 
-    byte[] terraformDestroyPlan = "terraformDestroyPlan".getBytes();
     TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(false, false,
-        terraformDestroyPlan, TerraformProvisionParameters.TerraformCommandUnit.Destroy,
+        encryptedPlanContent, TerraformProvisionParameters.TerraformCommandUnit.Destroy,
         TerraformProvisionParameters.TerraformCommand.DESTROY, false, false);
     TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
     verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.DESTROY);
@@ -374,7 +392,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
 
     byte[] terraformDestroyPlan = "terraformDestroyPlan".getBytes();
     TerraformProvisionParameters terraformProvisionParameters = createTerraformProvisionParameters(false, false,
-        terraformDestroyPlan, TerraformProvisionParameters.TerraformCommandUnit.Destroy,
+        encryptedPlanContent, TerraformProvisionParameters.TerraformCommandUnit.Destroy,
         TerraformProvisionParameters.TerraformCommand.DESTROY, false, true);
     TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
     verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.DESTROY);
@@ -394,9 +412,11 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     doReturn(terraformDestroyPlan)
         .when(terraformProvisionTaskSpy)
         .getTerraformPlanFile(anyString(), any(TerraformProvisionParameters.class));
+    doReturn(encryptedPlanContent).when(planEncryptDecryptHelper).encryptTerraformPlan(any(), any(), any());
     TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
+    Mockito.verify(planEncryptDecryptHelper, times(1)).encryptTerraformPlan(any(), any(), any());
     verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.DESTROY);
-    assertThat(terraformExecutionData.getTfPlanFile()).isEqualTo(terraformDestroyPlan);
+    assertThat(terraformExecutionData.getEncryptedTfPlan()).isEqualTo(encryptedPlanContent);
     verifyCommandExecuted(
         "terraform init", "terraform workspace", "terraform refresh", "terraform plan", "terraform show");
   }
@@ -417,9 +437,11 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     doReturn(terraformDestroyPlan)
         .when(terraformProvisionTaskSpy)
         .getTerraformPlanFile(anyString(), any(TerraformProvisionParameters.class));
+    doReturn(encryptedPlanContent).when(planEncryptDecryptHelper).encryptTerraformPlan(any(), any(), any());
     TerraformExecutionData terraformExecutionData = terraformProvisionTaskSpy.run(terraformProvisionParameters);
+    Mockito.verify(planEncryptDecryptHelper, times(1)).encryptTerraformPlan(any(), any(), any());
     verify(terraformExecutionData, TerraformProvisionParameters.TerraformCommand.DESTROY);
-    assertThat(terraformExecutionData.getTfPlanFile()).isEqualTo(terraformDestroyPlan);
+    assertThat(terraformExecutionData.getEncryptedTfPlan()).isEqualTo(encryptedPlanContent);
     verifyCommandExecuted(
         "terraform init", "terraform workspace", "terraform refresh", "terraform plan", "terraform show");
   }
@@ -443,18 +465,16 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     Mockito.verify(mockEncryptionService, times(1)).decrypt(gitConfig, sourceRepoEncryptionDetails, false);
     Mockito.verify(gitClient, times(1)).ensureRepoLocallyClonedAndUpdated(any(GitOperationContext.class));
     Mockito.verify(gitClientHelper, times(1)).getRepoDirectory(any(GitOperationContext.class));
-    int uploadTimes = TerraformProvisionParameters.TerraformCommand.DESTROY.equals(command) ? 1 : 2;
-    Mockito.verify(delegateFileManager, times(uploadTimes)).upload(any(DelegateFile.class), any(InputStream.class));
+    Mockito.verify(delegateFileManager, times(1)).upload(any(DelegateFile.class), any(InputStream.class));
     assertThat(terraformExecutionData.getWorkspace()).isEqualTo(WORKSPACE);
     assertThat(terraformExecutionData.getEntityId()).isEqualTo(ENTITY_ID);
-    assertThat(terraformExecutionData.getPlanLogFileId()).isEqualTo(null);
     assertThat(terraformExecutionData.getCommandExecuted()).isEqualTo(command);
     assertThat(terraformExecutionData.getSourceRepoReference()).isEqualTo("latestCommit");
     assertThat(terraformExecutionData.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
   private TerraformProvisionParameters createTerraformProvisionParameters(boolean runPlanOnly,
-      boolean exportPlanToApplyStep, byte[] terraformPlan,
+      boolean exportPlanToApplyStep, EncryptedRecordData encryptedTfPlan,
       TerraformProvisionParameters.TerraformCommandUnit commandUnit,
       TerraformProvisionParameters.TerraformCommand command, boolean saveTerraformJson, boolean skipRefresh) {
     Map<String, String> backendConfigs = new HashMap<>();
@@ -480,7 +500,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
         .entityId(ENTITY_ID)
         .backendConfigs(backendConfigs)
         .encryptedBackendConfigs(encryptedBackendConfigs)
-        .terraformPlan(terraformPlan)
+        .encryptedTfPlan(encryptedTfPlan)
         .runPlanOnly(runPlanOnly)
         .exportPlanToApplyStep(exportPlanToApplyStep)
         .variables(variables)
@@ -489,6 +509,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
         .tfVarFiles(tfVarFiles)
         .saveTerraformJson(saveTerraformJson)
         .skipRefreshBeforeApplyingPlan(skipRefresh)
+        .secretManagerConfig(KmsConfig.builder().name("config").uuid("uuid").build())
         .build();
   }
 
@@ -501,9 +522,11 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     byte[] planContent = "terraformPlanContent".getBytes();
     TerraformProvisionParameters terraformProvisionParameters =
         TerraformProvisionParameters.builder()
-            .terraformPlan(planContent)
             .command(TerraformProvisionParameters.TerraformCommand.APPLY)
+            .secretManagerConfig(KmsConfig.builder().build())
             .build();
+    doReturn(planContent).when(planEncryptDecryptHelper).getDecryptedTerraformPlan(any(), any());
+
     terraformProvisionTask.saveTerraformPlanContentToFile(terraformProvisionParameters, scriptDirectory);
     List<FileData> fileDataList = FileIo.getFilesUnderPath(scriptDirectory);
     assertThat(fileDataList.size()).isEqualTo(1);

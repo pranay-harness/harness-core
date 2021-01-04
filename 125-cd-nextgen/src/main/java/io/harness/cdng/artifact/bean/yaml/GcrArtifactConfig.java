@@ -2,7 +2,6 @@ package io.harness.cdng.artifact.bean.yaml;
 
 import static io.harness.delegate.task.artifacts.ArtifactSourceConstants.GCR_NAME;
 
-import io.harness.beans.ParameterField;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.cdng.visitor.YamlTypes;
@@ -10,6 +9,7 @@ import io.harness.cdng.visitor.helpers.artifact.GcrArtifactConfigVisitorHelper;
 import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;

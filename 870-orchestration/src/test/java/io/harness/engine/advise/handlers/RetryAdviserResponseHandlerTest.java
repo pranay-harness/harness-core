@@ -11,14 +11,14 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
-import io.harness.pms.advisers.AdviseType;
-import io.harness.pms.advisers.AdviserResponse;
-import io.harness.pms.advisers.RetryAdvise;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.ambiance.Level;
-import io.harness.pms.execution.Status;
-import io.harness.pms.plan.PlanNodeProto;
-import io.harness.pms.steps.StepType;
+import io.harness.pms.contracts.advisers.AdviseType;
+import io.harness.pms.contracts.advisers.AdviserResponse;
+import io.harness.pms.contracts.advisers.RetryAdvise;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 
@@ -42,31 +42,31 @@ public class RetryAdviserResponseHandlerTest extends OrchestrationTestBase {
   private static final String NODE_EXECUTION_ID = generateUuid();
   private static final String NODE_SETUP_ID = generateUuid();
 
-  private Ambiance ambiance;
+  private NodeExecution nodeExecution;
   private RetryAdvise advise;
 
   @Before
   public void setup() {
-    ambiance = Ambiance.newBuilder()
-                   .setPlanExecutionId(PLAN_EXECUTION_ID)
-                   .addAllLevels(Collections.singletonList(
-                       Level.newBuilder().setRuntimeId(NODE_EXECUTION_ID).setSetupId(NODE_SETUP_ID).build()))
-                   .build();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .setPlanExecutionId(PLAN_EXECUTION_ID)
+                            .addAllLevels(Collections.singletonList(
+                                Level.newBuilder().setRuntimeId(NODE_EXECUTION_ID).setSetupId(NODE_SETUP_ID).build()))
+                            .build();
 
     planExecutionService.save(PlanExecution.builder().uuid(PLAN_EXECUTION_ID).build());
 
-    NodeExecution nodeExecution = NodeExecution.builder()
-                                      .uuid(NODE_EXECUTION_ID)
-                                      .ambiance(ambiance)
-                                      .node(PlanNodeProto.newBuilder()
-                                                .setUuid(NODE_SETUP_ID)
-                                                .setName("DUMMY")
-                                                .setIdentifier("dummy")
-                                                .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                                                .build())
-                                      .startTs(System.currentTimeMillis())
-                                      .status(Status.FAILED)
-                                      .build();
+    nodeExecution = NodeExecution.builder()
+                        .uuid(NODE_EXECUTION_ID)
+                        .ambiance(ambiance)
+                        .node(PlanNodeProto.newBuilder()
+                                  .setUuid(NODE_SETUP_ID)
+                                  .setName("DUMMY")
+                                  .setIdentifier("dummy")
+                                  .setStepType(StepType.newBuilder().setType("DUMMY").build())
+                                  .build())
+                        .startTs(System.currentTimeMillis())
+                        .status(Status.FAILED)
+                        .build();
     nodeExecutionService.save(nodeExecution);
     advise = RetryAdvise.newBuilder().setWaitInterval(0).setRetryNodeExecutionId(NODE_EXECUTION_ID).build();
   }
@@ -77,7 +77,7 @@ public class RetryAdviserResponseHandlerTest extends OrchestrationTestBase {
   @Category(UnitTests.class)
   public void shouldTestHandleAdvise() {
     retryAdviseHandler.handleAdvise(
-        ambiance, AdviserResponse.newBuilder().setRetryAdvise(advise).setType(AdviseType.RETRY).build());
+        nodeExecution, AdviserResponse.newBuilder().setRetryAdvise(advise).setType(AdviseType.RETRY).build());
     List<NodeExecution> executions = nodeExecutionService.fetchNodeExecutions(PLAN_EXECUTION_ID);
     assertThat(executions).hasSize(2);
     NodeExecution newNodeExecution =

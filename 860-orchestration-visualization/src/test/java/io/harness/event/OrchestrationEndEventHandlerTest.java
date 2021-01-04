@@ -1,22 +1,21 @@
 package io.harness.event;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.execution.events.OrchestrationEventType.ORCHESTRATION_END;
+import static io.harness.pms.contracts.execution.events.OrchestrationEventType.ORCHESTRATION_END;
 import static io.harness.rule.OwnerRule.ALEXEI;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.OrchestrationVisualizationTestBase;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.cache.SpringMongoStore;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.plan.PlanExecutionService;
-import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.events.OrchestrationEvent;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.NodeExecutionProto;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
 import io.harness.testlib.RealMongo;
@@ -43,21 +42,6 @@ public class OrchestrationEndEventHandlerTest extends OrchestrationVisualization
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   @RealMongo
-  public void shouldThrowInvalidRequestException() {
-    String planExecutionId = generateUuid();
-    OrchestrationEvent event = OrchestrationEvent.builder()
-                                   .ambiance(Ambiance.newBuilder().setPlanExecutionId(planExecutionId).build())
-                                   .eventType(ORCHESTRATION_END)
-                                   .build();
-
-    assertThatThrownBy(() -> orchestrationEndEventHandler.handleEvent(event))
-        .isInstanceOf(InvalidRequestException.class);
-  }
-
-  @Test
-  @Owner(developers = ALEXEI)
-  @Category(UnitTests.class)
-  @RealMongo
   public void shouldUpdateGraphWithStatusAndEndTs() {
     PlanExecution planExecution = PlanExecution.builder()
                                       .uuid(generateUuid())
@@ -67,10 +51,16 @@ public class OrchestrationEndEventHandlerTest extends OrchestrationVisualization
                                       .build();
     planExecutionService.save(planExecution);
 
-    OrchestrationEvent event = OrchestrationEvent.builder()
-                                   .ambiance(Ambiance.newBuilder().setPlanExecutionId(planExecution.getUuid()).build())
-                                   .eventType(ORCHESTRATION_END)
-                                   .build();
+    OrchestrationEvent event =
+        OrchestrationEvent.builder()
+            .ambiance(Ambiance.newBuilder().setPlanExecutionId(planExecution.getUuid()).build())
+            .nodeExecutionProto(
+                NodeExecutionProto.newBuilder()
+                    .setUuid(generateUuid())
+                    .setAmbiance(Ambiance.newBuilder().setPlanExecutionId(planExecution.getUuid()).build())
+                    .build())
+            .eventType(ORCHESTRATION_END)
+            .build();
 
     OrchestrationGraph orchestrationGraph = OrchestrationGraph.builder()
                                                 .rootNodeIds(Lists.newArrayList(generateUuid()))

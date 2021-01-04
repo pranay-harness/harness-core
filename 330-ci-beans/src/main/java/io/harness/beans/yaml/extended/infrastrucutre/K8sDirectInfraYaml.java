@@ -11,7 +11,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonTypeName("kubernetes-direct")
+@JsonTypeName("KubernetesDirect")
 @TypeAlias("k8sDirectInfraYaml")
 public class K8sDirectInfraYaml implements Infrastructure {
   @Builder.Default private Type type = Type.KUBERNETES_DIRECT;

@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.triggers;
+
+option java_multiple_files = true;
+
+import "product/ci/scm/proto/scm.proto";
+
+message TriggerPayload {
+  string jsonPayload = 1;
+  ParsedPayload parsedPayload = 2;
+}
+
+message ParsedPayload {
+  oneof payload {
+    product.ci.scm.proto.PullRequestHook pr = 1;
+    product.ci.scm.proto.PushHook push = 2;
+  }
+}

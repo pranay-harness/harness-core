@@ -5,10 +5,11 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.advise.handlers.EndPlanAdviserResponseHandler;
 import io.harness.engine.advise.handlers.InterventionWaitAdviserResponseHandler;
+import io.harness.engine.advise.handlers.MarkSuccessAdviseHandler;
 import io.harness.engine.advise.handlers.NextStepHandler;
 import io.harness.engine.advise.handlers.RetryAdviserResponseHandler;
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.advisers.AdviseType;
+import io.harness.pms.contracts.advisers.AdviseType;
 
 import com.google.inject.Inject;
 
@@ -18,6 +19,7 @@ public class AdviseHandlerFactory {
   @Inject private RetryAdviserResponseHandler retryAdviseHandler;
   @Inject private EndPlanAdviserResponseHandler endPlanAdviseHandler;
   @Inject private InterventionWaitAdviserResponseHandler interventionWaitAdviseHandler;
+  @Inject private MarkSuccessAdviseHandler markSuccessAdviseHandler;
 
   public AdviserResponseHandler obtainHandler(AdviseType adviseType) {
     switch (adviseType) {
@@ -29,6 +31,8 @@ public class AdviseHandlerFactory {
         return interventionWaitAdviseHandler;
       case END_PLAN:
         return endPlanAdviseHandler;
+      case MARK_SUCCESS:
+        return markSuccessAdviseHandler;
       default:
         throw new InvalidRequestException("No handler Present for advise type: " + adviseType);
     }

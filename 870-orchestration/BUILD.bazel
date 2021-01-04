@@ -11,9 +11,9 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//880-orchestration-beans:module",
-        "//890-orchestration-persistence:module",
+        "//876-orchestration-beans:module",
         "//890-pms-contracts:module",
+        "//910-delegate-service-driver:module",
         "//930-delegate-tasks:module",
         "//950-wait-engine:module",
         "@maven//:com_esotericsoftware_kryo",

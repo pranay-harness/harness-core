@@ -1,12 +1,11 @@
 package io.harness.dto;
 
 import io.harness.interrupts.InterruptEffect;
-import io.harness.pms.execution.ExecutionMode;
-import io.harness.pms.execution.Status;
-import io.harness.pms.execution.failure.FailureInfo;
-import io.harness.pms.sdk.core.data.Metadata;
+import io.harness.pms.contracts.execution.ExecutionMode;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.sdk.core.data.Outcome;
-import io.harness.pms.steps.SkipType;
 import io.harness.tasks.ProgressData;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -16,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
+import org.bson.Document;
 
 @Value
 @Builder
@@ -37,9 +37,9 @@ public class GraphVertexDTO {
   Map<String, Object> stepParameters;
   ExecutionMode mode;
 
-  List<Metadata> executableResponsesMetadata;
+  List<Map<String, Object>> executableResponsesMetadata;
   List<InterruptEffect> interruptHistories;
-  List<Outcome> outcomes;
+  List<Document> outcomes;
   List<String> retryIds;
 
   Map<String, List<ProgressData>> progressDataMap;

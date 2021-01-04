@@ -8,13 +8,18 @@ import io.harness.security.annotations.NextGenManagerAuth;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import java.util.List;
 import javax.validation.Valid;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+@Api("verification-job-instance")
+@Path("verification-job-instance")
+@Produces("application/json")
 @NextGenManagerAuth
 public class VerificationJobInstanceResource {
   @Inject private VerificationJobInstanceService verificationJobInstanceService;

@@ -603,12 +603,13 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     cvConfig.setConnectorIdentifier(generateUuid());
     cvConfig.setServiceIdentifier("serviceIdentifier");
     cvConfig.setEnvIdentifier("envIdentifier");
-    cvConfig.setGroupId(generateUuid());
+    cvConfig.setIdentifier(generateUuid());
+    cvConfig.setMonitoringSourceName(generateUuid());
     cvConfig.setApplicationName("applicationName");
     cvConfig.setTierName("tierName");
     cvConfig.setOrgIdentifier("orgIdentifier");
     cvConfig.setMetricPack(
-        metricPackService.getMetricPacks(accountId, "projectId", DataSourceType.APP_DYNAMICS).get(0));
+        metricPackService.getMetricPacks(accountId, "org", "projectId", DataSourceType.APP_DYNAMICS).get(0));
     return cvConfig;
   }
 
@@ -623,7 +624,8 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     cvConfig.setServiceIdentifier("serviceIdentifier");
     cvConfig.setEnvIdentifier("envIdentifier");
     cvConfig.setOrgIdentifier("orgIdentifier");
-    cvConfig.setGroupId(generateUuid());
+    cvConfig.setIdentifier(generateUuid());
+    cvConfig.setMonitoringSourceName(generateUuid());
     cvConfig.setQuery("excetpion");
     cvConfig.setServiceInstanceIdentifier("host");
     return cvConfig;
@@ -697,7 +699,8 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     cvConfig.setServiceIdentifier(generateUuid());
     cvConfig.setEnvIdentifier(generateUuid());
     cvConfig.setProjectIdentifier(generateUuid());
-    cvConfig.setGroupId(generateUuid());
+    cvConfig.setIdentifier(generateUuid());
+    cvConfig.setMonitoringSourceName(generateUuid());
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
     cvConfig.setProductName(generateUuid());
   }

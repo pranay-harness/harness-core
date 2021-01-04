@@ -23,6 +23,7 @@ import io.harness.cvng.analysis.entities.TimeSeriesAnomalousPatterns.TimeSeriesA
 import io.harness.cvng.analysis.entities.TimeSeriesCanaryLearningEngineTask;
 import io.harness.cvng.analysis.entities.TimeSeriesCanaryLearningEngineTask.DeploymentVerificationTaskInfo;
 import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums;
+import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums.MetricSum;
 import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums.TimeSeriesCumulativeSumsKeys;
 import io.harness.cvng.analysis.entities.TimeSeriesLearningEngineTask;
 import io.harness.cvng.analysis.entities.TimeSeriesLoadTestLearningEngineTask;
@@ -242,11 +243,12 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   private String createCumulativeSumsUrl(AnalysisInput input) {
+    Instant startTime = input.getStartTime().minus(1, ChronoUnit.DAYS);
     URIBuilder uriBuilder = new URIBuilder();
     uriBuilder.setPath(
         SERVICE_BASE_URL + "/" + TIMESERIES_ANALYSIS_RESOURCE + "/timeseries-serviceguard-cumulative-sums");
     uriBuilder.addParameter("verificationTaskId", input.getVerificationTaskId());
-    uriBuilder.addParameter("analysisStartTime", input.getStartTime().toString());
+    uriBuilder.addParameter("analysisStartTime", startTime.toString());
     uriBuilder.addParameter("analysisEndTime", input.getEndTime().toString());
     return getUriString(uriBuilder);
   }
@@ -327,21 +329,20 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   @Override
-  public Map<String, Map<String, TimeSeriesCumulativeSums.MetricSum>> getCumulativeSums(
+  public Map<String, Map<String, List<MetricSum>>> getCumulativeSums(
       String verificationTaskId, Instant startTime, Instant endTime) {
     log.info(
         "Fetching cumulative sums for config: {}, startTime: {}, endTime: {}", verificationTaskId, startTime, endTime);
-    TimeSeriesCumulativeSums cumulativeSums =
-        hPersistence.createQuery(TimeSeriesCumulativeSums.class)
+    List<TimeSeriesCumulativeSums> cumulativeSums =
+        hPersistence.createQuery(TimeSeriesCumulativeSums.class, excludeAuthority)
             .filter(TimeSeriesCumulativeSumsKeys.verificationTaskId, verificationTaskId)
-            .filter(TimeSeriesCumulativeSumsKeys.analysisStartTime, startTime)
-            .filter(TimeSeriesCumulativeSumsKeys.analysisEndTime, endTime)
-            .get();
+            .field(TimeSeriesCumulativeSumsKeys.analysisStartTime)
+            .greaterThanOrEq(startTime)
+            .field(TimeSeriesCumulativeSumsKeys.analysisEndTime)
+            .lessThanOrEq(endTime)
+            .asList();
 
-    if (cumulativeSums != null) {
-      return cumulativeSums.convertToMap();
-    }
-    return Collections.emptyMap();
+    return TimeSeriesCumulativeSums.convertToMap(cumulativeSums);
   }
 
   @Override

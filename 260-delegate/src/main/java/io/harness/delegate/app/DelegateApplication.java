@@ -27,8 +27,8 @@ import io.harness.event.client.impl.EventPublisherConstants;
 import io.harness.event.client.impl.appender.AppenderModule;
 import io.harness.event.client.impl.appender.AppenderModule.Config;
 import io.harness.govern.ProviderModule;
-import io.harness.grpc.DelegateServiceGrpcLiteClientModule;
 import io.harness.grpc.client.ManagerGrpcClientModule;
+import io.harness.grpc.delegateservice.DelegateServiceGrpcAgentClientModule;
 import io.harness.grpc.pingpong.PingPongClient;
 import io.harness.grpc.pingpong.PingPongModule;
 import io.harness.logstreaming.LogStreamingModule;
@@ -47,7 +47,6 @@ import software.wings.delegatetasks.k8s.client.KubernetesClientFactoryModule;
 
 import ch.qos.logback.classic.LoggerContext;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -170,6 +169,7 @@ public class DelegateApplication {
     if (!isOnPrem(System.getenv().get(DEPLOY_MODE))) {
       modules.add(new PingPongModule());
       modules.add(new PerpetualTaskWorkerModule());
+      modules.add(DelegateServiceGrpcAgentClientModule.getInstance());
     }
     modules.add(KubernetesClientFactoryModule.getInstance());
     modules.add(KubernetesApiClientFactoryModule.getInstance());
@@ -182,10 +182,6 @@ public class DelegateApplication {
     modules.add(DelegateModule.getInstance());
 
     if (configuration.isGrpcServiceEnabled()) {
-      modules.add(new DelegateServiceGrpcLiteClientModule(configuration.getManagerServiceSecret()));
-    }
-
-    if (configuration.isGrpcServiceEnabled()) {
       modules.add(new DelegateGrpcServiceModule(
           configuration.getGrpcServiceConnectorPort(), configuration.getManagerServiceSecret()));
     }
@@ -195,13 +191,6 @@ public class DelegateApplication {
 
     // Add JVM shutdown hook so as to have a clean shutdown
     addShutdownHook(injector, messageService);
-
-    if (configuration.isGrpcServiceEnabled()) {
-      log.info("Initializing gRPC server...");
-      ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
-      serviceManager.awaitHealthy();
-      Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
-    }
 
     boolean watched = watcherProcess != null;
     if (watched) {

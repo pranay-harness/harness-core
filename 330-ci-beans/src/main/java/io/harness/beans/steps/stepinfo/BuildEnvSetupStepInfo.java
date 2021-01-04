@@ -5,11 +5,12 @@ import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.steps.StepType;
 
 import software.wings.jersey.JsonViews;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -28,33 +29,26 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("buildEnvSetupStepInfo")
 public class BuildEnvSetupStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
-  public static final int DEFAULT_TIMEOUT = 1200;
 
   @JsonView(JsonViews.Internal.class)
   @NotNull
-  public static final TypeInfo typeInfo =
-      TypeInfo.builder()
-          .stepInfoType(CIStepInfoType.SETUP_ENV)
-          .stepType(StepType.newBuilder().setType(CIStepInfoType.SETUP_ENV.name()).build())
-          .build();
-
+  public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.SETUP_ENV).build();
+  @JsonIgnore
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.SETUP_ENV.name()).build();
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
-  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
   @NotNull private BuildJobEnvInfo buildJobEnvInfo;
   @NotNull private String gitConnectorIdentifier;
   @NotNull private String branchName;
 
   @Builder
-  @ConstructorProperties(
-      {"identifier", "name", "retry", "timeout", "buildJobEnvInfo", "gitConnectorIdentifier", "branchName"})
-  public BuildEnvSetupStepInfo(String identifier, String name, Integer retry, Integer timeout,
-      BuildJobEnvInfo buildJobEnvInfo, String gitConnectorIdentifier, String branchName) {
+  @ConstructorProperties({"identifier", "name", "retry", "buildJobEnvInfo", "gitConnectorIdentifier", "branchName"})
+  public BuildEnvSetupStepInfo(String identifier, String name, Integer retry, BuildJobEnvInfo buildJobEnvInfo,
+      String gitConnectorIdentifier, String branchName) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
-    this.timeout = Optional.ofNullable(timeout).orElse(DEFAULT_TIMEOUT);
     this.buildJobEnvInfo = buildJobEnvInfo;
     this.gitConnectorIdentifier = gitConnectorIdentifier;
     this.branchName = branchName;
@@ -72,7 +66,7 @@ public class BuildEnvSetupStepInfo implements CIStepInfo {
 
   @Override
   public StepType getStepType() {
-    return typeInfo.getStepType();
+    return STEP_TYPE;
   }
 
   @Override

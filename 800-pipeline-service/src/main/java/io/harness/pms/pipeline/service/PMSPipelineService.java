@@ -1,5 +1,6 @@
 package io.harness.pms.pipeline.service;
 
+import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.StepCategory;
 
@@ -21,5 +22,11 @@ public interface PMSPipelineService {
 
   Page<PipelineEntity> list(Criteria criteria, Pageable pageable);
 
+  void saveExecutionInfo(
+      String accountId, String orgId, String projectId, String pipelineId, ExecutionSummaryInfo executionSummaryInfo);
+
   StepCategory getSteps(String module, String category);
+
+  Optional<PipelineEntity> incrementRunSequence(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean b);
 }

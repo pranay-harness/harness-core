@@ -15,7 +15,7 @@ public class EnvironmentMapper {
         .name(environmentYaml.getName() != null ? environmentYaml.getName().getValue() : "")
         .description(environmentYaml.getDescription() != null ? environmentYaml.getDescription().getValue() : "")
         .tags(convertToList(environmentYaml.getTags()))
-        .type(environmentYaml.getType())
+        .environmentType(environmentYaml.getType())
         .build();
   }
 }

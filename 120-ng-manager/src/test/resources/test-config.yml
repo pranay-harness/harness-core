@@ -19,9 +19,6 @@ nextGen:
   managerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
   userVerificationSecret: dyBvaWVmbGRrYyB6aHpjeHZvaWxzamt6ZGN6c2RhZmh5dBrebhmnjryRe54rX43W3565ytgbsDvnjws5
 
-scmConnectionConfig:
-  url: localhost:8091
-
 allowedOrigins:
   - https://localhost:8181
   - https://127.0.0.1:8181
@@ -112,3 +109,4 @@ pmsGrpcClientConfig:
   target: localhost:12011
   authority: localhost
 
+shouldConfigureWithPMS: false

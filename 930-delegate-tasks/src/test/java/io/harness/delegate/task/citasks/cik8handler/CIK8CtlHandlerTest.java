@@ -114,6 +114,7 @@ public class CIK8CtlHandlerTest extends CategoryTest {
 
   @InjectMocks private CIK8CtlHandler cik8CtlHandler;
 
+  private static final String secretName = "imgsecret";
   private static final String imageName = "IMAGE";
   private static final String tag = "TAG";
   private static final String podName = "pod";
@@ -152,9 +153,10 @@ public class CIK8CtlHandlerTest extends CategoryTest {
     ImageDetails imageDetails = ImageDetails.builder().name(imageName).tag(tag).build();
     ImageDetailsWithConnector imageDetailsWithConnector =
         ImageDetailsWithConnector.builder().imageDetails(imageDetails).build();
-    when(mockSecretSpecBuilder.getRegistrySecretSpec(imageDetailsWithConnector, namespace)).thenReturn(null);
-    cik8CtlHandler.createRegistrySecret(mockKubernetesClient, namespace, imageDetailsWithConnector);
-    verify(mockSecretSpecBuilder).getRegistrySecretSpec(imageDetailsWithConnector, namespace);
+    when(mockSecretSpecBuilder.getRegistrySecretSpec(secretName, imageDetailsWithConnector, namespace))
+        .thenReturn(null);
+    cik8CtlHandler.createRegistrySecret(mockKubernetesClient, namespace, secretName, imageDetailsWithConnector);
+    verify(mockSecretSpecBuilder).getRegistrySecretSpec(secretName, imageDetailsWithConnector, namespace);
   }
 
   @Test
@@ -166,13 +168,14 @@ public class CIK8CtlHandlerTest extends CategoryTest {
         ImageDetailsWithConnector.builder().imageDetails(imageDetails).build();
     Secret mockSecret = new SecretBuilder().build();
     Secret mockCreatedSecret = new SecretBuilder().build();
-    when(mockSecretSpecBuilder.getRegistrySecretSpec(imageDetailsWithConnector, namespace)).thenReturn(mockSecret);
+    when(mockSecretSpecBuilder.getRegistrySecretSpec(secretName, imageDetailsWithConnector, namespace))
+        .thenReturn(mockSecret);
     when(mockKubernetesClient.secrets()).thenReturn(mockKubeSecret);
     when(mockKubeSecret.inNamespace(namespace)).thenReturn(mockSecretNonNamespacedOp);
     when(mockSecretNonNamespacedOp.createOrReplace(mockSecret)).thenReturn(mockCreatedSecret);
 
-    cik8CtlHandler.createRegistrySecret(mockKubernetesClient, namespace, imageDetailsWithConnector);
-    verify(mockSecretSpecBuilder).getRegistrySecretSpec(imageDetailsWithConnector, namespace);
+    cik8CtlHandler.createRegistrySecret(mockKubernetesClient, namespace, secretName, imageDetailsWithConnector);
+    verify(mockSecretSpecBuilder).getRegistrySecretSpec(secretName, imageDetailsWithConnector, namespace);
     verify(mockKubernetesClient).secrets();
     verify(mockKubeSecret).inNamespace(namespace);
     verify(mockSecretNonNamespacedOp).createOrReplace(mockSecret);

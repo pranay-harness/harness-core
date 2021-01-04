@@ -5,19 +5,74 @@ package io.harness.capability;
 option java_multiple_files = true;
 option go_package = "240_capability";
 
-// Next ID: 3
+// Next ID: 11
 message CapabilityParameters {
   oneof capability {
+    AwsRegionParameters aws_region_parameters = 4;
+    ChartMuseumParameters chart_museum_parameters = 5;
+    HelmInstallationParameters helm_installation_parameters = 10;
+    HttpConnectionParameters http_connection_parameters = 6;
+    ProcessExecutorParameters process_executor_parameters = 7;
+    SftpCapabilityParameters sftp_capability_parameters = 3;
     SmbConnectionParameters smb_connection_parameters = 2;
+    SocketConnectivityParameters socket_connectivity_parameters = 8;
+    SystemEnvParameters system_env_parameters = 9;
     TestingCapability testing_capability = 1;
   }
 }
 
-// A testing method for capabilities
-message TestingCapability {}
+// Testing whether we can connect to AWS in a given region
+message AwsRegionParameters {
+  string region = 1;
+}
+
+// Whether chart museum is enabled or not
+message ChartMuseumParameters {}
+
+// Testing whether a delegate can connect to a given HTTP resource
+message HttpConnectionParameters {
+  string url = 1;
+}
+
+// Testing whether the delegate can execute a given command
+message ProcessExecutorParameters {
+  repeated string args = 1;
+}
+
+// Testing whether a delegate can make the given sftp connection
+message SftpCapabilityParameters {
+  string sftp_url = 1;
+}
 
 // Testing whether a connection can be established to a given SMB url
 // Next ID: 2
 message SmbConnectionParameters {
   string smb_url = 1;
 }
+
+// Whether the specified version of helm is installed or not
+message HelmInstallationParameters {
+  // Next ID: 3
+  enum HelmVersion {
+    UNKNOWN_VERSION = 0;
+    V2 = 1;
+    V3 = 2;
+  }
+  HelmVersion helm_version = 1;
+}
+
+// Testing whether a connection can be established to a given URL
+message SocketConnectivityParameters {
+  string host_name = 1;
+  int32 port = 2;
+  string url = 3;
+}
+
+// Checks whether the comparate is equal to the property or not
+message SystemEnvParameters {
+  string property = 1;
+  string comparate = 2;
+}
+
+// A testing method for capabilities
+message TestingCapability {}

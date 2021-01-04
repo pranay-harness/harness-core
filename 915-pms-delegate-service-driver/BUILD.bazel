@@ -1,0 +1,51 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//:macros.bzl", "sonarqube_test")
+load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "sources")
+
+sources()
+
+java_library(
+    name = "maven_deps",
+    visibility = ["//visibility:public"],
+    exports = [
+        "//920-delegate-service-beans:module",
+        "//950-wait-engine:module",
+        "//970-grpc:module",
+        "@maven//:com_google_code_findbugs_annotations",
+        "@maven//:com_google_inject_guice",
+        "@maven//:io_fabric8_fabric8_utils",
+        "@maven//:io_grpc_grpc_core",
+        "@maven//:io_grpc_grpc_netty_shaded",
+        "@maven//:org_apache_commons_commons_collections4",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_mongodb_morphia_morphia",
+        "@maven//:org_slf4j_slf4j_api",
+    ],
+)
+
+java_library(
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    resources = [
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "maven_deps",
+        "//:lombok",
+    ],
+)
+
+checkstyle()
+
+sonarqube_test(
+    name = "sq_mycomponent",
+    srcs = ["sources"],
+    targets = [
+        ":maven_deps",
+        ":module",
+    ],
+)
+
+pmd()

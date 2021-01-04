@@ -1,11 +1,11 @@
 package io.harness.yaml.core.failurestrategy;
 
-import io.harness.advisers.fail.OnFailAdviser;
-import io.harness.advisers.ignore.IgnoreAdviser;
-import io.harness.advisers.manualintervention.ManualInterventionAdviser;
-import io.harness.advisers.retry.RetryAdviser;
-import io.harness.advisers.success.OnSuccessAdviser;
-import io.harness.pms.advisers.AdviserType;
+import io.harness.pms.contracts.advisers.AdviserType;
+import io.harness.pms.sdk.core.adviser.fail.OnFailAdviser;
+import io.harness.pms.sdk.core.adviser.ignore.IgnoreAdviser;
+import io.harness.pms.sdk.core.adviser.manualintervention.ManualInterventionAdviser;
+import io.harness.pms.sdk.core.adviser.retry.RetryAdviser;
+import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviser;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

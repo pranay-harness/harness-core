@@ -12,9 +12,11 @@ java_library(
     visibility = ["//visibility:public"],
     exports = [
         "//870-yaml-beans:module",
+        "//900-yaml-sdk:module",
         "//910-delegate-service-driver:module",
         "//930-ng-core-clients:module",
         "//950-ng-core:module",
+        "//955-filters-sdk:module",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_google_code_findbugs_annotations",
@@ -26,6 +28,7 @@ java_library(
         "@maven//:javax_ws_rs_javax_ws_rs_api",
         "@maven//:org_apache_commons_commons_lang3",
         "@maven//:org_hibernate_hibernate_validator",
+        "@maven//:org_modelmapper_modelmapper",
         "@maven//:org_mongodb_morphia_morphia",
         "@maven//:org_reflections_reflections",
         "@maven//:org_slf4j_slf4j_api",
@@ -41,6 +44,9 @@ java_library(
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
+    resources = [
+        "//440-connector-nextgen/src/main/resources:resource",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "maven_deps",

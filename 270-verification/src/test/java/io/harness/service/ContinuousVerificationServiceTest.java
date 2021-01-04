@@ -71,6 +71,8 @@ import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.DatadogConfig;
+import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.alert.Alert;
@@ -113,6 +115,7 @@ import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.security.SecretManager;
@@ -201,6 +204,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Mock private HarnessMetricRegistry metricRegistry;
   @Mock private VerificationManagerClient verificationManagerClient;
   @Mock private DelegateService delegateService;
+  @Mock private EnvironmentService environmentService;
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private SettingsService settingsService;
   @Mock private SecretManager secretManager;
@@ -304,6 +308,10 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     writeField(managerVerificationService, "cvActivityLogService", cvActivityLogService, true);
     writeField(managerVerificationService, "dataCollectionService", dataCollectionService, true);
     writeField(managerVerificationService, "dataStoreService", dataStoreService, true);
+
+    writeField(managerVerificationService, "environmentService", environmentService, true);
+    when(environmentService.get(anyString(), anyString()))
+        .thenReturn(Environment.Builder.anEnvironment().environmentType(EnvironmentType.PROD).build());
 
     AlertService alertService = new AlertServiceImpl();
     writeField(alertService, "wingsPersistence", wingsPersistence, true);

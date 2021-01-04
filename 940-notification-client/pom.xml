@@ -7,9 +7,6 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
     <artifactId>940-notification-client</artifactId>
-    <properties>
-        <kafka.client.version>2.3.1</kafka.client.version>
-    </properties>
     <dependencies>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -24,28 +21,12 @@
             <artifactId>jackson-databind</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.github.daniel-shuy</groupId>
-            <artifactId>kafka-protobuf-serde</artifactId>
-            <version>2.2.0</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>annotations</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.confluent</groupId>
-            <artifactId>kafka-protobuf-serializer</artifactId>
-            <version>5.5.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka-clients</artifactId>
-            <version>${kafka.client.version}</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -62,12 +43,13 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>980-commons</artifactId>
+            <artifactId>960-notification-beans</artifactId>
             <version>${project.parent.version}</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>960-notification-beans</artifactId>
+            <artifactId>960-notification-beans-proto</artifactId>
             <version>${project.parent.version}</version>
             <scope>compile</scope>
         </dependency>
@@ -76,6 +58,11 @@
             <artifactId>960-persistence</artifactId>
             <version>${project.parent.version}</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>980-commons</artifactId>
+            <version>${project.parent.version}</version>
         </dependency>
     </dependencies>
 </project>

@@ -1,8 +1,8 @@
 package io.harness.ngpipeline.pipeline.executions.beans.dto;
 
-import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
-import io.harness.ngpipeline.pipeline.executions.beans.ExecutionErrorInfo;
 import io.harness.ngpipeline.pipeline.executions.beans.ServiceExecutionSummary;
+import io.harness.pms.contracts.execution.ExecutionErrorInfo;
+import io.harness.pms.execution.ExecutionStatus;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;

@@ -1,0 +1,89 @@
+pipeline:
+  identifier: "Test_Pipline11"
+  variables:
+  - name: "port2"
+    value: "${input}"
+  stages:
+  - stage:
+      identifier: "qaStage"
+      spec:
+        service:
+          identifier: "manager"
+          serviceDefinition:
+            spec:
+              manifests:
+              - manifest:
+                  identifier: "baseValues"
+                  spec:
+                    store:
+                      spec:
+                        gitFetchType: "${input}"
+                        paths: "${input}"
+              - manifest:
+                  identifier: "qaOverride"
+                  spec:
+                    store: "${input}"
+        infrastructure:
+          environment:
+            identifier: "stagingInfra"
+            tags:
+              team: "${input}"
+          infrastructureDefinition:
+            spec:
+              connectorRef: "${input}"
+              namespace: "${input}"
+              releaseName: "${input}"
+        execution:
+          steps:
+          - step:
+              identifier: "httpStep1"
+              spec:
+                url: "${input}"
+          - parallel:
+            - step:
+                identifier: "httpStep2"
+                spec:
+                  method: "${input}"
+          - step:
+              identifier: "httpStep11"
+              spec:
+                socketTimeoutMillis: "${input}"
+  - parallel:
+    - stage:
+        identifier: "qaStage2"
+        spec:
+          service:
+            identifier: "manager"
+            serviceDefinition:
+              spec:
+                manifests:
+                - manifest:
+                    identifier: "baseValues"
+                    spec:
+                      store:
+                        spec:
+                          connectorRef: "${input}"
+          infrastructure:
+            infrastructureDefinition:
+              spec:
+                namespace: "${input}"
+          execution:
+            steps:
+            - step:
+                identifier: "httpStep4"
+                spec:
+                  method: "${input}"
+    - stage:
+        identifier: "qaStage3"
+        spec:
+          service:
+            identifier: "manager"
+            serviceDefinition:
+              spec:
+                manifests: "${input}"
+          execution:
+            steps:
+            - step:
+                identifier: "httpStep5"
+                spec:
+                  method: "${input}"

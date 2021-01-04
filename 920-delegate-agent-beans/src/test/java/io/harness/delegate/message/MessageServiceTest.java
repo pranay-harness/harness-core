@@ -303,10 +303,9 @@ public class MessageServiceTest extends CategoryTest {
     map1.put("abc", "bar");
     map1.put("baz", "qux");
     FileUtils.write(dataFile1, JsonUtils.asPrettyJson(map1), UTF_8);
-
     assertThat(dataFile1.exists()).isTrue();
 
-    FileUtils.write(dataFile1, "non-readable text");
+    FileUtils.write(dataFile1, "non-readable text", UTF_8);
     map1 = messageService.getAllData(dataFile1.getName());
 
     assertThat(dataFile1.exists()).isFalse();

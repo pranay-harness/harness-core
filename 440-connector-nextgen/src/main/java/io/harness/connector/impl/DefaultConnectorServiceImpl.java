@@ -15,8 +15,8 @@ import io.harness.beans.SortOrder;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.connector.apis.dto.ConnectorCatalogueResponseDTO;
 import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorFilterPropertiesDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
-import io.harness.connector.apis.dto.ConnectorListFilter;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.apis.dto.stats.ConnectorStatistics;
 import io.harness.connector.entities.Connector;
@@ -31,7 +31,7 @@ import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
-import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.encryption.Scope;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.exception.DuplicateFieldException;
@@ -63,7 +63,7 @@ import org.springframework.data.mongodb.core.query.Update;
 public class DefaultConnectorServiceImpl implements ConnectorService {
   private final ConnectorMapper connectorMapper;
   private final ConnectorRepository connectorRepository;
-  private final ConnectorFilterService connectorFilterService;
+  private final ConnectorFilterService filterService;
   private Map<String, ConnectionValidator> connectionValidatorMap;
   private final CatalogueHelper catalogueHelper;
   EntitySetupUsageClient entitySetupUsageClient;
@@ -96,10 +96,11 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public Page<ConnectorResponseDTO> list(
-      int page, int size, String accountIdentifier, ConnectorListFilter connectorFilter) {
-    Criteria criteria =
-        connectorFilterService.createCriteriaFromConnectorListQueryParams(accountIdentifier, connectorFilter);
+  public Page<ConnectorResponseDTO> list(int page, int size, String accountIdentifier,
+      ConnectorFilterPropertiesDTO filterProperties, String orgIdentifier, String projectIdentifier,
+      String filterIdentifier, String searchTerm, Boolean includeAllConnectorsAccessibleAtScope) {
+    Criteria criteria = filterService.createCriteriaFromConnectorListQueryParams(accountIdentifier, orgIdentifier,
+        projectIdentifier, filterIdentifier, searchTerm, filterProperties, includeAllConnectorsAccessibleAtScope);
     Pageable pageable = PageUtils.getPageRequest(
         PageRequest.builder()
             .pageIndex(page)
@@ -113,7 +114,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
 
   public Page<ConnectorResponseDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String searchTerm, ConnectorType type, ConnectorCategory category) {
-    Criteria criteria = connectorFilterService.createCriteriaFromConnectorFilter(
+    Criteria criteria = filterService.createCriteriaFromConnectorFilter(
         accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category);
     Pageable pageable = PageUtils.getPageRequest(
         PageRequest.builder()

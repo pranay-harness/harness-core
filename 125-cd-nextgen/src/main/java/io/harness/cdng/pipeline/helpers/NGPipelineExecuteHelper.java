@@ -1,6 +1,9 @@
 package io.harness.cdng.pipeline.helpers;
 
-import io.harness.beans.EmbeddedUser;
+import static io.harness.cdng.pipeline.plancreators.PipelinePlanCreator.EVENT_PAYLOAD_KEY;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
+
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
 import io.harness.cdng.pipeline.beans.CDPipelineValidationInfo;
 import io.harness.cdng.pipeline.mappers.NGPipelineExecutionDTOMapper;
@@ -15,6 +18,9 @@ import io.harness.ngpipeline.inputset.helpers.InputSetMergeHelper;
 import io.harness.ngpipeline.pipeline.beans.resources.NGPipelineExecutionResponseDTO;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.plan.Plan;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
+import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
+import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.walktree.visitor.response.VisitorErrorResponse;
 import io.harness.walktree.visitor.response.VisitorErrorResponseWrapper;
 import io.harness.yaml.core.StageElement;
@@ -42,7 +48,7 @@ public class NGPipelineExecuteHelper {
 
   public NGPipelineExecutionResponseDTO runPipelineWithInputSetPipelineYaml(@NotNull String accountId,
       @NotNull String orgIdentifier, @NotNull String projectIdentifier, @NotNull String pipelineIdentifier,
-      String inputSetPipelineYaml, String eventPayload, boolean useFQNIfErrorResponse, EmbeddedUser user) {
+      String inputSetPipelineYaml, String eventPayload, boolean useFQNIfErrorResponse, TriggeredBy triggeredBy) {
     MergeInputSetResponse mergeInputSetResponse;
     if (EmptyPredicate.isEmpty(inputSetPipelineYaml)) {
       NgPipeline pipeline = inputSetMergeHelper.getOriginalOrTemplatePipeline(
@@ -57,15 +63,15 @@ public class NGPipelineExecuteHelper {
       contextAttributes.put(PipelinePlanCreator.INPUT_SET_YAML_KEY, inputSetPipelineYaml);
     }
     if (eventPayload != null) {
-      contextAttributes.put(PipelinePlanCreator.EVENT_PAYLOAD_KEY, eventPayload);
+      contextAttributes.put(EVENT_PAYLOAD_KEY, eventPayload);
     }
     return getPipelineResponseDTO(
-        accountId, orgIdentifier, projectIdentifier, mergeInputSetResponse, user, contextAttributes);
+        accountId, orgIdentifier, projectIdentifier, mergeInputSetResponse, triggeredBy, contextAttributes);
   }
 
   public NGPipelineExecutionResponseDTO runPipelineWithInputSetReferencesList(String accountId, String orgIdentifier,
       String projectIdentifier, String pipelineIdentifier, List<String> inputSetReferences,
-      boolean useFQNIfErrorResponse, EmbeddedUser user) {
+      boolean useFQNIfErrorResponse, TriggeredBy user) {
     MergeInputSetResponse mergeInputSetResponse =
         inputSetMergeHelper.getMergePipelineYamlFromInputIdentifierList(accountId, orgIdentifier, projectIdentifier,
             pipelineIdentifier, inputSetReferences, true, useFQNIfErrorResponse);
@@ -119,7 +125,7 @@ public class NGPipelineExecuteHelper {
   }
 
   private NGPipelineExecutionResponseDTO getPipelineResponseDTO(String accountId, String orgIdentifier,
-      String projectIdentifier, MergeInputSetResponse mergeInputSetResponse, EmbeddedUser user,
+      String projectIdentifier, MergeInputSetResponse mergeInputSetResponse, TriggeredBy user,
       Map<String, Object> contextAttributes) {
     if (mergeInputSetResponse.isErrorResponse()) {
       return NGPipelineExecutionDTOMapper.toNGPipelineResponseDTO(null, mergeInputSetResponse);
@@ -129,8 +135,8 @@ public class NGPipelineExecuteHelper {
     return NGPipelineExecutionDTOMapper.toNGPipelineResponseDTO(planExecution, mergeInputSetResponse);
   }
 
-  private PlanExecution startPipelinePlanExecution(String accountId, String orgIdentifier, String projectIdentifier,
-      NgPipeline finalPipeline, EmbeddedUser user, Map<String, Object> contextAttributes) {
+  public PlanExecution startPipelinePlanExecution(String accountId, String orgIdentifier, String projectIdentifier,
+      NgPipeline finalPipeline, TriggeredBy user, Map<String, Object> contextAttributes) {
     final Plan planForPipeline =
         executionPlanCreatorService.createPlanForPipeline(finalPipeline, accountId, contextAttributes);
 
@@ -143,24 +149,35 @@ public class NGPipelineExecuteHelper {
             .put(SetupAbstractionKeys.orgIdentifier, orgIdentifier)
             .put(SetupAbstractionKeys.projectIdentifier, projectIdentifier);
 
-    if (contextAttributes.get(PipelinePlanCreator.EVENT_PAYLOAD_KEY) != null) {
-      abstractionsBuilder.put(
-          PipelinePlanCreator.EVENT_PAYLOAD_KEY, (String) contextAttributes.get(PipelinePlanCreator.EVENT_PAYLOAD_KEY));
+    if (isNotEmpty(contextAttributes)) {
+      contextAttributes.forEach((key, val) -> {
+        if (val != null && String.class.isAssignableFrom(val.getClass())) {
+          abstractionsBuilder.put(key, (String) val);
+        }
+      });
     }
 
     if (user != null) {
       abstractionsBuilder.put(SetupAbstractionKeys.userId, user.getUuid())
-          .put(SetupAbstractionKeys.userName, user.getName())
-          .put(SetupAbstractionKeys.userEmail, user.getEmail());
+          .put(SetupAbstractionKeys.userName, user.getIdentifier())
+          .put(SetupAbstractionKeys.userEmail, user.getExtraInfoOrDefault("email", ""));
     }
-    return orchestrationService.startExecution(planForPipeline, abstractionsBuilder.build());
+    return orchestrationService.startExecution(planForPipeline, abstractionsBuilder.build(),
+        ExecutionMetadata.newBuilder()
+            .setRunSequence(0)
+            .setTriggerInfo(ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).setTriggeredBy(user).build())
+            .build());
   }
 
-  private EmbeddedUser getEmbeddedUser() {
+  private TriggeredBy getEmbeddedUser() {
     User user = UserThreadLocal.get();
     if (user == null) {
-      return EmbeddedUser.builder().build();
+      return TriggeredBy.newBuilder().build();
     }
-    return EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build();
+    return TriggeredBy.newBuilder()
+        .setUuid(user.getUuid())
+        .putExtraInfo("email", user.getEmail())
+        .setIdentifier(user.getName())
+        .build();
   }
 }

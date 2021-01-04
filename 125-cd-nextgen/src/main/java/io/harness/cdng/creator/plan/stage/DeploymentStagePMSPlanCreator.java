@@ -1,65 +1,86 @@
 package io.harness.cdng.creator.plan.stage;
 
+import static io.harness.pms.yaml.YAMLFieldNameConstants.PARALLEL;
+import static io.harness.pms.yaml.YAMLFieldNameConstants.STAGES;
+
 import io.harness.cdng.creator.plan.infrastructure.InfrastructurePmsPlanCreator;
 import io.harness.cdng.creator.plan.service.ServicePMSPlanCreator;
-import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
 import io.harness.cdng.pipeline.steps.DeploymentStageStep;
 import io.harness.plancreator.stages.stage.StageElementConfig;
-import io.harness.pms.facilitators.FacilitatorObtainment;
-import io.harness.pms.facilitators.FacilitatorType;
-import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.contracts.advisers.AdviserObtainment;
+import io.harness.pms.contracts.advisers.AdviserType;
+import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
+import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
+import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.YamlField;
+import io.harness.pms.yaml.YamlNode;
+import io.harness.pms.yaml.YamlUtils;
+import io.harness.serializer.KryoSerializer;
+import io.harness.steps.StepOutcomeGroup;
 
+import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElementConfig> {
+  @Inject private KryoSerializer kryoSerializer;
+
   @Override
-  public Map<String, PlanCreationResponse> createPlanForChildrenNodes(
+  public LinkedHashMap<String, PlanCreationResponse> createPlanForChildrenNodes(
       PlanCreationContext ctx, StageElementConfig field) {
-    Map<String, PlanCreationResponse> planCreationResponseMap = new HashMap<>();
+    LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
     Map<String, YamlField> dependenciesNodeMap = new HashMap<>();
 
     // Adding service child
-    String serviceNodeUuid =
-        ctx.getCurrentField().getNode().getField("spec").getNode().getField("service").getNode().getUuid();
+    YamlField serviceField = ctx.getCurrentField().getNode().getField("spec").getNode().getField("service");
 
-    PlanNode servicePlanNode = ServicePMSPlanCreator.createPlanForServiceNode(
-        serviceNodeUuid, ((DeploymentStageConfig) field.getStageType()).getService());
-    planCreationResponseMap.put(
-        serviceNodeUuid, PlanCreationResponse.builder().node(serviceNodeUuid, servicePlanNode).build());
-
+    if (serviceField != null) {
+      PlanNode servicePlanNode = ServicePMSPlanCreator.createPlanForServiceNode(
+          serviceField, ((DeploymentStageConfig) field.getStageType()).getService(), kryoSerializer);
+      planCreationResponseMap.put(serviceField.getNode().getUuid(),
+          PlanCreationResponse.builder().node(serviceField.getNode().getUuid(), servicePlanNode).build());
+    }
     // Adding infrastructure node
     String infraDefNodeUuid = ctx.getCurrentField()
+                                  .getNode()
+                                  .getField("spec")
                                   .getNode()
                                   .getField("infrastructure")
                                   .getNode()
                                   .getField("infrastructureDefinition")
                                   .getNode()
                                   .getUuid();
-    String infraNodeUuid = ctx.getCurrentField().getNode().getField("infrastructure").getNode().getUuid();
+    YamlField infraField = ctx.getCurrentField().getNode().getField("spec").getNode().getField("infrastructure");
+    YamlNode infraNode = infraField.getNode();
 
     PlanNode infraStepNode = InfrastructurePmsPlanCreator.getInfraStepPlanNode(
-        infraDefNodeUuid, ((DeploymentStageConfig) field.getStageType()).getInfrastructure());
+        infraDefNodeUuid, ((DeploymentStageConfig) field.getStageType()).getInfrastructure(), infraField);
     planCreationResponseMap.put(
         infraDefNodeUuid, PlanCreationResponse.builder().node(infraDefNodeUuid, infraStepNode).build());
 
     PlanNode infraSectionPlanNode =
-        InfrastructurePmsPlanCreator.getInfraSectionPlanNode(infraNodeUuid, infraStepNode.getUuid());
+        InfrastructurePmsPlanCreator.getInfraSectionPlanNode(infraNode, infraStepNode.getUuid(),
+            ((DeploymentStageConfig) field.getStageType()).getInfrastructure(), kryoSerializer, infraField);
     planCreationResponseMap.put(
-        infraNodeUuid, PlanCreationResponse.builder().node(infraNodeUuid, infraSectionPlanNode).build());
+        infraNode.getUuid(), PlanCreationResponse.builder().node(infraNode.getUuid(), infraSectionPlanNode).build());
 
     // Add dependency for execution
-    YamlField executionField = ctx.getCurrentField().getNode().getField("execution");
-    dependenciesNodeMap.put(infraNodeUuid, executionField);
+    YamlField executionField = ctx.getCurrentField().getNode().getField("spec").getNode().getField("execution");
+    dependenciesNodeMap.put(executionField.getNode().getUuid(), executionField);
 
     planCreationResponseMap.put(
         executionField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(dependenciesNodeMap).build());
@@ -68,19 +89,38 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
 
   @Override
   public PlanNode createPlanForParentNode(
-      PlanCreationContext ctx, StageElementConfig field, Set<String> childrenNodeIds) {
-    StepParameters stepParameters =
-        DeploymentStageStepParameters.builder().deploymentStage((DeploymentStage) field.getStageType()).build();
+      PlanCreationContext ctx, StageElementConfig config, List<String> childrenNodeIds) {
+    StepParameters stepParameters = DeploymentStageStepParameters.getStepParameters(config, childrenNodeIds.get(0));
     return PlanNode.builder()
-        .uuid(field.getUuid())
-        .name(field.getName())
-        .identifier(field.getIdentifier())
+        .uuid(config.getUuid())
+        .name(config.getName())
+        .identifier(config.getIdentifier())
+        .group(StepOutcomeGroup.STAGE.name())
         .stepParameters(stepParameters)
         .stepType(DeploymentStageStep.STEP_TYPE)
-        .facilitatorObtainment(FacilitatorObtainment.newBuilder()
-                                   .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD))
-                                   .build())
+        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
+        .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
         .build();
+  }
+
+  private List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlField currentField) {
+    List<AdviserObtainment> adviserObtainments = new ArrayList<>();
+    if (currentField != null && currentField.getNode() != null) {
+      if (checkIfParentIsParallel(currentField)) {
+        return adviserObtainments;
+      }
+      YamlField siblingField =
+          currentField.getNode().nextSiblingFromParentArray(currentField.getName(), Arrays.asList("stage", "parallel"));
+      if (siblingField != null && siblingField.getNode().getUuid() != null) {
+        adviserObtainments.add(
+            AdviserObtainment.newBuilder()
+                .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
+                .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
+                    OnSuccessAdviserParameters.builder().nextNodeId(siblingField.getNode().getUuid()).build())))
+                .build());
+      }
+    }
+    return adviserObtainments;
   }
 
   @Override
@@ -91,5 +131,13 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
   @Override
   public Map<String, Set<String>> getSupportedTypes() {
     return Collections.singletonMap("stage", Collections.singleton("Deployment"));
+  }
+
+  private boolean checkIfParentIsParallel(YamlField currentField) {
+    YamlNode parallelNode = YamlUtils.findParentNode(currentField.getNode(), PARALLEL);
+    if (parallelNode != null) {
+      return YamlUtils.findParentNode(parallelNode, STAGES) != null;
+    }
+    return false;
   }
 }

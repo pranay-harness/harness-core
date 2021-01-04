@@ -29,9 +29,9 @@ fi
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]
 then
-  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//71-rest/... -//260-delegate/...
-  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//71-rest/... -//260-delegate/... || true
-  # 71-rest and 260-delegate modules are excluded.
+  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//400-rest/... -//260-delegate/...
+  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//400-rest/... -//260-delegate/...|| true
+  # 400-rest and 260-delegate modules are excluded.
 fi
 
 BAZEL_MODULES="\
@@ -44,71 +44,66 @@ BAZEL_MODULES="\
   //490-ce-commons:module \
   //800-pipeline-service:module \
   //800-pipeline-service:module_deploy.jar \
-  //840-ng-triggers:module \
+  //810-ng-triggers:module \
   //850-execution-plan:module \
   //850-ng-pipeline-commons:module \
-  //850-pms-sdk:module \
   //860-orchestration-steps:module \
   //860-orchestration-visualization:module \
   //870-orchestration:module \
   //870-yaml-beans:module \
-  //880-orchestration-beans:module \
+  //876-orchestration-beans:module \
+  //879-pms-sdk:module \
   //882-pms-sdk-core:module \
   //884-pms-commons:module \
-  //890-orchestration-persistence:module \
+  //890-pms-contracts/src/main/proto:all \
   //890-pms-contracts:module \
   //890-sm-core:module \
   //900-yaml-sdk:module \
   //910-delegate-service-driver:module \
+  //910-delegate-task-grpc-service/src/main/proto:all \
   //910-delegate-task-grpc-service:module \
+  //915-pms-delegate-service-driver:module \
+  //920-delegate-agent-beans/src/main/proto:all \
   //920-delegate-agent-beans:module \
+  //920-delegate-service-beans/src/main/proto:all \
   //920-delegate-service-beans:module \
   //930-delegate-tasks:module \
   //930-ng-core-clients:module \
+  //940-delegate-beans/src/main/proto:all \
   //940-delegate-beans:module \
+  //940-feature-flag:module \
+  //940-notification-client:module \
+  //940-notification-client:module_deploy.jar \
   //940-secret-manager-client:module \
   //950-command-library-common:module \
   //950-common-entities:module \
+  //950-delegate-tasks-beans/src/main/proto:all \
   //950-delegate-tasks-beans:module \
+  //950-events-api/src/main/proto:all \
+  //950-events-api:module \
   //950-events-framework:module \
-  //950-feature-flag:module \
   //950-ng-core:module \
   //950-ng-project-n-orgs:module \
   //950-timeout-engine:module \
   //950-wait-engine:module \
   //950-walktree-visitor:module \
+  //955-filters-sdk:module \
   //960-api-services:module \
+  //960-expression-service/src/main/proto/io/harness/expression/service:all \
   //960-expression-service:module \
   //960-ng-core-beans:module \
+  //960-notification-beans/src/main/proto:all \
   //960-notification-beans:module \
   //960-persistence:module \
+  //960-persistence:supporter-test \
   //970-api-services-beans:module \
   //970-grpc:module \
   //970-ng-commons:module \
   //970-rbac-core:module \
   //980-commons:module \
   //990-commons-test:module \
-  \
-  //960-persistence:supporter-test \
-  \
-  //930-notification-service:module \
-  //930-notification-service:module_deploy.jar \
-  //940-notification-client:module \
-  //940-notification-client:module_deploy.jar \
-  //950-events-api:module \
-  //950-events-api:module_deploy.jar \
-  \
-  //950-events-api/src/main/proto:all \
-  //920-delegate-agent-beans/src/main/proto:all \
-  //920-delegate-service-beans/src/main/proto:all \
-  //890-pms-contracts/src/main/proto:all \
-  //910-delegate-task-grpc-service/src/main/proto:all \
-  //940-delegate-beans/src/main/proto:all \
-  //950-delegate-tasks-beans/src/main/proto:all \
-  //960-notification-beans/src/main/proto:all \
-  //960-expression-service/src/main/proto/io/harness/expression/service:all \
-  //product/ci/scm/proto:all \
   //product/ci/engine/proto:all \
+  //product/ci/scm/proto:all \
 "
 
 bazel ${bazelrc} build $BAZEL_MODULES ${GCP} ${BAZEL_ARGUMENTS} --experimental_remote_download_outputs=all
@@ -237,6 +232,9 @@ build_proto_module() {
   fi
 }
 
+build_bazel_application 800-pipeline-service
+build_bazel_application 940-notification-client
+
 build_bazel_module 420-delegate-agent
 build_bazel_module 420-delegate-service
 build_bazel_module 430-cv-nextgen-commons
@@ -244,39 +242,41 @@ build_bazel_module 440-connector-nextgen
 build_bazel_module 450-ce-views
 build_bazel_module 460-capability
 build_bazel_module 490-ce-commons
-build_bazel_module 840-ng-triggers
+build_bazel_module 810-ng-triggers
 build_bazel_module 850-execution-plan
 build_bazel_module 850-ng-pipeline-commons
-build_bazel_module 850-pms-sdk
 build_bazel_module 860-orchestration-steps
 build_bazel_module 860-orchestration-visualization
 build_bazel_module 870-orchestration
 build_bazel_module 870-yaml-beans
-build_bazel_module 880-orchestration-beans
+build_bazel_module 876-orchestration-beans
+build_bazel_module 879-pms-sdk
 build_bazel_module 882-pms-sdk-core
 build_bazel_module 884-pms-commons
-build_bazel_module 890-orchestration-persistence
 build_bazel_module 890-pms-contracts
 build_bazel_module 890-sm-core
 build_bazel_module 900-yaml-sdk
 build_bazel_module 910-delegate-service-driver
 build_bazel_module 910-delegate-task-grpc-service
+build_bazel_module 915-pms-delegate-service-driver
 build_bazel_module 920-delegate-agent-beans
 build_bazel_module 920-delegate-service-beans
 build_bazel_module 930-delegate-tasks
 build_bazel_module 930-ng-core-clients
 build_bazel_module 940-delegate-beans
+build_bazel_module 940-feature-flag
 build_bazel_module 940-secret-manager-client
 build_bazel_module 950-command-library-common
 build_bazel_module 950-common-entities
 build_bazel_module 950-delegate-tasks-beans
+build_bazel_module 950-events-api
 build_bazel_module 950-events-framework
 build_bazel_module 950-ng-core
-build_bazel_module 950-feature-flag
 build_bazel_module 950-ng-project-n-orgs
 build_bazel_module 950-timeout-engine
 build_bazel_module 950-wait-engine
 build_bazel_module 950-walktree-visitor
+build_bazel_module 955-filters-sdk
 build_bazel_module 960-api-services
 build_bazel_module 960-expression-service
 build_bazel_module 960-ng-core-beans
@@ -291,11 +291,6 @@ build_bazel_module 990-commons-test
 
 build_bazel_tests 960-persistence
 
-build_bazel_application 800-pipeline-service
-build_bazel_application 930-notification-service
-build_bazel_application 940-notification-client
-build_bazel_application 950-events-api
-
 build_java_proto_module 890-pms-contracts
 build_java_proto_module 910-delegate-task-grpc-service proto
 build_java_proto_module 920-delegate-agent-beans
@@ -306,5 +301,5 @@ build_java_proto_module 950-events-api
 build_java_proto_module 960-notification-beans
 
 build_proto_module 960-expression-service 960-expression-service/src/main/proto/io/harness/expression/service
-build_proto_module ciscm product/ci/scm/proto
 build_proto_module ciengine product/ci/engine/proto
+build_proto_module ciscm product/ci/scm/proto

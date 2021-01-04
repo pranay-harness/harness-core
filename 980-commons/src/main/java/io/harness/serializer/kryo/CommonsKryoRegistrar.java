@@ -9,6 +9,8 @@ import io.harness.exception.ShellExecutionException;
 import io.harness.exception.VerificationOperationException;
 import io.harness.logging.LogLevel;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.tasks.BinaryResponseData;
+import io.harness.tasks.FailureResponseData;
 
 import com.esotericsoftware.kryo.Kryo;
 
@@ -19,6 +21,10 @@ public class CommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(ServiceNowException.class, 3002);
     kryo.register(Scope.class, 3004);
     kryo.register(GeneralException.class, 3005);
+    kryo.register(BinaryResponseData.class, 3006);
+    kryo.register(FailureResponseData.class, 3007);
+
+    // Promoted Classes
     kryo.register(ArtifactServerException.class, 7244);
     kryo.register(InvalidArtifactServerException.class, 7250);
     kryo.register(ShellExecutionException.class, 7473);

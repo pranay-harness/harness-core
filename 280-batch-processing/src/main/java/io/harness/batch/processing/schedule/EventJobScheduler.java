@@ -2,6 +2,7 @@ package io.harness.batch.processing.schedule;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import io.harness.batch.processing.YamlPropertyLoaderFactory;
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.WeeklyReportServiceImpl;
@@ -26,7 +27,6 @@ import io.harness.logging.AutoLogContext;
 
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
-import com.google.common.collect.ImmutableSet;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Comparator;
@@ -37,12 +37,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
 @Slf4j
 @Configuration
 @EnableScheduling
+@PropertySource(value = "file:./batch-processing-config.yml", factory = YamlPropertyLoaderFactory.class)
 public class EventJobScheduler {
   @Autowired private List<Job> jobs;
   @Autowired private BatchJobRunner batchJobRunner;
@@ -90,7 +92,7 @@ public class EventJobScheduler {
     runCloudEfficiencyEventJobs(BatchJobBucket.IN_CLUSTER_BILLING, true);
   }
 
-  @Scheduled(cron = "0 0 * ? * *")
+  @Scheduled(cron = "0 0 * ? * *") // 0 */10 * * * ?   for testing
   public void runCloudEfficiencyOutOfClusterJobs() {
     runCloudEfficiencyEventJobs(BatchJobBucket.OUT_OF_CLUSTER, true);
   }
@@ -162,7 +164,7 @@ public class EventJobScheduler {
     }
   }
 
-  @Scheduled(cron = "0 0 14 * * MON")
+  @Scheduled(cron = "${scheduler-jobs-config.weeklyReportsJobCron}")
   public void runWeeklyReportJob() {
     try {
       weeklyReportService.generateAndSendWeeklyReport();
@@ -183,7 +185,7 @@ public class EventJobScheduler {
     }
   }
 
-  @Scheduled(cron = "0 30 14 * * ?")
+  @Scheduled(cron = "${scheduler-jobs-config.budgetAlertsJobCron}")
   public void runBudgetAlertsJob() {
     try {
       budgetAlertsService.sendBudgetAlerts();
@@ -205,15 +207,8 @@ public class EventJobScheduler {
   private void runJob(String accountId, Job job, boolean runningMode) {
     try {
       BatchJobType batchJobType = BatchJobType.fromJob(job);
-      if (BatchJobType.INSTANCE_BILLING_AGGREGATION == batchJobType
-          && !ImmutableSet
-                  .of("wFHXHD0RRQWoO8tIZT5YVw", "kmpySmUISimoRrJL6NL73w", "zEaak-FLS425IEO7OLzMUg",
-                      "hW63Ny6rQaaGsKkVjE0pJA", "0DdbKsBzRu-A9iYzPB7c0A")
-                  .contains(accountId)) {
-        return;
-      }
-
       BatchJobBucket batchJobBucket = batchJobType.getBatchJobBucket();
+
       try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR);
            AutoLogContext ignore1 = new BatchJobBucketLogContext(batchJobBucket.name(), OVERRIDE_ERROR);
            AutoLogContext ignore2 = new BatchJobTypeLogContext(batchJobType.name(), OVERRIDE_ERROR);

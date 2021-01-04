@@ -7,15 +7,15 @@ import static org.joor.Reflect.on;
 import static org.mockito.Mockito.when;
 
 import io.harness.NGPipelineTestBase;
-import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.expressions.AmbianceExpressionEvaluator;
 import io.harness.expression.EngineExpressionEvaluator;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.registries.field.OrchestrationFieldRegistry;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.sdk.core.registries.OrchestrationFieldRegistry;
+import io.harness.pms.serializer.jackson.NGHarnessJacksonModule;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
-import io.harness.serializer.jackson.NGHarnessJacksonModule;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;

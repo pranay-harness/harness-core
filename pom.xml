@@ -6,8 +6,6 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
-        <module>71-rest</module>
-        <!--The following modules are in the new order-->
         <module>120-ng-manager</module>
         <module>125-cd-nextgen</module>
         <module>136-git-sync-manager</module>
@@ -26,54 +24,11 @@
         <module>320-ci-execution</module>
         <module>330-ci-beans</module>
         <module>350-event-server</module>
-        <!--<module>40-pipeline-service</module>-->
-        <!--<module>420-delegate-agent</module>-->
-        <!--<module>420-delegate-service</module>-->
-        <!--<module>430-cv-nextgen-commons</module>-->
-        <!--<module>440-connector-nextgen</module>-->
-        <!--<module>450-ce-views</module>-->
-        <!--<module>460-capability</module>-->
-        <!--<module>490-ce-commons</module>-->
-        <!--<module>850-execution-plan</module>-->
-        <!--<module>850-ng-pipeline-commons</module>-->
-        <!--<module>860-orchestration-steps</module>-->
-        <!--<module>860-orchestration-visualization</module>-->
-        <!--<module>870-orchestration</module>-->
-        <!--<module>870-yaml-beans</module>-->
-        <!--<module>880-orchestration-beans</module>-->
-        <!--<module>890-orchestration-persistence</module>-->
-        <!--<module>890-sm-core</module>-->
-        <!--<module>900-yaml-sdk</module>-->
-        <!--<module>910-delegate-service-driver</module>-->
-        <!--<module>910-delegate-task-grpc-service</module>-->
-        <!--<module>920-delegate-agent-beans</module>-->
-        <!--<module>920-delegate-service-beans</module>-->
-        <!--<module>930-delegate-tasks</module>-->
-        <!--<module>930-ng-core-clients</module>-->
-        <!--<module>940-delegate-beans</module>-->
-        <!--<module>940-secret-manager-client</module>-->
-        <!--<module>950-command-library-common</module>-->
-        <!--<module>950-common-entities</module>-->
-        <!--<module>950-delegate-tasks-beans</module>-->
-        <!--<module>950-events-api</module>-->
-        <!--<module>950-events-framework</module>-->
-        <!--<module>950-ng-core</module>-->
-        <!--<module>950-ng-project-n-orgs</module>-->
-        <!--<module>950-feature-flag</module>-->
-        <!--<module>950-timeout-engine</module>-->
-        <!--<module>950-wait-engine</module>-->
-        <!--<module>950-walktree-visitor</module>-->
-        <!--<module>960-api-services</module>-->
-        <!--<module>960-expression-service</module>-->
-        <!--<module>960-ng-core-beans</module>-->
-        <!--<module>960-persistence</module>-->
-        <!--<module>970-api-services-beans</module>-->
-        <!--<module>970-atmosphere</module>-->
-        <!--<module>970-grpc</module>-->
-        <!--<module>970-ng-commons</module>-->
-        <!--<module>970-rbac-core</module>-->
-        <!--<module>980-commons</module>-->
-        <!--<module>990-commons-test</module>-->
+        <module>380-cg-graphql</module>
+        <module>400-rest</module>
+        <module>899-yaml-schema-plugin</module>
+        <module>930-notification-service</module>
+        <module>980-java-agent</module>
     </modules>
     <scm>
         <connection>scm:git:git://github.com/wings-software/portal.git</connection>
@@ -98,6 +53,7 @@
         <generated.repo.code>${basedir}/src/generated/java</generated.repo.code>
         <gitBranch>default</gitBranch>
         <gitCommitId>default</gitCommitId>
+        <google.http-client.version>1.38.0</google.http-client.version>
         <grpc-testing.version>1.33.1</grpc-testing.version>
         <grpc.version>1.33.1</grpc.version>
         <guice.version>4.2.3</guice.version>
@@ -687,6 +643,11 @@
                 <version>21.0</version>
             </dependency>
             <dependency>
+                <groupId>com.google.http-client</groupId>
+                <artifactId>google-http-client-apache-v2</artifactId>
+                <version>${google.http-client.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.google.inject</groupId>
                 <artifactId>guice</artifactId>
                 <version>${guice.version}</version>
@@ -781,6 +742,11 @@
                         <artifactId>slf4j-simple</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.networknt</groupId>
+                <artifactId>json-schema-validator</artifactId>
+                <version>1.0.45</version>
             </dependency>
             <dependency>
                 <groupId>com.nimbusds</groupId>
@@ -974,24 +940,39 @@
                 <version>1.8.3</version>
             </dependency>
             <dependency>
+                <groupId>io.harness.cf</groupId>
+                <artifactId>cf-client-sdk-java</artifactId>
+                <version>1.0.0-SNAPSHOT</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-simple</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.squareup.okhttp3</groupId>
+                        <artifactId>okhttp</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
                 <groupId>io.harness.cv</groupId>
                 <artifactId>data-collection-dsl</artifactId>
-                <version>0.16-RELEASE</version>
+                <version>0.18-RELEASE</version>
             </dependency>
             <dependency>
                 <groupId>io.kubernetes</groupId>
                 <artifactId>client-java</artifactId>
-                <version>8.0.2</version>
+                <version>10.0.0</version>
             </dependency>
             <dependency>
                 <groupId>io.kubernetes</groupId>
                 <artifactId>client-java-api</artifactId>
-                <version>8.0.2</version>
+                <version>10.0.0</version>
             </dependency>
             <dependency>
                 <groupId>io.kubernetes</groupId>
                 <artifactId>client-java-extended</artifactId>
-                <version>8.0.2</version>
+                <version>10.0.0</version>
             </dependency>
             <dependency>
                 <groupId>io.netty</groupId>
@@ -1153,6 +1134,21 @@
                 <groupId>org.apache.maven</groupId>
                 <artifactId>maven-artifact</artifactId>
                 <version>3.3.3</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-core</artifactId>
+                <version>3.6.3</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-plugin-api</artifactId>
+                <version>3.6.3</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven.plugin-tools</groupId>
+                <artifactId>maven-plugin-annotations</artifactId>
+                <version>3.4</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.sshd</groupId>
@@ -1581,7 +1577,7 @@
             <dependency>
                 <groupId>com.squareup.okhttp3</groupId>
                 <artifactId>mockwebserver</artifactId>
-                <version>3.6.0</version>
+                <version>3.9.0</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -1761,11 +1757,6 @@
         </dependencies>
     </dependencyManagement>
     <repositories>
-        <repository>
-            <id>confluent</id>
-            <name>confluent-maven</name>
-            <url>http://packages.confluent.io/maven</url>
-        </repository>
         <repository>
             <id>harness</id>
             <name>harness-releases</name>

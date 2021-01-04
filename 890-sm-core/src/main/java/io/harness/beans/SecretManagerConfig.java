@@ -61,8 +61,8 @@ import org.mongodb.morphia.annotations.Transient;
     fields =
     {
       @Field("name")
-      , @Field("accountId"), @Field("encryptionType"), @Field("ngMetadata.orgIdentifier"),
-          @Field("ngMetadata.projectIdentifier"), @Field("ngMetadata.identifier")
+      , @Field("accountId"), @Field("encryptionType"), @Field("ngMetadata.accountIdentifier"),
+          @Field("ngMetadata.orgIdentifier"), @Field("ngMetadata.projectIdentifier"), @Field("ngMetadata.identifier")
     })
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)

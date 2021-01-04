@@ -1,5 +1,7 @@
 package io.harness.beans.steps.stepinfo.publish.artifact.connectors;
 
+import io.harness.pms.yaml.ParameterField;
+
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -9,8 +11,8 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("artifactoryConnector")
 public class ArtifactoryConnector implements ArtifactConnector {
-  @NotNull private String connectorRef;
-  @NotNull private String repository;
-  @NotNull private String artifactPath;
+  @NotNull private ParameterField<String> connectorRef;
+  @NotNull private ParameterField<String> repository;
+  @NotNull private ParameterField<String> artifactPath;
   @Builder.Default @NotNull Type type = Type.ARTIFACTORY;
 }

@@ -2,10 +2,9 @@ package io.harness.pms.plan.creation;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.plan.PlanCreationBlobResponse;
-import io.harness.pms.plan.PlanNodeProto;
-import io.harness.pms.plan.YamlFieldBlob;
+import io.harness.pms.contracts.plan.*;
 
+import java.util.HashMap;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
 
@@ -18,6 +17,16 @@ public class PlanCreationBlobResponseUtils {
     addNodes(builder, other.getNodesMap());
     addDependencies(builder, other.getDependenciesMap());
     mergeStartingNodeId(builder, other.getStartingNodeId());
+    mergeContext(builder, other.getContextMap());
+    mergeLayoutNodeInfo(builder, other);
+  }
+
+  public void mergeContext(
+      PlanCreationBlobResponse.Builder builder, Map<String, PlanCreationContextValue> contextValueMap) {
+    if (EmptyPredicate.isEmpty(contextValueMap)) {
+      return;
+    }
+    builder.putAllContext(contextValueMap);
   }
 
   public void addNodes(PlanCreationBlobResponse.Builder builder, Map<String, PlanNodeProto> newNodes) {
@@ -59,6 +68,31 @@ public class PlanCreationBlobResponseUtils {
     if (!builder.getStartingNodeId().equals(otherStartingNodeId)) {
       throw new InvalidRequestException(String.format(
           "Received different set of starting nodes: %s and %s", builder.getStartingNodeId(), otherStartingNodeId));
+    }
+  }
+
+  public void mergeLayoutNodeInfo(PlanCreationBlobResponse.Builder builder, PlanCreationBlobResponse response) {
+    if (response.getGraphLayoutInfo() != null) {
+      String otherStartingNodeId = response.getGraphLayoutInfo().getStartingNodeId();
+      GraphLayoutInfo.Builder layoutNodeInfo = GraphLayoutInfo.newBuilder();
+      if (EmptyPredicate.isEmpty(builder.getGraphLayoutInfo().getStartingNodeId())) {
+        layoutNodeInfo.setStartingNodeId(otherStartingNodeId);
+      } else {
+        layoutNodeInfo.setStartingNodeId(builder.getGraphLayoutInfo().getStartingNodeId());
+      }
+      Map<String, GraphLayoutNode> layoutMap = new HashMap<>();
+      if (builder.getGraphLayoutInfo() != null) {
+        layoutMap = builder.getGraphLayoutInfo().getLayoutNodesMap();
+      }
+      if (!(layoutMap instanceof HashMap)) {
+        layoutMap = new HashMap<>(layoutMap);
+      }
+      if (response.getGraphLayoutInfo().getLayoutNodesMap() != null) {
+        layoutMap.putAll(response.getGraphLayoutInfo().getLayoutNodesMap());
+      }
+
+      layoutNodeInfo.putAllLayoutNodes(layoutMap);
+      builder.setGraphLayoutInfo(layoutNodeInfo);
     }
   }
 }

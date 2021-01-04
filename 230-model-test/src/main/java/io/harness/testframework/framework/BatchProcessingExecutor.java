@@ -15,6 +15,7 @@ import com.google.inject.Singleton;
 import io.fabric8.utils.Strings;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -65,6 +66,8 @@ public class BatchProcessingExecutor {
           }
         }
 
+        createConfigFile(directory.getPath());
+
         livenessMarker = Paths.get(directory.getPath(), "batch-processing-up");
         // ensure liveness file is deleted.
         FileUtils.deleteQuietly(livenessMarker.toFile());
@@ -104,6 +107,7 @@ public class BatchProcessingExecutor {
         failedAlready = true;
         throw exception;
       } finally {
+        deleteConfigFile(directory.getPath());
         FileIo.releaseLock(lockfile);
       }
     }
@@ -116,6 +120,27 @@ public class BatchProcessingExecutor {
     File livenessFile = livenessMarker.toFile();
     log.info("Checking for liveness marker {}", livenessFile.getAbsolutePath());
     return livenessFile.exists();
+  }
+
+  private void createConfigFile(String directory) {
+    try {
+      File config = new File(directory + "/batch-processing-config.yml");
+      if (!config.exists() && config.createNewFile()) {
+        FileWriter writer = new FileWriter(directory + "/batch-processing-config.yml");
+        writer.write(
+            "scheduler-jobs-config:\n  budgetAlertsJobCron: \"0 30 14 * * ?\"\n  weeklyReportsJobCron: \"0 0 14 * * MON\"");
+        writer.close();
+      }
+    } catch (IOException e) {
+      log.info("Error while creating config file for batch processing functional test");
+    }
+  }
+
+  private void deleteConfigFile(String directory) {
+    File config = new File(directory + "/batch-processing-config.yml");
+    if (config.exists()) {
+      config.delete();
+    }
   }
 
   public static void main(String[] args) throws IOException {

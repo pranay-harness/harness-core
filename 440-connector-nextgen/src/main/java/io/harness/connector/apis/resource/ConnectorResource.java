@@ -1,12 +1,14 @@
 package io.harness.connector.apis.resource;
 
+import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.connector.apis.dto.ConnectorCatalogueResponseDTO;
 import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorListFilter;
+import io.harness.connector.apis.dto.ConnectorFilterPropertiesDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.apis.dto.stats.ConnectorStatistics;
 import io.harness.connector.services.ConnectorService;
@@ -14,6 +16,7 @@ import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.encryption.Scope;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -49,6 +52,7 @@ import org.hibernate.validator.constraints.NotEmpty;
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 public class ConnectorResource {
+  private static final String INCLUDE_ALL_CONNECTORS_ACCESSIBLE = "includeAllConnectorsAvailableAtScope";
   private final ConnectorService connectorService;
   private static final String CATEGORY_KEY = "category";
 
@@ -104,15 +108,28 @@ public class ConnectorResource {
       @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
       @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size,
       @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      ConnectorListFilter connectorListFilter) {
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGResourceFilterConstants.FILTER_KEY) String filterIdentifier,
+      @QueryParam(INCLUDE_ALL_CONNECTORS_ACCESSIBLE) Boolean includeAllConnectorsAccessibleAtScope,
+      ConnectorFilterPropertiesDTO connectorListFilter) {
     return ResponseDTO.newResponse(
-        getNGPageResponse(connectorService.list(page, size, accountIdentifier, connectorListFilter)));
+        getNGPageResponse(connectorService.list(page, size, accountIdentifier, connectorListFilter, orgIdentifier,
+            projectIdentifier, filterIdentifier, searchTerm, includeAllConnectorsAccessibleAtScope)));
   }
 
   @POST
   @ApiOperation(value = "Creates a Connector", nickname = "createConnector")
   public ResponseDTO<ConnectorResponseDTO> create(@Valid @NotNull ConnectorDTO connector,
       @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
+    if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getConnectorInfo().getIdentifier())) {
+      throw new InvalidRequestException(
+          String.format("%s cannot be used as connector identifier", HARNESS_SECRET_MANAGER_IDENTIFIER), USER);
+    }
+    if (connector.getConnectorInfo().getConnectorType() == ConnectorType.LOCAL) {
+      throw new InvalidRequestException("Local Secret Manager creation not supported", USER);
+    }
     return ResponseDTO.newResponse(connectorService.create(connector, accountIdentifier));
   }
 
@@ -120,6 +137,11 @@ public class ConnectorResource {
   @ApiOperation(value = "Updates a Connector", nickname = "updateConnector")
   public ResponseDTO<ConnectorResponseDTO> update(@NotNull @Valid ConnectorDTO connector,
       @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
+    if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getConnectorInfo().getIdentifier())) {
+      throw new InvalidRequestException(
+          String.format("Update operation not supported for Harness Secret Manager (identifier: [%s])",
+              connector.getConnectorInfo().getIdentifier()));
+    }
     return ResponseDTO.newResponse(connectorService.update(connector, accountIdentifier));
   }
 
@@ -130,6 +152,10 @@ public class ConnectorResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier) {
+    if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connectorIdentifier)) {
+      throw new InvalidRequestException(String.format(
+          "Delete operation not supported for Harness Secret Manager (identifier: [%s])", connectorIdentifier));
+    }
     return ResponseDTO.newResponse(
         connectorService.delete(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
   }

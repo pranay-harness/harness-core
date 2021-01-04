@@ -21,16 +21,17 @@ import io.harness.executionplan.stepsdependency.StepDependencyResolverContext;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.executionplan.utils.ParentPathInfoUtils;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.data.StepTransput;
+import io.harness.pms.sdk.core.resolver.RefObjectUtil;
 import io.harness.pms.sdk.core.steps.io.ResolvedRefInput;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.refObjects.RefObjectUtil;
 import io.harness.rule.Owner;
 import io.harness.steps.dummy.DummyStepParameters;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -177,7 +178,13 @@ public class CDStepDependencyUtilsTest extends CategoryTest {
 
   @Data
   @AllArgsConstructor
+  @JsonTypeName("cdDummyOutcome")
   public static class DummyOutcome implements Outcome {
     String name;
+
+    @Override
+    public String getType() {
+      return "cdDummyOutcome";
+    }
   }
 }

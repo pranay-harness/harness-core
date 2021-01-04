@@ -3,6 +3,8 @@ package software.wings.delegatetasks.validation;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.filesystem.FileIo;
 import io.harness.rule.Owner;
@@ -22,6 +24,7 @@ import java.io.IOException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class K8sValidationHelperTest extends WingsBaseTest {
   @Inject private K8sValidationHelper k8sValidationHelper;
 

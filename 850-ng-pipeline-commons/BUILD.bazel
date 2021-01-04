@@ -11,8 +11,10 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
+        "//860-orchestration-steps:module",
         "//860-orchestration-visualization:module",
         "//870-yaml-beans:module",
+        "//884-pms-commons:module",
         "//930-ng-core-clients:module",
         "//950-delegate-tasks-beans:module",
         "//950-ng-project-n-orgs:module",

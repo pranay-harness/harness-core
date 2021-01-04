@@ -12,6 +12,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.spotinst.request.SpotInstSwapRoutesTaskParameters;
@@ -41,6 +43,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class SpotInstSwapRoutesTaskHandlerTest extends WingsBaseTest {
   @Mock private DelegateLogService mockDelegateLogService;
   @Mock private SpotInstHelperServiceDelegate mockSpotInstHelperServiceDelegate;
@@ -78,7 +81,7 @@ public class SpotInstSwapRoutesTaskHandlerTest extends WingsBaseTest {
         SpotInstConfig.builder().spotInstAccountId("SPOTINST_ACCOUNT_ID").spotInstToken(new char[] {'a', 'b'}).build(),
         AwsConfig.builder().build());
     verify(mockAwsElbHelperServiceDelegate)
-        .updateListenersForBGDeployment(any(), anyList(), anyList(), anyString(), any());
+        .updateListenersForSpotInstBGDeployment(any(), anyList(), anyList(), anyString(), any());
     verify(mockSpotInstHelperServiceDelegate).updateElastiGroupCapacity(anyString(), anyString(), anyString(), any());
   }
 
@@ -114,7 +117,7 @@ public class SpotInstSwapRoutesTaskHandlerTest extends WingsBaseTest {
         SpotInstConfig.builder().spotInstAccountId("SPOTINST_ACCOUNT_ID").spotInstToken(new char[] {'a', 'b'}).build(),
         AwsConfig.builder().build());
     verify(mockAwsElbHelperServiceDelegate)
-        .updateListenersForEcsBG(any(), anyList(), anyString(), anyString(), anyString());
+        .updateDefaultListenersForSpotInstBG(any(), anyList(), anyString(), anyString(), anyString());
     verify(spotInstSwapRoutesTaskHandler, times(2))
         .updateElastiGroupAndWait(anyString(), anyString(), any(), anyInt(), any(), anyString(), anyString());
   }

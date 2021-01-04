@@ -7,6 +7,8 @@ import lombok.Data;
 @Builder
 public class AzureAppDeploymentData {
   private String instanceId;
+  private String instanceType;
+  private String instanceName;
   private String resourceGroup;
   private String subscriptionId;
   private String appName;
@@ -14,4 +16,6 @@ public class AzureAppDeploymentData {
   private String deploySlotId;
   private String appServicePlanId;
   private String hostName;
+  private String instanceIp;
+  private String instanceState;
 }

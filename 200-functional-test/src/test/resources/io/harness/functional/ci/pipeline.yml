@@ -5,11 +5,11 @@ pipeline:
   stages:
     - stage:
         identifier: buildharnessportal
-        type: ci
+        type: CI
         spec:
           description: This stage is run hourly to build binaries from master and upload
           infrastructure:
-            type: kubernetes-direct
+            type: KubernetesDirect
             spec:
               connectorRef: account.ciplayground
               namespace: harness-delegate
@@ -25,18 +25,18 @@ pipeline:
             steps:
               - step:
                   identifier: gitClone
-                  type: gitClone
+                  type: GitClone
                   spec:
                     gitConnector: account.gitportal
                     path: portal
                     branch: master
               - step:
                   identifier: ping
-                  type: run
+                  type: Run
                   spec:
-                    command:
-                      - sleep 10
-                      - redis-cli -h cache ping
+                    command: |
+                      sleep 10
+                      redis-cli -h cache ping
                     image: "shubham149/redis"
                     resources:
                       limit:
@@ -44,6 +44,6 @@ pipeline:
                         memory: 500
           dependencies:
             - identifier: cache
-              type: service
+              type: Service
               spec:
                 image: "shubham149/redis"

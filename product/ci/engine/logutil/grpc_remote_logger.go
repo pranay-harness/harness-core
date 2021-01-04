@@ -2,11 +2,11 @@ package logutil
 
 import (
 	"github.com/wings-software/portal/commons/go/lib/logs"
-	logger "github.com/wings-software/portal/product/ci/logger/util"
+	"github.com/wings-software/portal/product/ci/common/external"
 )
 
 var (
-	getLogKey = logger.GetLogKey
+	getLogKey = external.GetLogKey
 )
 
 // GetGrpcRemoteLogger is a helper method that returns a logger than can communicate with the
@@ -20,7 +20,10 @@ func GetGrpcRemoteLogger(stepID string) (*logs.RemoteLogger, error) {
 	if err != nil {
 		return nil, err
 	}
-	writer := logs.NewRemoteWriter(grpcClient, key)
+	writer, err := logs.NewRemoteWriter(grpcClient, key)
+	if err != nil {
+		return nil, err
+	}
 	rl, err := logs.NewRemoteLogger(writer)
 	if err != nil {
 		return nil, err

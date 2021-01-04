@@ -16,6 +16,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
@@ -27,7 +29,6 @@ import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.CustomLogDataCollectionInfo;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
-import software.wings.service.impl.logs.LogResponseParserTest;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.CustomLogVerificationState;
@@ -55,6 +56,7 @@ import org.mockito.MockitoAnnotations;
 import retrofit2.Call;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class CustomLogDataCollectionTaskTest extends CategoryTest {
   CustomLogDataCollectionInfo dataCollectionInfo;
   @Mock private LogAnalysisStoreService logAnalysisStoreService;
@@ -120,7 +122,7 @@ public class CustomLogDataCollectionTaskTest extends CategoryTest {
   public void testFetchElkLogs() throws Exception {
     // setup
     String textLoad = Resources.toString(
-        LogResponseParserTest.class.getResource("/apm/elkMultipleHitsResponse.json"), Charsets.UTF_8);
+        CustomLogDataCollectionTaskTest.class.getResource("/apm/elkMultipleHitsResponse.json"), Charsets.UTF_8);
     String searchUrl = "_search?pretty=true&q=*&size=5";
     Map<String, ResponseMapper> responseMappers = new HashMap<>();
     responseMappers.put("timestamp",
@@ -176,7 +178,7 @@ public class CustomLogDataCollectionTaskTest extends CategoryTest {
   public void testFetchLogs_shouldNotInspectHosts() throws Exception {
     // setup
     String textLoad = Resources.toString(
-        LogResponseParserTest.class.getResource("/apm/elkMultipleHitsResponse.json"), Charsets.UTF_8);
+        CustomLogDataCollectionTaskTest.class.getResource("/apm/elkMultipleHitsResponse.json"), Charsets.UTF_8);
     String searchUrl = "_search?pretty=true&q=*&size=5";
     Map<String, ResponseMapper> responseMappers = new HashMap<>();
     responseMappers.put("timestamp",
@@ -234,7 +236,7 @@ public class CustomLogDataCollectionTaskTest extends CategoryTest {
   public void testFetchLogs_azureRefreshToken() throws Exception {
     // setup
     String textLoad =
-        Resources.toString(LogResponseParserTest.class.getResource("/apm/azuresample.json"), Charsets.UTF_8);
+        Resources.toString(CustomLogDataCollectionTaskTest.class.getResource("/apm/azuresample.json"), Charsets.UTF_8);
     String searchUrl = "_search?pretty=true&q=*&size=5";
     Map<String, ResponseMapper> responseMappers = new HashMap<>();
     responseMappers.put("timestamp",
@@ -304,7 +306,7 @@ public class CustomLogDataCollectionTaskTest extends CategoryTest {
   //@Ignore("Ignored until this test is moved to not use ELK server")
   public void testFetchElkLogsRetry() throws Exception {
     String textLoad = Resources.toString(
-        LogResponseParserTest.class.getResource("/apm/elkMultipleHitsResponse.json"), Charsets.UTF_8);
+        CustomLogDataCollectionTaskTest.class.getResource("/apm/elkMultipleHitsResponse.json"), Charsets.UTF_8);
 
     // setup
 

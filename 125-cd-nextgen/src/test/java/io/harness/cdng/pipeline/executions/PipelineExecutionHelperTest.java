@@ -6,7 +6,6 @@ import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.CDNGBaseTest;
 import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
@@ -19,19 +18,20 @@ import io.harness.cdng.service.beans.ServiceDefinition;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.execution.NodeExecution;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
-import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
 import io.harness.ngpipeline.pipeline.executions.beans.CDStageExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.CDStageExecutionSummary.CDStageExecutionSummaryKeys;
 import io.harness.ngpipeline.pipeline.executions.beans.DockerArtifactSummary;
-import io.harness.ngpipeline.pipeline.executions.beans.ExecutionErrorInfo;
 import io.harness.ngpipeline.pipeline.executions.beans.ParallelStageExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
 import io.harness.ngpipeline.pipeline.executions.beans.ServiceExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.StageExecutionSummary;
-import io.harness.pms.execution.Status;
-import io.harness.pms.execution.failure.FailureInfo;
-import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.contracts.execution.ExecutionErrorInfo;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.execution.ExecutionStatus;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ParallelStageElement;
 import io.harness.yaml.core.StageElement;
@@ -154,7 +154,7 @@ public class PipelineExecutionHelperTest extends CDNGBaseTest {
             .executionStatus(ExecutionStatus.FAILED)
             .startedAt(123L)
             .endedAt(124L)
-            .errorInfo(ExecutionErrorInfo.builder().message("invalid").build())
+            .errorInfo(ExecutionErrorInfo.newBuilder().setMessage("invalid").build())
             .build();
 
     CDStageExecutionSummary actualStageExecutionSummary =

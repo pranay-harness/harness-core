@@ -1,6 +1,6 @@
 package io.harness.ngpipeline.executions.mapper;
 
-import static io.harness.ngpipeline.pipeline.executions.ExecutionStatus.*;
+import static io.harness.pms.execution.ExecutionStatus.*;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,10 +11,10 @@ import io.harness.category.element.UnitTests;
 import io.harness.dto.GraphVertexDTO;
 import io.harness.dto.OrchestrationAdjacencyListDTO;
 import io.harness.dto.OrchestrationGraphDTO;
-import io.harness.ngpipeline.executions.beans.ExecutionGraph;
-import io.harness.ngpipeline.executions.beans.ExecutionNode;
-import io.harness.ngpipeline.executions.beans.ExecutionNodeAdjacencyList;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.execution.beans.ExecutionGraph;
+import io.harness.pms.execution.beans.ExecutionNode;
+import io.harness.pms.execution.beans.ExecutionNodeAdjacencyList;
 import io.harness.rule.Owner;
 
 import java.util.Arrays;

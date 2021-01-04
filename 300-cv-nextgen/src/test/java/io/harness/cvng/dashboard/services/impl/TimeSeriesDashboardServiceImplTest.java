@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.NEMANJA;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.data.Offset.offset;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.verify;
@@ -28,6 +29,7 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
+import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
@@ -37,6 +39,7 @@ import java.io.FileReader;
 import java.lang.reflect.Type;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -104,6 +107,90 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
             serviceIdentifier, CVMonitoringCategory.PERFORMANCE);
     assertThat(response).isNotNull();
     assertThat(response.getContent()).isNotEmpty();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetSortedMetricErrorData() throws Exception {
+    Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
+    Instant end = start.plus(5, ChronoUnit.MINUTES);
+    String cvConfigId = generateUuid();
+    List<TimeSeriesRecord> timeSeriesRecords = new ArrayList<>();
+    timeSeriesRecords.add(TimeSeriesRecord.builder()
+                              .verificationTaskId(cvConfigId)
+                              .bucketStartTime(start)
+                              .metricName("m1")
+                              .metricType(TimeSeriesMetricType.THROUGHPUT)
+                              .timeSeriesGroupValues(Sets.newHashSet(TimeSeriesRecord.TimeSeriesGroupValue.builder()
+                                                                         .groupName("g1")
+                                                                         .metricValue(1.0)
+                                                                         .timeStamp(start)
+                                                                         .build(),
+                                  TimeSeriesRecord.TimeSeriesGroupValue.builder()
+                                      .groupName("g2")
+                                      .metricValue(2.0)
+                                      .timeStamp(start)
+                                      .build()))
+                              .build());
+
+    timeSeriesRecords.add(TimeSeriesRecord.builder()
+                              .verificationTaskId(cvConfigId)
+                              .bucketStartTime(start)
+                              .metricName("m2")
+                              .metricType(TimeSeriesMetricType.ERROR)
+                              .timeSeriesGroupValues(Sets.newHashSet(TimeSeriesRecord.TimeSeriesGroupValue.builder()
+                                                                         .groupName("g1")
+                                                                         .metricValue(1.0)
+                                                                         .percentValue(2.0)
+                                                                         .timeStamp(start)
+                                                                         .build(),
+                                  TimeSeriesRecord.TimeSeriesGroupValue.builder()
+                                      .groupName("g2")
+                                      .metricValue(2.0)
+                                      .timeStamp(start)
+                                      .build()))
+                              .build());
+    when(timeSeriesService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
+        .thenReturn(timeSeriesRecords);
+    AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
+    cvConfig.setUuid(cvConfigId);
+    when(cvConfigService.getConfigsOfProductionEnvironments(accountId, orgIdentifier, projectIdentifier, envIdentifier,
+             serviceIdentifier, CVMonitoringCategory.PERFORMANCE))
+        .thenReturn(Arrays.asList(cvConfig));
+
+    PageResponse<TimeSeriesMetricDataDTO> response =
+        timeSeriesDashboardService.getSortedMetricData(accountId, projectIdentifier, orgIdentifier, envIdentifier,
+            serviceIdentifier, CVMonitoringCategory.PERFORMANCE, start.toEpochMilli(), end.toEpochMilli(), 0, 10);
+    List<TimeSeriesMetricDataDTO> timeSeriesMetricDTOs = response.getContent();
+    assertThat(timeSeriesMetricDTOs.size()).isEqualTo(4);
+    TimeSeriesMetricDataDTO timeSeriesMetricDataDTO = timeSeriesMetricDTOs.get(0);
+    assertThat(timeSeriesMetricDataDTO.getMetricType()).isEqualTo(TimeSeriesMetricType.THROUGHPUT);
+    assertThat(timeSeriesMetricDataDTO.getMetricName()).isEqualTo("m1");
+    assertThat(timeSeriesMetricDataDTO.getGroupName()).isEqualTo("g1");
+    assertThat(timeSeriesMetricDataDTO.getMetricDataList().size()).isEqualTo(1);
+    assertThat(timeSeriesMetricDataDTO.getMetricDataList().first().getValue()).isEqualTo(1.0, offset(0.00001));
+
+    timeSeriesMetricDataDTO = timeSeriesMetricDTOs.get(1);
+    assertThat(timeSeriesMetricDataDTO.getMetricType()).isEqualTo(TimeSeriesMetricType.ERROR);
+    assertThat(timeSeriesMetricDataDTO.getMetricName()).isEqualTo("m2");
+    assertThat(timeSeriesMetricDataDTO.getGroupName()).isEqualTo("g1");
+    assertThat(timeSeriesMetricDataDTO.getMetricDataList().size()).isEqualTo(1);
+    assertThat(timeSeriesMetricDataDTO.getMetricDataList().first().getValue()).isEqualTo(2.0, offset(0.00001));
+
+    timeSeriesMetricDataDTO = timeSeriesMetricDTOs.get(2);
+    assertThat(timeSeriesMetricDataDTO.getMetricType()).isEqualTo(TimeSeriesMetricType.THROUGHPUT);
+    assertThat(timeSeriesMetricDataDTO.getMetricName()).isEqualTo("m1");
+    assertThat(timeSeriesMetricDataDTO.getGroupName()).isEqualTo("g2");
+    assertThat(timeSeriesMetricDataDTO.getMetricDataList().size()).isEqualTo(1);
+    assertThat(timeSeriesMetricDataDTO.getMetricDataList().first().getValue()).isEqualTo(2.0, offset(0.00001));
+
+    timeSeriesMetricDataDTO = timeSeriesMetricDTOs.get(3);
+    assertThat(timeSeriesMetricDataDTO.getMetricType()).isEqualTo(TimeSeriesMetricType.ERROR);
+    assertThat(timeSeriesMetricDataDTO.getMetricName()).isEqualTo("m2");
+    assertThat(timeSeriesMetricDataDTO.getGroupName()).isEqualTo("g2");
+    assertThat(timeSeriesMetricDataDTO.getMetricDataList().size()).isEqualTo(1);
+    assertThat(timeSeriesMetricDataDTO.getMetricDataList().first().getValue()).isEqualTo(0.0, offset(0.00001));
   }
 
   @Test

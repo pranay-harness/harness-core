@@ -11,11 +11,11 @@ import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.plancreator.beans.GenericStepInfo;
 import io.harness.executionplan.stepsdependency.StepDependencyService;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
-import io.harness.pms.facilitators.FacilitatorObtainment;
-import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.PlanNode.PlanNodeBuilder;
-import io.harness.pms.steps.StepType;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.yaml.core.StepElement;
 
@@ -65,7 +65,7 @@ public class GenericStepPlanCreator implements SupportDefinedExecutorPlanCreator
         .identifier(stepElement.getIdentifier())
         .stepType(StepType.newBuilder().setType(genericStepInfo.getStepType().getType()).build())
         .group(StepOutcomeGroup.STEP.name())
-        .stepParameters(genericStepInfo.getStepParameters())
+        .stepParameters(stepElement.getStepSpecType().getStepParameters())
         .facilitatorObtainment(
             FacilitatorObtainment.newBuilder()
                 .setType(FacilitatorType.newBuilder().setType(genericStepInfo.getFacilitatorType()).build())

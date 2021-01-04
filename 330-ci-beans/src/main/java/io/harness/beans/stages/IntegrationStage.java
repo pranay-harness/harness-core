@@ -27,7 +27,7 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
-@JsonTypeName("ci")
+@JsonTypeName("CI")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("integrationStage")
 public class IntegrationStage implements CIStage {
@@ -39,7 +39,6 @@ public class IntegrationStage implements CIStage {
   @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore private String name;
 
   private boolean runParallel;
-  private String skipCondition;
   private boolean skipGitClone;
 
   private List<String> sharedPaths;

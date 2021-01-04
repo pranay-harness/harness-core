@@ -15,8 +15,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.connector.apis.dto.ConnectorCatalogueItem;
 import io.harness.connector.apis.dto.ConnectorCatalogueResponseDTO;
 import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorFilterPropertiesDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
-import io.harness.connector.apis.dto.ConnectorListFilter;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.helper.CatalogueHelper;
 import io.harness.connector.services.ConnectorService;
@@ -121,13 +121,19 @@ public class ConnectorResourceTest extends CategoryTest {
   public void list() {
     String orgIdentifier = "orgIdentifier";
     String projectIdentifier = "projectIdentifier";
-    ConnectorListFilter connectorListFilter = ConnectorListFilter.builder().build();
+    String filterIdentifier = "filterIdentifier";
+    String searchTerm = "searchTerm";
+    ConnectorFilterPropertiesDTO connectorListFilter = ConnectorFilterPropertiesDTO.builder().build();
     final Page<ConnectorResponseDTO> page =
         PageTestUtils.getPage(Arrays.asList(ConnectorResponseDTO.builder().build()), 1);
-    when(connectorService.list(0, 100, accountIdentifier, null)).thenReturn(page);
-    ResponseDTO<PageResponse<ConnectorResponseDTO>> connectorSummaryListResponse =
-        connectorResource.list(0, 100, accountIdentifier, null);
-    Mockito.verify(connectorService, times(1)).list(eq(0), eq(100), eq(accountIdentifier), eq(null));
+    when(connectorService.list(
+             0, 100, accountIdentifier, null, orgIdentifier, projectIdentifier, filterIdentifier, searchTerm, false))
+        .thenReturn(page);
+    ResponseDTO<PageResponse<ConnectorResponseDTO>> connectorSummaryListResponse = connectorResource.list(
+        0, 100, accountIdentifier, searchTerm, orgIdentifier, projectIdentifier, filterIdentifier, false, null);
+    Mockito.verify(connectorService, times(1))
+        .list(eq(0), eq(100), eq(accountIdentifier), eq(null), eq(orgIdentifier), eq(projectIdentifier),
+            eq(filterIdentifier), eq(searchTerm), eq(false));
     assertThat(connectorSummaryListResponse.getData()).isNotNull();
   }
 
@@ -191,8 +197,9 @@ public class ConnectorResourceTest extends CategoryTest {
     final List<ConnectorCatalogueItem> catalogue = response.getData().getCatalogue();
     assertThat(catalogue.size()).isEqualTo(ConnectorCategory.values().length);
     final int totalConnectorsWithinAllCategories =
-        catalogue.stream().map(item -> item.getConnectors().size()).mapToInt(i -> i.intValue()).sum();
-    assertThat(totalConnectorsWithinAllCategories).isEqualTo(ConnectorType.values().length);
+        catalogue.stream().map(item -> item.getConnectors().size()).mapToInt(Integer::intValue).sum();
+    // Handling it specially for git.
+    assertThat(totalConnectorsWithinAllCategories).isEqualTo(ConnectorType.values().length - 1);
     Mockito.verify(connectorService, times(1)).getConnectorCatalogue();
   }
 }

@@ -8,6 +8,8 @@ import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
@@ -18,11 +20,11 @@ import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.TaskClientParams;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.util.Durations;
+import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 
@@ -48,9 +50,15 @@ public class ConnectorHeartbeatServiceImpl implements ConnectorHeartbeatService 
                                                         .setInterval(Durations.fromMinutes(CONNECTIVITY_CHECK_INTERVAL))
                                                         .setTimeout(Durations.fromMinutes(CONNECTIVITY_CHECK_TIMEOUT))
                                                         .build();
-      Map<String, String> clientParamsMap =
-          ImmutableMap.of(ACCOUNT_KEY, accountIdentifier, ORG_KEY, connector.getOrgIdentifier(), PROJECT_KEY,
-              connector.getProjectIdentifier(), CONNECTOR_IDENTIFIER_KEY, connector.getIdentifier());
+      Map<String, String> clientParamsMap = new HashMap<>();
+      clientParamsMap.put(ACCOUNT_KEY, accountIdentifier);
+      if (isNotBlank(connector.getOrgIdentifier())) {
+        clientParamsMap.put(ORG_KEY, connector.getOrgIdentifier());
+      }
+      if (isNotBlank(connector.getProjectIdentifier())) {
+        clientParamsMap.put(PROJECT_KEY, connector.getProjectIdentifier());
+      }
+      clientParamsMap.put(CONNECTOR_IDENTIFIER_KEY, connector.getIdentifier());
       TaskClientParams clientParams = TaskClientParams.newBuilder().putAllParams(clientParamsMap).build();
       PerpetualTaskClientContextDetails taskContext =
           PerpetualTaskClientContextDetails.newBuilder().setTaskClientParams(clientParams).build();

@@ -1,9 +1,8 @@
 package io.harness.cdng.k8s;
 
-import io.harness.beans.ParameterField;
 import io.harness.common.SwaggerConstants;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModelProperty;
@@ -19,7 +18,7 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @AllArgsConstructor
 @TypeAlias("k8sRollingStepParameters")
-public class K8sRollingStepParameters implements StepParameters {
+public class K8sRollingStepParameters implements K8sStepParameters {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
   @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) ParameterField<Boolean> skipDryRun;
   @JsonIgnore Map<String, StepDependencySpec> stepDependencySpecs;

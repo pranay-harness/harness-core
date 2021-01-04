@@ -1,18 +1,22 @@
 package io.harness.cvng.analysis.entities;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,10 +43,21 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "timeseriesCumulativeSums", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class TimeSeriesCumulativeSums implements PersistentEntity, UuidAware {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("query_idx")
+                 .field(TimeSeriesCumulativeSumsKeys.verificationTaskId)
+                 .field(TimeSeriesCumulativeSumsKeys.analysisStartTime)
+                 .field(TimeSeriesCumulativeSumsKeys.analysisEndTime)
+                 .build())
+        .build();
+  }
+
   @Id private String uuid;
-  @NotEmpty @FdIndex private String verificationTaskId;
-  @NotEmpty @FdIndex private Instant analysisStartTime;
-  @NotEmpty @FdIndex private Instant analysisEndTime;
+  @NotEmpty private String verificationTaskId;
+  @NotEmpty private Instant analysisStartTime;
+  @NotEmpty private Instant analysisEndTime;
 
   private List<TransactionMetricSums> transactionMetricSums;
 
@@ -61,7 +76,7 @@ public class TimeSeriesCumulativeSums implements PersistentEntity, UuidAware {
   public static class MetricSum {
     private String metricName;
     private double risk;
-    private double sum;
+    private double data;
   }
 
   public static List<TransactionMetricSums> convertMapToTransactionMetricSums(
@@ -85,17 +100,32 @@ public class TimeSeriesCumulativeSums implements PersistentEntity, UuidAware {
     return txnMetricSumList;
   }
 
-  public Map<String, Map<String, MetricSum>> convertToMap() {
-    if (this.transactionMetricSums == null) {
+  public static Map<String, Map<String, List<MetricSum>>> convertToMap(
+      List<TimeSeriesCumulativeSums> timeSeriesCumulativeSumsList) {
+    if (isEmpty(timeSeriesCumulativeSumsList)) {
       return new HashMap<>();
     }
-    Map<String, Map<String, MetricSum>> txnMetricMap = new HashMap<>();
-    transactionMetricSums.forEach(transactionSum -> {
-      String transactionName = transactionSum.getTransactionName();
-      txnMetricMap.put(transactionName, new HashMap<>());
-      transactionSum.getMetricSums().forEach(
-          metricSum -> { txnMetricMap.get(transactionName).put(metricSum.getMetricName(), metricSum); });
-    });
+    timeSeriesCumulativeSumsList.sort(Comparator.comparing(TimeSeriesCumulativeSums::getAnalysisStartTime));
+    Map<String, Map<String, List<MetricSum>>> txnMetricMap = new HashMap<>();
+
+    for (TimeSeriesCumulativeSums timeSeriesCumulativeSums : timeSeriesCumulativeSumsList) {
+      if (isEmpty(timeSeriesCumulativeSums.getTransactionMetricSums())) {
+        continue;
+      }
+      for (TransactionMetricSums transactionSum : timeSeriesCumulativeSums.getTransactionMetricSums()) {
+        String transactionName = transactionSum.getTransactionName();
+        if (!txnMetricMap.containsKey(transactionName)) {
+          txnMetricMap.put(transactionName, new HashMap<>());
+        }
+        transactionSum.getMetricSums().forEach(metricSum -> {
+          String metricName = metricSum.getMetricName();
+          if (!txnMetricMap.get(transactionName).containsKey(metricName)) {
+            txnMetricMap.get(transactionName).put(metricName, new ArrayList<>());
+          }
+          txnMetricMap.get(transactionName).get(metricName).add(metricSum);
+        });
+      }
+    }
     return txnMetricMap;
   }
 }

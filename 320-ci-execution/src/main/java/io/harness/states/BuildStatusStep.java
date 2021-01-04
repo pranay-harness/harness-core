@@ -3,22 +3,23 @@ package io.harness.states;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.status.BuildStatusPushResponse;
-import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.task.ci.CIBuildStatusPushParameters;
 import io.harness.git.GitClientHelper;
 import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
-import io.harness.pms.steps.StepType;
+import io.harness.serializer.KryoSerializer;
 import io.harness.stateutils.buildstate.ConnectorUtils;
 import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
-import io.harness.tasks.Task;
 
 import com.google.inject.Inject;
 import java.util.Map;
@@ -30,6 +31,7 @@ public class BuildStatusStep implements TaskExecutable<BuildStatusUpdateParamete
   private static final int socketTimeoutMillis = 10000;
   @Inject GitClientHelper gitClientHelper;
   @Inject private ConnectorUtils connectorUtils;
+  @Inject private KryoSerializer kryoSerializer;
 
   @Override
   public Class<BuildStatusUpdateParameter> getStepParametersClass() {
@@ -37,7 +39,8 @@ public class BuildStatusStep implements TaskExecutable<BuildStatusUpdateParamete
   }
 
   @Override
-  public Task obtainTask(Ambiance ambiance, BuildStatusUpdateParameter stepParameters, StepInputPackage inputPackage) {
+  public TaskRequest obtainTask(
+      Ambiance ambiance, BuildStatusUpdateParameter stepParameters, StepInputPackage inputPackage) {
     NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
     ConnectorDetails gitConnector = getGitConnector(ngAccess, stepParameters.getConnectorIdentifier());
     GitConfigDTO gitConfigDTO = (GitConfigDTO) gitConnector.getConnectorConfig();
@@ -89,8 +92,7 @@ public class BuildStatusStep implements TaskExecutable<BuildStatusUpdateParamete
                                   .taskType("BUILD_STATUS")
                                   .parameters(new Object[] {ciBuildPushStatusParameters})
                                   .build();
-    return StepUtils.prepareDelegateTaskInput(
-        ambiance.getSetupAbstractions().get("accountId"), taskData, ambiance.getSetupAbstractions());
+    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer);
   }
 
   @Override

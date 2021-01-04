@@ -4,6 +4,7 @@ import static software.wings.utils.UsageRestrictionsUtils.getAllAppAllEnvUsageRe
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretText;
+import io.harness.exception.GeneralException;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -13,6 +14,7 @@ import software.wings.service.intfc.security.SecretManager;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.mongodb.DuplicateKeyException;
 
 @Singleton
 public class SecretGenerator {
@@ -30,7 +32,14 @@ public class SecretGenerator {
                                 .value(scmSecret.decryptToString(name))
                                 .usageRestrictions(getAllAppAllEnvUsageRestrictions())
                                 .build();
-    return secretManager.saveSecretUsingLocalMode(accountId, secretText);
+    try {
+      return secretManager.saveSecretUsingLocalMode(accountId, secretText);
+    } catch (GeneralException ge) {
+      if (ge.getCause() instanceof DuplicateKeyException) {
+        return secretManager.getSecretByName(accountId, name.getValue()).getUuid();
+      }
+      throw ge;
+    }
   }
 
   public String ensureStored(Owners owners, SecretName name) {

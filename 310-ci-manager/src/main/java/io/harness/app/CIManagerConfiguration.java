@@ -4,6 +4,7 @@ import static com.google.common.collect.ImmutableMap.of;
 import static java.util.stream.Collectors.toSet;
 
 import io.harness.ci.beans.entities.LogServiceConfig;
+import io.harness.ci.beans.entities.TIServiceConfig;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
@@ -36,6 +37,7 @@ public class CIManagerConfiguration extends Configuration implements AssetsBundl
           .build();
   @Builder.Default @JsonProperty("cimanager-mongo") private MongoConfig harnessCIMongo = MongoConfig.builder().build();
   @Builder.Default @JsonProperty("harness-mongo") private MongoConfig harnessMongo = MongoConfig.builder().build();
+  @JsonProperty("pmsMongo") private MongoConfig pmsMongoConfig;
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   private ScmConnectionConfig scmConnectionConfig;
 
@@ -44,6 +46,7 @@ public class CIManagerConfiguration extends Configuration implements AssetsBundl
 
   private String ngManagerServiceSecret;
   private LogServiceConfig logServiceConfig;
+  private TIServiceConfig tiServiceConfig;
 
   private String managerServiceSecret;
   private String jwtAuthSecret;

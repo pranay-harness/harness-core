@@ -78,6 +78,7 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
     if (latestDeploymentLogAnalysis == null) {
       return formPageResponse(Collections.emptyList(), pageNumber, DEFAULT_PAGE_SIZE);
     }
+    latestDeploymentLogAnalysis.getResultSummary().setLabelToControlDataMap();
     boolean shouldFilterByHostName = StringUtils.isNotBlank(hostName);
     List<LogAnalysisClusterDTO> logAnalysisClusters;
 
@@ -199,7 +200,7 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
                                            .score(clusterSummary.getScore())
                                            .count(clusterSummary.getCount())
                                            .clusterType(clusterSummary.getClusterType())
-                                           .controlFrequencyData(clusterSummary.getControlFrequencyData())
+                                           .controlFrequencyData(resultSummary.getControlData(cluster.getLabel()))
                                            .testFrequencyData(clusterSummary.getTestFrequencyData())
                                            .build()));
   }

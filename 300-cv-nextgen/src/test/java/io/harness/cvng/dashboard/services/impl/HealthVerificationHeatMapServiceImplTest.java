@@ -25,7 +25,6 @@ import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap;
 import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap.AggregationLevel;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
-import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -238,7 +237,7 @@ public class HealthVerificationHeatMapServiceImplTest extends CvNextGenTest {
     Instant endTime = Instant.now();
     heatMapService.updateRisk(verificationTaskId, 1.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY);
     heatMapService.updateRisk(
-        verificationTaskId, 0.0, endTime.plus(Duration.ofMinutes(15)), HealthVerificationPeriod.POST_ACTIVITY);
+        verificationTaskId, 0.7, endTime.plus(Duration.ofMinutes(15)), HealthVerificationPeriod.POST_ACTIVITY);
 
     Set<CategoryRisk> preActivityRisks =
         heatMapService.getAggregatedRisk(activityId, HealthVerificationPeriod.PRE_ACTIVITY);
@@ -261,7 +260,7 @@ public class HealthVerificationHeatMapServiceImplTest extends CvNextGenTest {
 
     for (CategoryRisk categoryRisk : postActivityRisks) {
       if (categoryRisk.getCategory().equals(CVMonitoringCategory.PERFORMANCE)) {
-        assertThat(categoryRisk.getRisk()).isEqualTo(100.0);
+        assertThat(categoryRisk.getRisk()).isEqualTo(70.0);
       } else {
         assertThat(categoryRisk.getRisk()).isEqualTo(-1.0);
       }
@@ -280,9 +279,7 @@ public class HealthVerificationHeatMapServiceImplTest extends CvNextGenTest {
     Set<String> taskIds = new HashSet<>();
     taskIds.add(verificationTaskId);
     when(verificationTaskService.getVerificationTaskIds(eq(accountId), anyString())).thenReturn(taskIds);
-
-    Optional<Double> risk = heatMapService.getVerificationRisk(
-        VerificationJobInstance.builder().accountId(accountId).uuid(verificationJobInstanceId).build());
+    Optional<Double> risk = heatMapService.getVerificationRisk(accountId, verificationJobInstanceId);
 
     assertThat(risk).isPresent();
     assertThat(risk.get()).isEqualTo(0.0);

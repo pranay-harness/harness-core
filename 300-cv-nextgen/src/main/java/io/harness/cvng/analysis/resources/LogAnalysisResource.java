@@ -3,6 +3,7 @@ package io.harness.cvng.analysis.resources;
 import static io.harness.cvng.analysis.CVAnalysisConstants.DEPLOYMENT_LOG_ANALYSIS_SAVE_PATH;
 import static io.harness.cvng.analysis.CVAnalysisConstants.LOG_ANALYSIS_RESOURCE;
 import static io.harness.cvng.analysis.CVAnalysisConstants.LOG_ANALYSIS_SAVE_PATH;
+import static io.harness.cvng.analysis.CVAnalysisConstants.PREVIOUS_ANALYSIS_URL;
 import static io.harness.cvng.analysis.CVAnalysisConstants.PREVIOUS_LOG_ANALYSIS_PATH;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TEST_DATA_PATH;
 
@@ -87,5 +88,22 @@ public class LogAnalysisResource {
       @QueryParam("taskId") String taskId, DeploymentLogAnalysisDTO deploymentLogAnalysisDTO) {
     logAnalysisService.saveAnalysis(taskId, deploymentLogAnalysisDTO);
     return new RestResponse<>(null);
+  }
+
+  @Produces({"application/json", "application/v1+json"})
+  @GET
+  @Path("/" + PREVIOUS_ANALYSIS_URL)
+  @Timed
+  @LearningEngineAuth
+  @ExceptionMetered
+  @ApiOperation(
+      value = "get previous deployment analysis result for next task", nickname = "getPreviousDeploymentAnalysis")
+  public RestResponse<DeploymentLogAnalysisDTO>
+  getPreviousDeploymentAnalysis(@QueryParam("verificationTaskId") String verificationTaskId,
+      @QueryParam("analysisStartTime") String analysisStartTime,
+      @QueryParam("analysisEndTime") String analysisEndTime) {
+    return new RestResponse<>(logAnalysisService.getPreviousDeploymentAnalysis(verificationTaskId,
+        Instant.ofEpochMilli(Long.parseLong(analysisStartTime)),
+        Instant.ofEpochMilli(Long.parseLong(analysisEndTime))));
   }
 }

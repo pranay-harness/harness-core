@@ -12,6 +12,8 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
@@ -26,7 +28,6 @@ import software.wings.metrics.MetricType;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.apm.APMMetricInfo;
-import software.wings.service.impl.apm.APMParserTest;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.StateType;
 
@@ -53,6 +54,7 @@ import org.mockito.MockitoAnnotations;
 import retrofit2.Call;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class APMDataCollectionTaskTest extends WingsBaseTest {
   APMDataCollectionInfo dataCollectionInfo;
   @Mock private RequestExecutor requestExecutor;
@@ -107,7 +109,7 @@ public class APMDataCollectionTaskTest extends WingsBaseTest {
     Class[] innerClasses = dataCollectionTask.getClass().getDeclaredClasses();
     log.info("" + innerClasses);
     Class[] parameterTypes = new Class[1];
-    parameterTypes[0] = java.lang.String.class;
+    parameterTypes[0] = String.class;
     Method m = innerClasses[0].getDeclaredMethod("resolveBatchHosts", parameterTypes);
     m.setAccessible(true);
     return m;
@@ -170,8 +172,8 @@ public class APMDataCollectionTaskTest extends WingsBaseTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testDataCollection() throws Exception {
-    String text500 =
-        Resources.toString(APMParserTest.class.getResource("/apm/insights_sample_response.json"), Charsets.UTF_8);
+    String text500 = Resources.toString(
+        APMDataCollectionTaskTest.class.getResource("/apm/insights_sample_response.json"), Charsets.UTF_8);
 
     Map<String, APMMetricInfo.ResponseMapper> responseMapperMap = new HashMap<>();
     responseMapperMap.put(

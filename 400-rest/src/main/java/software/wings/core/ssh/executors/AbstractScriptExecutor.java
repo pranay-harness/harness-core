@@ -1,0 +1,192 @@
+package software.wings.core.ssh.executors;
+
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.logging.CommandExecutionStatus.RUNNING;
+import static io.harness.logging.LogLevel.ERROR;
+import static io.harness.logging.LogLevel.INFO;
+import static io.harness.logging.LogLevel.WARN;
+
+import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.delegate.task.shell.ScriptType;
+import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogCallback;
+
+import software.wings.core.BaseScriptExecutor;
+import software.wings.delegatetasks.DelegateFileManager;
+
+import com.google.inject.Inject;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import javax.validation.executable.ValidateOnExecution;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
+
+/**
+ * Created by anubhaw on 2019-03-11.
+ */
+
+@ValidateOnExecution
+@Slf4j
+public abstract class AbstractScriptExecutor implements BaseScriptExecutor {
+  static final String UUID = generateUuid();
+  static final String HARNESS_START_TOKEN = "harness_start_token_" + UUID;
+  static final String HARNESS_END_TOKEN = "harness_end_token_" + UUID;
+
+  /**
+   * The Config.
+   */
+
+  /**
+   * The Log service.
+   */
+  protected LogCallback logCallback;
+  /**
+   * The File service.
+   */
+  protected DelegateFileManager delegateFileManager;
+
+  protected boolean shouldSaveExecutionLogs;
+
+  /**
+   * Instantiates a new abstract ssh executor.
+   *  @param delegateFileManager the file service
+   * @param logCallback          the log service
+   */
+  @Inject
+  public AbstractScriptExecutor(
+      DelegateFileManager delegateFileManager, LogCallback logCallback, boolean shouldSaveExecutionLogs) {
+    this.logCallback = logCallback;
+    this.delegateFileManager = delegateFileManager;
+    this.shouldSaveExecutionLogs = shouldSaveExecutionLogs;
+  }
+
+  @Override
+  public abstract CommandExecutionStatus executeCommandString(
+      String command, StringBuffer output, boolean displayCommand);
+
+  @Override
+  public abstract CommandExecutionResult executeCommandString(String command, List<String> envVariablesToCollect);
+
+  public abstract String getAccountId();
+
+  public abstract String getCommandUnitName();
+
+  public abstract String getAppId();
+
+  public abstract String getExecutionId();
+
+  public abstract String getHost();
+
+  @Override
+  public CommandExecutionStatus executeCommandString(String command) {
+    return executeCommandString(command, null, false);
+  }
+
+  @Override
+  public CommandExecutionStatus executeCommandString(String command, boolean displayCommand) {
+    return executeCommandString(command, null, displayCommand);
+  }
+
+  @Override
+  public CommandExecutionStatus executeCommandString(String command, StringBuffer output) {
+    return executeCommandString(command, output, false);
+  }
+
+  protected String addEnvVariablesCollector(
+      String command, List<String> envVariablesToCollect, String envVariablesOutputFilePath, ScriptType scriptType) {
+    StringBuilder wrapperCommand = new StringBuilder(command);
+    wrapperCommand.append('\n');
+    String redirect = ">";
+    for (String env : envVariablesToCollect) {
+      wrapperCommand.append("echo ")
+          .append(HARNESS_START_TOKEN)
+          .append(' ')
+          .append(env)
+          .append("=\"$")
+          .append(scriptType == ScriptType.POWERSHELL ? "env:" : "")
+          .append(env)
+          .append("\" ")
+          .append(HARNESS_END_TOKEN)
+          .append(' ')
+          .append(redirect)
+          .append(envVariablesOutputFilePath)
+          .append('\n');
+      redirect = ">>";
+    }
+    return wrapperCommand.toString();
+  }
+
+  protected void saveExecutionLog(String line) {
+    saveExecutionLog(line, RUNNING);
+  }
+
+  protected void processScriptOutputFile(@NotNull Map<String, String> envVariablesMap, @NotNull BufferedReader br)
+      throws IOException {
+    saveExecutionLog("Script Output: ");
+    StringBuilder sb = new StringBuilder();
+    String line;
+    while ((line = br.readLine()) != null) {
+      sb.append(line);
+      sb.append('\n');
+      if (line.endsWith(HARNESS_END_TOKEN)) {
+        String envVar = sb.toString();
+        envVar = StringUtils.substringBetween(envVar, HARNESS_START_TOKEN, HARNESS_END_TOKEN);
+        int index = envVar.indexOf('=');
+        if (index != -1) {
+          String key = envVar.substring(0, index).trim();
+          String value = envVar.substring(index + 1).trim();
+          if (StringUtils.isNotBlank(key)) {
+            envVariablesMap.put(key, value);
+            saveExecutionLog(key + "=" + value);
+          }
+          sb = new StringBuilder();
+        }
+      }
+    }
+  }
+
+  protected void saveExecutionLog(String line, CommandExecutionStatus commandExecutionStatus) {
+    if (shouldSaveExecutionLogs) {
+      logCallback.saveExecutionLog(line, INFO, commandExecutionStatus);
+    }
+  }
+
+  protected void saveExecutionLogError(String line) {
+    if (shouldSaveExecutionLogs) {
+      logCallback.saveExecutionLog(line, ERROR, RUNNING);
+    }
+  }
+
+  protected void saveExecutionLogWarn(String line) {
+    if (shouldSaveExecutionLogs) {
+      logCallback.saveExecutionLog(line, WARN, RUNNING);
+    }
+  }
+
+  /**
+   * The interface File provider.
+   */
+  public interface FileProvider {
+    /**
+     * Gets info.
+     *
+     * @return the info
+     * @throws IOException the io exception
+     */
+    Pair<String, Long> getInfo() throws IOException;
+
+    /**
+     * Download to stream.
+     *
+     * @param outputStream the output stream
+     * @throws IOException the io exception
+     */
+    void downloadToStream(OutputStream outputStream) throws IOException, ExecutionException;
+  }
+}

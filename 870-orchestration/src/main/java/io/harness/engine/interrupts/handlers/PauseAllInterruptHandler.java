@@ -11,25 +11,25 @@ import static io.harness.interrupts.Interrupt.State.DISCARDED;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSING;
 
-import io.harness.AmbianceUtils;
 import io.harness.OrchestrationPublisherName;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.interrupts.InterruptHandler;
+import io.harness.engine.interrupts.InterruptHelper;
 import io.harness.engine.interrupts.InterruptService;
+import io.harness.engine.interrupts.statusupdate.PausedStepStatusUpdate;
+import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
 import io.harness.engine.resume.EngineResumeAllCallback;
-import io.harness.engine.status.PausedStepStatusUpdate;
-import io.harness.engine.status.StepStatusUpdateInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.events.OrchestrationEvent;
-import io.harness.execution.events.OrchestrationEventType;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.InterruptEffect;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
@@ -60,7 +60,7 @@ public class PauseAllInterruptHandler implements InterruptHandler {
     PlanExecution planExecution = planExecutionService.get(interrupt.getPlanExecutionId());
     planExecutionService.updateStatus(planExecution.getUuid(), Status.PAUSING);
     eventEmitter.emitEvent(OrchestrationEvent.builder()
-                               .ambiance(AmbianceUtils.buildFromPlanExecution(planExecution))
+                               .ambiance(InterruptHelper.buildFromPlanExecution(planExecution))
                                .eventType(OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE)
                                .build());
 

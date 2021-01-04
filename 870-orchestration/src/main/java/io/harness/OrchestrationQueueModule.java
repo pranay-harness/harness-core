@@ -7,34 +7,41 @@ import io.harness.config.PublisherConfiguration;
 import io.harness.delay.DelayEvent;
 import io.harness.delay.DelayEventListener;
 import io.harness.engine.events.OrchestrationEventListener;
-import io.harness.execution.events.OrchestrationEvent;
 import io.harness.mongo.queue.QueueFactory;
+import io.harness.pms.execution.NodeExecutionEvent;
+import io.harness.pms.sdk.core.events.OrchestrationEvent;
+import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueuePublisher;
 import io.harness.version.VersionInfoManager;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Injector;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
+import com.google.inject.*;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 public class OrchestrationQueueModule extends AbstractModule {
   private static OrchestrationQueueModule instance;
+  private final OrchestrationModuleConfig config;
 
-  public static synchronized OrchestrationQueueModule getInstance() {
+  public static synchronized OrchestrationQueueModule getInstance(OrchestrationModuleConfig config) {
     if (instance == null) {
-      instance = new OrchestrationQueueModule();
+      instance = new OrchestrationQueueModule(config);
     }
     return instance;
+  }
+
+  public OrchestrationQueueModule(OrchestrationModuleConfig config) {
+    this.config = config;
   }
 
   @Override
   protected void configure() {
     bind(new TypeLiteral<QueueListener<DelayEvent>>() {}).to(DelayEventListener.class);
-    bind(new TypeLiteral<QueueListener<OrchestrationEvent>>() {}).to(OrchestrationEventListener.class);
+    bind(new TypeLiteral<QueueListener<NodeExecutionEvent>>() {}).to(NodeExecutionEventListener.class);
+
+    if (!config.isWithPMS()) {
+      bind(new TypeLiteral<QueueListener<OrchestrationEvent>>() {}).to(OrchestrationEventListener.class);
+    }
   }
 
   @Provides
@@ -63,9 +70,9 @@ public class OrchestrationQueueModule extends AbstractModule {
 
   @Provides
   @Singleton
-  QueueConsumer<OrchestrationEvent> orchestrationEventQueueConsumer(Injector injector,
+  QueuePublisher<NodeExecutionEvent> executionEventQueuePublisher(Injector injector,
       VersionInfoManager versionInfoManager, PublisherConfiguration config, MongoTemplate mongoTemplate) {
-    return QueueFactory.createNgQueueConsumer(injector, OrchestrationEvent.class, ofSeconds(5),
-        singletonList(singletonList(versionInfoManager.getVersionInfo().getVersion())), config, mongoTemplate);
+    return QueueFactory.createNgQueuePublisher(injector, NodeExecutionEvent.class,
+        singletonList(versionInfoManager.getVersionInfo().getVersion()), config, mongoTemplate);
   }
 }

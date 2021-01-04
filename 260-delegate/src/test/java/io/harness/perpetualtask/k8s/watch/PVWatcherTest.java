@@ -1,10 +1,11 @@
 package io.harness.perpetualtask.k8s.watch;
 
+import static io.harness.perpetualtask.k8s.watch.PVInfo.PVType.PV_TYPE_AWS_EBS;
+import static io.harness.perpetualtask.k8s.watch.PVInfo.PVType.PV_TYPE_AZURE_DISK;
 import static io.harness.perpetualtask.k8s.watch.PVInfo.PVType.PV_TYPE_GCE_PERSISTENT_DISK;
 import static io.harness.rule.OwnerRule.UTSAV;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
@@ -31,6 +32,7 @@ import io.kubernetes.client.informer.SharedInformerFactory;
 import io.kubernetes.client.openapi.JSON;
 import io.kubernetes.client.openapi.models.V1PersistentVolume;
 import io.kubernetes.client.openapi.models.V1PersistentVolumeBuilder;
+import io.kubernetes.client.openapi.models.V1PersistentVolumeSpecBuilder;
 import io.kubernetes.client.openapi.models.V1StorageClass;
 import io.kubernetes.client.openapi.models.V1StorageClassBuilder;
 import io.kubernetes.client.util.ClientBuilder;
@@ -55,7 +57,7 @@ public class PVWatcherTest extends CategoryTest {
 
   final DateTime TIMESTAMP = DateTime.now();
   final DateTime DELETION_TIMESTAMP = TIMESTAMP.plusMinutes(5);
-  private static final String DEFAULT_STORAGE_CLASS_TYPE = "default";
+  private static final String SC_NAME = "storage_class_name";
   private static final String SC_URL = "^/apis/storage.k8s.io/v1/storageclasses/";
 
   ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
@@ -115,7 +117,6 @@ public class PVWatcherTest extends CategoryTest {
                  .setPvName(samplePV.getMetadata().getName())
                  .putAllLabels(Collections.emptyMap())
                  .setCapacity(K8sResourceUtils.getStorageCapacity(samplePV.getSpec()))
-                 .setStorageClassType(DEFAULT_STORAGE_CLASS_TYPE)
                  .setClusterId(clusterDetails.getClusterId())
                  .setClusterName(clusterDetails.getClusterName())
                  .setCloudProviderId(clusterDetails.getCloudProviderId())
@@ -190,48 +191,56 @@ public class PVWatcherTest extends CategoryTest {
   @Test
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
-  public void testGetStorageType() throws Exception {
+  public void testGetPvType() {
+    PVInfo.PVType aws_ebs = pvWatcher.getPvType(
+        new V1PersistentVolumeSpecBuilder().withNewAwsElasticBlockStore().endAwsElasticBlockStore().build());
+    PVInfo.PVType gce_pd = pvWatcher.getPvType(
+        new V1PersistentVolumeSpecBuilder().withNewGcePersistentDisk().endGcePersistentDisk().build());
+    PVInfo.PVType azure_disk =
+        pvWatcher.getPvType(new V1PersistentVolumeSpecBuilder().withNewAzureDisk().endAzureDisk().build());
+
+    assertThat(aws_ebs).isEqualTo(PV_TYPE_AWS_EBS);
+    assertThat(gce_pd).isEqualTo(PV_TYPE_GCE_PERSISTENT_DISK);
+    assertThat(azure_disk).isEqualTo(PV_TYPE_AZURE_DISK);
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testGetStorageClassParameters() {
+    V1PersistentVolume samplePv =
+        new V1PersistentVolumeBuilder().withNewSpec().withStorageClassName(SC_NAME).endSpec().build();
+    Map<String, String> params = pvWatcher.getStorageClassParameters(samplePv);
+    assertThat(params).isNull();
+
     V1StorageClass storageClass = new V1StorageClassBuilder().withParameters(ImmutableMap.of("type", "pd-ssd")).build();
 
-    stubFor(get(urlMatching(SC_URL + "standard.*"))
+    stubFor(WireMock.get(urlMatching(SC_URL + SC_NAME + ".*"))
                 .willReturn(aResponse()
                                 .withStatus(200)
                                 .withHeader("Content-Type", "application/json")
                                 .withBody(new JSON().serialize(storageClass))));
 
-    assertThat(pvWatcher.getStorageType(samplePV)).isEqualTo("pd-ssd");
-    WireMock.verify(1, getRequestedFor(urlMatching(SC_URL + "standard.*")));
+    params = pvWatcher.getStorageClassParameters(samplePv);
+    assertThat(params).isEqualTo(ImmutableMap.of("type", "pd-ssd"));
   }
 
   @Test
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
-  public void testGetStorageTypeWithNullStorageType() throws Exception {
-    V1StorageClass storageClass = new V1StorageClassBuilder().withParameters(ImmutableMap.of()).build();
+  public void testStorageClassParamsCache() {
+    V1PersistentVolume samplePv =
+        new V1PersistentVolumeBuilder().withNewSpec().withStorageClassName(SC_NAME).endSpec().build();
 
-    stubFor(get(urlMatching(SC_URL + "standard.*"))
+    V1StorageClass storageClass = new V1StorageClassBuilder().withParameters(ImmutableMap.of("type", "pd-ssd")).build();
+    stubFor(WireMock.get(urlMatching(SC_URL + SC_NAME + ".*"))
                 .willReturn(aResponse()
                                 .withStatus(200)
                                 .withHeader("Content-Type", "application/json")
                                 .withBody(new JSON().serialize(storageClass))));
 
-    assertThat(pvWatcher.getStorageType(samplePV)).isEqualTo(DEFAULT_STORAGE_CLASS_TYPE);
-    WireMock.verify(1, getRequestedFor(urlMatching(SC_URL + "standard.*")));
-  }
-
-  @Test
-  @Owner(developers = UTSAV)
-  @Category(UnitTests.class)
-  public void testGetStorageTypeWithNullParams() throws Exception {
-    V1StorageClass storageClass = new V1StorageClassBuilder().build();
-
-    stubFor(get(urlMatching(SC_URL + "standard.*"))
-                .willReturn(aResponse()
-                                .withStatus(200)
-                                .withHeader("Content-Type", "application/json")
-                                .withBody(new JSON().serialize(storageClass))));
-
-    assertThat(pvWatcher.getStorageType(samplePV)).isEqualTo(DEFAULT_STORAGE_CLASS_TYPE);
-    WireMock.verify(1, getRequestedFor(urlMatching(SC_URL + "standard.*")));
+    pvWatcher.getStorageClassParameters(samplePv);
+    pvWatcher.getStorageClassParameters(samplePv);
+    WireMock.verify(1, getRequestedFor(urlMatching(SC_URL + SC_NAME + ".*")));
   }
 }

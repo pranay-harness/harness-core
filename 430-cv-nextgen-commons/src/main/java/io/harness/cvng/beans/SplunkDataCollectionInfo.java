@@ -16,7 +16,7 @@ public class SplunkDataCollectionInfo extends LogDataCollectionInfo<SplunkConnec
   private String query;
   private String serviceInstanceIdentifier;
   @Override
-  public Map<String, Object> getDslEnvVariables() {
+  public Map<String, Object> getDslEnvVariables(SplunkConnectorDTO splunkConnectorDTO) {
     Map<String, Object> map = new HashMap<>();
     map.put("query", query);
     map.put("hostCollectionQuery", serviceInstanceIdentifier + "=*|stats count by " + serviceInstanceIdentifier);

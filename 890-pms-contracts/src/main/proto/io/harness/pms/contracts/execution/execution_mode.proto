@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.execution;
+
+option java_multiple_files = true;
+
+enum ExecutionMode {
+  UNKNOWN = 0;
+  SYNC = 1;
+  ASYNC = 2;
+
+  TASK_CHAIN = 3;
+  TASK = 4;
+
+  CHILD_CHAIN = 5;
+  CHILDREN = 6;
+  CHILD = 7;
+
+  SKIP = 8;
+}

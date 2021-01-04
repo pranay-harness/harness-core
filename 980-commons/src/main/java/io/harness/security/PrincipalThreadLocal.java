@@ -21,6 +21,11 @@ public class PrincipalThreadLocal {
       set(old);
     }
   }
+
+  public static Guard principalGuard(Principal principal) {
+    return new Guard(principal);
+  }
+
   public final ThreadLocal<Principal> principalThreadLocal = new ThreadLocal<>();
 
   public void set(Principal principal) {

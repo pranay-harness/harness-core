@@ -5,8 +5,9 @@ import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.steps.StepType;
+import io.harness.pms.yaml.ParameterField;
 
 import software.wings.jersey.JsonViews;
 
@@ -24,52 +25,48 @@ import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@JsonTypeName("restoreCacheS3")
+@JsonTypeName("RestoreCacheS3")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("restoreCacheS3StepInfo")
 public class RestoreCacheS3StepInfo implements PluginCompatibleStep {
   public static final int DEFAULT_RETRY = 1;
-  public static final int DEFAULT_TIMEOUT = 60 * 60 * 2; // 2 hour
 
   @JsonView(JsonViews.Internal.class)
   @NotNull
-  public static final TypeInfo typeInfo =
-      TypeInfo.builder()
-          .stepInfoType(CIStepInfoType.RESTORE_CACHE_S3)
-          .stepType(StepType.newBuilder().setType(CIStepInfoType.RESTORE_CACHE_S3.name()).build())
-          .build();
+  public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.RESTORE_CACHE_S3).build();
 
-  @JsonIgnore private String callbackId;
-  @JsonIgnore private Integer port;
+  @JsonIgnore
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(CIStepInfoType.RESTORE_CACHE_S3.name()).build();
+
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
-  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
 
-  @NotNull private String connectorRef;
-  @JsonIgnore @NotNull private String image;
+  @NotNull private ParameterField<String> connectorRef;
+  @JsonIgnore @NotNull private ParameterField<String> containerImage;
   private ContainerResource resources;
 
   // plugin settings
-  private String endpoint;
-  @NotNull private String key;
-  @NotNull private String bucket;
-  private String target;
+  private ParameterField<String> endpoint;
+  @NotNull private ParameterField<String> key;
+  @NotNull private ParameterField<String> bucket;
+  private ParameterField<String> target;
 
   @Builder
-  @ConstructorProperties({"callbackId", "port", "identifier", "name", "retry", "timeout", "connectorRef", "image",
-      "resources", "endpoint", "key", "bucket", "target"})
-  public RestoreCacheS3StepInfo(String callbackId, Integer port, String identifier, String name, Integer retry,
-      Integer timeout, String connectorRef, String image, ContainerResource resources, String endpoint, String key,
-      String bucket, String target) {
-    this.callbackId = callbackId;
-    this.port = port;
+  @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "containerImage", "resources", "endpoint",
+      "key", "bucket", "target"})
+
+  public RestoreCacheS3StepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
+      ParameterField<String> containerImage, ContainerResource resources, ParameterField<String> endpoint,
+      ParameterField<String> key, ParameterField<String> bucket, ParameterField<String> target) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
-    this.timeout = Optional.ofNullable(timeout).orElse(DEFAULT_TIMEOUT);
+
     this.connectorRef = connectorRef;
-    this.image = Optional.ofNullable(image).orElse("plugins/s3-cache:latest");
+    this.containerImage =
+        Optional.ofNullable(containerImage).orElse(ParameterField.createValueField("plugins/s3-cache:latest"));
     this.resources = resources;
     this.endpoint = endpoint;
     this.key = key;
@@ -89,7 +86,7 @@ public class RestoreCacheS3StepInfo implements PluginCompatibleStep {
 
   @Override
   public StepType getStepType() {
-    return typeInfo.getStepType();
+    return STEP_TYPE;
   }
 
   @Override

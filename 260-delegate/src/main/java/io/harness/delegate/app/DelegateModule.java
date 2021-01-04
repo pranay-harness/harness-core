@@ -33,6 +33,8 @@ import io.harness.datacollection.impl.DataCollectionServiceImpl;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.git.NGGitServiceImpl;
+import io.harness.delegate.http.HttpTaskNG;
+import io.harness.delegate.k8s.K8sApplyRequestHandler;
 import io.harness.delegate.k8s.K8sBGRequestHandler;
 import io.harness.delegate.k8s.K8sRequestHandler;
 import io.harness.delegate.k8s.K8sRollingRequestHandler;
@@ -53,6 +55,10 @@ import io.harness.delegate.service.LogAnalysisStoreServiceImpl;
 import io.harness.delegate.service.MetricDataStoreServiceImpl;
 import io.harness.delegate.task.BuildSourceTask;
 import io.harness.delegate.task.DelegateRunnableTask;
+import io.harness.delegate.task.MailSenderDelegateTask;
+import io.harness.delegate.task.MicrosoftTeamsSenderDelegateTask;
+import io.harness.delegate.task.PagerDutySenderDelegateTask;
+import io.harness.delegate.task.SlackSenderDelegateTask;
 import io.harness.delegate.task.artifacts.ArtifactSourceDelegateRequest;
 import io.harness.delegate.task.artifacts.DelegateArtifactTaskHandler;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
@@ -205,8 +211,8 @@ import software.wings.delegatetasks.aws.ecs.ecstaskhandler.deploy.EcsRunTaskDepl
 import software.wings.delegatetasks.azure.AzureVMSSTask;
 import software.wings.delegatetasks.azure.appservice.AbstractAzureAppServiceTaskHandler;
 import software.wings.delegatetasks.azure.appservice.AzureAppServiceTask;
-import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppListDeploymentDataTaskHandler;
 import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppListWebAppDeploymentSlotNamesTaskHandler;
+import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppListWebAppInstancesTaskHandler;
 import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppListWebAppNamesTaskHandler;
 import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppRollbackTaskHandler;
 import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppSlotSetupTaskHandler;
@@ -443,6 +449,7 @@ import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
 import java.time.Clock;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -558,6 +565,16 @@ public class DelegateModule extends AbstractModule {
         new ThreadFactoryBuilder().setNameFormat("system-%d").setPriority(Thread.MAX_PRIORITY).build());
     Runtime.getRuntime().addShutdownHook(new Thread(() -> { systemExecutor.shutdownNow(); }));
     return systemExecutor;
+  }
+
+  @Provides
+  @Singleton
+  @Named("grpcServiceExecutor")
+  public ExecutorService grpcServiceExecutor() {
+    ExecutorService grpcServiceExecutor = Executors.newFixedThreadPool(
+        1, new ThreadFactoryBuilder().setNameFormat("grpc-%d").setPriority(Thread.MAX_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { grpcServiceExecutor.shutdownNow(); }));
+    return grpcServiceExecutor;
   }
 
   @Provides
@@ -853,6 +870,7 @@ public class DelegateModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), String.class, K8sRequestHandler.class);
     k8sTaskTypeToRequestHandler.addBinding(K8sTaskType.DEPLOYMENT_ROLLING.name()).to(K8sRollingRequestHandler.class);
     k8sTaskTypeToRequestHandler.addBinding(K8sTaskType.BLUE_GREEN_DEPLOY.name()).to(K8sBGRequestHandler.class);
+    k8sTaskTypeToRequestHandler.addBinding(K8sTaskType.APPLY.name()).to(K8sApplyRequestHandler.class);
 
     bind(DockerRegistryService.class).to(DockerRegistryServiceImpl.class);
     bind(HttpService.class).to(HttpServiceImpl.class);
@@ -880,8 +898,8 @@ public class DelegateModule extends AbstractModule {
     azureAppServiceTaskTypeToTaskHandlerMap
         .addBinding(AzureAppServiceTaskType.LIST_WEB_APP_DEPLOYMENT_SLOT_NAMES.name())
         .to(AzureWebAppListWebAppDeploymentSlotNamesTaskHandler.class);
-    azureAppServiceTaskTypeToTaskHandlerMap.addBinding(AzureAppServiceTaskType.LIST_WEB_APP_DEPLOYMENT_DATA.name())
-        .to(AzureWebAppListDeploymentDataTaskHandler.class);
+    azureAppServiceTaskTypeToTaskHandlerMap.addBinding(AzureAppServiceTaskType.LIST_WEB_APP_INSTANCES_DATA.name())
+        .to(AzureWebAppListWebAppInstancesTaskHandler.class);
     azureAppServiceTaskTypeToTaskHandlerMap.addBinding(AzureAppServiceTaskType.SLOT_SETUP.name())
         .to(AzureWebAppSlotSetupTaskHandler.class);
     azureAppServiceTaskTypeToTaskHandlerMap.addBinding(AzureAppServiceTaskType.SLOT_SHIFT_TRAFFIC.name())
@@ -1171,6 +1189,11 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.BUILD_STATUS).toInstance(CIBuildStatusPushTask.class);
     mapBinder.addBinding(TaskType.K8_FETCH_NAMESPACES).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.K8_FETCH_WORKLOADS).toInstance(ServiceImplDelegateTask.class);
+    mapBinder.addBinding(TaskType.HTTP_TASK_NG).toInstance(HttpTaskNG.class);
+    mapBinder.addBinding(TaskType.NOTIFY_MAIL).toInstance(MailSenderDelegateTask.class);
+    mapBinder.addBinding(TaskType.NOTIFY_SLACK).toInstance(SlackSenderDelegateTask.class);
+    mapBinder.addBinding(TaskType.NOTIFY_PAGERDUTY).toInstance(PagerDutySenderDelegateTask.class);
+    mapBinder.addBinding(TaskType.NOTIFY_MICROSOFTTEAMS).toInstance(MicrosoftTeamsSenderDelegateTask.class);
   }
 
   private void registerSecretManagementBindings() {

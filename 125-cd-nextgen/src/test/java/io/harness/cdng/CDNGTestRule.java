@@ -1,6 +1,7 @@
 package io.harness.cdng;
 
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static org.mockito.Mockito.mock;
 
@@ -8,8 +9,11 @@ import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationVisualizationModule;
 import io.harness.callback.DelegateCallbackToken;
+import io.harness.cdng.orchestration.NgStepRegistrar;
 import io.harness.connector.services.ConnectorService;
+import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
+import io.harness.engine.pms.tasks.NgDelegate2TaskExecutor;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.factory.ClosingFactory;
@@ -19,14 +23,19 @@ import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.sdk.PmsSdkConfiguration;
+import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
+import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.queue.QueueController;
+import io.harness.registrars.NGExecutionEventHandlerRegistrar;
+import io.harness.registrars.OrchestrationAdviserRegistrar;
+import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.serializer.CDNGRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
-import io.harness.spring.AliasRegistrar;
 import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
@@ -44,6 +53,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
+import io.grpc.inprocess.InProcessChannelBuilder;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -87,20 +97,6 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
 
       @Provides
       @Singleton
-      Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
-        return ImmutableSet.<Class<? extends AliasRegistrar>>builder().addAll(CDNGRegistrars.aliasRegistrars).build();
-      }
-
-      @Provides
-      @Singleton
-      public OrchestrationModuleConfig orchestrationModuleConfig() {
-        return OrchestrationModuleConfig.builder()
-            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
-            .build();
-      }
-
-      @Provides
-      @Singleton
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder()
             .addAll(ManagerRegistrars.morphiaConverters)
@@ -127,13 +123,15 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
         bind(EntitySetupUsageClient.class).toInstance(mock(EntitySetupUsageClient.class));
         bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {
         }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
+        bind(new TypeLiteral<DelegateServiceGrpc.DelegateServiceBlockingStub>() {
+        }).toInstance(DelegateServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(generateUuid()).build()));
       }
     });
     modules.add(TimeModule.getInstance());
-    modules.add(NGModule.getInstance());
+    modules.add(NGModule.getInstance(getOrchestrationConfig()));
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
-    modules.add(OrchestrationModule.getInstance());
+    modules.add(OrchestrationModule.getInstance(getOrchestrationConfig()));
     modules.add(ExecutionPlanModule.getInstance());
     modules.add(mongoTypeModule(annotations));
     modules.add(OrchestrationVisualizationModule.getInstance());
@@ -155,7 +153,33 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
       }
     });
 
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      protected NgDelegate2TaskExecutor ngDelegate2TaskExecutor() {
+        return mock(NgDelegate2TaskExecutor.class);
+      }
+    });
+    modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration()));
     return modules;
+  }
+
+  private PmsSdkConfiguration getPmsSdkConfiguration() {
+    return PmsSdkConfiguration.builder()
+        .deploymentMode(DeployMode.LOCAL)
+        .serviceName("cd")
+        .engineSteps(NgStepRegistrar.getEngineSteps())
+        .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers())
+        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
+        .engineEventHandlersMap(NGExecutionEventHandlerRegistrar.getEngineEventHandlers())
+        .build();
+  }
+
+  private OrchestrationModuleConfig getOrchestrationConfig() {
+    return OrchestrationModuleConfig.builder()
+        .serviceName("CD_NG_TEST")
+        .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+        .build();
   }
 
   @Override

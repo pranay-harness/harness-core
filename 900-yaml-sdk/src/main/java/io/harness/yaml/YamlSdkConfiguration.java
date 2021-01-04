@@ -1,18 +1,20 @@
 package io.harness.yaml;
 
-import java.io.InputStream;
-import lombok.Builder;
-import lombok.Data;
-
 /**
- * Configuration required to use SDK
+ * Configuration required to use SDK.
+ * Fixing config as convention.
  */
-@Data
-@Builder
 public class YamlSdkConfiguration {
   /**
-   * InputStream for index.xml of snippets.
+   * Snippets base path.
    */
-  InputStream snippetIndex;
-  // todo(abhinav): add yaml schema config
+  public static final String snippetBasePath = "snippets";
+  /**
+   * Snippets index file.
+   */
+  public static final String snippetIndexFile = "index.xml";
+  /**
+   * Schema base path.
+   */
+  public static final String schemaBasePath = "schema";
 }

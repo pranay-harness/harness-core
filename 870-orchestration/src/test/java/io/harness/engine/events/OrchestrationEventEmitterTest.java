@@ -11,14 +11,14 @@ import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.execution.events.AsyncOrchestrationEventHandlerProxy;
-import io.harness.execution.events.OrchestrationEvent;
-import io.harness.execution.events.OrchestrationEventHandler;
-import io.harness.execution.events.OrchestrationEventType;
-import io.harness.execution.events.OrchestrationSubject;
-import io.harness.execution.events.SyncOrchestrationEventHandler;
-import io.harness.execution.events.SyncOrchestrationEventHandlerProxy;
-import io.harness.registries.events.OrchestrationEventHandlerRegistry;
+import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandlerProxy;
+import io.harness.pms.sdk.core.events.OrchestrationEvent;
+import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
+import io.harness.pms.sdk.core.events.OrchestrationSubject;
+import io.harness.pms.sdk.core.events.SyncOrchestrationEventHandler;
+import io.harness.pms.sdk.core.events.SyncOrchestrationEventHandlerProxy;
+import io.harness.pms.sdk.core.registries.OrchestrationEventHandlerRegistry;
 import io.harness.rule.Owner;
 import io.harness.utils.AmbianceTestUtils;
 

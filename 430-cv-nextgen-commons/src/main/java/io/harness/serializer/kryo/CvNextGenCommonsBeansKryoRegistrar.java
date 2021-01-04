@@ -18,6 +18,7 @@ import io.harness.cvng.beans.MetricPackDTO.MetricDefinitionDTO;
 import io.harness.cvng.beans.SplunkSavedSearch;
 import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.cvng.beans.SplunkValidationResponse.SplunkSampleResponse;
+import io.harness.cvng.beans.StackdriverDataCollectionInfo;
 import io.harness.cvng.beans.ThirdPartyApiResponseStatus;
 import io.harness.cvng.beans.TimeSeriesCustomThresholdActions;
 import io.harness.cvng.beans.TimeSeriesMetricType;
@@ -31,9 +32,16 @@ import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO.KubernetesActivitySourceConfig;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
+import io.harness.cvng.beans.appd.AppDynamicsDataCollectionRequest;
+import io.harness.cvng.beans.appd.AppDynamicsFetchAppRequest;
+import io.harness.cvng.beans.appd.AppDynamicsFetchTiersRequest;
 import io.harness.cvng.beans.appd.AppDynamicsTier;
 import io.harness.cvng.beans.splunk.SplunkDataCollectionRequest;
 import io.harness.cvng.beans.splunk.SplunkSavedSearchRequest;
+import io.harness.cvng.beans.stackdriver.StackDriverMetricDefinition;
+import io.harness.cvng.beans.stackdriver.StackdriverDashboardDetailsRequest;
+import io.harness.cvng.beans.stackdriver.StackdriverDashboardRequest;
+import io.harness.cvng.beans.stackdriver.StackdriverSampleDataRequest;
 import io.harness.cvng.models.VerificationType;
 import io.harness.serializer.KryoRegistrar;
 
@@ -79,5 +87,14 @@ public class CvNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(DataCollectionRequestType.class, 9036);
     kryo.register(ActivityStatusDTO.class, 9037);
     kryo.register(ActivityVerificationStatus.class, 9038);
+    kryo.register(StackdriverDashboardRequest.class, 9039);
+    kryo.register(StackdriverDashboardDetailsRequest.class, 9040);
+    kryo.register(StackdriverSampleDataRequest.class, 9041);
+    kryo.register(StackDriverMetricDefinition.class, 9042);
+    kryo.register(StackDriverMetricDefinition.Aggregation.class, 9043);
+    kryo.register(StackdriverDataCollectionInfo.class, 9044);
+    kryo.register(AppDynamicsDataCollectionRequest.class, 9045);
+    kryo.register(AppDynamicsFetchAppRequest.class, 9046);
+    kryo.register(AppDynamicsFetchTiersRequest.class, 9047);
   }
 }

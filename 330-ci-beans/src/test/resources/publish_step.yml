@@ -1,7 +1,7 @@
 step:
   identifier: publishArtifacts
   name: publish artifacts step test
-  type: publishArtifacts
+  type: PublishArtifacts
   spec:
     publishArtifacts:
     - filePattern: ~/.m2/*-${BUILD_NUMBER}.jar

@@ -1,6 +1,6 @@
 package io.harness.cvng.beans;
 
-import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
+import io.harness.cvng.beans.activity.ActivitySourceDTO;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -12,5 +12,5 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class K8ActivityDataCollectionInfo extends CVDataCollectionInfo {
-  private KubernetesActivitySourceDTO activitySourceDTO;
+  private ActivitySourceDTO activitySourceDTO;
 }

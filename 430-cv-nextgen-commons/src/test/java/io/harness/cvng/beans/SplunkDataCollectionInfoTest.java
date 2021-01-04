@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.rule.Owner;
 
 import java.io.IOException;
@@ -30,6 +31,6 @@ public class SplunkDataCollectionInfoTest extends CategoryTest {
     expected.put("serviceInstanceIdentifier", "$.host");
     expected.put("maxCount", 10000);
     expected.put("hostCollectionQuery", "host=*|stats count by host");
-    assertThat(splunkDataCollectionInfo.getDslEnvVariables()).isEqualTo(expected);
+    assertThat(splunkDataCollectionInfo.getDslEnvVariables(SplunkConnectorDTO.builder().build())).isEqualTo(expected);
   }
 }

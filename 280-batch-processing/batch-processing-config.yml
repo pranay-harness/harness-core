@@ -40,6 +40,9 @@ awsS3SyncConfig:
 billingDataPipelineConfig:
   gcpProjectId: gcpProjectIdPlaceHolder
   gcsBasePath: gcsBasePathPlaceHolder
+  gcpPipelinePubSubTopic: "ce-gcpdata"
+  gcpUseNewPipeline: false
+  awsUseNewPipeline: false
   clusterDataGcsBucketName: "clusterdata-qa"
   clusterDataGcsBackupBucketName: "clusterdata-qa-backup"
 
@@ -61,3 +64,7 @@ baseUrl: https://localhost:8000
 reportScheduleConfig:
   enabled: true
   templateName: "ce_scheduled_report"
+
+scheduler-jobs-config:
+  budgetAlertsJobCron: "0 30 14 * * ?"
+  weeklyReportsJobCron: "0 0 14 * * MON"

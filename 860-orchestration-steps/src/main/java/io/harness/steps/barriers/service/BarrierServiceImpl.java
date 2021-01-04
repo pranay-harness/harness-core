@@ -9,14 +9,13 @@ import static io.harness.distribution.barrier.Forcer.State.APPROACHING;
 import static io.harness.distribution.barrier.Forcer.State.ARRIVED;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
-import static io.harness.pms.execution.Status.ABORTED;
-import static io.harness.pms.execution.Status.EXPIRED;
+import static io.harness.pms.contracts.execution.Status.ABORTED;
+import static io.harness.pms.contracts.execution.Status.EXPIRED;
 
 import static java.time.Duration.ofMinutes;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
-import io.harness.StatusUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.barrier.Barrier;
 import io.harness.distribution.barrier.BarrierId;
@@ -33,7 +32,8 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
 import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
 import io.harness.persistence.HPersistence;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.repositories.BarrierNodeRepository;
 import io.harness.steps.barriers.BarrierStep;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;

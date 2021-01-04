@@ -12,6 +12,7 @@ git log -1000 --oneline --format='%aN <%aE>' | sort -u |\
     grep -iv "^Abhinav Singh <abhinav.singh@harness.io>$" |\
     grep -iv "^Adam Hancock <adam.hancock@harness.io>$" |\
     grep -iv "^Adwait Bhandare <adwait.bhandare@harness.io>$" |\
+    grep -iv "^Akash Nagarajan <akash.nagarajan@harness.io>$" |\
     grep -iv "^Aleksandar Radisavljevic <aleksandar.radisavljevic@harness.io>$" |\
     grep -iv "^Alexandr Gorodetki <alexandr.gorodetki@harness.io>$" |\
     grep -iv "^Alexandru Bosii <alexandru.bosii@harness.io>$" |\
@@ -65,6 +66,7 @@ git log -1000 --oneline --format='%aN <%aE>' | sort -u |\
     grep -iv "^Michael Katz <michael.katz@harness.io>$" |\
     grep -iv "^Milan Balaban <milan.balaban@harness.io>$" |\
     grep -iv "^Milos Paunovic <milos.paunovic@harness.io>$" |\
+    grep -iv "^Mohit Garg <mohit.garg@harness.io>$" |\
     grep -iv "^Mohit Kurani <mohit.kurani@harness.io>$" |\
     grep -iv "^Naman Verma <naman.verma@harness.io>$" |\
     grep -iv "^Nandan Chandrashekar <nandan.chandrashekar@harness.io>$" |\
@@ -91,6 +93,7 @@ git log -1000 --oneline --format='%aN <%aE>' | sort -u |\
     grep -iv "^Rama Tummala <rama@harness.io>$" |\
     grep -iv "^Rathnakara Malatesha <rathna@harness.io>$" |\
     grep -iv "^Raunak Agrawal <raunak.agrawal@harness.io>$" |\
+    grep -iv "^Reetika <mallavarapu.reetika@harness.io>$" |\
     grep -iv "^Rihaz Zahir <rihaz.zahir@harness.io>$" |\
     grep -iv "^Rishi Singh <rishi@harness.io>$" |\
     grep -iv "^Rohit Karelia <rohit.karelia@harness.io>$" |\
@@ -125,12 +128,17 @@ git log -1000 --oneline --format='%aN <%aE>' | sort -u |\
     grep -iv "^Vasuki Kalluri <vasuki.kalluri@harness.io>$" |\
     grep -iv "^Venkatesh Kotrike <venkatesh.kotrike@harness.io>$" |\
     grep -iv "^Vikas Naiyar <vikas.naiyar@harness.io>$" |\
+    grep -iv "^Vikas Singh <vikas.singh@harness.io>$" |\
     grep -iv "^Vojin Djukic <vojin.djukic@harness.io>$" |\
     grep -iv "^Vistaar Juneja <vistaar.juneja@harness.io>$" |\
     grep -iv "^Vuk Skobalj <vuk.skobalj@harness.io>$" |\
     grep -iv "^Yogesh Chauhan <yogesh.chauhan@harness.io>$" |\
     grep -iv "^Prasun Banerjee <prasun.banerjee@harness.io>$" |\
-    grep -iv "^Tudor Macari <tudor.macari@harness.io>$" ` || :
+    grep -iv "^Diptiman Adak <diptiman.adak@harness.io>$" |\
+    grep -iv "^diptiman.adak <diptiman.adak@harness.io>$" |\
+    grep -iv "^Piyush Patel <piyush.patel@harness.io>$" |\
+    grep -iv "^Tudor Macari <tudor.macari@harness.io>$" |\
+    grep -iv "^Sainath Batthala <sainath.batthala@harness.io>$" ` || :
 
 if [ ! -z "$UNKNOWN_USERS" ]
 then
@@ -153,7 +161,7 @@ mv .mailmap.tmp .mailmap
 
 echo $EXECPTION_COMMITS exceptions
 
-if [ $EXECPTION_COMMITS -gt 225 ]
+if [ $EXECPTION_COMMITS -gt 240 ]
 then
     echo "You bringing commit with excepted author that is no longer allowed"
     git log --oneline --format='%aN <%aE>' | grep  "$EXCEPTIONS"

@@ -3,8 +3,9 @@ package io.harness.notification.service;
 import io.harness.NotificationRequest;
 import io.harness.Team;
 import io.harness.ng.beans.PageRequest;
+import io.harness.notification.beans.NotificationProcessingResponse;
 import io.harness.notification.entities.Notification;
-import io.harness.notification.entities.NotificationTemplate;
+import io.harness.notification.entities.Notification.NotificationKeys;
 import io.harness.notification.exception.NotificationException;
 import io.harness.notification.remote.mappers.NotificationMapper;
 import io.harness.notification.repositories.NotificationRepository;
@@ -18,7 +19,6 @@ import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
@@ -36,7 +36,8 @@ public class NotificationServiceImpl implements NotificationService {
     Optional<Notification> previousNotification = notificationRepository.findDistinctById(notificationRequest.getId());
     if (previousNotification.isPresent()) {
       log.info("Duplicate notification request recieved {}", notificationRequest.getId());
-      return previousNotification.get().getSent();
+      return !NotificationProcessingResponse.isNotificationResquestFailed(
+          previousNotification.get().getProcessingResponses());
     }
 
     Notification notification = NotificationMapper.toNotification(notificationRequest);
@@ -49,16 +50,18 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     notificationRepository.save(notification);
-    boolean sent = false;
+    NotificationProcessingResponse processingResponse = null;
     try {
-      sent = channelService.send(notificationRequest);
+      processingResponse = channelService.send(notificationRequest);
     } catch (NotificationException e) {
       log.error("Could not send notification.", e);
     }
-    notification.setSent(sent);
+    notification.setProcessingResponses(processingResponse.getResult());
+    notification.setShouldRetry(!(NotificationProcessingResponse.isNotificationResquestFailed(processingResponse)
+        || processingResponse.equals(NotificationProcessingResponse.trivialResponseWithNoRetries)));
     notification.setRetries(1);
     notificationRepository.save(notification);
-    return sent;
+    return !NotificationProcessingResponse.isNotificationResquestFailed(processingResponse);
   }
 
   @Override
@@ -71,13 +74,15 @@ public class NotificationServiceImpl implements NotificationService {
       return;
     }
     log.info("Retrying sending notification {}", notificationRequest.getId());
-    boolean sent = false;
+    NotificationProcessingResponse processingResponse = null;
     try {
-      sent = channelService.send(notificationRequest);
+      processingResponse = channelService.send(notificationRequest);
     } catch (NotificationException e) {
       log.error("Could not send notification.", e);
     }
-    notification.setSent(sent);
+    notification.setProcessingResponses(processingResponse.getResult());
+    notification.setShouldRetry(!(NotificationProcessingResponse.isNotificationResquestFailed(processingResponse)
+        || processingResponse.equals(NotificationProcessingResponse.trivialResponseWithNoRetries)));
     notification.setRetries(notification.getRetries() + 1);
     notificationRepository.save(notification);
   }
@@ -89,7 +94,7 @@ public class NotificationServiceImpl implements NotificationService {
 
   @Override
   public Page<Notification> list(Team team, PageRequest pageRequest) {
-    Criteria criteria = Criteria.where(Notification.NotificationKeys.team).is(team);
+    Criteria criteria = Criteria.where(NotificationKeys.team).is(team);
     return notificationRepository.findAll(criteria, PageUtils.getPageRequest(pageRequest));
   }
 }

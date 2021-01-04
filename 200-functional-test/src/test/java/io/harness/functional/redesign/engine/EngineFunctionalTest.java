@@ -1,8 +1,8 @@
 package io.harness.functional.redesign.engine;
 
-import static io.harness.pms.execution.Status.EXPIRED;
-import static io.harness.pms.execution.Status.FAILED;
-import static io.harness.pms.execution.Status.SUCCEEDED;
+import static io.harness.pms.contracts.execution.Status.EXPIRED;
+import static io.harness.pms.contracts.execution.Status.FAILED;
+import static io.harness.pms.contracts.execution.Status.SUCCEEDED;
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.PRASHANT;
@@ -157,7 +157,7 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = PRASHANT, intermittent = true)
+  @Owner(developers = PRASHANT)
   @Category(FunctionalTests.class)
   public void shouldExecuteHttpRetryAbortPlan() {
     PlanExecution httpRetryResponse = testSetupHelper.executePlan(
@@ -185,8 +185,9 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = GARVIT, intermittent = true)
+  @Owner(developers = GARVIT)
   @Category(FunctionalTests.class)
+  @Ignore("Fix after orchestration fields are supported")
   public void shouldExecuteSimpleShellScriptPlan() {
     PlanExecution shellScriptResponse = testSetupHelper.executePlan(
         bearerToken, application.getAccountId(), application.getAppId(), "simple-shell-script");

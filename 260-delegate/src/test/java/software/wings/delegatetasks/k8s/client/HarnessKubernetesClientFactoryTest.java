@@ -14,6 +14,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.KubernetesHelperService;
@@ -37,6 +39,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class HarnessKubernetesClientFactoryTest extends WingsBaseTest {
   @InjectMocks @Inject private HarnessKubernetesClientFactory harnessKubernetesClientFactory;
   @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;

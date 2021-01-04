@@ -85,6 +85,7 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
   private Random random;
   private String projectIdentifier;
   private String verificationTaskId;
+  private String orgIdentifier;
 
   @Inject private TimeSeriesService timeSeriesService;
   @Inject private HPersistence hPersistence;
@@ -100,6 +101,7 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
     connectorIdentifier = generateUuid();
     groupId = generateUuid();
     projectIdentifier = generateUuid();
+    orgIdentifier = generateUuid();
     random = new Random(System.currentTimeMillis());
     testUserProvider.setActiveUser(EmbeddedUser.builder().name("user1").build());
     hPersistence.registerUserProvider(testUserProvider);
@@ -392,15 +394,17 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetTimeSeriesMetricDefinitions() {
-    metricPackService.getMetricPacks(accountId, projectIdentifier, DataSourceType.APP_DYNAMICS);
+    metricPackService.getMetricPacks(accountId, orgIdentifier, projectIdentifier, DataSourceType.APP_DYNAMICS);
     AppDynamicsCVConfig appDynamicsCVConfig = new AppDynamicsCVConfig();
     appDynamicsCVConfig.setVerificationType(VerificationType.TIME_SERIES);
     appDynamicsCVConfig.setProjectIdentifier(projectIdentifier);
+    appDynamicsCVConfig.setOrgIdentifier(orgIdentifier);
     appDynamicsCVConfig.setAccountId(accountId);
     appDynamicsCVConfig.setConnectorIdentifier(connectorIdentifier);
     appDynamicsCVConfig.setServiceIdentifier("serviceIdentifier");
     appDynamicsCVConfig.setEnvIdentifier("environmentIdentifier");
-    appDynamicsCVConfig.setGroupId(groupId);
+    appDynamicsCVConfig.setIdentifier(groupId);
+    appDynamicsCVConfig.setMonitoringSourceName(generateUuid());
     appDynamicsCVConfig.setTierName("docker-tier");
     appDynamicsCVConfig.setApplicationName("cv-app");
     appDynamicsCVConfig.setTierName("tierName");

@@ -4,16 +4,15 @@ import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.beans.yaml.extended.container.ContainerResource;
+import io.harness.beans.yaml.extended.reports.UnitTestReport;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.steps.StepType;
-
-import software.wings.jersey.JsonViews;
+import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.annotation.JsonView;
 import java.beans.ConstructorProperties;
 import java.util.List;
 import java.util.Map;
@@ -26,51 +25,42 @@ import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@JsonTypeName("run")
+@JsonTypeName("Run")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("runStepInfo")
 public class RunStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 1;
-  public static final int DEFAULT_TIMEOUT = 60 * 60 * 2; // 2 hour
 
-  @JsonView(JsonViews.Internal.class)
-  @NotNull
-  public static final TypeInfo typeInfo =
-      TypeInfo.builder()
-          .stepInfoType(CIStepInfoType.RUN)
-          .stepType(StepType.newBuilder().setType(CIStepInfoType.RUN.name()).build())
-          .build();
+  @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.RUN).build();
+  @JsonIgnore public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.RUN.name()).build();
 
-  @JsonIgnore private String callbackId;
-  @JsonIgnore private Integer port;
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
-  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
-  @NotNull private List<String> command;
-  private List<String> output;
-  private Map<String, String> environment;
-  private String skipCondition;
 
-  @NotNull private String image;
-  private String connector;
+  @NotNull private ParameterField<String> command;
+  private ParameterField<List<String>> output;
+  private ParameterField<Map<String, String>> environment;
+  private List<UnitTestReport> reports;
+
+  @NotNull private ParameterField<String> image;
+  private ParameterField<String> connector;
   private ContainerResource resources;
 
   @Builder
-  @ConstructorProperties({"callbackId", "port", "identifier", "name", "retry", "timeout", "command", "output",
-      "skipCondition", "environment", "image", "connector", "resources"})
-  public RunStepInfo(String callbackId, Integer port, String identifier, String name, Integer retry, Integer timeout,
-      List<String> command, List<String> output, String skipCondition, Map<String, String> environment, String image,
-      String connector, ContainerResource resources) {
-    this.callbackId = callbackId;
-    this.port = port;
+  @ConstructorProperties(
+      {"identifier", "name", "retry", "command", "output", "reports", "environment", "image", "connector", "resources"})
+  public RunStepInfo(String identifier, String name, Integer retry, ParameterField<String> command,
+      ParameterField<List<String>> output, List<UnitTestReport> reports,
+      ParameterField<Map<String, String>> environment, ParameterField<String> image, ParameterField<String> connector,
+      ContainerResource resources) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
-    this.timeout = Optional.ofNullable(timeout).orElse(DEFAULT_TIMEOUT);
+
     this.command = command;
     this.environment = environment;
-    this.skipCondition = skipCondition;
+    this.reports = reports;
     this.output = output;
     this.image = image;
     this.connector = connector;
@@ -89,7 +79,7 @@ public class RunStepInfo implements CIStepInfo {
 
   @Override
   public StepType getStepType() {
-    return typeInfo.getStepType();
+    return STEP_TYPE;
   }
 
   @Override

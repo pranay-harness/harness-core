@@ -12,7 +12,10 @@ import java.util.List;
 public class LocalDTOToEntity implements ConnectorDTOToEntityMapper<LocalConnectorDTO> {
   @Override
   public Connector toConnectorEntity(LocalConnectorDTO connectorDTO) {
-    return LocalConnector.builder().isDefault(connectorDTO.isDefault()).build();
+    return LocalConnector.builder()
+        .isDefault(connectorDTO.isDefault())
+        .harnessManaged(connectorDTO.isHarnessManaged())
+        .build();
   }
 
   @Override

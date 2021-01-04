@@ -91,3 +91,6 @@ if [[ "" != "$LOG_SERVICE_GLOBAL_TOKEN" ]]; then
   yq write -i $CONFIG_FILE logServiceConfig.globalToken "$LOG_SERVICE_GLOBAL_TOKEN"
 fi
 
+if [[ "" != "$TI_SERVICE_ENDPOINT" ]]; then
+  yq write -i $CONFIG_FILE tiServiceConfig.baseUrl "$TI_SERVICE_ENDPOINT"
+fi

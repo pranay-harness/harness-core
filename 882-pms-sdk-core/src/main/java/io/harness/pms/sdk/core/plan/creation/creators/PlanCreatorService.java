@@ -3,12 +3,13 @@ package io.harness.pms.sdk.core.plan.creation.creators;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
-import io.harness.pms.plan.FilterCreationBlobRequest;
-import io.harness.pms.plan.FilterCreationBlobResponse;
-import io.harness.pms.plan.PlanCreationBlobRequest;
-import io.harness.pms.plan.PlanCreationBlobResponse;
-import io.harness.pms.plan.PlanCreationServiceGrpc.PlanCreationServiceImplBase;
-import io.harness.pms.plan.YamlFieldBlob;
+import io.harness.pms.contracts.plan.FilterCreationBlobRequest;
+import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
+import io.harness.pms.contracts.plan.PlanCreationBlobRequest;
+import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
+import io.harness.pms.contracts.plan.PlanCreationContextValue;
+import io.harness.pms.contracts.plan.PlanCreationServiceGrpc.PlanCreationServiceImplBase;
+import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.pipeline.filters.FilterCreatorService;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
@@ -60,19 +61,21 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
       }
     }
 
-    PlanCreationResponse finalResponse = createPlanForDependenciesRecursive(initialDependencies);
+    PlanCreationResponse finalResponse =
+        createPlanForDependenciesRecursive(initialDependencies, request.getContextMap());
     responseObserver.onNext(finalResponse.toBlobResponse());
     responseObserver.onCompleted();
   }
 
-  private PlanCreationResponse createPlanForDependenciesRecursive(Map<String, YamlField> initialDependencies) {
+  private PlanCreationResponse createPlanForDependenciesRecursive(
+      Map<String, YamlField> initialDependencies, Map<String, PlanCreationContextValue> context) {
     // TODO: Add patch version before sending the response back
     PlanCreationResponse finalResponse = PlanCreationResponse.builder().build();
     if (EmptyPredicate.isEmpty(planCreators) || EmptyPredicate.isEmpty(initialDependencies)) {
       return finalResponse;
     }
 
-    PlanCreationContext ctx = PlanCreationContext.builder().build();
+    PlanCreationContext ctx = PlanCreationContext.builder().globalContext(context).build();
     Map<String, YamlField> dependencies = new HashMap<>(initialDependencies);
     while (!dependencies.isEmpty()) {
       createPlanForDependencies(ctx, finalResponse, dependencies);
@@ -127,7 +130,10 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
         }
 
         finalResponse.addNodes(response.getNodes());
+        finalResponse.mergeContext(response.getContextMap());
+        finalResponse.mergeLayoutNodeInfo(response.getGraphLayoutResponse());
         finalResponse.mergeStartingNodeId(response.getStartingNodeId());
+        finalResponse.mergeLayoutNodeInfo(response.getGraphLayoutResponse());
         if (EmptyPredicate.isNotEmpty(response.getDependencies())) {
           for (YamlField childField : response.getDependencies().values()) {
             dependencies.put(childField.getNode().getUuid(), childField);

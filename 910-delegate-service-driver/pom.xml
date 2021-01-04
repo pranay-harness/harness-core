@@ -19,6 +19,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>915-pms-delegate-service-driver</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>920-delegate-service-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

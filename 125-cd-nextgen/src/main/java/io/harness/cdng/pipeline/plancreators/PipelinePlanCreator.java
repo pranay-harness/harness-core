@@ -18,8 +18,8 @@ import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.plancreator.beans.PlanNodeType;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
-import io.harness.pms.facilitators.FacilitatorObtainment;
-import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.steps.StepOutcomeGroup;
@@ -40,6 +40,8 @@ public class PipelinePlanCreator
     extends AbstractPlanCreatorWithChildren<NgPipeline> implements SupportDefinedExecutorPlanCreator<NgPipeline> {
   public static String INPUT_SET_YAML_KEY = "InputSetYaml";
   public static String EVENT_PAYLOAD_KEY = "eventPayload";
+  public static String WEBHOOK_EVENT_PAYLOAD_EVENT_REPO_TYPE = "webhookEventRepoType";
+  public static String WEBHOOK_EVENT_PAYLOAD_EVENT_TYPE = "webhookEventType";
 
   @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
 

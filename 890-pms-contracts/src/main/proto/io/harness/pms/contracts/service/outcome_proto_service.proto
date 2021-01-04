@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.service;
+
+option java_multiple_files = true;
+
+import "io/harness/pms/contracts/ambiance/ambiance.proto";
+import "io/harness/pms/contracts/refobjects/ref_objects.proto";
+
+service OutcomeProtoService {
+  rpc resolve(OutcomeResolveBlobRequest) returns (OutcomeResolveBlobResponse);
+  rpc consume(OutcomeConsumeBlobRequest) returns (OutcomeConsumeBlobResponse);
+  rpc findAllByRuntimeId(OutcomeFindAllBlobRequest) returns (OutcomeFindAllBlobResponse);
+  rpc fetchOutcomes(OutcomeFetchOutcomesBlobRequest) returns (OutcomeFetchOutcomesBlobResponse);
+  rpc fetchOutcome(OutcomeFetchOutcomeBlobRequest) returns (OutcomeFetchOutcomeBlobResponse);
+}
+
+message OutcomeFetchOutcomeBlobRequest {
+  string outcomeInstanceId = 1;
+}
+
+message OutcomeFetchOutcomeBlobResponse {
+  string outcome = 1;
+}
+
+message OutcomeFindAllBlobRequest {
+  string planExecutionId = 1;
+  string runtimeId = 2;
+}
+
+message OutcomeFindAllBlobResponse {
+  repeated string outcomes = 1;
+}
+
+message OutcomeFetchOutcomesBlobRequest {
+  repeated string outcomeInstanceIds = 1;
+}
+
+message OutcomeFetchOutcomesBlobResponse {
+  repeated string outcomes = 1;
+}
+
+message OutcomeResolveBlobRequest {
+  io.harness.pms.contracts.ambiance.Ambiance ambiance = 1;
+  io.harness.pms.contracts.refobjects.RefObject refObject = 2;
+}
+
+message OutcomeResolveBlobResponse {
+  string stepTransput = 1;
+}
+
+message OutcomeConsumeBlobRequest {
+  io.harness.pms.contracts.ambiance.Ambiance ambiance = 1;
+  string name = 2;
+  string groupName = 3;
+  string value = 4;
+}
+
+message OutcomeConsumeBlobResponse {
+  string response = 1;
+}

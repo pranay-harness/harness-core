@@ -3,7 +3,6 @@ package io.harness.cdng.manifest.yaml;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
-import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.manifest.ManifestConfigVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.walktree.beans.LevelNode;
@@ -13,7 +12,6 @@ import io.harness.walktree.visitor.Visitable;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,10 +19,9 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @NoArgsConstructor
-@JsonTypeName(YamlTypes.MANIFEST_CONFIG)
 @SimpleVisitorHelper(helperClass = ManifestConfigVisitorHelper.class)
 @TypeAlias("manifestConfig")
-public class ManifestConfig implements ManifestConfigWrapper, Visitable {
+public class ManifestConfig implements Visitable {
   @EntityIdentifier String identifier;
   String type;
   @JsonProperty("spec")
@@ -62,8 +59,6 @@ public class ManifestConfig implements ManifestConfigWrapper, Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder()
-        .qualifierName(YamlTypes.MANIFEST_LIST_CONFIG + YamlTypes.PATH_CONNECTOR + identifier)
-        .build();
+    return LevelNode.builder().qualifierName(identifier).build();
   }
 }

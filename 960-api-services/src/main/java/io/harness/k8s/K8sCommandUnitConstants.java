@@ -11,4 +11,5 @@ public interface K8sCommandUnitConstants {
   String WaitForSteadyState = "Wait for Steady State";
   String WrapUp = "Wrap Up";
   String TrafficSplit = "Traffic Split";
+  String SwapServiceSelectors = "Swap Service Selectors";
 }

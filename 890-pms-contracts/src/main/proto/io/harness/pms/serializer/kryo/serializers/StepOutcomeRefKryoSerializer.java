@@ -1,6 +1,6 @@
 package io.harness.pms.serializer.kryo.serializers;
 
-import io.harness.pms.data.StepOutcomeRef;
+import io.harness.pms.contracts.data.StepOutcomeRef;
 import io.harness.serializer.kryo.ProtobufKryoSerializer;
 
 public class StepOutcomeRefKryoSerializer extends ProtobufKryoSerializer<StepOutcomeRef> {

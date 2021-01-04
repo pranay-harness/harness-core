@@ -126,6 +126,12 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       ApplicationSummary activeApplication =
           findActiveApplication(executionLogCallback, pcfCommandSetupRequest, pcfRequestConfig, previousReleases);
 
+      ApplicationSummary mostRecentInactiveApplication = null;
+      if (pcfCommandSetupRequest.isBlueGreen()) {
+        mostRecentInactiveApplication = getMostRecentInactiveApplication(
+            executionLogCallback, activeApplication, pcfCommandSetupRequest, previousReleases);
+      }
+
       // Get new Revision version
       int releaseRevision = getReleaseRevisionForNewApplication(previousReleases);
 
@@ -187,8 +193,22 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
 
       List<PcfAppSetupTimeDetails> downsizeAppDetails = pcfCommandTaskHelper.generateDownsizeDetails(activeApplication);
 
+      PcfAppSetupTimeDetails mostRecentInactiveAppVersionDetails = null;
+      if (mostRecentInactiveApplication != null) {
+        List<String> mostRecentInactiveAppVersionUrls = new ArrayList<>();
+        mostRecentInactiveAppVersionUrls.addAll(mostRecentInactiveApplication.getUrls());
+        mostRecentInactiveAppVersionDetails =
+            PcfAppSetupTimeDetails.builder()
+                .applicationGuid(mostRecentInactiveApplication.getId())
+                .applicationName(mostRecentInactiveApplication.getName())
+                .initialInstanceCount(mostRecentInactiveApplication.getRunningInstances())
+                .urls(mostRecentInactiveAppVersionUrls)
+                .build();
+      }
+
       List<String> urls = new ArrayList<>();
       urls.addAll(newApplication.getUrls());
+
       PcfSetupCommandResponse pcfSetupCommandResponse =
           PcfSetupCommandResponse.builder()
               .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
@@ -201,6 +221,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
                                          .build())
               .totalPreviousInstanceCount(totalPreviousInstanceCount)
               .instanceCountForMostRecentVersion(instanceCountForMostRecentVersion)
+              .mostRecentInactiveAppVersion(mostRecentInactiveAppVersionDetails)
               .downsizeDetails(downsizeAppDetails)
               .build();
 
@@ -272,6 +293,29 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
     return artifactFile;
   }
 
+  private ApplicationSummary getMostRecentInactiveApplication(ExecutionLogCallback executionLogCallback,
+      ApplicationSummary activeApplicationSummary, PcfCommandSetupRequest pcfCommandSetupRequest,
+      List<ApplicationSummary> previousReleases) {
+    if (isEmpty(previousReleases)) {
+      return null;
+    }
+
+    ApplicationSummary mostRecentInactiveApplication = null;
+
+    mostRecentInactiveApplication =
+        previousReleases.stream()
+            .filter(applicationSummary
+                -> applicationSummary.getInstances() > 0 && !applicationSummary.equals(activeApplicationSummary))
+            .reduce((first, second) -> second)
+            .orElse(null);
+
+    if (mostRecentInactiveApplication == null && previousReleases.size() > 1) {
+      mostRecentInactiveApplication = previousReleases.get(previousReleases.size() - 2);
+    }
+
+    return mostRecentInactiveApplication;
+  }
+
   private ApplicationSummary findActiveApplication(ExecutionLogCallback executionLogCallback,
       PcfCommandSetupRequest pcfCommandSetupRequest, PcfRequestConfig pcfRequestConfig,
       List<ApplicationSummary> previousReleases) throws PivotalClientApiException {
@@ -279,27 +323,27 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       return null;
     }
 
-    ApplicationSummary currnetActiveApplication = null;
+    ApplicationSummary currentActiveApplication = null;
     // For BG, check for Environment Variable stamped to denote active version, "HARNESS__STATUS__INDENTIFIER: ACTIVE"
     if (pcfCommandSetupRequest.isBlueGreen()) {
-      currnetActiveApplication =
+      currentActiveApplication =
           pcfCommandTaskHelper.findCurrentActiveApplication(previousReleases, pcfRequestConfig, executionLogCallback);
     }
 
     // If not found, get Most recent version with non-zero count.
-    if (currnetActiveApplication == null) {
-      currnetActiveApplication = previousReleases.stream()
+    if (currentActiveApplication == null) {
+      currentActiveApplication = previousReleases.stream()
                                      .filter(applicationSummary -> applicationSummary.getInstances() > 0)
                                      .reduce((first, second) -> second)
                                      .orElse(null);
     }
 
     // All applications have 0 instances
-    if (currnetActiveApplication == null) {
-      currnetActiveApplication = previousReleases.get(previousReleases.size() - 1);
+    if (currentActiveApplication == null) {
+      currentActiveApplication = previousReleases.get(previousReleases.size() - 1);
     }
 
-    return currnetActiveApplication;
+    return currentActiveApplication;
   }
 
   private void printExistingApplicationsDetails(

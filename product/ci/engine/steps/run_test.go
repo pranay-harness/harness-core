@@ -39,14 +39,14 @@ func TestRunStepValidate(t *testing.T) {
 	assert.NotNil(t, err)
 
 	e = runStep{
-		commands: []string{"ls"},
-		log:      log.Sugar(),
+		command: "ls",
+		log:     log.Sugar(),
 	}
 	err = e.validate()
 	assert.NotNil(t, err)
 
 	e = runStep{
-		commands:      []string{"ls"},
+		command:       "ls",
 		containerPort: uint32(8000),
 		log:           log.Sugar(),
 	}
@@ -78,7 +78,7 @@ func TestRunExecuteClientErr(t *testing.T) {
 		Id: "test",
 		Step: &pb.UnitStep_Run{
 			Run: &pb.RunStep{
-				Commands:      []string{"cd .", "ls"},
+				Command:       "cd . ; ls",
 				ContainerPort: port,
 			},
 		},
@@ -108,7 +108,7 @@ func TestRunExecuteServerErr(t *testing.T) {
 		Id: "test",
 		Step: &pb.UnitStep_Run{
 			Run: &pb.RunStep{
-				Commands:      []string{"cd .", "ls"},
+				Command:       "cd . ; ls",
 				ContainerPort: port,
 			},
 		},
@@ -146,7 +146,7 @@ func TestRunExecuteSuccess(t *testing.T) {
 		Id: "test",
 		Step: &pb.UnitStep_Run{
 			Run: &pb.RunStep{
-				Commands:      []string{"cd .", "ls"},
+				Command:       "cd . ; ls",
 				ContainerPort: port,
 			},
 		},
@@ -188,35 +188,35 @@ func TestRunStepResolveJEXL(t *testing.T) {
 	cmd1Val := "bar"
 
 	tests := []struct {
-		name         string
-		commands     []string
-		resolvedCmds []string
-		jexlEvalRet  map[string]string
-		jexlEvalErr  error
-		expectedErr  bool
+		name        string
+		command     string
+		resolvedCmd string
+		jexlEvalRet map[string]string
+		jexlEvalErr error
+		expectedErr bool
 	}{
 		{
 			name:        "jexl evaluate error",
-			commands:    []string{jCmd1},
+			command:     jCmd1,
 			jexlEvalRet: nil,
 			jexlEvalErr: errors.New("evaluation failed"),
 			expectedErr: true,
 		},
 		{
-			name:         "jexl successfully evaluated",
-			commands:     []string{jCmd1},
-			jexlEvalRet:  map[string]string{jCmd1: cmd1Val},
-			jexlEvalErr:  nil,
-			resolvedCmds: []string{cmd1Val},
-			expectedErr:  false,
+			name:        "jexl successfully evaluated",
+			command:     jCmd1,
+			jexlEvalRet: map[string]string{jCmd1: cmd1Val},
+			jexlEvalErr: nil,
+			resolvedCmd: cmd1Val,
+			expectedErr: false,
 		},
 	}
 	oldJEXLEval := evaluateJEXL
 	defer func() { evaluateJEXL = oldJEXLEval }()
 	for _, tc := range tests {
 		s := &runStep{
-			commands: tc.commands,
-			log:      log.Sugar(),
+			command: tc.command,
+			log:     log.Sugar(),
 		}
 		// Initialize a mock CI addon
 		evaluateJEXL = func(ctx context.Context, stepID string, expressions []string, o output.StageOutput,
@@ -229,7 +229,7 @@ func TestRunStepResolveJEXL(t *testing.T) {
 		}
 
 		if got == nil {
-			assert.Equal(t, s.commands, tc.resolvedCmds)
+			assert.Equal(t, s.command, tc.resolvedCmd)
 		}
 	}
 }

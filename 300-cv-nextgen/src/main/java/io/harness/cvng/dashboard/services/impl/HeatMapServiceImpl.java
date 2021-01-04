@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
+import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.analysis.services.api.AnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.client.NextGenService;
@@ -49,6 +50,7 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
@@ -65,6 +67,8 @@ public class HeatMapServiceImpl implements HeatMapService {
   @Inject private Clock clock;
   @Inject private NextGenService nextGenService;
   @Inject private AnalysisService analysisService;
+  @Inject private AlertRuleService alertRuleService;
+  @Inject private ExecutorService defaultExecutorService;
 
   @Override
   public void updateRiskScore(String accountId, String orgIdentifier, String projectIdentifier,
@@ -81,6 +85,10 @@ public class HeatMapServiceImpl implements HeatMapService {
       // update for project
       updateRiskScore(category, accountId, orgIdentifier, projectIdentifier, null, null, timeStamp, riskScore);
     }
+
+    defaultExecutorService.execute(()
+                                       -> alertRuleService.processRiskScore(accountId, orgIdentifier, projectIdentifier,
+                                           serviceIdentifier, envIdentifier, category, timeStamp, riskScore));
   }
 
   private void updateRiskScore(CVMonitoringCategory category, String accountId, String orgIdentifier,

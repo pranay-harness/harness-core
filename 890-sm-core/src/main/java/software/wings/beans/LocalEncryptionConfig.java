@@ -3,6 +3,7 @@ package software.wings.beans;
 import static io.harness.beans.SecretManagerCapabilities.CAN_BE_DEFAULT_SM;
 import static io.harness.beans.SecretManagerCapabilities.CREATE_FILE_SECRET;
 import static io.harness.beans.SecretManagerCapabilities.CREATE_INLINE_SECRET;
+import static io.harness.helpers.GlobalSecretManagerUtils.isNgHarnessSecretManager;
 import static io.harness.mappers.SecretManagerConfigMapper.updateNGSecretManagerMetadata;
 import static io.harness.security.encryption.SecretManagerType.KMS;
 
@@ -37,7 +38,6 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = false)
 public class LocalEncryptionConfig extends SecretManagerConfig {
   public static final String HARNESS_DEFAULT_SECRET_MANAGER = "Harness Secrets Manager";
-  private String uuid;
   @Builder.Default private String name = HARNESS_DEFAULT_SECRET_MANAGER;
 
   @Override
@@ -57,6 +57,11 @@ public class LocalEncryptionConfig extends SecretManagerConfig {
 
   @Override
   public void maskSecrets() {}
+
+  @Override
+  public boolean isGlobalKms() {
+    return isNgHarnessSecretManager(getNgMetadata());
+  }
 
   @Override
   public List<SecretManagerCapabilities> getSecretManagerCapabilities() {

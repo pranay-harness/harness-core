@@ -13,18 +13,21 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.springframework.data.annotation.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "NotificationKeys")
-@Entity(value = "notifications", noClassnameStored = true)
-@Document("notifications")
-@TypeAlias("notifications")
+@Entity(value = "notificationsNg", noClassnameStored = true)
+@Document("notificationsNg")
+@TypeAlias("notificationsNg")
 public class Notification implements PersistentRegularIterable, PersistentEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -35,7 +38,7 @@ public class Notification implements PersistentRegularIterable, PersistentEntity
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("notification_retries_sent")
-                 .field(NotificationKeys.sent)
+                 .field(NotificationKeys.shouldRetry)
                  .field(NotificationKeys.retries)
                  .build())
         .build();
@@ -47,7 +50,8 @@ public class Notification implements PersistentRegularIterable, PersistentEntity
 
   Channel channel;
 
-  @Builder.Default Boolean sent = Boolean.FALSE;
+  List<Boolean> processingResponses;
+  @Builder.Default boolean shouldRetry = Boolean.TRUE;
   @Builder.Default Integer retries = 0;
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;

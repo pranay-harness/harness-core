@@ -1,0 +1,53 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/KubernetesAuthCredentialDTO"
+    },
+    {
+      "type": "object",
+      "required": [
+        "oidcClientIdRef",
+        "oidcIssuerUrl",
+        "oidcPasswordRef"
+      ],
+      "properties": {
+        "oidcClientIdRef": {
+          "type": "string"
+        },
+        "oidcIssuerUrl": {
+          "type": "string"
+        },
+        "oidcPasswordRef": {
+          "type": "string"
+        },
+        "oidcScopes": {
+          "type": "string"
+        },
+        "oidcSecretRef": {
+          "type": "string"
+        },
+        "oidcUsername": {
+          "type": "string"
+        },
+        "oidcUsernameRef": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "oneOf": [
+        {
+          "required": [
+            "oidcUsername"
+          ]
+        },
+        {
+          "required": [
+            "oidcUsernameRef"
+          ]
+        }
+      ]
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.execution.Status;
 
 import java.util.List;
 import lombok.Builder;

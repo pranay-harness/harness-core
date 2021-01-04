@@ -4,13 +4,14 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
+import io.harness.encryption.Scope;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 
-public interface CVConfigService {
+public interface CVConfigService extends DeleteEntityByProjectHandler<CVConfig> {
   CVConfig save(CVConfig cvConfig);
   List<CVConfig> save(List<CVConfig> cvConfig);
   void update(CVConfig cvConfig);
@@ -18,15 +19,18 @@ public interface CVConfigService {
   @Nullable CVConfig get(String cvConfigId);
   void delete(String cvConfigId);
 
-  void deleteByGroupId(String accountId, String connectorIdentifier, String productName, String groupId);
+  void deleteByIdentifier(
+      String accountId, String orgIdentifier, String projectIdentifier, String monitoringSourceIdentifier);
+  List<CVConfig> findByConnectorIdentifier(String accountId, @Nullable String orgIdentifier,
+      @Nullable String projectIdentifier, String connectorIdentifierWithoutScopePrefix, Scope scope);
   List<CVConfig> list(String accountId, String connectorIdentifier);
   List<CVConfig> list(String accountId, String connectorIdentifier, String productName);
-  List<CVConfig> list(String accountId, String connectorIdentifier, String productName, String groupId);
+  List<CVConfig> list(
+      String accountId, String connectorIdentifier, String productName, String monitoringSourceIdentifier);
   List<CVConfig> list(String accountId, String orgIdentifier, String projectIdentifier, String environmentIdentifier,
       String serviceIdentifier, CVMonitoringCategory monitoringCategory);
   List<String> getProductNames(String accountId, String connectorIdentifier);
-  List<String> getMonitoringSourceIds(
-      String accountId, String orgIdentifier, String projectIdentifier, int limit, int offset);
+  List<String> getMonitoringSourceIds(String accountId, String orgIdentifier, String projectIdentifier, String filter);
   List<CVConfig> listByMonitoringSources(
       String accountId, String orgIdentifier, String projectIdentifier, List<String> monitoringSourceIdentifier);
 
@@ -45,4 +49,7 @@ public interface CVConfigService {
       String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier);
   boolean doesAnyCVConfigExistsInProject(String accountId, String orgIdentifier, String projectIdentifier);
   int getNumberOfServicesSetup(String accountId, String orgIdentifier, String projectIdentifier);
+  void deleteConfigsForProject(String accountId, String orgIdentifier, String projectIdentifier);
+  List<CVConfig> getExistingMappedConfigs(
+      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String identifier);
 }

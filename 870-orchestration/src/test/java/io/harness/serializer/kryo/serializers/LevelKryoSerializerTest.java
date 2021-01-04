@@ -7,8 +7,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.pms.ambiance.Level;
-import io.harness.pms.steps.StepType;
+import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 

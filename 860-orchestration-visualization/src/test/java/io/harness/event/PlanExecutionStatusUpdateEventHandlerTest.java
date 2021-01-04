@@ -1,22 +1,20 @@
 package io.harness.event;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.execution.events.OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE;
+import static io.harness.pms.contracts.execution.events.OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE;
 import static io.harness.rule.OwnerRule.ALEXEI;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.OrchestrationVisualizationTestBase;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.cache.SpringMongoStore;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.plan.PlanExecutionService;
-import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.events.OrchestrationEvent;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
 import io.harness.testlib.RealMongo;
@@ -35,21 +33,6 @@ public class PlanExecutionStatusUpdateEventHandlerTest extends OrchestrationVisu
   @Inject PlanExecutionService planExecutionService;
   @Inject GraphGenerationService graphGenerationService;
   @Inject PlanExecutionStatusUpdateEventHandler planExecutionStatusUpdateEventHandler;
-
-  @Test
-  @Owner(developers = ALEXEI)
-  @Category(UnitTests.class)
-  @RealMongo
-  public void shouldThrowInvalidRequestException() {
-    String planExecutionId = generateUuid();
-    OrchestrationEvent event = OrchestrationEvent.builder()
-                                   .ambiance(Ambiance.newBuilder().setPlanExecutionId(planExecutionId).build())
-                                   .eventType(PLAN_EXECUTION_STATUS_UPDATE)
-                                   .build();
-
-    assertThatThrownBy(() -> planExecutionStatusUpdateEventHandler.handleEvent(event))
-        .isInstanceOf(InvalidRequestException.class);
-  }
 
   @Test
   @Owner(developers = ALEXEI)

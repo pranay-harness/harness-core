@@ -4,7 +4,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.expression.LateBindingValue;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ngpipeline.common.AmbianceHelper;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 
 public class ProjectFunctor implements LateBindingValue {
   private final ProjectService projectService;

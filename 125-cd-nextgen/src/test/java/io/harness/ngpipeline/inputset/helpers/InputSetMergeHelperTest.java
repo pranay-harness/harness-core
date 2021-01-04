@@ -135,7 +135,7 @@ public class InputSetMergeHelperTest extends CDNGBaseTest {
     String expectedMessage = "Input Set field cannot have value if not marked as runtime in original pipeline.";
     validateAssertOnErrorResponse(uuidToErrorResponseMap, key, expectedIdentifier, expectedFieldName, expectedMessage);
 
-    key = "myPipeline1.stages.qa.spec.service.serviceDefinition.spec.artifacts.sidecar.spec.imagePath";
+    key = "myPipeline1.stages.qa.spec.service.serviceDefinition.spec.artifacts.sidecars.sidecar.spec.imagePath";
     expectedFieldName = "imagePath";
     expectedMessage = "Value inside input set cannot be another runtime expression.";
     validateAssertOnErrorResponse(uuidToErrorResponseMap, key, expectedIdentifier, expectedFieldName, expectedMessage);

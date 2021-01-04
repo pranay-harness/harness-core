@@ -1,0 +1,509 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "All test related APIs will be documented here.",
+    "version": "1.0.0",
+    "title": "Tests APIs"
+  },
+  "tags": [
+    {
+      "name": "reports",
+      "description": "Everything reports related"
+    }
+  ],
+  "schemes": [
+    "https",
+    "http"
+  ],
+  "paths": {
+    "/reports/summary": {
+      "get": {
+        "summary": "Get test report summary",
+        "tags": [
+          "reports"
+        ],
+        "description": "Get summary of test reports",
+        "operationId": "reportSummary",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "accountId",
+            "description": "Account ID corresponding to report",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "orgId",
+            "description": "Org ID corresponding to report",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "projectId",
+            "description": "Project ID corresponding to report",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "buildId",
+            "description": "Build ID corresponding to report",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "report",
+            "description": "Report type",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "junit"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/TestReportSummary"
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/reports/test_suites": {
+      "get": {
+        "summary": "Get test suites",
+        "tags": [
+          "reports"
+        ],
+        "description": "Get information about test suites",
+        "operationId": "testSuiteSummary",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "accountId",
+            "description": "Account ID corresponding to report",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "orgId",
+            "description": "Org ID corresponding to report",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "projectId",
+            "description": "Project ID corresponding to report",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "buildId",
+            "description": "Build ID corresponding to report",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "report",
+            "description": "Report type",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "junit"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "description": "Max number of elements in response",
+            "required": false,
+            "default": 100,
+            "type": "integer"
+          },
+          {
+            "in": "query",
+            "name": "pageIndex",
+            "description": "Index of the page whose responses need to be returned",
+            "required": false,
+            "default": 0,
+            "type": "integer"
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "description": "Attribute to sort on",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "order",
+            "description": "Display results in ascending or descending order",
+            "required": false,
+            "default": "ASC",
+            "type": "string",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/TestSuites"
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/reports/test_cases": {
+      "get": {
+        "summary": "Get test cases",
+        "tags": [
+          "reports"
+        ],
+        "description": "Get test case details",
+        "operationId": "testCaseSummary",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "orgId",
+            "description": "Org ID corresponding to report",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "projectId",
+            "description": "Project ID corresponding to report",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "buildId",
+            "description": "Build ID corresponding to report",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "report",
+            "description": "Report type",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "junit"
+            ]
+          },
+          {
+            "in": "query",
+            "name": "suite_name",
+            "description": "Get test cases corresponding to the suite name",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "description": "Max number of elements in response",
+            "required": false,
+            "default": 100,
+            "type": "integer"
+          },
+          {
+            "in": "query",
+            "name": "pageIndex",
+            "description": "Index of the page whose responses need to be returned",
+            "required": false,
+            "default": 0,
+            "type": "integer"
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "description": "Attribute to sort on",
+            "required": false,
+            "default": 0,
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "order",
+            "description": "Display results in ascending or descending order",
+            "required": false,
+            "default": "ASC",
+            "type": "string",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/TestCases"
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Error": {
+      "type": "object",
+      "properties": {
+        "error_msg": {
+          "type": "string",
+          "description": "Details about the error encountered"
+        }
+      }
+    },
+    "TestReportSummary": {
+      "type": "object",
+      "properties": {
+        "total_tests": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "duration_ms": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "tests": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TestCaseSummary"
+          }
+        }
+      }
+    },
+    "TestCaseSummary": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/definitions/TestCaseStatus"
+        }
+      }
+    },
+    "Outcome": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/TestCaseStatus"
+        },
+        "message": {
+          "type": "string",
+          "description": "Message corresponding to the test case status"
+        },
+        "type": {
+          "type": "string",
+          "description": "Type corresponding to the test case status"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description corresponding to the test case status"
+        }
+      }
+    },
+    "TestSuite": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "duration_ms": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "total_tests": {
+          "type": "integer"
+        },
+        "failed_tests": {
+          "type": "integer"
+        },
+        "skipped_tests": {
+          "type": "integer"
+        },
+        "passed_tests": {
+          "type": "integer"
+        },
+        "failure_rate": {
+          "type": "number"
+        }
+      }
+    },
+    "ResponseMetadata": {
+      "type": "object",
+      "properties": {
+        "totalPages": {
+          "type": "integer"
+        },
+        "totalItems": {
+          "type": "integer"
+        },
+        "pageItemCount": {
+          "type": "integer"
+        },
+        "pageSize": {
+          "type": "integer"
+        }
+      }
+    },
+    "TestSuites": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/ResponseMetadata"
+        },
+        "content": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TestSuite"
+          }
+        }
+      }
+    },
+    "TestCases": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/ResponseMetadata"
+        },
+        "content": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TestCase"
+          }
+        }
+      }
+    },
+    "TestCase": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "suite_name": {
+          "type": "string"
+        },
+        "class_name": {
+          "type": "string"
+        },
+        "duration_ms": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "outcome": {
+          "$ref": "#/definitions/Outcome"
+        },
+        "stdout": {
+          "type": "string",
+          "description": "(Truncated) stdout while running the test"
+        },
+        "stderr": {
+          "type": "string",
+          "description": "(Truncated) stderr while running the test"
+        }
+      }
+    },
+    "TestCaseStatus": {
+      "type": "string",
+      "description": "Status of the test",
+      "enum": [
+        "passed",
+        "skipped",
+        "error",
+        "failed"
+      ]
+    }
+  }
+}

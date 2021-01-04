@@ -4,7 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
-import static software.wings.service.impl.verification.CVConfigurationServiceImplTest.createStackDriverConfig;
+import static software.wings.utils.StackDriverUtils.createStackDriverConfig;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -13,6 +13,8 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -65,6 +67,7 @@ import org.mockito.MockitoAnnotations;
 /**
  * @author praveen
  */
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class StackDriverDataCollectionTaskTest extends WingsBaseTest {
   @Mock private DataCollectionExecutorService dataCollectionService;
   @Mock private StackDriverDelegateService stackDriverDelegateService;

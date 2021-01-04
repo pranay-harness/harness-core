@@ -4,8 +4,6 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.CIBeansKryoRegistrar;
 import io.harness.serializer.morphia.CIBeansMorphiaRegistrar;
 import io.harness.serializer.morphia.YamlMorphiaRegistrar;
-import io.harness.serializer.spring.CIBeansAliasRegistrar;
-import io.harness.spring.AliasRegistrar;
 
 import com.google.common.collect.ImmutableSet;
 import lombok.experimental.UtilityClass;
@@ -33,17 +31,5 @@ public class CiBeansRegistrars {
           .addAll(OrchestrationVisualizationModuleRegistrars.morphiaRegistrars)
           .add(CIBeansMorphiaRegistrar.class)
           .add(YamlMorphiaRegistrar.class)
-          .build();
-
-  public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
-      ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-          .addAll(ExecutionPlanModuleRegistrars.aliasRegistrars)
-          .addAll(NGPipelineRegistrars.aliasRegistrars)
-          .addAll(ProjectAndOrgRegistrars.aliasRegistrars)
-          .addAll(NGCoreBeansRegistrars.aliasRegistrars)
-          .addAll(SecretManagerClientRegistrars.aliasRegistrars)
-          .addAll(OrchestrationVisualizationModuleRegistrars.aliasRegistrars)
-          .addAll(YamlBeansModuleRegistrars.aliasRegistrars)
-          .add(CIBeansAliasRegistrar.class)
           .build();
 }

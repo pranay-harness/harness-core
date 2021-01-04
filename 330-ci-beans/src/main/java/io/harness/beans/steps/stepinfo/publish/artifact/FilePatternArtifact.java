@@ -2,6 +2,7 @@ package io.harness.beans.steps.stepinfo.publish.artifact;
 
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.ArtifactConnector;
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.WithFileConnector;
+import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import javax.validation.constraints.NotNull;
@@ -14,7 +15,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonDeserialize
 @TypeAlias("filePatternArtifact")
 public class FilePatternArtifact implements Artifact, WithFileConnector {
-  @NotNull private String filePattern;
+  @NotNull private ParameterField<String> filePattern;
   @NotNull private ArtifactConnector connector;
   @Override
   public Artifact.Type getType() {

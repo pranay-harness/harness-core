@@ -59,7 +59,6 @@ public class NGAppStartupTest extends CategoryTest {
   @BeforeClass
   public static void beforeClass() {
     MONGO_SERVER = startMongoServer();
-    PowerMockito.mockStatic(PmsSdkModule.class);
     PowerMockito.mockStatic(YamlSdkModule.class);
     //    initializeDefaultInstance(any());
     SUPPORT = new DropwizardTestSupport<NextGenConfiguration>(NextGenApplication.class,

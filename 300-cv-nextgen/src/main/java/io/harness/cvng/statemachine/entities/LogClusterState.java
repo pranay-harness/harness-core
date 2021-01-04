@@ -39,10 +39,12 @@ public abstract class LogClusterState extends AnalysisState {
       log.info(
           "Executing ServiceGuardLogClusterState for input: {}. Created {} tasks", getInputs(), workerTaskIds.size());
     } else {
-      log.info(
-          "Executing ServiceGuardLogClusterState for input: {}. No clustering tasks were created. Marking as success",
+      log.error(
+          "Executing ServiceGuardLogClusterState for input: {}. No clustering tasks were created. This is an error state",
           getInputs());
-      this.setStatus(AnalysisStatus.SUCCESS);
+      throw new IllegalStateException("ServiceGuardLogClusterState for input: " + getInputs()
+          + ". No clustering tasks were created."
+          + " This is an error state");
     }
     return this;
   }

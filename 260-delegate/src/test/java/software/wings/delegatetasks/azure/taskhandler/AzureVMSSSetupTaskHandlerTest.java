@@ -6,6 +6,7 @@ import static io.harness.delegate.task.azure.request.AzureVMSSTaskParameters.Azu
 import static io.harness.rule.OwnerRule.IVAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
@@ -19,8 +20,12 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.azure.AzureEnvironmentType;
 import io.harness.azure.client.AzureAutoScaleSettingsClient;
 import io.harness.azure.client.AzureComputeClient;
+import io.harness.azure.client.AzureNetworkClient;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureMachineImageArtifact;
 import io.harness.azure.model.AzureUserAuthVMInstanceData;
@@ -31,23 +36,26 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthType;
+import io.harness.delegate.beans.azure.GalleryImageDefinitionDTO;
+import io.harness.delegate.task.azure.request.AzureLoadBalancerDetailForBGDeployment;
 import io.harness.delegate.task.azure.request.AzureVMSSSetupTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSSetupTaskResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskResponse;
 import io.harness.encryption.SecretRefData;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.delegatetasks.DelegateLogService;
 
 import com.google.common.util.concurrent.TimeLimiter;
+import com.microsoft.azure.management.compute.GalleryImage;
+import com.microsoft.azure.management.compute.GalleryImageIdentifier;
+import com.microsoft.azure.management.compute.OperatingSystemStateTypes;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
-import com.microsoft.azure.management.compute.VirtualMachineScaleSetVM;
-import com.microsoft.azure.management.compute.VirtualMachineScaleSetVMs;
-import com.microsoft.azure.management.resources.Subscription;
+import com.microsoft.azure.management.network.LoadBalancer;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
@@ -55,21 +63,21 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Optional;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
-  @Mock private DelegateLogService mockDelegateLogService;
   @Mock private AzureComputeClient mockAzureComputeClient;
+  @Mock private AzureNetworkClient mockAzureNetworkClient;
   @Mock private AzureAutoScaleSettingsClient mockAzureAutoScaleSettingsClient;
   @Mock private AzureAutoScaleHelper mockAzureAutoScaleHelper;
   @Mock private TimeLimiter timeLimiter;
-  @Mock VirtualMachineScaleSetVMs virtualMachineScaleSetVMs;
-  @Mock VirtualMachineScaleSetVM virtualMachineScaleSetVM;
-  @Mock Subscription subscription;
   private final int minInstances = 0;
   private final int maxInstances = 2;
   private final int desiredInstances = 1;
@@ -237,6 +245,194 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
         .isEqualTo(Collections.singletonList("{mostRecentScalingPolicies: {...}}"));
   }
 
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testGetAzureMachineImageArtifact() throws Exception {
+    String subscriptionId = "subscriptionId";
+    String resourceGroupName = "resourceGroupName";
+    ExecutionLogCallback executionLogCallback = mockExecutionLogCallbackMethods();
+    AzureConfig azureConfig = buildAzureConfig();
+    AzureMachineImageArtifactDTO artifactDTO = buildAzureMachineImageArtifactDTO();
+    GalleryImage mockGalleryImage = mockGalleryImage();
+
+    doReturn(Optional.of(mockGalleryImage))
+        .when(mockAzureComputeClient)
+        .getGalleryImage(azureConfig, subscriptionId, resourceGroupName, "galleryName", "definitionName");
+
+    AzureMachineImageArtifact azureMachineImageArtifact = azureVMSSSetupTaskHandler.getAzureMachineImageArtifact(
+        azureConfig, subscriptionId, resourceGroupName, artifactDTO, executionLogCallback);
+
+    assertThat(azureMachineImageArtifact).isNotNull();
+    assertThat(azureMachineImageArtifact)
+        .isEqualToComparingFieldByField(
+            AzureMachineImageArtifact.builder()
+                .imageReference(
+                    AzureMachineImageArtifact.MachineImageReference.builder()
+                        .offer("TestOffer")
+                        .id("/subscriptions/subscriptionId/resourceGroups/resourceGroupName/providers"
+                            + "/Microsoft.Compute/galleries/galleryName/images/definitionName/versions/version")
+                        .version("version")
+                        .osState(AzureMachineImageArtifact.MachineImageReference.OsState.GENERALIZED)
+                        .publisher("TestPublisher")
+                        .sku("TestSku")
+                        .build())
+                .imageType(AzureMachineImageArtifact.ImageType.IMAGE_GALLERY)
+                .osType(AzureMachineImageArtifact.OSType.LINUX)
+                .build());
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testGetAzureMachineImageArtifactWithNoExistingGalleryImage() throws Exception {
+    String subscriptionId = "subscriptionId";
+    String resourceGroupName = "resourceGroupName";
+    ExecutionLogCallback executionLogCallback = mockExecutionLogCallbackMethods();
+    AzureConfig azureConfig = buildAzureConfig();
+    AzureMachineImageArtifactDTO artifactDTO = buildAzureMachineImageArtifactDTO();
+
+    doReturn(Optional.empty())
+        .when(mockAzureComputeClient)
+        .getGalleryImage(azureConfig, subscriptionId, resourceGroupName, "galleryName", "definitionName");
+
+    assertThatThrownBy(()
+                           -> azureVMSSSetupTaskHandler.getAzureMachineImageArtifact(
+                               azureConfig, subscriptionId, resourceGroupName, artifactDTO, executionLogCallback))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(
+            "Image reference cannot be found, galleryImageId: galleryName, imageDefinitionName: definitionName, "
+            + "subscriptionId: subscriptionId, resourceGroupName: resourceGroupName, imageVersion: version");
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testGetLoadBalancer() {
+    AzureConfig azureConfig = buildAzureConfig();
+    String subscriptionId = "subscriptionId";
+    String resourceGroupName = "resourceGroupName";
+    String loadBalancerName = "loadBalancerName";
+    mockGetLoadBalancerByName(azureConfig, subscriptionId, resourceGroupName, loadBalancerName);
+
+    ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+
+    LoadBalancer loadBalancer =
+        azureVMSSSetupTaskHandler.getLoadBalancer(azureConfig, subscriptionId, resourceGroupName, loadBalancerName);
+
+    verify(mockAzureNetworkClient, times(1))
+        .getLoadBalancerByName(any(AzureConfig.class), eq(subscriptionId), eq(resourceGroupName), captor.capture());
+    String capturedLoadBalancerName = captor.getValue();
+    assertThat(capturedLoadBalancerName).isEqualTo(loadBalancerName);
+    assertThat(loadBalancer).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testGetLoadBalancerWithNoExistingLoadBalancer() {
+    AzureConfig azureConfig = buildAzureConfig();
+    String subscriptionId = "subscriptionId";
+    String resourceGroupName = "resourceGroupName";
+    String loadBalancerName = "loadBalancerName";
+
+    doReturn(Optional.empty())
+        .when(mockAzureNetworkClient)
+        .getLoadBalancerByName(azureConfig, subscriptionId, resourceGroupName, loadBalancerName);
+
+    assertThatThrownBy(()
+                           -> azureVMSSSetupTaskHandler.getLoadBalancer(
+                               azureConfig, subscriptionId, resourceGroupName, loadBalancerName))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Not found load balancer with name: loadBalancerName, resourceGroupName: resourceGroupName");
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testAttachNewCreatedVMSSToStageBackendPool() throws Exception {
+    AzureConfig azureConfig = buildAzureConfig();
+    String subscriptionId = "subscriptionId";
+    String resourceGroupName = "resourceGroupName";
+    String loadBalancerName = "loadBalancerName";
+    String newVirtualMachineScaleSetName = "newVirtualMachineScaleSetName";
+    ExecutionLogCallback executionLogCallback = mockExecutionLogCallbackMethods();
+    mockGetLoadBalancerByName(azureConfig, subscriptionId, resourceGroupName, loadBalancerName);
+    VirtualMachineScaleSet mockVirtualMachineScaleSet = mock(VirtualMachineScaleSet.class);
+    AzureVMSSSetupTaskParameters azureVMSSSetupTaskParameters = buildAzureVMSSSetupTaskParameters();
+    azureVMSSSetupTaskParameters.setAzureLoadBalancerDetail(AzureLoadBalancerDetailForBGDeployment.builder()
+                                                                .loadBalancerName("loadBalancerName")
+                                                                .prodBackendPool("prod")
+                                                                .stageBackendPool("stage")
+                                                                .build());
+
+    doReturn(mockVirtualMachineScaleSet)
+        .when(mockAzureComputeClient)
+        .detachVMSSFromBackendPools(any(AzureConfig.class), eq(subscriptionId), eq(resourceGroupName),
+            eq(newVirtualMachineScaleSetName), eq("*"));
+
+    doReturn(mockVirtualMachineScaleSet)
+        .when(mockAzureComputeClient)
+        .attachVMSSToBackendPools(any(AzureConfig.class), any(), eq(subscriptionId), eq(resourceGroupName),
+            eq(newVirtualMachineScaleSetName), any());
+
+    ArgumentCaptor<String> backendPoolNameCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<String> scaleSetNameCaptor = ArgumentCaptor.forClass(String.class);
+
+    azureVMSSSetupTaskHandler.attachNewCreatedVMSSToStageBackendPool(
+        azureConfig, azureVMSSSetupTaskParameters, newVirtualMachineScaleSetName, executionLogCallback);
+
+    verify(mockAzureComputeClient, times(1))
+        .attachVMSSToBackendPools(any(AzureConfig.class), any(), eq(subscriptionId), eq(resourceGroupName),
+            scaleSetNameCaptor.capture(), backendPoolNameCaptor.capture());
+    String capturedBackendPoolName = backendPoolNameCaptor.getValue();
+    String capturedScaleSetName = scaleSetNameCaptor.getValue();
+    assertThat(capturedBackendPoolName).isEqualTo("stage");
+    assertThat(capturedScaleSetName).isEqualTo(newVirtualMachineScaleSetName);
+  }
+
+  @NotNull
+  private GalleryImage mockGalleryImage() {
+    GalleryImageIdentifier galleryImageIdentifier = new GalleryImageIdentifier();
+    galleryImageIdentifier.withOffer("TestOffer");
+    galleryImageIdentifier.withPublisher("TestPublisher");
+    galleryImageIdentifier.withSku("TestSku");
+    GalleryImage galleryImage = mock(GalleryImage.class);
+    when(galleryImage.osState()).thenReturn(OperatingSystemStateTypes.GENERALIZED);
+    when(galleryImage.identifier()).thenReturn(galleryImageIdentifier);
+    return galleryImage;
+  }
+
+  private AzureMachineImageArtifactDTO buildAzureMachineImageArtifactDTO() {
+    return AzureMachineImageArtifactDTO.builder()
+        .imageType(AzureMachineImageArtifactDTO.ImageType.IMAGE_GALLERY)
+        .imageDefinition(GalleryImageDefinitionDTO.builder()
+                             .definitionName("definitionName")
+                             .galleryName("galleryName")
+                             .version("version")
+                             .build())
+        .imageOSType(AzureMachineImageArtifactDTO.OSType.LINUX)
+        .build();
+  }
+
+  private void mockGetLoadBalancerByName(
+      AzureConfig azureConfig, String subscriptionId, String resourceGroupName, String loadBalancerName) {
+    LoadBalancer mockLoadBalancer = mock(LoadBalancer.class);
+
+    doReturn(Optional.of(mockLoadBalancer))
+        .when(mockAzureNetworkClient)
+        .getLoadBalancerByName(azureConfig, subscriptionId, resourceGroupName, loadBalancerName);
+  }
+
+  private AzureConfig buildAzureConfig() {
+    return AzureConfig.builder()
+        .tenantId("tenantId")
+        .clientId("clientId")
+        .key("key".toCharArray())
+        .azureEnvironmentType(AzureEnvironmentType.AZURE)
+        .build();
+  }
+
   private AzureVMSSSetupTaskParameters buildAzureVMSSSetupTaskParameters() {
     AzureVMAuthDTO azureVMAuthDTO = buildAzureVMAuthDTO();
     return AzureVMSSSetupTaskParameters.builder()
@@ -281,11 +477,12 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
         .getVMSSAutoScaleSettingsJSONs(any(), anyString(), any());
   }
 
-  private void mockExecutionLogCallbackMethods() throws Exception {
+  private ExecutionLogCallback mockExecutionLogCallbackMethods() throws Exception {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
     doNothing().when(mockCallback).saveExecutionLog(anyString(), any(), any());
     doReturn(Boolean.TRUE).when(timeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
     doReturn(mockCallback).when(azureVMSSSetupTaskHandler).getLogCallBack(any(), anyString());
+    return mockCallback;
   }
 }

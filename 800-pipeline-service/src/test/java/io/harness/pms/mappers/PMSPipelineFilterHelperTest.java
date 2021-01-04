@@ -6,9 +6,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.PipelineServiceTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.pms.filter.creation.PMSPipelineFilterRequestDTO;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.mappers.PMSPipelineFilterHelper;
-import io.harness.pms.sdk.core.PMSPipelineFilterRequestDTO;
 import io.harness.rule.Owner;
 
 import java.util.Collections;

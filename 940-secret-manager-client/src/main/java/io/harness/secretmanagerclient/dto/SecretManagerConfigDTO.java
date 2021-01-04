@@ -36,4 +36,5 @@ public abstract class SecretManagerConfigDTO {
 
   private EncryptionType encryptionType;
   @JsonProperty("default") private boolean isDefault;
+  private boolean harnessManaged;
 }

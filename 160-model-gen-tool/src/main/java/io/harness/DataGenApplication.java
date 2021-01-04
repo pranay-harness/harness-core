@@ -2,6 +2,7 @@ package io.harness;
 
 import static io.harness.cache.CacheBackend.NOOP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.pms.sdk.PmsSdkConfiguration.DeployMode.LOCAL;
 import static io.harness.stream.AtmosphereBroadcaster.MEMORY;
 
 import static org.mockito.Mockito.mock;
@@ -23,10 +24,19 @@ import io.harness.manage.GlobalContextManager;
 import io.harness.mongo.MongoModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.sdk.PmsSdkConfiguration;
+import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
+import io.harness.registrars.OrchestrationModuleRegistrarHelper;
+import io.harness.registrars.OrchestrationStepsModuleEventHandlerRegistrar;
+import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
+import io.harness.registrars.OrchestrationVisualizationModuleEventHandlerRegistrar;
+import io.harness.registrars.WingsAdviserRegistrar;
+import io.harness.registrars.WingsStepRegistrar;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.service.DelegateServiceModule;
-import io.harness.spring.AliasRegistrar;
 import io.harness.springdata.SpringPersistenceModule;
 import io.harness.stream.AtmosphereBroadcaster;
 import io.harness.stream.StreamModule;
@@ -66,6 +76,7 @@ import io.dropwizard.Application;
 import io.dropwizard.setup.Environment;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -118,14 +129,6 @@ public class DataGenApplication extends Application<MainConfiguration> {
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(ManagerRegistrars.morphiaRegistrars)
-            .build();
-      }
-
-      @Provides
-      @Singleton
-      Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
-        return ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-            .addAll(ManagerRegistrars.aliasRegistrars)
             .build();
       }
 
@@ -196,6 +199,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
     modules.add(new SignupModule());
     modules.add(new GcpMarketplaceIntegrationModule());
     modules.add(new AuthModule());
+    modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration()));
 
     Injector injector = Guice.createInjector(modules);
 
@@ -251,6 +255,23 @@ public class DataGenApplication extends Application<MainConfiguration> {
       log.error("Exception occurred. Exiting datagen application...", e);
       System.exit(1);
     }
+  }
+
+  private PmsSdkConfiguration getPmsSdkConfiguration() {
+    Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> engineEventHandlersMap =
+        new HashMap<>();
+    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
+        engineEventHandlersMap, OrchestrationVisualizationModuleEventHandlerRegistrar.getEngineEventHandlers());
+    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
+        engineEventHandlersMap, OrchestrationStepsModuleEventHandlerRegistrar.getEngineEventHandlers());
+    return PmsSdkConfiguration.builder()
+        .deploymentMode(LOCAL)
+        .serviceName("datagen")
+        .engineSteps(WingsStepRegistrar.getEngineSteps())
+        .engineAdvisers(WingsAdviserRegistrar.getEngineAdvisers())
+        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
+        .engineEventHandlersMap(engineEventHandlersMap)
+        .build();
   }
 
   private void registerStores(Injector injector) {

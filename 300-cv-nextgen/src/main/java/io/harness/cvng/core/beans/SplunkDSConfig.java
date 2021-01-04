@@ -5,6 +5,7 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -16,11 +17,13 @@ import lombok.NoArgsConstructor;
 @JsonTypeName("SPLUNK")
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SplunkDSConfig extends DSConfig {
   private String query;
   private String serviceInstanceIdentifier;
   private String eventType;
   private String serviceIdentifier;
+  private String envIdentifier;
   @Override
   public DataSourceType getType() {
     return DataSourceType.SPLUNK;
@@ -39,6 +42,11 @@ public class SplunkDSConfig extends DSConfig {
     }
   }
 
+  @Override
+  public void validate(List<CVConfig> existingMapping) {
+    // do nothing
+  }
+
   private SplunkCVConfig toCVConfig() {
     SplunkCVConfig splunkCVConfig = new SplunkCVConfig();
     fillCommonFields(splunkCVConfig);
@@ -46,6 +54,7 @@ public class SplunkDSConfig extends DSConfig {
     splunkCVConfig.setServiceInstanceIdentifier(this.serviceInstanceIdentifier);
     splunkCVConfig.setCategory(CVMonitoringCategory.fromDisplayName(eventType));
     splunkCVConfig.setServiceIdentifier(serviceIdentifier);
+    splunkCVConfig.setEnvIdentifier(envIdentifier);
     return splunkCVConfig;
   }
 }

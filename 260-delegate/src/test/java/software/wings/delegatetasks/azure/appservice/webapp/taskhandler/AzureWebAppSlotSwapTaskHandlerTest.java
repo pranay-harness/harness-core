@@ -15,8 +15,8 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 
-import io.harness.azure.client.AzureMonitorClient;
-import io.harness.azure.client.AzureWebClient;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -27,7 +27,6 @@ import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
-import software.wings.delegatetasks.azure.AzureTimeLimiter;
 import software.wings.delegatetasks.azure.appservice.deployment.AzureAppServiceDeploymentService;
 
 import org.junit.Before;
@@ -37,6 +36,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AzureWebAppSlotSwapTaskHandlerTest extends WingsBaseTest {
   public static final String SUBSCRIPTION_ID = "subscriptionId";
   public static final String RESOURCE_GROUP_NAME = "resourceGroupName";
@@ -44,9 +44,6 @@ public class AzureWebAppSlotSwapTaskHandlerTest extends WingsBaseTest {
   public static final String TARGET_SLOT_NAME = "targetSlotName";
   public static final String WEB_APP_NAME = "webAppName";
 
-  @Mock private AzureWebClient mockAzureWebClient;
-  @Mock private AzureMonitorClient mockAzureMonitorClient;
-  @Mock private AzureTimeLimiter azureTimeLimiter;
   @Mock private ILogStreamingTaskClient mockLogStreamingTaskClient;
   @Mock private LogCallback mockLogCallback;
   @Mock private AzureAppServiceDeploymentService azureAppServiceDeploymentService;

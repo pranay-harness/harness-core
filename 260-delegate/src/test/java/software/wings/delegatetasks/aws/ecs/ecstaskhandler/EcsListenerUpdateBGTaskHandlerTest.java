@@ -11,6 +11,8 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
@@ -32,6 +34,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class EcsListenerUpdateBGTaskHandlerTest extends WingsBaseTest {
   @Mock private AwsElbHelperServiceDelegate awsElbHelperServiceDelegate;
   @Mock private EcsSwapRoutesCommandTaskHelper ecsSwapRoutesCommandTaskHelper;

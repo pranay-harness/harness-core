@@ -17,8 +17,8 @@ java_library(
         "//860-orchestration-visualization:module",
         "//870-orchestration:module",
         "//870-yaml-beans:module",
-        "//880-orchestration-beans:module",
-        "//890-orchestration-persistence:module",
+        "//876-orchestration-beans:module",
+        "//879-pms-sdk:module",
         "//890-pms-contracts/src/main/proto:890_pms_contracts_java_proto",
         "//920-delegate-service-beans/src/main/proto:920_delegate_service_beans_java_proto",
         "//930-delegate-tasks:module",
@@ -443,26 +443,27 @@ java_library(
     ],
 )
 
-#java_library(
-#    name = "tests",
-#    srcs = glob(["src/test/**/*.java"]),
-#    resources = [
-#        "//330-ci-beans/src/test/resources:resource",
-#    ],
-#    visibility = ["//visibility:private"],
-#    deps = [
-#        "maven_deps",
-#        "module",
-#        "//:lombok",
-#        "//990-commons-test:module",
-#        "@maven//:junit_junit",
-#        "@maven//:org_assertj_assertj_core",
-#        "@maven//:org_mockito_mockito_core",
-#        "@maven//:org_powermock_powermock_module_junit4",
-#    ],
-#)
+java_library(
+    name = "tests",
+    srcs = glob(["src/test/**/*.java"]),
+    resources = [
+        "//330-ci-beans/src/test/resources:resource",
+    ],
+    visibility = ["//visibility:private"],
+    deps = [
+        "maven_deps",
+        "module",
+        "//:lombok",
+        "//960-persistence:supporter-test",
+        "//990-commons-test:module",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_powermock_powermock_module_junit4",
+    ],
+)
 
-#run_tests()
+run_tests()
 
 checkstyle()
 

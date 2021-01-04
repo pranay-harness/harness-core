@@ -62,7 +62,7 @@ service LogProxy {
   rpc UploadLink(UploadLinkRequest) returns (UploadLinkResponse);
 
   // RPC to upload using a link
-  rpc UploadUsingLink(UploadUsingLinkRequest) returns (UploadUsingLinkResponse);
+  rpc UploadUsingLink(stream UploadUsingLinkRequest) returns (UploadUsingLinkResponse) {};
 
   // RPC to close a stream
   rpc Close(CloseRequest) returns (CloseResponse);

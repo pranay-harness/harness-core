@@ -4,8 +4,9 @@ import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.steps.StepType;
+import io.harness.pms.yaml.ParameterField;
 
 import software.wings.jersey.JsonViews;
 
@@ -23,37 +24,33 @@ import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@JsonTypeName("restoreCache")
+@JsonTypeName("RestoreCache")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("restoreCacheStepInfo")
 public class RestoreCacheStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
-  public static final int DEFAULT_TIMEOUT = 1200;
-  @JsonIgnore private String callbackId;
   @JsonView(JsonViews.Internal.class)
   @NotNull
-  public static final TypeInfo typeInfo =
-      TypeInfo.builder()
-          .stepInfoType(CIStepInfoType.RESTORE_CACHE)
-          .stepType(StepType.newBuilder().setType(CIStepInfoType.RESTORE_CACHE.name()).build())
-          .build();
+  public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.RESTORE_CACHE).build();
+
+  @JsonIgnore
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.RESTORE_CACHE.name()).build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
-  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
-  @NotNull private String key;
-  private boolean failIfNotExist;
+
+  @NotNull private ParameterField<String> key;
+  private ParameterField<Boolean> failIfNotExist;
 
   @Builder
-  @ConstructorProperties({"callbackId", "identifier", "name", "retry", "timeout", "key", "failIfNotExist"})
-  public RestoreCacheStepInfo(String callbackId, String identifier, String name, Integer retry, Integer timeout,
-      String key, boolean failIfNotExist) {
-    this.callbackId = callbackId;
+  @ConstructorProperties({"name", "retry", "key", "failIfNotExist"})
+  public RestoreCacheStepInfo(String identifier, String name, Integer retry, ParameterField<String> key,
+      ParameterField<Boolean> failIfNotExist) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
-    this.timeout = Optional.ofNullable(timeout).orElse(DEFAULT_TIMEOUT);
+
     this.key = key;
     this.failIfNotExist = failIfNotExist;
   }
@@ -70,7 +67,7 @@ public class RestoreCacheStepInfo implements CIStepInfo {
 
   @Override
   public StepType getStepType() {
-    return typeInfo.getStepType();
+    return STEP_TYPE;
   }
 
   @Override

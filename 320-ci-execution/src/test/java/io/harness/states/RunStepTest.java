@@ -16,17 +16,18 @@ import io.harness.delegate.task.stepstatus.StepExecutionStatus;
 import io.harness.delegate.task.stepstatus.StepMapOutput;
 import io.harness.delegate.task.stepstatus.StepStatus;
 import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
-import io.harness.engine.outputs.ExecutionSweepingOutputService;
 import io.harness.executionplan.CIExecutionTest;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.execution.AsyncExecutableResponse;
-import io.harness.pms.execution.Status;
-import io.harness.pms.execution.failure.FailureInfo;
-import io.harness.pms.execution.failure.FailureType;
-import io.harness.pms.refobjects.RefObject;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.execution.AsyncExecutableResponse;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.execution.failure.FailureType;
+import io.harness.pms.contracts.refobjects.RefObject;
+import io.harness.pms.sdk.core.resolver.RefObjectUtil;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
-import io.harness.refObjects.RefObjectUtil;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
 
@@ -60,7 +61,7 @@ public class RunStepTest extends CIExecutionTest {
 
   @Before
   public void setUp() {
-    ambiance = Ambiance.newBuilder().build();
+    ambiance = Ambiance.newBuilder().addLevels(Level.newBuilder().setIdentifier("runStepId").build()).build();
     stepInfo = RunStepInfo.builder().identifier(STEP_ID).build();
     stepInputPackage = StepInputPackage.builder().build();
     refObject = RefObjectUtil.getSweepingOutputRefObject(CALLBACK_IDS);

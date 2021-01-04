@@ -1,6 +1,5 @@
 package io.harness.cvng;
 
-import io.harness.beans.DecryptableEntity;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.entity.RuntimeParameters;
@@ -25,9 +24,9 @@ public class CVNGDataCollectionDelegateServiceImpl implements CVNGDataCollection
   @Override
   public String getDataCollectionResult(
       String accountId, DataCollectionRequest dataCollectionRequest, List<EncryptedDataDetail> encryptedDataDetails) {
-    if (dataCollectionRequest.getConnectorConfigDTO() instanceof DecryptableEntity) {
+    if (dataCollectionRequest.getConnectorConfigDTO().getDecryptableEntity() != null) {
       secretDecryptionService.decrypt(
-          (DecryptableEntity) dataCollectionRequest.getConnectorConfigDTO(), encryptedDataDetails);
+          dataCollectionRequest.getConnectorConfigDTO().getDecryptableEntity(), encryptedDataDetails);
     }
     String dsl = dataCollectionRequest.getDSL();
     Instant now = clock.instant();
@@ -35,7 +34,7 @@ public class CVNGDataCollectionDelegateServiceImpl implements CVNGDataCollection
                                                     .baseUrl(dataCollectionRequest.getBaseUrl())
                                                     .commonHeaders(dataCollectionRequest.collectionHeaders())
                                                     .commonOptions(dataCollectionRequest.collectionParams())
-                                                    .otherEnvVariables(dataCollectionRequest.getDslEnvVariables())
+                                                    .otherEnvVariables(dataCollectionRequest.fetchDslEnvVariables())
                                                     .endTime(dataCollectionRequest.getEndTime(now))
                                                     .startTime(dataCollectionRequest.getStartTime(now))
                                                     .build();

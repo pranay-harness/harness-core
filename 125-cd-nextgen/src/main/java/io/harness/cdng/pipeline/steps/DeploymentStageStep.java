@@ -4,12 +4,12 @@ import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
 
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
 import io.harness.executions.steps.ExecutionNodeType;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.execution.ChildExecutableResponse;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.ChildExecutableResponse;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
-import io.harness.pms.steps.StepType;
 import io.harness.tasks.ResponseData;
 
 import java.util.Map;
@@ -30,9 +30,8 @@ public class DeploymentStageStep implements ChildExecutable<DeploymentStageStepP
       Ambiance ambiance, DeploymentStageStepParameters stepParameters, StepInputPackage inputPackage) {
     log.info("Executing deployment stage with params [{}]", stepParameters);
 
-    final Map<String, String> fieldToExecutionNodeIdMap = stepParameters.getFieldToExecutionNodeIdMap();
-    final String executionNodeId = fieldToExecutionNodeIdMap.get("execution");
-    return ChildExecutableResponse.newBuilder().setChildNodeId(executionNodeId).build();
+    final String serviceNodeId = stepParameters.getChildNodeID();
+    return ChildExecutableResponse.newBuilder().setChildNodeId(serviceNodeId).build();
   }
 
   @Override

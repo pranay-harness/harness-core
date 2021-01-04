@@ -1,0 +1,34 @@
+{
+  "type": "object",
+  "required": [
+    "spec",
+    "type"
+  ],
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "UsernamePassword"
+      ]
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "UsernamePassword"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "spec": {
+            "$ref": "#/definitions/NexusUsernamePasswordAuth"
+          }
+        }
+      }
+    }
+  ]
+}

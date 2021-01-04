@@ -65,7 +65,7 @@ public class FileUtils {
   }
 
   public static void deleteModifiedConfig(Class clazz) {
-    final Path config = Paths.get(Project.rootDirectory(clazz), "71-rest", "modified_config.yml");
+    final Path config = Paths.get(Project.rootDirectory(clazz), "400-rest", "modified_config.yml");
     File file = new File(config.toString());
     if (file.exists()) {
       log.info("Deleting the config file as all the tests are completed : " + file.getName());

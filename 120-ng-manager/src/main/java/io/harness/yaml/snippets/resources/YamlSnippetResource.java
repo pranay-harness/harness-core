@@ -3,9 +3,9 @@ package io.harness.yaml.snippets.resources;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.yaml.dto.YamlSnippetsDTO;
-import io.harness.yaml.impl.YamlSnippetProvider;
 import io.harness.yaml.snippets.SnippetTag;
+import io.harness.yaml.snippets.dto.YamlSnippetsDTO;
+import io.harness.yaml.snippets.impl.YamlSnippetProvider;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
@@ -14,14 +14,18 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
 
 @Api("yaml-snippet")
 @Path("yaml-snippet")
+@Produces({"application/json", "text/yaml", "text/html", "text/plain"})
+@Consumes({"application/json", "text/yaml", "text/html", "text/plain"})
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @ApiResponses(value =
     {

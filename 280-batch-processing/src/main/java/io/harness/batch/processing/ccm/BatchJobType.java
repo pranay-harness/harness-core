@@ -18,7 +18,7 @@ import org.springframework.batch.core.Job;
 @Getter
 public enum BatchJobType {
   BILLING_DATA_PIPELINE(50, 1, ChronoUnit.HOURS, emptyList(), OUT_OF_CLUSTER),
-  SYNC_BILLING_REPORT_S3(100, 6, ChronoUnit.HOURS, emptyList(), OUT_OF_CLUSTER),
+  SYNC_BILLING_REPORT_S3(100, 1, ChronoUnit.HOURS, emptyList(), OUT_OF_CLUSTER),
   AWS_ECS_CLUSTER_SYNC(110, 1, ChronoUnit.DAYS, emptyList(), OUT_OF_CLUSTER),
   AWS_ECS_CLUSTER_DATA_SYNC(115, 1, ChronoUnit.HOURS, emptyList(), OUT_OF_CLUSTER),
   DEPLOYMENT_EVENT(150, 1, ChronoUnit.DAYS, emptyList(), IN_CLUSTER),

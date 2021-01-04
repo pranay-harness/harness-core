@@ -1,6 +1,5 @@
 package io.harness.plancreator.stages.parallel;
 
-import static io.harness.rule.OwnerRule.ARCHIT;
 import static io.harness.rule.OwnerRule.SAHIL;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,7 +16,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -41,10 +40,11 @@ public class ParallelPlanCreatorTest extends CategoryTest {
     YamlField childNode = parallelNode.getNode().asArray().get(0).getField("stage");
 
     ParallelPlanCreator parallelPlanCreator = new ParallelPlanCreator();
-    Map<String, YamlField> result =
-        parallelPlanCreator.getDependencyNodeIds(PlanCreationContext.builder().currentField(parallelNode).build());
+    List<YamlField> result =
+        parallelPlanCreator.getDependencyNodeIdsList(PlanCreationContext.builder().currentField(parallelNode).build());
+
     assertThat(result).isNotEmpty();
     assertThat(result.size()).isEqualTo(1);
-    assertThat(result.values().iterator().next()).isEqualTo(childNode);
+    assertThat(result.get(0)).isEqualTo(childNode);
   }
 }

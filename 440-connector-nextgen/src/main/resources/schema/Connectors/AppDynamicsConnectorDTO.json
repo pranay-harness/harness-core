@@ -1,0 +1,35 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/ConnectorConfigDTO"
+    },
+    {
+      "type": "object",
+      "required": [
+        "accountId",
+        "accountname",
+        "controllerUrl",
+        "passwordRef",
+        "username"
+      ],
+      "properties": {
+        "accountId": {
+          "type": "string"
+        },
+        "accountname": {
+          "type": "string"
+        },
+        "controllerUrl": {
+          "type": "string"
+        },
+        "passwordRef": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        }
+      }
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

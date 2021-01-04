@@ -38,6 +38,7 @@ import org.apache.commons.io.FileUtils;
 @Path("yamlschema")
 @Produces({"application/json", "text/yaml", "text/html"})
 @Consumes({"application/json", "text/yaml", "text/html"})
+@Deprecated
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 public class YamlSchemaResource {
   @Inject YamlBaseUrlService yamlBaseUrlService;

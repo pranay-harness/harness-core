@@ -1,6 +1,5 @@
 package io.harness.notification.service;
 
-import static io.harness.NotificationClientConstants.HARNESS_NAME;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.exception.WingsException.USER;
@@ -10,9 +9,13 @@ import static org.apache.commons.lang3.StringUtils.stripToNull;
 
 import io.harness.NotificationRequest;
 import io.harness.Team;
+import io.harness.beans.DelegateTaskRequest;
+import io.harness.delegate.beans.MailTaskParams;
+import io.harness.delegate.beans.NotificationTaskResponse;
 import io.harness.exception.ExceptionUtils;
 import io.harness.notification.NotificationChannelType;
 import io.harness.notification.SmtpConfig;
+import io.harness.notification.beans.NotificationProcessingResponse;
 import io.harness.notification.exception.NotificationException;
 import io.harness.notification.remote.dto.EmailSettingDTO;
 import io.harness.notification.remote.dto.NotificationSettingDTO;
@@ -20,9 +23,9 @@ import io.harness.notification.service.api.ChannelService;
 import io.harness.notification.service.api.NotificationSettingsService;
 import io.harness.notification.service.api.NotificationTemplateService;
 import io.harness.serializer.YamlUtils;
+import io.harness.service.DelegateGrpcClientWrapper;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import freemarker.core.InvalidReferenceException;
 import freemarker.template.Configuration;
@@ -30,32 +33,35 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.*;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.mail.DefaultAuthenticator;
-import org.apache.commons.mail.Email;
-import org.apache.commons.mail.EmailException;
-import org.apache.commons.mail.HtmlEmail;
 import org.apache.commons.validator.routines.EmailValidator;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class MailServiceImpl implements ChannelService {
   private final Configuration cfg = new Configuration(VERSION_2_3_23);
-  private final SmtpConfig smtpConfig;
+  private final SmtpConfig smtpConfigDefault;
   private final NotificationSettingsService notificationSettingsService;
   private final NotificationTemplateService notificationTemplateService;
   private final YamlUtils yamlUtils;
+  private final MailSenderImpl mailSender;
+  private final DelegateGrpcClientWrapper delegateGrpcClientWrapper;
 
   @Override
-  public boolean send(NotificationRequest notificationRequest) {
+  public NotificationProcessingResponse send(NotificationRequest notificationRequest) {
     if (Objects.isNull(notificationRequest) || !notificationRequest.hasEmail()) {
-      return false;
+      return NotificationProcessingResponse.trivialResponseWithNoRetries;
     }
 
     String notificationId = notificationRequest.getId();
@@ -65,16 +71,35 @@ public class MailServiceImpl implements ChannelService {
 
     if (Objects.isNull(stripToNull(templateId))) {
       log.info("template Id is null for notification request {}", notificationId);
-      return false;
+      return NotificationProcessingResponse.trivialResponseWithNoRetries;
     }
 
     List<String> emailIds = resolveRecipients(notificationRequest);
     if (isEmpty(emailIds)) {
       log.info("No recipients found in notification request {}", notificationId);
-      return false;
+      return NotificationProcessingResponse.trivialResponseWithNoRetries;
     }
 
-    return send(emailIds, templateId, templateData, notificationId, notificationRequest.getTeam());
+    try {
+      String subject = null;
+      String body = null;
+      Optional<EmailTemplate> emailTemplateOpt = getTemplate(templateId, notificationRequest.getTeam());
+      if (!emailTemplateOpt.isPresent()) {
+        log.error(
+            "Failed to send email for notification request {} possibly due to no valid template with name {} found",
+            notificationId, templateId);
+        return NotificationProcessingResponse.trivialResponseWithNoRetries;
+      }
+      EmailTemplate emailTemplate = emailTemplateOpt.get();
+
+      subject = processTemplate(templateId + "-subject", emailTemplate.getSubject(), templateData);
+      body = processTemplate(templateId + "-body", emailTemplate.getBody(), templateData);
+      return send(emailIds, subject, body, notificationId, notificationRequest.getAccountId());
+    } catch (Exception e) {
+      log.error("Failed to send email. Check template details for notificationId: {}\n{}", notificationId,
+          ExceptionUtils.getMessage(e));
+      return NotificationProcessingResponse.trivialResponseWithRetries;
+    }
   }
 
   @Override
@@ -82,81 +107,47 @@ public class MailServiceImpl implements ChannelService {
     EmailSettingDTO emailSettingDTO = (EmailSettingDTO) notificationSettingDTO;
     String email = emailSettingDTO.getRecipient();
     if (Objects.isNull(stripToNull(email)) || !EmailValidator.getInstance().isValid(email)) {
-      throw new NotificationException("Malformed webhook Url " + email, DEFAULT_ERROR_CODE, USER);
+      throw new NotificationException("Invalid email encountered while processing Test Connection request "
+              + notificationSettingDTO.getNotificationId(),
+          DEFAULT_ERROR_CODE, USER);
     }
-    boolean sent =
-        send(Collections.singletonList(email), emailSettingDTO.getSubject(), emailSettingDTO.getBody(), email);
-    if (!sent) {
+    NotificationProcessingResponse response = send(Collections.singletonList(email), emailSettingDTO.getSubject(),
+        emailSettingDTO.getBody(), email, notificationSettingDTO.getAccountId());
+    if (response.getResult().isEmpty() || !response.getResult().get(0).booleanValue()) {
       throw new NotificationException("Failed to send email. Check SMTP configuration", DEFAULT_ERROR_CODE, USER);
     }
     return true;
   }
 
-  private boolean send(
-      List<String> emailIds, String templateId, Map<String, String> templateData, String notificationId, Team team) {
-    try {
-      String subject = null;
-      String body = null;
-      Optional<EmailTemplate> emailTemplateOpt = getTemplate(templateId, team);
-      if (!emailTemplateOpt.isPresent()) {
-        log.error(
-            "Failed to send email for notification request {} possibly due to no valid template with name {} found",
-            notificationId, templateId);
-        return false;
-      }
-      EmailTemplate emailTemplate = emailTemplateOpt.get();
-
-      subject = processTemplate(templateId + "-subject", emailTemplate.getSubject(), templateData);
-      body = processTemplate(templateId + "-body", emailTemplate.getBody(), templateData);
-
-      return this.send(emailIds, subject, body, notificationId);
-    } catch (Exception e) {
-      log.error("Failed to send email. Check template details for notificationId: {}\n{}", notificationId,
-          ExceptionUtils.getMessage(e));
-      return false;
+  private NotificationProcessingResponse send(
+      List<String> emailIds, String subject, String body, String notificationId, String accountId) {
+    NotificationProcessingResponse notificationProcessingResponse = null;
+    if (notificationSettingsService.getSendNotificationViaDelegate(accountId)) {
+      DelegateTaskRequest delegateTaskRequest =
+          DelegateTaskRequest.builder()
+              .accountId(accountId)
+              .taskType("NOTIFY_MAIL")
+              .taskParameters(
+                  MailTaskParams.builder()
+                      .notificationId(notificationId)
+                      .subject(subject)
+                      .body(body)
+                      .emailIds(emailIds)
+                      .smtpConfig(notificationSettingsService.getSmtpConfig(accountId).orElse(smtpConfigDefault))
+                      .build())
+              .executionTimeout(Duration.ofMinutes(1L))
+              .build();
+      NotificationTaskResponse notificationTaskResponse =
+          (NotificationTaskResponse) delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+      notificationProcessingResponse = notificationTaskResponse.getProcessingResponse();
+    } else {
+      notificationProcessingResponse = mailSender.send(emailIds, subject, body, notificationId);
     }
-  }
-
-  private boolean send(List<String> emailIds, String subject, String body, String notificationId) {
-    try {
-      if (Objects.isNull(stripToNull(body))) {
-        log.error("No email body available. Aborting notification request {}", notificationId);
-        return false;
-      }
-
-      Email email = new HtmlEmail();
-      email.setHostName(smtpConfig.getHost());
-      email.setSmtpPort(smtpConfig.getPort());
-
-      if (!isEmpty(smtpConfig.getPassword())) {
-        email.setAuthenticator(
-            new DefaultAuthenticator(smtpConfig.getUsername(), new String(smtpConfig.getPassword())));
-      }
-      email.setSSLOnConnect(smtpConfig.isUseSSL());
-      if (smtpConfig.isUseSSL()) {
-        email.setSslSmtpPort(Integer.toString(smtpConfig.getPort()));
-      }
-
-      try {
-        email.setReplyTo(ImmutableList.of(new InternetAddress(smtpConfig.getFromAddress())));
-      } catch (AddressException | EmailException e) {
-        log.error(ExceptionUtils.getMessage(e), e);
-      }
-      email.setFrom(smtpConfig.getFromAddress(), HARNESS_NAME);
-
-      for (String emailId : emailIds) {
-        email.addTo(emailId);
-      }
-
-      email.setSubject(subject);
-      ((HtmlEmail) email).setHtmlMsg(body);
-      email.send();
-    } catch (EmailException e) {
-      log.error("Failed to send email. Check SMTP configuration. notificationId: {}\n{}", notificationId,
-          ExceptionUtils.getMessage(e));
-      return false;
-    }
-    return true;
+    log.info(NotificationProcessingResponse.isNotificationResquestFailed(notificationProcessingResponse)
+            ? "Notification request {} sent"
+            : "Failed to send notification for request {}",
+        notificationId);
+    return notificationProcessingResponse;
   }
 
   private String processTemplate(String templateName, String templateStr, Map<String, String> templateData) {

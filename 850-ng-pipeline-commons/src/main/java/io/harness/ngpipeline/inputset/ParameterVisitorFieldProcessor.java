@@ -1,6 +1,6 @@
 package io.harness.ngpipeline.inputset;
 
-import io.harness.beans.ParameterField;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.registries.visitorfield.VisitableFieldProcessor;
 
 public class ParameterVisitorFieldProcessor implements VisitableFieldProcessor<ParameterField<?>> {

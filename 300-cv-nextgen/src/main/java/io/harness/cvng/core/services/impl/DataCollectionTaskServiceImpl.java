@@ -242,8 +242,8 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
     if (cvConfig instanceof MetricCVConfig) {
       // TODO: get rid of this. Adding it to unblock. We need to redesign how are we setting DSL.
       metricPackService.populateDataCollectionDsl(cvConfig.getType(), ((MetricCVConfig) cvConfig).getMetricPack());
-      metricPackService.populatePaths(cvConfig.getAccountId(), cvConfig.getProjectIdentifier(), cvConfig.getType(),
-          ((MetricCVConfig) cvConfig).getMetricPack());
+      metricPackService.populatePaths(cvConfig.getAccountId(), cvConfig.getOrgIdentifier(),
+          cvConfig.getProjectIdentifier(), cvConfig.getType(), ((MetricCVConfig) cvConfig).getMetricPack());
     }
   }
 
@@ -269,6 +269,18 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
 
     log.info("Enqueued cvConfigId successfully: {}", cvConfig.getUuid());
     return dataCollectionTaskId;
+  }
+
+  @Override
+  public void resetLiveMonitoringPerpetualTask(CVConfig cvConfig) {
+    Map<String, String> params = new HashMap<>();
+    params.put(DataCollectionTaskKeys.dataCollectionWorkerId, cvConfig.getUuid());
+    params.put(DataCollectionTaskKeys.verificationTaskId,
+        verificationTaskService.getServiceGuardVerificationTaskId(cvConfig.getAccountId(), cvConfig.getUuid()));
+    params.put(CVConfigKeys.connectorIdentifier, cvConfig.getConnectorIdentifier());
+    verificationManagerService.resetDataCollectionTask(cvConfig.getAccountId(), cvConfig.getOrgIdentifier(),
+        cvConfig.getProjectIdentifier(), cvConfig.getPerpetualTaskId(),
+        DataCollectionConnectorBundle.builder().params(params).dataCollectionType(DataCollectionType.CV).build());
   }
 
   @Override

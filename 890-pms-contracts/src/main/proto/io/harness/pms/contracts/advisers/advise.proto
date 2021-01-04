@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.advisers;
+
+option java_multiple_files = true;
+
+import "google/protobuf/duration.proto";
+
+enum AdviseType {
+  UNKNOWN = 0;
+  NEXT_STEP = 1;
+  RETRY = 2;
+  INTERVENTION_WAIT = 3;
+  END_PLAN = 4;
+  MARK_SUCCESS = 5;
+}
+
+message AdviserResponse {
+  oneof advise {
+    NextStepAdvise nextStepAdvise = 1;
+    RetryAdvise retryAdvise = 2;
+    InterventionWaitAdvise interventionWaitAdvise = 3;
+    EndPlanAdvise endPlanAdvise = 4;
+    MarkSuccessAdvise markSuccessAdvise = 6;
+  }
+  AdviseType type = 5;
+}
+
+message NextStepAdvise {
+  string nextNodeId = 2;
+}
+
+message RetryAdvise {
+  string retryNodeExecutionId = 1;
+  int64 waitInterval = 2;
+}
+
+message InterventionWaitAdvise {
+  google.protobuf.Duration timeout = 1;
+}
+
+message EndPlanAdvise {}
+
+message MarkSuccessAdvise {
+  string nextNodeId = 1;
+}

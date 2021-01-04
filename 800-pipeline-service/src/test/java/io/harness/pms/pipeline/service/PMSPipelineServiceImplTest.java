@@ -6,12 +6,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.PipelineServiceTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.pms.contracts.steps.StepInfo;
+import io.harness.pms.contracts.steps.StepMetaData;
+import io.harness.pms.filter.creation.FilterCreatorMergeService;
 import io.harness.pms.pipeline.CommonStepInfo;
 import io.harness.pms.pipeline.StepCategory;
 import io.harness.pms.sdk.PmsSdkInstanceService;
-import io.harness.pms.sdk.core.FilterCreatorMergeService;
-import io.harness.pms.steps.StepInfo;
-import io.harness.pms.steps.StepMetaData;
 import io.harness.repositories.pipeline.PMSPipelineRepository;
 import io.harness.rule.Owner;
 
@@ -51,11 +51,13 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
     serviceInstanceNameToSupportedSteps.put("cd",
         Collections.singletonList(StepInfo.newBuilder()
                                       .setName("testStepCD")
+                                      .setType("testStepCD")
                                       .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Double/Single").build())
                                       .build()));
     serviceInstanceNameToSupportedSteps.put("cv",
         Collections.singletonList(StepInfo.newBuilder()
                                       .setName("testStepCV")
+                                      .setType("testStepCV")
                                       .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Double/Single").build())
                                       .build()));
     Mockito.when(pmsSdkInstanceService.getInstanceNameToSupportedSteps())
@@ -65,7 +67,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
 
     StepCategory stepCategory = pmsPipelineService.getSteps("cd", null);
     String expected =
-        "StepCategory(name=Library, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCD)], stepCategories=[])]), StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV)], stepCategories=[])])])])";
+        "StepCategory(name=Library, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCD, type=testStepCD)], stepCategories=[])]), StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV)], stepCategories=[])])])])";
 
     assertThat(stepCategory.toString()).isEqualTo(expected);
   }
@@ -79,11 +81,13 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
         Collections.singletonList(
             StepInfo.newBuilder()
                 .setName("testStepCD")
+                .setType("testStepCD")
                 .setStepMetaData(StepMetaData.newBuilder().addCategory("K8S").setFolderPath("Double/Single").build())
                 .build()));
     serviceInstanceNameToSupportedSteps.put("cv",
         Collections.singletonList(StepInfo.newBuilder()
                                       .setName("testStepCV")
+                                      .setType("testStepCV")
                                       .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Double/Single").build())
                                       .build()));
     Mockito.when(pmsSdkInstanceService.getInstanceNameToSupportedSteps())
@@ -93,7 +97,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
 
     StepCategory stepCategory = pmsPipelineService.getSteps("cd", "Terraform");
     String expected =
-        "StepCategory(name=Library, stepsData=[], stepCategories=[StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV)], stepCategories=[])])])])";
+        "StepCategory(name=Library, stepsData=[], stepCategories=[StepCategory(name=cv, stepsData=[], stepCategories=[StepCategory(name=Double, stepsData=[], stepCategories=[StepCategory(name=Single, stepsData=[StepData(name=testStepCV, type=testStepCV)], stepCategories=[])])])])";
     assertThat(stepCategory.toString()).isEqualTo(expected);
   }
 }

@@ -1,39 +1,50 @@
 package io.harness.executionplan.rule;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
+import static org.mockito.Mockito.mock;
+
 import io.harness.CIExecutionServiceModule;
 import io.harness.CIExecutionTestModule;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.ci.config.CIExecutionServiceConfig;
+import io.harness.delegate.DelegateServiceGrpc;
+import io.harness.engine.pms.tasks.NgDelegate2TaskExecutor;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
+import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.sdk.PmsSdkConfiguration;
+import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
+import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.queue.QueueController;
+import io.harness.registrars.ExecutionRegistrar;
+import io.harness.registrars.OrchestrationAdviserRegistrar;
+import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
-import io.harness.serializer.CiExecutionRegistrars;
-import io.harness.spring.AliasRegistrar;
 import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 
+import ci.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import io.grpc.inprocess.InProcessChannelBuilder;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Supplier;
 import org.junit.Rule;
 import org.junit.rules.MethodRule;
@@ -84,15 +95,6 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
       }
     });
 
-    modules.add(new AbstractModule() {
-      @Provides
-      @Singleton
-      Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
-        return ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-            .addAll(CiExecutionRegistrars.aliasRegistrars)
-            .build();
-      }
-    });
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
     modules.add(new CIExecutionServiceModule(CIExecutionServiceConfig.builder()
@@ -103,15 +105,39 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
                                                  .delegateServiceEndpointVariableValue("delegate-service:8080")
                                                  .liteEngineImageTag("v1.4-alpha")
                                                  .pvcDefaultStorageSize(25600)
-                                                 .build()));
+                                                 .build(),
+        false));
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
         bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {
         }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
+
+        bind(new TypeLiteral<DelegateServiceGrpc.DelegateServiceBlockingStub>() {
+        }).toInstance(DelegateServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(generateUuid()).build()));
       }
     });
+
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      protected NgDelegate2TaskExecutor ngDelegate2TaskExecutor() {
+        return mock(NgDelegate2TaskExecutor.class);
+      }
+    });
+    modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration()));
     return modules;
+  }
+
+  private PmsSdkConfiguration getPmsSdkConfiguration() {
+    return PmsSdkConfiguration.builder()
+        .deploymentMode(DeployMode.LOCAL)
+        .serviceName("ci")
+        .engineSteps(ExecutionRegistrar.getEngineSteps())
+        .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers())
+        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
+        .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers())
+        .build();
   }
 
   @Override

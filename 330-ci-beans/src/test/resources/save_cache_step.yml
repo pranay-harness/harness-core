@@ -1,7 +1,7 @@
 step:
   identifier: cacheResults
   name: stepName
-  type: saveCache
+  type: SaveCache
   spec:
     key: test_results
     paths:

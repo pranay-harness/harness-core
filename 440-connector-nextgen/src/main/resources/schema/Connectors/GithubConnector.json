@@ -1,0 +1,34 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/ConnectorConfigDTO"
+    },
+    {
+      "type": "object",
+      "required": [
+        "authentication",
+        "type",
+        "url"
+      ],
+      "properties": {
+        "apiAccess": {
+          "$ref": "#/definitions/GithubApiAccess"
+        },
+        "authentication": {
+          "$ref": "#/definitions/GithubAuthentication"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "Account",
+            "Repo"
+          ]
+        },
+        "url": {
+          "type": "string"
+        }
+      }
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

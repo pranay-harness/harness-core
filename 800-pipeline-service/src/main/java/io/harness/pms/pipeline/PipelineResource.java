@@ -2,6 +2,7 @@ package io.harness.pms.pipeline;
 
 import static java.lang.Long.parseLong;
 import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 import io.harness.NGCommonEntityConstants;
@@ -11,12 +12,19 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.pms.filter.creation.PMSPipelineFilterRequestDTO;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
+import io.harness.pms.pipeline.mappers.ExecutionGraphMapper;
 import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
 import io.harness.pms.pipeline.mappers.PMSPipelineFilterHelper;
+import io.harness.pms.pipeline.mappers.PipelineExecutionSummaryDtoMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
-import io.harness.pms.sdk.core.PMSPipelineFilterRequestDTO;
+import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
+import io.harness.pms.plan.execution.beans.dto.PipelineExecutionDetailDTO;
+import io.harness.pms.plan.execution.beans.dto.PipelineExecutionSummaryDTO;
+import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.serializer.JsonUtils;
+import io.harness.tasks.ProgressData;
 import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
@@ -42,8 +50,12 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.groovy.util.Maps;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -63,6 +75,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Slf4j
 public class PipelineResource {
   private PMSPipelineService pmsPipelineService;
+  private PMSExecutionService pmsExecutionService;
 
   @POST
   @ApiOperation(value = "Create a Pipeline", nickname = "createPipeline")
@@ -187,5 +200,79 @@ public class PipelineResource {
     log.info("Get Steps for given module");
 
     return ResponseDTO.newResponse(pmsPipelineService.getSteps(module, category));
+  }
+
+  @GET
+  @Path("/execution/summary")
+  @ApiOperation(value = "Gets Executions list", nickname = "getListOfExecutions")
+  public ResponseDTO<Page<PipelineExecutionSummaryDTO>> getListOfExecutions(
+      @NotNull @QueryParam("accountIdentifier") String accountId, @QueryParam("orgIdentifier") String orgId,
+      @NotNull @QueryParam("projectIdentifier") String projectId, @QueryParam("filter") String filter,
+      @QueryParam("pipelineIdentifier") String pipelineIdentifier, @QueryParam("page") @DefaultValue("0") int page,
+      @QueryParam("size") @DefaultValue("10") int size, @QueryParam("sort") List<String> sort) {
+    log.info("Get List of executions");
+    Criteria criteria = new Criteria();
+    if (EmptyPredicate.isNotEmpty(accountId)) {
+      criteria.and(PipelineEntityKeys.accountId).is(accountId);
+    }
+    if (EmptyPredicate.isNotEmpty(orgId)) {
+      criteria.and(PipelineEntityKeys.orgIdentifier).is(orgId);
+    }
+    if (EmptyPredicate.isNotEmpty(projectId)) {
+      criteria.and(PipelineEntityKeys.projectIdentifier).is(projectId);
+    }
+    if (EmptyPredicate.isNotEmpty(pipelineIdentifier)) {
+      criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.pipelineIdentifier).is(pipelineIdentifier);
+    }
+    Pageable pageRequest;
+    if (EmptyPredicate.isEmpty(sort)) {
+      pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.createdAt));
+    } else {
+      pageRequest = PageUtils.getPageRequest(page, size, sort);
+    }
+
+    Page<PipelineExecutionSummaryDTO> planExecutionSummaryDTOS =
+        pmsExecutionService.getPipelineExecutionSummaryEntity(criteria, pageRequest)
+            .map(PipelineExecutionSummaryDtoMapper::toDto);
+
+    return ResponseDTO.newResponse(planExecutionSummaryDTOS);
+  }
+
+  @GET
+  @Path("/execution/{planExecutionId}")
+  @ApiOperation(value = "Gets Execution Detail", nickname = "getExecutionDetail")
+  public ResponseDTO<PipelineExecutionDetailDTO> getExecutionDetail(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId, @QueryParam("filter") String filter,
+      @QueryParam("stageNodeId") String stageNodeId,
+      @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
+    log.info("Get Execution Detail");
+
+    PipelineExecutionDetailDTO pipelineExecutionDetailDTO =
+        PipelineExecutionDetailDTO.builder()
+            .pipelineExecutionSummary(PipelineExecutionSummaryDtoMapper.toDto(
+                pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId)))
+            .executionGraph(ExecutionGraphMapper.toExecutionGraph(
+                pmsExecutionService.getOrchestrationGraph(stageNodeId, planExecutionId)))
+            .build();
+
+    return ResponseDTO.newResponse(pipelineExecutionDetailDTO);
+  }
+
+  @GET
+  @Path("/execution/{planExecutionId}/inputset")
+  @ApiOperation(value = "Gets  inputsetYaml", nickname = "getInputsetYaml")
+  public String getInputsetYaml(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
+      @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
+    return pmsExecutionService.getInputsetYaml(accountId, orgId, projectId, planExecutionId);
+  }
+
+  @Value
+  @Builder
+  private static class DummyProgressData implements ProgressData {
+    String data;
   }
 }

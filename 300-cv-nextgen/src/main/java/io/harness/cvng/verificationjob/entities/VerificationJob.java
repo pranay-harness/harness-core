@@ -12,7 +12,8 @@ import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobType;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
-import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -21,6 +22,7 @@ import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -33,6 +35,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
@@ -42,26 +45,40 @@ import org.mongodb.morphia.annotations.Id;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "verificationJobs")
 @HarnessEntity(exportable = true)
+@SuperBuilder
 // Also the serialization of duration is in millis.
 public abstract class VerificationJob
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("query_idx")
+                 .field(VerificationJobKeys.projectIdentifier)
+                 .field(VerificationJobKeys.orgIdentifier)
+                 .field(VerificationJobKeys.accountId)
+                 .build())
+        .build();
+  }
+
   public VerificationJob() {
     this.type = getType();
   }
   @Id private String uuid;
-  private String identifier;
-  private String jobName;
+  @NotNull private String identifier;
+  @NotNull private String jobName;
   private long createdAt;
   private long lastUpdatedAt;
   private String projectIdentifier;
   private String orgIdentifier;
+  private String activitySourceIdentifier;
   private VerificationJobType type;
-  @NotNull @FdIndex private String accountId;
+  @NotNull private String accountId;
   @NotNull private RuntimeParameter serviceIdentifier;
   @NotNull private RuntimeParameter envIdentifier;
   private List<DataSourceType> dataSources;
 
   private RuntimeParameter duration;
+  private boolean isDefaultJob;
 
   public abstract VerificationJobType getType();
   public abstract VerificationJobDTO getVerificationJobDTO();
@@ -103,6 +120,7 @@ public abstract class VerificationJob
     verificationJobDTO.setDataSources(this.dataSources);
     verificationJobDTO.setProjectIdentifier(this.getProjectIdentifier());
     verificationJobDTO.setOrgIdentifier(this.getOrgIdentifier());
+    verificationJobDTO.setDefaultJob(isDefaultJob);
   }
 
   protected List<TimeRange> getTimeRangesForDuration(Instant startTime) {

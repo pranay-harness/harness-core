@@ -27,6 +27,7 @@ import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang3.BooleanUtils.isNotTrue;
 
 import io.harness.beans.FileData;
 import io.harness.delegate.k8s.K8sBGBaseHandler;
@@ -235,7 +236,9 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
   boolean prepareForBlueGreen(K8sBlueGreenDeployTaskParameters k8sBlueGreenDeployTaskParameters,
       K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback) {
     try {
-      markVersionedResources(resources);
+      if (isNotTrue(k8sBlueGreenDeployTaskParameters.getSkipVersioningForAllK8sObjects())) {
+        markVersionedResources(resources);
+      }
 
       executionLogCallback.saveExecutionLog("Manifests processed. Found following resources: \n"
           + k8sTaskHelperBase.getResourcesInTableFormat(resources));
@@ -333,7 +336,9 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
 
       executionLogCallback.saveExecutionLog("\nVersioning resources.");
 
-      addRevisionNumber(resources, currentRelease.getNumber());
+      if (isNotTrue(k8sBlueGreenDeployTaskParameters.getSkipVersioningForAllK8sObjects())) {
+        addRevisionNumber(resources, currentRelease.getNumber());
+      }
       managedWorkload = getManagedWorkload(resources);
       managedWorkload.appendSuffixInName('-' + stageColor);
       managedWorkload.addLabelsInPodSpec(

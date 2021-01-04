@@ -16,7 +16,7 @@ func Test_GetRemoteLogger_OpenSuccess(t *testing.T) {
 
 	mclient := mock.NewMockClient(ctrl)
 	mclient.EXPECT().Open(context.Background(), "key").Return(nil)
-	writer := NewRemoteWriter(mclient, "key")
+	writer, _ := NewRemoteWriter(mclient, "key")
 	_, err := NewRemoteLogger(writer)
 	assert.Equal(t, err, nil)
 }
@@ -27,7 +27,7 @@ func Test_GetRemoteLogger_OpenFailure(t *testing.T) {
 
 	mclient := mock.NewMockClient(ctrl)
 	mclient.EXPECT().Open(context.Background(), "key").Return(errors.New("err"))
-	writer := NewRemoteWriter(mclient, "key")
+	writer, _ := NewRemoteWriter(mclient, "key")
 	_, err := NewRemoteLogger(writer)
 	assert.Equal(t, err, nil)
 }

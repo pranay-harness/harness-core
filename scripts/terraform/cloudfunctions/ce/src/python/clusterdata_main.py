@@ -68,7 +68,7 @@ def main(jsonData, context):
         # invalid file format
         print("Filename is invalid {}".format(fileName))
         jsonData["fileDate"] = None
-    jsonData["accountId"] = accountId
+    jsonData["accountId"] = accountId.strip()
     jsonData["datasetName"] = datasetName
     jsonData["tableName"] = tableName
     jsonData["projectName"] = projectName
@@ -83,6 +83,7 @@ def main(jsonData, context):
         print("%s table does not exists, creating table..." % clusterDataTableRef)
         createTable(client, clusterDataTableName)
     else:
+        alterClusterTable(client, jsonData)
         print("%s table exists" % clusterDataTableRef)
 
     if not if_tbl_exists(client, unifiedTableRef):
@@ -93,14 +94,29 @@ def main(jsonData, context):
 
     ingestDataFromAvroToClusterData(client, jsonData)
     ingestDataFromClusterDataToUnified(client, jsonData)
+    loadIntoUnifiedGCP(client, jsonData)
+    loadIntoUnifiedAWS(client, jsonData)
     client.close()
+
+def alterClusterTable(client, jsonData):
+    print("Altering CLuster Data Table")
+    ds = "%s.%s" % (jsonData["projectName"], jsonData["datasetName"])
+    query = "ALTER TABLE `%s.clusterData` ADD COLUMN IF NOT EXISTS envname STRING, ADD COLUMN IF NOT EXISTS servicename STRING, ADD COLUMN IF NOT EXISTS appname STRING;" % (ds)
+
+    try:
+        query_job = client.query(query)
+        results = query_job.result()
+    except Exception as e:
+        # Error Running Alter Query
+        print(e)
+    else:
+        print("Fnished Altering CLuster Data Table")
 
 
 def ingestDataFromAvroToClusterData(client, jsonData):
     """Loads data from Avro to clusterData table
     """
     # table_id = "your-project.your_dataset.your_table_name"
-    # TODO: Delete that days of data from clusterData table in case we reexecute something
     from google.cloud import bigquery
     deleteDataFromClusterData(client, jsonData)
     job_config = bigquery.LoadJobConfig(
@@ -117,8 +133,11 @@ def ingestDataFromAvroToClusterData(client, jsonData):
         jsonData["tableName"],
         job_config=job_config
     )  # Make an API request.
-
-    load_job.result()  # Wait for the job to complete.
+    try:
+        load_job.result()  # Wait for the job to complete.
+    except Exception as e:
+        print(e)
+        # Probably the file was deleted in earlier runs
 
     table = client.get_table(jsonData["tableName"])
     print("Total: {} rows in table {}".format(table.num_rows, jsonData["tableName"]))
@@ -135,11 +154,94 @@ def deleteFromGcs(jsonData):
     for blob in blobs:
         # kmpySmUISimoRrJL6NL73w/billing_data_2020_DECEMBER_10.avro
         if blob.name.endswith(jsonData["fileName"]): # or .endswith(".avro"):
-             print("Deleting blob... : %s" % blob.name)
-             blob.delete()
-             print("Deleted blob : %s" % blob.name)
-             break
-          
+            print("Deleting blob... : %s" % blob.name)
+            blob.delete()
+            print("Deleted blob : %s" % blob.name)
+            break
+
+def loadIntoUnifiedGCP(client, jsonData):
+    print("Loading into unifiedTable table for GCP...")
+    ds = "%s.%s" % (jsonData["projectName"], jsonData["datasetName"])
+    query = """DELETE FROM `%s.unifiedTable` WHERE DATE(startTime) <= DATE_SUB(@run_date , INTERVAL 1 DAY) AND
+                    DATE(startTime) >= DATE_SUB(@run_date , INTERVAL 6 DAY) AND cloudProvider = "GCP";
+           INSERT INTO `%s.unifiedTable` (product, cost, gcpProduct,gcpSkuId,gcpSkuDescription, startTime, gcpProjectId,
+                region,zone,gcpBillingAccountId,cloudProvider, discount, labels)
+                SELECT service.description AS product, cost AS cost, service.description AS gcpProduct, sku.id AS gcpSkuId,
+                     sku.description AS gcpSkuDescription, TIMESTAMP_TRUNC(usage_start_time, DAY) as startTime, project.id AS gcpProjectId,
+                     location.region AS region, location.zone AS zone, billing_account_id AS gcpBillingAccountId, "GCP" AS cloudProvider, credits.amount as discount, labels AS labels
+                FROM `%s.gcp_billing_export*` LEFT JOIN UNNEST(credits) as credits
+                WHERE DATE(usage_start_time) <= DATE_SUB(CAST(FORMAT_DATE('%%Y-%%m-%%d', @run_date) AS DATE), INTERVAL 1 DAY) AND
+                     DATE(usage_start_time) >= DATE_SUB(CAST(FORMAT_DATE('%%Y-%%m-%%d', @run_date) AS DATE), INTERVAL 6 DAY) ;
+    """ % (ds, ds, ds)
+
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter(
+                "run_date",
+                "DATE",
+                datetime.datetime.utcnow().date(),
+            )
+        ]
+    )
+    try:
+        query_job = client.query(query, job_config=job_config)
+        results = query_job.result()
+    except Exception as e:
+        # For this account table GCP billing data isnt present
+        print(e)
+    else:
+        #print(query)
+        print("Loaded into unifiedTable table for GCP...")
+
+
+def loadIntoUnifiedAWS(client, jsonData):
+    """
+    Assumption: unifiedTable should be created at this point.
+    """
+    from google.cloud import bigquery
+    ds = "%s.%s" % (jsonData["projectName"], jsonData["datasetName"])
+    print(ds)
+    dataset = client.get_dataset(ds)
+    table_ref = dataset.table("unifiedTable")
+    # In the new BigQuery dataset, create a reference to a new table for
+    # storing the query results.
+    print("Loading into unifiedTable table for AWS...")
+    # Configure the query job.
+    job_config = bigquery.QueryJobConfig()
+
+    query = """DELETE FROM `%s.unifiedTable` WHERE DATE(startTime) >= DATE_SUB(@run_date , INTERVAL 6 DAY) AND cloudProvider = "AWS";
+               INSERT INTO `%s.unifiedTable` (product, startTime,
+                    awsBlendedRate,awsBlendedCost,awsUnblendedRate, awsUnblendedCost, cost, awsServicecode,
+                    region,awsAvailabilityzone,awsUsageaccountid,awsInstancetype,awsUsagetype,cloudProvider, labels)
+               SELECT productname AS product, TIMESTAMP_TRUNC(usagestartdate, DAY) as startTime, blendedrate AS
+                    awsBlendedRate, blendedcost AS awsBlendedCost, unblendedrate AS awsUnblendedRate, unblendedcost AS
+                    awsUnblendedCost, unblendedcost AS cost, productname AS awsServicecode, region, availabilityzone AS
+                    awsAvailabilityzone, usageaccountid AS awsUsageaccountid, instancetype AS awsInstancetype, usagetype
+                    AS awsUsagetype, "AWS" AS cloudProvider, tags AS labels FROM `%s.awscur_2020_*`
+               WHERE lineitemtype != 'Tax' AND
+                    TIMESTAMP_TRUNC(usagestartdate, DAY) >= TIMESTAMP_TRUNC(TIMESTAMP_SUB(TIMESTAMP (@run_date),
+                    INTERVAL 6 DAY), DAY);
+    """ % (ds, ds, ds)
+
+    # Configure the query job.
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter(
+                "run_date",
+                "DATE",
+                datetime.datetime.utcnow().date(),
+            )
+        ]
+    )
+    try:
+        query_job = client.query(query, job_config=job_config)
+        results = query_job.result()
+    except Exception as e:
+        # For this account table AWS billing data isnt present
+        print(e)
+    else:
+        print("Loaded into unified table for AWS...")
+
 def deleteDataFromClusterData(client, jsonData):
     from google.cloud import bigquery
     if jsonData["fileDate"] == None:
@@ -157,12 +259,12 @@ def deleteDataFromClusterData(client, jsonData):
     print(query)
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
-             bigquery.ScalarQueryParameter(
-                  "run_date",
-                  "DATE",
-                  datetime.datetime.utcnow().date(),
-             )
-             ]
+            bigquery.ScalarQueryParameter(
+                "run_date",
+                "DATE",
+                datetime.datetime.utcnow().date(),
+            )
+        ]
     )
     query_job = client.query(query, job_config=job_config)
     results = query_job.result()
@@ -178,23 +280,23 @@ def ingestDataFromClusterDataToUnified(client, jsonData):
     year = int(jsonData["fileDate"][0])
     month = MONTHMAP[jsonData["fileDate"][1]]
     day = int(jsonData["fileDate"][2])
-    query = """DELETE FROM `%s.unifiedTable` WHERE DATE(startTime) = DATE(%s, %s, %s) 
+    query = """DELETE FROM `%s.unifiedTable` WHERE DATE(startTime) = DATE(%s, %s, %s)
                 AND cloudProvider = "CLUSTER";
-            INSERT INTO `%s.unifiedTable` (CLOUDPROVIDER, PRODUCT, STARTTIME, ENDTIME, COST, CPUBILLINGAMOUNT, 
-                MEMORYBILLINGAMOUNT, ACTUALIDLECOST, SYSTEMCOST, UNALLOCATEDCOST, NETWORKCOST, CLUSTERCLOUDPROVIDER, 
-                ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, NAMESPACE, WORKLOADNAME, WORKLOADTYPE,  
+            INSERT INTO `%s.unifiedTable` (CLOUDPROVIDER, PRODUCT, STARTTIME, ENDTIME, COST, CPUBILLINGAMOUNT,
+                MEMORYBILLINGAMOUNT, ACTUALIDLECOST, SYSTEMCOST, UNALLOCATEDCOST, NETWORKCOST, CLUSTERCLOUDPROVIDER,
+                ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, NAMESPACE, WORKLOADNAME, WORKLOADTYPE,
                 INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME, LABELS)
-            SELECT "CLUSTER" AS CLOUDPROVIDER, 
+            SELECT "CLUSTER" AS CLOUDPROVIDER,
                 (CASE
                     WHEN CLUSTERTYPE = "K8S" THEN "Kubernetes Cluster"
-                    ELSE "ECS Cluster" 
+                    ELSE "ECS Cluster"
                 END) AS PRODUCT,
-                TIMESTAMP_TRUNC(TIMESTAMP_MILLIS(starttime), DAY) as STARTTIME, TIMESTAMP_TRUNC(TIMESTAMP_MILLIS(endtime), DAY) as ENDTIME, 
-                SUM(billingamount) AS COST, SUM(cpubillingamount) AS CPUBILLINGAMOUNT, SUM(memorybillingamount) AS MEMORYBILLINGAMOUNT, 
-                SUM(actualidlecost) AS ACTUALIDLECOST,  SUM(systemcost) AS SYSTEMCOST,  SUM(unallocatedcost) AS UNALLOCATEDCOST, 
-                SUM(networkcost) AS NETWORKCOST, cloudprovider AS CLUSTERCLOUDPROVIDER, accountid AS ACCOUNTID, clusterid AS CLUSTERID, 
-                clustername AS CLUSTERNAME, clustertype AS CLUSTERTYPE, region AS REGION, namespace AS NAMESPACE, workloadname AS WORKLOADNAME, 
-                workloadtype AS WORKLOADTYPE, instancetype AS INSTANCETYPE, appid AS APPID, serviceid AS SERVICEID, envid AS ENVID, 
+                TIMESTAMP_TRUNC(TIMESTAMP_MILLIS(starttime), DAY) as STARTTIME, TIMESTAMP_TRUNC(TIMESTAMP_MILLIS(endtime), DAY) as ENDTIME,
+                SUM(billingamount) AS COST, SUM(cpubillingamount) AS CPUBILLINGAMOUNT, SUM(memorybillingamount) AS MEMORYBILLINGAMOUNT,
+                SUM(actualidlecost) AS ACTUALIDLECOST,  SUM(systemcost) AS SYSTEMCOST,  SUM(unallocatedcost) AS UNALLOCATEDCOST,
+                SUM(networkcost) AS NETWORKCOST, cloudprovider AS CLUSTERCLOUDPROVIDER, accountid AS ACCOUNTID, clusterid AS CLUSTERID,
+                clustername AS CLUSTERNAME, clustertype AS CLUSTERTYPE, region AS REGION, namespace AS NAMESPACE, workloadname AS WORKLOADNAME,
+                workloadtype AS WORKLOADTYPE, instancetype AS INSTANCETYPE, appname AS APPID, servicename AS SERVICEID, envname AS ENVID,
                 cloudproviderid AS CLOUDPROVIDERID, launchtype AS LAUNCHTYPE, cloudservicename AS CLOUDSERVICENAME, 
                 ANY_VALUE(labels) as LABELS 
             FROM `%s.clusterData` 
@@ -205,12 +307,12 @@ def ingestDataFromClusterDataToUnified(client, jsonData):
     """ % (ds, year, month, day, ds, ds, year, month, day)
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
-             bigquery.ScalarQueryParameter(
-                  "run_date",
-                  "DATE",
-                  datetime.datetime.utcnow().date(),
-             )
-             ]
+            bigquery.ScalarQueryParameter(
+                "run_date",
+                "DATE",
+                datetime.datetime.utcnow().date(),
+            )
+        ]
     )
     query_job = client.query(query, job_config=job_config)
     #print(query)

@@ -187,7 +187,8 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
     createConnector(connectorIdentifier2);
     createConnector(connectorIdentifier3);
     ArgumentCaptor<Page> connectorsListArgumentCaptor = ArgumentCaptor.forClass(Page.class);
-    Page<ConnectorResponseDTO> connectorSummaryDTOSList = connectorService.list(0, 100, accountIdentifier, null);
+    Page<ConnectorResponseDTO> connectorSummaryDTOSList =
+        connectorService.list(0, 100, accountIdentifier, null, null, null, "", "", false);
     assertThat(connectorSummaryDTOSList.getTotalElements()).isEqualTo(3);
     List<String> connectorIdentifierList =
         connectorSummaryDTOSList.stream()

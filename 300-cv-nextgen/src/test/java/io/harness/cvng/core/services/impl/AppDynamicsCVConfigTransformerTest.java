@@ -1,5 +1,6 @@
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,10 +51,12 @@ public class AppDynamicsCVConfigTransformerTest extends CVConfigTransformerTestB
   @Category(UnitTests.class)
   public void transformToDSConfig_withAppDCVConfigForASingleApp() {
     AppDynamicsDSConfig appDynamicsDSConfig = appDynamicsCVConfigTransformer.transform(createCVConfigForAGroup("app1"));
-    assertThat(appDynamicsDSConfig.getApplicationName()).isEqualTo("app1");
-    assertThat(appDynamicsDSConfig.getMetricPacks()).isEqualTo(metricPacks);
-    assertThat(appDynamicsDSConfig.getServiceMappings()).isEqualTo(serviceMappings);
     assertThat(appDynamicsDSConfig.getAccountId()).isEqualTo(accountId);
+    assertThat(appDynamicsDSConfig.getAppConfigs().size()).isEqualTo(1);
+    appDynamicsDSConfig.getAppConfigs().forEach(appdynamicsAppConfig -> {
+      assertThat(appdynamicsAppConfig.getMetricPacks()).isEqualTo(metricPacks);
+      assertThat(appdynamicsAppConfig.getServiceMappings()).isEqualTo(serviceMappings);
+    });
   }
 
   private List<AppDynamicsCVConfig> createCVConfigForAGroup(String applicationName) {
@@ -61,8 +64,10 @@ public class AppDynamicsCVConfigTransformerTest extends CVConfigTransformerTestB
     metricPacks.forEach(metricPack -> serviceMappings.forEach(serviceMapping -> {
       AppDynamicsCVConfig appDynamicsCVConfig = new AppDynamicsCVConfig();
       fillCommonFields(appDynamicsCVConfig);
-      appDynamicsCVConfig.setGroupId(applicationName);
+      appDynamicsCVConfig.setIdentifier(applicationName);
+      appDynamicsCVConfig.setMonitoringSourceName(generateUuid());
       appDynamicsCVConfig.setTierName(serviceMapping.getTierName());
+      appDynamicsCVConfig.setEnvIdentifier(envIdentifier);
       appDynamicsCVConfig.setServiceIdentifier(serviceMapping.getServiceIdentifier());
       appDynamicsCVConfig.setApplicationName(applicationName);
       appDynamicsCVConfig.setMetricPack(metricPack);

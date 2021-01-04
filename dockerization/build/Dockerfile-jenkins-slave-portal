@@ -40,9 +40,9 @@ COPY jenkins-slave /usr/local/bin/jenkins-slave
 USER root
 ENV PATH ${PATH}:/opt/gsutil
 
-RUN curl -O https://releases.hashicorp.com/terraform/0.11.11/terraform_0.11.11_linux_amd64.zip \
+RUN curl -O https://releases.hashicorp.com/terraform/0.12.11/terraform_0.12.11_linux_amd64.zip \
     && yum install -y unzip \
-    && unzip terraform_0.11.11_linux_amd64.zip \
+    && unzip terraform_0.12.11_linux_amd64.zip \
     && chmod 755 terraform \
     && mv terraform /usr/local/bin
 
@@ -80,7 +80,7 @@ RUN cd /tmp \
     && git clone https://github.com/bazelbuild/buildtools.git \
     && cd buildtools \
     && bazel build //... \
-    && cp /tmp/buildtools/bazel-bin/unused_deps/unused_deps-linux_amd64 /usr/bin/unused_deps \
+    && cp /tmp/buildtools/bazel-bin/unused_deps/unused_deps_/unused_deps /usr/bin/unused_deps \
     && unused_deps --version \
     && cd / \
     && rm -rf /tmp/*

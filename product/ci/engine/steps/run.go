@@ -37,10 +37,11 @@ type runStep struct {
 	id            string
 	displayName   string
 	tmpFilePath   string
-	commands      []string
+	command       string
 	envVarOutputs []string
 	containerPort uint32
 	stepContext   *pb.StepContext
+	reports       []*pb.Report
 	stageOutput   output.StageOutput
 	log           *zap.SugaredLogger
 }
@@ -52,10 +53,11 @@ func NewRunStep(step *pb.UnitStep, tmpFilePath string, so output.StageOutput,
 	return &runStep{
 		id:            step.GetId(),
 		displayName:   step.GetDisplayName(),
-		commands:      r.GetCommands(),
+		command:       r.GetCommand(),
 		containerPort: r.GetContainerPort(),
 		stepContext:   r.GetContext(),
 		envVarOutputs: r.GetEnvVarOutputs(),
+		reports:       r.GetReports(),
 		tmpFilePath:   tmpFilePath,
 		stageOutput:   so,
 		log:           log,
@@ -75,8 +77,8 @@ func (e *runStep) Run(ctx context.Context) (*output.StepOutput, int32, error) {
 }
 
 func (e *runStep) validate() error {
-	if len(e.commands) == 0 {
-		err := fmt.Errorf("commands in run step should have atleast one item")
+	if len(e.command) == 0 {
+		err := fmt.Errorf("command in run step should be non-empty string")
 		return err
 	}
 	if e.containerPort == 0 {
@@ -88,23 +90,19 @@ func (e *runStep) validate() error {
 
 // resolveJEXL resolves JEXL expressions present in run step input
 func (e *runStep) resolveJEXL(ctx context.Context) error {
-	// JEXL expressions are only present in run step commands
-	s := e.commands
-	resolvedExprs, err := evaluateJEXL(ctx, e.id, s, e.stageOutput, e.log)
+	// JEXL expressions are only present in run step command
+	cmd := e.command
+	resolvedExprs, err := evaluateJEXL(ctx, e.id, []string{cmd}, e.stageOutput, e.log)
 	if err != nil {
 		return err
 	}
 
-	// Updating step commands with the resolved value of JEXL expressions
-	var resolvedCmds []string
-	for _, cmd := range e.commands {
-		if val, ok := resolvedExprs[cmd]; ok {
-			resolvedCmds = append(resolvedCmds, val)
-		} else {
-			resolvedCmds = append(resolvedCmds, cmd)
-		}
+	// Updating step command with the resolved value of JEXL expressions
+	resolvedCmd := cmd
+	if val, ok := resolvedExprs[cmd]; ok {
+		resolvedCmd = val
 	}
-	e.commands = resolvedCmds
+	e.command = resolvedCmd
 	return nil
 }
 
@@ -136,8 +134,9 @@ func (e *runStep) getExecuteStepArg() *addonpb.ExecuteStepRequest {
 			DisplayName: e.displayName,
 			Step: &pb.UnitStep_Run{
 				Run: &pb.RunStep{
-					Commands:      e.commands,
+					Command:       e.command,
 					Context:       e.stepContext,
+					Reports:       e.reports,
 					EnvVarOutputs: e.envVarOutputs,
 				},
 			},

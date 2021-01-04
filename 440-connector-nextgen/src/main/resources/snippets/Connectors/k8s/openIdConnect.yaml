@@ -1,0 +1,29 @@
+connector:
+  # Connector typ to access kubernetes cluster
+  # Name of the connector Required
+  name: "My k8s Cluster"
+  # Non-changeable identifier of the connector, can not contain spaces or special chars. REQUIRED
+  identifier: "my_k8s_cluster"
+  type: K8sCluster
+  spec:
+    credential:
+      # Options are ManualConfig and InheritFromDelegate
+      type: ManualConfig
+      spec:
+        masterUrl: "k8s master url"
+        auth:
+          # OpenID Connect (OIDC): OAuth2 supported by some OAuth2 providers, notably Azure Active Directory, Salesforce, and Google.
+          type: OpenIdConnect
+          spec:
+            # URL of the provider which allows the API server to discover public signing keys. Required
+            oidcIssuerUrl: "https://dev-00000.okta.com/oauth2/default/v1"
+            # Public identifier for the client that is required for all OAuth flows. Required
+            oidcClientIdRef: "account.kubernetes"
+            # Login credentials for a user assigned to the provider app
+            oidcUsername: "admin"
+            # Login credentials for a user assigned to the provider app
+            oidcPasswordRef: "account.k8s_oidc_password"
+            # The client secret for the app. Optional
+            oidcSecretRef: "account.secret"
+            # OIDC scopes are used by an application during authentication to authorize access to a user's details, like name and picture. Optional
+            oidcScopes: "picture"

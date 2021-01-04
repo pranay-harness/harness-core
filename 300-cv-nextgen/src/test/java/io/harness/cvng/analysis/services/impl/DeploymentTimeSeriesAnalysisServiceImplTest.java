@@ -337,6 +337,18 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
+  public void testGetRecentHighestRiskScore_verificationTaskIdDoesNotExists() {
+    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    String verificationJobInstanceId =
+        verificationJobInstanceService.create(accountId, createVerificationJobInstanceDTO());
+    assertThatThrownBy(
+        () -> deploymentTimeSeriesAnalysisService.getRecentHighestRiskScore(accountId, verificationJobInstanceId))
+        .isInstanceOf(IllegalStateException.class);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
   public void testGetRecentHighestRiskScore_getLatest() {
     verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId =
@@ -484,7 +496,8 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     cvConfig.setEnvIdentifier("env");
     cvConfig.setOrgIdentifier(orgIdentifier);
     cvConfig.setProjectIdentifier(projectIdentifier);
-    cvConfig.setGroupId(generateUuid());
+    cvConfig.setIdentifier(generateUuid());
+    cvConfig.setMonitoringSourceName(generateUuid());
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
     cvConfig.setProductName(generateUuid());
     cvConfig.setApplicationName("appName");

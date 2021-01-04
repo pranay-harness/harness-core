@@ -1,19 +1,20 @@
 package io.harness.pms.sdk.core.plan.creation.creators;
 
-import io.harness.pms.facilitators.FacilitatorObtainment;
-import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.plan.MapStepParameters;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
-import io.harness.pms.steps.StepType;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 
 import com.google.common.base.Preconditions;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -37,9 +38,10 @@ public class PipelinePlanCreator extends ChildrenPlanCreator<YamlField> {
   }
 
   @Override
-  public Map<String, PlanCreationResponse> createPlanForChildrenNodes(PlanCreationContext ctx, YamlField field) {
-    YamlNode yamlNode = field.getNode();
-    Map<String, PlanCreationResponse> responseMap = new HashMap<>();
+  public LinkedHashMap<String, PlanCreationResponse> createPlanForChildrenNodes(
+      PlanCreationContext ctx, YamlField config) {
+    YamlNode yamlNode = config.getNode();
+    LinkedHashMap<String, PlanCreationResponse> responseMap = new LinkedHashMap<>();
     YamlNode stagesYamlNode = Preconditions.checkNotNull(yamlNode.getField("stages")).getNode();
     if (stagesYamlNode == null) {
       return responseMap;
@@ -72,8 +74,8 @@ public class PipelinePlanCreator extends ChildrenPlanCreator<YamlField> {
   }
 
   @Override
-  public PlanNode createPlanForParentNode(PlanCreationContext ctx, YamlField field, Set<String> childrenNodeIds) {
-    YamlNode yamlNode = field.getNode();
+  public PlanNode createPlanForParentNode(PlanCreationContext ctx, YamlField config, List<String> childrenNodeIds) {
+    YamlNode yamlNode = config.getNode();
     return PlanNode.builder()
         .uuid(yamlNode.getUuid())
         .identifier(yamlNode.getIdentifier())

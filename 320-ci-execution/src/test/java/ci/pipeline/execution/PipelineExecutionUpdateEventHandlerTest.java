@@ -7,16 +7,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
-import io.harness.beans.stages.IntegrationStageStepParameters;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
-import io.harness.execution.NodeExecution;
-import io.harness.execution.events.OrchestrationEvent;
-import io.harness.plancreators.IntegrationStagePlanCreator;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.ambiance.Level;
-import io.harness.pms.execution.Status;
-import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.rule.Owner;
 
 import io.fabric8.utils.Lists;
@@ -49,15 +44,6 @@ public class PipelineExecutionUpdateEventHandlerTest extends CategoryTest {
                               "projectIdentfier", "orgIdentifier", "orgIdentifier"))
                           .addAllLevels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
                           .build())
-            .build();
-    NodeExecution nodeExecution =
-        NodeExecution.builder()
-            .status(Status.RUNNING)
-            .resolvedStepParameters(IntegrationStageStepParameters.builder()
-                                        .buildStatusUpdateParameter(null)
-                                        .integrationStage(null)
-                                        .build())
-            .node(PlanNodeProto.newBuilder().setGroup(IntegrationStagePlanCreator.GROUP_NAME).build())
             .build();
     when(gitBuildStatusUtility.shouldSendStatus(any())).thenReturn(true);
     pipelineExecutionUpdateEventHandler.handleEvent(orchestrationEvent);

@@ -1,12 +1,21 @@
 package io.harness.ng.orchestration;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
+
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
+import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
+import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.redesign.services.CustomExecutionProvider;
 import io.harness.redesign.services.CustomExecutionService;
 import io.harness.rest.RestResponse;
+
+import software.wings.beans.User;
+import software.wings.security.UserThreadLocal;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -36,7 +45,7 @@ public class NgOrchestrationResource {
   public RestResponse<PlanExecution> triggerHttpV2Plan(
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("appId") @NotNull String appId) {
     PlanExecution execution = orchestrationService.startExecution(
-        customExecutionProvider.provideHttpSwitchPlanV2(), getAbstractions(accountId, appId));
+        customExecutionProvider.provideHttpSwitchPlanV2(), getAbstractions(accountId, appId), getMetadata());
     return new RestResponse<>(execution);
   }
 
@@ -46,7 +55,7 @@ public class NgOrchestrationResource {
   public RestResponse<PlanExecution> triggerHttpV3Plan(
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("appId") @NotNull String appId) {
     PlanExecution execution = orchestrationService.startExecution(
-        customExecutionProvider.provideHttpSwitchPlanV3(), getAbstractions(accountId, appId));
+        customExecutionProvider.provideHttpSwitchPlanV3(), getAbstractions(accountId, appId), getMetadata());
     return new RestResponse<>(execution);
   }
 
@@ -56,8 +65,8 @@ public class NgOrchestrationResource {
   public RestResponse<PlanExecution> triggerHttpChainV2Plan(
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("appId") @NotNull String appId) {
     PlanExecution execution = orchestrationService.startExecution(
-        customExecutionProvider.provideTaskChainPlan(OrchestrationFacilitatorType.TASK_CHAIN_V2),
-        getAbstractions(accountId, appId));
+        customExecutionProvider.provideTaskChainPlan(OrchestrationFacilitatorType.TASK_CHAIN),
+        getAbstractions(accountId, appId), getMetadata());
     return new RestResponse<>(execution);
   }
 
@@ -67,8 +76,8 @@ public class NgOrchestrationResource {
   public RestResponse<PlanExecution> triggerHttpChainV3Plan(
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("appId") @NotNull String appId) {
     PlanExecution execution = orchestrationService.startExecution(
-        customExecutionProvider.provideTaskChainPlan(OrchestrationFacilitatorType.TASK_CHAIN_V3),
-        getAbstractions(accountId, appId));
+        customExecutionProvider.provideTaskChainPlan(OrchestrationFacilitatorType.TASK_CHAIN),
+        getAbstractions(accountId, appId), getMetadata());
     return new RestResponse<>(execution);
   }
 
@@ -98,5 +107,27 @@ public class NgOrchestrationResource {
   private Map<String, String> getAbstractions(String accountId, String appId) {
     return ImmutableMap.of("accountId", accountId, "appId", appId, "userId", "lv0euRhKRCyiXWzS7pOg6g", "userName",
         "Admin", "userEmail", "admin@harness.io");
+  }
+
+  private ExecutionMetadata getMetadata() {
+    return ExecutionMetadata.newBuilder().setRunSequence(0).setTriggerInfo(getTriggerInfo()).build();
+  }
+  private ExecutionTriggerInfo getTriggerInfo() {
+    User user = UserThreadLocal.get();
+    TriggeredBy userInfo = null;
+    if (user == null) {
+      userInfo = TriggeredBy.newBuilder()
+                     .putExtraInfo("email", "admin@harness.io")
+                     .setIdentifier("Admin")
+                     .setUuid(generateUuid())
+                     .build();
+    } else {
+      userInfo = TriggeredBy.newBuilder()
+                     .putExtraInfo("email", user.getEmail())
+                     .setIdentifier(user.getName())
+                     .setUuid(user.getUuid())
+                     .build();
+    }
+    return ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).setTriggeredBy(userInfo).build();
   }
 }

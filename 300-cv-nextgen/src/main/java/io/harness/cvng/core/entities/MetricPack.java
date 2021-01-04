@@ -9,9 +9,8 @@ import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.MetricPackDTO.MetricDefinitionDTO;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.data.validator.Trimmed;
-import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -20,8 +19,10 @@ import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -36,9 +37,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
-@NgUniqueIndex(
-    name = "unique_Idx", fields = { @Field("projectIdentifier")
-                                    , @Field("dataSourceType"), @Field("identifier") })
 @Data
 @Builder
 @NoArgsConstructor
@@ -48,10 +46,25 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "MetricPackKeys")
 @HarnessEntity(exportable = true)
 public class MetricPack implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("idx")
+                 .unique(true)
+                 .field(MetricPackKeys.accountId)
+                 .field(MetricPackKeys.orgIdentifier)
+                 .field(MetricPackKeys.projectIdentifier)
+                 .field(MetricPackKeys.dataSourceType)
+                 .field(MetricPackKeys.identifier)
+                 .build())
+        .build();
+  }
+
   @Id private String uuid;
   private long createdAt;
   private long lastUpdatedAt;
-  @FdIndex private String accountId;
+  private String accountId;
+  @NotEmpty private String orgIdentifier;
   @NotEmpty private String projectIdentifier;
   @NotNull private DataSourceType dataSourceType;
   @Trimmed @NotEmpty private String identifier;
@@ -63,6 +76,13 @@ public class MetricPack implements PersistentEntity, UuidAware, CreatedAtAware, 
     return dataCollectionDsl;
   }
 
+  public void addToMetrics(MetricDefinition metricDefinition) {
+    if (this.metrics == null) {
+      this.metrics = new HashSet<>();
+    }
+    this.metrics.add(metricDefinition);
+  }
+
   public Set<MetricDefinition> getMetrics() {
     if (this.metrics == null) {
       return Collections.emptySet();
@@ -72,7 +92,9 @@ public class MetricPack implements PersistentEntity, UuidAware, CreatedAtAware, 
 
   public MetricPackDTO toDTO() {
     return MetricPackDTO.builder()
+        .uuid(getUuid())
         .accountId(getAccountId())
+        .orgIdentifier(getOrgIdentifier())
         .projectIdentifier(getProjectIdentifier())
         .dataSourceType(getDataSourceType())
         .identifier(getIdentifier())
@@ -102,15 +124,11 @@ public class MetricPack implements PersistentEntity, UuidAware, CreatedAtAware, 
       return validationPath;
     }
 
-    @JsonIgnore
-    public TimeSeriesMetricType getType() {
-      return type;
-    }
-
     public MetricDefinitionDTO toDTO() {
       return MetricDefinitionDTO.builder()
           .name(name)
           .path(path)
+          .type(type)
           .validationPath(validationPath)
           .included(included)
           .thresholds(isEmpty(thresholds)

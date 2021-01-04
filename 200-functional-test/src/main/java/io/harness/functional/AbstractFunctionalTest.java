@@ -1,5 +1,7 @@
 package io.harness.functional;
 
+import static io.harness.beans.PageRequest.UNLIMITED;
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -11,6 +13,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
 import io.harness.ff.FeatureFlagService;
 import io.harness.multiline.MultilineStringMixin;
@@ -29,14 +33,18 @@ import io.harness.testframework.restutils.WorkflowRestUtils;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseStepExecutionData;
 import software.wings.beans.Account;
+import software.wings.beans.Activity;
+import software.wings.beans.Activity.ActivityKeys;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.ExecutionCredential.ExecutionType;
+import software.wings.beans.Log;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
 import software.wings.beans.security.UserGroup;
@@ -48,6 +56,7 @@ import software.wings.service.impl.analysis.AnalysisContext.AnalysisContextKeys;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.instance.InstanceService;
@@ -95,6 +104,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   @Inject InfrastructureMappingService infrastructureMappingService;
   @Inject ServerlessInstanceService serverlessInstanceService;
   @Inject InfrastructureDefinitionService infrastructureDefinitionService;
+  @Inject LogService logService;
 
   @Override
   public DataLoaderRegistry getDataLoaderRegistry() {
@@ -136,35 +146,6 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   public static void cleanup() {
     FileUtils.deleteModifiedConfig(AbstractFunctionalTest.class);
     log.info("All tests exit");
-  }
-
-  protected void assertExecutionEcsRunTask(Workflow savedWorkflow, String appId, String envId) {
-    ExecutionArgs executionArgs = new ExecutionArgs();
-    executionArgs.setWorkflowType(savedWorkflow.getWorkflowType());
-
-    String artifactId = ArtifactStreamRestUtils.getArtifactStreamId(
-        bearerToken, appId, savedWorkflow.getEnvId(), savedWorkflow.getServiceId());
-    Artifact artifact = new Artifact();
-    artifact.setUuid(artifactId);
-
-    executionArgs.setArtifacts(Arrays.asList(artifact));
-    executionArgs.setOrchestrationId(savedWorkflow.getUuid());
-    executionArgs.setExecutionCredential(SSHExecutionCredential.Builder.aSSHExecutionCredential()
-                                             .withExecutionType(ExecutionCredential.ExecutionType.SSH)
-                                             .build());
-
-    log.info("Invoking workflow execution");
-
-    WorkflowExecution workflowExecution = runWorkflow(bearerToken, appId, envId, executionArgs);
-    logStateExecutionInstanceErrors(workflowExecution);
-    assertThat(workflowExecution).isNotNull();
-
-    if (workflowExecution.getStatus() != ExecutionStatus.SUCCESS) {
-      return;
-    }
-
-    log.info("ECs Execution status: " + workflowExecution.getStatus());
-    assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
   public void resetCache(String accountId) {
@@ -230,7 +211,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
 
   protected void logStateExecutionInstanceErrors(WorkflowExecution workflowExecution) {
     if (workflowExecution != null && workflowExecution.getStatus() != ExecutionStatus.FAILED) {
-      log.info("Workflow execution didn't failed, skipping this step");
+      log.info("Workflow execution didn't fail, skipping this step");
       return;
     }
 
@@ -407,5 +388,36 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
         .filter(InstanceKeys.serviceId, serviceId)
         .filter(InstanceKeys.isDeleted, Boolean.FALSE)
         .asList();
+  }
+
+  public void getFailedWorkflowExecutionLogs(WorkflowExecution workflowExecution) {
+    if (workflowExecution != null && workflowExecution.getStatus() != ExecutionStatus.FAILED) {
+      log.info("Workflow execution didn't fail, skipping fetching logs");
+      return;
+    }
+    List<Activity> activities = wingsPersistence.createQuery(Activity.class)
+                                    .filter(ActivityKeys.accountId, workflowExecution.getAccountId())
+                                    .filter(ActivityKeys.workflowExecutionId, workflowExecution.getUuid())
+                                    .asList();
+
+    for (Activity activity : activities) {
+      for (CommandUnit commandUnit : activity.getCommandUnits()) {
+        log.info("Logs For {}", commandUnit.getName());
+        PageRequest<Log> request = new PageRequest<>();
+        request.setLimit(UNLIMITED);
+        request.addFilter("activityId", EQ, activity.getUuid());
+        request.addFilter("commandUnitName", EQ, commandUnit.getName());
+        PageResponse<Log> logPageResponse = logService.list(workflowExecution.getAppId(), request);
+        log.info("for activityId : {}", activity.getUuid());
+        logPageResponse.forEach(response -> log.info(response.getLogLine()));
+      }
+    }
+  }
+
+  protected void enableFeatureFlag(FeatureName featureName, String accountId) {
+    if (!featureFlagService.isEnabled(featureName, accountId)) {
+      featureFlagService.enableAccount(featureName, accountId);
+    }
+    assertThat(featureFlagService.isEnabled(featureName, accountId));
   }
 }

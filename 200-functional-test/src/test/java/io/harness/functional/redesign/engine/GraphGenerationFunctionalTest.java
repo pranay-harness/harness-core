@@ -4,7 +4,6 @@ import static io.harness.rule.OwnerRule.ALEXEI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.StatusUtils;
 import io.harness.beans.EdgeList;
 import io.harness.category.element.FunctionalTests;
 import io.harness.dto.GraphVertexDTO;
@@ -15,7 +14,8 @@ import io.harness.functional.redesign.OrchestrationEngineTestSetupHelper;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.testframework.framework.MockServerExecutor;
@@ -83,7 +83,7 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
     assertThat(planExecutionResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
 
     OrchestrationGraphDTO response =
-        requestOrchestrationGraph(null, planExecutionResponse.getUuid(), "get-orchestration-graph");
+        requestOrchestrationGraph(null, planExecutionResponse.getUuid(), "get-orchestration-graph-v2");
     assertThat(response).isNotNull();
 
     GraphVertexDTO forkVertex = response.getAdjacencyList()

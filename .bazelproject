@@ -1,4 +1,5 @@
 directories:
+  260-delegate
   310-ci-manager
   320-ci-execution
   330-ci-beans
@@ -9,29 +10,30 @@ directories:
   450-ce-views
   490-ce-commons
   800-pipeline-service
-  840-ng-triggers
+  810-ng-triggers
   850-execution-plan
   850-ng-pipeline-commons
-  850-pms-sdk
   860-orchestration-steps
   860-orchestration-visualization
   870-orchestration
   870-yaml-beans
-  880-orchestration-beans
+  876-orchestration-beans
+  879-pms-sdk
   882-pms-sdk-core
   884-pms-commons
-  890-orchestration-persistence
   890-pms-contracts
   890-sm-core
   900-yaml-sdk
   910-delegate-service-driver
   910-delegate-task-grpc-service
+  915-pms-delegate-service-driver
   920-delegate-agent-beans
   920-delegate-service-beans
   930-delegate-tasks
   930-ng-core-clients
   930-notification-service
   940-delegate-beans
+  940-feature-flag
   940-notification-client
   940-secret-manager-client
   950-command-library-common
@@ -41,15 +43,16 @@ directories:
   950-events-framework
   950-ng-core
   950-ng-project-n-orgs
-  950-feature-flag
   950-timeout-engine
   950-wait-engine
   950-walktree-visitor
+  955-filters-sdk
   960-api-services
   960-expression-service
   960-ng-core-beans
   960-notification-beans
   960-persistence
+  960-recaster
   970-api-services-beans
   970-grpc
   970-ng-commons
@@ -57,6 +60,7 @@ directories:
   980-commons
   990-commons-test
   tools/bazel
+  400-rest
 
 # Automatically includes all relevant targets under the 'directories' above
 derive_targets_from_directories: true
@@ -65,7 +69,8 @@ workspace_type: java
 java_language_level: 8
 
 import_run_configurations:
-  DelegateApp.xml
-  WingsApp.xml
-  Notification Microservice.xml
-  Notification Client.xml
+  run-configurations/DelegateApp.xml
+  run-configurations/WingsApp.xml
+  run-configurations/Notification Microservice.xml
+  run-configurations/Notification Client.xml
+  run-configurations/EventsFrameworkTest.xml

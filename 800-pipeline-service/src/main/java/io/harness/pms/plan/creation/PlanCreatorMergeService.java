@@ -1,21 +1,23 @@
 package io.harness.pms.plan.creation;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static java.lang.String.format;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
-import io.harness.pms.plan.PlanCreationBlobRequest;
-import io.harness.pms.plan.PlanCreationBlobResponse;
-import io.harness.pms.plan.PlanCreationServiceGrpc.PlanCreationServiceBlockingStub;
-import io.harness.pms.plan.YamlFieldBlob;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
+import io.harness.pms.contracts.plan.PlanCreationBlobRequest;
+import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
+import io.harness.pms.contracts.plan.PlanCreationContextValue;
+import io.harness.pms.contracts.plan.PlanCreationServiceGrpc.PlanCreationServiceBlockingStub;
+import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.utils.CompletableFutures;
 import io.harness.pms.yaml.YamlField;
-import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
@@ -49,6 +51,10 @@ public class PlanCreatorMergeService {
   }
 
   public PlanCreationBlobResponse createPlan(@NotNull String content) throws IOException {
+    return createPlan(content, ExecutionMetadata.newBuilder().build());
+  }
+
+  public PlanCreationBlobResponse createPlan(@NotNull String content, ExecutionMetadata metadata) throws IOException {
     Map<String, Map<String, Set<String>>> sdkInstances = pmsSdkInstanceService.getInstanceNameToSupportedTypes();
     Map<String, PlanCreatorServiceInfo> services = new HashMap<>();
     if (EmptyPredicate.isNotEmpty(planCreatorServices) && EmptyPredicate.isNotEmpty(sdkInstances)) {
@@ -59,33 +65,41 @@ public class PlanCreatorMergeService {
       });
     }
 
-    String finalContent = preprocessYaml(content);
-    YamlField pipelineField = YamlUtils.extractPipelineField(finalContent);
+    String processedYaml = YamlUtils.injectUuid(content);
+    YamlField pipelineField = YamlUtils.extractPipelineField(processedYaml);
     Map<String, YamlFieldBlob> dependencies = new HashMap<>();
     dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
-    PlanCreationBlobResponse finalResponse = createPlanForDependenciesRecursive(services, dependencies);
+    PlanCreationBlobResponse finalResponse = createPlanForDependenciesRecursive(services, dependencies, metadata);
     validatePlanCreationBlobResponse(finalResponse);
     return finalResponse;
   }
 
-  private PlanCreationBlobResponse createPlanForDependenciesRecursive(
-      Map<String, PlanCreatorServiceInfo> services, Map<String, YamlFieldBlob> initialDependencies) {
+  private Map<String, PlanCreationContextValue> createInitialPlanCreationContext(ExecutionMetadata metadata) {
+    Map<String, PlanCreationContextValue> planCreationContextBuilder = new HashMap<>();
+    if (metadata != null) {
+      planCreationContextBuilder.put("metadata", PlanCreationContextValue.newBuilder().setMetadata(metadata).build());
+    }
+    return planCreationContextBuilder;
+  }
+
+  private PlanCreationBlobResponse createPlanForDependenciesRecursive(Map<String, PlanCreatorServiceInfo> services,
+      Map<String, YamlFieldBlob> initialDependencies, ExecutionMetadata metadata) {
     PlanCreationBlobResponse.Builder finalResponseBuilder =
         PlanCreationBlobResponse.newBuilder().putAllDependencies(initialDependencies);
     if (EmptyPredicate.isEmpty(services) || EmptyPredicate.isEmpty(initialDependencies)) {
       return finalResponseBuilder.build();
     }
-
+    finalResponseBuilder.putAllContext(createInitialPlanCreationContext(metadata));
     for (int i = 0; i < MAX_DEPTH && EmptyPredicate.isNotEmpty(finalResponseBuilder.getDependenciesMap()); i++) {
-      PlanCreationBlobResponse currIterationResponse =
-          createPlanForDependencies(services, finalResponseBuilder.getDependenciesMap());
+      PlanCreationBlobResponse currIterationResponse = createPlanForDependencies(services, finalResponseBuilder);
       PlanCreationBlobResponseUtils.addNodes(finalResponseBuilder, currIterationResponse.getNodesMap());
       PlanCreationBlobResponseUtils.mergeStartingNodeId(
           finalResponseBuilder, currIterationResponse.getStartingNodeId());
+      PlanCreationBlobResponseUtils.mergeLayoutNodeInfo(finalResponseBuilder, currIterationResponse);
       if (EmptyPredicate.isNotEmpty(finalResponseBuilder.getDependenciesMap())) {
         throw new InvalidRequestException("Some YAML nodes could not be parsed");
       }
-
+      PlanCreationBlobResponseUtils.mergeContext(finalResponseBuilder, currIterationResponse.getContextMap());
       PlanCreationBlobResponseUtils.addDependencies(finalResponseBuilder, currIterationResponse.getDependenciesMap());
     }
 
@@ -93,13 +107,14 @@ public class PlanCreatorMergeService {
   }
 
   private PlanCreationBlobResponse createPlanForDependencies(
-      Map<String, PlanCreatorServiceInfo> services, Map<String, YamlFieldBlob> dependencies) {
+      Map<String, PlanCreatorServiceInfo> services, PlanCreationBlobResponse.Builder responseBuilder) {
     PlanCreationBlobResponse.Builder currIterationResponseBuilder = PlanCreationBlobResponse.newBuilder();
     CompletableFutures<PlanCreationBlobResponse> completableFutures = new CompletableFutures<>(executor);
     for (Map.Entry<String, PlanCreatorServiceInfo> serviceEntry : services.entrySet()) {
       Map<String, Set<String>> supportedTypes = serviceEntry.getValue().getSupportedTypes();
       Map<String, YamlFieldBlob> filteredDependencies =
-          dependencies.entrySet()
+          responseBuilder.getDependenciesMap()
+              .entrySet()
               .stream()
               .filter(entry -> {
                 try {
@@ -118,7 +133,10 @@ public class PlanCreatorMergeService {
       completableFutures.supplyAsync(() -> {
         try {
           return serviceEntry.getValue().getPlanCreationClient().createPlan(
-              PlanCreationBlobRequest.newBuilder().putAllDependencies(filteredDependencies).build());
+              PlanCreationBlobRequest.newBuilder()
+                  .putAllDependencies(filteredDependencies)
+                  .putAllContext(responseBuilder.getContextMap())
+                  .build());
         } catch (Exception ex) {
           log.error("Error fetching partial plan from service " + serviceEntry.getKey(), ex);
           return null;
@@ -145,9 +163,5 @@ public class PlanCreatorMergeService {
     if (EmptyPredicate.isEmpty(finalResponse.getStartingNodeId())) {
       throw new InvalidRequestException("Unable to find out starting node");
     }
-  }
-
-  private String preprocessYaml(@NotNull String content) throws IOException {
-    return YamlUtils.injectUuid(content);
   }
 }

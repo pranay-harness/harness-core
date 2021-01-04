@@ -6,7 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.cache.Distributable;
 import io.harness.cache.Nominal;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.execution.Status;
 
 import java.io.ObjectStreamClass;
 import java.util.List;

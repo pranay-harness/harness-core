@@ -4,9 +4,7 @@ import io.harness.ngpipeline.inputset.services.InputSetEntityService;
 import io.harness.ngpipeline.inputset.services.impl.InputSetEntityServiceImpl;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
 import io.harness.ngpipeline.pipeline.service.NGPipelineServiceImpl;
-import io.harness.registrars.NGPipelineOrchestrationFieldRegistrar;
 import io.harness.registrars.NGPipelineVisitorFieldRegistrar;
-import io.harness.registries.registrar.OrchestrationFieldRegistrar;
 import io.harness.threading.ThreadPool;
 import io.harness.walktree.registries.registrars.VisitableFieldRegistrar;
 
@@ -20,22 +18,22 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class NGPipelineCommonsModule extends AbstractModule {
   private static final AtomicReference<NGPipelineCommonsModule> instanceRef = new AtomicReference<>();
+  private final OrchestrationModuleConfig config;
 
-  public static NGPipelineCommonsModule getInstance() {
+  public static NGPipelineCommonsModule getInstance(OrchestrationModuleConfig config) {
     if (instanceRef.get() == null) {
-      instanceRef.compareAndSet(null, new NGPipelineCommonsModule());
+      instanceRef.compareAndSet(null, new NGPipelineCommonsModule(config));
     }
     return instanceRef.get();
   }
 
+  public NGPipelineCommonsModule(OrchestrationModuleConfig config) {
+    this.config = config;
+  }
+
   @Override
   protected void configure() {
-    install(OrchestrationModule.getInstance());
-
-    MapBinder<String, OrchestrationFieldRegistrar> orchestrationFieldRegistrarMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, OrchestrationFieldRegistrar.class);
-    orchestrationFieldRegistrarMapBinder.addBinding(NGPipelineOrchestrationFieldRegistrar.class.getName())
-        .to(NGPipelineOrchestrationFieldRegistrar.class);
+    install(OrchestrationModule.getInstance(config));
 
     MapBinder<String, VisitableFieldRegistrar> visitableFieldRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, VisitableFieldRegistrar.class);

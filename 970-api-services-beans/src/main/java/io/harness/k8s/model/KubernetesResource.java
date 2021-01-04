@@ -8,6 +8,7 @@ import static io.harness.k8s.manifest.ObjectYamlUtils.readYaml;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static java.lang.String.format;
+import static java.util.Objects.nonNull;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesYamlException;
@@ -181,20 +182,14 @@ public class KubernetesResource {
 
   public boolean isPrimaryService() {
     if (StringUtils.equals(Kind.Service.name(), this.getResourceId().getKind())) {
-      String isPrimary = (String) this.getField("metadata.annotations." + encodeDot(HarnessAnnotations.primaryService));
-      if (StringUtils.equalsIgnoreCase(isPrimary, "true")) {
-        return true;
-      }
+      return hasMetadataAnnotation(HarnessAnnotations.primaryService);
     }
     return false;
   }
 
   public boolean isStageService() {
     if (StringUtils.equals(Kind.Service.name(), this.getResourceId().getKind())) {
-      String isStage = (String) this.getField("metadata.annotations." + encodeDot(HarnessAnnotations.stageService));
-      if (StringUtils.equalsIgnoreCase(isStage, "true")) {
-        return true;
-      }
+      return hasMetadataAnnotation(HarnessAnnotations.stageService);
     }
     return false;
   }
@@ -714,7 +709,8 @@ public class KubernetesResource {
   }
 
   public String getMetadataAnnotationValue(String harnessAnnotation) {
-    return (String) this.getField("metadata.annotations." + encodeDot(harnessAnnotation));
+    Object o = this.getField("metadata.annotations." + encodeDot(harnessAnnotation));
+    return nonNull(o) ? String.valueOf(o) : null;
   }
 
   /* Issue https://github.com/kubernetes/kubernetes/pull/66165 was fixed in 1.11.2.

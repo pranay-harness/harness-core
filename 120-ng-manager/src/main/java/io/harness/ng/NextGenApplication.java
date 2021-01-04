@@ -11,16 +11,18 @@ import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRAT
 
 import static com.google.common.collect.ImmutableMap.of;
 
+import io.harness.cdng.creator.CDNGModuleInfoProvider;
 import io.harness.cdng.creator.CDNGPlanCreatorProvider;
 import io.harness.cdng.creator.filters.CDNGFilterCreationResponseMerger;
 import io.harness.cdng.executionplan.ExecutionPlanCreatorRegistrar;
+import io.harness.cdng.orchestration.NgStepRegistrar;
 import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.gitsync.core.runnable.GitChangeSetRunnable;
 import io.harness.maintenance.MaintenanceController;
-import io.harness.metrics.HarnessMetricRegistry;
-import io.harness.metrics.MetricRegistryModule;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.EtagFilter;
+import io.harness.ng.core.event.EntityCRUDStreamConsumer;
+import io.harness.ng.core.event.FeatureFlagStreamConsumer;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.NotFoundExceptionMapper;
@@ -28,19 +30,21 @@ import io.harness.ng.core.exceptionmappers.OptimisticLockingFailureExceptionMapp
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.invites.ext.mail.EmailNotificationListener;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
-import io.harness.ngtriggers.service.TriggerWebhookService;
 import io.harness.persistence.HPersistence;
-import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.sdk.PmsSdkConfiguration;
+import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
+import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
-import io.harness.pms.steps.StepType;
+import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
+import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
+import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
-import io.harness.registries.state.StepRegistry;
+import io.harness.registrars.NGExecutionEventHandlerRegistrar;
+import io.harness.registrars.OrchestrationAdviserRegistrar;
+import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.security.JWTAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
-import io.harness.serializer.json.FailureInfoSerializer;
-import io.harness.serializer.json.StepTypeSerializer;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
@@ -52,15 +56,11 @@ import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
 import io.harness.waiter.ProgressUpdateService;
-import io.harness.yaml.YamlSdkConfiguration;
-import io.harness.yaml.YamlSdkModule;
-import io.harness.yaml.snippets.SnippetConstants;
+import io.harness.yaml.YamlSdkInitHelper;
 
 import software.wings.app.CharsetResponseFilter;
 
-import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -75,7 +75,6 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
-import java.io.InputStream;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -100,9 +99,6 @@ import org.glassfish.jersey.server.model.Resource;
 public class NextGenApplication extends Application<NextGenConfiguration> {
   private static final SecureRandom random = new SecureRandom();
   private static final String APPLICATION_NAME = "CD NextGen Application";
-
-  private final MetricRegistry metricRegistry = new MetricRegistry();
-  private HarnessMetricRegistry harnessMetricRegistry;
 
   public static void main(String[] args) throws Exception {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -132,12 +128,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     });
   }
   public static void configureObjectMapper(final ObjectMapper mapper) {
-    SimpleModule module = new SimpleModule();
-    // Todo: Discuss with Prashant on having an impl just like Morphia Converters
-    module.addSerializer(StepType.class, new StepTypeSerializer());
-    module.addSerializer(FailureInfo.class, new FailureInfoSerializer());
-    mapper.registerModule(module);
     NGPipelineObjectMapperHelper.configureNGObjectMapper(mapper);
+    mapper.registerModule(new PmsBeansJacksonModule());
   }
 
   @Override
@@ -147,9 +139,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         20, 1000, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
     MaintenanceController.forceMaintenance(true);
     List<Module> modules = new ArrayList<>();
-    modules.add(new SCMGrpcClientModule(appConfig.getScmConnectionConfig()));
     modules.add(new NextGenModule(appConfig));
-    modules.add(new MetricRegistryModule(metricRegistry));
+    modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(appConfig)));
     Injector injector = Guice.createInjector(modules);
 
     // Will create collections and Indexes
@@ -164,38 +155,62 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerScheduleJobs(injector);
     registerWaitEnginePublishers(injector);
     registerManagedBeans(environment, injector);
-    registerQueueListeners(injector);
+    registerQueueListeners(injector, appConfig);
     registerExecutionPlanCreators(injector);
     registerAuthFilters(appConfig, environment, injector);
-    harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
-    injector.getInstance(TriggerWebhookService.class).registerIterators();
-
-    registerPipelineSDK(injector, appConfig);
-
-    final InputStream snippetIndexFile = getClass().getClassLoader().getResourceAsStream(SnippetConstants.resourceFile);
-    YamlSdkConfiguration yamlSdkConfiguration = YamlSdkConfiguration.builder().snippetIndex(snippetIndexFile).build();
-    YamlSdkModule.initializeDefaultInstance(yamlSdkConfiguration);
+    registerPipelineSDK(appConfig, injector);
+    registerYamlSdk(injector);
 
     MaintenanceController.forceMaintenance(false);
+    createConsumerThreadsToListenToEvents(injector);
   }
 
-  public void registerPipelineSDK(Injector injector, NextGenConfiguration appConfig) {
-    if (appConfig.getShouldConfigureWithPMS() != null && appConfig.getShouldConfigureWithPMS()) {
-      PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
-                                          .mongoConfig(appConfig.getPmsMongoConfig())
-                                          .grpcServerConfig(appConfig.getPmsSdkGrpcServerConfig())
-                                          .pmsGrpcClientConfig(appConfig.getPmsGrpcClientConfig())
-                                          .pipelineServiceInfoProvider(new CDNGPlanCreatorProvider())
-                                          .filterCreationResponseMerger(new CDNGFilterCreationResponseMerger())
-                                          .stepRegistry(registerStepRegistry(injector))
-                                          .build();
+  private void createConsumerThreadsToListenToEvents(Injector injector) {
+    new Thread(injector.getInstance(EntityCRUDStreamConsumer.class)).start();
+    new Thread(injector.getInstance(FeatureFlagStreamConsumer.class)).start();
+  }
+
+  private void registerYamlSdk(Injector injector) {
+    //    final InputStream snippetIndexFile =
+    //        getClass().getClassLoader().getResourceAsStream(YamlSdkConstants.snippetsResourceFile);
+    //    YamlSdkConfiguration yamlSdkConfiguration = YamlSdkConfiguration.builder()
+    //                                                    .snippetIndex(snippetIndexFile)
+    //                                                    .schemaBasePath(YamlSdkConstants.schemaBasePath)
+    //                                                    .build();
+    YamlSdkInitHelper.initialize(injector);
+  }
+
+  public void registerPipelineSDK(NextGenConfiguration appConfig, Injector injector) {
+    PmsSdkConfiguration sdkConfig = getPmsSdkConfiguration(appConfig);
+    if (sdkConfig.getDeploymentMode().equals(DeployMode.REMOTE)) {
       try {
-        PmsSdkModule.initializeDefaultInstance(sdkConfig);
+        PmsSdkInitHelper.initializeSDKInstance(injector, sdkConfig);
       } catch (Exception e) {
         log.error("Failed To register pipeline sdk");
         System.exit(1);
       }
     }
+  }
+
+  private PmsSdkConfiguration getPmsSdkConfiguration(NextGenConfiguration appConfig) {
+    boolean remote = false;
+    if (appConfig.getShouldConfigureWithPMS() != null && appConfig.getShouldConfigureWithPMS()) {
+      remote = true;
+    }
+    return PmsSdkConfiguration.builder()
+        .deploymentMode(remote ? DeployMode.REMOTE : DeployMode.LOCAL)
+        .serviceName("cd")
+        .mongoConfig(appConfig.getPmsMongoConfig())
+        .grpcServerConfig(appConfig.getPmsSdkGrpcServerConfig())
+        .pmsGrpcClientConfig(appConfig.getPmsGrpcClientConfig())
+        .pipelineServiceInfoProviderClass(CDNGPlanCreatorProvider.class)
+        .filterCreationResponseMerger(new CDNGFilterCreationResponseMerger())
+        .engineSteps(NgStepRegistrar.getEngineSteps())
+        .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers())
+        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
+        .engineEventHandlersMap(NGExecutionEventHandlerRegistrar.getEngineEventHandlers())
+        .executionSummaryModuleInfoProviderClass(CDNGModuleInfoProvider.class)
+        .build();
   }
 
   private void registerManagedBeans(Environment environment, Injector injector) {
@@ -244,12 +259,16 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     environment.jersey().register(injector.getInstance(EtagFilter.class));
   }
 
-  private void registerQueueListeners(Injector injector) {
+  private void registerQueueListeners(Injector injector, NextGenConfiguration appConfig) {
     log.info("Initializing queue listeners...");
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 5);
     queueListenerController.register(injector.getInstance(EmailNotificationListener.class), 1);
     queueListenerController.register(injector.getInstance(OrchestrationEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
+    if (appConfig.getShouldConfigureWithPMS()) {
+      queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 1);
+    }
   }
 
   private void registerWaitEnginePublishers(Injector injector) {
@@ -281,10 +300,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void registerExecutionPlanCreators(Injector injector) {
     injector.getInstance(ExecutionPlanCreatorRegistrar.class).register();
-  }
-
-  private StepRegistry registerStepRegistry(Injector injector) {
-    return injector.getInstance(StepRegistry.class);
   }
 
   private void registerAuthFilters(NextGenConfiguration configuration, Environment environment, Injector injector) {

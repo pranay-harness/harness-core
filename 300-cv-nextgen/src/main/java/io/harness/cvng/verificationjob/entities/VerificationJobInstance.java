@@ -6,10 +6,13 @@ import io.harness.cvng.beans.DataCollectionExecutionStatus;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobType;
+import io.harness.cvng.verificationjob.entities.VerificationJob.RuntimeParameter.RuntimeParameterKeys;
 import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -18,6 +21,7 @@ import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.time.Duration;
 import java.time.Instant;
@@ -27,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
@@ -48,12 +53,26 @@ import org.mongodb.morphia.annotations.Id;
 @HarnessEntity(exportable = true)
 public class VerificationJobInstance
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, PersistentRegularIterable {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("query_idx")
+                 .field(VerificationJobInstanceKeys.executionStatus)
+                 .field(VerificationJobInstanceKeys.accountId)
+                 .build())
+        .build();
+  }
+
   public static final String VERIFICATION_JOB_TYPE_KEY =
       String.format("%s.%s", VerificationJobInstanceKeys.resolvedJob, VerificationJobKeys.type);
   public static String PROJECT_IDENTIFIER_KEY =
       String.format("%s.%s", VerificationJobInstanceKeys.resolvedJob, VerificationJobKeys.projectIdentifier);
   public static String ORG_IDENTIFIER_KEY =
       String.format("%s.%s", VerificationJobInstanceKeys.resolvedJob, VerificationJobKeys.orgIdentifier);
+  public static String ENV_IDENTIFIER_KEY = String.format("%s.%s.%s", VerificationJobInstanceKeys.resolvedJob,
+      VerificationJobKeys.envIdentifier, RuntimeParameterKeys.value);
+  public static String SERVICE_IDENTIFIER_KEY = String.format("%s.%s.%s", VerificationJobInstanceKeys.resolvedJob,
+      VerificationJobKeys.serviceIdentifier, RuntimeParameterKeys.value);
   public static String VERIFICATION_JOB_IDENTIFIER_KEY =
       String.format("%s.%s", VerificationJobInstanceKeys.resolvedJob, VerificationJobKeys.identifier);
   @Id private String uuid;
@@ -75,6 +94,7 @@ public class VerificationJobInstance
   // this stuff is only required for deployment verification
   private Duration dataCollectionDelay;
   private List<String> perpetualTaskIds;
+  private Map<String, String> connectorsToPerpetualTaskIdsMap;
   private Set<String> oldVersionHosts;
   private Set<String> newVersionHosts;
   private Integer newHostsTrafficSplitPercentage;

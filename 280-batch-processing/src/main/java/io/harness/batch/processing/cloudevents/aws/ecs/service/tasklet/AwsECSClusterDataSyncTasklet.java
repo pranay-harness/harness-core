@@ -337,8 +337,10 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
 
   private boolean updateInstanceStopTimeForTask(InstanceData instanceData, Task task) {
     if (null != task.getStoppedAt()) {
-      instanceData.setUsageStopTime(task.getStoppedAt().toInstant());
+      Instant usageStopInstant = task.getStoppedAt().toInstant();
+      instanceData.setUsageStopTime(usageStopInstant);
       instanceData.setInstanceState(InstanceState.STOPPED);
+      instanceData.setTtl(new Date(usageStopInstant.plus(30, ChronoUnit.DAYS).toEpochMilli()));
       return true;
     }
     return false;
@@ -447,21 +449,23 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
                     InstanceMetaDataConstants.INSTANCE_FAMILY, metaData),
                 InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.REGION, metaData),
                 CloudProvider.AWS);
-            InstanceData instanceData = InstanceData.builder()
-                                            .accountId(accountId)
-                                            .instanceId(containerInstanceId)
-                                            .clusterName(getIdFromArn(clusterArn))
-                                            .clusterId(clusterId)
-                                            .settingId(settingId)
-                                            .instanceType(InstanceType.ECS_CONTAINER_INSTANCE)
-                                            .instanceState(InstanceState.RUNNING)
-                                            .usageStartTime(containerInstance.getRegisteredAt().toInstant())
-                                            .totalResource(totalResource)
-                                            .allocatableResource(resource)
-                                            .metaData(metaData)
-                                            .build();
-            log.debug("Creating container instance {} ", containerInstanceId);
-            instanceDataService.create(instanceData);
+            if (null != totalResource) {
+              InstanceData instanceData = InstanceData.builder()
+                                              .accountId(accountId)
+                                              .instanceId(containerInstanceId)
+                                              .clusterName(getIdFromArn(clusterArn))
+                                              .clusterId(clusterId)
+                                              .settingId(settingId)
+                                              .instanceType(InstanceType.ECS_CONTAINER_INSTANCE)
+                                              .instanceState(InstanceState.RUNNING)
+                                              .usageStartTime(containerInstance.getRegisteredAt().toInstant())
+                                              .totalResource(totalResource)
+                                              .allocatableResource(resource)
+                                              .metaData(metaData)
+                                              .build();
+              log.debug("Creating container instance {} ", containerInstanceId);
+              instanceDataService.create(instanceData);
+            }
           }
         });
   }

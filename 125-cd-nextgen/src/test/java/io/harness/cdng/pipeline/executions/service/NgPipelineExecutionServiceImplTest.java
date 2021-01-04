@@ -1,5 +1,6 @@
 package io.harness.cdng.pipeline.executions.service;
 
+import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.utils.PageTestUtils.getPage;
@@ -9,7 +10,6 @@ import static java.util.Collections.singletonList;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -18,7 +18,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
-import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.executions.PipelineExecutionHelper;
@@ -27,26 +26,26 @@ import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.interrupts.InterruptPackage;
-import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.Interrupt;
 import io.harness.ng.core.environment.beans.EnvironmentType;
-import io.harness.ngpipeline.executions.beans.ExecutionGraph;
 import io.harness.ngpipeline.executions.mapper.ExecutionGraphMapper;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
-import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
-import io.harness.ngpipeline.pipeline.executions.TriggerType;
-import io.harness.ngpipeline.pipeline.executions.beans.ExecutionTriggerInfo;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionInterruptType;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummaryFilter;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
 import io.harness.plan.Plan;
-import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
+import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.plan.TriggeredBy;
+import io.harness.pms.execution.ExecutionStatus;
+import io.harness.pms.execution.beans.ExecutionGraph;
 import io.harness.repositories.pipeline.PipelineExecutionRepository;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
@@ -97,7 +96,6 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
   @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void testGetPipelineExecutionDetail() {
-    shouldFailIfNodeForStageIdentifierNotFound();
     shouldReturnStageGraph();
   }
 
@@ -222,18 +220,13 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
   }
 
   private void shouldReturnStageGraph() {
-    NodeExecution stageNodeExecution =
-        NodeExecution.builder().node(PlanNodeProto.newBuilder().setUuid("planNodeId").build()).build();
     doReturn(Optional.of(PipelineExecutionSummary.builder().build()))
         .when(pipelineExecutionRepository)
         .findByPlanExecutionId(any());
-    doReturn(Optional.of(stageNodeExecution))
-        .when(nodeExecutionService)
-        .getByNodeIdentifier("stageId", "planExecutionId");
-    OrchestrationGraphDTO orchestrationGraph = OrchestrationGraphDTO.builder().build();
+    OrchestrationGraphDTO orchestrationGraph = OrchestrationGraphDTO.builder().status(Status.SUCCEEDED).build();
     doReturn(orchestrationGraph)
         .when(graphGenerationService)
-        .generatePartialOrchestrationGraphFromSetupNodeId("planNodeId", "planExecutionId");
+        .generatePartialOrchestrationGraphFromIdentifier("stageId", "planExecutionId");
     PowerMockito.mockStatic(ExecutionGraphMapper.class);
     ExecutionGraph executionGraph = ExecutionGraph.builder().build();
     when(ExecutionGraphMapper.toExecutionGraph(orchestrationGraph)).thenReturn(executionGraph);
@@ -241,12 +234,6 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
     PipelineExecutionDetail pipelineExecutionDetail =
         ngPipelineExecutionService.getPipelineExecutionDetail("planExecutionId", "stageId");
     assertThat(pipelineExecutionDetail.getStageGraph()).isEqualTo(executionGraph);
-  }
-
-  private void shouldFailIfNodeForStageIdentifierNotFound() {
-    doReturn(Optional.empty()).when(nodeExecutionService).getByNodeIdentifier(anyString(), anyString());
-    assertThatThrownBy(() -> ngPipelineExecutionService.getPipelineExecutionDetail("planId", "stageId"))
-        .isInstanceOf(InvalidRequestException.class);
   }
 
   @Test
@@ -280,13 +267,13 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
             .pipelineName(ngPipeline.getName())
             .pipelineIdentifier(ngPipeline.getIdentifier())
             .executionStatus(ExecutionStatus.RUNNING)
-            .triggerInfo(ExecutionTriggerInfo.builder()
-                             .triggerType(TriggerType.MANUAL)
-                             .triggeredBy(EmbeddedUser.builder()
-                                              .uuid("lv0euRhKRCyiXWzS7pOg6g")
-                                              .email("admin@harness.io")
-                                              .name("Admin")
-                                              .build())
+            .triggerInfo(ExecutionTriggerInfo.newBuilder()
+                             .setTriggerType(MANUAL)
+                             .setTriggeredBy(TriggeredBy.newBuilder()
+                                                 .setUuid("lv0euRhKRCyiXWzS7pOg6g")
+                                                 .putExtraInfo("email", "admin@harness.io")
+                                                 .setIdentifier("Admin")
+                                                 .build())
                              .build())
             .planExecutionId(planExecution.getUuid())
             .startedAt(planExecution.getStartTs())

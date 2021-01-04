@@ -210,7 +210,7 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
       Map<String, ContainerState> containerStates = workloadState.getContainerStateMap();
       Map<String, ContainerCheckpoint> updatedContainerCheckpoints = containerStates.entrySet().stream().collect(
           Collectors.toMap(Map.Entry::getKey, cse -> cse.getValue().toContainerCheckpoint()));
-      K8sWorkloadRecommendation recommendation = workloadRecommendationDao.fetchRecommendationForWorkload(workloadId);
+      K8sWorkloadRecommendation recommendation = workloadState.getRecommendation();
       recommendation.setContainerCheckpoints(updatedContainerCheckpoints);
       recommendation.setDirty(true);
       Instant lastReceivedUtilDataTimestamp = updatedContainerCheckpoints.values()
@@ -231,15 +231,8 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
       Map<String, ContainerStateV2> containerStatesV2 = workloadState.getContainerStateMap();
       Map<String, ContainerCheckpoint> containerCheckpointsV2 = containerStatesV2.entrySet().stream().collect(
           Collectors.toMap(Map.Entry::getKey, cse -> cse.getValue().toContainerCheckpoint()));
-      PartialRecommendationHistogram partialRecommendationHistogram = PartialRecommendationHistogram.builder()
-                                                                          .accountId(workloadId.getAccountId())
-                                                                          .clusterId(workloadId.getClusterId())
-                                                                          .namespace(workloadId.getNamespace())
-                                                                          .workloadName(workloadId.getName())
-                                                                          .workloadType(workloadId.getKind())
-                                                                          .date(jobStartDate)
-                                                                          .containerCheckpoints(containerCheckpointsV2)
-                                                                          .build();
+      PartialRecommendationHistogram partialRecommendationHistogram = workloadState.getHistogram();
+      partialRecommendationHistogram.setContainerCheckpoints(containerCheckpointsV2);
       workloadRecommendationDao.save(partialRecommendationHistogram);
     });
   }

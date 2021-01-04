@@ -1,0 +1,459 @@
+package software.wings.service.impl;
+
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.OrchestrationWorkflowType.BUILD;
+import static io.harness.beans.WorkflowType.ORCHESTRATION;
+import static io.harness.beans.WorkflowType.PIPELINE;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.expression.ExpressionEvaluator.matchesVariablePattern;
+import static io.harness.validation.Validator.notNullCheck;
+
+import static software.wings.beans.VariableType.ENTITY;
+
+import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
+import io.harness.beans.OrchestrationWorkflowType;
+import io.harness.exception.InvalidRequestException;
+import io.harness.expression.ExpressionEvaluator;
+import io.harness.ff.FeatureFlagService;
+
+import software.wings.api.CanaryWorkflowStandardParams;
+import software.wings.api.DeploymentType;
+import software.wings.api.WorkflowElement;
+import software.wings.beans.CanaryOrchestrationWorkflow;
+import software.wings.beans.ExecutionArgs;
+import software.wings.beans.Pipeline;
+import software.wings.beans.PipelineStage;
+import software.wings.beans.PipelineStage.PipelineStageElement;
+import software.wings.beans.RuntimeInputsConfig;
+import software.wings.beans.Service;
+import software.wings.beans.Variable;
+import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowExecution;
+import software.wings.beans.appmanifest.HelmChart;
+import software.wings.beans.artifact.Artifact;
+import software.wings.beans.deployment.WorkflowVariablesMetadata;
+import software.wings.service.intfc.InfrastructureDefinitionService;
+import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.StateMachine;
+import software.wings.sm.WorkflowStandardParams;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
+
+@OwnedBy(CDC)
+@Singleton
+public class WorkflowExecutionServiceHelper {
+  @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private WorkflowService workflowService;
+  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private PipelineService pipelineService;
+  @Inject private FeatureFlagService featureFlagService;
+
+  public WorkflowVariablesMetadata fetchWorkflowVariables(
+      String appId, ExecutionArgs executionArgs, String workflowExecutionId) {
+    List<Variable> workflowVariables = fetchWorkflowVariables(appId, executionArgs);
+    if (isBlank(workflowExecutionId) || isEmpty(workflowVariables)) {
+      return new WorkflowVariablesMetadata(workflowVariables);
+    }
+
+    WorkflowExecution workflowExecution = workflowExecutionService.getWorkflowExecution(appId, workflowExecutionId);
+    if (workflowExecution == null || workflowExecution.getExecutionArgs() == null
+        || executionArgs.getWorkflowType() != workflowExecution.getWorkflowType()
+        || (ORCHESTRATION == workflowExecution.getWorkflowType()
+            && !executionArgs.getOrchestrationId().equals(workflowExecution.getWorkflowId()))
+        || (PIPELINE == workflowExecution.getWorkflowType()
+            && (workflowExecution.getPipelineExecution() == null
+                || workflowExecution.getPipelineExecution().getPipeline() == null
+                || !executionArgs.getPipelineId().equals(workflowExecution.getPipelineExecution().getPipelineId())))) {
+      return new WorkflowVariablesMetadata(workflowVariables);
+    }
+
+    Map<String, String> oldWorkflowVariablesValueMap = workflowExecution.getExecutionArgs().getWorkflowVariables();
+    if (isEmpty(oldWorkflowVariablesValueMap)) {
+      if (featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, workflowExecution.getAccountId())) {
+        boolean changed = false;
+        for (Variable variable : workflowVariables) {
+          if (!Boolean.TRUE.equals(variable.getRuntimeInput()) && variable.isMandatory()) {
+            changed = true;
+            break;
+          }
+        }
+
+        return new WorkflowVariablesMetadata(workflowVariables, changed);
+      } else {
+        return new WorkflowVariablesMetadata(
+            workflowVariables, workflowVariables.stream().anyMatch(variable -> ENTITY == variable.getType()));
+      }
+    }
+
+    boolean changed = populateWorkflowVariablesValues(workflowVariables, new HashMap<>(oldWorkflowVariablesValueMap));
+    return new WorkflowVariablesMetadata(workflowVariables, changed);
+  }
+
+  @NotNull
+  public Workflow obtainWorkflow(@NotNull String appId, @NotNull String workflowId) {
+    Workflow workflow = workflowService.readWorkflow(appId, workflowId);
+    notNullCheck("Error reading workflow. Might be deleted", workflow);
+    notNullCheck("Error reading workflow. Might be deleted", workflow.getOrchestrationWorkflow());
+    if (!workflow.getOrchestrationWorkflow().isValid()) {
+      throw new InvalidRequestException("Workflow requested for execution is not valid/complete.");
+    }
+
+    return workflow;
+  }
+
+  @NotNull
+  public WorkflowExecution obtainExecution(Workflow workflow, StateMachine stateMachine, String resolveEnvId,
+      String pipelineExecutionId, @NotNull ExecutionArgs executionArgs) {
+    WorkflowExecution workflowExecution = WorkflowExecution.builder().build();
+    workflowExecution.setAppId(workflow.getAppId());
+    workflowExecution.setAccountId(workflow.getAccountId());
+
+    if (resolveEnvId != null) {
+      workflowExecution.setEnvId(resolveEnvId);
+      workflowExecution.setEnvIds(Collections.singletonList(resolveEnvId));
+    }
+
+    workflowExecution.setWorkflowId(workflow.getUuid());
+    workflowExecution.setWorkflowIds(asList(workflow.getUuid()));
+    workflowExecution.setName(workflow.getName());
+    workflowExecution.setWorkflowType(ORCHESTRATION);
+    workflowExecution.setOrchestrationType(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
+    workflowExecution.setConcurrencyStrategy(workflow.getOrchestrationWorkflow().getConcurrencyStrategy());
+    workflowExecution.setStateMachine(stateMachine);
+    workflowExecution.setPipelineExecutionId(pipelineExecutionId);
+    workflowExecution.setExecutionArgs(executionArgs);
+    workflowExecution.setStageName(executionArgs.getStageName());
+
+    Map<String, String> workflowVariables = executionArgs.getWorkflowVariables();
+    List<Service> services = workflowService.getResolvedServices(workflow, workflowVariables);
+    if (isNotEmpty(services)) {
+      workflowExecution.setServiceIds(services.stream().map(Service::getUuid).collect(toList()));
+      if (services.size() == 1) {
+        Service targetService = services.get(0);
+        boolean useSweepingOutput = targetService.getDeploymentType() == DeploymentType.SSH
+            || targetService.getDeploymentType() == DeploymentType.WINRM;
+        workflowExecution.setUseSweepingOutputs(useSweepingOutput);
+      }
+    }
+
+    workflowExecution.setInfraDefinitionIds(workflowService.getResolvedInfraDefinitionIds(workflow, workflowVariables));
+    workflowExecution.setCloudProviderIds(infrastructureDefinitionService.fetchCloudProviderIds(
+        workflow.getAppId(), workflowExecution.getInfraDefinitionIds()));
+    return workflowExecution;
+  }
+
+  @NotNull
+  public WorkflowStandardParams obtainWorkflowStandardParams(
+      String appId, String envId, @NotNull ExecutionArgs executionArgs, Workflow workflow) {
+    WorkflowStandardParams stdParams;
+    if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.CANARY
+        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.BASIC
+        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.ROLLING
+        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.MULTI_SERVICE
+        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == BUILD
+        || workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() == OrchestrationWorkflowType.BLUE_GREEN) {
+      stdParams = new CanaryWorkflowStandardParams();
+
+      if (workflow.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow) {
+        CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+            (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+        if (canaryOrchestrationWorkflow.getUserVariables() != null) {
+          stdParams.setWorkflowElement(WorkflowElement.builder()
+                                           .variables(fetchWorkflowVariablesFromOrchestrationWorkflow(
+                                               canaryOrchestrationWorkflow, executionArgs))
+                                           .build());
+        }
+        if (isNotEmpty(canaryOrchestrationWorkflow.getWorkflowPhaseIds())
+            && canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().get(
+                   canaryOrchestrationWorkflow.getWorkflowPhaseIds().get(0))
+                != null) {
+          stdParams.setLastDeployPhaseId(canaryOrchestrationWorkflow.getWorkflowPhaseIds().get(
+              canaryOrchestrationWorkflow.getWorkflowPhaseIds().size() - 1));
+          stdParams.setLastRollbackPhaseId(canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap()
+                                               .get(canaryOrchestrationWorkflow.getWorkflowPhaseIds().get(0))
+                                               .getUuid());
+        }
+      }
+    } else {
+      stdParams = new WorkflowStandardParams();
+    }
+
+    stdParams.setAppId(appId);
+    stdParams.setEnvId(envId);
+    if (isNotEmpty(executionArgs.getArtifacts())) {
+      stdParams.setArtifactIds(executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(toList()));
+    }
+
+    if (isNotEmpty(executionArgs.getHelmCharts())) {
+      stdParams.setHelmChartIds(executionArgs.getHelmCharts().stream().map(HelmChart::getUuid).collect(toList()));
+    }
+
+    stdParams.setExecutionCredential(executionArgs.getExecutionCredential());
+
+    stdParams.setExcludeHostsWithSameArtifact(executionArgs.isExcludeHostsWithSameArtifact());
+    stdParams.setNotifyTriggeredUserOnly(executionArgs.isNotifyTriggeredUserOnly());
+    stdParams.setExecutionHosts(executionArgs.getHosts());
+    return stdParams;
+  }
+
+  private Map<String, Object> fetchWorkflowVariablesFromOrchestrationWorkflow(
+      CanaryOrchestrationWorkflow orchestrationWorkflow, ExecutionArgs executionArgs) {
+    Map<String, Object> variables = new HashMap<>();
+    if (orchestrationWorkflow.getUserVariables() == null) {
+      return variables;
+    }
+    for (Variable variable : orchestrationWorkflow.getUserVariables()) {
+      if (variable.isFixed()) {
+        setVariables(variable.getName(), variable.getValue(), variables);
+        continue;
+      }
+
+      // no input from user
+      if (executionArgs == null || isEmpty(executionArgs.getWorkflowVariables())
+          || isBlank(executionArgs.getWorkflowVariables().get(variable.getName()))) {
+        if (variable.isMandatory() && isBlank(variable.getValue())) {
+          throw new InvalidRequestException(
+              "Workflow variable [" + variable.getName() + "] is mandatory for execution", USER);
+        }
+        if (isBlank(variable.getValue())) {
+          setVariables(variable.getName(), "", variables);
+        } else {
+          setVariables(variable.getName(), variable.getValue(), variables);
+        }
+        continue;
+      }
+      // Verify for allowed values
+      if (isNotEmpty(variable.getAllowedValues())) {
+        if (isNotEmpty(variable.getValue())) {
+          if (!variable.getAllowedList().contains(variable.getValue())) {
+            throw new InvalidRequestException("Workflow variable value [" + variable.getValue()
+                + " is not in Allowed Values [" + variable.getAllowedList() + "]");
+          }
+        }
+      }
+      setVariables(variable.getName(), executionArgs.getWorkflowVariables().get(variable.getName()), variables);
+    }
+    return variables;
+  }
+
+  private void setVariables(String key, Object value, Map<String, Object> variableMap) {
+    if (!isNull(key)) {
+      variableMap.put(key, value);
+    }
+  }
+
+  private boolean isNull(String string) {
+    return isEmpty(string) || string.equals("null");
+  }
+
+  private List<Variable> fetchWorkflowVariables(String appId, ExecutionArgs executionArgs) {
+    // Fetch workflow variables without any value.
+    List<Variable> workflowVariables;
+    if (ORCHESTRATION == executionArgs.getWorkflowType()) {
+      Workflow workflow = workflowService.readWorkflowWithoutServices(appId, executionArgs.getOrchestrationId());
+      workflowVariables = (workflow == null || workflow.getOrchestrationWorkflow() == null)
+          ? null
+          : workflow.getOrchestrationWorkflow().getUserVariables();
+    } else {
+      workflowVariables = pipelineService.getPipelineVariables(appId, executionArgs.getPipelineId());
+    }
+    return (workflowVariables == null) ? Collections.emptyList() : workflowVariables;
+  }
+
+  /**
+   * Populate workflow variables with values based on old workflow variables.
+   * Current Behaviour:
+   * - Don't set values if variable name not present in oldWorkflowVariablesMap
+   * - Don't set values if variable corresponding to name is not of the same type and possibly entity type
+   * - Otherwise set values
+   * - Finally if value is not found for any entity-type variable or there is an entity-variable not present in current
+   *   workflow variables, all entity-type variables are reset. This is to make the behaviour simple and predictable for
+   *   now. This can made more intelligent later on.
+   *
+   * @param workflowVariables       current workflow variables - non-empty
+   * @param oldWorkflowVariablesMap workflow variables from an older execution - non-empty
+   * @return true if entity-type variables are reset, otherwise false
+   */
+  private boolean populateWorkflowVariablesValues(
+      List<Variable> workflowVariables, Map<String, String> oldWorkflowVariablesMap) {
+    // NOTE: workflowVariables and oldWorkflowVariablesMap are not empty.
+    // oldEntityVariableNames is a set of all the names of old ENTITY workflow variables.
+    if (oldWorkflowVariablesMap == null) {
+      oldWorkflowVariablesMap = new HashMap<>();
+    }
+    boolean resetEntities = false;
+    for (Variable variable : workflowVariables) {
+      String name = variable.getName();
+      boolean isEntity = ENTITY == variable.getType();
+      boolean oldVariablePresent = oldWorkflowVariablesMap.containsKey(name);
+      if (!oldVariablePresent && !Boolean.TRUE.equals(variable.getRuntimeInput())) {
+        // A new workflow variable.
+        if (isEntity) {
+          // If there is a new workflow variable of type ENTITY set resetEntities = true.
+          resetEntities = true;
+        }
+        continue;
+      }
+      variable.setValue(oldWorkflowVariablesMap.get(name));
+      // This is never a noop as we have already dealt with the case that this workflow variable is new.
+      oldWorkflowVariablesMap.remove(name);
+    }
+
+    // resetEntities is true if there are one or more new ENTITY workflow variables.
+    // oldEntityVariableNames is not empty when one or more ENTITY variables have been removed.
+    if (resetEntities || isNotEmpty(oldWorkflowVariablesMap)) {
+      resetEntityWorkflowVariables(workflowVariables);
+      return true;
+    }
+    return false;
+  }
+
+  private void resetEntityWorkflowVariables(List<Variable> workflowVariables) {
+    // NOTE: workflowVariables are not empty.
+    for (Variable variable : workflowVariables) {
+      if (ENTITY == variable.getType()) {
+        variable.setValue(null);
+      }
+    }
+  }
+
+  public static boolean calculateCdPageCandidate(
+      String pipelineExecutionId, String pipelineResumeId, boolean latestPipelineResume) {
+    boolean cdPageCandidate;
+    if (isNotEmpty(pipelineResumeId)) {
+      cdPageCandidate = latestPipelineResume;
+    } else {
+      // For a pipeline which is not resumed at all LatestPipelineResume is false and pipelineResumeId is null.
+      cdPageCandidate = true;
+    }
+
+    if (!isEmpty(pipelineExecutionId)) {
+      cdPageCandidate = false;
+    }
+    return cdPageCandidate;
+  }
+
+  public WorkflowVariablesMetadata fetchWorkflowVariablesForRunningExecution(
+      String appId, String workflowExecutionId, String pipelineStageElementId) {
+    List<Variable> workflowVariables =
+        fetchWorkflowVariablesRunningPipeline(appId, workflowExecutionId, pipelineStageElementId);
+    return new WorkflowVariablesMetadata(workflowVariables);
+  }
+
+  private List<Variable> fetchWorkflowVariablesRunningPipeline(
+      String appId, String pipelineExecutionId, String pipelineStageElementId) {
+    WorkflowExecution pipelineExecution = workflowExecutionService.getWorkflowExecution(appId, pipelineExecutionId);
+
+    notNullCheck("No Executions found for given PipelineExecutionId " + pipelineExecutionId, pipelineExecution);
+    String pipelineId = pipelineExecution.getWorkflowId();
+    Pipeline pipeline = pipelineService.readPipelineWithVariables(appId, pipelineId);
+
+    notNullCheck("No pipeline associated with given executionId:  " + pipelineExecutionId, pipeline);
+
+    List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
+    if (isEmpty(pipelineStages)) {
+      throw new InvalidRequestException("Given Pipeline does not contain any Stages", USER);
+    }
+    for (PipelineStage pipelineStage : pipelineStages) {
+      PipelineStageElement pipelineStageElement = pipelineStage.getPipelineStageElements().get(0);
+      if (pipelineStageElement.getUuid().equals(pipelineStageElementId)) {
+        String workflowId = (String) pipelineStageElement.getProperties().get("workflowId");
+        if (isEmpty(workflowId)) {
+          throw new InvalidRequestException(
+              String.format("No workflow found in pipelineStage: %s for given stageElementId: %s ",
+                  pipelineStageElement.getName(), pipelineStageElementId));
+        }
+
+        Workflow workflow = workflowService.readWorkflow(appId, workflowId);
+        notNullCheck(
+            "Not able to load workflow associated with given PipelineStageElementId: " + pipelineStageElementId,
+            workflow);
+        notNullCheck(
+            "Not able to load workflow associated with given PipelineStageElementId: " + pipelineStageElementId,
+            workflow.getOrchestrationWorkflow());
+        List<Variable> variables = workflow.getOrchestrationWorkflow().getUserVariables();
+        if (isEmpty(variables)) {
+          return variables;
+        }
+
+        RuntimeInputsConfig runtimeInputsConfig = pipelineStageElement.getRuntimeInputsConfig();
+        if (runtimeInputsConfig == null || isEmpty(runtimeInputsConfig.getRuntimeInputVariables())) {
+          return new ArrayList<>();
+        }
+
+        List<Variable> vars = pipeline.getPipelineVariables();
+        ExecutionArgs args = pipelineExecution.getExecutionArgs();
+        if (args.getWorkflowVariables() == null) {
+          args.setWorkflowVariables(new HashMap<>());
+        }
+        Map<String, String> resolvedVariablesValues = pipelineStageElement.getWorkflowVariables();
+        return CanaryOrchestrationWorkflow.reorderUserVariables(
+            getRuntimeVariablesForStage(args, runtimeInputsConfig, variables, vars, resolvedVariablesValues));
+      }
+    }
+    throw new InvalidRequestException(
+        " No PipelineStage found for given PipelineStageElementId: " + pipelineStageElementId);
+  }
+
+  @VisibleForTesting
+  public static List<Variable> getRuntimeVariablesForStage(ExecutionArgs args, RuntimeInputsConfig runtimeInputsConfig,
+      List<Variable> workflowVariables, List<Variable> pipelineVariables, Map<String, String> resolvedVariablesValues) {
+    List<Variable> runtimeVariables =
+        workflowVariables.stream()
+            .filter(t -> runtimeInputsConfig.getRuntimeInputVariables().contains(t.getName()))
+            .collect(toList());
+
+    Set<String> pipelineVarsName = runtimeVariables.stream()
+                                       .map(v -> ExpressionEvaluator.getName(resolvedVariablesValues.get(v.getName())))
+                                       .collect(Collectors.toSet());
+
+    Set<String> runtimePipelineVarNames = pipelineVariables.stream()
+                                              .filter(v -> Boolean.TRUE.equals(v.getRuntimeInput()))
+                                              .map(Variable::getName)
+                                              .collect(Collectors.toSet());
+    Map<String, String> wfVariables = new HashMap<>();
+    for (Map.Entry<String, String> entry : args.getWorkflowVariables().entrySet()) {
+      if (!runtimePipelineVarNames.contains(entry.getKey())) {
+        wfVariables.put(entry.getKey(), entry.getValue());
+      }
+    }
+
+    for (Variable variable : pipelineVariables) {
+      String defaultValuePresent = args.getWorkflowVariables().get(variable.getName());
+      if (isNotEmpty(defaultValuePresent) && isNotNewVar(defaultValuePresent)) {
+        variable.setValue(defaultValuePresent);
+      }
+      if (variable.obtainEntityType() != null) {
+        PipelineServiceImpl.setParentAndRelatedFieldsForRuntime(
+            pipelineVariables, wfVariables, variable.getName(), variable, variable.obtainEntityType());
+      }
+    }
+
+    return pipelineVariables.stream().filter(v -> pipelineVarsName.contains(v.getName())).collect(toList());
+  }
+
+  private static boolean isNotNewVar(String defaultValuePresent) {
+    return !(matchesVariablePattern(defaultValuePresent) && !defaultValuePresent.contains("."));
+  }
+}

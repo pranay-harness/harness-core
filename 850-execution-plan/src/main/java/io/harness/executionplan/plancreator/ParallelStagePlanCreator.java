@@ -10,11 +10,12 @@ import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.plancreator.beans.PlanCreatorType;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
-import io.harness.pms.facilitators.FacilitatorObtainment;
-import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.contracts.steps.SkipType;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
-import io.harness.pms.steps.StepType;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.fork.ForkStep;
 import io.harness.steps.fork.ForkStepParameters;
@@ -77,6 +78,7 @@ public class ParallelStagePlanCreator implements SupportDefinedExecutorPlanCreat
                 .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
                 .build())
         .skipExpressionChain(true)
+        .skipGraphType(SkipType.SKIP_NODE)
         .build();
   }
 

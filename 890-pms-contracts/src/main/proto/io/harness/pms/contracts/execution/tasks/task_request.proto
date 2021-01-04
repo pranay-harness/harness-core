@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.execution.tasks;
+
+option java_multiple_files = true;
+
+import "io/harness/pms/contracts/execution/tasks/delegate_task_request.proto";
+
+message TaskRequest {
+  oneof request {
+    DelegateTaskRequest delegateTaskRequest = 1;
+  }
+  TaskCategory taskCategory = 2;
+}
+
+enum TaskCategory {
+  UNKNOWN_CATEGORY = 0;
+  DELEGATE_TASK_V1 = 1;
+  DELEGATE_TASK_V2 = 2;
+}

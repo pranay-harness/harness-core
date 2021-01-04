@@ -1,8 +1,8 @@
 package io.harness.steps.resourcerestraint;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.pms.execution.ExecutionMode.ASYNC;
-import static io.harness.pms.execution.ExecutionMode.SYNC;
+import static io.harness.pms.contracts.execution.ExecutionMode.ASYNC;
+import static io.harness.pms.contracts.execution.ExecutionMode.SYNC;
 import static io.harness.rule.OwnerRule.ALEXEI;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,9 +15,9 @@ import io.harness.category.element.UnitTests;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintId;
 import io.harness.distribution.constraint.Consumer;
-import io.harness.engine.expressions.EngineExpressionService;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.ambiance.Level;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.sdk.core.facilitator.DefaultFacilitatorParams;
 import io.harness.pms.sdk.core.facilitator.FacilitatorResponse;
 import io.harness.rule.Owner;
@@ -47,7 +47,7 @@ public class ResourceRestraintFacilitatorTest extends OrchestrationStepsTestBase
   @Inject private KryoSerializer kryoSerializer;
   @Mock private ResourceRestraintService resourceRestraintService;
   @Mock private RestraintService restraintService;
-  @Mock private EngineExpressionService engineExpressionService;
+  @Mock private PmsEngineExpressionService pmsEngineExpressionService;
   @Inject @InjectMocks private ResourceRestraintRegistry resourceRestraintRegistry;
   @Inject @InjectMocks private ResourceRestraintFacilitator resourceRestraintFacilitator;
 
@@ -67,7 +67,7 @@ public class ResourceRestraintFacilitatorTest extends OrchestrationStepsTestBase
                  .build())
         .when(resourceRestraintService)
         .createAbstraction(any());
-    when(engineExpressionService.renderExpression(any(), any())).thenReturn(RESOURCE_UNIT);
+    when(pmsEngineExpressionService.renderExpression(any(), any())).thenReturn(RESOURCE_UNIT);
   }
 
   @Test

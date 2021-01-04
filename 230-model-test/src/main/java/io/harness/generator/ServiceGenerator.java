@@ -10,6 +10,7 @@ import static io.harness.govern.Switch.unhandled;
 import static software.wings.beans.Service.ServiceBuilder;
 import static software.wings.beans.Service.builder;
 
+import io.harness.exception.InvalidRequestException;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
@@ -29,6 +30,7 @@ import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.WingsPersistence;
@@ -36,15 +38,21 @@ import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.ArtifactType;
 
+import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.github.benas.randombeans.api.EnhancedRandom;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
+@Slf4j
 public class ServiceGenerator {
   private static final String HELM_S3_SERVICE_NAME = "Helm S3 Functional Test";
   private static final String CHARTMUSEUM_CHART_NAME = "chartmuseum";
@@ -65,6 +73,8 @@ public class ServiceGenerator {
     WINDOWS_TEST,
     ECS_TEST,
     K8S_V2_TEST,
+    K8_V2_SKIP_VERSIONING_TEST,
+    K8S_V2_LIST_TEST,
     MULTI_ARTIFACT_FUNCTIONAL_TEST,
     MULTI_ARTIFACT_K8S_V2_TEST,
     NAS_FUNCTIONAL_TEST,
@@ -89,6 +99,10 @@ public class ServiceGenerator {
         return ensureWindowsTest(seed, owners, "Test IIS APP Service");
       case K8S_V2_TEST:
         return ensureK8sTest(seed, owners, "Test K8sV2 Service");
+      case K8_V2_SKIP_VERSIONING_TEST:
+        return ensureK8sTestSkipVersioningAllObjects(seed, owners, "Test K8sV2 Service Skip Versioning");
+      case K8S_V2_LIST_TEST:
+        return ensureK8sListTest(seed, owners, "Test K8sV2 List Service");
       case MULTI_ARTIFACT_FUNCTIONAL_TEST:
         return ensureMultiArtifactFunctionalTest(seed, owners, "MA-FunctionalTest Service");
       case MULTI_ARTIFACT_K8S_V2_TEST:
@@ -261,6 +275,47 @@ public class ServiceGenerator {
   }
 
   public Service ensureK8sTest(Randomizer.Seed seed, Owners owners, String name) {
+    final Application application =
+        owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
+    owners.add(ensureService(seed, owners,
+        builder()
+            .name(name)
+            .artifactType(ArtifactType.DOCKER)
+            .deploymentType(DeploymentType.KUBERNETES)
+            .isK8sV2(true)
+            .appId(application.getUuid())
+            .build()));
+    ArtifactStream artifactStream =
+        artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_DOCKER);
+    Service service = owners.obtainService();
+    service.setArtifactStreamIds(new ArrayList<>(Arrays.asList(artifactStream.getUuid())));
+    return service;
+  }
+
+  public Service ensureK8sTestSkipVersioningAllObjects(Randomizer.Seed seed, Owners owners, String name) {
+    owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
+    owners.add(ensureService(seed, owners,
+        builder()
+            .name(name)
+            .artifactType(ArtifactType.DOCKER)
+            .deploymentType(DeploymentType.KUBERNETES)
+            .isK8sV2(true)
+            .build()));
+    ArtifactStream artifactStream =
+        artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_DOCKER);
+    Service service = owners.obtainService();
+
+    ApplicationManifest applicationManifest =
+        applicationManifestService.getManifestByServiceId(service.getAppId(), service.getUuid());
+    applicationManifest.setAppId(service.getAppId());
+    applicationManifest.setSkipVersioningForAllK8sObjects(true);
+    upsertApplicationManifest(applicationManifest);
+
+    service.setArtifactStreamIds(new ArrayList<>(Arrays.asList(artifactStream.getUuid())));
+    return service;
+  }
+
+  public Service ensureK8sListTest(Randomizer.Seed seed, Owners owners, String name) {
     owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
     owners.add(ensureService(seed, owners,
         builder()
@@ -273,7 +328,35 @@ public class ServiceGenerator {
         artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_DOCKER);
     Service service = owners.obtainService();
     service.setArtifactStreamIds(new ArrayList<>(Arrays.asList(artifactStream.getUuid())));
+
+    addDeploymentListManifestFile(service);
+
     return service;
+  }
+
+  private void addDeploymentListManifestFile(Service service) {
+    ApplicationManifest applicationManifest =
+        applicationManifestService.getManifestByServiceId(service.getAppId(), service.getUuid());
+    List<ManifestFile> manifestFiles =
+        applicationManifestService.getManifestFilesByAppManifestId(service.getAppId(), applicationManifest.getUuid());
+    for (ManifestFile manifestFile : manifestFiles) {
+      if (!manifestFile.getFileName().equals("values.yaml")) {
+        applicationManifestService.deleteManifestFileById(service.getAppId(), manifestFile.getUuid());
+      }
+    }
+
+    URL url = ServiceGenerator.class.getClassLoader().getResource("k8s-manifests/deployment-list.yaml");
+    String deploymentListYaml = null;
+    try {
+      deploymentListYaml = Resources.toString(url, StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
+
+    ManifestFile listDeploymentSpec =
+        ManifestFile.builder().fileName("templates/deployment.yaml").fileContent(deploymentListYaml).build();
+    listDeploymentSpec.setAppId(service.getAppId());
+    applicationManifestService.createManifestFileByServiceId(listDeploymentSpec, service.getUuid());
   }
 
   public Service ensureEcsRemoteTest(
@@ -308,7 +391,11 @@ public class ServiceGenerator {
     }
 
     applicationManifest.setAppId(service.getAppId());
-    upsertApplicationManifest(applicationManifest);
+    try {
+      upsertApplicationManifest(applicationManifest);
+    } catch (InvalidRequestException ex) {
+      log.warn("Unable to save application manifest. Continuing", ex);
+    }
     return service;
   }
 

@@ -1,6 +1,7 @@
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.NEMANJA;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,24 +11,36 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.VerificationApplication;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.LogRecordDTO;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.DeletedCVConfig;
+import io.harness.cvng.core.entities.LogRecord;
 import io.harness.cvng.core.entities.SplunkCVConfig;
+import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
+import io.harness.cvng.core.services.api.LogRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.PersistentEntity;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
+import org.reflections.Reflections;
 
 public class DeletedCVConfigServiceImplTest extends CvNextGenTest {
   @Inject private HPersistence hPersistence;
@@ -36,6 +49,7 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTest {
   @Inject private DeletedCVConfigService deletedCVConfigService;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private CVConfigService cvConfigService;
+  @Inject private LogRecordService logRecordService;
 
   private String accountId;
   private String connectorId;
@@ -85,6 +99,57 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTest {
   }
 
   @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testTriggerCleanup_deleteVerificationTask() {
+    CVConfig cvConfig = createCVConfig();
+    DeletedCVConfig saved = save(createDeletedCVConfig(cvConfig));
+    List<String> verificationTaskIds = verificationTaskService.getVerificationTaskIds(cvConfig.getUuid());
+    LogRecordDTO logRecord1 = LogRecordDTO.builder()
+                                  .verificationTaskId(verificationTaskIds.get(0))
+                                  .accountId(accountId)
+                                  .timestamp(Instant.now().toEpochMilli())
+                                  .log("log message")
+                                  .host("host")
+                                  .build();
+    LogRecordDTO logRecord2 = LogRecordDTO.builder()
+                                  .verificationTaskId(generateUuid())
+                                  .accountId(accountId)
+                                  .timestamp(Instant.now().toEpochMilli())
+                                  .log("log message")
+                                  .host("host")
+                                  .build();
+    logRecordService.save(Arrays.asList(logRecord1, logRecord2));
+    deletedCVConfigServiceWithMocks.triggerCleanup(saved);
+    List<LogRecord> logRecords = hPersistence.createQuery(LogRecord.class).asList();
+    assertThat(logRecords).hasSize(1);
+    assertThat(logRecords.get(0).getVerificationTaskId()).isEqualTo(logRecord2.getVerificationTaskId());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testTriggerCleanup_entitiesList() {
+    Set<Class<? extends PersistentEntity>> entitiesWithVerificationTaskId = new HashSet<>();
+    entitiesWithVerificationTaskId.addAll(DeletedCVConfigServiceImpl.ENTITIES_TO_DELETE_BY_VERIFICATION_ID);
+    entitiesWithVerificationTaskId.addAll(DeletedCVConfigServiceImpl.ENTITIES_DELETE_BLACKLIST_BY_VERIFICATION_ID);
+    Reflections reflections = new Reflections(VerificationApplication.class.getPackage().getName());
+    Set<Class<? extends PersistentEntity>> withVerificationTaskId = new HashSet<>();
+    reflections.getSubTypesOf(PersistentEntity.class).forEach(entity -> {
+      if (doesClassContainField(entity, VerificationTask.VERIFICATION_TASK_ID_KEY)) {
+        withVerificationTaskId.add(entity);
+      }
+    });
+    assertThat(entitiesWithVerificationTaskId)
+        .isEqualTo(withVerificationTaskId)
+        .withFailMessage(
+            "Entities with verificationTaskId found which is not added to ENTITIES_TO_DELETE_BY_VERIFICATION_ID or ENTITIES_DELETE_BLACKLIST_BY_VERIFICATION_ID");
+  }
+
+  private boolean doesClassContainField(Class<?> clazz, String fieldName) {
+    return Arrays.stream(clazz.getDeclaredFields()).anyMatch(f -> f.getName().equals(fieldName));
+  }
+  @Test
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
   public void testGet() {
@@ -116,7 +181,8 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTest {
     cvConfig.setServiceIdentifier(generateUuid());
     cvConfig.setEnvIdentifier(generateUuid());
     cvConfig.setProjectIdentifier(generateUuid());
-    cvConfig.setGroupId(groupId);
+    cvConfig.setIdentifier(groupId);
+    cvConfig.setMonitoringSourceName(generateUuid());
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
     cvConfig.setProductName(productName);
   }

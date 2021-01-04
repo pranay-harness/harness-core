@@ -7,8 +7,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"go.uber.org/zap"
 	"strings"
 	"sync"
 	"time"
@@ -38,10 +38,17 @@ type RemoteWriter struct {
 	closed bool
 	close  chan struct{}
 	ready  chan struct{}
+
+	log *zap.SugaredLogger
 }
 
 // NewWriter returns a new writer
-func NewRemoteWriter(client client.Client, key string) *RemoteWriter {
+func NewRemoteWriter(client client.Client, key string) (*RemoteWriter, error) {
+	l, err := zap.NewProduction()
+	if err != nil {
+		return &RemoteWriter{}, err
+	}
+	defer l.Sync()
 	b := &RemoteWriter{
 		client:   client,
 		key:      key,
@@ -50,9 +57,10 @@ func NewRemoteWriter(client client.Client, key string) *RemoteWriter {
 		interval: time.Second,
 		close:    make(chan struct{}),
 		ready:    make(chan struct{}, 1),
+		log:      l.Sugar(),
 	}
 	go b.Start()
-	return b
+	return b, nil
 }
 
 // SetLimit sets the Writer limit.
@@ -110,7 +118,13 @@ func (b *RemoteWriter) Write(p []byte) (n int, err error) {
 	b.prev = []byte{}
 
 	for _, part := range split(res) {
+		if len(part) == 0 {
+			continue
+		}
 		line := b.Convert(part)
+		// Only for debugging purposes (Remove later)
+		jsonLine, _ := json.Marshal(line)
+		b.log.Infow(string(jsonLine))
 
 		for b.size+len(p) > b.limit {
 			// Keep streaming even after the limit, but only upload last `b.limit` data to the store
@@ -163,8 +177,10 @@ func (b *RemoteWriter) Close() error {
 		b.flush()
 	}
 	err := b.upload()
-	// Close the log stream once upload has completed
-	b.client.Close(context.Background(), b.key)
+	// Close the log stream once upload has completed. Log in case of any error
+	if errc := b.client.Close(context.Background(), b.key); errc != nil {
+		b.log.Errorw("failed to close log stream", "key", b.key, zap.Error(errc))
+	}
 	return err
 }
 
@@ -178,22 +194,25 @@ func (b *RemoteWriter) upload() error {
 			return err
 		}
 		data.Write(buf.Bytes())
-		data.Write([]byte("\n"))
 	}
+	b.log.Infow("calling upload link", "key", b.key)
 	link, err := b.client.UploadLink(context.Background(), b.key)
 	if err != nil {
+		b.log.Errorw("errored while trying to get upload link", zap.Error(err))
 		return err
 	}
+
+	b.log.Infow("uploading logs", "key", b.key, "link", link.Value, "num_lines", len(b.history))
 	err = b.client.UploadUsingLink(context.Background(), link.Value, data)
-	return err
+	if err != nil {
+		b.log.Errorw("failed to upload using link", "key", b.key, "link", link.Value, zap.Error(err))
+		return err
+	}
+	return nil
 }
 
 // flush batch uploads all buffered logs to the server.
 func (b *RemoteWriter) flush() error {
-	// If the stream was not opened successfully, skip trying to flush logs to the stream
-	if b.closed {
-		return errors.New("stream is not open")
-	}
 	b.Lock()
 	lines := b.copy()
 	b.clear()
@@ -201,13 +220,13 @@ func (b *RemoteWriter) flush() error {
 	if len(lines) == 0 {
 		return nil
 	}
-	// ONLY FOR DEBUG PURPOSES (TEMPORARY)
-	for _, line := range lines {
-		jsonLine, _ := json.Marshal(line)
-		fmt.Println(string(jsonLine))
+	err := b.client.Write(context.Background(), b.key, lines)
+	if err != nil {
+		b.log.Errorw("failed to flush lines", "key", b.key, "num_lines", len(lines), zap.Error(err))
+		return err
 	}
-	return b.client.Write(
-		context.Background(), b.key, lines)
+	b.log.Infow("successfully flushed lines", "key", b.key, "num_lines", len(lines))
+	return nil
 }
 
 // copy returns a copy of the buffered lines.
@@ -254,7 +273,11 @@ func (b *RemoteWriter) Start() error {
 			case <-intervalTimer.C:
 				// we intentionally ignore errors. log streams
 				// are ephemeral and are considered low priority
-				b.flush()
+				err := b.flush()
+				// Write the error to help with debugging
+				if err != nil {
+					b.log.Errorw("errored while trying to flush lines", "key", b.key, zap.Error(err))
+				}
 			}
 		}
 	}

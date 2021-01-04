@@ -1,6 +1,7 @@
 package io.harness.ngpipeline.pipeline.executions.beans;
 
-import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
+import io.harness.pms.contracts.execution.ExecutionErrorInfo;
+import io.harness.pms.execution.ExecutionStatus;
 
 import javax.validation.constraints.NotNull;
 import lombok.Builder;

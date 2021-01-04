@@ -21,6 +21,7 @@ import io.harness.cvng.analysis.services.api.AnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.AppDynamicsDSConfig;
+import io.harness.cvng.core.beans.AppDynamicsDSConfig.AppdynamicsAppConfig;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
@@ -96,16 +97,20 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     AppDynamicsDSConfig dsConfig = new AppDynamicsDSConfig();
     dsConfig.setProjectIdentifier(projectIdentifier);
     dsConfig.setAccountId(accountId);
-    dsConfig.setMetricPacks(Sets.newHashSet(MetricPack.builder().category(CVMonitoringCategory.PERFORMANCE).build()));
     dsConfig.setConnectorIdentifier(generateUuid());
-    dsConfig.setEnvIdentifier(envIdentifier);
     dsConfig.setProductName(generateUuid());
-    dsConfig.setApplicationName(generateUuid());
     dsConfig.setIdentifier(generateUuid());
-    dsConfig.setServiceMappings(Sets.newHashSet(AppDynamicsDSConfig.ServiceMapping.builder()
-                                                    .serviceIdentifier(serviceIdentifier)
-                                                    .tierName(generateUuid())
-                                                    .build()));
+    dsConfig.setMonitoringSourceName(generateUuid());
+    dsConfig.setAppConfigs(Lists.newArrayList(
+        AppdynamicsAppConfig.builder()
+            .applicationName(generateUuid())
+            .envIdentifier(envIdentifier)
+            .metricPacks(Sets.newHashSet(MetricPack.builder().category(CVMonitoringCategory.PERFORMANCE).build()))
+            .serviceMappings(Sets.newHashSet(AppDynamicsDSConfig.ServiceMapping.builder()
+                                                 .serviceIdentifier(serviceIdentifier)
+                                                 .tierName(generateUuid())
+                                                 .build()))
+            .build()));
 
     cvConfig = new AppDynamicsCVConfig();
     dsConfigService.upsert(dsConfig);

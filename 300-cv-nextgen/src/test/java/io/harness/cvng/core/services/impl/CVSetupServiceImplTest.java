@@ -53,7 +53,7 @@ public class CVSetupServiceImplTest extends CvNextGenTest {
     when(nextGenService.getEnvironmentCount(eq(accountId), eq(orgIdentifier), eq(projectIdentifier))).thenReturn(5);
     when(cvConfigService.getNumberOfServicesSetup(eq(accountId), eq(orgIdentifier), eq(projectIdentifier)))
         .thenReturn(5);
-    when(kubernetesActivitySourceService.getNumberOfServicesSetup(
+    when(kubernetesActivitySourceService.getNumberOfKubernetesServicesSetup(
              eq(accountId), eq(orgIdentifier), eq(projectIdentifier)))
         .thenReturn(4);
     when(verificationJobService.getNumberOfServicesUndergoingHealthVerification(

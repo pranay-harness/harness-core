@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
+import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -36,7 +37,7 @@ public class TimeSeriesAnomalousPatterns implements PersistentEntity, UuidAware,
   @Id private String uuid;
   private long createdAt;
   private long lastUpdatedAt;
-  private String verificationTaskId;
+  @FdIndex private String verificationTaskId;
   private List<TimeSeriesAnomalies> anomalies;
 
   public static List<TimeSeriesAnomalies> convertFromMap(

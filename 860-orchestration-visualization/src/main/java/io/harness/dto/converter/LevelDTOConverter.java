@@ -1,7 +1,7 @@
 package io.harness.dto.converter;
 
 import io.harness.dto.LevelDTO;
-import io.harness.pms.ambiance.Level;
+import io.harness.pms.contracts.ambiance.Level;
 
 import java.util.function.Function;
 import lombok.experimental.UtilityClass;

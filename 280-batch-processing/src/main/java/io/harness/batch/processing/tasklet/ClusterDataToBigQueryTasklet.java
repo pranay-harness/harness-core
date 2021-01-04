@@ -11,10 +11,14 @@ import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.service.impl.GoogleCloudStorageServiceImpl;
 import io.harness.batch.processing.tasklet.dto.HarnessTags;
 import io.harness.batch.processing.tasklet.reader.BillingDataReader;
+import io.harness.batch.processing.tasklet.support.HarnessEntitiesService;
+import io.harness.batch.processing.tasklet.support.HarnessEntitiesService.HarnessEntities;
 import io.harness.batch.processing.tasklet.support.HarnessTagService;
 import io.harness.batch.processing.tasklet.support.K8SWorkloadService;
 import io.harness.ccm.commons.beans.InstanceType;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
@@ -48,10 +52,17 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
   @Autowired private GoogleCloudStorageServiceImpl googleCloudStorageService;
   @Autowired private K8SWorkloadService k8SWorkloadService;
   @Autowired private HarnessTagService harnessTagService;
+  @Autowired private HarnessEntitiesService harnessEntitiesService;
 
   private static final String defaultParentWorkingDirectory = "./avro/";
   private static final String defaultBillingDataFileName = "billing_data_%s_%s_%s.avro";
   private static final String gcsObjectNameFormat = "%s/%s";
+  public static final long CACHE_SIZE = 10000;
+
+  LoadingCache<HarnessEntitiesService.CacheKey, String> entityIdToNameCache =
+      Caffeine.newBuilder()
+          .maximumSize(CACHE_SIZE)
+          .build(key -> harnessEntitiesService.fetchEntityName(key.getEntity(), key.getEntityId()));
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
@@ -184,6 +195,27 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
     clusterBillingData.setUsagedurationseconds(instanceBillingData.getUsageDurationSeconds());
     clusterBillingData.setEndtime(instanceBillingData.getEndTimestamp());
     clusterBillingData.setStarttime(instanceBillingData.getStartTimestamp());
+
+    if (instanceBillingData.getAppId() != null) {
+      clusterBillingData.setAppname(entityIdToNameCache.get(
+          new HarnessEntitiesService.CacheKey(instanceBillingData.getAppId(), HarnessEntities.APP)));
+    } else {
+      clusterBillingData.setAppname(null);
+    }
+
+    if (instanceBillingData.getEnvId() != null) {
+      clusterBillingData.setEnvname(entityIdToNameCache.get(
+          new HarnessEntitiesService.CacheKey(instanceBillingData.getEnvId(), HarnessEntities.ENV)));
+    } else {
+      clusterBillingData.setEnvname(null);
+    }
+
+    if (instanceBillingData.getServiceId() != null) {
+      clusterBillingData.setServicename(entityIdToNameCache.get(
+          new HarnessEntitiesService.CacheKey(instanceBillingData.getServiceId(), HarnessEntities.SERVICE)));
+    } else {
+      clusterBillingData.setServicename(null);
+    }
 
     List<Label> labels = new ArrayList<>();
     if (instanceBillingData.getInstanceType().equals(InstanceType.K8S_POD.name())) {

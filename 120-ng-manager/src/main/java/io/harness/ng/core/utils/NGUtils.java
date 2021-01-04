@@ -80,8 +80,9 @@ public class NGUtils {
         objects, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1L), clazz));
   }
 
-  public static ConnectorDTO getConnectorRequestDTO(SecretManagerConfigDTO secretManagerConfigDTO) {
-    ConnectorInfoDTO connectorInfo = null;
+  public static ConnectorDTO getConnectorRequestDTO(
+      SecretManagerConfigDTO secretManagerConfigDTO, boolean isHarnessManaged) {
+    ConnectorInfoDTO connectorInfo;
     switch (secretManagerConfigDTO.getEncryptionType()) {
       case GCP_KMS:
         GcpKmsConfigDTO gcpKmsConfig = (GcpKmsConfigDTO) secretManagerConfigDTO;
@@ -93,6 +94,7 @@ public class NGUtils {
                                                     .credentials(gcpKmsConfig.getCredentials())
                                                     .isDefault(secretManagerConfigDTO.isDefault())
                                                     .build();
+        gcpKmsConnectorDTO.setHarnessManaged(isHarnessManaged);
         connectorInfo = ConnectorInfoDTO.builder()
                             .connectorType(GCP_KMS)
                             .identifier(secretManagerConfigDTO.getIdentifier())
@@ -106,6 +108,7 @@ public class NGUtils {
       case LOCAL:
         LocalConnectorDTO localConnectorDTO =
             LocalConnectorDTO.builder().isDefault(secretManagerConfigDTO.isDefault()).build();
+        localConnectorDTO.setHarnessManaged(isHarnessManaged);
         connectorInfo = ConnectorInfoDTO.builder()
                             .connectorType(LOCAL)
                             .identifier(secretManagerConfigDTO.getIdentifier())
@@ -126,7 +129,7 @@ public class NGUtils {
   public static String getDefaultHarnessSecretManagerName(EncryptionType encryptionType) {
     switch (encryptionType) {
       case GCP_KMS:
-        return "Harness Secrets Manager - Google KMS";
+        return "Harness Secrets Manager Google KMS";
       case LOCAL:
         return "Harness Vault";
       default:

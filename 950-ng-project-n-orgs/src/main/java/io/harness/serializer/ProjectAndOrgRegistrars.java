@@ -4,7 +4,6 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.ProjectAndOrgKryoRegistrar;
 import io.harness.serializer.morphia.InvitesMorphiaRegistrar;
 import io.harness.serializer.morphia.ProjectAndOrgMorphiaRegistrar;
-import io.harness.spring.AliasRegistrar;
 
 import com.google.common.collect.ImmutableSet;
 import lombok.experimental.UtilityClass;
@@ -24,11 +23,5 @@ public class ProjectAndOrgRegistrars {
           .addAll(PersistenceRegistrars.morphiaRegistrars)
           .add(InvitesMorphiaRegistrar.class)
           .add(ProjectAndOrgMorphiaRegistrar.class)
-          .build();
-
-  public static final ImmutableSet<Class<? extends AliasRegistrar>> aliasRegistrars =
-      ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-          .addAll(NGCoreBeansRegistrars.aliasRegistrars)
-          .addAll(PersistenceRegistrars.aliasRegistrars)
           .build();
 }

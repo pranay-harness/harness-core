@@ -83,10 +83,30 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
   private static final String DATE_PATTERN_FOR_CHART = "MMM dd";
 
   @Override
-  public List<String> getFilterValueStats(
-      BigQuery bigQuery, List<QLCEViewFilter> filters, String cloudProviderTableName, Integer limit, Integer offset) {
+  public List<String> getFilterValueStats(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
+      String cloudProviderTableName, Integer limit, Integer offset) {
+    List<ViewRule> viewRuleList = new ArrayList<>();
+    Optional<QLCEViewFilterWrapper> viewMetadataFilter = getViewMetadataFilter(filters);
+    List<QLCEViewFilter> idFilters = getIdFilters(filters);
+
+    List<QLCEViewRule> rules = getRuleFilters(filters);
+    if (!rules.isEmpty()) {
+      for (QLCEViewRule rule : rules) {
+        viewRuleList.add(convertQLCEViewRuleToViewRule(rule));
+      }
+    }
+
+    if (viewMetadataFilter.isPresent()) {
+      QLCEViewMetadataFilter metadataFilter = viewMetadataFilter.get().getViewMetadataFilter();
+      final String viewId = metadataFilter.getViewId();
+      if (!metadataFilter.isPreview()) {
+        CEView ceView = viewService.get(viewId);
+        viewRuleList = ceView.getViewRules();
+      }
+    }
+
     ViewsQueryMetadata viewsQueryMetadata =
-        viewsQueryBuilder.getFilterValuesQuery(filters, cloudProviderTableName, limit, offset);
+        viewsQueryBuilder.getFilterValuesQuery(viewRuleList, idFilters, cloudProviderTableName, limit, offset);
     QueryJobConfiguration queryConfig =
         QueryJobConfiguration.newBuilder(viewsQueryMetadata.getQuery().toString()).build();
     TableResult result;
@@ -427,7 +447,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     return entityStatsDataPoints;
   }
 
-  List<String> convertToFilterValuesData(TableResult result, List<QLCEViewFieldInput> viewFieldList) {
+  public List<String> convertToFilterValuesData(TableResult result, List<QLCEViewFieldInput> viewFieldList) {
     List<String> filterValues = new ArrayList<>();
     for (FieldValueList row : result.iterateAll()) {
       for (QLCEViewFieldInput field : viewFieldList) {

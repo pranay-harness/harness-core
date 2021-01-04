@@ -1,10 +1,10 @@
 package io.harness.cdng.service.beans;
 
-import io.harness.beans.ParameterField;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.serviceconfig.ServiceUseFromOverridesVisitorHelper;
 import io.harness.cdng.visitor.helpers.serviceconfig.ServiceUseFromStageVisitorHelper;
 import io.harness.common.SwaggerConstants;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChild;
 import io.harness.walktree.beans.VisitableChildren;

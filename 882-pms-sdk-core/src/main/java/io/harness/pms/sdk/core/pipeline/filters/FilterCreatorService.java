@@ -6,10 +6,11 @@ import static io.harness.pms.plan.creation.PlanCreatorUtils.supportsField;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.pipeline.filter.FilterCreationResponse;
-import io.harness.pms.plan.FilterCreationBlobRequest;
-import io.harness.pms.plan.FilterCreationBlobResponse;
-import io.harness.pms.plan.YamlFieldBlob;
+import io.harness.pms.contracts.plan.FilterCreationBlobRequest;
+import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
+import io.harness.pms.contracts.plan.YamlFieldBlob;
+import io.harness.pms.filter.creation.FilterCreationResponse;
+import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
@@ -91,11 +92,12 @@ public class FilterCreatorService {
       FilterJsonCreator filterJsonCreator = filterCreatorOptional.get();
       Class<?> clazz = filterJsonCreator.getFieldClass();
       if (YamlField.class.isAssignableFrom(clazz)) {
-        response = filterJsonCreator.handleNode(yamlField);
+        response =
+            filterJsonCreator.handleNode(FilterCreationContext.builder().currentField(yamlField).build(), yamlField);
       } else {
         try {
           Object obj = YamlUtils.read(yamlField.getNode().toString(), clazz);
-          response = filterJsonCreator.handleNode(obj);
+          response = filterJsonCreator.handleNode(FilterCreationContext.builder().currentField(yamlField).build(), obj);
         } catch (IOException e) {
           throw new InvalidRequestException("Invalid yaml", e);
         }
@@ -106,8 +108,6 @@ public class FilterCreatorService {
         continue;
       }
       finalResponse.setStageCount(finalResponse.getStageCount() + response.getStageCount());
-      finalResponse.addLayoutNodes(response.getLayoutNodes());
-      finalResponse.setStartingNodeId(response.getStartingNodeId());
       filterCreationResponseMerger.mergeFilterCreationResponse(finalResponse, response);
       finalResponse.addResolvedDependency(yamlField);
       if (isNotEmpty(response.getDependencies())) {

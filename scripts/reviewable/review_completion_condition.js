@@ -24,7 +24,7 @@ let pendingReviewers = _(discussionBlockers)
 let required = _.pluck(review.pullRequest.assignees, 'username');
 
 let reviewBigModule = _.some(review.files, function(file) {
-  if (file.path.startsWith('71-rest/') && !file.path.endsWith('Test.java')) {
+  if (file.path.startsWith('400-rest/') && !file.path.endsWith('Test.java')) {
     let reviewed = _.some(file.revisions, function(revision) {
       return _.some(revision.reviewers, function(reviewer) {
         return reviewer.username === restAddReviewer;

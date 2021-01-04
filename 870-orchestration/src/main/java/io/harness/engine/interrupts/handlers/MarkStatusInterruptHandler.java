@@ -3,8 +3,8 @@ package io.harness.engine.interrupts.handlers;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_UNSUCCESSFULLY;
-import static io.harness.pms.execution.Status.INTERVENTION_WAITING;
-import static io.harness.pms.execution.Status.RUNNING;
+import static io.harness.pms.contracts.execution.Status.INTERVENTION_WAITING;
+import static io.harness.pms.contracts.execution.Status.RUNNING;
 
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -16,7 +16,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.InterruptEffect;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.execution.Status;
 
 import com.google.inject.Inject;
 import javax.validation.Valid;

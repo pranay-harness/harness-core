@@ -54,12 +54,14 @@ public class CIK8CtlHandler {
   @Inject Provider<ExecCommandListener> execListenerProvider;
   @Inject private Sleeper sleeper;
 
-  public void createRegistrySecret(
-      KubernetesClient kubernetesClient, String namespace, ImageDetailsWithConnector imageDetails) {
-    Secret secret = secretSpecBuilder.getRegistrySecretSpec(imageDetails, namespace);
-    if (secret != null) {
-      kubernetesClient.secrets().inNamespace(namespace).createOrReplace(secret);
+  public Secret createRegistrySecret(
+      KubernetesClient kubernetesClient, String namespace, String secretName, ImageDetailsWithConnector imageDetails) {
+    Secret secret = secretSpecBuilder.getRegistrySecretSpec(secretName, imageDetails, namespace);
+    if (secret == null) {
+      return null;
     }
+
+    return kubernetesClient.secrets().inNamespace(namespace).createOrReplace(secret);
   }
 
   public void createPVC(

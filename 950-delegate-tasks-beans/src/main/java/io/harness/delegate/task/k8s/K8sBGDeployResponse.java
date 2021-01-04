@@ -13,7 +13,6 @@ public class K8sBGDeployResponse implements K8sNGTaskResponse {
   List<K8sPod> k8sPodList;
   String primaryServiceName;
   String stageServiceName;
-  String primaryWorkload;
-  String stageWorkload;
   String stageColor;
+  String primaryColor;
 }

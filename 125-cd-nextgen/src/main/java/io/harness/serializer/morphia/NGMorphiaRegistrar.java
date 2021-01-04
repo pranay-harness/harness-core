@@ -45,6 +45,7 @@ public class NGMorphiaRegistrar implements MorphiaRegistrar {
     h.put("cdng.artifact.bean.DockerArtifactOutcome", DockerArtifactOutcome.class);
     h.put("cdng.service.beans.ServiceOutcome", ServiceOutcome.class);
     h.put("cdng.service.beans.ServiceOutcome$ArtifactsOutcome", ArtifactsOutcome.class);
+    h.put("cdng.manifest.yaml.ManifestsOutcome", ArtifactsOutcome.class);
     h.put("cdng.service.beans.StageOverridesConfig", StageOverridesConfig.class);
     h.put("cdng.service.beans.ServiceUseFromStage", ServiceUseFromStage.class);
     h.put("cdng.service.beans.ServiceUseFromStage$Overrides", Overrides.class);

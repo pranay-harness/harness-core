@@ -49,6 +49,7 @@ public class AnomalyServiceImpl implements AnomalyService {
 
     hPersistence.getDatastore(Anomaly.class)
         .update(hPersistence.createQuery(Anomaly.class, excludeAuthority)
+                    .filter(AnomalyKeys.accountId, accountId)
                     .filter(AnomalyKeys.projectIdentifier, cvConfig.getProjectIdentifier())
                     .filter(AnomalyKeys.serviceIdentifier, cvConfig.getServiceIdentifier())
                     .filter(AnomalyKeys.envIdentifier, cvConfig.getEnvIdentifier())
@@ -77,6 +78,7 @@ public class AnomalyServiceImpl implements AnomalyService {
     }
 
     Query<Anomaly> query = hPersistence.createQuery(Anomaly.class, excludeAuthority)
+                               .filter(AnomalyKeys.accountId, accountId)
                                .filter(AnomalyKeys.projectIdentifier, cvConfig.getProjectIdentifier())
                                .filter(AnomalyKeys.serviceIdentifier, cvConfig.getServiceIdentifier())
                                .filter(AnomalyKeys.envIdentifier, cvConfig.getEnvIdentifier())
@@ -103,6 +105,7 @@ public class AnomalyServiceImpl implements AnomalyService {
 
     try (HIterator<Anomaly> anomalyIterator =
              new HIterator<>(hPersistence.createQuery(Anomaly.class, excludeAuthority)
+                                 .filter(AnomalyKeys.accountId, accountId)
                                  .filter(AnomalyKeys.serviceIdentifier, serviceIdentifier)
                                  .filter(AnomalyKeys.envIdentifier, envIdentifier)
                                  .filter(AnomalyKeys.category, category)

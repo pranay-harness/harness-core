@@ -3,7 +3,8 @@ package io.harness.pms.sdk.core.steps.executables;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
@@ -26,7 +27,7 @@ import java.util.Map;
  */
 @OwnedBy(CDC)
 public interface TaskExecutable<T extends StepParameters> extends Step<T> {
-  Task obtainTask(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage);
+  TaskRequest obtainTask(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage);
 
   StepResponse handleTaskResult(Ambiance ambiance, T stepParameters, Map<String, ResponseData> responseDataMap);
 }

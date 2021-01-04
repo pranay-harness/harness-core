@@ -1,6 +1,8 @@
 
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
+
 import io.harness.cvng.CVConstants;
 import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.entities.VerificationTask.VerificationTaskKeys;
@@ -76,9 +78,10 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
   }
 
   @Override
-  public String getVerificationTaskId(String cvConfigId, String verificationJobInstanceId) {
+  public String getVerificationTaskId(String accountId, String cvConfigId, String verificationJobInstanceId) {
     Preconditions.checkNotNull(verificationJobInstanceId, "verificationJobInstanceId should not be null");
     return hPersistence.createQuery(VerificationTask.class)
+        .filter(VerificationTaskKeys.accountId, accountId)
         .filter(VerificationTaskKeys.verificationJobInstanceId, verificationJobInstanceId)
         .filter(VerificationTaskKeys.cvConfigId, cvConfigId)
         .get()
@@ -140,6 +143,17 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
   }
 
   @Override
+  public List<String> getVerificationTaskIds(String cvConfigId) {
+    return hPersistence.createQuery(VerificationTask.class)
+        .filter(VerificationTaskKeys.cvConfigId, cvConfigId)
+        .project(VerificationTaskKeys.uuid, true)
+        .asList()
+        .stream()
+        .map(verificationTask -> verificationTask.getUuid())
+        .collect(Collectors.toList());
+  }
+
+  @Override
   public String findBaselineVerificationTaskId(
       String currentVerificationTaskId, VerificationJobInstance verificationJobInstance) {
     Preconditions.checkState(verificationJobInstance.getResolvedJob() instanceof TestVerificationJob,
@@ -150,6 +164,19 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
       return null;
     }
     String cvConfigId = getCVConfigId(currentVerificationTaskId);
-    return getVerificationTaskId(cvConfigId, baselineVerificationJobInstanceId);
+    return getVerificationTaskId(verificationJobInstance.getAccountId(), cvConfigId, baselineVerificationJobInstanceId);
+  }
+
+  @Override
+  public List<String> getAllVerificationJobInstanceIdsForCVConfig(String cvConfigId) {
+    return hPersistence.createQuery(VerificationTask.class, excludeAuthority)
+        .filter(VerificationTaskKeys.cvConfigId, cvConfigId)
+        .field(VerificationTaskKeys.verificationJobInstanceId)
+        .exists()
+        .project(VerificationTaskKeys.verificationJobInstanceId, true)
+        .asList()
+        .stream()
+        .map(verificationTask -> verificationTask.getVerificationJobInstanceId())
+        .collect(Collectors.toList());
   }
 }

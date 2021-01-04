@@ -19,6 +19,7 @@
             "type": "UsernamePassword",
             "spec": {
               "username": "userName",
+              "usernameRef":null,
               "passwordRef": "account.passwordRef"
             }
           }

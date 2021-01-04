@@ -2,9 +2,8 @@ package io.harness.delegate.beans.connector.docker;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import io.swagger.annotations.ApiModelProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -14,11 +13,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonDeserialize(using = DockerAuthenticationDTODeserializer.class)
 public class DockerAuthenticationDTO {
-  @ApiModelProperty(allowableValues = DockerConstants.USERNAME_PASSWORD)
-  @NotNull
-  @JsonProperty("type")
-  DockerAuthType authType;
+  @NotNull @JsonProperty("type") DockerAuthType authType;
 
   @Builder
   public DockerAuthenticationDTO(DockerAuthType authType, DockerAuthCredentialsDTO credentials) {
@@ -29,9 +26,6 @@ public class DockerAuthenticationDTO {
   @JsonProperty("spec")
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
-  @JsonSubTypes(
-      { @JsonSubTypes.Type(value = DockerUserNamePasswordDTO.class, name = DockerConstants.USERNAME_PASSWORD) })
-  @NotNull
   @Valid
   DockerAuthCredentialsDTO credentials;
 }

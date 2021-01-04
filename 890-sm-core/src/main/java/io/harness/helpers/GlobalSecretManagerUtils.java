@@ -14,7 +14,8 @@ public class GlobalSecretManagerUtils {
   public static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
 
   public static boolean isNgHarnessSecretManager(NGSecretManagerMetadata ngSecretManagerMetadata) {
-    return ngSecretManagerMetadata != null && ngSecretManagerMetadata.getIdentifier() != null
-        && HARNESS_SECRET_MANAGER_IDENTIFIER.equals(ngSecretManagerMetadata.getIdentifier());
+    return ngSecretManagerMetadata != null
+        && (Boolean.TRUE.equals(ngSecretManagerMetadata.getHarnessManaged())
+            || HARNESS_SECRET_MANAGER_IDENTIFIER.equals(ngSecretManagerMetadata.getIdentifier()));
   }
 }

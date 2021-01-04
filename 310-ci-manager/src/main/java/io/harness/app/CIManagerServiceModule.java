@@ -11,7 +11,6 @@ import io.harness.callback.MongoDatabase;
 import io.harness.connector.apis.client.ConnectorResourceClientModule;
 import io.harness.core.ci.services.BuildNumberService;
 import io.harness.core.ci.services.BuildNumberServiceImpl;
-import io.harness.delegate.task.HDelegateTask;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
@@ -25,18 +24,14 @@ import io.harness.persistence.HPersistence;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.service.DelegateServiceDriverModule;
-import io.harness.states.CIDelegateTaskExecutor;
-import io.harness.tasks.TaskExecutor;
-import io.harness.tasks.TaskMode;
 import io.harness.threading.ThreadPool;
+import io.harness.tiserviceclient.TIServiceModule;
 
 import com.google.common.base.Suppliers;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import java.util.concurrent.ExecutorService;
@@ -104,14 +99,11 @@ public class CIManagerServiceModule extends AbstractModule {
         .annotatedWith(Names.named("taskPollExecutor"))
         .toInstance(new ManagedScheduledExecutorService("TaskPoll-Thread"));
 
-    MapBinder<String, TaskExecutor<HDelegateTask>> taskExecutorMap = MapBinder.newMapBinder(
-        binder(), new TypeLiteral<String>() {}, new TypeLiteral<TaskExecutor<HDelegateTask>>() {});
-    taskExecutorMap.addBinding(TaskMode.DELEGATE_TASK_V3.name()).to(CIDelegateTaskExecutor.class);
-
-    install(new CIExecutionServiceModule(ciManagerConfiguration.getCiExecutionServiceConfig()));
+    install(new CIExecutionServiceModule(
+        ciManagerConfiguration.getCiExecutionServiceConfig(), ciManagerConfiguration.getShouldConfigureWithPMS()));
     install(DelegateServiceDriverModule.getInstance());
     install(new DelegateServiceDriverGrpcClientModule(ciManagerConfiguration.getManagerServiceSecret(),
-        ciManagerConfiguration.getManagerTarget(), ciManagerConfiguration.getManagerAuthority(), null));
+        ciManagerConfiguration.getManagerTarget(), ciManagerConfiguration.getManagerAuthority()));
     install(new ManagerGrpcClientModule(ManagerGrpcClientModule.Config.builder()
                                             .target(ciManagerConfiguration.getManagerTarget())
                                             .authority(ciManagerConfiguration.getManagerAuthority())
@@ -126,5 +118,6 @@ public class CIManagerServiceModule extends AbstractModule {
     install(new SecretNGManagerClientModule(ciManagerConfiguration.getNgManagerClientConfig(),
         ciManagerConfiguration.getNgManagerServiceSecret(), "CIManager"));
     install(new CILogServiceClientModule(ciManagerConfiguration.getLogServiceConfig()));
+    install(new TIServiceModule(ciManagerConfiguration.getTiServiceConfig()));
   }
 }

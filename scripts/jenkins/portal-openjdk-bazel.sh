@@ -11,14 +11,14 @@ mkdir -p dist/manager ;
 
 cd dist/manager
 
-cp ${HOME}/.bazel-dirs/bin/71-rest/module_deploy.jar rest-capsule.jar
-cp ../../71-rest/src/main/resources/hazelcast.xml .
+cp ${HOME}/.bazel-dirs/bin/400-rest/module_deploy.jar rest-capsule.jar
+cp ../../400-rest/src/main/resources/hazelcast.xml .
 cp ../../keystore.jks .
-cp ../../71-rest/key.pem .
-cp ../../71-rest/cert.pem .
-cp ../../71-rest/newrelic.yml .
-cp ../../71-rest/config.yml .
-cp ../../71-rest/src/main/resources/redisson-jcache.yaml .
+cp ../../400-rest/key.pem .
+cp ../../400-rest/cert.pem .
+cp ../../400-rest/newrelic.yml .
+cp ../../400-rest/config.yml .
+cp ../../400-rest/src/main/resources/redisson-jcache.yaml .
 
 cp ../../dockerization/manager/Dockerfile-manager-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/manager/Dockerfile-manager-jenkins-k8-gcr-openjdk ./Dockerfile-gcr

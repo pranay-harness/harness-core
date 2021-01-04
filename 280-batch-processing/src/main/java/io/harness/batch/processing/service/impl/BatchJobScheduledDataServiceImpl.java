@@ -56,7 +56,8 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
       }
     }
 
-    if (null != instant && batchJobType.getBatchJobBucket() != BatchJobBucket.OUT_OF_CLUSTER) {
+    if (null != instant && batchJobType.getBatchJobBucket() != BatchJobBucket.OUT_OF_CLUSTER
+        && batchJobType != BatchJobType.INSTANCE_BILLING_AGGREGATION) {
       Instant startInstant = Instant.now().minus(MAX_IN_CLUSTER_DATA, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
       instant = startInstant.isAfter(instant) ? startInstant : instant;
     }

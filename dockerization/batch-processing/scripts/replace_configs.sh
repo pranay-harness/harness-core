@@ -75,6 +75,18 @@ if [[ "" != "$DATA_PIPELINE_CONFIG_GCS_BASE_PATH" ]]; then
   yq write -i $CONFIG_FILE billingDataPipelineConfig.gcsBasePath "$DATA_PIPELINE_CONFIG_GCS_BASE_PATH"
 fi
 
+if [[ "" != "$GCP_PIPELINE_PUB_SUB_TOPIC" ]]; then
+  yq write -i $CONFIG_FILE billingDataPipelineConfig.gcpPipelinePubSubTopic "$GCP_PIPELINE_PUB_SUB_TOPIC"
+fi
+
+if [[ "" != "$GCP_USE_NEW_PIPELINE" ]]; then
+  yq write -i $CONFIG_FILE billingDataPipelineConfig.gcpUseNewPipeline "$GCP_USE_NEW_PIPELINE"
+fi
+
+if [[ "" != "$AWS_USE_NEW_PIPELINE" ]]; then
+  yq write -i $CONFIG_FILE billingDataPipelineConfig.awsUseNewPipeline "$AWS_USE_NEW_PIPELINE"
+fi
+
 if [[ "" != "$CLUSTER_DATA_GCS_BUCKET" ]]; then
   yq write -i $CONFIG_FILE billingDataPipelineConfig.clusterDataGcsBucketName "$CLUSTER_DATA_GCS_BUCKET"
 fi
@@ -117,4 +129,12 @@ fi
 
 if [[ "" != "$ISOLATED_REPLICA" ]]; then
   yq write -i $CONFIG_FILE podInfo.isolatedReplica "$ISOLATED_REPLICA"
+fi
+
+if [[ "" != "$BUDGET_ALERTS_JOB_CRON" ]]; then
+  yq write -i $CONFIG_FILE scheduler-jobs-config.budgetAlertsJobCron "$BUDGET_ALERTS_JOB_CRON"
+fi
+
+if [[ "" != "$WEEKLY_REPORT_JOB_CRON" ]]; then
+  yq write -i $CONFIG_FILE scheduler-jobs-config.weeklyReportsJobCron "$WEEKLY_REPORT_JOB_CRON"
 fi

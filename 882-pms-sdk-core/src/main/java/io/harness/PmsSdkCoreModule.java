@@ -1,10 +1,6 @@
 package io.harness;
 
-import io.harness.registrars.PmsSdkCoreFacilitatorRegistrar;
-import io.harness.registries.registrar.FacilitatorRegistrar;
-
 import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.MapBinder;
 
 public class PmsSdkCoreModule extends AbstractModule {
   private static PmsSdkCoreModule instance;
@@ -19,10 +15,5 @@ public class PmsSdkCoreModule extends AbstractModule {
   private PmsSdkCoreModule() {}
 
   @Override
-  protected void configure() {
-    MapBinder<String, FacilitatorRegistrar> facilitatorRegistrarMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, FacilitatorRegistrar.class);
-    facilitatorRegistrarMapBinder.addBinding(PmsSdkCoreFacilitatorRegistrar.class.getName())
-        .to(PmsSdkCoreFacilitatorRegistrar.class);
-  }
+  protected void configure() {}
 }

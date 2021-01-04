@@ -1,7 +1,7 @@
 package io.harness.ngpipeline.pipeline.executions.beans;
 
 import io.harness.ng.core.environment.beans.EnvironmentType;
-import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
+import io.harness.pms.execution.ExecutionStatus;
 
 import java.util.List;
 import lombok.Builder;

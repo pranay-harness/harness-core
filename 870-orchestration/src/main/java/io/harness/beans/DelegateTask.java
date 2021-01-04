@@ -8,7 +8,6 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataKeys;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.HDelegateTask;
-import io.harness.expression.ExpressionEvaluator;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -137,6 +136,9 @@ public class DelegateTask
   private String delegateId;
   private String preAssignedDelegateId;
   private Set<String> alreadyTriedDelegates;
+
+  // Intended to be used for targeting a delegate for the purpose of delegate profile script execution
+  private String mustExecuteOnDelegateId;
 
   private Long lastBroadcastAt;
   private int broadcastCount;

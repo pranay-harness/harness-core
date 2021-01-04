@@ -5,8 +5,9 @@ import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.steps.StepType;
+import io.harness.pms.yaml.ParameterField;
 
 import software.wings.jersey.JsonViews;
 
@@ -26,62 +27,57 @@ import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@JsonTypeName("buildAndPushGCR")
+@JsonTypeName("BuildAndPushGCR")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("gcrStepInfo")
 public class GCRStepInfo implements PluginCompatibleStep {
   public static final int DEFAULT_RETRY = 1;
-  public static final int DEFAULT_TIMEOUT = 60 * 60 * 2; // 2 hour
 
   @JsonView(JsonViews.Internal.class)
   @NotNull
-  public static final TypeInfo typeInfo =
-      TypeInfo.builder()
-          .stepInfoType(CIStepInfoType.GCR)
-          .stepType(StepType.newBuilder().setType(CIStepInfoType.GCR.name()).build())
-          .build();
+  public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.GCR).build();
+  @JsonIgnore public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.GCR.name()).build();
 
-  @JsonIgnore private String callbackId;
-  @JsonIgnore private Integer port;
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
-  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
 
-  @NotNull private String connectorRef;
-  @JsonIgnore @NotNull private String image;
+  @NotNull private ParameterField<String> connectorRef;
+  @JsonIgnore @NotNull private ParameterField<String> containerImage;
   private ContainerResource resources;
 
   // plugin settings
-  @NotNull private String registry;
-  @NotNull private String repo;
-  @NotNull private List<String> tags;
-  private String context;
-  private String dockerFile;
-  private String target;
-  private Map<String, String> labels;
-  private Map<String, String> buildArgs;
+  @NotNull private ParameterField<String> host;
+  @NotNull private ParameterField<String> projectID;
+  @NotNull private ParameterField<String> imageName;
+  @NotNull private ParameterField<List<String>> tags;
+  private ParameterField<String> context;
+  private ParameterField<String> dockerfile;
+  private ParameterField<String> target;
+  private ParameterField<Map<String, String>> labels;
+  private ParameterField<List<String>> buildArgs;
 
   @Builder
-  @ConstructorProperties({"callbackId", "port", "identifier", "name", "retry", "timeout", "connectorRef", "image",
-      "resources", "registry", "repo", "tags", "context", "dockerFile", "target", "labels", "buildArgs"})
-  public GCRStepInfo(String callbackId, Integer port, String identifier, String name, Integer retry, Integer timeout,
-      String connectorRef, String image, ContainerResource resources, String registry, String repo, List<String> tags,
-      String context, String dockerFile, String target, Map<String, String> labels, Map<String, String> buildArgs) {
-    this.callbackId = callbackId;
-    this.port = port;
+  @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "containerImage", "resources", "host",
+      "projectID", "imageName", "tags", "context", "dockerfile", "target", "labels", "buildArgs"})
+  public GCRStepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
+      ParameterField<String> containerImage, ContainerResource resources, ParameterField<String> host,
+      ParameterField<String> projectID, ParameterField<String> imageName, ParameterField<List<String>> tags,
+      ParameterField<String> context, ParameterField<String> dockerfile, ParameterField<String> target,
+      ParameterField<Map<String, String>> labels, ParameterField<List<String>> buildArgs) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
-    this.timeout = Optional.ofNullable(timeout).orElse(DEFAULT_TIMEOUT);
     this.connectorRef = connectorRef;
-    this.image = Optional.ofNullable(image).orElse("plugins/kaniko-gcr:latest");
+    this.containerImage =
+        Optional.ofNullable(containerImage).orElse(ParameterField.createValueField("plugins/kaniko-gcr:latest"));
     this.resources = resources;
-    this.registry = registry;
-    this.repo = repo;
+    this.host = host;
+    this.projectID = projectID;
+    this.imageName = imageName;
     this.tags = tags;
     this.context = context;
-    this.dockerFile = dockerFile;
+    this.dockerfile = dockerfile;
     this.target = target;
     this.labels = labels;
     this.buildArgs = buildArgs;
@@ -99,7 +95,7 @@ public class GCRStepInfo implements PluginCompatibleStep {
 
   @Override
   public StepType getStepType() {
-    return typeInfo.getStepType();
+    return STEP_TYPE;
   }
 
   @Override

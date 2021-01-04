@@ -3,6 +3,7 @@ package io.harness.cvng.verificationjob.resources;
 import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
+import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 
@@ -11,8 +12,8 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import java.util.List;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
@@ -28,6 +29,7 @@ import retrofit2.http.Body;
 @NextGenManagerAuth
 public class VerificationJobResource {
   @Inject private VerificationJobService verificationJobService;
+
   @GET
   @Timed
   @ExceptionMetered
@@ -60,8 +62,25 @@ public class VerificationJobResource {
   @ExceptionMetered
   @Path("/list")
   @ApiOperation(value = "lists all verification jobs for an identifier", nickname = "listVerificationJobs")
-  public RestResponse<List<VerificationJobDTO>> list(@QueryParam("accountId") @Valid final String accountId,
-      @QueryParam("projectIdentifier") String projectIdentifier, @QueryParam("orgIdentifier") String orgIdentifier) {
-    return new RestResponse<>(verificationJobService.list(accountId, projectIdentifier, orgIdentifier));
+  public RestResponse<PageResponse<VerificationJobDTO>> list(@QueryParam("accountId") @Valid final String accountId,
+      @QueryParam("projectIdentifier") String projectIdentifier, @QueryParam("orgIdentifier") String orgIdentifier,
+      @QueryParam("offset") @NotNull Integer offset, @QueryParam("pageSize") @NotNull Integer pageSize,
+      @QueryParam("filter") String filter) {
+    return new RestResponse<>(
+        verificationJobService.list(accountId, projectIdentifier, orgIdentifier, offset, pageSize, filter));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("/default-health-job")
+  @ApiOperation(
+      value = "gets the default health verification job for a project", nickname = "getDefaultHealthVerificationJob")
+  public RestResponse<VerificationJobDTO>
+  getDefaultHealthVerificationJob(@QueryParam("accountId") @NotNull @Valid final String accountId,
+      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+      @QueryParam("orgIdentifier") @NotNull String orgIdentifier) {
+    return new RestResponse<>(
+        verificationJobService.getDefaultHealthVerificationJobDTO(accountId, orgIdentifier, projectIdentifier));
   }
 }

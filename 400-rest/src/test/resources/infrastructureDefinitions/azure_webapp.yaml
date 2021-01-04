@@ -1,0 +1,9 @@
+harnessApiVersion: '1.0'
+type: INFRA_DEFINITION
+cloudProviderType: AZURE
+deploymentType: AZURE_WEBAPP
+infrastructure:
+- type: AZURE_WEBAPP
+  cloudProviderName: TEST_CLOUD_PROVIDER
+  resourceGroup: devAppServiceAPIResourceGroup
+  subscriptionId: 12d2db62-5aa9-471d-84bb-faa489b3e319"

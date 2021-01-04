@@ -5,8 +5,9 @@ import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.steps.StepType;
+import io.harness.pms.yaml.ParameterField;
 
 import software.wings.jersey.JsonViews;
 
@@ -24,7 +25,7 @@ import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@JsonTypeName("uploadToGCS")
+@JsonTypeName("GCSUpload")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("uploadToGCSStepInfo")
 public class UploadToGCSStepInfo implements PluginCompatibleStep {
@@ -33,44 +34,35 @@ public class UploadToGCSStepInfo implements PluginCompatibleStep {
 
   @JsonView(JsonViews.Internal.class)
   @NotNull
-  public static final TypeInfo typeInfo =
-      TypeInfo.builder()
-          .stepInfoType(CIStepInfoType.UPLOAD_GCS)
-          .stepType(StepType.newBuilder().setType(CIStepInfoType.UPLOAD_GCS.name()).build())
-          .build();
+  public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.UPLOAD_GCS).build();
+  @JsonIgnore
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.UPLOAD_GCS.name()).build();
 
-  @JsonIgnore private String callbackId;
-  @JsonIgnore private Integer port;
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
-  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
 
-  @NotNull private String connectorRef;
-  @JsonIgnore @NotNull private String image;
+  @NotNull private ParameterField<String> connectorRef;
+  @JsonIgnore @NotNull private ParameterField<String> containerImage;
   private ContainerResource resources;
 
   // plugin settings
-  @NotNull private String bucket;
-  @NotNull private String sourcePath;
-  @NotNull private String target;
+  @NotNull private ParameterField<String> bucket;
+  @NotNull private ParameterField<String> sourcePath;
+  @NotNull private ParameterField<String> target;
 
   @Builder
-  @ConstructorProperties({"callbackId", "port", "identifier", "name", "retry", "timeout", "connectorRef", "image",
-      "resources", "bucket", "sourcePath", "target"})
-  public UploadToGCSStepInfo(String callbackId, Integer port, String identifier, String name, Integer retry,
-      Integer timeout, String connectorRef, String image, ContainerResource resources, String bucket, String sourcePath,
-      String target) {
-    this.callbackId = callbackId;
-    this.port = port;
+  @ConstructorProperties(
+      {"identifier", "name", "retry", "connectorRef", "containerImage", "resources", "bucket", "sourcePath", "target"})
+  public UploadToGCSStepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
+      ParameterField<String> containerImage, ContainerResource resources, ParameterField<String> bucket,
+      ParameterField<String> sourcePath, ParameterField<String> target) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
-    this.timeout = Optional.ofNullable(timeout).orElse(DEFAULT_TIMEOUT);
     this.connectorRef = connectorRef;
-    this.image = Optional.ofNullable(image).orElse("plugins/gcs");
+    this.containerImage = Optional.ofNullable(containerImage).orElse(ParameterField.createValueField("plugins/gcs"));
     this.resources = resources;
-
     this.bucket = bucket;
     this.sourcePath = sourcePath;
     this.target = target;
@@ -88,7 +80,7 @@ public class UploadToGCSStepInfo implements PluginCompatibleStep {
 
   @Override
   public StepType getStepType() {
-    return typeInfo.getStepType();
+    return STEP_TYPE;
   }
 
   @Override

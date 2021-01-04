@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
-import io.harness.beans.CIBeansTest;
+import io.harness.CiBeansTestBase;
 import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -20,7 +20,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class StepInfoGraphConverterTest extends CIBeansTest {
+public class StepInfoGraphConverterTest extends CiBeansTestBase {
   @Inject private StepInfoGraphConverter stepInfoGraphConverter;
 
   @Test

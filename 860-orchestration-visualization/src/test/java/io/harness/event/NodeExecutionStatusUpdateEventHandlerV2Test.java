@@ -1,15 +1,14 @@
 package io.harness.event;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.execution.events.OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE;
-import static io.harness.pms.execution.Status.SUCCEEDED;
+import static io.harness.pms.contracts.execution.Status.SUCCEEDED;
+import static io.harness.pms.contracts.execution.events.OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE;
 import static io.harness.rule.OwnerRule.ALEXEI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import io.harness.LevelUtils;
 import io.harness.OrchestrationVisualizationTestBase;
 import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationGraph;
@@ -21,15 +20,19 @@ import io.harness.data.OutcomeInstance;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
+import io.harness.execution.NodeExecutionMapper;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.events.OrchestrationEvent;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.ambiance.Level;
-import io.harness.pms.execution.ExecutionMode;
-import io.harness.pms.execution.Status;
-import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.execution.ExecutionMode;
+import io.harness.pms.contracts.execution.NodeExecutionProto;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.execution.utils.LevelUtils;
+import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
-import io.harness.pms.steps.StepType;
+import io.harness.pms.serializer.persistence.DocumentOrchestrationUtils;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
 import io.harness.testlib.RealMongo;
@@ -45,6 +48,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.assertj.core.util.Maps;
 import org.awaitility.Awaitility;
+import org.bson.Document;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Spy;
@@ -73,6 +77,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
                                                  .setPlanExecutionId(planExecutionId)
                                                  .addAllLevels(Collections.singletonList(Level.newBuilder().build()))
                                                  .build())
+                                   .nodeExecutionProto(NodeExecutionProto.newBuilder().build())
                                    .eventType(NODE_EXECUTION_STATUS_UPDATE)
                                    .build();
     eventHandlerV2.handleEvent(event);
@@ -101,6 +106,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
                                              .setStepType(StepType.newBuilder().setType("DUMMY").build())
                                              .setIdentifier("identifier1")
                                              .build())
+                                   .status(Status.QUEUED)
                                    .build();
     nodeExecutionService.save(dummyStart);
 
@@ -128,6 +134,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
                                                  .addAllLevels(Collections.singletonList(
                                                      Level.newBuilder().setRuntimeId(dummyStart.getUuid()).build()))
                                                  .build())
+                                   .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(dummyStart))
                                    .eventType(NODE_EXECUTION_STATUS_UPDATE)
                                    .build();
     eventHandlerV2.handleEvent(event);
@@ -197,12 +204,14 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
 
     // creating outcome
     DummyOutcome dummyOutcome = new DummyOutcome("outcome");
+    Document doc = Document.parse(dummyOutcome.toJson());
+    doc.put(DocumentOrchestrationUtils.PMS_CLASS_KEY, dummyOutcome.getClass().getName());
     OutcomeInstance outcome =
         OutcomeInstance.builder()
             .planExecutionId(planExecution.getUuid())
             .producedBy(LevelUtils.buildLevelFromPlanNode(dummyStart.getUuid(), dummyStart.getNode()))
             .createdAt(System.currentTimeMillis())
-            .outcome(dummyOutcome)
+            .outcome(doc)
             .build();
     mongoTemplate.insert(outcome);
 
@@ -213,6 +222,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
                                                  .addAllLevels(Collections.singletonList(
                                                      Level.newBuilder().setRuntimeId(dummyStart.getUuid()).build()))
                                                  .build())
+                                   .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(dummyStart))
                                    .eventType(NODE_EXECUTION_STATUS_UPDATE)
                                    .build();
     eventHandlerV2.handleEvent(event);
@@ -233,7 +243,8 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
     Map<String, GraphVertex> graphVertexMap = updatedGraph.getAdjacencyList().getGraphVertexMap();
     assertThat(graphVertexMap.size()).isEqualTo(1);
     assertThat(graphVertexMap.get(dummyStart.getUuid()).getStatus()).isEqualTo(SUCCEEDED);
-    assertThat(graphVertexMap.get(dummyStart.getUuid()).getOutcomes()).containsExactlyInAnyOrder(dummyOutcome);
+    assertThat(graphVertexMap.get(dummyStart.getUuid()).getOutcomeDocuments())
+        .containsExactlyInAnyOrder(DocumentOrchestrationUtils.convertToDocument(dummyOutcome));
     assertThat(updatedGraph.getAdjacencyList().getAdjacencyMap().size()).isEqualTo(1);
     assertThat(updatedGraph.getStatus()).isEqualTo(planExecution.getStatus());
   }

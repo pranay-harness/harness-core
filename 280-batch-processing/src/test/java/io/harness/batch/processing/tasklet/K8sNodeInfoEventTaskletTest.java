@@ -249,8 +249,7 @@ public class K8sNodeInfoEventTaskletTest extends CategoryTest {
   public void shouldCreateInstanceNodeInfoForAwsSpot() throws Exception {
     when(cloudProviderService.getK8SCloudProvider(any(), any())).thenReturn(CloudProvider.AWS);
     when(cloudProviderService.getFirstClassSupportedCloudProviders()).thenReturn(ImmutableList.of(AWS, AZURE, GCP));
-    when(instanceResourceService.getComputeVMResource(any(), any(), any()))
-        .thenReturn(Resource.builder().cpuUnits(1024.0).memoryMb(2048.0).build());
+    when(instanceResourceService.getComputeVMResource(any(), any(), any())).thenReturn(null);
     Map<String, String> label = new HashMap<>();
     label.put(K8sCCMConstants.REGION, InstanceMetaDataConstants.REGION);
     label.put(K8sCCMConstants.INSTANCE_FAMILY, InstanceMetaDataConstants.INSTANCE_FAMILY);
@@ -270,7 +269,7 @@ public class K8sNodeInfoEventTaskletTest extends CategoryTest {
     assertThat(instanceInfo.getClusterId()).isEqualTo(CLUSTER_ID);
     assertThat(instanceInfo.getClusterName()).isEqualTo(CLUSTER_NAME);
     assertThat(infoResource.getCpuUnits()).isEqualTo(1024.0);
-    assertThat(infoResource.getMemoryMb()).isEqualTo(2048.0);
+    assertThat(infoResource.getMemoryMb()).isEqualTo(1.0);
     assertThat(metaData.get(InstanceMetaDataConstants.INSTANCE_CATEGORY)).isEqualTo(InstanceCategory.SPOT.name());
     assertThat(metaData.get(InstanceMetaDataConstants.REGION)).isEqualTo(InstanceMetaDataConstants.REGION);
     assertThat(metaData.get(InstanceMetaDataConstants.CLOUD_PROVIDER)).isEqualTo(CloudProvider.AWS.name());

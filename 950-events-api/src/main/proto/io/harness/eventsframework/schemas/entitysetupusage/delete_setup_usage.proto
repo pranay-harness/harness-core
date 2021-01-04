@@ -1,0 +1,10 @@
+syntax = "proto3";
+package io.harness.eventsframework.schemas.entitysetupusage;
+
+option java_multiple_files = true;
+
+message DeleteSetupUsageDTO {
+  string accountIdentifier = 1;
+  string referredEntityFQN = 2;
+  string referredByEntityFQN = 3;
+}

@@ -14,13 +14,18 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.entitysetupusageclient.EntitySetupUsageHelper;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
-import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
+import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.api.ProducerShutdownException;
+import io.harness.eventsframework.producer.Message;
+import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
+import io.harness.eventsframework.schemas.entitysetupusage.DeleteSetupUsageDTO;
+import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateDTO;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 
-import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -29,14 +34,19 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@Slf4j
 public class SecretEntityReferenceHelperTest extends CategoryTest {
   @InjectMocks SecretEntityReferenceHelper secretEntityReferenceHelper;
   @Mock EntitySetupUsageClient entityReferenceClient;
+  @Mock AbstractProducer abstractProducer;
   @Mock EntitySetupUsageHelper entityReferenceHelper;
+  @Mock IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper;
 
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
+    when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(anyString(), anyString(), anyString(), anyString()))
+        .thenCallRealMethod();
   }
 
   @Test
@@ -60,19 +70,24 @@ public class SecretEntityReferenceHelperTest extends CategoryTest {
                                             .secretManagerName(secretManagerName)
                                             .build();
     when(entityReferenceHelper.createEntityReference(anyString(), any(), any())).thenCallRealMethod();
-    secretEntityReferenceHelper.createEntityReferenceForSecret(encryptedDataDTO);
-    ArgumentCaptor<EntitySetupUsageDTO> argumentCaptor = ArgumentCaptor.forClass(EntitySetupUsageDTO.class);
-    verify(entityReferenceClient, times(1)).save(argumentCaptor.capture());
-    EntitySetupUsageDTO entityReferenceDTO = argumentCaptor.getValue();
+    secretEntityReferenceHelper.createSetupUsageForSecretManager(encryptedDataDTO);
+    ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
+    try {
+      verify(abstractProducer, times(1)).send(argumentCaptor.capture());
+    } catch (ProducerShutdownException e) {
+      e.printStackTrace();
+    }
+    EntitySetupUsageCreateDTO entityReferenceDTO = null;
+    try {
+      entityReferenceDTO = EntitySetupUsageCreateDTO.parseFrom(argumentCaptor.getValue().getData());
+    } catch (Exception ex) {
+      log.error("Unexpected error :", ex);
+    }
     assertThat(entityReferenceDTO.getReferredEntity().getName()).isEqualTo(secretManagerName);
-    assertThat(entityReferenceDTO.getReferredEntity().getType()).isEqualTo(CONNECTORS);
-    assertThat(entityReferenceDTO.getReferredEntity().getEntityRef().getFullyQualifiedName())
-        .isEqualTo(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(account, org, project, secretManager));
+    assertThat(entityReferenceDTO.getReferredEntity().getType().toString()).isEqualTo(CONNECTORS.name());
     assertThat(entityReferenceDTO.getAccountIdentifier()).isEqualTo(account);
     assertThat(entityReferenceDTO.getReferredByEntity().getName()).isEqualTo(secretName);
-    assertThat(entityReferenceDTO.getReferredByEntity().getType()).isEqualTo(SECRETS);
-    assertThat(entityReferenceDTO.getReferredByEntity().getEntityRef().getFullyQualifiedName())
-        .isEqualTo(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(account, org, project, identifier));
+    assertThat(entityReferenceDTO.getReferredByEntity().getType().toString()).isEqualTo(SECRETS.name());
   }
 
   @Test
@@ -95,13 +110,23 @@ public class SecretEntityReferenceHelperTest extends CategoryTest {
                                             .secretManager(secretManager)
                                             .secretManagerName(secretManagerName)
                                             .build();
-    ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
     secretEntityReferenceHelper.deleteSecretEntityReferenceWhenSecretGetsDeleted(encryptedDataDTO);
-    verify(entityReferenceClient, times(1))
-        .deleteAllReferredByEntityRecords(argumentCaptor.capture(), argumentCaptor.capture());
-    List<String> stringArguments = argumentCaptor.getAllValues();
-    assertThat(stringArguments.get(0)).isEqualTo(account);
-    String secretFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(account, org, project, identifier);
-    assertThat(stringArguments.get(1)).isEqualTo(secretFQN);
+    try {
+      verify(abstractProducer, times(1)).send(argumentCaptor.capture());
+    } catch (ProducerShutdownException e) {
+      e.printStackTrace();
+    }
+    DeleteSetupUsageDTO deleteSetupUsageDTO = null;
+    try {
+      deleteSetupUsageDTO = DeleteSetupUsageDTO.parseFrom(argumentCaptor.getValue().getData());
+    } catch (Exception ex) {
+      log.error("Exception in the event framework");
+    }
+    assertThat(deleteSetupUsageDTO.getAccountIdentifier()).isEqualTo(account);
+    assertThat(deleteSetupUsageDTO.getReferredByEntityFQN())
+        .isEqualTo(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(account, org, project, identifier));
+    assertThat(deleteSetupUsageDTO.getReferredByEntityFQN())
+        .isEqualTo(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(account, org, project, identifier));
   }
 }

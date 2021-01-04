@@ -64,6 +64,8 @@ import io.harness.beans.yaml.extended.CustomVariable;
 import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.beans.yaml.extended.container.Container;
 import io.harness.beans.yaml.extended.container.ContainerResource;
+import io.harness.beans.yaml.extended.container.quantity.CpuQuantity;
+import io.harness.beans.yaml.extended.container.quantity.MemoryQuantity;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.ci.beans.entities.BuildNumberDetails;
@@ -84,9 +86,6 @@ import io.harness.delegate.beans.connector.docker.DockerAuthType;
 import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
-import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
-import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
@@ -95,12 +94,19 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
+import io.harness.delegate.beans.connector.scm.GitAuthType;
+import io.harness.delegate.beans.connector.scm.GitConnectionType;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
+import io.harness.plancreator.execution.ExecutionElementConfig;
+import io.harness.plancreator.execution.ExecutionWrapperConfig;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.ParallelStepElement;
@@ -110,8 +116,6 @@ import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.intfc.Connector;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
-import io.harness.yaml.extended.ci.codebase.CodeBaseType;
-import io.harness.yaml.extended.ci.codebase.impl.GitHubCodeBase;
 
 import com.google.inject.Singleton;
 import graph.StepInfoGraph;
@@ -145,11 +149,15 @@ public class CIExecutionPlanTestHelper {
 
   private static final Integer PLUGIN_STEP_LIMIT_MEM = 50;
   private static final Integer PLUGIN_STEP_LIMIT_CPU = 100;
+  private static final String PLUGIN_STEP_LIMIT_MEM_STRING = "50Mi";
+  private static final String PLUGIN_STEP_LIMIT_CPU_STRING = "100m";
   private static final String PLUGIN_ENV_VAR = "foo";
   private static final String PLUGIN_ENV_VAL = "bar";
 
   private static final String SERVICE_ID = "db";
   private static final String SERVICE_CTR_NAME = "service-0";
+  private static final String SERVICE_LIMIT_MEM_STRING = "60Mi";
+  private static final String SERVICE_LIMIT_CPU_STRING = "80m";
   private static final Integer SERVICE_LIMIT_MEM = 60;
   private static final Integer SERVICE_LIMIT_CPU = 80;
   private static final String SERVICE_IMAGE = "redis";
@@ -198,14 +206,20 @@ public class CIExecutionPlanTestHelper {
   }
 
   public CodeBase getCICodebase() {
-    return CodeBase.builder()
-        .codeBaseType(CodeBaseType.GIT_HUB)
-        .codeBaseSpec(GitHubCodeBase.builder().connectorRef(GIT_CONNECTOR).build())
-        .build();
+    return CodeBase.builder().connectorRef(GIT_CONNECTOR).build();
+  }
+
+  public CodeBase getCICodebaseWithRepoName() {
+    return CodeBase.builder().connectorRef(GIT_CONNECTOR).repoName("portal").build();
   }
 
   public ConnectorDetails getGitConnector() {
     ConnectorInfoDTO connectorInfo = getGitConnectorDTO().getConnectorInfo();
+    return buildConnector(connectorInfo);
+  }
+
+  public ConnectorDetails getGitAccountConnector() {
+    ConnectorInfoDTO connectorInfo = getGitConnectorDTOAccountLevel().getConnectorInfo();
     return buildConnector(connectorInfo);
   }
 
@@ -241,6 +255,7 @@ public class CIExecutionPlanTestHelper {
   }
 
   public LiteEngineTaskStepInfo getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackId() {
+    List<ExecutionWrapperConfig> steps = new ArrayList<>();
     return LiteEngineTaskStepInfo.builder()
         .identifier("liteEngineTask1")
         .buildJobEnvInfo(getCIBuildJobEnvInfoOnFirstPod())
@@ -248,6 +263,20 @@ public class CIExecutionPlanTestHelper {
         .steps(getExpectedExecutionElement(true))
         .accountId("accountId")
         .ciCodebase(getCICodebase())
+        .executionElementConfig(ExecutionElementConfig.builder().steps(steps).build())
+        .build();
+  }
+
+  public LiteEngineTaskStepInfo getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackIdReponameSet() {
+    List<ExecutionWrapperConfig> steps = new ArrayList<>();
+    return LiteEngineTaskStepInfo.builder()
+        .identifier("liteEngineTask1")
+        .buildJobEnvInfo(getCIBuildJobEnvInfoOnFirstPod())
+        .usePVC(true)
+        .steps(getExpectedExecutionElement(true))
+        .accountId("accountId")
+        .ciCodebase(getCICodebaseWithRepoName())
+        .executionElementConfig(ExecutionElementConfig.builder().steps(steps).build())
         .build();
   }
 
@@ -398,18 +427,18 @@ public class CIExecutionPlanTestHelper {
   private DependencyElement getServiceDependencyElement() {
     return DependencyElement.builder()
         .identifier(SERVICE_ID)
-        .dependencySpecType(
-            CIServiceInfo.builder()
-                .identifier(SERVICE_ID)
-                .args(Collections.singletonList(SERVICE_ARGS))
-                .entrypoint(Collections.singletonList(SERVICE_ENTRYPOINT))
-                .image(SERVICE_IMAGE)
-                .resources(
-                    ContainerResource.builder()
-                        .limit(
-                            ContainerResource.Limit.builder().cpu(SERVICE_LIMIT_CPU).memory(SERVICE_LIMIT_MEM).build())
-                        .build())
-                .build())
+        .dependencySpecType(CIServiceInfo.builder()
+                                .identifier(SERVICE_ID)
+                                .args(Collections.singletonList(SERVICE_ARGS))
+                                .entrypoint(Collections.singletonList(SERVICE_ENTRYPOINT))
+                                .image(SERVICE_IMAGE)
+                                .resources(ContainerResource.builder()
+                                               .limits(ContainerResource.Limits.builder()
+                                                           .cpu(CpuQuantity.fromString(SERVICE_LIMIT_CPU_STRING))
+                                                           .memory(MemoryQuantity.fromString(SERVICE_LIMIT_MEM_STRING))
+                                                           .build())
+                                               .build())
+                                .build())
         .build();
   }
 
@@ -421,11 +450,9 @@ public class CIExecutionPlanTestHelper {
         .stepSpecType(RunStepInfo.builder()
                           .identifier(RUN_STEP_ID)
                           .name(RUN_STEP_NAME)
-                          .command(singletonList("./test-script1.sh"))
-                          .callbackId("test-p1-callbackId")
-                          .image(RUN_STEP_IMAGE)
-                          .connector(RUN_STEP_CONNECTOR)
-                          .port(PORT_STARTING_RANGE + index)
+                          .command(ParameterField.createValueField("./test-script1.sh"))
+                          .image(ParameterField.createValueField(RUN_STEP_IMAGE))
+                          .connector(ParameterField.createValueField(RUN_STEP_CONNECTOR))
                           .build())
         .build();
   }
@@ -541,16 +568,14 @@ public class CIExecutionPlanTestHelper {
         .stepSpecType(PluginStepInfo.builder()
                           .identifier(PLUGIN_STEP_ID)
                           .name(PLUGIN_STEP_NAME)
-                          .callbackId("test-p1-callbackId")
-                          .image(PLUGIN_STEP_IMAGE)
+                          .image(ParameterField.createValueField(PLUGIN_STEP_IMAGE))
                           .resources(ContainerResource.builder()
-                                         .limit(ContainerResource.Limit.builder()
-                                                    .cpu(PLUGIN_STEP_LIMIT_CPU)
-                                                    .memory(PLUGIN_STEP_LIMIT_MEM)
-                                                    .build())
+                                         .limits(ContainerResource.Limits.builder()
+                                                     .cpu(CpuQuantity.fromString(PLUGIN_STEP_LIMIT_CPU_STRING))
+                                                     .memory(MemoryQuantity.fromString(PLUGIN_STEP_LIMIT_MEM_STRING))
+                                                     .build())
                                          .build())
-                          .port(PORT_STARTING_RANGE + index)
-                          .settings(settings)
+                          .settings(ParameterField.createValueField(settings))
                           .build())
         .build();
   }
@@ -688,11 +713,9 @@ public class CIExecutionPlanTestHelper {
         .type(CIStepInfoType.PLUGIN.name().toLowerCase())
         .stepSpecType(PluginStepInfo.builder()
                           .identifier(GIT_CLONE_STEP_ID)
-                          .image(GIT_CLONE_IMAGE)
+                          .image(ParameterField.createValueField(GIT_CLONE_IMAGE))
                           .name(GIT_CLONE_STEP_NAME)
-                          .settings(settings)
-                          .callbackId(callbackId)
-                          .port(PORT_STARTING_RANGE + index)
+                          .settings(ParameterField.createValueField(settings))
                           .build())
         .build();
   }
@@ -704,44 +727,45 @@ public class CIExecutionPlanTestHelper {
             .sections(asList(getRunStepElement(index), getPluginStepElement(index + 1)))
             .build(),
         ParallelStepElement.builder()
-            .sections(asList(StepElement.builder()
-                                 .identifier("publish-1")
-                                 .type("publishArtifacts")
-                                 .stepSpecType(PublishStepInfo.builder()
-                                                   .identifier("publish-1")
-                                                   .callbackId("publish-1-callbackId")
-                                                   .publishArtifacts(singletonList(
-                                                       DockerFileArtifact.builder()
-                                                           .connector(GcrConnector.builder()
-                                                                          .connectorRef("gcr-connector")
-                                                                          .location("us.gcr.io/ci-play/portal:v01")
-                                                                          .build())
-                                                           .tag("v01")
-                                                           .image("ci-play/portal")
-                                                           .context("~/")
-                                                           .dockerFile("~/Dockerfile")
-                                                           .build()))
-                                                   .build())
-                                 .build(),
+            .sections(asList(
+                StepElement.builder()
+                    .identifier("publish-1")
+                    .type("publishArtifacts")
+                    .stepSpecType(
+                        PublishStepInfo.builder()
+                            .identifier("publish-1")
+                            .publishArtifacts(singletonList(
+                                DockerFileArtifact.builder()
+                                    .connector(
+                                        GcrConnector.builder()
+                                            .connectorRef(ParameterField.createValueField("gcr-connector"))
+                                            .location(ParameterField.createValueField("us.gcr.io/ci-play/portal:v01"))
+                                            .build())
+                                    .tag(ParameterField.createValueField("v01"))
+                                    .image(ParameterField.createValueField("ci-play/portal"))
+                                    .context(ParameterField.createValueField("~/"))
+                                    .dockerFile(ParameterField.createValueField("~/Dockerfile"))
+                                    .build()))
+                            .build())
+                    .build(),
                 StepElement.builder()
                     .identifier("publish-2")
                     .type("publishArtifacts")
                     .stepSpecType(
                         PublishStepInfo.builder()
                             .identifier("publish-2")
-                            .callbackId("publish-2-callbackId")
                             .publishArtifacts(singletonList(
                                 DockerFileArtifact.builder()
                                     .connector(
                                         EcrConnector.builder()
-                                            .connectorRef("ecr-connector")
-                                            .location(
-                                                " https://987923132879.dkr.ecr.eu-west-1.amazonaws.com/ci-play/portal:v01")
+                                            .connectorRef(ParameterField.createValueField("ecr-connector"))
+                                            .location(ParameterField.createValueField(
+                                                " https://987923132879.dkr.ecr.eu-west-1.amazonaws.com/ci-play/portal:v01"))
                                             .build())
-                                    .tag("v01")
-                                    .image("ci-play/portal")
-                                    .context("~/")
-                                    .dockerFile("~/Dockerfile")
+                                    .tag(ParameterField.createValueField("v01"))
+                                    .image(ParameterField.createValueField("ci-play/portal"))
+                                    .context(ParameterField.createValueField("~/"))
+                                    .dockerFile(ParameterField.createValueField("~/Dockerfile"))
                                     .build()))
                             .build())
                     .build()))
@@ -755,44 +779,45 @@ public class CIExecutionPlanTestHelper {
             .sections(asList(getRunStepElement(index + 1), getPluginStepElement(index + 2)))
             .build(),
         ParallelStepElement.builder()
-            .sections(asList(StepElement.builder()
-                                 .identifier("publish-1")
-                                 .type("publishArtifacts")
-                                 .stepSpecType(PublishStepInfo.builder()
-                                                   .identifier("publish-1")
-                                                   .callbackId("publish-1-callbackId")
-                                                   .publishArtifacts(singletonList(
-                                                       DockerFileArtifact.builder()
-                                                           .connector(GcrConnector.builder()
-                                                                          .connectorRef("gcr-connector")
-                                                                          .location("us.gcr.io/ci-play/portal:v01")
-                                                                          .build())
-                                                           .tag("v01")
-                                                           .image("ci-play/portal")
-                                                           .context("~/")
-                                                           .dockerFile("~/Dockerfile")
-                                                           .build()))
-                                                   .build())
-                                 .build(),
+            .sections(asList(
+                StepElement.builder()
+                    .identifier("publish-1")
+                    .type("publishArtifacts")
+                    .stepSpecType(
+                        PublishStepInfo.builder()
+                            .identifier("publish-1")
+                            .publishArtifacts(singletonList(
+                                DockerFileArtifact.builder()
+                                    .connector(
+                                        GcrConnector.builder()
+                                            .connectorRef(ParameterField.createValueField("gcr-connector"))
+                                            .location(ParameterField.createValueField("us.gcr.io/ci-play/portal:v01"))
+                                            .build())
+                                    .tag(ParameterField.createValueField("v01"))
+                                    .image(ParameterField.createValueField("ci-play/portal"))
+                                    .context(ParameterField.createValueField("~/"))
+                                    .dockerFile(ParameterField.createValueField("~/Dockerfile"))
+                                    .build()))
+                            .build())
+                    .build(),
                 StepElement.builder()
                     .identifier("publish-2")
                     .type("publishArtifacts")
                     .stepSpecType(
                         PublishStepInfo.builder()
                             .identifier("publish-2")
-                            .callbackId("publish-2-callbackId")
                             .publishArtifacts(singletonList(
                                 DockerFileArtifact.builder()
                                     .connector(
                                         EcrConnector.builder()
-                                            .connectorRef("ecr-connector")
-                                            .location(
-                                                " https://987923132879.dkr.ecr.eu-west-1.amazonaws.com/ci-play/portal:v01")
+                                            .connectorRef(ParameterField.createValueField("ecr-connector"))
+                                            .location(ParameterField.createValueField(
+                                                " https://987923132879.dkr.ecr.eu-west-1.amazonaws.com/ci-play/portal:v01"))
                                             .build())
-                                    .tag("v01")
-                                    .image("ci-play/portal")
-                                    .context("~/")
-                                    .dockerFile("~/Dockerfile")
+                                    .tag(ParameterField.createValueField("v01"))
+                                    .image(ParameterField.createValueField("ci-play/portal"))
+                                    .context(ParameterField.createValueField("~/"))
+                                    .dockerFile(ParameterField.createValueField("~/Dockerfile"))
                                     .build()))
                             .build())
                     .build()))
@@ -1066,6 +1091,31 @@ public class CIExecutionPlanTestHelper {
                                                 .url("https://github.com/wings-software/portal.git")
                                                 .branchName("master")
                                                 .gitAuthType(GitAuthType.HTTP)
+                                                .gitConnectionType(GitConnectionType.REPO)
+                                                .gitAuth(GitHTTPAuthenticationDTO.builder()
+                                                             .username("username")
+                                                             .passwordRef(SecretRefData.builder()
+                                                                              .identifier("gitPassword")
+                                                                              .scope(Scope.ACCOUNT)
+                                                                              .decryptedValue("password".toCharArray())
+                                                                              .build())
+                                                             .build())
+                                                .build())
+                           .build())
+        .build();
+  }
+
+  public ConnectorDTO getGitConnectorDTOAccountLevel() {
+    return ConnectorDTO.builder()
+        .connectorInfo(ConnectorInfoDTO.builder()
+                           .name("gitConnector")
+                           .identifier("gitConnector")
+                           .connectorType(ConnectorType.GIT)
+                           .connectorConfig(GitConfigDTO.builder()
+                                                .url("https://github.com/wings-software/")
+                                                .branchName("master")
+                                                .gitAuthType(GitAuthType.HTTP)
+                                                .gitConnectionType(GitConnectionType.ACCOUNT)
                                                 .gitAuth(GitHTTPAuthenticationDTO.builder()
                                                              .username("username")
                                                              .passwordRef(SecretRefData.builder()

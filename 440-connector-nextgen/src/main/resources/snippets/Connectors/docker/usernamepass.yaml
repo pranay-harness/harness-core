@@ -1,0 +1,15 @@
+connector:
+  name: SampleDockerConnector
+  identifier: SampleDockerConnectorId
+  description: Sample Docker Connector
+  orgIdentifier: orgId
+  projectIdentifier: projectId
+  type: DockerRegistry
+  spec:
+    dockerRegistryUrl: somedockerregistryurl
+    providerType: DockerHub
+    auth:
+      type: UsernamePassword
+      spec:
+        username: someuser
+        passwordRef: somepasswordref

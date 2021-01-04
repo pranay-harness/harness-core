@@ -1,9 +1,14 @@
 package io.harness.ccm.views.service.impl;
 
+import io.harness.ccm.views.dao.CEViewDao;
 import io.harness.ccm.views.dao.ViewCustomFieldDao;
+import io.harness.ccm.views.entities.CEView;
+import io.harness.ccm.views.entities.ViewCondition;
 import io.harness.ccm.views.entities.ViewCustomField;
 import io.harness.ccm.views.entities.ViewField;
 import io.harness.ccm.views.entities.ViewFieldIdentifier;
+import io.harness.ccm.views.entities.ViewIdCondition;
+import io.harness.ccm.views.entities.ViewRule;
 import io.harness.ccm.views.service.ViewCustomFieldService;
 import io.harness.exception.InvalidRequestException;
 
@@ -25,8 +30,10 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class ViewCustomFieldServiceImpl implements ViewCustomFieldService {
   @Inject private ViewCustomFieldDao viewCustomFieldDao;
+  @Inject private CEViewDao ceViewDao;
 
   private static final String CUSTOM_FIELD_DUPLICATE_EXCEPTION = "Custom Field with given name already exists";
+  private static final String CUSTOM_FIELD_IN_USE = "Custom Field in use, clean up all usages to delete the field";
   private static final String leftJoinLabels = " LEFT JOIN UNNEST(labels) as labels";
 
   @Override
@@ -83,6 +90,15 @@ public class ViewCustomFieldServiceImpl implements ViewCustomFieldService {
 
   @Override
   public boolean delete(String uuid, String accountId) {
+    CEView ceView = ceViewDao.get(viewCustomFieldDao.getById(uuid).getViewId());
+    for (ViewRule rule : ceView.getViewRules()) {
+      for (ViewCondition condition : rule.getViewConditions()) {
+        ViewIdCondition viewIdCondition = (ViewIdCondition) condition;
+        if (viewIdCondition.getViewField().getFieldId().equals(uuid)) {
+          throw new InvalidRequestException(CUSTOM_FIELD_IN_USE);
+        }
+      }
+    }
     return viewCustomFieldDao.delete(uuid, accountId);
   }
 

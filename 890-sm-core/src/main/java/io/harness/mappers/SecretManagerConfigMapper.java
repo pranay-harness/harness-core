@@ -55,6 +55,7 @@ public class SecretManagerConfigMapper {
         .accountIdentifier(dto.getAccountIdentifier())
         .description(dto.getDescription())
         .tags(TagMapper.convertToList(dto.getTags()))
+        .harnessManaged(dto.isHarnessManaged())
         .build();
   }
 
@@ -67,6 +68,7 @@ public class SecretManagerConfigMapper {
       secretManagerConfigDTO.setIdentifier(ngMetadata.getIdentifier());
       secretManagerConfigDTO.setTags(TagMapper.convertToMap(ngMetadata.getTags()));
       secretManagerConfigDTO.setDescription(ngMetadata.getDescription());
+      secretManagerConfigDTO.setHarnessManaged(secretManagerConfigDTO.isHarnessManaged());
     }
   }
 }

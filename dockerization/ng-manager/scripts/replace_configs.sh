@@ -96,10 +96,6 @@ if [[ "" != "$SMTP_USERNAME" ]]; then
   yq write -i $CONFIG_FILE smtp.username "$SMTP_USERNAME"
 fi
 
-if [[ "" != "$SCM_SERVICE_URI" ]]; then
-  yq write -i $CONFIG_FILE scmConnectionConfig.url "$SCM_SERVICE_URI"
-fi
-
 if [[ "" != "$SMTP_PASSWORD" ]]; then
   yq write -i $CONFIG_FILE smtp.password "$SMTP_PASSWORD"
 fi
@@ -134,7 +130,7 @@ if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
 fi
 
 if [[ "" != "$GRPC_SERVER_PORT" ]]; then
-  yq write -i $CONFIG_FILE   pmsSdkGrpcServerConfig.connectors.port "$GRPC_SERVER_PORT"
+  yq write -i $CONFIG_FILE pmsSdkGrpcServerConfig.connectors[0].port "$GRPC_SERVER_PORT"
 fi
 
 if [[ "" != "$SHOULD_CONFIGURE_WITH_PMS" ]]; then

@@ -12,12 +12,14 @@ import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
-import io.harness.pms.plan.GraphLayoutNode;
+import io.harness.pms.contracts.plan.GraphLayoutNode;
+import io.harness.pms.execution.ExecutionStatus;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
 import com.sun.istack.internal.NotNull;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,8 +77,8 @@ public class PipelineEntity implements PersistentEntity, AccountAccess, UuidAwar
 
   @Version Long version;
   @Builder.Default Map<String, org.bson.Document> filters = new HashMap<>();
-  @Builder.Default Map<String, GraphLayoutNode> layoutNodeMap = new HashMap<>();
-  String startingNodeID;
+  ExecutionSummaryInfo executionSummaryInfo;
+  @Builder.Default int runSequence = 0;
 
   @Override
   public String getAccountId() {

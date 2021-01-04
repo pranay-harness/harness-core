@@ -2,7 +2,6 @@ package io.harness.steps.barriers.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.barrier.Barrier.State;
 import io.harness.iterator.PersistentRegularIterable;
@@ -26,7 +25,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @OwnedBy(CDC)
 @Data
 @Builder
-@Redesign
 @FieldNameConstants(innerTypeName = "BarrierExecutionInstanceKeys")
 @Entity(value = "barrierExecutionInstances")
 @Document("barrierExecutionInstances")

@@ -1,7 +1,7 @@
 package io.harness.cvng.beans;
 
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
-import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
+import io.harness.cvng.beans.activity.ActivitySourceDTO;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -24,7 +24,7 @@ public class DataCollectionConnectorBundle implements ExecutionCapabilityDemande
   private ConnectorInfoDTO connectorDTO;
   private Map<String, String> params;
   DataCollectionType dataCollectionType;
-  KubernetesActivitySourceDTO activitySourceDTO;
+  ActivitySourceDTO activitySourceDTO;
 
   @JsonIgnore
   public ConnectorConfigDTO getConnectorConfigDTO() {

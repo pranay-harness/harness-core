@@ -7,13 +7,13 @@ import io.harness.connector.entities.embedded.gitconnector.GitUserNamePasswordAu
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.connector.ConnectorCategory;
-import io.harness.delegate.beans.connector.gitconnector.CustomCommitAttributes;
-import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
-import io.harness.delegate.beans.connector.gitconnector.GitAuthenticationDTO;
-import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.gitconnector.GitConnectionType;
-import io.harness.delegate.beans.connector.gitconnector.GitHTTPAuthenticationDTO;
-import io.harness.delegate.beans.connector.gitconnector.GitSSHAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.GitAuthType;
+import io.harness.delegate.beans.connector.scm.GitConnectionType;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.CustomCommitAttributes;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
 import io.harness.exception.UnknownEnumTypeException;
 
 import com.google.inject.Singleton;
@@ -41,7 +41,7 @@ public class GitDTOToEntity implements ConnectorDTOToEntityMapper<GitConfigDTO> 
 
   @Override
   public List<ConnectorCategory> getConnectorCategory() {
-    return Collections.singletonList(ConnectorCategory.CLOUD_PROVIDER);
+    return Collections.singletonList(ConnectorCategory.CODE_REPO);
   }
 
   private String getBranchName(GitConfigDTO gitConfigDTO) {

@@ -1,15 +1,10 @@
 package io.harness.ng.core.impl;
 
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
-import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
-import static io.harness.ng.NextGenModule.SECRET_MANAGER_CONNECTOR_SERVICE;
 import static io.harness.ng.core.remote.ProjectMapper.toProject;
-import static io.harness.ng.core.utils.NGUtils.getConnectorRequestDTO;
-import static io.harness.ng.core.utils.NGUtils.getDefaultHarnessSecretManagerName;
 import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
 
@@ -18,19 +13,17 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.connector.services.ConnectorService;
-import io.harness.eventsframework.Event;
-import io.harness.eventsframework.EventDrivenClient;
-import io.harness.eventsframework.EventFrameworkConstants;
-import io.harness.eventsframework.ProjectUpdate;
+import io.harness.eventsframework.EventsFrameworkConstants;
+import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.api.ProducerShutdownException;
+import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
+import io.harness.eventsframework.producer.Message;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.SecretManagementException;
 import io.harness.ng.core.DefaultOrganization;
 import io.harness.ng.core.OrgIdentifier;
 import io.harness.ng.core.ProjectIdentifier;
-import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ProjectFilterDTO;
@@ -42,15 +35,15 @@ import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.repositories.core.spring.ProjectRepository;
-import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.PrincipalType;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.google.protobuf.Any;
+import com.google.protobuf.ByteString;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -69,22 +62,16 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class ProjectServiceImpl implements ProjectService {
   private final ProjectRepository projectRepository;
   private final OrganizationService organizationService;
-  private final NGSecretManagerService ngSecretManagerService;
-  private final ConnectorService secretManagerConnectorService;
-  private final EventDrivenClient eventDrivenClient;
+  private final AbstractProducer eventProducer;
   private final NgUserService ngUserService;
   private static final String PROJECT_ADMIN_ROLE_NAME = "Project Admin";
 
   @Inject
   public ProjectServiceImpl(ProjectRepository projectRepository, OrganizationService organizationService,
-      NGSecretManagerService ngSecretManagerService,
-      @Named(SECRET_MANAGER_CONNECTOR_SERVICE) ConnectorService secretManagerConnectorService,
-      EventDrivenClient eventDrivenClient, NgUserService ngUserService) {
+      @Named(EventsFrameworkConstants.ENTITY_CRUD) AbstractProducer eventProducer, NgUserService ngUserService) {
     this.projectRepository = projectRepository;
     this.organizationService = organizationService;
-    this.ngSecretManagerService = ngSecretManagerService;
-    this.secretManagerConnectorService = secretManagerConnectorService;
-    this.eventDrivenClient = eventDrivenClient;
+    this.eventProducer = eventProducer;
     this.ngUserService = ngUserService;
   }
 
@@ -108,7 +95,7 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   private void performActionsPostProjectCreation(Project project) {
-    createHarnessSecretManager(project);
+    publishEvent(project, EventsFrameworkConstants.CREATE_ACTION);
     createUserProjectMap(project);
   }
 
@@ -130,23 +117,6 @@ public class ProjectServiceImpl implements ProjectService {
                                           .roles(singletonList(role))
                                           .build();
       ngUserService.createUserProjectMap(userProjectMap);
-    }
-  }
-
-  private void createHarnessSecretManager(Project project) {
-    try {
-      SecretManagerConfigDTO globalSecretManager =
-          ngSecretManagerService.getGlobalSecretManager(project.getAccountIdentifier());
-      globalSecretManager.setIdentifier(HARNESS_SECRET_MANAGER_IDENTIFIER);
-      globalSecretManager.setDescription("Project: " + project.getName());
-      globalSecretManager.setName(getDefaultHarnessSecretManagerName(globalSecretManager.getEncryptionType()));
-      globalSecretManager.setProjectIdentifier(project.getIdentifier());
-      globalSecretManager.setOrgIdentifier(project.getOrgIdentifier());
-      globalSecretManager.setDefault(false);
-      secretManagerConnectorService.create(getConnectorRequestDTO(globalSecretManager), project.getAccountIdentifier());
-    } catch (Exception ex) {
-      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
-          String.format("Harness Secret Manager for project %s could not be created", project.getName()), ex, USER);
     }
   }
 
@@ -178,23 +148,35 @@ public class ProjectServiceImpl implements ProjectService {
       List<ModuleType> moduleTypeList = verifyModulesNotRemoved(existingProject.getModules(), project.getModules());
       project.setModules(moduleTypeList);
       validate(project);
-      publishUpdates(project);
-      return projectRepository.save(project);
+      Project updatedProject = projectRepository.save(project);
+      publishEvent(existingProject, EventsFrameworkConstants.UPDATE_ACTION);
+      return updatedProject;
     }
     throw new InvalidRequestException(
         String.format("Project with identifier [%s] and orgIdentifier [%s] not found", identifier, orgIdentifier),
         USER);
   }
 
-  private void publishUpdates(Project project) {
-    eventDrivenClient.publishEvent(EventFrameworkConstants.PROJECT_UPDATE_CHANNEL,
-        Event.newBuilder()
-            .setAccountId(project.getAccountIdentifier())
-            .setPayload(Any.pack(ProjectUpdate.newBuilder()
-                                     .setProjectIdentifier(project.getIdentifier())
-                                     .setOrgIdentifier(project.getOrgIdentifier())
-                                     .build()))
-            .build());
+  private void publishEvent(Project project, String action) {
+    try {
+      eventProducer.send(Message.newBuilder()
+                             .putAllMetadata(ImmutableMap.of("accountId", project.getAccountIdentifier(),
+                                 EventsFrameworkConstants.ENTITY_TYPE_METADATA, EventsFrameworkConstants.PROJECT_ENTITY,
+                                 EventsFrameworkConstants.ACTION_METADATA, action))
+                             .setData(getProjectPayload(project))
+                             .build());
+    } catch (ProducerShutdownException e) {
+      log.error("Failed to send event to events framework projectIdentifier: " + project.getIdentifier(), e);
+    }
+  }
+
+  private ByteString getProjectPayload(Project project) {
+    return ProjectEntityChangeDTO.newBuilder()
+        .setIdentifier(project.getIdentifier())
+        .setOrgIdentifier(project.getOrgIdentifier())
+        .setAccountIdentifier(project.getAccountIdentifier())
+        .build()
+        .toByteString();
   }
 
   private List<ModuleType> verifyModulesNotRemoved(List<ModuleType> oldList, List<ModuleType> newList) {
@@ -218,6 +200,11 @@ public class ProjectServiceImpl implements ProjectService {
   @Override
   public Page<Project> list(Criteria criteria, Pageable pageable) {
     return projectRepository.findAll(criteria, pageable);
+  }
+
+  @Override
+  public List<Project> list(Criteria criteria) {
+    return projectRepository.findAll(criteria);
   }
 
   private Criteria createProjectFilterCriteria(Criteria criteria, ProjectFilterDTO projectFilterDTO) {
@@ -247,7 +234,16 @@ public class ProjectServiceImpl implements ProjectService {
   @DefaultOrganization
   public boolean delete(String accountIdentifier, @OrgIdentifier String orgIdentifier,
       @ProjectIdentifier String projectIdentifier, Long version) {
-    return projectRepository.delete(accountIdentifier, orgIdentifier, projectIdentifier, version);
+    boolean delete = projectRepository.delete(accountIdentifier, orgIdentifier, projectIdentifier, version);
+    if (delete) {
+      publishEvent(Project.builder()
+                       .accountIdentifier(accountIdentifier)
+                       .orgIdentifier(orgIdentifier)
+                       .identifier(projectIdentifier)
+                       .build(),
+          EventsFrameworkConstants.DELETE_ACTION);
+    }
+    return delete;
   }
 
   private void validateCreateProjectRequest(String accountIdentifier, String orgIdentifier, ProjectDTO project) {

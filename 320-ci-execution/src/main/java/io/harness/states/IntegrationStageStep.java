@@ -8,13 +8,13 @@ import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.ci.beans.entities.BuildNumberDetails;
-import io.harness.engine.outputs.ExecutionSweepingOutputService;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.execution.ChildExecutableResponse;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.ChildExecutableResponse;
+import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
-import io.harness.pms.steps.StepType;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
@@ -47,10 +47,10 @@ public class IntegrationStageStep implements ChildExecutable<IntegrationStageSte
       // TODO This is hack because identifier is null due to json ignore, we will solve it properly during PMS
       // Integration
       String stageID = integrationStageStepParameters.getIntegrationStageIdentifier();
+      int buildNumber = ambiance.getMetadata().getRunSequence();
 
       K8PodDetails k8PodDetails = K8PodDetails.builder()
                                       .clusterName(k8sDirectInfraYaml.getSpec().getConnectorRef())
-                                      .buildNumberDetails(buildNumberDetails)
                                       .stageID(stageID)
                                       .accountId(buildNumberDetails.getAccountIdentifier())
                                       .namespace(k8sDirectInfraYaml.getSpec().getNamespace())

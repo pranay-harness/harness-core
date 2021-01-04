@@ -8,4 +8,5 @@ import lombok.NoArgsConstructor;
 public abstract class LogAnalysisLearningEngineTask extends LearningEngineTask {
   private String controlDataUrl;
   private String testDataUrl;
+  private String previousAnalysisUrl;
 }

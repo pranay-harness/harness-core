@@ -14,14 +14,15 @@ import io.harness.category.element.UnitTests;
 import io.harness.ccm.views.entities.ViewFieldIdentifier;
 import io.harness.ccm.views.graphql.QLCEViewFieldInput;
 import io.harness.ccm.views.graphql.QLCEViewFilter;
+import io.harness.ccm.views.graphql.QLCEViewFilterWrapper;
 import io.harness.ccm.views.graphql.ViewsMetaDataFields;
 import io.harness.ccm.views.graphql.ViewsQueryBuilder;
 import io.harness.rule.Owner;
 
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.TableResult;
-import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.junit.Before;
@@ -38,7 +39,7 @@ public class ViewsBillingServiceImplTest extends CategoryTest {
   public static final String LABEL_KEY = "labelKey";
   public static final String LABEL_KEY_NAME = "labelKeyName";
   public static final String LABEL_VALUE = "labelValue";
-  @InjectMocks @Inject @Spy private ViewsBillingServiceImpl viewsBillingService;
+  @InjectMocks @Spy private ViewsBillingServiceImpl viewsBillingService;
   @Mock private ViewsQueryBuilder viewsQueryBuilder;
   @Mock BigQuery bigQuery;
   @Mock TableResult resultSet;
@@ -52,17 +53,15 @@ public class ViewsBillingServiceImplTest extends CategoryTest {
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
     doCallRealMethod().when(viewsQueryBuilder).getAliasFromField(any());
-    doCallRealMethod().when(viewsQueryBuilder).getFilterValuesQuery(any(), anyString(), anyInt(), anyInt());
+    doCallRealMethod().when(viewsQueryBuilder).getFilterValuesQuery(any(), any(), anyString(), anyInt(), anyInt());
     doReturn(resultSet).when(bigQuery).query(any());
 
     clusterId = QLCEViewFieldInput.builder()
                     .fieldId(CLUSTER_ID)
+                    .fieldName(CLUSTER)
                     .identifier(ViewFieldIdentifier.CLUSTER)
                     .identifierName(ViewFieldIdentifier.CLUSTER.getDisplayName())
                     .build();
-    doReturn(Collections.singletonList(CLUSTER))
-        .when(viewsBillingService)
-        .convertToFilterValuesData(resultSet, Collections.singletonList(clusterId));
 
     labelKey = QLCEViewFieldInput.builder()
                    .fieldId(ViewsMetaDataFields.LABEL_KEY.getFieldName())
@@ -88,8 +87,27 @@ public class ViewsBillingServiceImplTest extends CategoryTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void getFilterValueStats() {
-    List<QLCEViewFilter> filters = new ArrayList<>();
-    filters.add(QLCEViewFilter.builder().field(clusterId).values(new String[] {""}).build());
+    doReturn(Collections.singletonList(CLUSTER))
+        .when(viewsBillingService)
+        .convertToFilterValuesData(resultSet, Collections.singletonList(clusterId));
+    List<QLCEViewFilterWrapper> filters = new ArrayList<>();
+    filters.add(QLCEViewFilterWrapper.builder()
+                    .idFilter(QLCEViewFilter.builder().field(clusterId).values(new String[] {""}).build())
+                    .build());
+    List<String> filterValueStats =
+        viewsBillingService.getFilterValueStats(bigQuery, filters, cloudProviderTable, 10, 0);
+    assertThat(filterValueStats.get(0)).isEqualTo(CLUSTER);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void getFilterValueStatsQuery() {
+    doReturn(Arrays.asList(CLUSTER)).when(viewsBillingService).convertToFilterValuesData(any(), any());
+    List<QLCEViewFilterWrapper> filters = new ArrayList<>();
+    filters.add(QLCEViewFilterWrapper.builder()
+                    .idFilter(QLCEViewFilter.builder().field(clusterId).values(new String[] {CLUSTER}).build())
+                    .build());
     List<String> filterValueStats =
         viewsBillingService.getFilterValueStats(bigQuery, filters, cloudProviderTable, 10, 0);
     assertThat(filterValueStats.get(0)).isEqualTo(CLUSTER);
@@ -99,8 +117,10 @@ public class ViewsBillingServiceImplTest extends CategoryTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void getFilterValueStatsLabelKey() {
-    List<QLCEViewFilter> filters = new ArrayList<>();
-    filters.add(QLCEViewFilter.builder().field(labelKey).values(new String[] {""}).build());
+    List<QLCEViewFilterWrapper> filters = new ArrayList<>();
+    filters.add(QLCEViewFilterWrapper.builder()
+                    .idFilter(QLCEViewFilter.builder().field(labelKey).values(new String[] {""}).build())
+                    .build());
     List<String> filterValueStats =
         viewsBillingService.getFilterValueStats(bigQuery, filters, cloudProviderTable, 10, 0);
     assertThat(filterValueStats.get(0)).isEqualTo(LABEL_KEY);
@@ -110,8 +130,10 @@ public class ViewsBillingServiceImplTest extends CategoryTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void getFilterValueStatsLabelValue() {
-    List<QLCEViewFilter> filters = new ArrayList<>();
-    filters.add(QLCEViewFilter.builder().field(labelValue).values(new String[] {""}).build());
+    List<QLCEViewFilterWrapper> filters = new ArrayList<>();
+    filters.add(QLCEViewFilterWrapper.builder()
+                    .idFilter(QLCEViewFilter.builder().field(labelValue).values(new String[] {""}).build())
+                    .build());
     List<String> filterValueStats =
         viewsBillingService.getFilterValueStats(bigQuery, filters, cloudProviderTable, 10, 0);
     assertThat(filterValueStats.get(0)).isEqualTo(LABEL_VALUE);

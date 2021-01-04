@@ -12,12 +12,18 @@ import io.harness.connector.mappers.artifactorymapper.ArtifactoryDTOToEntity;
 import io.harness.connector.mappers.artifactorymapper.ArtifactoryEntityToDTO;
 import io.harness.connector.mappers.awsmapper.AwsDTOToEntity;
 import io.harness.connector.mappers.awsmapper.AwsEntityToDTO;
+import io.harness.connector.mappers.bitbucketconnectormapper.BitbucketDTOToEntity;
+import io.harness.connector.mappers.bitbucketconnectormapper.BitbucketEntityToDTO;
 import io.harness.connector.mappers.docker.DockerDTOToEntity;
 import io.harness.connector.mappers.docker.DockerEntityToDTO;
 import io.harness.connector.mappers.gcpmappers.GcpDTOToEntity;
 import io.harness.connector.mappers.gcpmappers.GcpEntityToDTO;
 import io.harness.connector.mappers.gitconnectormapper.GitDTOToEntity;
 import io.harness.connector.mappers.gitconnectormapper.GitEntityToDTO;
+import io.harness.connector.mappers.githubconnector.GithubDTOToEntity;
+import io.harness.connector.mappers.githubconnector.GithubEntityToDTO;
+import io.harness.connector.mappers.gitlabconnector.GitlabDTOToEntity;
+import io.harness.connector.mappers.gitlabconnector.GitlabEntityToDTO;
 import io.harness.connector.mappers.jira.JiraDTOToEntity;
 import io.harness.connector.mappers.jira.JiraEntityToDTO;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesDTOToEntity;
@@ -38,15 +44,19 @@ import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.validator.ArtifactoryConnectionValidator;
 import io.harness.connector.validator.AwsConnectorValidator;
+import io.harness.connector.validator.BitbucketConnectorValidator;
 import io.harness.connector.validator.CVConnectorValidator;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.connector.validator.DockerConnectionValidator;
 import io.harness.connector.validator.GcpConnectorValidator;
 import io.harness.connector.validator.GitConnectorValidator;
+import io.harness.connector.validator.GithubConnectorValidator;
+import io.harness.connector.validator.GitlabConnectorValidator;
 import io.harness.connector.validator.JiraConnectorValidator;
 import io.harness.connector.validator.KubernetesConnectionValidator;
 import io.harness.connector.validator.NexusConnectorValidator;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.filter.FiltersModule;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.AbstractModule;
@@ -59,7 +69,7 @@ public class ConnectorModule extends AbstractModule {
   @Override
   protected void configure() {
     registerRequiredBindings();
-
+    install(FiltersModule.getInstance());
     MapBinder<String, ConnectionValidator> connectorValidatorMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ConnectionValidator.class);
     connectorValidatorMapBinder.addBinding(ConnectorType.KUBERNETES_CLUSTER.getDisplayName())
@@ -74,6 +84,10 @@ public class ConnectorModule extends AbstractModule {
         .to(ArtifactoryConnectionValidator.class);
     connectorValidatorMapBinder.addBinding(ConnectorType.NEXUS.getDisplayName()).to(NexusConnectorValidator.class);
     connectorValidatorMapBinder.addBinding(ConnectorType.JIRA.getDisplayName()).to(JiraConnectorValidator.class);
+    connectorValidatorMapBinder.addBinding(ConnectorType.GITHUB.getDisplayName()).to(GithubConnectorValidator.class);
+    connectorValidatorMapBinder.addBinding(ConnectorType.GITLAB.getDisplayName()).to(GitlabConnectorValidator.class);
+    connectorValidatorMapBinder.addBinding(ConnectorType.BITBUCKET.getDisplayName())
+        .to(BitbucketConnectorValidator.class);
 
     MapBinder<String, ConnectorDTOToEntityMapper> connectorDTOToEntityMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ConnectorDTOToEntityMapper.class);
@@ -93,6 +107,9 @@ public class ConnectorModule extends AbstractModule {
         .to(ArtifactoryDTOToEntity.class);
     connectorDTOToEntityMapBinder.addBinding(ConnectorType.JIRA.getDisplayName()).to(JiraDTOToEntity.class);
     connectorDTOToEntityMapBinder.addBinding(ConnectorType.NEXUS.getDisplayName()).to(NexusDTOToEntity.class);
+    connectorDTOToEntityMapBinder.addBinding(ConnectorType.GITHUB.getDisplayName()).to(GithubDTOToEntity.class);
+    connectorDTOToEntityMapBinder.addBinding(ConnectorType.GITLAB.getDisplayName()).to(GitlabDTOToEntity.class);
+    connectorDTOToEntityMapBinder.addBinding(ConnectorType.BITBUCKET.getDisplayName()).to(BitbucketDTOToEntity.class);
 
     MapBinder<String, ConnectorEntityToDTOMapper> connectorEntityToDTOMapper =
         MapBinder.newMapBinder(binder(), String.class, ConnectorEntityToDTOMapper.class);
@@ -110,6 +127,9 @@ public class ConnectorModule extends AbstractModule {
     connectorEntityToDTOMapper.addBinding(ConnectorType.ARTIFACTORY.getDisplayName()).to(ArtifactoryEntityToDTO.class);
     connectorEntityToDTOMapper.addBinding(ConnectorType.JIRA.getDisplayName()).to(JiraEntityToDTO.class);
     connectorEntityToDTOMapper.addBinding(ConnectorType.NEXUS.getDisplayName()).to(NexusEntityToDTO.class);
+    connectorEntityToDTOMapper.addBinding(ConnectorType.GITHUB.getDisplayName()).to(GithubEntityToDTO.class);
+    connectorEntityToDTOMapper.addBinding(ConnectorType.GITLAB.getDisplayName()).to(GitlabEntityToDTO.class);
+    connectorEntityToDTOMapper.addBinding(ConnectorType.BITBUCKET.getDisplayName()).to(BitbucketEntityToDTO.class);
 
     bind(ConnectorService.class)
         .annotatedWith(Names.named(DEFAULT_CONNECTOR_SERVICE))

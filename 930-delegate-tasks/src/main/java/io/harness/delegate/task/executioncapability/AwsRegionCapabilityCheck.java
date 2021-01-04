@@ -2,6 +2,9 @@ package io.harness.delegate.task.executioncapability;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.capability.CapabilityParameters;
+import io.harness.capability.CapabilitySubjectPermission;
+import io.harness.capability.CapabilitySubjectPermission.PermissionResult;
 import io.harness.delegate.beans.executioncapability.AwsRegionCapability;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -19,6 +22,16 @@ public class AwsRegionCapabilityCheck implements CapabilityCheck {
     String region = awsRegionCapability.getRegion();
     boolean valid = region == null || checkIfSameRegion(region) || isLocalDev();
     return CapabilityResponse.builder().delegateCapability(awsRegionCapability).validated(valid).build();
+  }
+
+  public CapabilitySubjectPermission performCapabilityCheckWithProto(CapabilityParameters parameters) {
+    CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
+    if (parameters.getCapabilityCase() != CapabilityParameters.CapabilityCase.AWS_REGION_PARAMETERS) {
+      return builder.permissionResult(PermissionResult.DENIED).build();
+    }
+    String region = parameters.getAwsRegionParameters().getRegion();
+    boolean valid = region == null || checkIfSameRegion(region) || isLocalDev();
+    return builder.permissionResult(valid ? PermissionResult.ALLOWED : PermissionResult.DENIED).build();
   }
 
   private boolean checkIfSameRegion(String region) {

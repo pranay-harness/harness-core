@@ -1,6 +1,7 @@
 package io.harness.cvng.core.services.impl;
 
 import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.CVSetupStatusDTO;
 import io.harness.cvng.core.beans.OnboardingStep;
@@ -10,6 +11,7 @@ import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import lombok.AllArgsConstructor;
 
@@ -27,7 +29,7 @@ public class CVSetupServiceImpl implements CVSetupService {
     int totalNumberOfServices = nextGenService.getServicesCount(accountId, orgIdentifier, projectIdentifier);
     int totalNumberOfEnvironments = nextGenService.getEnvironmentCount(accountId, orgIdentifier, projectIdentifier);
     int numberOfServicesUsedInActivitySources =
-        kubernetesActivitySourceService.getNumberOfServicesSetup(accountId, orgIdentifier, projectIdentifier);
+        kubernetesActivitySourceService.getNumberOfKubernetesServicesSetup(accountId, orgIdentifier, projectIdentifier);
     int numberOfServicesUsedInMonitoringSources =
         cvConfigService.getNumberOfServicesSetup(accountId, orgIdentifier, projectIdentifier);
     int servicesUndergoingHealthVerification = verificationJobService.getNumberOfServicesUndergoingHealthVerification(
@@ -59,5 +61,10 @@ public class CVSetupServiceImpl implements CVSetupService {
       allStepsWhichAreDone.add(OnboardingStep.VERIFICATION_JOBS);
     }
     return allStepsWhichAreDone;
+  }
+
+  @Override
+  public List<DataSourceType> getSupportedProviders(String accountId, String orgIdentifier, String projectIdentifier) {
+    return Arrays.asList(DataSourceType.values());
   }
 }

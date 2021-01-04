@@ -7,6 +7,8 @@ import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
@@ -29,6 +31,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AwsAmiAsyncTaskTest extends WingsBaseTest {
   @Mock private DelegateLogService mockDelegateLogService;
   @Mock private AwsAmiHelperServiceDelegate mockAwsAmiHelperServiceDelegate;

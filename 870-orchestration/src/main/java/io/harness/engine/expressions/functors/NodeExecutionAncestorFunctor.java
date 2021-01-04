@@ -2,14 +2,14 @@ package io.harness.engine.expressions.functors;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.AmbianceUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.expressions.NodeExecutionsCache;
-import io.harness.engine.outcomes.OutcomeService;
-import io.harness.engine.outputs.ExecutionSweepingOutputService;
+import io.harness.engine.pms.data.PmsOutcomeService;
+import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.execution.NodeExecution;
 import io.harness.expression.LateBindingMap;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.execution.utils.AmbianceUtils;
 
 import java.util.Map;
 import java.util.Set;
@@ -23,8 +23,8 @@ import lombok.Value;
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public class NodeExecutionAncestorFunctor extends LateBindingMap {
   transient NodeExecutionsCache nodeExecutionsCache;
-  transient OutcomeService outcomeService;
-  transient ExecutionSweepingOutputService executionSweepingOutputService;
+  transient PmsOutcomeService pmsOutcomeService;
+  transient PmsSweepingOutputService pmsSweepingOutputService;
   transient Ambiance ambiance;
   transient Set<NodeExecutionEntityType> entityTypes;
   transient Map<String, String> groupAliases;
@@ -39,8 +39,8 @@ public class NodeExecutionAncestorFunctor extends LateBindingMap {
     return startNodeExecution == null ? null
                                       : NodeExecutionValue.builder()
                                             .nodeExecutionsCache(nodeExecutionsCache)
-                                            .outcomeService(outcomeService)
-                                            .executionSweepingOutputService(executionSweepingOutputService)
+                                            .pmsOutcomeService(pmsOutcomeService)
+                                            .pmsSweepingOutputService(pmsSweepingOutputService)
                                             .ambiance(ambiance)
                                             .startNodeExecution(startNodeExecution)
                                             .entityTypes(entityTypes)

@@ -9,16 +9,20 @@ public interface YamlTypes {
   String ARTIFACT_LIST_CONFIG = "artifacts";
   String ARTIFACT_OVERRIDE_SETS = "artifactOverrideSets";
   String SIDECAR_ARTIFACT_CONFIG = "sidecar";
+  String SIDECARS_ARTIFACT_CONFIG = "sidecars";
   String ENVIRONMENT_YAML = "environment";
   String INFRASTRUCTURE_DEF = "infrastructureDefinition";
   String INFRA_USE_FROM_STAGE = "useFromStage";
   String INFRA_USE_FROM_STAGE_OVERRIDES = "overrides";
+
   String K8S_ROLLING_ROLLBACK = StepSpecTypeConstants.K8S_ROLLING_ROLLBACK;
   String K8S_ROLLING_DEPLOY = StepSpecTypeConstants.K8S_ROLLING_DEPLOY;
+  String K8S_BLUE_GREEN_DEPLOY = StepSpecTypeConstants.K8S_BLUE_GREEN_DEPLOY;
+  String K8S_APPLY = StepSpecTypeConstants.K8S_APPLY;
+
   String MANIFEST_LIST_CONFIG = "manifests";
   String MANIFEST_CONFIG = "manifest";
   String MANIFEST_OVERRIDE_SETS = "manifestOverrideSets";
-  String STORE_CONFIG_WRAPPER = "store";
   String K8S_MANIFEST = ManifestType.K8Manifest;
   String SPEC = "spec";
   String PIPELINE_INFRASTRUCTURE = "infrastructure";

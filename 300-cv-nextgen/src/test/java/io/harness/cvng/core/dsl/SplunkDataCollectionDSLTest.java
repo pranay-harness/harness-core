@@ -36,7 +36,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -61,7 +60,7 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
     final RuntimeParameters runtimeParameters = getRuntimeParameters(Instant.parse("2020-08-28T11:06:44.711Z"));
     List<LogDataRecord> logDataRecords =
         (List<LogDataRecord>) dataCollectionDSLService.execute(code, runtimeParameters, callDetails -> {});
-    Assertions.assertThat(logDataRecords).isNotNull();
+    assertThat(logDataRecords).isNotNull();
     assertThat(logDataRecords).hasSize(6);
     assertThat(logDataRecords.get(0).getHostname()).isEqualTo("harness-test-appd-deployment-5bd684f655-cslds");
     assertThat(logDataRecords.get(0).getLog())
@@ -210,7 +209,7 @@ public class SplunkDataCollectionDSLTest extends HoverflyTest {
         .baseUrl(dataCollectionInfo.getBaseUrl(splunkConnectorDTO))
         .commonHeaders(dataCollectionInfo.collectionHeaders(splunkConnectorDTO))
         .commonOptions(dataCollectionInfo.collectionParams(splunkConnectorDTO))
-        .otherEnvVariables(dataCollectionInfo.getDslEnvVariables())
+        .otherEnvVariables(dataCollectionInfo.getDslEnvVariables(SplunkConnectorDTO.builder().build()))
         .endTime(instant)
         .startTime(instant.minus(Duration.ofMinutes(1)))
         .build();

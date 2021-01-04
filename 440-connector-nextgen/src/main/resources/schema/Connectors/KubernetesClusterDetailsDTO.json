@@ -1,0 +1,23 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/KubernetesCredentialSpecDTO"
+    },
+    {
+      "type": "object",
+      "required": [
+        "auth",
+        "masterUrl"
+      ],
+      "properties": {
+        "auth": {
+          "$ref": "#/definitions/KubernetesAuthDTO"
+        },
+        "masterUrl": {
+          "type": "string"
+        }
+      }
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

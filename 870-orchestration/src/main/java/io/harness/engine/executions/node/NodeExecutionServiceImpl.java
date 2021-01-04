@@ -1,29 +1,25 @@
 package io.harness.engine.executions.node;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.pms.execution.Status.DISCONTINUING;
+import static io.harness.pms.contracts.execution.Status.DISCONTINUING;
 import static io.harness.springdata.SpringDataMongoUtils.returnNewOptions;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
-import io.harness.StatusUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
-import io.harness.execution.events.OrchestrationEvent;
-import io.harness.execution.events.OrchestrationEventType;
+import io.harness.execution.NodeExecutionMapper;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.InterruptEffect;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.execution.Status;
-import io.harness.pms.sdk.core.steps.Step;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.pms.serializer.json.JsonOrchestrationUtils;
-import io.harness.registries.state.StepRegistry;
+import io.harness.pms.contracts.execution.NodeExecutionProto;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.execution.utils.StatusUtils;
+import io.harness.pms.sdk.core.events.OrchestrationEvent;
 
 import com.google.inject.Inject;
 import com.mongodb.client.result.UpdateResult;
@@ -33,7 +29,6 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.Document;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -45,7 +40,6 @@ import org.springframework.data.mongodb.core.query.Update;
 public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Inject private MongoTemplate mongoTemplate;
   @Inject private OrchestrationEventEmitter eventEmitter;
-  @Inject private StepRegistry stepRegistry;
 
   @Override
   public NodeExecution get(String nodeExecutionId) {
@@ -137,7 +131,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
           "Node Execution Cannot be updated with provided operations" + nodeExecutionId);
     }
 
-    emitEvent(updated.getAmbiance());
+    emitEvent(updated);
     return updated;
   }
 
@@ -153,6 +147,11 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Override
   public NodeExecution save(NodeExecution nodeExecution) {
     return nodeExecution.getVersion() == null ? mongoTemplate.insert(nodeExecution) : mongoTemplate.save(nodeExecution);
+  }
+
+  @Override
+  public NodeExecution save(NodeExecutionProto nodeExecution) {
+    return save(NodeExecutionMapper.fromNodeExecutionProto(nodeExecution));
   }
 
   /**
@@ -180,7 +179,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     if (updated == null) {
       log.warn("Cannot update execution status for the node {} with {}", nodeExecutionId, status);
     } else {
-      emitEvent(updated.getAmbiance());
+      emitEvent(updated);
     }
     return updated;
   }
@@ -243,30 +242,10 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     return true;
   }
 
-  @Override
-  public StepParameters extractStepParameters(NodeExecution nodeExecution) {
-    Document document = isEmpty(nodeExecution.getNode().getStepParameters())
-        ? null
-        : Document.parse(nodeExecution.getNode().getStepParameters());
-    return extractStepParametersInternal(nodeExecution, document);
-  }
-
-  @Override
-  public StepParameters extractResolvedStepParameters(NodeExecution nodeExecution) {
-    return extractStepParametersInternal(nodeExecution, nodeExecution.getResolvedStepParameters());
-  }
-
-  private StepParameters extractStepParametersInternal(NodeExecution nodeExecution, Document stepParameters) {
-    Step step = stepRegistry.obtain(nodeExecution.getNode().getStepType());
-    if (stepParameters == null) {
-      return null;
-    }
-    return (StepParameters) JsonOrchestrationUtils.asObject(stepParameters.toJson(), step.getStepParametersClass());
-  }
-
-  private void emitEvent(Ambiance ambiance) {
+  private void emitEvent(NodeExecution nodeExecution) {
     eventEmitter.emitEvent(OrchestrationEvent.builder()
-                               .ambiance(ambiance)
+                               .ambiance(nodeExecution.getAmbiance())
+                               .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
                                .eventType(OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE)
                                .build());
   }

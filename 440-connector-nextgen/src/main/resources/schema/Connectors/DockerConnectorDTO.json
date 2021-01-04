@@ -1,0 +1,32 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/ConnectorConfigDTO"
+    },
+    {
+      "type": "object",
+      "required": [
+        "dockerRegistryUrl",
+        "providerType"
+      ],
+      "properties": {
+        "auth": {
+          "$ref": "#/definitions/DockerAuthenticationDTO"
+        },
+        "dockerRegistryUrl": {
+          "type": "string"
+        },
+        "providerType": {
+          "type": "string",
+          "enum": [
+            "DockerHub",
+            "Harbor",
+            "Quay",
+            "Other"
+          ]
+        }
+      }
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

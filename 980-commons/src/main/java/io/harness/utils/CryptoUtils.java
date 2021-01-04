@@ -4,7 +4,7 @@ import java.security.SecureRandom;
 import java.util.Random;
 
 /**
- * The current implementation is taken from 71-rest
+ * The current implementation is taken from 400-rest
  */
 /* http://stackoverflow.com/a/19597101 */
 public class CryptoUtils {

@@ -7,11 +7,11 @@ import static java.util.Arrays.asList;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.NodeExecutionsCache;
-import io.harness.engine.outcomes.OutcomeService;
-import io.harness.engine.outputs.ExecutionSweepingOutputService;
+import io.harness.engine.pms.data.PmsOutcomeService;
+import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.execution.NodeExecution;
 import io.harness.expression.LateBindingValue;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 
 import java.util.HashMap;
 import java.util.List;
@@ -30,8 +30,8 @@ import lombok.Value;
 @Builder
 public class NodeExecutionValue implements LateBindingValue {
   NodeExecutionsCache nodeExecutionsCache;
-  OutcomeService outcomeService;
-  ExecutionSweepingOutputService executionSweepingOutputService;
+  PmsOutcomeService pmsOutcomeService;
+  PmsSweepingOutputService pmsSweepingOutputService;
   Ambiance ambiance;
   NodeExecution startNodeExecution;
   Set<NodeExecutionEntityType> entityTypes;
@@ -42,8 +42,8 @@ public class NodeExecutionValue implements LateBindingValue {
     addChildren(map, startNodeExecution == null ? null : startNodeExecution.getUuid());
     return NodeExecutionMap.builder()
         .nodeExecutionsCache(nodeExecutionsCache)
-        .outcomeService(outcomeService)
-        .executionSweepingOutputService(executionSweepingOutputService)
+        .pmsOutcomeService(pmsOutcomeService)
+        .pmsSweepingOutputService(pmsSweepingOutputService)
         .ambiance(ambiance)
         .nodeExecution(startNodeExecution)
         .entityTypes(entityTypes)
@@ -72,8 +72,8 @@ public class NodeExecutionValue implements LateBindingValue {
     String key = nodeExecution.getNode().getIdentifier();
     NodeExecutionValue childValue = NodeExecutionValue.builder()
                                         .nodeExecutionsCache(nodeExecutionsCache)
-                                        .outcomeService(outcomeService)
-                                        .executionSweepingOutputService(executionSweepingOutputService)
+                                        .pmsOutcomeService(pmsOutcomeService)
+                                        .pmsSweepingOutputService(pmsSweepingOutputService)
                                         .ambiance(ambiance)
                                         .startNodeExecution(nodeExecution)
                                         .entityTypes(entityTypes)

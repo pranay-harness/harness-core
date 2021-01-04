@@ -1,7 +1,7 @@
 package io.harness.serializer.morphia.converters;
 
 import io.harness.persistence.converters.ProtoMessageConverter;
-import io.harness.pms.execution.ExecutableResponse;
+import io.harness.pms.contracts.execution.ExecutableResponse;
 
 import com.google.inject.Singleton;
 

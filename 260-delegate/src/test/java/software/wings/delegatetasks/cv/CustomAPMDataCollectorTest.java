@@ -12,6 +12,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -45,6 +47,7 @@ import org.mockito.MockitoAnnotations;
 import retrofit2.Call;
 import retrofit2.Response;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class CustomAPMDataCollectorTest extends WingsBaseTest {
   @Mock EncryptionService mockEncryptionService;
   @Mock DataCollectionExecutionContext dataCollectionExecutionContext;

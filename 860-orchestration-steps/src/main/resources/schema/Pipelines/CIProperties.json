@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "properties": {
+    "codebase": {
+      "$ref": "#/definitions/CodeBase"
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

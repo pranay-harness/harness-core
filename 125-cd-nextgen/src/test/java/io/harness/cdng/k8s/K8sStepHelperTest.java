@@ -9,13 +9,19 @@ import static org.mockito.Mockito.doReturn;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
+import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
+import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.rule.Owner;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.Rule;
@@ -28,6 +34,7 @@ import org.mockito.junit.MockitoRule;
 
 public class K8sStepHelperTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
+
   @Mock private ConnectorService connectorService;
   @InjectMocks private K8sStepHelper k8sStepHelper;
 
@@ -90,5 +97,44 @@ public class K8sStepHelperTest extends CategoryTest {
     setupAbstractions.put(SetupAbstractionKeys.projectIdentifier, "project1");
 
     return Ambiance.newBuilder().putAllSetupAbstractions(setupAbstractions).build();
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void testGetK8sManifestsOutcome() {
+    assertThatThrownBy(() -> k8sStepHelper.getK8sManifestOutcome(Collections.emptyList()))
+        .hasMessageContaining("K8s Manifests are mandatory for k8s Rolling step");
+
+    K8sManifestOutcome k8sManifestOutcome = K8sManifestOutcome.builder().build();
+    ValuesManifestOutcome valuesManifestOutcome = ValuesManifestOutcome.builder().build();
+    List<ManifestOutcome> serviceManifestOutcomes = new ArrayList<>();
+    serviceManifestOutcomes.add(k8sManifestOutcome);
+    serviceManifestOutcomes.add(valuesManifestOutcome);
+
+    K8sManifestOutcome actualK8sManifest = k8sStepHelper.getK8sManifestOutcome(serviceManifestOutcomes);
+    assertThat(actualK8sManifest).isEqualTo(k8sManifestOutcome);
+
+    K8sManifestOutcome anotherK8sManifest = K8sManifestOutcome.builder().build();
+    serviceManifestOutcomes.add(anotherK8sManifest);
+
+    assertThatThrownBy(() -> k8sStepHelper.getK8sManifestOutcome(serviceManifestOutcomes))
+        .hasMessageContaining("There can be only a single K8s manifest");
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void testGetAggregatedValuesManifests() {
+    K8sManifestOutcome k8sManifestOutcome = K8sManifestOutcome.builder().build();
+    ValuesManifestOutcome valuesManifestOutcome = ValuesManifestOutcome.builder().build();
+    List<ManifestOutcome> serviceManifestOutcomes = new ArrayList<>();
+    serviceManifestOutcomes.add(k8sManifestOutcome);
+    serviceManifestOutcomes.add(valuesManifestOutcome);
+
+    List<ValuesManifestOutcome> aggregatedValuesManifests =
+        k8sStepHelper.getAggregatedValuesManifests(serviceManifestOutcomes);
+    assertThat(aggregatedValuesManifests).hasSize(1);
+    assertThat(aggregatedValuesManifests.get(0)).isEqualTo(valuesManifestOutcome);
   }
 }

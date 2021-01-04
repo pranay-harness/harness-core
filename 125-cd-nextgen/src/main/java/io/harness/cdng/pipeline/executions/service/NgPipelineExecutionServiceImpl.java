@@ -2,11 +2,11 @@ package io.harness.cdng.pipeline.executions.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
 
-import io.harness.beans.EmbeddedUser;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.executions.PipelineExecutionHelper;
@@ -25,12 +25,8 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.interrupts.Interrupt;
-import io.harness.ngpipeline.executions.beans.ExecutionGraph;
 import io.harness.ngpipeline.executions.mapper.ExecutionGraphMapper;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
-import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
-import io.harness.ngpipeline.pipeline.executions.TriggerType;
-import io.harness.ngpipeline.pipeline.executions.beans.ExecutionTriggerInfo;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionInterruptType;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary.PipelineExecutionSummaryKeys;
@@ -38,6 +34,10 @@ import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummaryF
 import io.harness.ngpipeline.pipeline.executions.beans.ServiceExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.dto.PipelineExecutionInterruptDTO;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
+import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
+import io.harness.pms.contracts.plan.TriggeredBy;
+import io.harness.pms.execution.ExecutionStatus;
+import io.harness.pms.execution.beans.ExecutionGraph;
 import io.harness.repositories.pipeline.PipelineExecutionRepository;
 import io.harness.service.GraphGenerationService;
 import io.harness.steps.StepOutcomeGroup;
@@ -49,7 +49,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import lombok.NonNull;
@@ -59,8 +58,11 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 @Singleton
 public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionService {
-  private static final EmbeddedUser EMBEDDED_USER =
-      EmbeddedUser.builder().uuid("lv0euRhKRCyiXWzS7pOg6g").email("admin@harness.io").name("Admin").build();
+  private static final TriggeredBy EMBEDDED_USER = TriggeredBy.newBuilder()
+                                                       .setUuid("lv0euRhKRCyiXWzS7pOg6g")
+                                                       .putExtraInfo("email", "admin@harness.io")
+                                                       .setIdentifier("Admin")
+                                                       .build();
 
   @Inject private PipelineExecutionRepository pipelineExecutionRepository;
   @Inject private NodeExecutionService nodeExecutionService;
@@ -148,8 +150,7 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
             .pipelineName(ngPipeline.getName())
             .pipelineIdentifier(ngPipeline.getIdentifier())
             .executionStatus(ExecutionStatus.RUNNING)
-            .triggerInfo(
-                ExecutionTriggerInfo.builder().triggerType(TriggerType.MANUAL).triggeredBy(EMBEDDED_USER).build())
+            .triggerInfo(ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).setTriggeredBy(EMBEDDED_USER).build())
             .planExecutionId(planExecution.getUuid())
             .startedAt(planExecution.getStartTs())
             .inputSetYaml(inputSetYaml)
@@ -164,17 +165,18 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
     PipelineExecutionDetailBuilder pipelineExecutionDetailBuilder = PipelineExecutionDetail.builder();
 
     if (isNotEmpty(stageIdentifier)) {
-      Optional<NodeExecution> stageNode = nodeExecutionService.getByNodeIdentifier(stageIdentifier, planExecutionId);
-      if (!stageNode.isPresent()) {
-        throw new InvalidRequestException(
-            format("No Graph node found corresponding to identifier: [%s], planExecutionId: [%s]", stageIdentifier,
-                planExecutionId));
-      }
       OrchestrationGraphDTO orchestrationGraph =
-          graphGenerationService.generatePartialOrchestrationGraphFromSetupNodeId(
-              stageNode.get().getNode().getUuid(), planExecutionId);
+          graphGenerationService.generatePartialOrchestrationGraphFromIdentifier(stageIdentifier, planExecutionId);
       @NonNull ExecutionGraph executionGraph = ExecutionGraphMapper.toExecutionGraph(orchestrationGraph);
       pipelineExecutionDetailBuilder.stageGraph(executionGraph);
+
+      if (ExecutionStatus.BROKE_STATUSES.contains(orchestrationGraph.getStatus())) {
+        OrchestrationGraphDTO rollbackOrchestrationGraph =
+            graphGenerationService.generatePartialOrchestrationGraphFromIdentifier(
+                stageIdentifier + "Rollback", planExecutionId);
+        ExecutionGraph rollbackExecutionGraph = ExecutionGraphMapper.toExecutionGraph(rollbackOrchestrationGraph);
+        pipelineExecutionDetailBuilder.stageRollbackGraph(rollbackExecutionGraph);
+      }
     }
 
     return pipelineExecutionDetailBuilder

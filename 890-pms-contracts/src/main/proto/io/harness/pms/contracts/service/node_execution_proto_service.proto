@@ -1,0 +1,100 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.plan;
+
+option java_multiple_files = true;
+
+import "io/harness/pms/contracts/execution/failure/failure_info.proto";
+import "io/harness/pms/contracts/execution/tasks/task_request.proto";
+import "io/harness/pms/contracts/execution/executable_response.proto";
+import "io/harness/pms/contracts/execution/node_execution_proto.proto";
+import "io/harness/pms/contracts/execution/status.proto";
+import "io/harness/pms/contracts/steps/io/step_response_proto.proto";
+import "io/harness/pms/contracts/facilitators/facilitators.proto";
+import "io/harness/pms/contracts/advisers/advise.proto";
+import "io/harness/pms/contracts/service/node_execution_event.proto";
+
+service NodeExecutionProtoService {
+  rpc queueNodeExecution(QueueNodeExecutionRequest) returns (QueueNodeExecutionResponse);
+  rpc queueTask(QueueTaskRequest) returns (QueueTaskResponse);
+  rpc addExecutableResponse(AddExecutableResponseRequest) returns (AddExecutableResponseResponse);
+  rpc handleStepResponse(HandleStepResponseRequest) returns (HandleStepResponseResponse);
+  rpc resumeNodeExecution(ResumeNodeExecutionRequest) returns (ResumeNodeExecutionResponse);
+  rpc accumulateResponses(AccumulateResponsesRequest) returns (AccumulateResponsesResponse);
+  rpc handleFacilitatorResponse(FacilitatorResponseRequest) returns (FacilitatorResponseResponse);
+  rpc handleAdviserResponse(AdviserResponseRequest) returns (AdviserResponseResponse);
+  rpc handleEventError(EventErrorRequest) returns (EventErrorResponse);
+}
+
+message QueueNodeExecutionRequest {
+  execution.NodeExecutionProto nodeExecution = 1;
+}
+
+message QueueNodeExecutionResponse {}
+
+message QueueTaskRequest {
+  string nodeExecutionId = 1;
+  map<string, string> setupAbstractions = 3;
+  io.harness.pms.contracts.execution.tasks.TaskRequest taskRequest = 4;
+}
+
+message QueueTaskResponse {
+  string taskId = 1;
+}
+
+message AddExecutableResponseRequest {
+  string nodeExecutionId = 1;
+  execution.Status status = 2;
+  execution.ExecutableResponse executableResponse = 3;
+  repeated string callbackIds = 4;
+}
+
+message AddExecutableResponseResponse {}
+
+message HandleStepResponseRequest {
+  string nodeExecutionId = 1;
+  steps.io.StepResponseProto stepResponse = 2;
+}
+
+message HandleStepResponseResponse {}
+
+message ResumeNodeExecutionRequest {
+  string nodeExecutionId = 1;
+  map<string, bytes> response = 2;
+  bool asyncError = 3;
+}
+
+message ResumeNodeExecutionResponse {}
+
+message AccumulateResponsesRequest {
+  string planExecutionId = 1;
+  string notifyId = 2;
+}
+
+message AccumulateResponsesResponse {
+  map<string, bytes> response = 1;
+}
+
+message FacilitatorResponseRequest {
+  string nodeExecutionId = 1;
+  string notifyId = 2;
+  io.harness.pms.contracts.facilitators.FacilitatorResponseProto facilitatorResponse = 3;
+}
+
+message FacilitatorResponseResponse {}
+
+message AdviserResponseRequest {
+  string nodeExecutionId = 1;
+  string notifyId = 2;
+  io.harness.pms.contracts.advisers.AdviserResponse adviserResponse = 3;
+}
+
+message AdviserResponseResponse {}
+
+message EventErrorRequest {
+  NodeExecutionEventType eventType = 1;
+  string eventNotifyId = 2;
+  execution.failure.FailureInfo failureInfo = 3;
+}
+
+message EventErrorResponse {}

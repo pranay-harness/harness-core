@@ -7,11 +7,7 @@ import lombok.Data;
 
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXTERNAL_PROPERTY, property = "type", visible = true)
-@JsonSubTypes(value =
-    {
-      @JsonSubTypes.Type(value = MongoBackendConfiguration.class, name = "MONGO")
-      , @JsonSubTypes.Type(value = KafkaBackendConfiguration.class, name = "KAFKA")
-    })
+@JsonSubTypes(value = { @JsonSubTypes.Type(value = MongoBackendConfiguration.class, name = "MONGO") })
 @Data
 public abstract class NotificationClientBackendConfiguration {
   @JsonProperty("type") String type;

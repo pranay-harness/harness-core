@@ -1,5 +1,6 @@
 package io.harness.cvng.activity.services.impl;
 
+import static io.harness.cvng.activity.CVActivityConstants.HEALTH_VERIFICATION_RETRIGGER_BUFFER_MINS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -15,31 +16,42 @@ import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentVeri
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
+import io.harness.cvng.activity.entities.ActivitySource;
+import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceKeys;
 import io.harness.cvng.activity.entities.CustomActivity;
 import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.entities.DeploymentActivity.DeploymentActivityKeys;
+import io.harness.cvng.activity.entities.InfrastructureActivity;
 import io.harness.cvng.activity.entities.KubernetesActivity;
+import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
-import io.harness.cvng.beans.ActivityDTO;
-import io.harness.cvng.beans.ActivityType;
+import io.harness.cvng.beans.activity.ActivityDTO;
+import io.harness.cvng.beans.activity.ActivitySourceDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
+import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
+import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.cvng.client.NextGenService;
+import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
+import io.harness.cvng.verificationjob.beans.VerificationJobType;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ExecutionStatus;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
+import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.HQuery;
+import io.harness.utils.PageUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,6 +69,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
 public class ActivityServiceImpl implements ActivityService {
@@ -68,6 +81,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private NextGenService nextGenService;
   @Inject private HealthVerificationHeatMapService healthVerificationHeatMapService;
   @Inject private CVConfigService cvConfigService;
+  @Inject private VerificationManagerService verificationManagerService;
 
   @Override
   public Activity get(String activityId) {
@@ -95,7 +109,7 @@ public class ActivityServiceImpl implements ActivityService {
     Preconditions.checkNotNull(activityDTO);
     Activity activity = getActivityFromDTO(activityDTO);
     activity.validate();
-    activity.setVerificationJobInstanceIds(createVerificationJobInstances(activity));
+    activity.setVerificationJobInstanceIds(createVerificationJobInstancesForActivity(activity));
     hPersistence.save(activity);
     log.info("Registered  an activity of type {} for account {}, project {}, org {}", activity.getType(), accountId,
         activity.getProjectIdentifier(), activity.getOrgIdentifier());
@@ -256,10 +270,9 @@ public class ActivityServiceImpl implements ActivityService {
     List<DeploymentActivity> deploymentActivities =
         (List<DeploymentActivity>) (List<?>) hPersistence
             .createQuery(Activity.class, Collections.singleton(HQuery.QueryChecks.COUNT))
-            .filter(ActivityKeys.accountIdentifier, accountId)
+            .filter(ActivityKeys.accountId, accountId)
             .filter(ActivityKeys.orgIdentifier, orgIdentifier)
             .filter(ActivityKeys.projectIdentifier, projectIdentifier)
-            .filter(ActivityKeys.orgIdentifier, orgIdentifier)
             .filter(ActivityKeys.serviceIdentifier, serviceIdentifier)
             .filter(ActivityKeys.type, ActivityType.DEPLOYMENT)
             .filter(DeploymentActivityKeys.deploymentTag, deploymentTag)
@@ -273,7 +286,7 @@ public class ActivityServiceImpl implements ActivityService {
       String accountId, String orgIdentifier, String projectIdentifier) {
     List<DeploymentActivity> activities =
         (List<DeploymentActivity>) (List<?>) hPersistence.createQuery(Activity.class, excludeAuthority)
-            .filter(ActivityKeys.accountIdentifier, accountId)
+            .filter(ActivityKeys.accountId, accountId)
             .filter(ActivityKeys.orgIdentifier, orgIdentifier)
             .filter(ActivityKeys.projectIdentifier, projectIdentifier)
             .filter(ActivityKeys.type, ActivityType.DEPLOYMENT)
@@ -305,7 +318,7 @@ public class ActivityServiceImpl implements ActivityService {
   public String getDeploymentTagFromActivity(String accountId, String verificationJobInstanceId) {
     DeploymentActivity deploymentActivity =
         (DeploymentActivity) hPersistence.createQuery(Activity.class, excludeAuthority)
-            .filter(ActivityKeys.accountIdentifier, accountId)
+            .filter(ActivityKeys.accountId, accountId)
             .filter(ActivityKeys.type, ActivityType.DEPLOYMENT)
             .field(ActivityKeys.verificationJobInstanceIds)
             .hasThisOne(verificationJobInstanceId)
@@ -318,9 +331,10 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   @Override
-  public List<ActivityDashboardDTO> listActivitiesInTimeRange(String orgIdentifier, String projectIdentifier,
-      String environmentIdentifier, Instant startTime, Instant endTime) {
+  public List<ActivityDashboardDTO> listActivitiesInTimeRange(String accountId, String orgIdentifier,
+      String projectIdentifier, String environmentIdentifier, Instant startTime, Instant endTime) {
     Query<Activity> activityQuery = hPersistence.createQuery(Activity.class, excludeAuthority)
+                                        .filter(ActivityKeys.accountId, accountId)
                                         .filter(ActivityKeys.orgIdentifier, orgIdentifier)
                                         .filter(ActivityKeys.projectIdentifier, projectIdentifier)
                                         .field(ActivityKeys.activityStartTime)
@@ -340,7 +354,7 @@ public class ActivityServiceImpl implements ActivityService {
             verificationJobInstanceService.get(activity.getVerificationJobInstanceIds()));
 
         activityDashboardDTOList.add(ActivityDashboardDTO.builder()
-                                         .activityType(activity.getType())
+                                         .activityType(getActivityType(activity))
                                          .activityId(activity.getUuid())
                                          .activityName(activity.getActivityName())
                                          .environmentIdentifier(activity.getEnvironmentIdentifier())
@@ -353,6 +367,16 @@ public class ActivityServiceImpl implements ActivityService {
       });
     }
     return activityDashboardDTOList;
+  }
+
+  private ActivityType getActivityType(Activity activity) {
+    switch (activity.getType()) {
+      case KUBERNETES:
+        KubernetesActivity kubernetesActivity = (KubernetesActivity) activity;
+        return kubernetesActivity.getKubernetesActivityType();
+      default:
+        return activity.getType();
+    }
   }
 
   @Override
@@ -373,8 +397,12 @@ public class ActivityServiceImpl implements ActivityService {
           healthVerificationHeatMapService.getAggregatedRisk(activity.getUuid(), HealthVerificationPeriod.PRE_ACTIVITY);
       Set<CategoryRisk> postActivityRisks = healthVerificationHeatMapService.getAggregatedRisk(
           activity.getUuid(), HealthVerificationPeriod.POST_ACTIVITY);
+      List<Double> postActivityValidRisks = new ArrayList<>();
+      postActivityRisks.stream()
+          .filter(risk -> risk.getRisk() != -1.0)
+          .forEach(categoryRisk -> postActivityValidRisks.add(categoryRisk.getRisk()));
 
-      Double overallRisk = summary.getRiskScore() == null ? -1 : 100 * summary.getRiskScore();
+      Double overallRisk = postActivityValidRisks.size() == 0 ? -1.0 : Collections.max(postActivityValidRisks);
       return ActivityVerificationResultDTO.builder()
           .preActivityRisks(preActivityRisks)
           .postActivityRisks(postActivityRisks)
@@ -396,17 +424,20 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public List<ActivityVerificationResultDTO> getRecentActivityVerificationResults(
-      String orgIdentifier, String projectIdentifier, int limitCounter) {
+      String accountId, String orgIdentifier, String projectIdentifier, int limitCounter) {
     if (limitCounter == 0) {
       limitCounter = RECENT_DEPLOYMENT_ACTIVITIES_RESULT_SIZE;
     }
 
     List<Activity> activities = hPersistence.createQuery(Activity.class, excludeAuthority)
+                                    .filter(ActivityKeys.accountId, accountId)
                                     .filter(ActivityKeys.orgIdentifier, orgIdentifier)
                                     .filter(ActivityKeys.projectIdentifier, projectIdentifier)
                                     .field(ActivityKeys.type)
                                     .notIn(Arrays.asList(ActivityType.DEPLOYMENT))
                                     .order(Sort.descending(ActivityKeys.activityStartTime))
+                                    .field(ActivityKeys.verificationJobInstanceIds)
+                                    .exists()
                                     .asList(new FindOptions().limit(limitCounter));
 
     if (isEmpty(activities)) {
@@ -426,7 +457,7 @@ public class ActivityServiceImpl implements ActivityService {
 
   private String getServiceNameFromActivity(Activity activity) {
     return nextGenService
-        .getService(activity.getServiceIdentifier(), activity.getAccountIdentifier(), activity.getOrgIdentifier(),
+        .getService(activity.getServiceIdentifier(), activity.getAccountId(), activity.getOrgIdentifier(),
             activity.getProjectIdentifier())
         .getName();
   }
@@ -445,19 +476,46 @@ public class ActivityServiceImpl implements ActivityService {
     }
   }
 
-  private List<String> createVerificationJobInstances(Activity activity) {
+  public List<String> createVerificationJobInstancesForActivity(Activity activity) {
     List<VerificationJobInstance> jobInstancesToCreate = new ArrayList<>();
-    activity.getVerificationJobRuntimeDetails().forEach(jobDetail -> {
-      String jobIdentifier = jobDetail.getVerificationJobIdentifier();
-      Preconditions.checkNotNull(jobIdentifier, "Job Identifier must be present in the jobs to trigger");
-      VerificationJob verificationJob =
-          verificationJobService.getVerificationJob(activity.getAccountIdentifier(), jobIdentifier);
-      Preconditions.checkNotNull(verificationJob, "No Job exists for verificationJobIdentifier: '%s'", jobIdentifier);
+    List<VerificationJob> verificationJobs = new ArrayList<>();
+    Map<String, Map<String, String>> runtimeDetailsMap = new HashMap<>();
+    if (isEmpty(activity.getVerificationJobRuntimeDetails())) {
+      // check to see if any other jobs are currently running
+      List<VerificationJobInstance> runningInstances = verificationJobInstanceService.getRunningOrQueuedJobInstances(
+          activity.getAccountId(), activity.getOrgIdentifier(), activity.getProjectIdentifier(),
+          activity.getEnvironmentIdentifier(), activity.getServiceIdentifier(), VerificationJobType.HEALTH,
+          activity.getActivityStartTime().plus(Duration.ofMinutes(HEALTH_VERIFICATION_RETRIGGER_BUFFER_MINS)));
+      if (isNotEmpty(runningInstances)) {
+        log.info(
+            "There are verification jobs that are already running for {}, {}, {}. So we will not trigger a new one",
+            activity.getProjectIdentifier(), activity.getEnvironmentIdentifier(), activity.getServiceIdentifier());
+        return null;
+      }
+      verificationJobs.addAll(
+          verificationJobService.getHealthVerificationJobs(activity.getAccountId(), activity.getOrgIdentifier(),
+              activity.getProjectIdentifier(), activity.getEnvironmentIdentifier(), activity.getServiceIdentifier()));
+    } else {
+      activity.getVerificationJobRuntimeDetails().forEach(jobDetail -> {
+        String jobIdentifier = jobDetail.getVerificationJobIdentifier();
+        Preconditions.checkNotNull(jobIdentifier, "Job Identifier must be present in the jobs to trigger");
+        VerificationJob verificationJob =
+            verificationJobService.getVerificationJob(activity.getAccountId(), jobIdentifier);
+        Preconditions.checkNotNull(verificationJob, "No Job exists for verificationJobIdentifier: '%s'", jobIdentifier);
+        verificationJobs.add(verificationJob);
+        if (isNotEmpty(jobDetail.getRuntimeValues())) {
+          runtimeDetailsMap.put(verificationJob.getIdentifier(), jobDetail.getRuntimeValues());
+        }
+      });
+    }
 
-      VerificationJobInstance verificationJobInstance = fillOutCommonJobInstanceProperties(activity,
-          verificationJob.resolveVerificationJob(jobDetail.getRuntimeValues())
-              .resolveAdditionsFields(verificationJobInstanceService));
-      validateJob(activity, verificationJob);
+    verificationJobs.forEach(verificationJob -> {
+      if (runtimeDetailsMap.containsKey(verificationJob.getIdentifier())) {
+        verificationJob.resolveVerificationJob(runtimeDetailsMap.get(verificationJob.getIdentifier()));
+      }
+      VerificationJobInstance verificationJobInstance = fillOutCommonJobInstanceProperties(
+          activity, verificationJob.resolveAdditionsFields(verificationJobInstanceService));
+      validateJob(verificationJob);
       activity.fillInVerificationJobInstanceDetails(verificationJobInstance);
 
       jobInstancesToCreate.add(verificationJobInstance);
@@ -465,25 +523,18 @@ public class ActivityServiceImpl implements ActivityService {
     return verificationJobInstanceService.create(jobInstancesToCreate);
   }
 
-  private void validateJob(Activity activity, VerificationJob verificationJob) {
-    List<CVConfig> cvConfigs = cvConfigService.list(activity.getAccountIdentifier(), activity.getOrgIdentifier(),
-        activity.getProjectIdentifier(), activity.getEnvironmentIdentifier(), activity.getServiceIdentifier(), null);
-    Preconditions.checkState(isNotEmpty(cvConfigs), "No data sources defined for environment %s and service %s",
-        activity.getEnvironmentIdentifier(), activity.getServiceIdentifier());
-    List<CVConfig> dataSources =
-        cvConfigs.stream()
-            .filter(cvConfig -> new HashSet<>(verificationJob.getDataSources()).contains(cvConfig.getType()))
-            .collect(Collectors.toList());
-    Preconditions.checkState(isNotEmpty(dataSources),
+  private void validateJob(VerificationJob verificationJob) {
+    List<CVConfig> cvConfigs = verificationJobInstanceService.getCVConfigsForVerificationJob(verificationJob);
+    Preconditions.checkState(isNotEmpty(cvConfigs),
         "No data sources of type(s) %s defined for environment %s and service %s", verificationJob.getDataSources(),
-        activity.getEnvironmentIdentifier(), activity.getServiceIdentifier());
+        verificationJob.getEnvIdentifier(), verificationJob.getServiceIdentifier());
   }
 
   private VerificationJobInstance fillOutCommonJobInstanceProperties(
       Activity activity, VerificationJob verificationJob) {
     return VerificationJobInstance.builder()
         .verificationJobIdentifier(verificationJob.getIdentifier())
-        .accountId(activity.getAccountIdentifier())
+        .accountId(activity.getAccountId())
         .executionStatus(ExecutionStatus.QUEUED)
         .deploymentStartTime(activity.getActivityStartTime())
         .resolvedJob(verificationJob)
@@ -497,16 +548,106 @@ public class ActivityServiceImpl implements ActivityService {
         activity = DeploymentActivity.builder().build();
         break;
       case INFRASTRUCTURE:
-        activity = KubernetesActivity.builder().build();
+        activity = InfrastructureActivity.builder().build();
         break;
       case CUSTOM:
         activity = CustomActivity.builder().build();
         break;
+      case KUBERNETES:
+        throw new IllegalStateException("KUBERNETES events are handled by its own service");
       default:
         throw new IllegalStateException("Invalid type " + activityDTO.getType());
     }
 
     activity.fromDTO(activityDTO);
     return activity;
+  }
+
+  @Override
+  public String saveActivitySource(
+      String accountId, String orgIdentifier, String projectIdentifier, ActivitySourceDTO activitySourceDTO) {
+    if (isNotEmpty(activitySourceDTO.getUuid())) {
+      update(activitySourceDTO);
+    }
+
+    ActivitySource activitySource;
+    switch (activitySourceDTO.getType()) {
+      case KUBERNETES:
+        activitySource = KubernetesActivitySource.fromDTO(
+            accountId, orgIdentifier, projectIdentifier, (KubernetesActivitySourceDTO) activitySourceDTO);
+        break;
+      default:
+        throw new IllegalStateException("Invalid type " + activitySourceDTO.getType());
+    }
+    return hPersistence.save(activitySource);
+  }
+
+  private void update(ActivitySourceDTO activitySourceDTO) {
+    KubernetesActivitySource kubernetesActivitySource =
+        hPersistence.get(KubernetesActivitySource.class, activitySourceDTO.getUuid());
+    if (isNotEmpty(kubernetesActivitySource.getDataCollectionTaskId())) {
+      verificationManagerService.deletePerpetualTask(
+          kubernetesActivitySource.getAccountId(), kubernetesActivitySource.getDataCollectionTaskId());
+    }
+    UpdateOperations<ActivitySource> updateOperations = hPersistence.createUpdateOperations(ActivitySource.class)
+                                                            .set(ActivitySourceKeys.name, activitySourceDTO.getName())
+
+                                                            .unset(ActivitySourceKeys.dataCollectionTaskId);
+
+    switch (activitySourceDTO.getType()) {
+      case KUBERNETES:
+        KubernetesActivitySource.setUpdateOperations(updateOperations, (KubernetesActivitySourceDTO) activitySourceDTO);
+        break;
+      default:
+        throw new IllegalStateException("Invalid type " + activitySourceDTO.getType());
+    }
+    hPersistence.update(hPersistence.get(ActivitySource.class, activitySourceDTO.getUuid()), updateOperations);
+  }
+
+  @Override
+  public ActivitySource getActivitySource(String activitySourceId) {
+    return hPersistence.get(ActivitySource.class, activitySourceId);
+  }
+
+  @Override
+  public ActivitySourceDTO getActivitySource(
+      String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
+    ActivitySource activitySource = hPersistence.createQuery(KubernetesActivitySource.class, excludeAuthority)
+                                        .filter(ActivitySourceKeys.accountId, accountId)
+                                        .filter(ActivitySourceKeys.orgIdentifier, orgIdentifier)
+                                        .filter(ActivitySourceKeys.projectIdentifier, projectIdentifier)
+                                        .filter(ActivitySourceKeys.identifier, identifier)
+                                        .get();
+    if (activitySource == null) {
+      return null;
+    }
+    return activitySource.toDTO();
+  }
+
+  @Override
+  public PageResponse<ActivitySourceDTO> listActivitySources(
+      String accountId, String orgIdentifier, String projectIdentifier, int offset, int pageSize, String filter) {
+    List<ActivitySource> activitySources = hPersistence.createQuery(ActivitySource.class, excludeAuthority)
+                                               .filter(ActivitySourceKeys.accountId, accountId)
+                                               .filter(ActivitySourceKeys.orgIdentifier, orgIdentifier)
+                                               .filter(ActivitySourceKeys.projectIdentifier, projectIdentifier)
+                                               .asList();
+    List<ActivitySourceDTO> activitySourceDTOs =
+        activitySources.stream()
+            .filter(activitySource
+                -> isEmpty(filter) || activitySource.getName().toLowerCase().contains(filter.trim().toLowerCase()))
+            .map(activitySource -> activitySource.toDTO())
+            .collect(Collectors.toList());
+    return PageUtils.offsetAndLimit(activitySourceDTOs, offset, pageSize);
+  }
+
+  @Override
+  public boolean deleteActivitySource(
+      String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
+    return hPersistence.delete(hPersistence.createQuery(ActivitySource.class, excludeAuthority)
+                                   .filter(ActivitySourceKeys.accountId, accountId)
+                                   .filter(ActivitySourceKeys.orgIdentifier, orgIdentifier)
+                                   .filter(ActivitySourceKeys.projectIdentifier, projectIdentifier)
+                                   .filter(ActivitySourceKeys.identifier, identifier));
   }
 }

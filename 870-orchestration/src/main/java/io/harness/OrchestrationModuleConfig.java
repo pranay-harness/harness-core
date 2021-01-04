@@ -11,9 +11,12 @@ import lombok.Value;
 @Value
 @Builder
 public class OrchestrationModuleConfig {
+  @NonNull String serviceName;
   @NonNull ExpressionEvaluatorProvider expressionEvaluatorProvider;
   @Builder.Default int corePoolSize = 1;
   @Builder.Default int maxPoolSize = 5;
   @Builder.Default long idleTimeInSecs = 10;
   @Builder.Default String publisherName = ORCHESTRATION;
+  boolean withPMS;
+  boolean isPipelineService;
 }

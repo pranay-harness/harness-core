@@ -91,12 +91,16 @@ public class CustomDeploymentPerpetualTaskExecutor implements PerpetualTaskExecu
             .output(new String(Files.readAllBytes(Paths.get(outputPath)), StandardCharsets.UTF_8))
             .build();
       } else {
+        log.error("Error Occured While Running Custom Deployment Perpetual Task:{}, Message: {}", taskId,
+            commandExecutionResult.getErrorMessage());
         return ShellScriptProvisionExecutionData.builder()
             .executionStatus(ExecutionStatus.FAILED)
             .errorMsg(commandExecutionResult.getErrorMessage())
             .build();
       }
     } catch (Exception ex) {
+      log.error("Exception Occured While Running Custom Deployment Perpetual Task:{}, Message: {}", taskId,
+          ExceptionUtils.getMessage(ex));
       return ShellScriptProvisionExecutionData.builder()
           .executionStatus(ExecutionStatus.FAILED)
           .errorMsg(ExceptionUtils.getMessage(ex))

@@ -30,7 +30,7 @@ func TestExecuteSuccess(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	e := runTask{
 		id:                "step1",
-		commands:          []string{"ls"},
+		command:           "ls",
 		timeoutSecs:       5,
 		numRetries:        numRetries,
 		tmpFilePath:       "/tmp",
@@ -65,7 +65,7 @@ func TestExecuteNonZeroStatus(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	e := runTask{
 		id:                "step1",
-		commands:          []string{"ls"},
+		command:           "ls",
 		timeoutSecs:       5,
 		numRetries:        numRetries,
 		tmpFilePath:       "/tmp",
@@ -116,7 +116,7 @@ func TestExecuteSuccessWithOutput(t *testing.T) {
 	f1, err := os.Open(filePath)
 	e := runTask{
 		id:                "step1",
-		commands:          []string{"ls"},
+		command:           "ls",
 		timeoutSecs:       5,
 		numRetries:        numRetries,
 		envVarOutputs:     []string{"abc", "abc1"},
@@ -163,7 +163,7 @@ func TestExecuteErrorWithOutput(t *testing.T) {
 
 	e := runTask{
 		id:                "step1",
-		commands:          []string{"ls"},
+		command:           "ls",
 		timeoutSecs:       5,
 		numRetries:        numRetries,
 		envVarOutputs:     []string{"abc", "abc1"},
@@ -194,7 +194,7 @@ func TestRunTaskCreate(t *testing.T) {
 		Id: "test",
 		Step: &pb.UnitStep_Run{
 			Run: &pb.RunStep{
-				Commands: []string{"cd .", "ls"},
+				Command: "cd . ; ls",
 			},
 		},
 	}

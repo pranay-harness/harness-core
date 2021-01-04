@@ -5,11 +5,9 @@ import static io.harness.rule.OwnerRule.DEEPAK;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.GraphQLTest;
-import io.harness.beans.FeatureName;
 import io.harness.beans.SecretText;
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
-import io.harness.ff.FeatureFlagService;
 import io.harness.generator.AccountGenerator;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.OwnerManager;
@@ -33,7 +31,6 @@ public class CreateSSHCredentialTest extends GraphQLTest {
   @Inject private OwnerManager ownerManager;
   @Inject private SecretGenerator secretGenerator;
   @Inject private ApplicationGenerator applicationGenerator;
-  @Inject private FeatureFlagService featureFlagService;
   private String secretName = "tests";
   private String userName = "ubuntu";
   private int port = 5986;
@@ -45,7 +42,6 @@ public class CreateSSHCredentialTest extends GraphQLTest {
 
   @Before
   public void setup() {
-    featureFlagService.enableGlobally(FeatureName.CONNECTORS_REF_SECRETS);
     final OwnerManager.Owners owners = ownerManager.create();
     final Randomizer.Seed seed = new Randomizer.Seed(0);
     Account account = accountGenerator.ensurePredefined(seed, owners, AccountGenerator.Accounts.GENERIC_TEST);

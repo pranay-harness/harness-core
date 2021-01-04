@@ -19,12 +19,6 @@ public class KubernetesCredentialDTO {
   @JsonProperty("spec")
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = KubernetesClusterDetailsDTO.class, name = KubernetesConfigConstants.MANUAL_CREDENTIALS)
-    ,
-        @JsonSubTypes.Type(
-            value = KubernetesDelegateDetailsDTO.class, name = KubernetesConfigConstants.INHERIT_FROM_DELEGATE)
-  })
   @NotNull
   @Valid
   KubernetesCredentialSpecDTO config;

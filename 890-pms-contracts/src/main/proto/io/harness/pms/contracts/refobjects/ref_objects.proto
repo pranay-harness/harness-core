@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.refobjects;
+
+option java_multiple_files = true;
+
+message RefObject {
+  string name = 1;
+  string producerId = 2;
+  string key = 3;
+  RefType refType = 4;
+}
+
+message RefType {
+  string type = 1;
+}

@@ -19,7 +19,7 @@ pipeline:
                     identifier: sidecar1
                     type: Dockerhub
                     spec:
-                      imagePath: myPipeline1.stages.qa.spec.service.serviceDefinition.spec.artifacts.sidecar.spec.imagePath
+                      imagePath: myPipeline1.stages.qa.spec.service.serviceDefinition.spec.artifacts.sidecars.sidecar.spec.imagePath
         infrastructure:
           infrastructureDefinition:
             type: KubernetesDirect

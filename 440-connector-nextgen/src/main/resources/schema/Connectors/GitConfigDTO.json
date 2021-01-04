@@ -1,0 +1,74 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/ConnectorConfigDTO"
+    },
+    {
+      "type": "object",
+      "required": [
+        "connectionType",
+        "spec",
+        "type",
+        "url"
+      ],
+      "properties": {
+        "branchName": {
+          "type": "string"
+        },
+        "connectionType": {
+          "type": "string",
+          "enum": [
+            "Account",
+            "Repo"
+          ]
+        },
+        "gitSync": {
+          "$ref": "#/definitions/GitSyncConfig"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "Http",
+            "Ssh"
+          ]
+        },
+        "url": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "Ssh"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "spec": {
+            "$ref": "#/definitions/GitSSHAuthenticationDTO"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "Http"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "spec": {
+            "$ref": "#/definitions/GitHTTPAuthenticationDTO"
+          }
+        }
+      }
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

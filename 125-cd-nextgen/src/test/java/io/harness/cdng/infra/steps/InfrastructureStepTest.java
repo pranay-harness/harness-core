@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
-import io.harness.beans.ParameterField;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
 import io.harness.cdng.environment.EnvironmentOutcome;
@@ -19,7 +18,8 @@ import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.services.EnvironmentService;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
 import java.util.Collections;
@@ -91,7 +91,7 @@ public class InfrastructureStepTest extends CategoryTest {
                                                 .identifier("test-id")
                                                 .name("test-id")
                                                 .description("")
-                                                .type(EnvironmentType.PreProduction)
+                                                .environmentType(EnvironmentType.PreProduction)
                                                 .tags(Collections.emptyList())
                                                 .build();
     doReturn(expectedEnv).when(environmentService).upsert(expectedEnv);

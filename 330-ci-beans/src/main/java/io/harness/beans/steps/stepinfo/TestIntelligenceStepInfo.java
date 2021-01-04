@@ -5,8 +5,8 @@ import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.steps.StepType;
 
 import software.wings.jersey.JsonViews;
 
@@ -14,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import java.beans.ConstructorProperties;
+import java.util.Optional;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
@@ -22,7 +23,7 @@ import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@JsonTypeName("testIntelligence")
+@JsonTypeName("TestIntelligence")
 @TypeAlias("testIntelligenceStepInfo")
 public class TestIntelligenceStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
@@ -31,17 +32,16 @@ public class TestIntelligenceStepInfo implements CIStepInfo {
 
   @JsonView(JsonViews.Internal.class)
   @NotNull
-  public static final TypeInfo typeInfo =
-      TypeInfo.builder()
-          .stepInfoType(CIStepInfoType.TEST_INTELLIGENCE)
-          .stepType(StepType.newBuilder().setType(CIStepInfoType.TEST_INTELLIGENCE.name()).build())
-          .build();
+  public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.TEST_INTELLIGENCE).build();
 
-  @JsonIgnore private String callbackId;
+  @JsonIgnore
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(CIStepInfoType.TEST_INTELLIGENCE.name()).build();
+
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
-  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
+
   @NotNull private String goals;
   @NotNull private String language;
   @NotNull private String buildTool;
@@ -49,26 +49,26 @@ public class TestIntelligenceStepInfo implements CIStepInfo {
   @NotNull private String image;
   private String connector;
   private ContainerResource resources;
-  private int port;
 
   @Builder
-  @ConstructorProperties({"callbackId", "identifier", "name", "retry", "timeout", "goals", "language", "buildTool",
-      "image", "connector", "resources", "port"})
-  public TestIntelligenceStepInfo(String callbackId, String identifier, String name, int retry, int timeout,
-      String goals, String language, String buildTool, String image, String connector, ContainerResource resources,
-      int port) {
-    this.callbackId = callbackId;
+  @ConstructorProperties(
+      {"identifier", "name", "retry", "goals", "language", "buildTool", "image", "connector", "resources"})
+  public TestIntelligenceStepInfo(String identifier, String name, Integer retry, String goals, String language,
+      String buildTool, String image, String connector, ContainerResource resources) {
     this.identifier = identifier;
     this.name = name;
-    this.retry = retry;
-    this.timeout = timeout;
+    this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
     this.goals = goals;
     this.language = language;
     this.buildTool = buildTool;
     this.image = image;
     this.connector = connector;
     this.resources = resources;
-    this.port = port;
+  }
+
+  @Override
+  public long getDefaultTimeout() {
+    return DEFAULT_TIMEOUT;
   }
 
   @Override
@@ -83,7 +83,7 @@ public class TestIntelligenceStepInfo implements CIStepInfo {
 
   @Override
   public StepType getStepType() {
-    return typeInfo.getStepType();
+    return STEP_TYPE;
   }
 
   @Override

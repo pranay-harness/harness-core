@@ -1,7 +1,7 @@
 package io.harness.serializer.morphia.converters;
 
 import io.harness.persistence.converters.ProtoMessageConverter;
-import io.harness.pms.refobjects.RefType;
+import io.harness.pms.contracts.refobjects.RefType;
 
 import com.google.inject.Singleton;
 

@@ -2,34 +2,35 @@ package io.harness.beans.serializer;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.beans.plugin.compatible.PluginCompatibleStep;
+import io.harness.beans.environment.K8BuildJobEnvInfo;
+import io.harness.beans.environment.pod.PodSetupInfo;
+import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.steps.CIStepInfo;
-import io.harness.beans.steps.stepinfo.PluginStepInfo;
-import io.harness.beans.steps.stepinfo.PublishStepInfo;
-import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
-import io.harness.beans.steps.stepinfo.RunStepInfo;
-import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
-import io.harness.beans.steps.stepinfo.TestIntelligenceStepInfo;
+import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
+import io.harness.exception.ngexception.CIStageExecutionException;
+import io.harness.plancreator.execution.ExecutionElementConfig;
+import io.harness.plancreator.execution.ExecutionWrapperConfig;
+import io.harness.plancreator.steps.ParallelStepElementConfig;
+import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.pms.yaml.YamlUtils;
 import io.harness.product.ci.engine.proto.Execution;
 import io.harness.product.ci.engine.proto.ParallelStep;
 import io.harness.product.ci.engine.proto.Step;
 import io.harness.product.ci.engine.proto.UnitStep;
-import io.harness.yaml.core.ExecutionElement;
-import io.harness.yaml.core.ParallelStepElement;
-import io.harness.yaml.core.StepElement;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.binary.Base64;
 
 @Slf4j
 @Singleton
-public class ExecutionProtobufSerializer implements ProtobufSerializer<ExecutionElement> {
+public class ExecutionProtobufSerializer implements ProtobufSerializer<ExecutionElementConfig> {
   @Inject private RunStepProtobufSerializer runStepProtobufSerializer;
   @Inject private PublishStepProtobufSerializer publishStepProtobufSerializer;
   @Inject private SaveCacheStepProtobufSerializer saveCacheStepProtobufSerializer;
@@ -38,31 +39,29 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
   @Inject private TestIntelligenceStepProtobufSerializer testIntelligenceStepProtobufSerializer;
   @Inject private PluginCompatibleStepSerializer pluginCompatibleStepSerializer;
 
-  @Override
-  public String serialize(ExecutionElement object) {
-    return Base64.encodeBase64String(convertExecutionElement(object).toByteArray());
-  }
-
-  public Execution convertExecutionElement(ExecutionElement executionElement) {
+  public Execution convertExecutionElement(ExecutionElementConfig executionElement,
+      LiteEngineTaskStepInfo liteEngineTaskStepInfo, Map<String, String> taskIds) {
     List<Step> protoSteps = new LinkedList<>();
     if (isEmpty(executionElement.getSteps())) {
       return Execution.newBuilder().build();
     }
 
     executionElement.getSteps().forEach(executionWrapper -> {
-      if (executionWrapper instanceof StepElement) {
-        UnitStep serialisedStep = serialiseStep((StepElement) executionWrapper);
+      if (!executionWrapper.getStep().isNull()) {
+        StepElementConfig stepElementConfig = getStepElementConfig(executionWrapper);
+
+        UnitStep serialisedStep = serialiseStep(stepElementConfig, liteEngineTaskStepInfo, taskIds);
         if (serialisedStep != null) {
           protoSteps.add(Step.newBuilder().setUnit(serialisedStep).build());
         }
-      } else if (executionWrapper instanceof ParallelStepElement) {
-        ParallelStepElement parallel = (ParallelStepElement) executionWrapper;
+      } else if (!executionWrapper.getParallel().isNull()) {
+        ParallelStepElementConfig parallelStepElementConfig = getParallelStepElementConfig(executionWrapper);
         List<UnitStep> unitStepsList =
-            parallel.getSections()
+            parallelStepElementConfig.getSections()
                 .stream()
-                .filter(executionWrapperInParallel -> executionWrapperInParallel instanceof StepElement)
-                .map(executionWrapperInParallel -> (StepElement) executionWrapperInParallel)
-                .map(this::serialiseStep)
+                .filter(executionWrapperInParallel -> !executionWrapperInParallel.getStep().isNull())
+                .map(executionWrapperInParallel -> getStepElementConfig(executionWrapper))
+                .map(stepElementConfig -> serialiseStep(stepElementConfig, liteEngineTaskStepInfo, taskIds))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
@@ -77,20 +76,62 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
     return Execution.newBuilder().addAllSteps(protoSteps).buildPartial();
   }
 
-  public UnitStep serialiseStep(StepElement step) {
+  private Integer getPort(LiteEngineTaskStepInfo liteEngineTaskStepInfo, String stepIdentifier) {
+    K8BuildJobEnvInfo.PodsSetupInfo podSetupInfo =
+        ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getPodsSetupInfo();
+    if (isEmpty(podSetupInfo.getPodSetupInfoList())) {
+      return null;
+    }
+
+    Optional<PodSetupInfo> podSetupInfoOptional = podSetupInfo.getPodSetupInfoList().stream().findFirst();
+    try {
+      if (podSetupInfoOptional.isPresent()) {
+        List<ContainerDefinitionInfo> containerDefinitionInfos =
+            podSetupInfoOptional.get()
+                .getPodSetupParams()
+                .getContainerDefinitionInfos()
+                .stream()
+                .filter(containerDefinitionInfo -> {
+                  return containerDefinitionInfo.getStepIdentifier().equals(stepIdentifier);
+                })
+                .collect(Collectors.toList());
+
+        if (containerDefinitionInfos.size() != 1) {
+          log.error("Step {} should map to single container", stepIdentifier);
+          return null;
+        }
+
+        if (containerDefinitionInfos.get(0).getPorts().size() != 1) {
+          log.error("Step {} should map to single port", stepIdentifier);
+          return null;
+        }
+
+        return containerDefinitionInfos.get(0).getPorts().get(0);
+      } else {
+        return null;
+      }
+    } catch (Exception ex) {
+      throw new CIStageExecutionException("Failed to retrieve port for step " + stepIdentifier, ex);
+    }
+  }
+
+  public UnitStep serialiseStep(
+      StepElementConfig step, LiteEngineTaskStepInfo liteEngineTaskStepInfo, Map<String, String> taskIds) {
     if (step.getStepSpecType() instanceof CIStepInfo) {
       CIStepInfo ciStepInfo = (CIStepInfo) step.getStepSpecType();
       switch (ciStepInfo.getNonYamlInfo().getStepInfoType()) {
         case RUN:
-          return runStepProtobufSerializer.serializeStep((RunStepInfo) ciStepInfo);
+          return runStepProtobufSerializer.serializeStep(
+              step, getPort(liteEngineTaskStepInfo, step.getIdentifier()), taskIds.get(step.getIdentifier()));
         case PLUGIN:
-          return pluginStepProtobufSerializer.serializeStep((PluginStepInfo) ciStepInfo);
+          return pluginStepProtobufSerializer.serializeStep(
+              step, getPort(liteEngineTaskStepInfo, step.getIdentifier()), taskIds.get(step.getIdentifier()));
         case SAVE_CACHE:
-          return saveCacheStepProtobufSerializer.serializeStep((SaveCacheStepInfo) ciStepInfo);
+          return saveCacheStepProtobufSerializer.serializeStep(step, null, taskIds.get(step.getIdentifier()));
         case RESTORE_CACHE:
-          return restoreCacheStepProtobufSerializer.serializeStep((RestoreCacheStepInfo) ciStepInfo);
+          return restoreCacheStepProtobufSerializer.serializeStep(step, null, taskIds.get(step.getIdentifier()));
         case PUBLISH:
-          return publishStepProtobufSerializer.serializeStep((PublishStepInfo) ciStepInfo);
+          return publishStepProtobufSerializer.serializeStep(step, null, taskIds.get(step.getIdentifier()));
         case GCR:
         case DOCKER:
         case ECR:
@@ -100,9 +141,11 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
         case RESTORE_CACHE_GCS:
         case SAVE_CACHE_S3:
         case RESTORE_CACHE_S3:
-          return pluginCompatibleStepSerializer.serializeStep((PluginCompatibleStep) ciStepInfo);
+          return pluginCompatibleStepSerializer.serializeStep(
+              step, getPort(liteEngineTaskStepInfo, step.getIdentifier()), taskIds.get(step.getIdentifier()));
         case TEST_INTELLIGENCE:
-          return testIntelligenceStepProtobufSerializer.serializeStep((TestIntelligenceStepInfo) ciStepInfo);
+          return testIntelligenceStepProtobufSerializer.serializeStep(
+              step, getPort(liteEngineTaskStepInfo, step.getIdentifier()), taskIds.get(step.getIdentifier()));
         case CLEANUP:
         case TEST:
         case BUILD:
@@ -115,6 +158,22 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
       }
     } else {
       throw new IllegalArgumentException("Non CISteps serialisation is not supported");
+    }
+  }
+
+  private ParallelStepElementConfig getParallelStepElementConfig(ExecutionWrapperConfig executionWrapperConfig) {
+    try {
+      return YamlUtils.read(executionWrapperConfig.getParallel().toString(), ParallelStepElementConfig.class);
+    } catch (Exception ex) {
+      throw new CIStageExecutionException("Failed to deserialize ExecutionWrapperConfig parallel node", ex);
+    }
+  }
+
+  private StepElementConfig getStepElementConfig(ExecutionWrapperConfig executionWrapperConfig) {
+    try {
+      return YamlUtils.read(executionWrapperConfig.getStep().toString(), StepElementConfig.class);
+    } catch (Exception ex) {
+      throw new CIStageExecutionException("Failed to deserialize ExecutionWrapperConfig step node", ex);
     }
   }
 }

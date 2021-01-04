@@ -5,7 +5,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
 
-import io.harness.AmbianceUtils;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintUnit;
@@ -14,17 +13,18 @@ import io.harness.distribution.constraint.ConsumerId;
 import io.harness.distribution.constraint.InvalidPermitsException;
 import io.harness.distribution.constraint.PermanentlyBlockedConsumerException;
 import io.harness.distribution.constraint.UnableToRegisterConsumerException;
-import io.harness.engine.expressions.EngineExpressionService;
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.execution.AsyncExecutableResponse;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.AsyncExecutableResponse;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.sdk.core.steps.executables.AsyncExecutable;
 import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
-import io.harness.pms.steps.StepType;
 import io.harness.steps.OrchestrationStepTypes;
 import io.harness.steps.resourcerestraint.beans.AcquireMode;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraint;
@@ -53,7 +53,7 @@ public class ResourceRestraintStep
   @Inject private ResourceRestraintService resourceRestraintService;
   @Inject private RestraintService restraintService;
   @Inject private ResourceRestraintRegistry resourceRestraintRegistry;
-  @Inject private EngineExpressionService engineExpressionService;
+  @Inject private PmsEngineExpressionService pmsEngineExpressionService;
 
   @Override
   public Class<ResourceRestraintStepParameters> getStepParametersClass() {
@@ -139,7 +139,7 @@ public class ResourceRestraintStep
     int permits = calculatePermits(stepParameters, ambiance);
 
     ConstraintUnit renderedResourceUnit =
-        new ConstraintUnit(engineExpressionService.renderExpression(ambiance, stepParameters.getResourceUnit()));
+        new ConstraintUnit(pmsEngineExpressionService.renderExpression(ambiance, stepParameters.getResourceUnit()));
 
     Map<String, Object> constraintContext = populateConstraintContext(stepParameters, releaseEntityId);
 

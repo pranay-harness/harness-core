@@ -6,8 +6,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
-import io.harness.execution.events.AsyncOrchestrationEventHandler;
-import io.harness.execution.events.OrchestrationEvent;
+import io.harness.pms.contracts.execution.NodeExecutionProto;
+import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
+import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.service.GraphGenerationService;
 
 import com.google.inject.Inject;
@@ -21,13 +22,20 @@ public class OrchestrationEndEventHandler implements AsyncOrchestrationEventHand
 
   @Override
   public void handleEvent(OrchestrationEvent event) {
-    PlanExecution planExecution = planExecutionService.get(event.getAmbiance().getPlanExecutionId());
-    log.info("Ending Execution for planExecutionId [{}] with status [{}].", planExecution.getUuid(),
-        planExecution.getStatus());
+    NodeExecutionProto nodeExecutionProto = event.getNodeExecutionProto();
+    String planExecutionId = nodeExecutionProto.getAmbiance().getPlanExecutionId();
+    try {
+      PlanExecution planExecution = planExecutionService.get(planExecutionId);
+      log.info("Ending Execution for planExecutionId [{}] with status [{}].", planExecution.getUuid(),
+          planExecution.getStatus());
 
-    OrchestrationGraph cachedGraph = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
+      OrchestrationGraph cachedGraph = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
 
-    graphGenerationService.cacheOrchestrationGraph(
-        cachedGraph.withStatus(planExecution.getStatus()).withEndTs(planExecution.getEndTs()));
+      graphGenerationService.cacheOrchestrationGraph(
+          cachedGraph.withStatus(planExecution.getStatus()).withEndTs(planExecution.getEndTs()));
+    } catch (Exception e) {
+      log.error("[{}] event failed for [{}] for plan [{}]", event.getEventType(), nodeExecutionProto.getUuid(),
+          planExecutionId, e);
+    }
   }
 }

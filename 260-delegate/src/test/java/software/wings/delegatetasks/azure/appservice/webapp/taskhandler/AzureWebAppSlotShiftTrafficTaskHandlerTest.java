@@ -15,6 +15,8 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -34,6 +36,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AzureWebAppSlotShiftTrafficTaskHandlerTest extends WingsBaseTest {
   public static final double TRAFFIC_WEIGHT_IN_PERCENTAGE = 50.0;
   public static final String SHIFT_TRAFFIC_SLOT_NAME = "slotName";
@@ -90,7 +93,7 @@ public class AzureWebAppSlotShiftTrafficTaskHandlerTest extends WingsBaseTest {
     AzureWebAppSlotShiftTrafficParameters azureAppServiceTaskParameters = buildAzureWebAppSlotShiftTrafficParameters();
     AzureConfig azureConfig = buildAzureConfig();
 
-    azureAppServiceTaskParameters.setShiftTrafficSlotName(EMPTY);
+    azureAppServiceTaskParameters.setDeploymentSlot(EMPTY);
 
     assertThatExceptionOfType(InvalidArgumentsException.class)
         .isThrownBy(()
@@ -131,7 +134,7 @@ public class AzureWebAppSlotShiftTrafficTaskHandlerTest extends WingsBaseTest {
         .timeoutIntervalInMin(15)
         .commandName(SLOT_TRAFFIC_WEIGHT)
         .webAppName("webAppName")
-        .shiftTrafficSlotName(SHIFT_TRAFFIC_SLOT_NAME)
+        .deploymentSlot(SHIFT_TRAFFIC_SLOT_NAME)
         .trafficWeightInPercentage(TRAFFIC_WEIGHT_IN_PERCENTAGE)
         .build();
   }

@@ -44,9 +44,12 @@ if [[ "${DISABLE_NEW_RELIC}" != "true" ]]; then
     echo "Using new relic env " $NEWRELIC_ENV
 fi
 
-
 if [[ "${DEPLOY_MODE}" == "KUBERNETES" ]] || [[ "${DEPLOY_MODE}" == "KUBERNETES_ONPREM" ]]; then
     java $JAVA_OPTS -jar $CAPSULE_JAR $COMMAND /opt/harness/config.yml
 else
-    java $JAVA_OPTS -jar $CAPSULE_JAR $COMMAND /opt/harness/config.yml > /opt/harness/logs/portal.log 2>&1
+    if [[ "${ROLLING_FILE_LOGGING_ENABLED}" == "true" ]]; then
+        java $JAVA_OPTS -jar $CAPSULE_JAR $COMMAND /opt/harness/config.yml
+    else
+        java $JAVA_OPTS -jar $CAPSULE_JAR $COMMAND /opt/harness/config.yml > /opt/harness/logs/portal.log 2>&1
+    fi
 fi

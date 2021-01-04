@@ -1,0 +1,19 @@
+{
+  "type": "object",
+  "required": [
+    "build",
+    "connectorRef"
+  ],
+  "properties": {
+    "build": {
+      "$ref": "#/definitions/ParameterFieldBuild"
+    },
+    "connectorRef": {
+      "type": "string"
+    },
+    "repoName": {
+      "type": "string"
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

@@ -3,6 +3,7 @@ package io.harness.rule;
 import static io.harness.cache.CacheBackend.CAFFEINE;
 import static io.harness.cache.CacheBackend.NOOP;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
+import static io.harness.pms.sdk.PmsSdkConfiguration.DeployMode.LOCAL;
 
 import static org.mockito.Mockito.mock;
 
@@ -14,6 +15,7 @@ import io.harness.cvng.client.CVNGServiceClient;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
+import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
@@ -23,18 +25,29 @@ import io.harness.logstreaming.LogStreamingServiceConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.sdk.PmsSdkConfiguration;
+import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
+import io.harness.redis.RedisConfig;
+import io.harness.registrars.OrchestrationModuleRegistrarHelper;
+import io.harness.registrars.OrchestrationStepsModuleEventHandlerRegistrar;
+import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
+import io.harness.registrars.OrchestrationVisualizationModuleEventHandlerRegistrar;
+import io.harness.registrars.WingsAdviserRegistrar;
+import io.harness.registrars.WingsStepRegistrar;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.kryo.TestManagerKryoRegistrar;
 import io.harness.service.DelegateServiceModule;
-import io.harness.spring.AliasRegistrar;
 import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
+import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.version.VersionModule;
 
 import software.wings.app.AuthModule;
@@ -65,8 +78,10 @@ import graphql.GraphQL;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
@@ -135,6 +150,11 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
 
     SegmentConfig segmentConfig = SegmentConfig.builder().enabled(false).url("dummy_url").apiKey("dummy_key").build();
     configuration.setSegmentConfig(segmentConfig);
+    configuration.setEventsFrameworkConfiguration(
+        EventsFrameworkConfiguration.builder()
+            .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
+            .build());
+    configuration.setTimeScaleDBConfig(TimeScaleDBConfig.builder().build());
     return configuration;
   }
 
@@ -165,14 +185,6 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(ManagerRegistrars.morphiaRegistrars)
-            .build();
-      }
-
-      @Provides
-      @Singleton
-      Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
-        return ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-            .addAll(ManagerRegistrars.aliasRegistrars)
             .build();
       }
 
@@ -234,7 +246,25 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
     modules.add(new SSOModule());
     modules.add(new SignupModule());
     modules.add(new GcpMarketplaceIntegrationModule());
+    modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration()));
     return modules;
+  }
+
+  private PmsSdkConfiguration getPmsSdkConfiguration() {
+    Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> engineEventHandlersMap =
+        new HashMap<>();
+    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
+        engineEventHandlersMap, OrchestrationVisualizationModuleEventHandlerRegistrar.getEngineEventHandlers());
+    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
+        engineEventHandlersMap, OrchestrationStepsModuleEventHandlerRegistrar.getEngineEventHandlers());
+    return PmsSdkConfiguration.builder()
+        .deploymentMode(LOCAL)
+        .serviceName("graphql")
+        .engineSteps(WingsStepRegistrar.getEngineSteps())
+        .engineAdvisers(WingsAdviserRegistrar.getEngineAdvisers())
+        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
+        .engineEventHandlersMap(engineEventHandlersMap)
+        .build();
   }
 
   @Override

@@ -228,3 +228,25 @@ logStreamingServiceConfig:
 cvngClientConfig:
   baseUrl: https://localhost:6060/cv/
   cvNgServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
+eventsFramework:
+  redis:
+    sentinel: false
+    masterName: "mymaster"
+    redisUrl: "dummyRedisUrl"
+    sentinelUrls:
+      - redis://localhost:26379
+    envNamespace: ""
+    readMode: MASTER
+    nettyThreads: 16
+    useScriptCache: true
+
+timescaledb:
+  timescaledbUrl: ""
+  timescaledbUsername: ""
+  timescaledbPassword: ""
+  connectTimeout: 10
+  socketTimeout: 30
+  logUnclosedConnections: false
+  loggerLevel: OFF
+  instanceDataRetentionDays: 210

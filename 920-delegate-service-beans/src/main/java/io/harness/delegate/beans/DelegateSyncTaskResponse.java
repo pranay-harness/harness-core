@@ -16,7 +16,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "!!!custom_delegateSyncTaskResponses", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "DelegateSyncTaskResponseKeys")
 public class DelegateSyncTaskResponse implements PersistentEntity {
-  @Id private String uuid;
+  @Id @org.springframework.data.annotation.Id private String uuid;
   private byte[] responseData;
 
   @FdTtlIndex @Builder.Default private Date validUntil = Date.from(OffsetDateTime.now().plusHours(2).toInstant());

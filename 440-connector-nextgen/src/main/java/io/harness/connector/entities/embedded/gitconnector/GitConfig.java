@@ -1,9 +1,9 @@
 package io.harness.connector.entities.embedded.gitconnector;
 
 import io.harness.connector.entities.Connector;
-import io.harness.delegate.beans.connector.gitconnector.CustomCommitAttributes;
-import io.harness.delegate.beans.connector.gitconnector.GitAuthType;
-import io.harness.delegate.beans.connector.gitconnector.GitConnectionType;
+import io.harness.delegate.beans.connector.scm.GitAuthType;
+import io.harness.delegate.beans.connector.scm.GitConnectionType;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.CustomCommitAttributes;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;

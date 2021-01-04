@@ -139,6 +139,7 @@ public class AzureVMSSFunctionalTest extends AbstractFunctionalTest {
 
     WorkflowExecution workflowExecution = runWorkflow(
         bearerToken, application.getUuid(), environment.getUuid(), workflow.getUuid(), ImmutableList.of(artifact));
+    getFailedWorkflowExecutionLogs(workflowExecution);
     verifyExecution(workflowExecution);
   }
 
@@ -161,6 +162,7 @@ public class AzureVMSSFunctionalTest extends AbstractFunctionalTest {
 
     WorkflowExecution workflowExecution = runWorkflow(
         bearerToken, application.getUuid(), environment.getUuid(), workflow.getUuid(), ImmutableList.of(artifact));
+    getFailedWorkflowExecutionLogs(workflowExecution);
     verifyExecution(workflowExecution);
   }
 

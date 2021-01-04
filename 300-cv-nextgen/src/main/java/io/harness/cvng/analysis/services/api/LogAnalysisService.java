@@ -22,6 +22,10 @@ public interface LogAnalysisService {
   List<LogClusterDTO> getTestData(String verificationTaskId, Instant analysisStartTime, Instant analysisEndTime);
   List<LogAnalysisCluster> getPreviousAnalysis(
       String verificationTaskId, Instant analysisStartTime, Instant analysisEndTime);
+
+  DeploymentLogAnalysisDTO getPreviousDeploymentAnalysis(
+      String verificationTaskId, Instant analysisStartTime, Instant analysisEndTime);
+
   void saveAnalysis(String taskId, LogAnalysisDTO analysisBody);
   List<LogAnalysisCluster> getAnalysisClusters(String verificationTaskId, Set<Long> labels);
   List<LogAnalysisResult> getAnalysisResults(

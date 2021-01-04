@@ -1,17 +1,17 @@
 package io.harness.delegate.task.gcp.request;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
-import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import com.google.common.collect.ImmutableSet;
-import java.util.Collections;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -20,8 +20,6 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public abstract class GcpRequest implements ExecutionCapabilityDemander {
-  private static final String GCS_URL = "https://storage.cloud.google.com/";
-
   public enum RequestType { VALIDATE; }
 
   private String delegateSelector;
@@ -33,10 +31,8 @@ public abstract class GcpRequest implements ExecutionCapabilityDemander {
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     if (isNotBlank(delegateSelector)) {
-      return Collections.singletonList(
-          SelectorCapability.builder().selectors(ImmutableSet.of(delegateSelector)).build());
+      return singletonList(SelectorCapability.builder().selectors(ImmutableSet.of(delegateSelector)).build());
     }
-    return Collections.singletonList(
-        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(GCS_URL, maskingEvaluator));
+    return emptyList();
   }
 }

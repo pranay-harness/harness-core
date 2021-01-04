@@ -9,10 +9,16 @@ import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
 import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.BillingDataPipelineHealthStatusService;
 import io.harness.batch.processing.service.intfc.BillingDataPipelineService;
+import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord.BillingDataPipelineRecordBuilder;
 import io.harness.ccm.cluster.entities.BatchJobScheduledData;
 
+import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.FieldValueList;
+import com.google.cloud.bigquery.QueryJobConfiguration;
+import com.google.cloud.bigquery.QueryParameterValue;
+import com.google.cloud.bigquery.TableResult;
 import com.google.cloud.bigquery.datatransfer.v1.DataTransferServiceClient;
 import com.google.cloud.bigquery.datatransfer.v1.ListTransferConfigsRequest;
 import com.google.cloud.bigquery.datatransfer.v1.TransferConfig;
@@ -37,6 +43,11 @@ public class BillingDataPipelineHealthStatusServiceImpl implements BillingDataPi
   private BillingDataPipelineRecordDao billingDataPipelineRecordDao;
   private BillingDataPipelineService billingDataPipelineService;
   private BatchJobScheduledDataDao batchJobScheduledDataDao;
+  @Autowired private BigQueryService bigQueryService;
+
+  private static final String AWS_PRE_AGG_TABLE_DATACHECK_TEMPLATE =
+      "SELECT count(*) as count FROM `%s.preAggregated` WHERE DATE(startTime) "
+      + ">= DATE_SUB(@run_date , INTERVAL 3 DAY) AND cloudProvider = \"AWS\";%n";
 
   @Autowired
   public BillingDataPipelineHealthStatusServiceImpl(BatchMainConfig mainConfig,
@@ -88,19 +99,54 @@ public class BillingDataPipelineHealthStatusServiceImpl implements BillingDataPi
   void updateBillingPipelineRecordsStatus(Map<String, TransferState> transferToStatusMap) {
     billingDataPipelineRecordDao.listAllBillingDataPipelineRecords().forEach(billingDataPipelineRecord -> {
       try {
-        BillingDataPipelineRecordBuilder billingDataPipelineRecordBuilder =
-            BillingDataPipelineRecord.builder()
-                .accountId(billingDataPipelineRecord.getAccountId())
-                .settingId(billingDataPipelineRecord.getSettingId())
+        BillingDataPipelineRecordBuilder billingDataPipelineRecordBuilder = BillingDataPipelineRecord.builder();
+        if (billingDataPipelineRecord.getCloudProvider().equals(CloudProvider.GCP.name())) {
+          billingDataPipelineRecordBuilder.accountId(billingDataPipelineRecord.getAccountId())
+              .settingId(billingDataPipelineRecord.getSettingId())
+              .dataTransferJobStatus(
+                  getTransferStateStringValue(transferToStatusMap, billingDataPipelineRecord.getDataTransferJobName()));
+          if (mainConfig.getBillingDataPipelineConfig().isGcpUseNewPipeline()) {
+            // For GCP only + in new pipeline, we dont need to compute preagg status anymore.
+            // This is for compatibility with health status api in manager
+            log.info("Setting status for preagg query in new pipeline for GCP");
+            billingDataPipelineRecordBuilder.preAggregatedScheduledQueryStatus(TransferState.SUCCEEDED.toString());
+          } else {
+            // Regular flow
+            log.info("Setting status for preagg query for GCP");
+            billingDataPipelineRecordBuilder.preAggregatedScheduledQueryStatus(getTransferStateStringValue(
+                transferToStatusMap, billingDataPipelineRecord.getPreAggregatedScheduledQueryName()));
+          }
+        } else if (billingDataPipelineRecord.getCloudProvider().equals(CloudProvider.AWS.name())) {
+          billingDataPipelineRecordBuilder.accountId(billingDataPipelineRecord.getAccountId())
+              .settingId(billingDataPipelineRecord.getSettingId());
+          if (mainConfig.getBillingDataPipelineConfig().isAwsUseNewPipeline()) {
+            // Check for data in last 3 days in preAgg table. Only when time has elapsed more than 24 hours.
+            log.info("Setting status for preagg query in new pipeline for AWS");
+            long now = Instant.now().toEpochMilli() - 1 * 24 * 60 * 60 * 1000;
+            if (billingDataPipelineRecord.getCreatedAt() >= now
+                || isDataPresentPreAgg(billingDataPipelineRecord.getDataSetId())) {
+              // Set SUCCEEDED in first 24 hours
+              billingDataPipelineRecordBuilder.dataTransferJobStatus(TransferState.SUCCEEDED.toString())
+                  .preAggregatedScheduledQueryStatus(TransferState.SUCCEEDED.toString())
+                  .awsFallbackTableScheduledQueryStatus(TransferState.SUCCEEDED.toString());
+            } else {
+              billingDataPipelineRecordBuilder.dataTransferJobStatus(TransferState.FAILED.toString())
+                  .preAggregatedScheduledQueryStatus(TransferState.FAILED.toString())
+                  .awsFallbackTableScheduledQueryStatus(TransferState.FAILED.toString());
+            }
+          } else {
+            // Regular flow
+            log.info("Setting status for preagg query for AWS");
+            billingDataPipelineRecordBuilder
                 .dataTransferJobStatus(getTransferStateStringValue(
                     transferToStatusMap, billingDataPipelineRecord.getDataTransferJobName()))
                 .preAggregatedScheduledQueryStatus(getTransferStateStringValue(
-                    transferToStatusMap, billingDataPipelineRecord.getPreAggregatedScheduledQueryName()));
-        if (billingDataPipelineRecord.getCloudProvider().equals(CloudProvider.AWS.name())) {
-          billingDataPipelineRecordBuilder
-              .awsFallbackTableScheduledQueryStatus(getTransferStateStringValue(
-                  transferToStatusMap, billingDataPipelineRecord.getAwsFallbackTableScheduledQueryName()))
-              .lastSuccessfulS3Sync(fetchLastSuccessfulS3RunInstant(billingDataPipelineRecord.getAccountId()));
+                    transferToStatusMap, billingDataPipelineRecord.getPreAggregatedScheduledQueryName()))
+                .awsFallbackTableScheduledQueryStatus(getTransferStateStringValue(
+                    transferToStatusMap, billingDataPipelineRecord.getAwsFallbackTableScheduledQueryName()));
+          }
+          billingDataPipelineRecordBuilder.lastSuccessfulS3Sync(
+              fetchLastSuccessfulS3RunInstant(billingDataPipelineRecord.getAccountId()));
         }
         billingDataPipelineRecordDao.upsert(billingDataPipelineRecordBuilder.build());
       } catch (Exception e) {
@@ -121,5 +167,34 @@ public class BillingDataPipelineHealthStatusServiceImpl implements BillingDataPi
   protected String getTransferStateStringValue(Map<String, TransferState> transferToStatusMap, String key) {
     return transferToStatusMap.containsKey(key) ? transferToStatusMap.get(key).toString()
                                                 : TransferState.UNRECOGNIZED.toString();
+  }
+
+  private boolean isDataPresentPreAgg(String datasetId) {
+    BigQuery bigquery = bigQueryService.get();
+    String gcpProjectId = mainConfig.getBillingDataPipelineConfig().getGcpProjectId();
+    String tablePrefix = gcpProjectId + "." + datasetId;
+    String query = String.format(AWS_PRE_AGG_TABLE_DATACHECK_TEMPLATE, tablePrefix);
+    QueryJobConfiguration queryConfig =
+        QueryJobConfiguration.newBuilder(query)
+            .addNamedParameter("run_date", QueryParameterValue.date(String.valueOf(java.time.LocalDate.now())))
+            .build();
+
+    // Get the results.
+    TableResult result;
+    try {
+      result = bigquery.query(queryConfig);
+    } catch (InterruptedException e) {
+      log.error("Failed to check for data. {}", e);
+      Thread.currentThread().interrupt();
+      return false;
+    }
+    // Print all pages of the results.
+    for (FieldValueList row : result.iterateAll()) {
+      long count = row.get("count").getLongValue();
+      if (count > 0) {
+        return true;
+      }
+    }
+    return false;
   }
 }

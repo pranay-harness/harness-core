@@ -126,6 +126,61 @@ public class TrendAnalysisServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
+  public void testGetTestData_withBaselineClusters() {
+    Instant start = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
+    Instant end = start.plus(5, ChronoUnit.MINUTES);
+    List<LogAnalysisCluster> logAnalysisClusters = createLogAnalysisClusters(start, end);
+
+    LogAnalysisCluster record = LogAnalysisCluster.builder()
+                                    .verificationTaskId(verificationTaskId)
+                                    .label(1)
+                                    .firstSeenTime(start.toEpochMilli())
+                                    .frequencyTrend(new ArrayList<>())
+                                    .isEvicted(false)
+                                    .build();
+    logAnalysisClusters.add(record);
+
+    hPersistence.save(logAnalysisClusters);
+
+    List<TimeSeriesRecordDTO> testData = trendAnalysisService.getTestData(verificationTaskId, start, end);
+
+    assertThat(testData).isNotNull();
+    assertThat(testData.size()).isEqualTo(10);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetTestData_withNonBaselineClusters() {
+    Instant start = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
+    Instant end = start.plus(5, ChronoUnit.MINUTES);
+    List<LogAnalysisCluster> logAnalysisClusters = createLogAnalysisClusters(start, end);
+
+    LogAnalysisCluster record =
+        LogAnalysisCluster.builder()
+            .verificationTaskId(verificationTaskId)
+            .label(1)
+            .firstSeenTime(start.minus(40, ChronoUnit.MINUTES).toEpochMilli())
+            .frequencyTrend(Collections.singletonList(Frequency.builder()
+                                                          .timestamp(TimeUnit.SECONDS.toMinutes(start.getEpochSecond()))
+                                                          .count(4)
+                                                          .riskScore(0.5)
+                                                          .build()))
+            .isEvicted(false)
+            .build();
+    logAnalysisClusters.add(record);
+
+    hPersistence.save(logAnalysisClusters);
+
+    List<TimeSeriesRecordDTO> testData = trendAnalysisService.getTestData(verificationTaskId, start, end);
+
+    assertThat(testData).isNotNull();
+    assertThat(testData.size()).isEqualTo(11);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
   public void testSaveAnalysis() {
     Instant start = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
     Instant end = start.plus(5, ChronoUnit.MINUTES);
@@ -189,7 +244,7 @@ public class TrendAnalysisServiceImplTest extends CvNextGenTest {
     TimeSeriesCumulativeSums cumulativeSums =
         hPersistence.createQuery(TimeSeriesCumulativeSums.class).filter("verificationTaskId", verificationTaskId).get();
     assertThat(cumulativeSums).isNotNull();
-    assertThat(cumulativeSums.convertToMap()).isEmpty();
+    assertThat(TimeSeriesCumulativeSums.convertToMap(Collections.singletonList(cumulativeSums))).isEmpty();
     TimeSeriesAnomalousPatterns anomalousPatterns = hPersistence.createQuery(TimeSeriesAnomalousPatterns.class)
                                                         .filter("verificationTaskId", verificationTaskId)
                                                         .get();
@@ -304,7 +359,7 @@ public class TrendAnalysisServiceImplTest extends CvNextGenTest {
       ServiceGuardTxnMetricAnalysisDataDTO txnMetricData =
           ServiceGuardTxnMetricAnalysisDataDTO.builder()
               .isKeyTransaction(false)
-              .cumulativeSums(TimeSeriesCumulativeSums.MetricSum.builder().risk(0.5).sum(0.9).build())
+              .cumulativeSums(TimeSeriesCumulativeSums.MetricSum.builder().risk(0.5).data(0.9).build())
               .shortTermHistory(Arrays.asList(0.1, 0.2, 0.3, 0.4))
               .anomalousPatterns(
                   Collections.singletonList(TimeSeriesAnomalies.builder()
@@ -436,7 +491,8 @@ public class TrendAnalysisServiceImplTest extends CvNextGenTest {
     cvConfig.setServiceIdentifier(generateUuid());
     cvConfig.setEnvIdentifier(generateUuid());
     cvConfig.setProjectIdentifier(generateUuid());
-    cvConfig.setGroupId(generateUuid());
+    cvConfig.setIdentifier(generateUuid());
+    cvConfig.setMonitoringSourceName(generateUuid());
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
     cvConfig.setProductName(generateUuid());
   }

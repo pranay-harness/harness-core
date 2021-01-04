@@ -7,11 +7,14 @@ import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static java.util.Collections.singletonList;
 
 import io.harness.AuthorizationServiceHeader;
+import io.harness.ci.plan.creator.CIModuleInfoProvider;
 import io.harness.ci.plan.creator.CIPipelineServiceInfoProvider;
+import io.harness.ci.plan.creator.filter.CIFilterCreationResponseMerger;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.engine.events.OrchestrationEventListener;
+import io.harness.exception.GeneralException;
 import io.harness.executionplan.CIExecutionPlanCreatorRegistrar;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.govern.ProviderModule;
@@ -23,13 +26,19 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
-import io.harness.pms.execution.failure.FailureInfo;
 import io.harness.pms.sdk.PmsSdkConfiguration;
+import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
+import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
-import io.harness.pms.steps.StepType;
+import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
+import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
+import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
+import io.harness.registrars.ExecutionRegistrar;
+import io.harness.registrars.OrchestrationAdviserRegistrar;
+import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.security.JWTAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.serializer.CiBeansRegistrars;
@@ -40,13 +49,9 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationRegistrars;
 import io.harness.serializer.PersistenceRegistrars;
 import io.harness.serializer.YamlBeansModuleRegistrars;
-import io.harness.serializer.json.FailureInfoSerializer;
-import io.harness.serializer.json.StepTypeSerializer;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
-import io.harness.spring.AliasRegistrar;
-import io.harness.springdata.SpringPersistenceModule;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -54,8 +59,8 @@ import io.harness.waiter.NotifyResponseCleaner;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 import io.harness.waiter.ProgressUpdateService;
 
+import ci.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -131,12 +136,8 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
   }
 
   public static void configureObjectMapper(final ObjectMapper mapper) {
-    SimpleModule module = new SimpleModule();
-    // Todo: Discuss with Prashant on having an impl just like Morphia Converters
-    module.addSerializer(StepType.class, new StepTypeSerializer());
-    module.addSerializer(FailureInfo.class, new FailureInfoSerializer());
-    mapper.registerModule(module);
     NGPipelineObjectMapperHelper.configureNGObjectMapper(mapper);
+    mapper.registerModule(new PmsBeansJacksonModule());
   }
 
   @Override
@@ -183,14 +184,6 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
 
       @Provides
       @Singleton
-      Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
-        return ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-            .addAll(CiExecutionRegistrars.aliasRegistrars)
-            .build();
-      }
-
-      @Provides
-      @Singleton
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder()
             .addAll(PersistenceRegistrars.morphiaConverters)
@@ -216,7 +209,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     });
 
     modules.add(MongoModule.getInstance());
-    modules.add(new SpringPersistenceModule());
+    modules.add(new CIPersistenceModule(configuration.getShouldConfigureWithPMS()));
     addGuiceValidationModule(modules);
     modules.add(new CIManagerServiceModule(configuration));
 
@@ -239,17 +232,17 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
       }
     });
 
+    modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(configuration)));
+
     Injector injector = Guice.createInjector(modules);
-    if (configuration.getShouldConfigureWithPMS() != null && configuration.getShouldConfigureWithPMS()) {
-      registerPMSSDK(configuration);
-    }
+    registerPMSSDK(configuration, injector);
     registerResources(environment, injector);
     registerWaitEnginePublishers(injector);
     registerManagedBeans(environment, injector);
     registerHealthCheck(environment, injector);
     registerAuthFilters(configuration, environment);
     registerExecutionPlanCreators(injector);
-    registerQueueListeners(injector);
+    registerQueueListeners(injector, configuration);
     registerStores(configuration, injector);
     scheduleJobs(injector);
     log.info("Starting app done");
@@ -282,17 +275,38 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
       }
     }
   }
-  private void registerPMSSDK(CIManagerConfiguration config) {
-    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
-                                        .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
-                                        .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
-                                        .pipelineServiceInfoProvider(new CIPipelineServiceInfoProvider())
-                                        .build();
-    try {
-      PmsSdkModule.initializeDefaultInstance(sdkConfig);
-    } catch (Exception e) {
-      // Ignore for Now
+
+  private void registerPMSSDK(CIManagerConfiguration config, Injector injector) {
+    PmsSdkConfiguration sdkConfig = getPmsSdkConfiguration(config);
+    if (sdkConfig.getDeploymentMode().equals(DeployMode.REMOTE)) {
+      try {
+        PmsSdkInitHelper.initializeSDKInstance(injector, sdkConfig);
+      } catch (Exception e) {
+        throw new GeneralException("Fail to start ci manager because pms sdk registration failed", e);
+      }
     }
+  }
+
+  private PmsSdkConfiguration getPmsSdkConfiguration(CIManagerConfiguration config) {
+    boolean remote = false;
+    if (config.getShouldConfigureWithPMS() != null && config.getShouldConfigureWithPMS()) {
+      remote = true;
+    }
+
+    return PmsSdkConfiguration.builder()
+        .deploymentMode(remote ? DeployMode.REMOTE : DeployMode.LOCAL)
+        .serviceName("ci")
+        .pipelineServiceInfoProviderClass(CIPipelineServiceInfoProvider.class)
+        .mongoConfig(config.getPmsMongoConfig())
+        .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
+        .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
+        .filterCreationResponseMerger(new CIFilterCreationResponseMerger())
+        .engineSteps(ExecutionRegistrar.getEngineSteps())
+        .executionSummaryModuleInfoProviderClass(CIModuleInfoProvider.class)
+        .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers())
+        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
+        .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers())
+        .build();
   }
 
   private void scheduleJobs(Injector injector) {
@@ -309,10 +323,14 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         .scheduleWithFixedDelay(injector.getInstance(ProgressUpdateService.class), 0L, 5L, TimeUnit.SECONDS);
   }
 
-  private void registerQueueListeners(Injector injector) {
+  private void registerQueueListeners(Injector injector, CIManagerConfiguration configuration) {
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class), 5);
     queueListenerController.register(injector.getInstance(OrchestrationEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
+    if (configuration.getShouldConfigureWithPMS()) {
+      queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 1);
+    }
   }
 
   private void registerManagedBeans(Environment environment, Injector injector) {

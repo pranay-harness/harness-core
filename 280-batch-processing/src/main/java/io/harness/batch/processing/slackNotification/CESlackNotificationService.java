@@ -33,6 +33,6 @@ public class CESlackNotificationService {
 
     log.info("Sending message for account {} via manager", accountId);
     slackMessageSender.send(
-        new SlackMessage(slackConfig.getOutgoingWebhookUrl(), slackChannel, senderName, message), false);
+        new SlackMessage(slackConfig.getOutgoingWebhookUrl(), slackChannel, senderName, message), false, false);
   }
 }

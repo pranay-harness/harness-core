@@ -15,8 +15,11 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.CVConfigTransformer;
 import io.harness.cvng.core.services.api.DSConfigService;
 import io.harness.cvng.core.services.api.MonitoringSourceImportStatusCreator;
+import io.harness.ng.beans.PageResponse;
+import io.harness.utils.PageUtils;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -29,8 +32,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class DSConfigServiceImpl implements DSConfigService {
-  @Inject CVConfigService cvConfigService;
-  @Inject NextGenService nextGenService;
+  @Inject private CVConfigService cvConfigService;
+  @Inject private NextGenService nextGenService;
   @Inject private Injector injector;
 
   @Override
@@ -43,35 +46,61 @@ public class DSConfigServiceImpl implements DSConfigService {
     CVConfigTransformer<? extends CVConfig, ? extends DSConfig> cvConfigTransformer =
         injector.getInstance(Key.get(CVConfigTransformer.class, Names.named(dataSourceType.name())));
     Map<String, List<CVConfig>> groupById =
-        cvConfigs.stream().collect(Collectors.groupingBy(CVConfig::getGroupId, Collectors.toList()));
+        cvConfigs.stream().collect(Collectors.groupingBy(CVConfig::getIdentifier, Collectors.toList()));
     return groupById.values().stream().map(group -> cvConfigTransformer.transform(group)).collect(Collectors.toList());
   }
 
   @Override
   public void upsert(DSConfig dsConfig) {
+    List<CVConfig> existingMapping =
+        cvConfigService.getExistingMappedConfigs(dsConfig.getAccountId(), dsConfig.getOrgIdentifier(),
+            dsConfig.getProjectIdentifier(), dsConfig.getConnectorIdentifier(), dsConfig.getIdentifier());
+    dsConfig.validate(existingMapping);
     List<CVConfig> saved = cvConfigService.list(dsConfig.getAccountId(), dsConfig.getConnectorIdentifier(),
         dsConfig.getProductName(), dsConfig.getIdentifier());
     CVConfigUpdateResult cvConfigUpdateResult = dsConfig.getCVConfigUpdateResult(saved);
     cvConfigUpdateResult.getDeleted().forEach(cvConfig -> cvConfigService.delete(cvConfig.getUuid()));
     cvConfigService.update(cvConfigUpdateResult.getUpdated());
+
     cvConfigService.save(cvConfigUpdateResult.getAdded());
   }
 
   @Override
-  public void delete(String accountId, String connectorIdentifier, String productName, String identifier) {
-    cvConfigService.deleteByGroupId(accountId, connectorIdentifier, productName, identifier);
+  public void delete(
+      String accountId, String orgIdentifier, String projectIdentifier, String monitoringSourceIdentifier) {
+    cvConfigService.deleteByIdentifier(accountId, orgIdentifier, projectIdentifier, monitoringSourceIdentifier);
   }
 
   @Override
-  public List<MonitoringSourceDTO> listMonitoringSources(
-      String accountId, String orgIdentifier, String projectIdentifier, int limit, int offset) {
-    List<String> monitoringSourceIdsForGivenLimitAndOffset =
-        cvConfigService.getMonitoringSourceIds(accountId, orgIdentifier, projectIdentifier, limit, offset);
+  public DSConfig getMonitoringSource(
+      String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
     List<CVConfig> cvConfigs = cvConfigService.listByMonitoringSources(
-        accountId, orgIdentifier, projectIdentifier, monitoringSourceIdsForGivenLimitAndOffset);
+        accountId, orgIdentifier, projectIdentifier, Lists.newArrayList(identifier));
+    Preconditions.checkState(isNotEmpty(cvConfigs), "No configurations found with identifier %s", identifier);
+
+    Map<String, List<CVConfig>> groupById =
+        cvConfigs.stream().collect(Collectors.groupingBy(CVConfig::getIdentifier, Collectors.toList()));
+    Preconditions.checkState(groupById.size() == 1, "%s groups found for identifier %s", groupById.size(), identifier);
+    DataSourceType dataSourceType = cvConfigs.get(0).getType();
+    CVConfigTransformer<? extends CVConfig, ? extends DSConfig> cvConfigTransformer =
+        injector.getInstance(Key.get(CVConfigTransformer.class, Names.named(dataSourceType.name())));
+
+    List<? extends DSConfig> dsConfigs =
+        groupById.values().stream().map(group -> cvConfigTransformer.transform(group)).collect(Collectors.toList());
+    Preconditions.checkState(dsConfigs.size() == 1, "%s configs found for identifier %s", dsConfigs.size(), identifier);
+    return dsConfigs.get(0);
+  }
+
+  @Override
+  public PageResponse<MonitoringSourceDTO> listMonitoringSources(
+      String accountId, String orgIdentifier, String projectIdentifier, int limit, int offset, String filter) {
+    List<String> filteredMonitoringSources =
+        cvConfigService.getMonitoringSourceIds(accountId, orgIdentifier, projectIdentifier, filter);
+    List<CVConfig> cvConfigs =
+        cvConfigService.listByMonitoringSources(accountId, orgIdentifier, projectIdentifier, filteredMonitoringSources);
     List<MonitoringSourceDTO> monitoringSourceDTOS = groupDSConfigsByMonitoringSources(cvConfigs);
     monitoringSourceDTOS.sort(Comparator.comparing(MonitoringSourceDTO::getImportedAt).reversed());
-    return monitoringSourceDTOS;
+    return PageUtils.offsetAndLimit(monitoringSourceDTOS, offset, limit);
   }
 
   private List<MonitoringSourceDTO> groupDSConfigsByMonitoringSources(List<CVConfig> cvConfigs) {
@@ -79,7 +108,7 @@ public class DSConfigServiceImpl implements DSConfigService {
       return Collections.emptyList();
     }
     Map<String, List<CVConfig>> groupByMonitoringSource =
-        cvConfigs.stream().collect(Collectors.groupingBy(CVConfig::getMonitoringSourceIdentifier, Collectors.toList()));
+        cvConfigs.stream().collect(Collectors.groupingBy(CVConfig::getIdentifier, Collectors.toList()));
     return groupByMonitoringSource.values()
         .stream()
         .map(listOfConfigs -> createMonitoringSourceDTO(listOfConfigs))
@@ -101,7 +130,7 @@ public class DSConfigServiceImpl implements DSConfigService {
   private void populateCommonFieldsOfMonitoringSource(
       List<CVConfig> cvConfigsGroupedByMonitoringSource, MonitoringSourceDTOBuilder monitoringSourceDTOBuilder) {
     CVConfig firstCVConfig = cvConfigsGroupedByMonitoringSource.get(0);
-    monitoringSourceDTOBuilder.monitoringSourceIdentifier(firstCVConfig.getMonitoringSourceIdentifier());
+    monitoringSourceDTOBuilder.monitoringSourceIdentifier(firstCVConfig.getIdentifier());
     monitoringSourceDTOBuilder.monitoringSourceName(firstCVConfig.getMonitoringSourceName());
     long importedAtTime = cvConfigsGroupedByMonitoringSource.stream()
                               .min(Comparator.comparing(CVConfig::getCreatedAt))

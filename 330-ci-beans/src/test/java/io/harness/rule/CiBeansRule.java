@@ -1,6 +1,12 @@
 package io.harness.rule;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
+import io.harness.CIBeansModule;
+import io.harness.callback.DelegateCallbackToken;
+import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.factory.ClosingFactory;
+import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.morphia.MorphiaModule;
@@ -9,15 +15,19 @@ import io.harness.serializer.CiBeansRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.testing.ComponentTestsModule;
+import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import com.google.inject.name.Named;
+import io.grpc.inprocess.InProcessChannelBuilder;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -25,7 +35,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import lombok.extern.slf4j.Slf4j;
+import java.util.function.Supplier;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
@@ -33,9 +43,8 @@ import org.mongodb.morphia.ObjectFactory;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.mongodb.morphia.mapping.DefaultCreator;
 
-@Slf4j
-public class CiBeansRule implements MethodRule, InjectorRuleMixin {
-  ClosingFactory closingFactory;
+public class CiBeansRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
+  private final ClosingFactory closingFactory;
 
   public CiBeansRule(ClosingFactory closingFactory) {
     this.closingFactory = closingFactory;
@@ -53,13 +62,22 @@ public class CiBeansRule implements MethodRule, InjectorRuleMixin {
   }
 
   @Override
-  public List<Module> modules(List<Annotation> annotations) throws Exception {
+  public List<Module> modules(List<Annotation> annotations) {
     ExecutorModule.getInstance().setExecutorService(new CurrentThreadExecutor());
 
     List<Module> modules = new ArrayList<>();
+    modules.add(new ClosingFactoryModule(closingFactory));
     modules.add(new ComponentTestsModule());
     modules.add(KryoModule.getInstance());
     modules.add(new ProviderModule() {
+      @Override
+      protected void configure() {
+        bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {
+        }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
+        bind(new TypeLiteral<DelegateServiceGrpc.DelegateServiceBlockingStub>() {
+        }).toInstance(DelegateServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(generateUuid()).build()));
+      }
+
       @Provides
       @Singleton
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
@@ -88,6 +106,7 @@ public class CiBeansRule implements MethodRule, InjectorRuleMixin {
       }
     });
 
+    modules.add(CIBeansModule.getInstance());
     modules.add(MorphiaModule.getInstance());
     modules.add(new ProviderModule() {
       @Provides

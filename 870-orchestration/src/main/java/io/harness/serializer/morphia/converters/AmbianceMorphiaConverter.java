@@ -1,7 +1,7 @@
 package io.harness.serializer.morphia.converters;
 
 import io.harness.persistence.converters.ProtoMessageConverter;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 
 import com.google.inject.Singleton;
 

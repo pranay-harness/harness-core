@@ -12,6 +12,7 @@ import io.harness.expression.ExpressionEvaluator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Collections;
 import java.util.List;
+import javax.validation.Valid;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -21,7 +22,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class KubernetesClusterConfigDTO extends ConnectorConfigDTO implements ExecutionCapabilityDemander {
-  KubernetesCredentialDTO credential;
+  @Valid KubernetesCredentialDTO credential;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

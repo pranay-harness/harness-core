@@ -2,35 +2,22 @@ package io.harness.engine.expressions;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.Redesign;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
-import io.harness.engine.expressions.functors.ExecutionSweepingOutputFunctor;
-import io.harness.engine.expressions.functors.NodeExecutionAncestorFunctor;
-import io.harness.engine.expressions.functors.NodeExecutionChildFunctor;
-import io.harness.engine.expressions.functors.NodeExecutionEntityType;
-import io.harness.engine.expressions.functors.NodeExecutionQualifiedFunctor;
-import io.harness.engine.expressions.functors.OutcomeFunctor;
-import io.harness.engine.outcomes.OutcomeService;
-import io.harness.engine.outputs.ExecutionSweepingOutputService;
+import io.harness.engine.expressions.functors.*;
+import io.harness.engine.pms.data.PmsOutcomeService;
+import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.exception.CriticalExpressionEvaluationException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
-import io.harness.expression.EngineExpressionEvaluator;
-import io.harness.expression.EngineJexlContext;
-import io.harness.expression.ExpressionEvaluatorUtils;
-import io.harness.expression.JsonFunctor;
-import io.harness.expression.RegexFunctor;
-import io.harness.expression.ResolveObjectResponse;
-import io.harness.expression.VariableResolverTracker;
-import io.harness.expression.XmlFunctor;
-import io.harness.expression.field.OrchestrationField;
-import io.harness.expression.field.OrchestrationFieldProcessor;
-import io.harness.expression.field.OrchestrationFieldType;
-import io.harness.expression.field.ProcessorResult;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.registries.field.OrchestrationFieldRegistry;
+import io.harness.expression.*;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.expression.OrchestrationField;
+import io.harness.pms.expression.OrchestrationFieldProcessor;
+import io.harness.pms.expression.OrchestrationFieldType;
+import io.harness.pms.expression.ProcessorResult;
+import io.harness.pms.sdk.core.registries.OrchestrationFieldRegistry;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -55,10 +42,9 @@ import org.hibernate.validator.constraints.NotEmpty;
  * sample implementation, look at SampleExpressionEvaluator.java and SampleExpressionEvaluatorProvider.java.
  */
 @OwnedBy(CDC)
-@Redesign
 public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
-  @Inject private OutcomeService outcomeService;
-  @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
+  @Inject private PmsOutcomeService pmsOutcomeService;
+  @Inject private PmsSweepingOutputService pmsSweepingOutputService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
   @Inject private OrchestrationFieldRegistry orchestrationFieldRegistry;
@@ -96,13 +82,13 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
     }
 
     if (entityTypes.contains(NodeExecutionEntityType.OUTCOME)) {
-      addToContext("outcome", OutcomeFunctor.builder().ambiance(ambiance).outcomeService(outcomeService).build());
+      addToContext("outcome", OutcomeFunctor.builder().ambiance(ambiance).pmsOutcomeService(pmsOutcomeService).build());
     }
 
     if (entityTypes.contains(NodeExecutionEntityType.SWEEPING_OUTPUT)) {
       addToContext("output",
           ExecutionSweepingOutputFunctor.builder()
-              .executionSweepingOutputService(executionSweepingOutputService)
+              .pmsSweepingOutputService(pmsSweepingOutputService)
               .ambiance(ambiance)
               .build());
     }
@@ -117,8 +103,8 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
     addToContext("child",
         NodeExecutionChildFunctor.builder()
             .nodeExecutionsCache(nodeExecutionsCache)
-            .outcomeService(outcomeService)
-            .executionSweepingOutputService(executionSweepingOutputService)
+            .pmsOutcomeService(pmsOutcomeService)
+            .pmsSweepingOutputService(pmsSweepingOutputService)
             .ambiance(ambiance)
             .entityTypes(entityTypes)
             .build());
@@ -126,8 +112,8 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
     addToContext("ancestor",
         NodeExecutionAncestorFunctor.builder()
             .nodeExecutionsCache(nodeExecutionsCache)
-            .outcomeService(outcomeService)
-            .executionSweepingOutputService(executionSweepingOutputService)
+            .pmsOutcomeService(pmsOutcomeService)
+            .pmsSweepingOutputService(pmsSweepingOutputService)
             .ambiance(ambiance)
             .entityTypes(entityTypes)
             .groupAliases(groupAliases)
@@ -136,8 +122,8 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
     addToContext("qualified",
         NodeExecutionQualifiedFunctor.builder()
             .nodeExecutionsCache(nodeExecutionsCache)
-            .outcomeService(outcomeService)
-            .executionSweepingOutputService(executionSweepingOutputService)
+            .pmsOutcomeService(pmsOutcomeService)
+            .pmsSweepingOutputService(pmsSweepingOutputService)
             .ambiance(ambiance)
             .entityTypes(entityTypes)
             .build());
@@ -187,7 +173,7 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
     Object value = super.evaluateInternal(expression, ctx);
     if (value instanceof OrchestrationField) {
       OrchestrationField orchestrationField = (OrchestrationField) value;
-      return orchestrationField.getFinalValue();
+      return orchestrationField.fetchFinalValue();
     }
     return value;
   }

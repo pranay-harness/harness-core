@@ -4,6 +4,7 @@ import static io.harness.ng.core.mapper.TagMapper.convertToList;
 import static io.harness.ng.core.mapper.TagMapper.convertToMap;
 
 import io.harness.ng.core.dto.OrganizationDTO;
+import io.harness.ng.core.dto.OrganizationResponse;
 import io.harness.ng.core.entities.Organization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,18 +21,29 @@ public class OrganizationMapper {
         .description(Optional.ofNullable(dto.getDescription()).orElse(""))
         .identifier(dto.getIdentifier())
         .name(dto.getName())
+        .harnessManaged(dto.isHarnessManaged())
         .version(dto.getVersion())
         .build();
   }
 
   public static OrganizationDTO writeDto(Organization organization) {
-    return OrganizationDTO.builder()
-        .description(organization.getDescription())
-        .identifier(organization.getIdentifier())
-        .accountIdentifier(organization.getAccountIdentifier())
-        .name(organization.getName())
-        .tags(convertToMap(organization.getTags()))
+    OrganizationDTO organizationDTO = OrganizationDTO.builder()
+                                          .description(organization.getDescription())
+                                          .identifier(organization.getIdentifier())
+                                          .accountIdentifier(organization.getAccountIdentifier())
+                                          .name(organization.getName())
+                                          .tags(convertToMap(organization.getTags()))
+                                          .build();
+    organizationDTO.setHarnessManaged(Boolean.TRUE.equals(organization.getHarnessManaged()));
+    return organizationDTO;
+  }
+
+  public static OrganizationResponse toResponseWrapper(Organization organization) {
+    return OrganizationResponse.builder()
+        .createdAt(organization.getCreatedAt())
         .lastModifiedAt(organization.getLastModifiedAt())
+        .harnessManaged(Boolean.TRUE.equals(organization.getHarnessManaged()))
+        .organization(writeDto(organization))
         .build();
   }
 

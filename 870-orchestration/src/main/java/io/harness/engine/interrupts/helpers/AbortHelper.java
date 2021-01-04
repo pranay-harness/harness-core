@@ -11,21 +11,20 @@ import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionUpdateFailedException;
 import io.harness.engine.interrupts.InterruptProcessingFailedException;
+import io.harness.engine.pms.tasks.TaskExecutor;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.interrupts.Interrupt;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.execution.ExecutableResponse;
-import io.harness.pms.execution.ExecutableResponse.ResponseCase;
-import io.harness.pms.execution.Status;
-import io.harness.pms.execution.TaskChainExecutableResponse;
-import io.harness.pms.execution.TaskExecutableResponse;
-import io.harness.pms.plan.PlanNodeProto;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.ExecutableResponse;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.TaskChainExecutableResponse;
+import io.harness.pms.contracts.execution.TaskExecutableResponse;
+import io.harness.pms.contracts.execution.tasks.TaskCategory;
+import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
-import io.harness.pms.sdk.core.steps.executables.Abortable;
-import io.harness.registries.state.StepRegistry;
-import io.harness.tasks.TaskExecutor;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -40,49 +39,50 @@ import lombok.extern.slf4j.Slf4j;
 public class AbortHelper {
   @Inject private StepRegistry stepRegistry;
   @Inject private NodeExecutionService nodeExecutionService;
-  @Inject private Map<String, TaskExecutor> taskExecutorMap;
+  @Inject private Map<TaskCategory, TaskExecutor> taskExecutorMap;
   @Inject private OrchestrationEngine engine;
 
   public void discontinueMarkedInstance(NodeExecution nodeExecution, Status finalStatus) {
     try {
       Ambiance ambiance = nodeExecution.getAmbiance();
       PlanNodeProto node = nodeExecution.getNode();
-      Step currentState = Preconditions.checkNotNull(stepRegistry.obtain(node.getStepType()));
+      // Step currentState = Preconditions.checkNotNull(stepRegistry.obtain(node.getStepType()));
       ExecutableResponse executableResponse = nodeExecution.obtainLatestExecutableResponse();
       if (executableResponse != null && nodeExecution.isTaskSpawningMode()) {
         String taskId;
-        String taskMode;
+        TaskCategory taskCategory;
         switch (executableResponse.getResponseCase()) {
           case TASK:
             TaskExecutableResponse taskExecutableResponse = executableResponse.getTask();
             taskId = taskExecutableResponse.getTaskId();
-            taskMode = taskExecutableResponse.getTaskMode().name();
+            taskCategory = taskExecutableResponse.getTaskCategory();
             break;
           case TASKCHAIN:
             TaskChainExecutableResponse taskChainExecutableResponse = executableResponse.getTaskChain();
             taskId = taskChainExecutableResponse.getTaskId();
-            taskMode = taskChainExecutableResponse.getTaskMode().name();
+            taskCategory = taskChainExecutableResponse.getTaskCategory();
             break;
           default:
             throw new InvalidRequestException("Executable Response should contain either task or taskChain");
         }
-        TaskExecutor executor = taskExecutorMap.get(taskMode);
+        TaskExecutor executor = taskExecutorMap.get(taskCategory);
         boolean aborted = executor.abortTask(ambiance.getSetupAbstractionsMap(), taskId);
         if (!aborted) {
           log.error(
               "Delegate Task Cannot be aborted : TaskId: {}, NodeExecutionId: {}", taskId, nodeExecution.getUuid());
         }
       }
-      if (currentState instanceof Abortable && executableResponse != null) {
-        if (executableResponse.getResponseCase() == ResponseCase.ASYNC) {
-          ((Abortable) currentState)
-              .handleAbort(ambiance, nodeExecutionService.extractResolvedStepParameters(nodeExecution),
-                  executableResponse.getAsync());
-        } else {
-          log.error("Executable Response of type {} is not supported for abort", executableResponse.getResponseCase());
-          throw new InvalidRequestException("Abort for nodeExecution [" + nodeExecution.getUuid() + "] failed");
-        }
-      }
+      //      if (currentState instanceof Abortable && executableResponse != null) {
+      //        if (executableResponse.getResponseCase() == ResponseCase.ASYNC) {
+      //          ((Abortable) currentState)
+      //              .handleAbort(ambiance, nodeExecutionService.extractResolvedStepParameters(nodeExecution),
+      //                  executableResponse.getAsync());
+      //        } else {
+      //          log.error("Executable Response of type {} is not supported for abort",
+      //          executableResponse.getResponseCase()); throw new InvalidRequestException("Abort for nodeExecution [" +
+      //          nodeExecution.getUuid() + "] failed");
+      //        }
+      //      }
 
       NodeExecution updatedNodeExecution = nodeExecutionService.updateStatusWithOps(
           nodeExecution.getUuid(), finalStatus, ops -> ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis()));

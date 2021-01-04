@@ -67,17 +67,12 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>400-rest</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>440-connector-nextgen</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>71-rest</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>840-ng-triggers</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -98,6 +93,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>950-events-api-proto</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>955-filters-sdk</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -233,6 +233,19 @@
                         <goals>
                             <goal>java</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>software.wings</groupId>
+                <artifactId>899-yaml-schema-plugin</artifactId>
+                <version>0.0.1-SNAPSHOT</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <phase>compile</phase>
                     </execution>
                 </executions>
             </plugin>

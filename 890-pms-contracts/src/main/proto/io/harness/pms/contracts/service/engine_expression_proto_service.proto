@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.service;
+
+option java_multiple_files = true;
+
+import "io/harness/pms/contracts/ambiance/ambiance.proto";
+
+service EngineExpressionProtoService {
+  rpc renderExpression(ExpressionRenderBlobRequest) returns (ExpressionRenderBlobResponse);
+  rpc evaluateExpression(ExpressionEvaluateBlobRequest) returns (ExpressionEvaluateBlobResponse);
+}
+
+message ExpressionRenderBlobRequest {
+  io.harness.pms.contracts.ambiance.Ambiance ambiance = 1;
+  string expression = 2;
+}
+
+message ExpressionRenderBlobResponse {
+  string value = 1;
+}
+
+message ExpressionEvaluateBlobRequest {
+  io.harness.pms.contracts.ambiance.Ambiance ambiance = 1;
+  string expression = 2;
+}
+
+message ExpressionEvaluateBlobResponse {
+  string value = 1;
+}

@@ -5,12 +5,13 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.AmbianceUtils;
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.data.Outcome;
-import io.harness.refObjects.RefObjectUtil;
+import io.harness.pms.sdk.core.resolver.RefObjectUtil;
+import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 import io.harness.utils.AmbianceTestUtils;
@@ -20,6 +21,7 @@ import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -29,6 +31,7 @@ public class OutcomeServiceImplTest extends OrchestrationTestBase {
   @Test
   @RealMongo
   @Owner(developers = PRASHANT)
+  @Ignore("Move to PmsServiceImpl Test")
   @Category(UnitTests.class)
   public void shouldTestSaveAndFind() {
     Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
@@ -51,6 +54,7 @@ public class OutcomeServiceImplTest extends OrchestrationTestBase {
   @Test
   @RealMongo
   @Owner(developers = PRASHANT)
+  @Ignore("Move to PmsServiceImpl Test")
   @Category(UnitTests.class)
   public void shouldTestSaveAndFindForNull() {
     Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
@@ -64,6 +68,7 @@ public class OutcomeServiceImplTest extends OrchestrationTestBase {
   @Test
   @RealMongo
   @Owner(developers = ALEXEI)
+  @Ignore("Move to PmsServiceImpl Test")
   @Category(UnitTests.class)
   public void shouldFetchAllOutcomesByRuntimeId() {
     Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
@@ -82,6 +87,7 @@ public class OutcomeServiceImplTest extends OrchestrationTestBase {
   @Test
   @RealMongo
   @Owner(developers = PRASHANT)
+  @Ignore("Move to PmsServiceImpl Test")
   @Category(UnitTests.class)
   public void shouldFetchOutcomes() {
     Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
@@ -103,6 +109,7 @@ public class OutcomeServiceImplTest extends OrchestrationTestBase {
   @Test
   @RealMongo
   @Owner(developers = PRASHANT)
+  @Ignore("Move to PmsServiceImpl Test")
   @Category(UnitTests.class)
   public void shouldFetchOutcome() {
     Ambiance ambiance = AmbianceTestUtils.buildAmbiance();

@@ -1,0 +1,26 @@
+connector:
+  # Connector typ to access kubernetes cluster
+  # Name of the connector Required
+  name: "My k8s Cluster"
+  # Non-changeable identifier of the connector, can not contain spaces or special chars. REQUIRED
+  identifier: "my_k8s_cluster"
+  type: K8sCluster
+  spec:
+    credential:
+      # Options are ManualConfig and InheritFromDelegate
+      type: ManualConfig
+      spec:
+        masterUrl: "k8s master url"
+        auth:
+          type: ClientKeyCert
+          spec:
+            # Root certificate used to validate client certificates presented to the API server. Optional
+            caCertRef: "acc.kubeClusterCacert"
+            # Client certificate for the cluster. Required
+            clientCertRef: "secretRef:k8s_cluster_client"
+            # Client key for the client certificate. Required
+            clientKeyRef: "secretRef:k8s_client_key"
+            # Client key passphrase Required
+            clientKeyPassphraseRef: "secretRef:k8s_client_key_passphrase"
+            # Encryption algorithm used when the certificate was created. Typically, RSA
+            clientKeyAlgo: "RSA"

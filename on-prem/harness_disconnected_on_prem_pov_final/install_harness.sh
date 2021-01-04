@@ -548,8 +548,6 @@ function startUp(){
 
     if [[ ${newinstallation} == "true" ]];then
         populateEnvironmentVariablesFromMongo
-    else
-        backupMongo
     fi
 
     setUpVerificationService
@@ -564,8 +562,17 @@ function cleanupAfterStart(){
    echo "################################Cleaning up after start ################################"
    rm -rf config
 }
-
+upgrade42=false
+if [[ ${newinstallation} == "false" ]];then
+  backupMongo
+  checkMongoUpgrade
+fi
 stopContainers
 startUp
+
+if [[ ${upgrade42} == "true" ]];then
+  setCompatibility42
+fi
+
 cleanupAfterStart
 echo "Server is running at http://${host1}:${proxyPort}"

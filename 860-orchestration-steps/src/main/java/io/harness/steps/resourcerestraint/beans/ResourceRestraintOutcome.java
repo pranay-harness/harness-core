@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.sdk.core.data.Outcome;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Value;
 import org.springframework.data.annotation.TypeAlias;
@@ -13,10 +14,16 @@ import org.springframework.data.annotation.TypeAlias;
 @Value
 @Builder
 @TypeAlias("resourceRestraintOutcome")
+@JsonTypeName("resourceRestraintOutcome")
 public class ResourceRestraintOutcome implements Outcome {
   String name;
   int capacity;
   String resourceUnit;
   int usage;
   int alreadyAcquiredPermits;
+
+  @Override
+  public String getType() {
+    return "resourceRestraintOutcome";
+  }
 }

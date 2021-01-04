@@ -9,7 +9,7 @@ import io.harness.ci.beans.entities.CIBuild;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.execution.Status;
 
 import java.util.Arrays;
 

@@ -3,6 +3,7 @@ package io.harness.rule;
 import static org.mockito.Mockito.mock;
 
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
+import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
@@ -10,7 +11,9 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.SecretManagementModule;
+import io.harness.ng.eventsframework.EventsFrameworkModule;
 import io.harness.persistence.HPersistence;
+import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.serializer.KryoModule;
@@ -18,12 +21,12 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.NextGenRegistrars;
 import io.harness.service.DelegateGrpcClientWrapper;
-import io.harness.spring.AliasRegistrar;
 import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
+import io.harness.yaml.YamlSdkModule;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -79,6 +82,10 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
     modules.add(KryoModule.getInstance());
+    modules.add(YamlSdkModule.getInstance());
+    modules.add(new EventsFrameworkModule(EventsFrameworkConfiguration.builder()
+                                              .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
+                                              .build()));
     modules.add(new SecretManagementModule());
     modules.add(new SecretManagementClientModule(
         ServiceHttpClientConfig.builder().baseUrl("http://localhost:8080/").build(), "test_secret", "NextGenManager"));
@@ -95,12 +102,6 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
       @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return NextGenRegistrars.morphiaRegistrars;
-      }
-
-      @Provides
-      @Singleton
-      Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
-        return NextGenRegistrars.aliasRegistrars;
       }
 
       @Provides

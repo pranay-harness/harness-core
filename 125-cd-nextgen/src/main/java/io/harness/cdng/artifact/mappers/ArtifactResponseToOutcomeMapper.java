@@ -4,6 +4,7 @@ import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
+import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateResponse;
 import io.harness.delegate.task.artifacts.response.ArtifactDelegateResponse;
 
@@ -33,6 +34,7 @@ public class ArtifactResponseToOutcomeMapper {
         .tag(dockerDelegateResponse.getTag())
         .tagRegex(dockerConfig.getTagRegex() != null ? dockerConfig.getTagRegex().getValue() : null)
         .identifier(dockerConfig.getIdentifier())
+        .artifactType(ArtifactSourceType.DOCKER_HUB.getDisplayName())
         .primaryArtifact(dockerConfig.isPrimaryArtifact())
         .build();
   }

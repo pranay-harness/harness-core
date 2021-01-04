@@ -1,8 +1,9 @@
 package io.harness.ng;
 
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
-import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
+import static io.harness.NGConstants.CONNECTOR_STRING;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
+import static io.harness.delegate.beans.connector.ConnectorCategory.SECRET_MANAGER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.ng.NextGenModule.SECRET_MANAGER_CONNECTOR_SERVICE;
 
@@ -10,8 +11,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.connector.apis.dto.ConnectorCatalogueResponseDTO;
 import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.apis.dto.ConnectorFilterPropertiesDTO;
 import io.harness.connector.apis.dto.ConnectorInfoDTO;
-import io.harness.connector.apis.dto.ConnectorListFilter;
 import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.apis.dto.stats.ConnectorStatistics;
 import io.harness.connector.entities.Connector;
@@ -22,16 +23,21 @@ import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.encryption.Scope;
-import io.harness.eraro.ErrorCode;
+import io.harness.eventsframework.EventsFrameworkConstants;
+import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.entity_crud.connector.ConnectorEntityChangeDTO;
+import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.SecretManagementException;
 import io.harness.ng.core.activityhistory.NGActivityType;
 import io.harness.repositories.ConnectorRepository;
+import io.harness.serializer.KryoSerializer;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.google.protobuf.StringValue;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -45,24 +51,26 @@ public class ConnectorServiceImpl implements ConnectorService {
   private final ConnectorActivityService connectorActivityService;
   private final ConnectorHeartbeatService connectorHeartbeatService;
   private final ConnectorRepository connectorRepository;
+  private final AbstractProducer eventProducer;
+  private final KryoSerializer kryoSerializer;
 
   @Inject
   public ConnectorServiceImpl(@Named(DEFAULT_CONNECTOR_SERVICE) ConnectorService defaultConnectorService,
       @Named(SECRET_MANAGER_CONNECTOR_SERVICE) ConnectorService secretManagerConnectorService,
       ConnectorActivityService connectorActivityService, ConnectorHeartbeatService connectorHeartbeatService,
-      ConnectorRepository connectorRepository) {
+      ConnectorRepository connectorRepository,
+      @Named(EventsFrameworkConstants.ENTITY_CRUD) AbstractProducer eventProducer, KryoSerializer kryoSerializer) {
     this.defaultConnectorService = defaultConnectorService;
     this.secretManagerConnectorService = secretManagerConnectorService;
     this.connectorActivityService = connectorActivityService;
     this.connectorHeartbeatService = connectorHeartbeatService;
     this.connectorRepository = connectorRepository;
+    this.eventProducer = eventProducer;
+    this.kryoSerializer = kryoSerializer;
   }
 
   private ConnectorService getConnectorService(ConnectorType connectorType) {
-    if (connectorType == ConnectorType.LOCAL) {
-      throw new SecretManagementException(
-          ErrorCode.SECRET_MANAGEMENT_ERROR, "Operation not allowed for Secret Manager", USER);
-    } else if (connectorType == ConnectorType.VAULT || connectorType == ConnectorType.GCP_KMS) {
+    if (SECRET_MANAGER.getConnectors().contains(connectorType)) {
       return secretManagerConnectorService;
     }
     return defaultConnectorService;
@@ -75,18 +83,8 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public Page<ConnectorResponseDTO> list(
-      int page, int size, String accountIdentifier, ConnectorListFilter connectorFilter) {
-    return defaultConnectorService.list(page, size, accountIdentifier, connectorFilter);
-  }
-
-  @Override
   public ConnectorResponseDTO create(@NotNull ConnectorDTO connector, String accountIdentifier) {
     ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
-    if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connectorInfo.getIdentifier())) {
-      throw new InvalidRequestException(
-          String.format("%s cannot be used as connector identifier", HARNESS_SECRET_MANAGER_IDENTIFIER), USER);
-    }
     ConnectorResponseDTO connectorResponse =
         getConnectorService(connectorInfo.getConnectorType()).create(connector, accountIdentifier);
     ConnectorInfoDTO savedConnector = connectorResponse.getConnector();
@@ -106,14 +104,38 @@ public class ConnectorServiceImpl implements ConnectorService {
   @Override
   public ConnectorResponseDTO update(@NotNull ConnectorDTO connector, String accountIdentifier) {
     ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
-    if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connectorInfo.getIdentifier())) {
-      throw new InvalidRequestException("Update operation not supported for Harness Secret Manager", USER);
-    }
     ConnectorResponseDTO connectorResponse =
         getConnectorService(connectorInfo.getConnectorType()).update(connector, accountIdentifier);
     ConnectorInfoDTO savedConnector = connectorResponse.getConnector();
     createConnectorUpdateActivity(accountIdentifier, savedConnector);
+    publishEventForConnectorUpdate(accountIdentifier, savedConnector);
     return connectorResponse;
+  }
+
+  private void publishEventForConnectorUpdate(String accountIdentifier, ConnectorInfoDTO savedConnector) {
+    try {
+      ConnectorEntityChangeDTO.Builder connectorUpdateDTOBuilder =
+          ConnectorEntityChangeDTO.newBuilder()
+              .setAccountIdentifier(StringValue.of(accountIdentifier))
+              .setIdentifier(StringValue.of(savedConnector.getIdentifier()));
+      if (isNotBlank(savedConnector.getOrgIdentifier())) {
+        connectorUpdateDTOBuilder.setOrgIdentifier(StringValue.of(savedConnector.getOrgIdentifier()));
+      }
+      if (isNotBlank(savedConnector.getProjectIdentifier())) {
+        connectorUpdateDTOBuilder.setProjectIdentifier(StringValue.of(savedConnector.getProjectIdentifier()));
+      }
+      eventProducer.send(
+          Message.newBuilder()
+              .putAllMetadata(ImmutableMap.of("accountId", accountIdentifier,
+                  EventsFrameworkConstants.ENTITY_TYPE_METADATA, EventsFrameworkConstants.CONNECTOR_ENTITY,
+                  EventsFrameworkConstants.ACTION_METADATA, EventsFrameworkConstants.UPDATE_ACTION))
+              .setData(connectorUpdateDTOBuilder.build().toByteString())
+              .build());
+    } catch (Exception ex) {
+      log.info("Exception while publishing the event of connector update for {}",
+          String.format(CONNECTOR_STRING, savedConnector.getIdentifier(), accountIdentifier,
+              savedConnector.getOrgIdentifier(), savedConnector.getProjectIdentifier()));
+    }
   }
 
   private void createConnectorUpdateActivity(String accountIdentifier, ConnectorInfoDTO connector) {
@@ -127,9 +149,6 @@ public class ConnectorServiceImpl implements ConnectorService {
   @Override
   public boolean delete(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connectorIdentifier)) {
-      throw new InvalidRequestException("Delete operation not supported for Harness Secret Manager", USER);
-    }
     String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     Optional<Connector> connectorOptional =
@@ -213,6 +232,14 @@ public class ConnectorServiceImpl implements ConnectorService {
   public ConnectorStatistics getConnectorStatistics(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, Scope scope) {
     return defaultConnectorService.getConnectorStatistics(accountIdentifier, orgIdentifier, projectIdentifier, scope);
+  }
+
+  @Override
+  public Page<ConnectorResponseDTO> list(int page, int size, String accountIdentifier,
+      ConnectorFilterPropertiesDTO filterProperties, String orgIdentifier, String projectIdentifier,
+      String filterIdentifier, String searchTerm, Boolean includeAllConnectorsAccessibleAtScope) {
+    return defaultConnectorService.list(page, size, accountIdentifier, filterProperties, orgIdentifier,
+        projectIdentifier, filterIdentifier, searchTerm, includeAllConnectorsAccessibleAtScope);
   }
 
   @Override

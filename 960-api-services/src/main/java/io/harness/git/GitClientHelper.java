@@ -68,7 +68,7 @@ public class GitClientHelper {
   private static final Integer OWNER_GROUP = 4;
   private static final Integer REPO_GROUP = 5;
   private static final Integer USER_GROUP = 1;
-  private static final Integer SCM_GROUP = 2;
+  private static final Integer SCM_GROUP = 3;
 
   private static final LoadingCache<String, Object> cache = CacheBuilder.newBuilder()
                                                                 .maximumSize(2000)

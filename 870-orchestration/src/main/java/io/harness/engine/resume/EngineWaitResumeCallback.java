@@ -4,7 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.sdk.core.facilitator.FacilitatorResponse;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.tasks.ResponseData;
@@ -19,11 +20,12 @@ public class EngineWaitResumeCallback implements NotifyCallback {
   @Inject private OrchestrationEngine orchestrationEngine;
 
   Ambiance ambiance;
-  FacilitatorResponse facilitatorResponse;
+  FacilitatorResponseProto facilitatorResponse;
   StepInputPackage inputPackage;
 
   @Builder
-  EngineWaitResumeCallback(Ambiance ambiance, FacilitatorResponse facilitatorResponse, StepInputPackage inputPackage) {
+  EngineWaitResumeCallback(
+      Ambiance ambiance, FacilitatorResponseProto facilitatorResponse, StepInputPackage inputPackage) {
     this.ambiance = ambiance;
     this.facilitatorResponse = facilitatorResponse;
     this.inputPackage = inputPackage;
@@ -31,7 +33,7 @@ public class EngineWaitResumeCallback implements NotifyCallback {
 
   @Override
   public void notify(Map<String, ResponseData> response) {
-    orchestrationEngine.invokeExecutable(ambiance, facilitatorResponse, inputPackage);
+    orchestrationEngine.invokeExecutable(ambiance, facilitatorResponse);
   }
 
   @Override

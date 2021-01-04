@@ -1,28 +1,16 @@
 package io.harness.connector.apis.dto;
 
+import static io.harness.ConnectorConstants.CONNECTOR_TYPES;
+
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ExecutionCapabilityDemanderWithScope;
-import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
-import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConnectorDTO;
-import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
-import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
-import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
-import io.harness.delegate.beans.connector.gitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
-import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
-import io.harness.delegate.beans.connector.nexusconnector.NexusConnectorDTO;
-import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
-import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.expression.ExpressionEvaluator;
-import io.harness.secretmanagerclient.dto.GcpKmsConfigDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.util.List;
 import java.util.Map;
@@ -46,26 +34,11 @@ public class ConnectorInfoDTO {
   String projectIdentifier;
   Map<String, String> tags;
 
-  @NotNull @JsonProperty("type") ConnectorType connectorType;
+  @NotNull @JsonProperty(CONNECTOR_TYPES) ConnectorType connectorType;
 
   @JsonProperty("spec")
-  @JsonTypeInfo(
-      use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = KubernetesClusterConfigDTO.class, name = "K8sCluster")
-    , @JsonSubTypes.Type(value = GitConfigDTO.class, name = "Git"),
-        @JsonSubTypes.Type(value = SplunkConnectorDTO.class, name = "Splunk"),
-        @JsonSubTypes.Type(value = AppDynamicsConnectorDTO.class, name = "AppDynamics"),
-        @JsonSubTypes.Type(value = VaultConnectorDTO.class, name = "Vault"),
-        @JsonSubTypes.Type(value = DockerConnectorDTO.class, name = "DockerRegistry"),
-        @JsonSubTypes.Type(value = LocalConnectorDTO.class, name = "Local"),
-        @JsonSubTypes.Type(value = GcpKmsConfigDTO.class, name = "GcpKms"),
-        @JsonSubTypes.Type(value = GcpConnectorDTO.class, name = "Gcp"),
-        @JsonSubTypes.Type(value = AwsConnectorDTO.class, name = "Aws"),
-        @JsonSubTypes.Type(value = ArtifactoryConnectorDTO.class, name = "Artifactory"),
-        @JsonSubTypes.Type(value = JiraConnectorDTO.class, name = "Jira"),
-        @JsonSubTypes.Type(value = NexusConnectorDTO.class, name = "Nexus")
-  })
+  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = CONNECTOR_TYPES, include = JsonTypeInfo.As.EXTERNAL_PROPERTY,
+      visible = true)
   @Valid
   @NotNull
   ConnectorConfigDTO connectorConfig;

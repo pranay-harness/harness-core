@@ -4,7 +4,7 @@ import io.harness.notification.SeedDataConfiguration;
 import io.harness.notification.entities.NotificationTemplate;
 import io.harness.notification.service.api.NotificationTemplateService;
 import io.harness.notification.service.api.SeedDataPopulaterService;
-import io.harness.templates.PredefinedTemplate;
+import io.harness.notification.templates.PredefinedTemplate;
 
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
@@ -14,9 +14,9 @@ import java.net.URL;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@Slf4j
 public class SeedDataPopulaterServiceImpl implements SeedDataPopulaterService {
   private final NotificationTemplateService notificationTemplateService;
 

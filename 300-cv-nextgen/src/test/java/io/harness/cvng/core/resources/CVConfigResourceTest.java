@@ -2,6 +2,7 @@ package io.harness.cvng.core.resources;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.NEMANJA;
+import static io.harness.rule.OwnerRule.RAGHU;
 
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,7 +39,8 @@ public class CVConfigResourceTest extends CvNextGenTest {
   private String accountId;
   private String connectorIdentifier;
   private String productName;
-  private String groupId;
+  private String monitoringSourceIdentifier;
+  private String monitoringSourceName;
   private String serviceInstanceIdentifier;
 
   @Before
@@ -47,7 +49,8 @@ public class CVConfigResourceTest extends CvNextGenTest {
     this.accountId = generateUuid();
     this.connectorIdentifier = generateUuid();
     this.productName = generateUuid();
-    this.groupId = generateUuid();
+    this.monitoringSourceIdentifier = generateUuid();
+    this.monitoringSourceName = generateUuid();
     this.serviceInstanceIdentifier = generateUuid();
   }
 
@@ -157,7 +160,7 @@ public class CVConfigResourceTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testSaveCVConfig_whenGroupIdIsMissing() {
     SplunkCVConfig cvConfig = createCVConfig();
-    cvConfig.setGroupId(null);
+    cvConfig.setIdentifier(null);
     Response saveResponse = RESOURCES.client()
                                 .target("http://localhost:9998/cv-config")
                                 .queryParam("accountId", accountId)
@@ -166,7 +169,24 @@ public class CVConfigResourceTest extends CvNextGenTest {
     assertThat(saveResponse.getStatus()).isEqualTo(500);
     assertThat(
         saveResponse.readEntity(new GenericType<RestResponse<CVConfig>>() {}).getResponseMessages().get(0).getMessage())
-        .contains("groupId should not be null");
+        .contains("identifier should not be null");
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testSaveCVConfig_whenNameIsMissing() {
+    SplunkCVConfig cvConfig = createCVConfig();
+    cvConfig.setMonitoringSourceName(null);
+    Response saveResponse = RESOURCES.client()
+                                .target("http://localhost:9998/cv-config")
+                                .queryParam("accountId", accountId)
+                                .request(MediaType.APPLICATION_JSON_TYPE)
+                                .post(entity(cvConfig, MediaType.APPLICATION_JSON_TYPE));
+    assertThat(saveResponse.getStatus()).isEqualTo(500);
+    assertThat(
+        saveResponse.readEntity(new GenericType<RestResponse<CVConfig>>() {}).getResponseMessages().get(0).getMessage())
+        .contains("monitoringSourceName should not be null");
   }
 
   @Test
@@ -378,7 +398,8 @@ public class CVConfigResourceTest extends CvNextGenTest {
     cvConfig.setServiceIdentifier(generateUuid());
     cvConfig.setEnvIdentifier(generateUuid());
     cvConfig.setProjectIdentifier(generateUuid());
-    cvConfig.setGroupId(groupId);
+    cvConfig.setIdentifier(monitoringSourceIdentifier);
+    cvConfig.setMonitoringSourceName(monitoringSourceName);
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
     cvConfig.setProductName(productName);
     cvConfig.setCreatedAt(1);

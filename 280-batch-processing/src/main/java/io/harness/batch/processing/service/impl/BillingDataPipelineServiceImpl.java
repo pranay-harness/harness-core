@@ -190,9 +190,10 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
     String description = getDataSetDescription(accountId, accountName);
     Map<String, String> labelMap =
         BillingDataPipelineUtils.getLabelMap(accountName, BillingDataPipelineUtils.getAccountType(account));
+
+    ServiceAccountCredentials credentials = getCredentials(GOOGLE_CREDENTIALS_PATH);
+    BigQuery bigquery = BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
     try {
-      ServiceAccountCredentials credentials = getCredentials(GOOGLE_CREDENTIALS_PATH);
-      BigQuery bigquery = BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
       DatasetInfo datasetInfo =
           DatasetInfo.newBuilder(dataSetName).setDescription(description).setLabels(labelMap).build();
 
@@ -202,6 +203,9 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
     } catch (BigQueryException bigQueryEx) {
       // data set/PreAggregate Table already exists.
       if (bigQueryEx.getCode() == 409) {
+        if (bigquery.getTable(TableId.of(dataSetName, PRE_AGG_TABLE_NAME_VALUE)) == null) {
+          bigquery.create(getPreAggregateTableInfo(dataSetName));
+        }
         return dataSetName;
       }
       log.error("BQ Data Set was not created {} " + bigQueryEx);
@@ -214,27 +218,29 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
       String impersonatedServiceAccount, String srcTablePrefix) throws IOException {
     String gcpProjectId = mainConfig.getBillingDataPipelineConfig().getGcpProjectId();
     String tablePrefix = gcpProjectId + "." + dstDataSetId;
-
+    Map<String, Value> params = new HashMap<>();
     ServiceAccountCredentials sourceCredentials = getCredentials(GOOGLE_CREDENTIALS_PATH);
     Credentials credentials = getImpersonatedCredentials(sourceCredentials, impersonatedServiceAccount);
     DataTransferServiceClient dataTransferServiceClient = getDataTransferClient(credentials);
 
     String query = String.format(TRANSFER_GCP_SCHEDULED_QUERY_TEMPLATE, tablePrefix, tablePrefix, srcTablePrefix);
+    params.put("query", Value.newBuilder().setStringValue(query).build());
     String parent = String.format(PARENT_TEMPLATE_WITH_LOCATION, gcpProjectId, LOCATION);
-
+    log.info("Creating transfer scheduled queries for gcp {}", scheduledQueryName);
     TransferConfig transferConfig =
         TransferConfig.newBuilder()
             .setDisplayName(scheduledQueryName)
-            .setParams(
-                Struct.newBuilder().putFields(QUERY_CONST, Value.newBuilder().setStringValue(query).build()).build())
+            .setParams(Struct.newBuilder().putAllFields(params).build())
             .setScheduleOptions(ScheduleOptions.newBuilder().setStartTime(getJobStartTimeStamp(1, 6, 0)).build())
             .setDataSourceId(SCHEDULED_QUERY_DATA_SOURCE_ID)
+            .setNotificationPubsubTopic(mainConfig.getBillingDataPipelineConfig().getGcpPipelinePubSubTopic())
             .build();
 
     CreateTransferConfigRequest scheduledTransferConfigRequest =
         CreateTransferConfigRequest.newBuilder().setTransferConfig(transferConfig).setParent(parent).build();
     TransferConfig createdTransferConfig =
         executeDataTransferJobCreate(scheduledTransferConfigRequest, dataTransferServiceClient);
+    log.info("Created transfer scheduled queries for gcp {}", createdTransferConfig.getName());
     return createdTransferConfig.getName();
   }
 
@@ -247,7 +253,7 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
     DataTransferServiceClient client = getDataTransferClient(credentials);
 
     String query = String.format(RUN_ONCE_GCP_SCHEDULED_QUERY_TEMPLATE, gcpBqProjectId + "." + gcpBqDatasetId);
-
+    log.info("Creating run once scheduled query for gcp {}", runOnceScheduledQueryName);
     String parent = String.format(PARENT_TEMPLATE, gcpProjectId);
     TransferConfig transferConfig =
         TransferConfig.newBuilder()
@@ -261,17 +267,25 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
                     .build())
             .setDestinationDatasetId(dstDataSetId)
             .setScheduleOptions(ScheduleOptions.newBuilder().setDisableAutoScheduling(true).build())
+            .setNotificationPubsubTopic(mainConfig.getBillingDataPipelineConfig().getGcpPipelinePubSubTopic())
             .setDataSourceId(SCHEDULED_QUERY_DATA_SOURCE_ID)
             .build();
     CreateTransferConfigRequest transferConfigRequest =
         CreateTransferConfigRequest.newBuilder().setTransferConfig(transferConfig).setParent(parent).build();
 
     TransferConfig createdTransferConfig = executeDataTransferJobCreate(transferConfigRequest, client);
+    log.info("Created run once scheduled query for gcp {}", createdTransferConfig.getName());
     return createdTransferConfig.getName();
   }
 
   @Override
   public String createScheduledQueriesForGCP(String scheduledQueryName, String dstDataSetId) throws IOException {
+    if (mainConfig.getBillingDataPipelineConfig().isGcpUseNewPipeline()) {
+      log.info("Using new pipeline. Not creating preaggregated scheduled query for GCP");
+      final String s = "";
+      return s;
+    }
+    log.info("Using old pipeline. creating preaggregated scheduled query for GCP");
     String gcpProjectId = mainConfig.getBillingDataPipelineConfig().getGcpProjectId();
     DataTransferServiceClient dataTransferServiceClient = getDataTransferClient();
     String tablePrefix = gcpProjectId + "." + dstDataSetId;
@@ -417,7 +431,7 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
     ServiceAccountCredentials sourceCredentials = getCredentials(GOOGLE_CREDENTIALS_PATH);
     Credentials credentials = getImpersonatedCredentials(sourceCredentials, impersonatedServiceAccount);
     DataTransferServiceClient client = getDataTransferClient(credentials);
-
+    log.info("Creating data transfer job {}", jobName);
     String parent = String.format(PARENT_TEMPLATE, dstProjectId);
     TransferConfig transferConfig =
         TransferConfig.newBuilder()
@@ -430,10 +444,12 @@ public class BillingDataPipelineServiceImpl implements BillingDataPipelineServic
                            .putFields("overwrite_destination_table", Value.newBuilder().setBoolValue(true).build())
                            .build())
             .setScheduleOptions(ScheduleOptions.newBuilder().setStartTime(getJobStartTimeStamp(1, 6, 0)).build())
+            .setNotificationPubsubTopic(mainConfig.getBillingDataPipelineConfig().getGcpPipelinePubSubTopic())
             .build();
     CreateTransferConfigRequest request =
         CreateTransferConfigRequest.newBuilder().setTransferConfig(transferConfig).setParent(parent).build();
     TransferConfig createdTransferConfig = executeDataTransferJobCreate(request, client);
+    log.info("Created data transfer job {}", createdTransferConfig.getName());
     return createdTransferConfig.getName();
   }
 

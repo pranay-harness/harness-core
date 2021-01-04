@@ -4,10 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.expressions.NodeExecutionsCache;
-import io.harness.engine.outcomes.OutcomeService;
-import io.harness.engine.outputs.ExecutionSweepingOutputService;
+import io.harness.engine.pms.data.PmsOutcomeService;
+import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.expression.LateBindingValue;
-import io.harness.pms.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Ambiance;
 
 import java.util.Set;
 import lombok.Builder;
@@ -18,8 +18,8 @@ import lombok.Value;
 @Builder
 public class NodeExecutionQualifiedFunctor implements LateBindingValue {
   NodeExecutionsCache nodeExecutionsCache;
-  OutcomeService outcomeService;
-  ExecutionSweepingOutputService executionSweepingOutputService;
+  PmsOutcomeService pmsOutcomeService;
+  PmsSweepingOutputService pmsSweepingOutputService;
   Ambiance ambiance;
   Set<NodeExecutionEntityType> entityTypes;
 
@@ -27,8 +27,8 @@ public class NodeExecutionQualifiedFunctor implements LateBindingValue {
   public Object bind() {
     return NodeExecutionValue.builder()
         .nodeExecutionsCache(nodeExecutionsCache)
-        .outcomeService(outcomeService)
-        .executionSweepingOutputService(executionSweepingOutputService)
+        .pmsOutcomeService(pmsOutcomeService)
+        .pmsSweepingOutputService(pmsSweepingOutputService)
         .ambiance(ambiance)
         .startNodeExecution(null)
         .entityTypes(entityTypes)

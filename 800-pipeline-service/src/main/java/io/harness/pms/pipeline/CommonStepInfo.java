@@ -1,7 +1,7 @@
 package io.harness.pms.pipeline;
 
-import io.harness.pms.steps.StepInfo;
-import io.harness.pms.steps.StepMetaData;
+import io.harness.pms.contracts.steps.StepInfo;
+import io.harness.pms.contracts.steps.StepMetaData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,11 +12,13 @@ public class CommonStepInfo {
   StepInfo shellScriptStepInfo =
       StepInfo.newBuilder()
           .setName("Shell Script")
+          .setType("ShellScript")
           .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Utilities/Scripted").build())
           .build();
   StepInfo httpStepInfo =
       StepInfo.newBuilder()
           .setName("Http")
+          .setType("Http")
           .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Utilities/Non-Scripted").build())
           .build();
 

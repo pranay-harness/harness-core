@@ -134,6 +134,7 @@ public class KubernetesDTOToEntity implements ConnectorDTOToEntityMapper<Kuberne
       KubernetesUserNamePasswordDTO kubernetesUserNamePasswordDTO) {
     return K8sUserNamePassword.builder()
         .userName(kubernetesUserNamePasswordDTO.getUsername())
+        .userNameRef(SecretRefHelper.getSecretConfigString(kubernetesUserNamePasswordDTO.getUsernameRef()))
         .passwordRef(SecretRefHelper.getSecretConfigString(kubernetesUserNamePasswordDTO.getPasswordRef()))
         .build();
   }
@@ -159,6 +160,7 @@ public class KubernetesDTOToEntity implements ConnectorDTOToEntityMapper<Kuberne
   private KubernetesAuth toOpenIdConnectKubernetesCredential(KubernetesOpenIdConnectDTO kubernetesOpenIdConnectDTO) {
     return K8sOpenIdConnect.builder()
         .oidcUsername(kubernetesOpenIdConnectDTO.getOidcUsername())
+        .oidcUsernameRef(SecretRefHelper.getSecretConfigString(kubernetesOpenIdConnectDTO.getOidcUsernameRef()))
         .oidcSecretRef(SecretRefHelper.getSecretConfigString(kubernetesOpenIdConnectDTO.getOidcSecretRef()))
         .oidcScopes(kubernetesOpenIdConnectDTO.getOidcScopes())
         .oidcPasswordRef(SecretRefHelper.getSecretConfigString(kubernetesOpenIdConnectDTO.getOidcPasswordRef()))

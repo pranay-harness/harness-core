@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	gomysql "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 )
 
 // ConnectionInfo contains information to connect to a database

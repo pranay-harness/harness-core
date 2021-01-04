@@ -1,0 +1,288 @@
+pipeline:
+  name: My Deployment Pipeline
+  identifier: myPipeline1
+  description: Sample Project Build and Test Pipeline
+  properties:
+    ci:
+      codebase:
+        repoName: mycode.git # accept w/o git at the end
+        connectorRef: account.gitconnector
+        build: ${input} # build: type branch|tag spec: branch: <name>
+  stages:
+    - stage:
+        identifier: stage1
+        name: stage1
+        type: CI
+        description: Build artifacts off master and upload to artifacts repo
+        spec:
+          infrastructure:
+            type: KubernetesDirect
+            spec:
+              connectorRef: cidelegate
+              namespace: harness-delegate
+          cloneCodebase: true # default is true
+          sharedPaths:
+            - myPath
+            - myPath2
+          variables:
+            - name: REPLACE_USERNAME_HERE
+              type: Secret
+              value: REPLACE_USERNAME_HERE
+            - name: param1
+              type: Text
+              value: value1
+
+          serviceDependencies:
+            - identifier: database
+              name: database
+              type: Service
+              spec:
+                envVariables: #Optional - A set of environment variables for the container, on top of what was provided in the custom vars
+                  kube_context: myContext ${mySecret}
+                entrypoint:  # (optional)
+                  - "mysqld"
+                args:  # (optional) - marks the flags for the entry point
+                  - "--character-set-server=utf8mb4"
+                connectorRef: "np-quotecenter" #(optional)
+                image: "us.gcr.io/platform-205701/mysql:12" #latest if version not provided
+                resources:
+                  limits:
+                    memory: 2Gi
+                    cpu: 250m
+          execution:
+            steps:
+              - step:
+                  identifier: buildcommand2
+                  name: stepName
+                  description: myDescription
+                  type: Run
+                  timeout: 90s
+                  skipCondition: someExpression # some JEXL expression
+                  spec:
+                    image: "us.gcr.io/platform-205701/mysql:12"
+                    connectorRef: gcrConnector
+                    command: some command or commands
+                    reports:
+                      - type: JUnit
+                        spec:
+                          paths:
+                            - rspec.xml
+                    envVariables:
+                      key: value1
+                      key2: val2
+                    outputVariables:
+                      - var1
+                      - var2
+                    resources:
+                      limits:
+                        memory: 64Mi
+                        cpu: "2"
+              - step:
+                  name: slack plugin wrapper
+                  identifier: mySlackPluginWrapper
+                  timeout: 20m
+                  type: Plugin
+                  spec:
+                    connectorRef: "gcr-NA"
+                    image: plugins/slack
+                    settings:
+                      webhook: https://hooks.slack.com/services/...
+                      channel: dev
+                    resources:
+                      limits:
+                        memory: 64Mi
+                        cpu: 250m
+
+
+              - step:
+                  identifier: saveCacheGCS
+                  name: Save Cache to GCS
+                  type: SaveCacheGCS
+                  timeout: 3h
+                  spec:
+                    key: "{{checksum filePath1 }}-{{checksum filePath2 }}"
+                    sourcePaths:
+                      - ~/.m2
+                      - ~/.m2
+                    connectorRef: myGCSconnector
+                    bucket: bucket
+                    target: pathOnBucket
+                    resources:
+                      limits:
+                        memory: 64Mi
+                        cpu: 250m
+
+
+              - step:
+                  identifier: saveCacheS3
+                  name: Save Cache to S3
+                  type: SaveCacheS3
+                  timeout: 2h
+                  spec:
+                    key: "{{checksum filePath1 }}-{{checksum filePath2 }}"
+                    sourcePaths:
+                      - ~/.m2
+                      - ~/.m2
+                    connectorRef: myS3connector
+                    endpoint:    #(optional) for S3 compatible object stores
+                    region: us-east1
+                    bucket: bucket
+                    target: pathOnBucket    #(optional
+                    resources:
+                      limits:
+                        memory: 64Mi
+                        cpu: 250m
+              - step:
+                  identifier: restoreCacheS3
+                  name: Restore Cache from S3
+                  type: RestoreCacheS3
+                  timeout: 90s
+                  spec:
+                    connectorRef: myS3
+                    key: "{{checksum filePath1 }}-{{checksum filePath2 }}"
+                    bucket: bucket
+                    region: us-east1
+                    target: pathOnBucket
+                    endpoint:    #(optional) for S3 compatible object stores
+                    resources:
+                      limits:
+                        memory: 64Mi
+                        cpu: 250m
+              - step:
+                  identifier: restoreCacheGCS
+                  name: Restore Cache form GCS
+                  type: RestoreCacheGCS
+                  spec:
+                    key: "{{checksum filePath1 }}-{{checksum filePath2 }}"
+                    connectorRef: myGCS
+                    bucket: bucket
+                    target: pathOnBucket
+                    resources:
+                      limits:
+                        memory: 64Mi
+                        cpu: 250m
+              - step:
+                  name: Build and push to DcokerHub
+                  identifier: docker
+                  type: BuildAndPushDockerHub
+                  description: build and push an image to DcokerHub
+                  timeout: 90s
+                  spec:
+                    connectorRef: my_docker_Connector # only show docker connectors in UI dropdown
+                    repo: myImage #url to the image, without a tag
+                    dockerfile: # (optional) by default it will use the dockerfile in the root of the codebase
+                    tags:
+                      - latest
+                      - 1.0
+                    context:  # (optional) Either a path to a directory containing a Dockerfile, or a url to a git repository.
+                    buildArgs: # (optional) build arguments, which are environment variables accessible only during the build process
+                      - arg1
+                      - arg2
+                    labels: # (optional)
+                      key1: value1
+                      key2: value2
+                    target: someTarget # (optional) Build the specified stage as defined inside the Dockerfile
+                    resources:
+                      limits:
+                        memory: 64Mi
+                        cpu: 250m
+              - step:
+                  name: build and Push to ECR
+                  identifier: ecr
+                  type: BuildAndPushECR
+                  description: build and push an image to ECR
+                  spec:
+                    connectorRef: my_ECR_Connector # only show ECR connectors in UI dropdown
+                    region: us-east-1 # region
+                    account: accontID # aws accont
+                    imageName: imageName # image name
+                    dockerfile: # (optional) by default it will use the dockerfile in the root of the codebase
+                    tags:
+                      - latest
+                      - 1.0
+                    context:  # (optional) Either a path to a directory containing a Dockerfile, or a url to a git repository.
+                    labels: # (optional)
+                      key1: value1
+                      key2: value2
+                    buildArgs: # (optional) build arguments, which are environment variables accessible only during the build process
+                      - arg1
+                      - arg2
+                    target: someTarget # (optional) Build the specified stage as defined inside the Dockerfile
+                    resources:
+                      limits:
+                        memory: 64Mi
+                        cpu: 250m
+              - step:
+                  name: build and Upload to GCR
+                  identifier: gcr
+                  type: BuildAndPushGCR
+                  description: build and push an image to GCR
+                  spec:
+                    connectorRef: my_GCR_Connector # only show GCR connectors in UI dropdown
+                    host: us.gcr
+                    projectID: myProj
+                    imageName: myImage #Image Name without a tage
+                    dockerfile: # (optional) by default it will use the dockerfile in the root of the codebase
+                    tags:
+                      - latest
+                      - 1.0
+                    context:  # (optional) Either a path to a directory containing a Dockerfile, or a url to a git repository.
+                    buildArgs: # (optional) build arguments, which are environment variables accessible only during the build process
+                      - arg1
+                      - arg2
+                    labels: # (optional)
+                      key1: value1
+                      key2: value2
+                    target: someTarget # (optional) Build the specified stage as defined inside the Dockerfile
+                    resources:
+                      limits:
+                        memory: 64Mi
+                        cpu: 250m
+              - step:
+                  name: Upload Artifacts to S3
+                  identifier: s3Upload
+                  type: S3Upload
+                  description: Upload Artifacts to S3
+                  spec:
+                    connectorRef: my_AWS_Connector # only show AWS connectors in UI dropdown
+                    endpoint:    #(optional) for S3 compatible object stores
+                    region: us-east1
+                    bucket: bucket
+                    target: someTarget # (optional) Build the specified stage as defined inside the Dockerfile
+                    sourcePath: somePath
+                    resources:
+                      limits:
+                        memory: 64Mi
+                        cpu: 250m
+              - step:
+                  name: Upload Artifacts to GCS
+                  identifier: gcsUpload
+                  type: GCSUpload
+                  description: Upload Artifacts to GCS
+                  spec:
+                    connectorRef: my_GCP_Connector # only show GCP connectors in UI dropdown
+                    bucket: bucket
+                    target: someTarget # (optional) Build the specified stage as defined inside the Dockerfile
+                    sourcePath: somePath
+                    resources:
+                      limits:
+                        memory: 64Mi
+                        cpu: 250m
+    - stage:
+        identifier: stage2
+        name: stage2
+        type: CI
+        spec:
+          infrastructure:
+            useFromStage: stage1
+          cloneCodebase: false # default is true
+          sharedPaths:
+            - myPath
+            - myPath2
+          variables:
+            - name: REPLACE_USERNAME_HERE
+              type: Secret
+              value: REPLACE_USERNAME_HERE
+            - name: param1
+              type: Text
+              value: value1

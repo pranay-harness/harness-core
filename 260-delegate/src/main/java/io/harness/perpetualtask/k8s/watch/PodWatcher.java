@@ -33,7 +33,6 @@ import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1PodStatus;
 import io.kubernetes.client.openapi.models.V1Volume;
 import io.kubernetes.client.util.CallGeneratorParams;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -175,17 +174,6 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
 
     if (isPodDeleted(pod)) {
       Timestamp timestamp = HTimestamps.fromMillis(pod.getMetadata().getDeletionTimestamp().getMillis());
-      PodEvent podEvent = PodEvent.newBuilder(podEventPrototype)
-                              .setPodUid(uid)
-                              .setType(EVENT_TYPE_TERMINATED)
-                              .setTimestamp(timestamp)
-                              .build();
-      logMessage(podEvent);
-      eventPublisher.publishMessage(podEvent, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
-      publishedPods.remove(uid);
-
-    } else if (isPodInTerminalPhase(pod)) {
-      Timestamp timestamp = HTimestamps.fromInstant(Instant.now());
       PodEvent podEvent = PodEvent.newBuilder(podEventPrototype)
                               .setPodUid(uid)
                               .setType(EVENT_TYPE_TERMINATED)

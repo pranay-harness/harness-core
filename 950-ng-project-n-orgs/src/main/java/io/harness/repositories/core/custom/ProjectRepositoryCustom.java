@@ -2,6 +2,7 @@ package io.harness.repositories.core.custom;
 
 import io.harness.ng.core.entities.Project;
 
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -14,4 +15,6 @@ public interface ProjectRepositoryCustom {
   Project update(Query query, Update update);
 
   Boolean delete(String accountIdentifier, String orgIdentifier, String identifier, Long version);
+
+  List<Project> findAll(Criteria criteria);
 }

@@ -8,6 +8,7 @@ import lombok.Value;
 @Builder
 public class TimeSeriesThresholdDTO {
   String accountId;
+  String orgIdentifier;
   String projectIdentifier;
   DataSourceType dataSourceType;
   String metricPackIdentifier;

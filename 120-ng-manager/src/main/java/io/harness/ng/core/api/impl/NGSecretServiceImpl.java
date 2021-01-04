@@ -82,7 +82,7 @@ public class NGSecretServiceImpl implements NGSecretService {
       dto.setDraft(true);
     }
     EncryptedDataDTO encryptedData = getResponse(secretManagerClient.createSecret(dto));
-    secretEntityReferenceHelper.createEntityReferenceForSecret(encryptedData);
+    secretEntityReferenceHelper.createSetupUsageForSecretManager(encryptedData);
     return fromDTO(encryptedData);
   }
 

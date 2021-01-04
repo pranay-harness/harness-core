@@ -4,6 +4,7 @@ import static io.harness.AuthorizationServiceHeader.BEARER;
 import static io.harness.AuthorizationServiceHeader.DEFAULT;
 import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
 import static io.harness.AuthorizationServiceHeader.MANAGER;
+import static io.harness.cvng.migration.beans.CVNGSchema.CVNGMigrationStatus.RUNNING;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.security.ServiceTokenGenerator.VERIFICATION_SERVICE_SECRET;
@@ -12,9 +13,10 @@ import static com.google.inject.matcher.Matchers.not;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
+import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceKeys;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
-import io.harness.cvng.activity.entities.KubernetesActivitySource.KubernetesActivitySourceKeys;
 import io.harness.cvng.activity.jobs.K8ActivityCollectionHandler;
+import io.harness.cvng.beans.activity.ActivitySourceType;
 import io.harness.cvng.client.NextGenClientModule;
 import io.harness.cvng.client.VerificationManagerClientModule;
 import io.harness.cvng.core.entities.CVConfig;
@@ -23,11 +25,16 @@ import io.harness.cvng.core.entities.DeletedCVConfig;
 import io.harness.cvng.core.entities.DeletedCVConfig.DeletedCVConfigKeys;
 import io.harness.cvng.core.jobs.CVConfigCleanupHandler;
 import io.harness.cvng.core.jobs.CVConfigDataCollectionHandler;
+import io.harness.cvng.core.jobs.EntityCRUDStreamConsumer;
 import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.exception.BadRequestExceptionMapper;
 import io.harness.cvng.exception.ConstraintViolationExceptionMapper;
 import io.harness.cvng.exception.GenericExceptionMapper;
 import io.harness.cvng.exception.NotFoundExceptionMapper;
+import io.harness.cvng.migration.CVNGSchemaHandler;
+import io.harness.cvng.migration.beans.CVNGSchema;
+import io.harness.cvng.migration.beans.CVNGSchema.CVNGSchemaKeys;
+import io.harness.cvng.migration.service.CVNGMigrationService;
 import io.harness.cvng.statemachine.jobs.AnalysisOrchestrationJob;
 import io.harness.cvng.statemachine.jobs.DeploymentVerificationJobInstanceOrchestrationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
@@ -52,6 +59,7 @@ import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.morphia.MorphiaModule;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.notification.module.NotificationClientModule;
 import io.harness.persistence.HPersistence;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.security.JWTAuthenticationFilter;
@@ -144,6 +152,9 @@ public class VerificationApplication extends Application<VerificationConfigurati
   public static void configureObjectMapper(final ObjectMapper mapper) {
     mapper.setSubtypeResolver(new JsonSubtypeResolver(mapper.getSubtypeResolver()));
   }
+  private void createConsumerThreadsToListenToEvents(Injector injector) {
+    new Thread(injector.getInstance(EntityCRUDStreamConsumer.class)).start();
+  }
 
   @Override
   public void run(VerificationConfiguration configuration, Environment environment) {
@@ -211,13 +222,15 @@ public class VerificationApplication extends Application<VerificationConfigurati
     });
 
     modules.add(MorphiaModule.getInstance());
-    modules.add(new CVServiceModule());
+    modules.add(new CVServiceModule(configuration));
+    modules.add(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration()));
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(new VerificationManagerClientModule(configuration.getManagerClientConfig().getBaseUrl()));
     modules.add(new NextGenClientModule(configuration.getNgManagerServiceConfig()));
     modules.add(new SecretManagementClientModule(configuration.getManagerClientConfig(),
         configuration.getNgManagerServiceConfig().getManagerServiceSecret(), "NextGenManager"));
     modules.add(new CVNextGenCommonsServiceModule());
+    modules.add(new NotificationClientModule(configuration.getNotificationClientConfiguration()));
     Injector injector = Guice.createInjector(modules);
     initializeServiceSecretKeys();
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
@@ -233,8 +246,12 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerExceptionMappers(environment.jersey());
     registerCVConfigCleanupIterator(injector);
     registerHealthChecks(environment, injector);
+    createConsumerThreadsToListenToEvents(injector);
+    registerCVNGSchemaMigrationIterator(injector);
     log.info("Leaving startup maintenance mode");
     MaintenanceController.forceMaintenance(false);
+
+    runMigrations(injector);
 
     log.info("Starting app done");
   }
@@ -324,14 +341,17 @@ public class VerificationApplication extends Application<VerificationConfigurati
         MongoPersistenceIterator.<KubernetesActivitySource, MorphiaFilterExpander<KubernetesActivitySource>>builder()
             .mode(PersistenceIterator.ProcessMode.PUMP)
             .clazz(KubernetesActivitySource.class)
-            .fieldName(KubernetesActivitySourceKeys.dataCollectionTaskIteration)
+            .fieldName(ActivitySourceKeys.dataCollectionTaskIteration)
             .targetInterval(ofMinutes(5))
             .acceptableNoAlertDelay(ofMinutes(1))
             .executorService(dataCollectionExecutor)
             .semaphore(new Semaphore(5))
             .handler(k8ActivityCollectionHandler)
             .schedulingType(REGULAR)
-            .filterExpander(query -> query.criteria(KubernetesActivitySourceKeys.dataCollectionTaskId).doesNotExist())
+            .filterExpander(query
+                -> query.filter(ActivitySourceKeys.type, ActivitySourceType.KUBERNETES)
+                       .criteria(ActivitySourceKeys.dataCollectionTaskId)
+                       .doesNotExist())
             .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
             .redistribute(true)
             .build();
@@ -438,6 +458,30 @@ public class VerificationApplication extends Application<VerificationConfigurati
     environment.jersey().register(injector.getInstance(CVNGAuthenticationFilter.class));
   }
 
+  private void registerCVNGSchemaMigrationIterator(Injector injector) {
+    ScheduledThreadPoolExecutor migrationExecutor = new ScheduledThreadPoolExecutor(
+        2, new ThreadFactoryBuilder().setNameFormat("cvng-schema-migration-iterator").build());
+    CVNGSchemaHandler cvngSchemaMigrationHandler = injector.getInstance(CVNGSchemaHandler.class);
+
+    PersistenceIterator dataCollectionIterator =
+        MongoPersistenceIterator.<CVNGSchema, MorphiaFilterExpander<CVNGSchema>>builder()
+            .mode(PersistenceIterator.ProcessMode.PUMP)
+            .clazz(CVNGSchema.class)
+            .fieldName(CVNGSchemaKeys.cvngNextIteration)
+            .targetInterval(ofMinutes(30))
+            .acceptableNoAlertDelay(ofMinutes(5))
+            .executorService(migrationExecutor)
+            .semaphore(new Semaphore(3))
+            .handler(cvngSchemaMigrationHandler)
+            .schedulingType(REGULAR)
+            .filterExpander(query -> query.criteria(CVNGSchemaKeys.cvngMigrationStatus).notEqual(RUNNING))
+            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
+            .redistribute(true)
+            .build();
+    injector.injectMembers(dataCollectionIterator);
+    migrationExecutor.scheduleWithFixedDelay(() -> dataCollectionIterator.process(), 0, 15, TimeUnit.MINUTES);
+  }
+
   private void initializeServiceSecretKeys() {
     // TODO: using env variable directly for now. The whole secret management needs to move to env variable and
     // cv-nextgen should have a new secret with manager along with other services. Change this once everything is
@@ -468,5 +512,9 @@ public class VerificationApplication extends Application<VerificationConfigurati
     jersey.register(ConstraintViolationExceptionMapper.class);
     jersey.register(NotFoundExceptionMapper.class);
     jersey.register(BadRequestExceptionMapper.class);
+  }
+
+  private void runMigrations(Injector injector) {
+    injector.getInstance(CVNGMigrationService.class).runMigrations();
   }
 }

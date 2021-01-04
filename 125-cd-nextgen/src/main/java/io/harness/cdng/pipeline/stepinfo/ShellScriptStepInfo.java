@@ -1,19 +1,21 @@
 package io.harness.cdng.pipeline.stepinfo;
 
-import io.harness.cdng.executionplan.utils.PlanCreatorFacilitatorUtils;
 import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.cdstepinfo.ShellScriptStepInfoVisitorHelper;
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.executions.steps.StepSpecTypeConstants;
-import io.harness.pms.steps.StepType;
+import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.redesign.states.shell.ShellScriptStep;
-import io.harness.redesign.states.shell.ShellScriptStepParameters;
+import io.harness.steps.common.script.ExecutionTarget;
+import io.harness.steps.common.script.ShellScriptSourceWrapper;
+import io.harness.steps.common.script.ShellScriptStepParameters;
+import io.harness.steps.common.script.ShellType;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
-
-import software.wings.sm.states.ShellScriptState;
+import io.harness.yaml.core.variables.NGVariable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -35,12 +37,10 @@ public class ShellScriptStepInfo extends ShellScriptStepParameters implements CD
   @JsonIgnore String identifier;
 
   @Builder(builderMethodName = "infoBuilder")
-  public ShellScriptStepInfo(boolean executeOnDelegate, String host, List<String> tags,
-      ShellScriptState.ConnectionType connectionType, String sshKeyRef, String connectionAttributes, String commandPath,
-      ScriptType scriptType, String scriptString, String timeoutSecs, String outputVars, String sweepingOutputName,
-      String sweepingOutputScope, String name, String identifier) {
-    super(executeOnDelegate, host, tags, connectionType, sshKeyRef, connectionAttributes, commandPath, scriptType,
-        scriptString, timeoutSecs, outputVars, sweepingOutputName, sweepingOutputScope);
+  public ShellScriptStepInfo(ShellType shellType, ShellScriptSourceWrapper source,
+      List<NGVariable> environmentVariables, List<NGVariable> outputVariables, ExecutionTarget executionTarget,
+      ParameterField<String> timeout, ParameterField<Boolean> onDelegate, String name, String identifier) {
+    super(shellType, source, environmentVariables, outputVariables, executionTarget, timeout, onDelegate);
     this.name = name;
     this.identifier = identifier;
   }
@@ -59,7 +59,7 @@ public class ShellScriptStepInfo extends ShellScriptStepParameters implements CD
   @Override
   @JsonIgnore
   public String getFacilitatorType() {
-    return PlanCreatorFacilitatorUtils.decideTaskFacilitatorType();
+    return OrchestrationFacilitatorType.TASK;
   }
 
   @Override

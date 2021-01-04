@@ -33,6 +33,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.data.structure.HarnessStringUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.EnvironmentGenerator.Environments;
 import io.harness.generator.InfrastructureProvisionerGenerator.InfrastructureProvisioners;
@@ -57,9 +58,6 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.VMSSAuthType;
 import software.wings.beans.VMSSDeploymentType;
-import software.wings.beans.appmanifest.AppManifestKind;
-import software.wings.beans.appmanifest.ApplicationManifest;
-import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.dl.WingsPersistence;
 import software.wings.infra.AwsAmiInfrastructure;
 import software.wings.infra.AwsEcsInfrastructure;
@@ -415,26 +413,11 @@ public class InfrastructureDefinitionGenerator {
 
   private InfrastructureDefinition ensureK8sTest(
       Randomizer.Seed seed, Owners owners, Environment environment, String namespace) {
-    ApplicationManifest applicationManifest =
-        applicationManifestService.getByEnvId(environment.getAppId(), environment.getUuid(), AppManifestKind.VALUES);
-
-    if (applicationManifest == null) {
-      environmentService.createValues(environment.getAppId(), environment.getUuid(), null,
-          ManifestFile.builder().fileName("values.yaml").fileContent("serviceType: ClusterIP\n").build(),
-          AppManifestKind.VALUES);
-    }
-
-    Service service = owners.obtainService();
-    if (service == null) {
-      service = serviceGenerator.ensurePredefined(seed, owners, Services.K8S_V2_TEST);
-      owners.add(service);
-    }
-
     final SettingAttribute gcpCloudProvider = settingGenerator.ensurePredefined(seed, owners, GCP_PLAYGROUND);
 
     InfrastructureDefinition infrastructureDefinition =
         InfrastructureDefinition.builder()
-            .name("exploration-harness-test-" + namespace)
+            .name("gcp-harness-test-" + namespace)
             .infrastructure(GoogleKubernetesEngine.builder()
                                 .cloudProviderId(gcpCloudProvider.getUuid())
                                 .clusterName("us-central1-a/harness-test")
@@ -733,7 +716,15 @@ public class InfrastructureDefinitionGenerator {
       return existing;
     }
 
-    return infrastructureDefinitionService.save(infrastructureDefinition, false, true);
+    try {
+      return infrastructureDefinitionService.save(infrastructureDefinition, false, true);
+    } catch (InvalidRequestException ex) {
+      existing = exists(infrastructureDefinition);
+      if (existing != null) {
+        return existing;
+      }
+      throw ex;
+    }
   }
 
   private InfrastructureDefinition ensurePcf(Seed seed, Owners owners, String bearerToken) {

@@ -53,6 +53,7 @@ public class AnomalyServiceImplTest extends CvNextGenTest {
   private String serviceIdentifier;
   private String envIdentifier;
   private String accountId;
+  private String orgIdentifier;
   @Inject private HPersistence hPersistence;
 
   @Before
@@ -61,6 +62,7 @@ public class AnomalyServiceImplTest extends CvNextGenTest {
     serviceIdentifier = generateUuid();
     envIdentifier = generateUuid();
     accountId = generateUuid();
+    orgIdentifier = generateUuid();
   }
 
   @Test
@@ -213,7 +215,7 @@ public class AnomalyServiceImplTest extends CvNextGenTest {
   }
 
   private CVConfig createAndSaveAppDConfig(CVMonitoringCategory category) {
-    metricPackService.getMetricPacks(accountId, projectIdentifier, DataSourceType.APP_DYNAMICS);
+    metricPackService.getMetricPacks(accountId, orgIdentifier, projectIdentifier, DataSourceType.APP_DYNAMICS);
     AppDynamicsCVConfig appDynamicsCVConfig = new AppDynamicsCVConfig();
     appDynamicsCVConfig.setServiceIdentifier(serviceIdentifier);
     appDynamicsCVConfig.setEnvIdentifier(envIdentifier);
@@ -225,7 +227,8 @@ public class AnomalyServiceImplTest extends CvNextGenTest {
                                           .metrics(Sets.newHashSet(MetricPack.MetricDefinition.builder().build()))
                                           .build());
     appDynamicsCVConfig.setConnectorIdentifier(generateUuid());
-    appDynamicsCVConfig.setGroupId(generateUuid());
+    appDynamicsCVConfig.setIdentifier(generateUuid());
+    appDynamicsCVConfig.setMonitoringSourceName(generateUuid());
     appDynamicsCVConfig.setApplicationName(generateUuid());
     appDynamicsCVConfig.setTierName(generateUuid());
     return cvConfigService.save(appDynamicsCVConfig);

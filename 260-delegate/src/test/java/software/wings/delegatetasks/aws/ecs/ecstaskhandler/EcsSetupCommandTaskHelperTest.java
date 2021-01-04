@@ -33,6 +33,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static wiremock.com.google.common.collect.Lists.newArrayList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
 import io.harness.exception.WingsException;
@@ -101,6 +103,7 @@ import org.mockito.Spy;
 import org.slf4j.Logger;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   public static final String SECURITY_GROUP_ID_1 = "sg-id";
   public static final String CLUSTER_NAME = "clusterName";
@@ -262,7 +265,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
             .withFamily("family")
             .withRevision(1)
             .withContainerDefinitions(
-                new com.amazonaws.services.ecs.model.ContainerDefinition()
+                new ContainerDefinition()
                     .withPortMappings(new PortMapping().withContainerPort(80).withProtocol("http"))
                     .withName(CONTAINER_NAME));
 
@@ -457,7 +460,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
 
   private TaskDefinition getTaskDefinition() {
     return new TaskDefinition().withFamily("family").withRevision(1).withContainerDefinitions(
-        new com.amazonaws.services.ecs.model.ContainerDefinition()
+        new ContainerDefinition()
             .withPortMappings(new PortMapping().withContainerPort(80).withProtocol("http"))
             .withName(CONTAINER_NAME));
   }
@@ -592,8 +595,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     assertThat(registerTaskDefinitionRequest.getNetworkMode().toLowerCase())
         .isEqualTo(NetworkMode.Awsvpc.name().toLowerCase());
     assertThat(registerTaskDefinitionRequest.getContainerDefinitions()).hasSize(1);
-    com.amazonaws.services.ecs.model.ContainerDefinition taskDefinition1 =
-        registerTaskDefinitionRequest.getContainerDefinitions().iterator().next();
+    ContainerDefinition taskDefinition1 = registerTaskDefinitionRequest.getContainerDefinitions().iterator().next();
     assertThat(taskDefinition1.getPortMappings()).isNotNull();
     assertThat(taskDefinition1.getPortMappings()).hasSize(1);
 

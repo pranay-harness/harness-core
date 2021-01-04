@@ -142,7 +142,7 @@ public class SecretCrudServiceImplTest extends CategoryTest {
     when(secretManagerClient.createSecretFile(any(), any()).execute())
         .thenReturn(Response.success(new RestResponse<>(encryptedDataDTO)));
     when(ngSecretServiceV2.create(any(), any(), eq(false))).thenReturn(secret);
-    doNothing().when(secretEntityReferenceHelper).createEntityReferenceForSecret(any());
+    doNothing().when(secretEntityReferenceHelper).createSetupUsageForSecretManager(any());
 
     SecretResponseWrapper created =
         secretCrudService.createFile("account", secretDTOV2, new StringInputStream("string"));
@@ -150,7 +150,7 @@ public class SecretCrudServiceImplTest extends CategoryTest {
 
     verify(secretManagerClient, atLeastOnce()).createSecretFile(any(), any());
     verify(ngSecretServiceV2).create(any(), any(), eq(false));
-    verify(secretEntityReferenceHelper).createEntityReferenceForSecret(any());
+    verify(secretEntityReferenceHelper).createSetupUsageForSecretManager(any());
   }
 
   @Test
@@ -242,6 +242,7 @@ public class SecretCrudServiceImplTest extends CategoryTest {
         .thenReturn(Response.success(new RestResponse<>(true)));
     when(ngSecretServiceV2.delete(any(), any(), any(), any())).thenReturn(true);
     doNothing().when(secretEntityReferenceHelper).deleteSecretEntityReferenceWhenSecretGetsDeleted(any());
+    when(ngSecretServiceV2.get(any(), any(), any(), any())).thenReturn(Optional.empty());
     boolean success = secretCrudService.delete("account", null, null, "identifier");
 
     assertThat(success).isTrue();

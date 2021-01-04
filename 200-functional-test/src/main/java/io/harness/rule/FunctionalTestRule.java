@@ -2,6 +2,7 @@ package io.harness.rule;
 
 import static io.harness.cache.CacheBackend.NOOP;
 import static io.harness.mongo.MongoModule.defaultMongoClientOptions;
+import static io.harness.pms.sdk.PmsSdkConfiguration.DeployMode.LOCAL;
 
 import static org.mockito.Mockito.mock;
 
@@ -16,6 +17,7 @@ import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.segment.SegmentConfig;
+import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.functional.AbstractFunctionalTest;
@@ -32,6 +34,17 @@ import io.harness.mongo.ObjectFactoryModule;
 import io.harness.mongo.QueryFactory;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.sdk.PmsSdkConfiguration;
+import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
+import io.harness.redis.RedisConfig;
+import io.harness.registrars.OrchestrationModuleRegistrarHelper;
+import io.harness.registrars.OrchestrationStepsModuleEventHandlerRegistrar;
+import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
+import io.harness.registrars.OrchestrationVisualizationModuleEventHandlerRegistrar;
+import io.harness.registrars.WingsAdviserRegistrar;
+import io.harness.registrars.WingsStepRegistrar;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rest.RestResponse;
 import io.harness.scm.ScmSecret;
@@ -43,12 +56,12 @@ import io.harness.serializer.kryo.CvNextGenCommonsBeansKryoRegistrar;
 import io.harness.serializer.morphia.BatchProcessingMorphiaRegistrar;
 import io.harness.serializer.morphia.EventServerMorphiaRegistrar;
 import io.harness.service.DelegateServiceModule;
-import io.harness.spring.AliasRegistrar;
 import io.harness.springdata.SpringPersistenceModule;
 import io.harness.testframework.framework.ManagerExecutor;
 import io.harness.testframework.framework.Setup;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
+import io.harness.timescaledb.TimeScaleDBConfig;
 
 import software.wings.app.AuthModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
@@ -90,6 +103,7 @@ import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -198,14 +212,6 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
 
       @Provides
       @Singleton
-      Set<Class<? extends AliasRegistrar>> aliasRegistrars() {
-        return ImmutableSet.<Class<? extends AliasRegistrar>>builder()
-            .addAll(ManagerRegistrars.aliasRegistrars)
-            .build();
-      }
-
-      @Provides
-      @Singleton
       @Named("morphiaClasses")
       Map<Class, String> morphiaCustomCollectionNames() {
         return ImmutableMap.<Class, String>builder()
@@ -302,6 +308,7 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
 
     modules.add(new GrpcServiceConfigurationModule(((MainConfiguration) configuration).getGrpcServerConfig(),
         ((MainConfiguration) configuration).getPortal().getJwtNextGenManagerSecret()));
+    modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration()));
     return modules;
   }
 
@@ -332,7 +339,29 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     configuration.setNgManagerServiceHttpClientConfig(
         ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build());
     configuration.getBackgroundSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
+    configuration.setEventsFrameworkConfiguration(
+        EventsFrameworkConfiguration.builder()
+            .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
+            .build());
+    configuration.setTimeScaleDBConfig(TimeScaleDBConfig.builder().build());
     return configuration;
+  }
+
+  private PmsSdkConfiguration getPmsSdkConfiguration() {
+    Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> engineEventHandlersMap =
+        new HashMap<>();
+    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
+        engineEventHandlersMap, OrchestrationVisualizationModuleEventHandlerRegistrar.getEngineEventHandlers());
+    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
+        engineEventHandlersMap, OrchestrationStepsModuleEventHandlerRegistrar.getEngineEventHandlers());
+    return PmsSdkConfiguration.builder()
+        .deploymentMode(LOCAL)
+        .serviceName("functionaltests")
+        .engineSteps(WingsStepRegistrar.getEngineSteps())
+        .engineAdvisers(WingsAdviserRegistrar.getEngineAdvisers())
+        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
+        .engineEventHandlersMap(engineEventHandlersMap)
+        .build();
   }
 
   @Override

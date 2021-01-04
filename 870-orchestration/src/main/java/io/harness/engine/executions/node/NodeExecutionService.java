@@ -5,7 +5,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.NodeExecution;
 import io.harness.interrupts.ExecutionInterruptType;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.execution.NodeExecutionProto;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 
 import java.util.EnumSet;
@@ -44,6 +45,8 @@ public interface NodeExecutionService {
 
   NodeExecution save(NodeExecution nodeExecution);
 
+  NodeExecution save(NodeExecutionProto nodeExecution);
+
   List<NodeExecution> fetchChildrenNodeExecutionsByStatuses(
       String planExecutionId, List<String> parentIds, EnumSet<Status> statuses);
 
@@ -57,8 +60,4 @@ public interface NodeExecutionService {
   Optional<NodeExecution> getByNodeIdentifier(@NonNull String nodeIdentifier, @NonNull String planExecutionId);
 
   List<NodeExecution> findByParentIdAndStatusIn(String parentId, EnumSet<Status> flowingStatuses);
-
-  StepParameters extractStepParameters(NodeExecution nodeExecution);
-
-  StepParameters extractResolvedStepParameters(NodeExecution nodeExecution);
 }

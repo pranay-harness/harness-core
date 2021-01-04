@@ -1,6 +1,7 @@
 package io.harness.ng.core.invites.api.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.core.invites.entities.Invite.InviteType.ADMIN_INITIATED_INVITE;
 import static io.harness.ng.core.invites.entities.Invite.InviteType.USER_INITIATED_INVITE;
@@ -129,7 +130,7 @@ public class InvitesServiceImpl implements InvitesService {
       return InviteOperationResponse.USER_INVITE_RESENT;
 
     } catch (DuplicateKeyException ex) {
-      throw new DuplicateFieldException((invite.getProjectIdentifier() == null)
+      throw new DuplicateFieldException(isEmpty(invite.getProjectIdentifier())
               ? String.format("Invite [%s] under account [%s] and organization [%s] already exists", invite.getId(),
                   invite.getAccountIdentifier(), invite.getOrgIdentifier())
               : String.format("Invite [%s] under account [%s], organization [%s] and project [%s] already exists",
@@ -227,14 +228,14 @@ public class InvitesServiceImpl implements InvitesService {
     updateJWTTokenInInvite(invite);
     String url = String.format(verificationBaseUrl, invite.getInviteToken(), invite.getAccountIdentifier());
     String subject;
-    if (invite.getProjectIdentifier() == null) {
+    if (isEmpty(invite.getProjectIdentifier())) {
       subject = String.format(MAIL_SUBJECT_FORMAT_FOR_ORGANIZATION, invite.getOrgIdentifier());
     } else {
       subject = String.format(MAIL_SUBJECT_FORMAT_FOR_PROJECT, invite.getProjectIdentifier());
     }
     EmailData emailData = EmailData.builder().to(ImmutableList.of(invite.getEmail())).subject(subject).build();
     emailData.setTemplateName("invite");
-    if (invite.getProjectIdentifier() == null) {
+    if (isEmpty(invite.getProjectIdentifier())) {
       emailData.setTemplateModel(ImmutableMap.of("organizationname", invite.getOrgIdentifier(), "url", url));
     } else {
       emailData.setTemplateModel(ImmutableMap.of("projectname", invite.getProjectIdentifier(), "url", url));

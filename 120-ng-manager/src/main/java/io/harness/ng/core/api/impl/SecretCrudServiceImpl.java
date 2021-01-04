@@ -1,5 +1,6 @@
 package io.harness.ng.core.api.impl;
 
+import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
@@ -17,6 +18,7 @@ import io.harness.ng.core.api.SecretModifyService;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.SecretFileSpecDTO;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
+import io.harness.ng.core.dto.secrets.SecretTextSpecDTO;
 import io.harness.ng.core.models.Secret;
 import io.harness.ng.core.models.Secret.SecretKeys;
 import io.harness.ng.core.remote.SecretValidationMetaData;
@@ -96,7 +98,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
   public SecretResponseWrapper create(String accountIdentifier, SecretDTOV2 dto) {
     EncryptedDataDTO encryptedData = getService(dto.getType()).create(accountIdentifier, dto);
     if (Optional.ofNullable(encryptedData).isPresent()) {
-      secretEntityReferenceHelper.createEntityReferenceForSecret(encryptedData);
+      secretEntityReferenceHelper.createSetupUsageForSecretManager(encryptedData);
       Secret secret = ngSecretService.create(accountIdentifier, dto, false);
       return getResponseWrapper(secret);
     }
@@ -110,7 +112,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
     }
     EncryptedDataDTO encryptedData = getService(dto.getType()).create(accountIdentifier, dto);
     if (Optional.ofNullable(encryptedData).isPresent()) {
-      secretEntityReferenceHelper.createEntityReferenceForSecret(encryptedData);
+      secretEntityReferenceHelper.createSetupUsageForSecretManager(encryptedData);
       Secret secret = ngSecretService.create(accountIdentifier, dto, true);
       return getResponseWrapper(secret);
     }
@@ -153,21 +155,49 @@ public class SecretCrudServiceImpl implements SecretCrudService {
   public boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
     EncryptedDataDTO encryptedData =
         getResponse(secretManagerClient.getSecret(identifier, accountIdentifier, orgIdentifier, projectIdentifier));
+    Optional<SecretResponseWrapper> optionalSecret =
+        get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
 
-    boolean remoteDeletionSuccess =
-        getResponse(secretManagerClient.deleteSecret(identifier, accountIdentifier, orgIdentifier, projectIdentifier));
-    boolean localDeletionSuccess = false;
+    boolean remoteDeletionSuccess = true, localDeletionSuccess = false;
+    if (encryptedData != null) {
+      remoteDeletionSuccess = getResponse(
+          secretManagerClient.deleteSecret(identifier, accountIdentifier, orgIdentifier, projectIdentifier));
+    }
+
     if (remoteDeletionSuccess) {
       localDeletionSuccess = ngSecretService.delete(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     }
     if (remoteDeletionSuccess && localDeletionSuccess) {
-      secretEntityReferenceHelper.deleteSecretEntityReferenceWhenSecretGetsDeleted(encryptedData);
+      if (encryptedData != null) {
+        secretEntityReferenceHelper.deleteSecretEntityReferenceWhenSecretGetsDeleted(encryptedData);
+      } else {
+        optionalSecret.ifPresent(secretResponseWrapper
+            -> secretEntityReferenceHelper.deleteSecretEntityReferenceWhenSecretGetsDeleted(
+                EncryptedDataDTO.builder()
+                    .account(accountIdentifier)
+                    .org(orgIdentifier)
+                    .project(projectIdentifier)
+                    .identifier(identifier)
+                    .secretManager(getSecretManagerIdentifier(secretResponseWrapper.getSecret()))
+                    .build()));
+      }
       return true;
     }
     if (!remoteDeletionSuccess) {
       throw new InvalidRequestException("Unable to delete secret remotely.", USER);
     } else {
       throw new InvalidRequestException("Unable to delete secret locally, data might be inconsistent", USER);
+    }
+  }
+
+  private String getSecretManagerIdentifier(SecretDTOV2 secret) {
+    switch (secret.getType()) {
+      case SecretText:
+        return ((SecretTextSpecDTO) secret.getSpec()).getSecretManagerIdentifier();
+      case SecretFile:
+        return ((SecretFileSpecDTO) secret.getSpec()).getSecretManagerIdentifier();
+      default:
+        return HARNESS_SECRET_MANAGER_IDENTIFIER;
     }
   }
 
@@ -231,7 +261,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
             getRequestBody(ByteStreams.toByteArray(
                 new BoundedInputStream(inputStream, fileUploadLimit.getEncryptedFileLimit())))));
     if (Optional.ofNullable(encryptedData).isPresent()) {
-      secretEntityReferenceHelper.createEntityReferenceForSecret(encryptedData);
+      secretEntityReferenceHelper.createSetupUsageForSecretManager(encryptedData);
       Secret secret = ngSecretService.create(accountIdentifier, dto, false);
       return getResponseWrapper(secret);
     }

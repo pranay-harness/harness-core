@@ -10,10 +10,10 @@ import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.functional.redesign.mixins.adviserobtainment.AdviserObtainmentTestMixin;
 import io.harness.functional.redesign.mixins.advisertype.AdviserTypeTestMixin;
 import io.harness.functional.redesign.mixins.ambiance.AmbianceTestMixin;
+import io.harness.functional.redesign.mixins.executionmetadata.ExecutionMetadataTestMixin;
 import io.harness.functional.redesign.mixins.facilitatorobtainment.FacilitatorObtainmentTestMixin;
 import io.harness.functional.redesign.mixins.facilitatortype.FacilitatorTypeTestMixin;
 import io.harness.functional.redesign.mixins.failuretype.FailureInfoTestMixin;
-import io.harness.functional.redesign.mixins.outcome.OutcomeTestMixin;
 import io.harness.functional.redesign.mixins.plannode.PlanNodeProtoTestMixin;
 import io.harness.functional.redesign.mixins.refobject.RefObjectTestMixin;
 import io.harness.functional.redesign.mixins.reftype.RefTypeTestMixin;
@@ -22,25 +22,31 @@ import io.harness.functional.redesign.mixins.stepoutcomeref.StepOutcomeRefTestMi
 import io.harness.functional.redesign.mixins.stepparameters.StepParametersTestMixin;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.InterruptKeys;
-import io.harness.pms.advisers.AdviserObtainment;
-import io.harness.pms.advisers.AdviserType;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.data.StepOutcomeRef;
-import io.harness.pms.execution.failure.FailureInfo;
-import io.harness.pms.facilitators.FacilitatorObtainment;
-import io.harness.pms.facilitators.FacilitatorType;
-import io.harness.pms.plan.PlanNodeProto;
-import io.harness.pms.refobjects.RefObject;
-import io.harness.pms.refobjects.RefType;
-import io.harness.pms.sdk.core.data.Outcome;
+import io.harness.pms.contracts.advisers.AdviserObtainment;
+import io.harness.pms.contracts.advisers.AdviserType;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.data.StepOutcomeRef;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
+import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.refobjects.RefObject;
+import io.harness.pms.contracts.refobjects.RefType;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.pms.steps.StepType;
 import io.harness.rest.RestResponse;
+import io.harness.steps.barriers.beans.BarrierOutcome;
 import io.harness.testframework.framework.Setup;
+
+import software.wings.api.HttpStateExecutionData;
+import software.wings.api.WaitStateExecutionData;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.inject.Inject;
+import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import io.restassured.config.ObjectMapperConfig;
 import io.restassured.config.RestAssuredConfig;
 import io.restassured.config.SSLConfig;
@@ -65,7 +71,9 @@ public class OrchestrationEngineTestSetupHelper {
                     .objectMapperConfig(new ObjectMapperConfig().jackson2ObjectMapperFactory((cls, charset) -> {
                       ObjectMapper mapper = new ObjectMapper();
                       mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-                      mapper.addMixIn(Outcome.class, OutcomeTestMixin.class);
+                      mapper.registerModule(new JavaTimeModule());
+                      mapper.registerSubtypes(
+                          HttpStateExecutionData.class, WaitStateExecutionData.class, BarrierOutcome.class);
                       mapper.addMixIn(StepParameters.class, StepParametersTestMixin.class);
                       mapper.addMixIn(Ambiance.class, AmbianceTestMixin.class);
                       mapper.addMixIn(AdviserType.class, AdviserTypeTestMixin.class);
@@ -78,6 +86,8 @@ public class OrchestrationEngineTestSetupHelper {
                       mapper.addMixIn(FailureInfo.class, FailureInfoTestMixin.class);
                       mapper.addMixIn(PlanNodeProto.class, PlanNodeProtoTestMixin.class);
                       mapper.addMixIn(StepOutcomeRef.class, StepOutcomeRefTestMixin.class);
+                      mapper.addMixIn(ExecutionMetadata.class, ExecutionMetadataTestMixin.class);
+                      mapper.registerModule(new ProtobufModule());
                       return mapper;
                     }))
                     .sslConfig(new SSLConfig().relaxedHTTPSValidation()))
@@ -89,7 +99,7 @@ public class OrchestrationEngineTestSetupHelper {
     PlanExecution original = startPlanExecution(bearerToken, accountId, appId, planType);
 
     final String finalStatusEnding = "ED";
-    Awaitility.await().atMost(5, TimeUnit.MINUTES).pollInterval(10, TimeUnit.SECONDS).until(() -> {
+    Awaitility.await().atMost(6, TimeUnit.MINUTES).pollInterval(10, TimeUnit.SECONDS).until(() -> {
       final PlanExecution planExecution = getPlanExecution(original.getUuid());
       return planExecution != null && planExecution.getStatus().name().endsWith(finalStatusEnding);
     });

@@ -7,12 +7,14 @@ import static io.harness.encryption.Scope.PROJECT;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnexpectedException;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.utils.IdentifierRefHelper;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonValue;
+import java.lang.reflect.Field;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -81,6 +83,18 @@ public class SecretRefData {
         return PROJECT.getYamlRepresentation();
       default:
         throw new UnknownEnumTypeException("Scope", scope.toString());
+    }
+  }
+
+  public boolean isNull() {
+    try {
+      for (Field f : getClass().getDeclaredFields())
+        if (f.get(this) != null && !f.getName().equals("SECRET_DELIMINITER")
+            && !f.getName().equals("SECRET_DOT_DELIMINITER"))
+          return false;
+      return true;
+    } catch (IllegalAccessException ex) {
+      throw new UnexpectedException("Error while checking whether the secret ref is null");
     }
   }
 }

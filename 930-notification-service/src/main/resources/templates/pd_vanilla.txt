@@ -1,0 +1,4 @@
+summary: ${message}
+link:
+    href: ${link_href}
+    text: ${link_text}

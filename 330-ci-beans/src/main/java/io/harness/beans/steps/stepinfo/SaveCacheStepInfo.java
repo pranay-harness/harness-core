@@ -4,8 +4,9 @@ import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.steps.StepType;
+import io.harness.pms.yaml.ParameterField;
 
 import software.wings.jersey.JsonViews;
 
@@ -24,36 +25,31 @@ import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@JsonTypeName("saveCache")
+@JsonTypeName("SaveCache")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("saveCacheStepInfo")
 public class SaveCacheStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
-  public static final int DEFAULT_TIMEOUT = 1200;
-  @JsonIgnore private String callbackId;
   @JsonView(JsonViews.Internal.class)
   @NotNull
-  public static final TypeInfo typeInfo =
-      TypeInfo.builder()
-          .stepInfoType(CIStepInfoType.SAVE_CACHE)
-          .stepType(StepType.newBuilder().setType(CIStepInfoType.SAVE_CACHE.name()).build())
-          .build();
+  public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.SAVE_CACHE).build();
+  @JsonIgnore
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.SAVE_CACHE.name()).build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
-  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
-  @NotNull private String key;
-  @NotNull private List<String> paths;
+
+  @NotNull private ParameterField<String> key;
+  @NotNull private ParameterField<List<String>> paths;
 
   @Builder
-  @ConstructorProperties({"callbackId", "identifier", "name", "retry", "timeout", "key", "paths"})
-  public SaveCacheStepInfo(String callbackId, String identifier, String name, Integer retry, Integer timeout,
-      String key, List<String> paths) {
+  @ConstructorProperties({"identifier", "name", "retry", "key", "paths"})
+  public SaveCacheStepInfo(
+      String identifier, String name, Integer retry, ParameterField<String> key, ParameterField<List<String>> paths) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
-    this.timeout = Optional.ofNullable(timeout).orElse(DEFAULT_TIMEOUT);
     this.key = key;
     this.paths = paths;
   }

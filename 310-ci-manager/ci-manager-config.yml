@@ -46,6 +46,13 @@ cimanager-mongo:
   serverSelectionTimeout: 90000
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
+pmsMongo:
+  uri: mongodb://localhost:27017/pms-harness
+  connectTimeout: 30000
+  serverSelectionTimeout: 90000
+  maxConnectionIdleTime: 600000
+  connectionsPerHost: 300
+  indexManagerMode: AUTO
 
 enableAuth: false
 
@@ -53,8 +60,11 @@ scmConnectionConfig:
   url: localhost:8091
 
 logServiceConfig:
-  baseUrl: http://localhost:8079/
-  globalToken: "token"
+  baseUrl: https://qb.harness.io/log-service/
+  globalToken: "c76e567a-b341-404d-a8dd-d9738714eb82"
+
+tiServiceConfig:
+  baseUrl: http://localhost:8078
 
 managerTarget: localhost:9880
 managerAuthority: localhost
@@ -72,8 +82,8 @@ managerClientConfig:
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 ciExecutionServiceConfig:
-  addonImageTag: v1.5-alpha
-  liteEngineImageTag: v1.5-alpha
+  addonImageTag: valpha-1.21.2
+  liteEngineImageTag: valpha-1.21.2
   defaultMemoryLimit: 200
   defaultCPULimit: 200
   defaultInternalImageConnector: account.harnessimage
@@ -82,7 +92,7 @@ ciExecutionServiceConfig:
 
 pmsSdkGrpcServerConfig:
   connectors:
-    - port: 12101
+    - port: 12301
 
 pmsGrpcClientConfig:
   target: localhost:12011

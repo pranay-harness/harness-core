@@ -1,6 +1,6 @@
 package io.harness.notification.entities;
 
-import static io.harness.NotificationRequest.*;
+import static io.harness.NotificationRequest.Email;
 
 import io.harness.notification.NotificationChannelType;
 

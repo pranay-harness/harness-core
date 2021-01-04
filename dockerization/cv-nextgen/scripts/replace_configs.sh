@@ -52,3 +52,19 @@ fi
 if [[ "" != "$MANAGER_JWT_IDENTITY_SERVICE_SECRET" ]]; then
   yq write -i /opt/harness/cv-nextgen-config.yml managerAuthConfig.jwtIdentityServiceSecret "$MANAGER_JWT_IDENTITY_SERVICE_SECRET"
 fi
+
+if [[ "" != "$NG_MANAGER_URL" ]]; then
+  yq write -i $CONFIG_FILE nextGen.ngManagerUrl "$NG_MANAGER_URL"
+fi
+
+if [[ "" != "$NOTIFICATION_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE notificationClient.httpClient.baseUrl "$NOTIFICATION_BASE_URL"
+fi
+
+if [[ "" != "$NOTIFICATION_MONGO_URI" ]]; then
+  yq write -i $CONFIG_FILE notificationClient.messageBroker.uri "$NOTIFICATION_MONGO_URI"
+fi
+
+if [[ "" != "$PORTAL_URL" ]]; then
+  yq write -i $CONFIG_FILE portalUrl "$PORTAL_URL"
+fi

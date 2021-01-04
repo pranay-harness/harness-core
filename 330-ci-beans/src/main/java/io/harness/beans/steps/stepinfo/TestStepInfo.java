@@ -5,11 +5,12 @@ import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.steps.StepType;
 
 import software.wings.jersey.JsonViews;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -25,7 +26,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@JsonTypeName("test")
+@JsonTypeName("Test")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("testStepInfo")
 public class TestStepInfo implements CIStepInfo {
@@ -39,23 +40,23 @@ public class TestStepInfo implements CIStepInfo {
           .stepInfoType(CIStepInfoType.TEST)
           .stepType(StepType.newBuilder().setType(CIStepInfoType.TEST.name()).build())
           .build();
+  @JsonIgnore
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.TEST.name()).build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
-  @Min(MIN_TIMEOUT) @Max(MAX_TIMEOUT) private int timeout;
 
   @NotEmpty private String numParallel;
   private List<ScriptInfo> scriptInfos;
 
   @Builder
-  @ConstructorProperties({"identifier", "name", "retry", "timeout", "numParallel", "scriptInfos"})
-  public TestStepInfo(String identifier, String name, Integer retry, Integer timeout, String numParallel,
-      List<ScriptInfo> scriptInfos) {
+  @ConstructorProperties({"identifier", "name", "retry", "numParallel", "scriptInfos"})
+  public TestStepInfo(String identifier, String name, Integer retry, String numParallel, List<ScriptInfo> scriptInfos) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
-    this.timeout = Optional.ofNullable(timeout).orElse(DEFAULT_TIMEOUT);
+
     this.numParallel = numParallel;
     this.scriptInfos = scriptInfos;
   }
@@ -72,7 +73,7 @@ public class TestStepInfo implements CIStepInfo {
 
   @Override
   public StepType getStepType() {
-    return typeInfo.getStepType();
+    return STEP_TYPE;
   }
 
   @Override

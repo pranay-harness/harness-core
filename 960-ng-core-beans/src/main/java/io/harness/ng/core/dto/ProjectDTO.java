@@ -17,11 +17,12 @@ import javax.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @Data
-@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(NON_NULL)
 @ApiModel(value = "Project")
@@ -34,6 +35,18 @@ public class ProjectDTO {
   @Size(max = 1024) List<ModuleType> modules;
   @Size(max = 1024) String description;
   @Size(max = 128) Map<String, String> tags;
-  Long lastModifiedAt;
   @JsonIgnore Long version;
+
+  @Builder
+  public ProjectDTO(String accountIdentifier, String orgIdentifier, String identifier, String name, String color,
+      List<ModuleType> modules, String description, Map<String, String> tags) {
+    this.accountIdentifier = accountIdentifier;
+    this.orgIdentifier = orgIdentifier;
+    this.identifier = identifier;
+    this.name = name;
+    this.color = color;
+    this.modules = modules;
+    this.description = description;
+    this.tags = tags;
+  }
 }

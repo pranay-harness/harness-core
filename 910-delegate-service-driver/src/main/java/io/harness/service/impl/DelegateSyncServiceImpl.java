@@ -6,13 +6,13 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.System.currentTimeMillis;
 import static java.util.stream.Collectors.toList;
 
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse.DelegateSyncTaskResponseKeys;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateSyncService;
+import io.harness.tasks.ResponseData;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -61,7 +61,7 @@ public class DelegateSyncServiceImpl implements DelegateSyncService {
   }
 
   @Override
-  public <T extends DelegateResponseData> T waitForTask(String taskId, String description, Duration timeout) {
+  public <T extends ResponseData> T waitForTask(String taskId, String description, Duration timeout) {
     DelegateSyncTaskResponse taskResponse;
     try {
       log.info("Executing sync task");

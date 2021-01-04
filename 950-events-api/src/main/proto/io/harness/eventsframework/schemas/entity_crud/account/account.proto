@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package io.harness.eventsframework.entity_crud.account;
+
+option java_multiple_files = true;
+
+message AccountEntityChangeDTO {
+  string accountId = 1;
+}

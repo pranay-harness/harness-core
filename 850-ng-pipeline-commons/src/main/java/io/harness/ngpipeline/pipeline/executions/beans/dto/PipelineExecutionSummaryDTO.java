@@ -1,9 +1,9 @@
 package io.harness.ngpipeline.pipeline.executions.beans.dto;
 
-import io.harness.ngpipeline.pipeline.executions.ExecutionStatus;
-import io.harness.ngpipeline.pipeline.executions.beans.ExecutionErrorInfo;
-import io.harness.ngpipeline.pipeline.executions.beans.ExecutionTriggerInfo;
 import io.harness.pipeline.executions.NGStageType;
+import io.harness.pms.contracts.execution.ExecutionErrorInfo;
+import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
+import io.harness.pms.execution.ExecutionStatus;
 
 import java.util.List;
 import java.util.Map;

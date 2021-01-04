@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.ACASIAN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.k8s.apiclient.KubernetesApiClientFactoryModule;
 import io.harness.k8s.apiclient.ApiClientFactory;
@@ -24,6 +25,7 @@ import org.junit.runners.JUnit4;
 
 @Slf4j
 @RunWith(JUnit4.class)
+@TargetModule(io.harness.annotations.dev.Module._930_DELEGATE_TASKS)
 public class KubernetesApiClientFactoryModuleTest extends CategoryTest {
   @Test
   @Owner(developers = ACASIAN)

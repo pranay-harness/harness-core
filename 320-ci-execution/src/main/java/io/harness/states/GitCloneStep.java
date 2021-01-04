@@ -1,13 +1,13 @@
 package io.harness.states;
 
 import io.harness.beans.steps.stepinfo.GitCloneStepInfo;
-import io.harness.pms.ambiance.Ambiance;
-import io.harness.pms.execution.Status;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
-import io.harness.pms.steps.StepType;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class GitCloneStep implements SyncExecutable<GitCloneStepInfo> {
-  public static final StepType STEP_TYPE = GitCloneStepInfo.typeInfo.getStepType();
+  public static final StepType STEP_TYPE = GitCloneStepInfo.STEP_TYPE;
 
   @Override
   public Class<GitCloneStepInfo> getStepParametersClass() {

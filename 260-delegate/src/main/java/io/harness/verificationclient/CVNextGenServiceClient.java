@@ -9,9 +9,9 @@ import static io.harness.cvng.core.services.CVNextGenConstants.LOG_RECORD_RESOUR
 import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
 import io.harness.cvng.beans.HostRecordDTO;
-import io.harness.cvng.beans.KubernetesActivityDTO;
 import io.harness.cvng.beans.LogRecordDTO;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
+import io.harness.cvng.beans.activity.KubernetesActivityDTO;
 import io.harness.rest.RestResponse;
 
 import java.util.List;

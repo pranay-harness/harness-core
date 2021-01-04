@@ -3,10 +3,10 @@ package io.harness.plancreator.stages.stage;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
-import io.harness.beans.ParameterField;
 import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -16,14 +16,15 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@Builder
+@NoArgsConstructor
 @TypeAlias("stageElementConfig")
 public class StageElementConfig {
   String uuid;
-  @EntityIdentifier String identifier;
+  @NotNull @EntityIdentifier String identifier;
   @EntityName String name;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> description;
 
@@ -33,4 +34,16 @@ public class StageElementConfig {
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   StageInfoConfig stageType;
+
+  @Builder
+  public StageElementConfig(String uuid, String identifier, String name, ParameterField<String> description,
+      List<FailureStrategyConfig> failureStrategies, String type, StageInfoConfig stageType) {
+    this.uuid = uuid;
+    this.identifier = identifier;
+    this.name = name;
+    this.description = description;
+    this.failureStrategies = failureStrategies;
+    this.type = type;
+    this.stageType = stageType;
+  }
 }

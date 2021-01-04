@@ -27,18 +27,16 @@ import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
-import io.harness.integrationstage.CILiteEngineIntegrationStageModifier;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
-import io.harness.pms.advisers.AdviserObtainment;
-import io.harness.pms.facilitators.FacilitatorObtainment;
-import io.harness.pms.facilitators.FacilitatorType;
+import io.harness.pms.contracts.advisers.AdviserObtainment;
+import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.serializer.KryoSerializer;
 import io.harness.states.IntegrationStageStep;
 import io.harness.yaml.core.ExecutionElement;
-import io.harness.yaml.extended.ci.codebase.impl.GitHubCodeBase;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -57,7 +55,6 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
   static final Integer RANDOM_LENGTH = 8;
   @Inject private ExecutionPlanCreatorHelper executionPlanCreatorHelper;
   @Inject private KryoSerializer kryoSerializer;
-  @Inject private CILiteEngineIntegrationStageModifier ciLiteEngineIntegrationStageModifier;
   private static final SecureRandom random = new SecureRandom();
   @Override
   public ExecutionPlanCreatorResponse createPlan(
@@ -75,8 +72,7 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
     BuildNumberDetails buildNumber = ciExecutionArgs.getBuildNumberDetails();
 
     ExecutionElement execution = integrationStage.getExecution();
-    ExecutionElement modifiedExecutionPlan =
-        ciLiteEngineIntegrationStageModifier.modifyExecutionPlan(execution, integrationStage, context, podName);
+    ExecutionElement modifiedExecutionPlan = execution;
 
     integrationStage.setExecution(modifiedExecutionPlan);
     if (ciExecutionArgs.getExecutionSource() != null
@@ -98,7 +94,7 @@ public class IntegrationStagePlanCreator implements SupportDefinedExecutorPlanCr
                              -> new InvalidRequestException(
                                  "Execution arguments are empty for pipeline execution " + context.getAccountId()));
 
-    return ((GitHubCodeBase) ngPipeline.getCiCodebase().getCodeBaseSpec()).getConnectorRef();
+    return ngPipeline.getCiCodebase().getConnectorRef();
   }
 
   private String retrieveLastCommitSha(WebhookExecutionSource webhookExecutionSource) {

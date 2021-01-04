@@ -5,13 +5,14 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.GraphVertex;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.execution.NodeExecution;
-import io.harness.pms.sdk.core.data.Metadata;
 import io.harness.pms.sdk.core.data.Outcome;
+import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 import io.harness.serializer.JsonUtils;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 
@@ -66,19 +67,20 @@ public class GraphVertexConverter {
         .interruptHistories(nodeExecution.getInterruptHistories())
         .retryIds(nodeExecution.getRetryIds())
         .skipType(nodeExecution.getNode().getSkipType())
-        .outcomes(outcomes)
+        .outcomeDocuments(PmsOutcomeMapper.convertOutcomesToDocumentList(outcomes))
         .progressDataMap(nodeExecution.getProgressDataMap())
         .build();
   }
 
-  private List<Metadata> getExecutableResponsesMetadata(NodeExecution nodeExecution) {
+  private List<Map<String, Object>> getExecutableResponsesMetadata(NodeExecution nodeExecution) {
     if (EmptyPredicate.isEmpty(nodeExecution.getExecutableResponses())) {
       return Collections.emptyList();
     }
     return nodeExecution.getExecutableResponses()
         .stream()
         .filter(response -> EmptyPredicate.isNotEmpty(response.getMetadata()))
-        .map(meta -> JsonUtils.asObject(meta.getMetadata(), Metadata.class))
+        .map(meta -> JsonUtils.asMap(meta.getMetadata()))
+        .filter(EmptyPredicate::isNotEmpty)
         .collect(Collectors.toList());
   }
 }

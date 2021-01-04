@@ -13,4 +13,5 @@ public interface CVConstants {
    */
   int MONGO_QUERY_TIMEOUT_SEC = 5;
   double DEPLOYMENT_RISK_SCORE_FAILURE_THRESHOLD = 0.5;
+  String DEFAULT_HEALTH_JOB_NAME = "_DEFAULT_HEALTH_JOB";
 }

@@ -1,0 +1,59 @@
+Var authTokenUrl = "https://www.googleapis.com/oauth2/v4/token"
+Var authBodyMap = {}
+Var:authBodyMap.put("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer")
+Var:authBodyMap.put("assertion",Env:jwtToken)
+
+Var bearerTokenResponse = sync-call(url=Var:authTokenUrl,body=Var:authBodyMap, bodyType=FORM_URL_ENCODED)
+Var token = extract(Var:bearerTokenResponse, $.access_token)
+
+Var header = {}
+Var headerVal = concat("Bearer ", Var:token)
+Var:header.put("Authorization", Var:headerVal)
+
+Var params = {}
+Var:params.put("interval.startTime", Env:startTime)
+Var:params.put("interval.endTime", Env:endTime)
+Var:params.put("aggregation.alignmentPeriod", Env:alignmentPeriod)
+Var emptySpace = ""
+if Env:crossSeriesReducer != Var:emptySpace {
+  Var:params.put("aggregation.crossSeriesReducer", Env:crossSeriesReducer)
+}
+if Env:perSeriesAligner != Var:emptySpace {
+  Var:params.put("aggregation.perSeriesAligner", Env:perSeriesAligner)
+}
+Var:params.put("filter", Env:filter)
+
+Var url = concat(Env:baseUrl, Env:project, "/timeSeries")
+Var groupBy = []
+if Env:groupByFields != Var:groupBy {
+  Var:params.put("aggregation.groupByFields", Env:groupByFields)
+}
+
+Var metricResponse = sync-call(url=Var:url, header=Var:header, options=Var:params)
+
+Var timeseriesList = extract(Var:metricResponse, $.timeSeries)
+Var returnList = []
+foreach timeseries in Var:timeseriesList {
+    Var metricName = extract(Var:timeseries, $.metric.type)
+    Var txnName = ""
+    foreach field in Env:groupByResponses {
+
+      Var path = concat("$.", Var:field)
+      Var extracted = extract(Var:timeseries, Var:path)
+      txnName = concat(Var:txnName, Var:extracted)
+    }
+
+    if Var:txnName == Var:emptySpace {
+        txnName = concat(Var:metricName, "")
+    }
+
+    Var points = extract(Var:timeseries, $.points)
+    foreach point in Var:points {
+        Var val = extract(Var:point, $.value.doubleValue)
+        Var timestamp = extract(Var:point, $.interval.endTime)
+        Var timeStampVal = string-to-time(Var:timestamp)
+        Var tsRecord = new TimeseriesRecord(txnName=Var:txnName, metricName=Var:metricName, metricValue=Var:val, timestamp=Var:timeStampVal)
+        Var:returnList.append(Var:tsRecord)
+    }
+}
+return Var:returnList

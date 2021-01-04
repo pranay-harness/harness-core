@@ -67,7 +67,7 @@ build --define=ABSOLUTE_JAVABASE=/Library/Java/JavaVirtualMachines/jdk1.8.0_202.
 
 If you have regular bazel installed, please uninstall bazel and install bazelisk. It allows us to use the git repo to synchronize everyone's installation of bazel.
 
-9. Download the data-collection-dsl username and password from [vault](https://vault-internal.harness.io:8200/ui/vault/secrets/secret/show/cv/datacollection-artifactory) and add following lines in your `~/.bashrc` file
+9. Download the data-collection-dsl username and password from [vault](https://vault-internal.harness.io:8200/ui/vault/secrets/secret/show/credentials/artifactory-internal-read) and add following lines in your `~/.bashrc` file
 ```
 export JFROG_USERNAME=<username-here>
 export JFROG_PASSWORD=<password-here>
@@ -151,7 +151,7 @@ NOTE: the data from it is used for every git operation github does on you behave
     $ docker run -p 9200:9200 -p 9300:9300 -v ~/_elasticsearch_data:/usr/share/elasticsearch/data -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.3.0
     ```
 
-    In portal/71-rest/config.yml set `searchEnabled` to `true`.
+    In portal/400-rest/config.yml set `searchEnabled` to `true`.
 
     Run mongo in replica set:
 
@@ -198,7 +198,7 @@ cd to `portal` directory
 1. Start server by running following commands :
 
    * `mvn clean install -DskipTests`
-   * `java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:~/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar -Dfile.encoding=UTF-8 -jar 71-rest/target/rest-capsule.jar server 71-rest/config.yml > portal.log &`
+   * `java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:~/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar -Dfile.encoding=UTF-8 -jar 400-rest/target/rest-capsule.jar server 400-rest/config.yml > portal.log &`
 
 2. Generate sample data required to run the services locally by running the following step only once.
    DataGenUtil: Open a new terminal and run following command (Make sure you [setup `HARNESS_GENERATION_PASSPHRASE` environment variable](https://docs.google.com/document/d/1CddJtyZ7CvLzHnBIe408tQN-zCeQ7NXTfIdEGilm4bs/edit) in your Bash profile):
@@ -271,10 +271,13 @@ helper shell scripts:
 
 9. Install bazel project plugin from the IntelliJ marketplace
 
+10. If facing build issues make sure you have enabled "Always update snapshots" in IntelliJ (Preferences > Build, Execution, Deployment > Build Tools > Maven) 
+
 
 ### Run from IntelliJ
 
 Run configurations for the different applications are already checked into the repo. Choose the appropriate run configuration from the menu.
+While running an app from pre checked in configs, Add JAVA_HOME as an environment variable in Intellij. 
 ![Run configuration menu](img/run_configs.png)
 
 
@@ -299,11 +302,9 @@ Alternatively, use Fish shell: `brew install fish` then set iterms command to `/
 
 2. Run API Server (WingsApplication): [Run > Run... > WingsApplication]
 
-3. From within the IDE, run `rest/src/test/java/software/wings/integration/DataGenUtil.java` and
+3. Run DataGenApp: [Run > Run... > DataGenApp]. Add HARNESS_GENERATION_PASSPHRASE environment variable to DataGenApp config in intellij. 
 
-4. `rest/src/test/java/software/wings/service/impl/RoleRefreshUtil.java` to create the default users and roles.
-
-5. Run DelegateApplication: [Run > Run... > DelegateApplication]
+4. Run DelegateApplication: [Run > Run... > DelegateApplication]
 
 The admin username and password are in BaseIntegrationTest.java.
 
