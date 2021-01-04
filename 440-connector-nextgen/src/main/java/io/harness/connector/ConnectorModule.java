@@ -13,6 +13,7 @@ import io.harness.connector.mappers.artifactorymapper.ArtifactoryEntityToDTO;
 import io.harness.connector.mappers.awsmapper.AwsDTOToEntity;
 import io.harness.connector.mappers.awsmapper.AwsEntityToDTO;
 import io.harness.connector.mappers.bitbucketconnectormapper.BitbucketDTOToEntity;
+import io.harness.connector.mappers.bitbucketconnectormapper.BitbucketEntityToDTO;
 import io.harness.connector.mappers.docker.DockerDTOToEntity;
 import io.harness.connector.mappers.docker.DockerEntityToDTO;
 import io.harness.connector.mappers.gcpmappers.GcpDTOToEntity;
@@ -128,7 +129,7 @@ public class ConnectorModule extends AbstractModule {
     connectorEntityToDTOMapper.addBinding(ConnectorType.NEXUS.getDisplayName()).to(NexusEntityToDTO.class);
     connectorEntityToDTOMapper.addBinding(ConnectorType.GITHUB.getDisplayName()).to(GithubEntityToDTO.class);
     connectorEntityToDTOMapper.addBinding(ConnectorType.GITLAB.getDisplayName()).to(GitlabEntityToDTO.class);
-    connectorEntityToDTOMapper.addBinding(ConnectorType.BITBUCKET.getDisplayName()).to(GitlabEntityToDTO.class);
+    connectorEntityToDTOMapper.addBinding(ConnectorType.BITBUCKET.getDisplayName()).to(BitbucketEntityToDTO.class);
 
     bind(ConnectorService.class)
         .annotatedWith(Names.named(DEFAULT_CONNECTOR_SERVICE))
