@@ -89,10 +89,8 @@ public abstract class BaseContainerSpecBuilder {
 
     LocalObjectReference imageSecret = null;
     ImageDetails imageDetails = containerParams.getImageDetailsWithConnector().getImageDetails();
-    if (isNotBlank(imageDetails.getRegistryUrl()) && isNotBlank(imageDetails.getUsername())
-        && isNotBlank(imageDetails.getPassword())) {
-      String secretName = getKubernetesRegistrySecretName(imageDetails);
-      imageSecret = new LocalObjectReference(secretName);
+    if (containerParams.getImageSecret() != null) {
+      imageSecret = new LocalObjectReference(containerParams.getImageSecret());
     }
 
     ResourceRequirements resourceRequirements = getResourceRequirements(containerParams.getContainerResourceParams());

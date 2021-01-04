@@ -173,6 +173,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
       Secret imgSecret = kubeCtlHandler.createRegistrySecret(
           kubernetesClient, namespace, secretName, containerParams.getImageDetailsWithConnector());
       if (imgSecret != null) {
+        containerParams.setImageSecret(secretName);
         switch (containerParams.getContainerType()) {
           case SERVICE:
           case PLUGIN:
