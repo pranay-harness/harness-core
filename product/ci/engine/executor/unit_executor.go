@@ -170,7 +170,7 @@ func (e *unitExecutor) execute(ctx context.Context, step *pb.UnitStep,
 		}
 	case *pb.UnitStep_Plugin:
 		e.log.Infow("Plugin step info", "step", x.Plugin.String(), "step_id", step.GetId())
-		numRetries, err = pluginStep(step, e.log).Run(ctx)
+		numRetries, err = pluginStep(step, so, e.log).Run(ctx)
 		if err != nil {
 			return nil, numRetries, err
 		}

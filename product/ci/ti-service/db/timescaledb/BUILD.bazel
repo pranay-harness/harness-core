@@ -9,7 +9,6 @@ go_library(
         "//commons/go/lib/db:go_default_library",
         "//product/ci/ti-service/types:go_default_library",
         "@com_github_hashicorp_go_multierror//:go_default_library",
-        "@com_github_lib_pq//:go_default_library",
         "@org_uber_go_zap//:go_default_library",
     ],
 )

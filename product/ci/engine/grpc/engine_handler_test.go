@@ -8,6 +8,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/wings-software/portal/commons/go/lib/logs"
+	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 )
@@ -129,4 +130,48 @@ func TestGetImageEntrypointWithSecretErr(t *testing.T) {
 	h := NewEngineHandler(log.Sugar())
 	_, err := h.GetImageEntrypoint(ctx, arg)
 	assert.NotNil(t, err)
+}
+
+func TestEvaluateJEXLErr(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	arg := &pb.EvaluateJEXLRequest{
+		StepId:      "test",
+		Expressions: []string{"${foo.bar}"},
+	}
+
+	oldEvaluateJEXL := evaluateJEXL
+	evaluateJEXL = func(ctx context.Context, stepID string, expressions []string, o output.StageOutput, log *zap.SugaredLogger) (
+		map[string]string, error) {
+		return nil, fmt.Errorf("invalid expression")
+	}
+	defer func() { evaluateJEXL = oldEvaluateJEXL }()
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	h := NewEngineHandler(log.Sugar())
+	_, err := h.EvaluateJEXL(ctx, arg)
+	assert.NotNil(t, err)
+}
+
+func TestEvaluateJEXLSuccess(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	arg := &pb.EvaluateJEXLRequest{
+		StepId:      "test",
+		Expressions: []string{"${foo.bar}"},
+	}
+
+	oldEvaluateJEXL := evaluateJEXL
+	evaluateJEXL = func(ctx context.Context, stepID string, expressions []string, o output.StageOutput, log *zap.SugaredLogger) (
+		map[string]string, error) {
+		return nil, nil
+	}
+	defer func() { evaluateJEXL = oldEvaluateJEXL }()
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	h := NewEngineHandler(log.Sugar())
+	_, err := h.EvaluateJEXL(ctx, arg)
+	assert.Nil(t, err)
 }

@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/wings-software/portal/commons/go/lib/exec"
+	"github.com/wings-software/portal/commons/go/lib/expressions"
 	"github.com/wings-software/portal/commons/go/lib/images"
 	"github.com/wings-software/portal/commons/go/lib/utils"
-	"github.com/wings-software/portal/product/ci/addon/imageutil"
+	"github.com/wings-software/portal/product/ci/addon/remote"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 )
@@ -22,10 +24,12 @@ const (
 	defaultPluginNumRetries int32         = 1
 	pluginCmdExitWaitTime   time.Duration = time.Duration(0)
 	imageSecretEnv                        = "HARNESS_IMAGE_SECRET" // Docker image secret for plugin image
+	settingEnvPrefix                      = "PLUGIN_"
 )
 
 var (
-	getImgMetadata = imageutil.GetEntrypoint
+	getImgMetadata = remote.GetImageEntrypoint
+	evaluateJEXL   = remote.EvaluateJEXL
 )
 
 // PluginTask represents interface to execute a plugin step
@@ -39,14 +43,15 @@ type pluginTask struct {
 	timeoutSecs       int64
 	numRetries        int32
 	image             string
-	imageSecretEnv    string // Name of environment variable that stores the docker image secret. If not set, plugin is public.
+	prevStepOutputs   map[string]*pb.StepOutput
 	log               *zap.SugaredLogger
 	procWriter        io.Writer
 	cmdContextFactory exec.CmdContextFactory
 }
 
 // NewPluginTask creates a plugin step executor
-func NewPluginTask(step *pb.UnitStep, log *zap.SugaredLogger, w io.Writer) PluginTask {
+func NewPluginTask(step *pb.UnitStep, prevStepOutputs map[string]*pb.StepOutput,
+	log *zap.SugaredLogger, w io.Writer) PluginTask {
 	r := step.GetPlugin()
 	timeoutSecs := r.GetContext().GetExecutionTimeoutSecs()
 	if timeoutSecs == 0 {
@@ -63,6 +68,7 @@ func NewPluginTask(step *pb.UnitStep, log *zap.SugaredLogger, w io.Writer) Plugi
 		image:             r.GetImage(),
 		timeoutSecs:       timeoutSecs,
 		numRetries:        numRetries,
+		prevStepOutputs:   prevStepOutputs,
 		cmdContextFactory: exec.OsCommandContextGracefulWithLog(log),
 		log:               log,
 		procWriter:        w,
@@ -78,6 +84,37 @@ func (e *pluginTask) Run(ctx context.Context) (int32, error) {
 		}
 	}
 	return e.numRetries, err
+}
+
+// resolveEnvJEXL resolves JEXL expressions present in plugin settings environment variables
+func (e *pluginTask) resolveEnvJEXL(ctx context.Context) (map[string]string, error) {
+	envVarMap := getEnvVars()
+
+	var exprsToResolve []string
+	for k, v := range envVarMap {
+		if strings.HasPrefix(k, settingEnvPrefix) && expressions.IsJEXL(v) {
+			exprsToResolve = append(exprsToResolve, v)
+		}
+	}
+
+	if len(exprsToResolve) == 0 {
+		return envVarMap, nil
+	}
+
+	resolvedExprs, err := evaluateJEXL(ctx, e.id, exprsToResolve, e.prevStepOutputs, e.log)
+	if err != nil {
+		return nil, err
+	}
+
+	resolvedEnvVarMap := make(map[string]string)
+	for k, v := range envVarMap {
+		if v, ok := resolvedExprs[v]; ok {
+			resolvedEnvVarMap[k] = v
+		} else {
+			resolvedEnvVarMap[k] = v
+		}
+	}
+	return resolvedEnvVarMap, nil
 }
 
 func (e *pluginTask) execute(ctx context.Context, retryCount int32) error {
@@ -97,8 +134,14 @@ func (e *pluginTask) execute(ctx context.Context, retryCount int32) error {
 		return err
 	}
 
+	envVarsMap, err := e.resolveEnvJEXL(ctx)
+	if err != nil {
+		logPluginErr(e.log, "failed to evaluate JEXL expression for settings", e.id, commands, retryCount, start, err)
+		return err
+	}
+
 	cmd := e.cmdContextFactory.CmdContextWithSleep(ctx, pluginCmdExitWaitTime, commands[0], commands[1:]...).
-		WithStdout(e.procWriter).WithStderr(e.procWriter).WithEnvVarsMap(nil)
+		WithStdout(e.procWriter).WithStderr(e.procWriter).WithEnvVarsMap(envVarsMap)
 	err = cmd.Run()
 	if ctxErr := ctx.Err(); ctxErr == context.DeadlineExceeded {
 		logPluginErr(e.log, "timeout while executing plugin step", e.id, commands, retryCount, start, ctxErr)
@@ -138,4 +181,18 @@ func logPluginErr(log *zap.SugaredLogger, errMsg, stepID string, cmds []string, 
 		"elapsed_time_ms", utils.TimeSince(startTime),
 		zap.Error(err),
 	)
+}
+
+// Returns environment variables as a map with key as environment variable name
+// and value as environment variable value.
+func getEnvVars() map[string]string {
+	m := make(map[string]string)
+	// os.Environ returns a copy of strings representing the environment in form
+	// "key=value". Converting it into a map.
+	for _, e := range os.Environ() {
+		if i := strings.Index(e, "="); i >= 0 {
+			m[e[:i]] = e[i+1:]
+		}
+	}
+	return m
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/images"
 	"github.com/wings-software/portal/commons/go/lib/utils"
-	"github.com/wings-software/portal/product/ci/addon/imageutil"
+	"github.com/wings-software/portal/product/ci/addon/remote"
 	"go.uber.org/zap"
 )
 
@@ -21,7 +21,7 @@ const (
 )
 
 var (
-	getImgMetadata = imageutil.GetEntrypoint
+	getImgMetadata = remote.GetImageEntrypoint
 )
 
 // IntegrationSvc represents interface to execute an integration service

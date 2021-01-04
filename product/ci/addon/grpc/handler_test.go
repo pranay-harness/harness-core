@@ -124,7 +124,7 @@ func TestExecutePluginStep(t *testing.T) {
 
 	oldPluginTask := newPluginTask
 	defer func() { newPluginTask = oldPluginTask }()
-	newPluginTask = func(step *pb.UnitStep, log *zap.SugaredLogger, w io.Writer) tasks.PluginTask {
+	newPluginTask = func(step *pb.UnitStep, so map[string]*pb.StepOutput, log *zap.SugaredLogger, w io.Writer) tasks.PluginTask {
 		return mockStep
 	}
 

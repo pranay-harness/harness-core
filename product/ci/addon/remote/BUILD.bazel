@@ -2,8 +2,11 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "go_default_library",
-    srcs = ["remote_image.go"],
-    importpath = "github.com/wings-software/portal/product/ci/addon/imageutil",
+    srcs = [
+        "image.go",
+        "jexl.go",
+    ],
+    importpath = "github.com/wings-software/portal/product/ci/addon/remote",
     visibility = ["//visibility:public"],
     deps = [
         "//product/ci/engine/consts:go_default_library",
@@ -15,7 +18,10 @@ go_library(
 
 go_test(
     name = "go_default_test",
-    srcs = ["remote_image_test.go"],
+    srcs = [
+        "image_test.go",
+        "jexl_test.go",
+    ],
     embed = [":go_default_library"],
     deps = [
         "//commons/go/lib/logs:go_default_library",

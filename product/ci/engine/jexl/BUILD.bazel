@@ -8,6 +8,7 @@ go_library(
     deps = [
         "//960-expression-service/src/main/proto/io/harness/expression/service:go_default_library",
         "//commons/go/lib/expression-service/grpc:go_default_library",
+        "//commons/go/lib/expressions:go_default_library",
         "//commons/go/lib/utils:go_default_library",
         "//product/ci/engine/output:go_default_library",
         "@com_github_gogo_protobuf//jsonpb:go_default_library",

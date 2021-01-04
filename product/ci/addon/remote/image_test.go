@@ -1,4 +1,4 @@
-package imageutil
+package remote
 
 import (
 	"context"
@@ -28,6 +28,10 @@ func (c *mockClient) UpdateState(ctx context.Context, in *pb.UpdateStateRequest,
 	return nil, nil
 }
 
+func (c *mockClient) EvaluateJEXL(ctx context.Context, in *pb.EvaluateJEXLRequest, opts ...grpc.CallOption) (*pb.EvaluateJEXLResponse, error) {
+	return nil, nil
+}
+
 func TestGetEntrypoint(t *testing.T) {
 	ctrl, ctx := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
@@ -50,6 +54,6 @@ func TestGetEntrypoint(t *testing.T) {
 		return mClient, nil
 	}
 
-	_, _, err := GetEntrypoint(ctx, id, image, secret, log.Sugar())
+	_, _, err := GetImageEntrypoint(ctx, id, image, secret, log.Sugar())
 	assert.NotNil(t, err)
 }
