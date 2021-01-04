@@ -3,6 +3,7 @@ package software.wings.beans;
 import io.harness.delegate.beans.TaskGroup;
 
 public enum TaskType {
+  BATCH_CAPABILITY_CHECK(TaskGroup.BATCH_CAPABILITY_CHECK),
   CAPABILITY_VALIDATION(TaskGroup.CAPABILITY_VALIDATION),
   COMMAND(TaskGroup.COMMAND),
   SCRIPT(TaskGroup.SCRIPT),
