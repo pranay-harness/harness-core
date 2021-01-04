@@ -39,4 +39,7 @@
    |TAG_ENTITY_TYPE|- Identifier to denote type of tags to search<br>- null to ignore tags|APPLICATION / DEPLOYMENT / ENVIRONMENT / SERVICE / null|
    |TAG_PAIR_LIST|- List of tag name and value in defined format<br>- tags ignored if TAG_ENTITY_TYPE is null|[tag_name=tag_value,commitId=122,env=Prod]|
    
-   
+   Sample Query : 
+   ```
+   python3 workflow_driver.py "https://qa.harness.io/gateway" "cHg3eGRfQkZSQ2ktcGZXUFlYVmp2dzo6ZEs3bkRPRVNGcG1XcWhuaEVRR2R3NjN6ZnVqYlFMZ1ZZT2pmNGEyb3dBMVdJQlBuNTVXclVVdEZjYWdCQkdJd0xwMFdPa3RxUml4VTRwRWw=" "px7xd_BFRCi-pfWPYXVjvw" "NEW" "/Users/John" "TEST" "/Users/John/Documents/meta" "null" "" "12/02/2020 00:00:00" "12/05/2020 00:00:00" "null" ""
+   ```
