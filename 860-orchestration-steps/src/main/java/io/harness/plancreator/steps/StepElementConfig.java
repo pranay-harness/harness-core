@@ -37,11 +37,12 @@ public class StepElementConfig {
   StepSpecType stepSpecType;
 
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH) ParameterField<List<String>> delegateSelectors;
 
   @Builder
   public StepElementConfig(String uuid, String identifier, String name, String description, Timeout timeout,
       List<FailureStrategyConfig> failureStrategies, String type, StepSpecType stepSpecType,
-      ParameterField<String> skipCondition) {
+      ParameterField<String> skipCondition, ParameterField<List<String>> delegateSelectors) {
     this.uuid = uuid;
     this.identifier = identifier;
     this.name = name;
@@ -51,5 +52,6 @@ public class StepElementConfig {
     this.type = type;
     this.stepSpecType = stepSpecType;
     this.skipCondition = skipCondition;
+    this.delegateSelectors = delegateSelectors;
   }
 }

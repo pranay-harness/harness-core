@@ -46,28 +46,6 @@ pipeline:
                     socketTimeoutMillis: 1000
                     method: GET
                     url: http://www.mocky.io/v2/5ed11ed8350000b8e1ffa2c5
-              - step:
-                  name: "Rollout Deployment 2"
-                  identifier: rollout-deployment-2
-                  type: ShellScript
-                  spec:
-                    executeOnDelegate: true
-                    connectionType: SSH
-                    scriptType: BASH
-                    scriptString: |
-                      echo 'Hello, world, from script 11!'
-                      export HELLO='hello1!'
-                      export HI='hi1!'
-                      echo "scriptType = ${scriptType}"
-                      echo "sweepingOutputScope = ${sweepingOutputScope}"
-                      export artifactsPrimayImage="${service.artifacts.primary.imagePath}"
-                      export artifactsSidecar1Image="${service.artifacts.sidecars.sidecar1.imagePath}"
-                      export artifactsSidecar2Image="${service.artifacts.sidecars.sidecar2.imagePath}"
-                      export serviceName="${service.displayName}"
-                      export INFRA="hey ${infrastructure.namespace} ${environment.type}"
-                    outputVars: HELLO,HI,serviceName,artifactsPrimayImage,artifactsSidecar1Image,artifactsSidecar2Image,INFRA
-                    sweepingOutputName: shell1
-                    sweepingOutputScope: STAGE
     - stage:
         identifier: deploymentStage2
         name: deployment-stage-2
@@ -96,26 +74,3 @@ pipeline:
                     socketTimeoutMillis: 1000
                     method: GET
                     url: http://www.mocky.io/v2/5ed11ed8350000b8e1ffa2c5
-              - step:
-                  name: "shell script"
-                  identifier: shellScript
-                  type: ShellScript
-                  spec:
-                    executeOnDelegate: true
-                    connectionType: SSH
-                    scriptType: BASH
-                    scriptString: |
-                      echo 'Hello, world, from script 11!'
-                      export HELLO='hello1!'
-                      export HI='hi1!'
-                      echo "scriptType = ${scriptType}"
-                      echo "sweepingOutputScope = ${sweepingOutputScope}"
-                      export serviceName="${service.displayName}"
-                      export artifactsPrimayImage="${service.artifacts.primary.imagePath}"
-                      export artifactsSidecar1ImageStage1="${deploymentStage1.service.artifacts.sidecars.sidecar1.imagePath}"
-                      export artifactsSidecar2ImageStage1="${deploymentStage1.service.artifacts.sidecars.sidecar2.imagePath}"
-                      export serviceNameStage1="${deploymentStage1.service.displayName}"
-                      export INFRA="hey ${infrastructure.namespace} ${deploymentStage1.environment.type} ${stages.deploymentStage1.environment.displayName}"
-                    outputVars: HELLO,HI,serviceName,artifactsPrimayImage,artifactsSidecar1ImageStage1,artifactsSidecar2ImageStage1,serviceNameStage1,INFRA
-                    sweepingOutputName: shell1
-                    sweepingOutputScope: STAGE
