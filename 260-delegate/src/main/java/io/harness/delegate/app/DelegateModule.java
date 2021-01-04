@@ -72,6 +72,7 @@ import io.harness.delegate.task.citasks.CICleanupTask;
 import io.harness.delegate.task.citasks.ExecuteCommandTask;
 import io.harness.delegate.task.docker.DockerTestConnectionDelegateTask;
 import io.harness.delegate.task.docker.DockerTestConnectionDelegateTask.DockerValidationHandler;
+import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTask;
 import io.harness.delegate.task.gcp.GcpTask;
 import io.harness.delegate.task.gcp.request.GcpRequest;
 import io.harness.delegate.task.gcp.taskHandlers.GcpValidationTaskHandler;
@@ -917,6 +918,7 @@ public class DelegateModule extends AbstractModule {
     MapBinder<TaskType, Class<? extends DelegateRunnableTask>> mapBinder = MapBinder.newMapBinder(
         binder(), new TypeLiteral<TaskType>() {}, new TypeLiteral<Class<? extends DelegateRunnableTask>>() {});
 
+    mapBinder.addBinding(TaskType.BATCH_CAPABILITY_CHECK).toInstance(BatchCapabilityCheckTask.class);
     mapBinder.addBinding(TaskType.CAPABILITY_VALIDATION).toInstance(PerpetualTaskCapabilityCheckTask.class);
     mapBinder.addBinding(TaskType.COMMAND).toInstance(CommandTask.class);
     mapBinder.addBinding(TaskType.SCRIPT).toInstance(ShellScriptTask.class);

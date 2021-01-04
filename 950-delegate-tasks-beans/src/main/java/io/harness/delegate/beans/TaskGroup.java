@@ -67,5 +67,6 @@ public enum TaskGroup {
   JIRA_NG,
   CVNG,
   NOTIFICATION,
-  HTTP_NG
+  HTTP_NG,
+  BATCH_CAPABILITY_CHECK
 }
