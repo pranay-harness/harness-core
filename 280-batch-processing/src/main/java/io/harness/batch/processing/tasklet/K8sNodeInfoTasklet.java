@@ -127,10 +127,13 @@ public class K8sNodeInfoTasklet implements Tasklet {
     String computeType =
         InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.COMPUTE_TYPE, metaData);
     if (cloudProviders.contains(k8SCloudProvider) && !K8sCCMConstants.AWS_FARGATE_COMPUTE_TYPE.equals(computeType)) {
-      totalResource = instanceResourceService.getComputeVMResource(
+      Resource computeVMResource = instanceResourceService.getComputeVMResource(
           InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.INSTANCE_FAMILY, metaData),
           InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.REGION, metaData),
           k8SCloudProvider);
+      if (null != computeVMResource) {
+        totalResource = computeVMResource;
+      }
     }
 
     return InstanceInfo.builder()

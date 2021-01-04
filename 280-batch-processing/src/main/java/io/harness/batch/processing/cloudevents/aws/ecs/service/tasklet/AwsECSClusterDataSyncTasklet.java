@@ -449,21 +449,23 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
                     InstanceMetaDataConstants.INSTANCE_FAMILY, metaData),
                 InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.REGION, metaData),
                 CloudProvider.AWS);
-            InstanceData instanceData = InstanceData.builder()
-                                            .accountId(accountId)
-                                            .instanceId(containerInstanceId)
-                                            .clusterName(getIdFromArn(clusterArn))
-                                            .clusterId(clusterId)
-                                            .settingId(settingId)
-                                            .instanceType(InstanceType.ECS_CONTAINER_INSTANCE)
-                                            .instanceState(InstanceState.RUNNING)
-                                            .usageStartTime(containerInstance.getRegisteredAt().toInstant())
-                                            .totalResource(totalResource)
-                                            .allocatableResource(resource)
-                                            .metaData(metaData)
-                                            .build();
-            log.debug("Creating container instance {} ", containerInstanceId);
-            instanceDataService.create(instanceData);
+            if (null != totalResource) {
+              InstanceData instanceData = InstanceData.builder()
+                                              .accountId(accountId)
+                                              .instanceId(containerInstanceId)
+                                              .clusterName(getIdFromArn(clusterArn))
+                                              .clusterId(clusterId)
+                                              .settingId(settingId)
+                                              .instanceType(InstanceType.ECS_CONTAINER_INSTANCE)
+                                              .instanceState(InstanceState.RUNNING)
+                                              .usageStartTime(containerInstance.getRegisteredAt().toInstant())
+                                              .totalResource(totalResource)
+                                              .allocatableResource(resource)
+                                              .metaData(metaData)
+                                              .build();
+              log.debug("Creating container instance {} ", containerInstanceId);
+              instanceDataService.create(instanceData);
+            }
           }
         });
   }
