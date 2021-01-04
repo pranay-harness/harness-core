@@ -129,6 +129,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.mongodb.morphia.aggregation.AggregationPipeline;
 import org.mongodb.morphia.aggregation.Group;
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
@@ -390,7 +391,9 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       query.order(Sort.descending(CREATED_AT_KEY));
     }
 
-    Instance instance = query.get();
+    FindOptions findOptions = new FindOptions();
+    findOptions.modifier("$hint", "instance_index7");
+    Instance instance = query.get(findOptions);
     if (instance == null) {
       return timestamp;
     }
