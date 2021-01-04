@@ -14,6 +14,6 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("io.harness.yaml.extended.ci.CodeBase")
 public class CodeBase {
   @NotNull String connectorRef;
-  @NotNull String repoName;
+  String repoName;
   @NotNull ParameterField<Build> build;
 }
