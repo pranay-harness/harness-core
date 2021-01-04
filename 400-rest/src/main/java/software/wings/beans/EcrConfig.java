@@ -2,6 +2,8 @@ package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
@@ -48,7 +50,7 @@ public class EcrConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Access Key", required = true) @NotEmpty private String accessKey;
   @Attributes(title = "Secret Key", required = true) @Encrypted(fieldName = "secret_key") private char[] secretKey;
   @Attributes(title = "Region", required = true)
-  @DefaultValue("us-east-1")
+  @DefaultValue(AWS_DEFAULT_REGION)
   @EnumData(enumDataProvider = AwsRegionDataProvider.class)
   private String region;
   @SchemaIgnore @NotEmpty private String accountId;

@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
+import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
 import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
@@ -65,7 +66,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
 
   private String analysisServerConfigId;
 
-  private String region = "us-east-1";
+  private String region = AWS_DEFAULT_REGION;
 
   private Map<String, List<CloudWatchMetric>> loadBalancerMetrics;
 
@@ -284,7 +285,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
 
   public String getRegion() {
     if (isEmpty(region)) {
-      return "us-east-1";
+      return AWS_DEFAULT_REGION;
     }
     return region;
   }

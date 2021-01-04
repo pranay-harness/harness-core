@@ -22,7 +22,6 @@ import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
@@ -70,13 +69,20 @@ public class AwsEc2HelperServiceDelegateImpl
     return (AmazonEC2Client) builder.build();
   }
 
+  @VisibleForTesting
+  AmazonEC2Client getAmazonEc2Client(AwsConfig awsConfig) {
+    AmazonEC2ClientBuilder builder = AmazonEC2ClientBuilder.standard().withRegion(getRegion(awsConfig));
+    attachCredentials(builder, awsConfig);
+    return (AmazonEC2Client) builder.build();
+  }
+
   @Override
   public AwsEc2ValidateCredentialsResponse validateAwsAccountCredential(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails, false);
       tracker.trackEC2Call("Get Ec2 client");
-      getAmazonEc2Client(Regions.US_EAST_1.getName(), awsConfig).describeRegions();
+      getAmazonEc2Client(awsConfig).describeRegions();
     } catch (AmazonEC2Exception amazonEC2Exception) {
       if (amazonEC2Exception.getStatusCode() == 401) {
         AwsEc2ValidateCredentialsResponseBuilder responseBuilder =
@@ -102,7 +108,7 @@ public class AwsEc2HelperServiceDelegateImpl
   public List<String> listRegions(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(Regions.US_EAST_1.getName(), awsConfig);
+      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(awsConfig);
       tracker.trackEC2Call("List Ec2 regions");
       return amazonEC2Client.describeRegions().getRegions().stream().map(Region::getRegionName).collect(toList());
     } catch (AmazonServiceException amazonServiceException) {

@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.FeatureName.AWS_OVERRIDE_REGION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedFields;
@@ -50,6 +51,7 @@ import software.wings.beans.InstanaConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.KubernetesClusterConfig;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PrometheusConfig;
@@ -85,6 +87,7 @@ import software.wings.service.impl.gcp.GcpHelperServiceManager;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl;
 import software.wings.service.impl.spotinst.SpotinstHelperServiceManager;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.AwsHelperResourceService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.DelegateService;
@@ -145,6 +148,7 @@ public class SettingValidationService {
   @Inject private AWSCEConfigValidationService awsceConfigValidationService;
   @Inject private GcpHelperServiceManager gcpHelperServiceManager;
   @Inject private SettingServiceHelper settingServiceHelper;
+  @Inject private AwsHelperResourceService awsHelperResourceService;
 
   public ValidationResult validateConnectivity(SettingAttribute settingAttribute) {
     SettingValue settingValue = settingAttribute.getValue();
@@ -398,6 +402,16 @@ public class SettingValidationService {
   private void validateAwsConfig(SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails) {
     AwsConfig value = (AwsConfig) settingAttribute.getValue();
     try {
+      if (isNotBlank(value.getDefaultRegion())) {
+        if (featureFlagService.isNotEnabled(AWS_OVERRIDE_REGION, settingAttribute.getAccountId())) {
+          throw new InvalidRequestException("AWS Override region support is not enabled", USER);
+        } else {
+          List<NameValuePair> awsRegions = awsHelperResourceService.getAwsRegions();
+          if (awsRegions.stream().noneMatch(ar -> value.getDefaultRegion().equals(ar.getValue()))) {
+            throw new InvalidRequestException("Invalid AWS region provided: " + value.getDefaultRegion(), USER);
+          }
+        }
+      }
       awsEc2HelperServiceManager.validateAwsAccountCredential(value, encryptedDataDetails);
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);

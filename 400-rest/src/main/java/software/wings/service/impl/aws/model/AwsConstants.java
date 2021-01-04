@@ -54,6 +54,7 @@ public interface AwsConstants {
 
   String CONTEXT_NEW_ASG_NAME_EXPR = "ami.newAsgName";
   String CONTEXT_OLD_ASG_NAME_EXPR = "ami.oldAsgName";
+  String AWS_DEFAULT_REGION = "us-east-1";
 
   int DEFAULT_STATE_TIMEOUT_BUFFER_MIN = 5;
 }

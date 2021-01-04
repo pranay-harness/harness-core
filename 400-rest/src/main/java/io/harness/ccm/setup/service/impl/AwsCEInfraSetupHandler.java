@@ -1,5 +1,7 @@
 package io.harness.ccm.setup.service.impl;
 
+import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
+
 import io.harness.ccm.setup.service.CEInfraSetupHandler;
 import io.harness.ccm.setup.service.intfc.AWSAccountService;
 import io.harness.ccm.setup.service.intfc.AwsEKSClusterService;
@@ -21,7 +23,7 @@ public class AwsCEInfraSetupHandler extends CEInfraSetupHandler {
   @Inject private AwsEKSHelperService awsEKSHelperService;
   @Inject private AwsEKSClusterService awsEKSClusterService;
 
-  private static final String DEFAULT_REGION = "us-east-1";
+  private static final String DEFAULT_REGION = AWS_DEFAULT_REGION;
 
   @Override
   public void syncCEInfra(SettingAttribute settingAttribute) {

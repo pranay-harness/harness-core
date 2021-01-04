@@ -6,7 +6,10 @@ import static io.harness.eraro.ErrorCode.AWS_CLUSTER_NOT_FOUND;
 import static io.harness.eraro.ErrorCode.AWS_SERVICE_NOT_FOUND;
 import static io.harness.exception.WingsException.USER;
 
+import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
+
 import static org.apache.commons.lang3.StringUtils.defaultString;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.aws.AwsCallTracker;
 import io.harness.exception.InvalidRequestException;
@@ -48,6 +51,7 @@ class AwsHelperServiceDelegateBase {
 
   protected void attachCredentials(AwsClientBuilder builder, AwsConfig awsConfig) {
     AWSCredentialsProvider credentialsProvider;
+
     if (awsConfig.isUseEc2IamCredentials()) {
       log.info("Instantiating EC2ContainerCredentialsProviderWrapper");
       credentialsProvider = new EC2ContainerCredentialsProviderWrapper();
@@ -58,10 +62,12 @@ class AwsHelperServiceDelegateBase {
     }
     if (awsConfig.isAssumeCrossAccountRole() && awsConfig.getCrossAccountAttributes() != null) {
       // For the security token service we default to us-east-1.
-      AWSSecurityTokenService securityTokenService = AWSSecurityTokenServiceClientBuilder.standard()
-                                                         .withRegion("us-east-1")
-                                                         .withCredentials(credentialsProvider)
-                                                         .build();
+
+      AWSSecurityTokenService securityTokenService =
+          AWSSecurityTokenServiceClientBuilder.standard()
+              .withRegion(isNotBlank(awsConfig.getDefaultRegion()) ? awsConfig.getDefaultRegion() : AWS_DEFAULT_REGION)
+              .withCredentials(credentialsProvider)
+              .build();
       AwsCrossAccountAttributes crossAccountAttributes = awsConfig.getCrossAccountAttributes();
       credentialsProvider = new STSAssumeRoleSessionCredentialsProvider
                                 .Builder(crossAccountAttributes.getCrossAccountRoleArn(), UUID.randomUUID().toString())
@@ -69,6 +75,7 @@ class AwsHelperServiceDelegateBase {
                                 .withExternalId(crossAccountAttributes.getExternalId())
                                 .build();
     }
+
     builder.withCredentials(credentialsProvider);
   }
 
@@ -129,5 +136,13 @@ class AwsHelperServiceDelegateBase {
   protected boolean isHarnessManagedTag(String infraMappingId, TagDescription tagDescription) {
     return tagDescription.getKey().equals(HARNESS_AUTOSCALING_GROUP_TAG)
         && tagDescription.getValue().startsWith(infraMappingId);
+  }
+
+  protected String getRegion(AwsConfig awsConfig) {
+    if (isNotBlank(awsConfig.getDefaultRegion())) {
+      return awsConfig.getDefaultRegion();
+    } else {
+      return AWS_DEFAULT_REGION;
+    }
   }
 }

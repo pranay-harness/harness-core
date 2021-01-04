@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_ECS_FARGATE;
+import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
 
 import static com.amazonaws.util.StringUtils.isNullOrEmpty;
 import static java.lang.String.format;
@@ -41,7 +42,7 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants(innerTypeName = "EcsInfrastructureMappingKeys")
 public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
   @Attributes(title = "Region")
-  @DefaultValue("us-east-1")
+  @DefaultValue(AWS_DEFAULT_REGION)
   @EnumData(enumDataProvider = AwsRegionDataProvider.class)
   @Blueprint
   private String region;
@@ -235,7 +236,7 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
    * @return Value for property 'region'.
    */
   public String getRegion() {
-    return isNullOrEmpty(region) ? "us-east-1" : region;
+    return isNullOrEmpty(region) ? AWS_DEFAULT_REGION : region;
   }
 
   /**
@@ -664,7 +665,7 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends ContainerInfrastructureMapping.YamlWithComputeProvider {
-    private String region = "us-east-1";
+    private String region = AWS_DEFAULT_REGION;
     private String vpcId;
     private String subnetIds;
     private String securityGroupIds;

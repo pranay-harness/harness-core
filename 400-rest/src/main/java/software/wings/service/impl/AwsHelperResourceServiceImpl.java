@@ -4,7 +4,6 @@ import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
-import static com.amazonaws.regions.Regions.GovCloud;
 import static java.util.stream.Collectors.toMap;
 
 import io.harness.data.structure.EmptyPredicate;
@@ -70,15 +69,13 @@ public class AwsHelperResourceServiceImpl implements AwsHelperResourceService {
     List<NameValuePair> awsRegions = new ArrayList<>();
     for (Regions region : Regions.values()) {
       String regionName = region.getName();
-      if (!GovCloud.getName().equals(regionName)) {
-        NameValuePairBuilder regionNameValuePair = NameValuePair.builder().value(regionName);
-        if (awsRegionIdToName.containsKey(regionName)) {
-          regionNameValuePair.name(awsRegionIdToName.get(regionName));
-        } else {
-          regionNameValuePair.name(regionName);
-        }
-        awsRegions.add(regionNameValuePair.build());
+      NameValuePairBuilder regionNameValuePair = NameValuePair.builder().value(regionName);
+      if (awsRegionIdToName.containsKey(regionName)) {
+        regionNameValuePair.name(awsRegionIdToName.get(regionName));
+      } else {
+        regionNameValuePair.name(regionName);
       }
+      awsRegions.add(regionNameValuePair.build());
     }
     return awsRegions;
   }

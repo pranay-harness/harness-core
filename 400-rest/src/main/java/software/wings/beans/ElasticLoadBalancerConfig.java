@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
+
 import static java.util.Collections.emptyList;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -39,7 +41,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @EqualsAndHashCode(callSuper = false)
 public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements EncryptableSetting {
   @Attributes(title = "Region", required = true)
-  @DefaultValue("us-east-1")
+  @DefaultValue(AWS_DEFAULT_REGION)
   @EnumData(enumDataProvider = AwsRegionDataProvider.class)
   private Regions region;
 

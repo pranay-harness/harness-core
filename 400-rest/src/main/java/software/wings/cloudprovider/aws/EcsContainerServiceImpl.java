@@ -9,6 +9,7 @@ import static io.harness.threading.Morpheus.sleep;
 import static software.wings.beans.LogColor.Yellow;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
+import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
 import static software.wings.service.impl.aws.model.AwsConstants.MAIN_ECS_CONTAINER_NAME_TAG;
 
 import static java.lang.String.format;
@@ -116,7 +117,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
    * Create cluster.
    */
   public void createCluster() {
-    awsHelperService.createStack("us-east-1",
+    awsHelperService.createStack(AWS_DEFAULT_REGION,
         new CreateStackRequest()
             .withStackName("EC2ContainerService-demo")
             .withTemplateBody("AWSTemplateFormatVersion: '2010-09-09'\n"
@@ -444,16 +445,17 @@ public class EcsContainerServiceImpl implements EcsContainerService {
             .build());
 
     Stack stack;
-    while (!"CREATE_COMPLETE".equals((
-        stack = awsHelperService
-                    .describeStacks("us-east-1", new DescribeStacksRequest().withStackName("EC2ContainerService-test2"),
-                        AwsConfig.builder()
-                            .accessKey("AKIAJLEKM45P4PO5QUFQ".toCharArray())
-                            .secretKey("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".toCharArray())
-                            .build())
-                    .getStacks()
-                    .get(0))
-                                         .getStackStatus())) {
+    while (!"CREATE_COMPLETE".equals(
+        (stack = awsHelperService
+                     .describeStacks(AWS_DEFAULT_REGION,
+                         new DescribeStacksRequest().withStackName("EC2ContainerService-test2"),
+                         AwsConfig.builder()
+                             .accessKey("AKIAJLEKM45P4PO5QUFQ".toCharArray())
+                             .secretKey("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".toCharArray())
+                             .build())
+                     .getStacks()
+                     .get(0))
+            .getStackStatus())) {
       sleep(ofSeconds(1));
     }
 
@@ -464,7 +466,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
    * Destroy cluster.
    */
   public void destroyCluster() {
-    awsHelperService.createStack("us-east-1",
+    awsHelperService.createStack(AWS_DEFAULT_REGION,
         new CreateStackRequest()
             .withStackName("EC2ContainerService-test2")
             .withTemplateBody("AWSTemplateFormatVersion: '2010-09-09'\n"
@@ -792,16 +794,17 @@ public class EcsContainerServiceImpl implements EcsContainerService {
             .build());
 
     Stack stack;
-    while (!"CREATE_COMPLETE".equals((
-        stack = awsHelperService
-                    .describeStacks("us-east-1", new DescribeStacksRequest().withStackName("EC2ContainerService-test2"),
-                        AwsConfig.builder()
-                            .accessKey("AKIAJLEKM45P4PO5QUFQ".toCharArray())
-                            .secretKey("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".toCharArray())
-                            .build())
-                    .getStacks()
-                    .get(0))
-                                         .getStackStatus())) {
+    while (!"CREATE_COMPLETE".equals(
+        (stack = awsHelperService
+                     .describeStacks(AWS_DEFAULT_REGION,
+                         new DescribeStacksRequest().withStackName("EC2ContainerService-test2"),
+                         AwsConfig.builder()
+                             .accessKey("AKIAJLEKM45P4PO5QUFQ".toCharArray())
+                             .secretKey("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".toCharArray())
+                             .build())
+                     .getStacks()
+                     .get(0))
+            .getStackStatus())) {
       sleep(ofSeconds(1));
     }
 
