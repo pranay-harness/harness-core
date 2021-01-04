@@ -277,6 +277,7 @@ helper shell scripts:
 ### Run from IntelliJ
 
 Run configurations for the different applications are already checked into the repo. Choose the appropriate run configuration from the menu.
+While running an app from pre checked in configs, Add JAVA_HOME as an environment variable in Intellij. 
 ![Run configuration menu](img/run_configs.png)
 
 
@@ -301,11 +302,9 @@ Alternatively, use Fish shell: `brew install fish` then set iterms command to `/
 
 2. Run API Server (WingsApplication): [Run > Run... > WingsApplication]
 
-3. From within the IDE, run `rest/src/test/java/software/wings/integration/DataGenUtil.java` and
+3. Run DataGenApp: [Run > Run... > DataGenApp]. Add HARNESS_GENERATION_PASSPHRASE environment variable to DataGenApp config in intellij. 
 
-4. `rest/src/test/java/software/wings/service/impl/RoleRefreshUtil.java` to create the default users and roles.
-
-5. Run DelegateApplication: [Run > Run... > DelegateApplication]
+4. Run DelegateApplication: [Run > Run... > DelegateApplication]
 
 The admin username and password are in BaseIntegrationTest.java.
 
