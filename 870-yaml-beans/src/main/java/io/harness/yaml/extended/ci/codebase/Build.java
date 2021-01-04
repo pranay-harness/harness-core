@@ -1,14 +1,22 @@
 package io.harness.yaml.extended.ci.codebase;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
-
+import lombok.NoArgsConstructor;
 @Data
-@Builder
+@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Build {
   @NotNull private BuildType type;
-  @NotNull private BuildSpec spec;
+  @JsonTypeInfo(
+      use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
+  @NotNull
+  private BuildSpec spec;
+  @Builder
+  public Build(BuildType type, BuildSpec spec) {
+    this.type = type;
+    this.spec = spec;
+  }
 }

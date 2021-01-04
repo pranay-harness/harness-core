@@ -2,8 +2,7 @@
   "type": "object",
   "required": [
     "build",
-    "connectorRef",
-    "repoName"
+    "connectorRef"
   ],
   "properties": {
     "build": {

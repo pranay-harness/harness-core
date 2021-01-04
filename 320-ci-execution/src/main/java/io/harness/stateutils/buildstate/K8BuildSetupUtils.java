@@ -4,7 +4,6 @@ import static io.harness.common.BuildEnvironmentConstants.DRONE_NETRC_MACHINE;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_NETRC_USERNAME;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_REMOTE_URL;
 import static io.harness.common.CICommonPodConstants.STEP_EXEC;
-import static io.harness.common.CIExecutionConstants.ACCESS_KEY_MINIO_VARIABLE;
 import static io.harness.common.CIExecutionConstants.GIT_URL_SUFFIX;
 import static io.harness.common.CIExecutionConstants.HARNESS_ACCOUNT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_BUILD_ID_VARIABLE;
@@ -17,10 +16,12 @@ import static io.harness.common.CIExecutionConstants.LOCALHOST_IP;
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.PATH_SEPARATOR;
-import static io.harness.common.CIExecutionConstants.SECRET_KEY_MINIO_VARIABLE;
 import static io.harness.common.CIExecutionConstants.TI_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.connector.ConnectorType.BITBUCKET;
+import static io.harness.delegate.beans.connector.ConnectorType.GITHUB;
+import static io.harness.delegate.beans.connector.ConnectorType.GITLAB;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
@@ -36,7 +37,6 @@ import io.harness.beans.serializer.ExecutionProtobufSerializer;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
-import io.harness.beans.yaml.extended.CustomSecretVariable;
 import io.harness.ci.beans.entities.TIServiceConfig;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.delegate.beans.ci.CIK8BuildTaskParams;
@@ -53,13 +53,23 @@ import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpAuthenticationType;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
-import io.harness.encryption.Scope;
-import io.harness.encryption.SecretRefData;
+import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpAuthenticationType;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernamePasswordDTO;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.git.GitClientHelper;
 import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.ng.core.NGAccess;
@@ -287,17 +297,6 @@ public class K8BuildSetupUtils {
       containerDefinitionInfo.getSecretVariables().forEach(secretVariable
           -> secretVariableDetails.add(secretVariableUtils.getSecretVariableDetails(ngAccess, secretVariable)));
     }
-
-    secretVariableDetails.add(secretVariableUtils.getSecretVariableDetails(ngAccess,
-        CustomSecretVariable.builder()
-            .name(ACCESS_KEY_MINIO_VARIABLE)
-            .value(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(ACCESS_KEY_MINIO_VARIABLE).build())
-            .build()));
-    secretVariableDetails.add(secretVariableUtils.getSecretVariableDetails(ngAccess,
-        CustomSecretVariable.builder()
-            .name(SECRET_KEY_MINIO_VARIABLE)
-            .value(SecretRefData.builder().scope(Scope.ACCOUNT).identifier(SECRET_KEY_MINIO_VARIABLE).build())
-            .build()));
     return secretVariableDetails;
   }
 
@@ -358,16 +357,85 @@ public class K8BuildSetupUtils {
     }
 
     validateGitConnector(gitConnector);
+    if (gitConnector.getConnectorType() == GITHUB) {
+      GithubConnectorDTO gitConfigDTO = (GithubConnectorDTO) gitConnector.getConnectorConfig();
+      envVars = retrieveGithubEnvVar(gitConfigDTO, ciCodebase);
+    } else if (gitConnector.getConnectorType() == GITLAB) {
+      GitlabConnectorDTO gitConfigDTO = (GitlabConnectorDTO) gitConnector.getConnectorConfig();
+      envVars = retrieveGitlabEnvVar(gitConfigDTO, ciCodebase);
+    } else if (gitConnector.getConnectorType() == BITBUCKET) {
+      BitbucketConnectorDTO gitConfigDTO = (BitbucketConnectorDTO) gitConnector.getConnectorConfig();
+      envVars = retrieveBitbucketEnvVar(gitConfigDTO, ciCodebase);
+    } else {
+      throw new CIStageExecutionException("Unsupported git connector type" + gitConnector.getConnectorType());
+    }
 
-    GitConfigDTO gitConfigDTO = (GitConfigDTO) gitConnector.getConnectorConfig();
-    String gitUrl = getGitUrl(gitConfigDTO, ciCodebase);
+    return envVars;
+  }
+
+  private Map<String, String> retrieveGithubEnvVar(GithubConnectorDTO gitConfigDTO, CodeBase ciCodebase) {
+    Map<String, String> envVars = new HashMap<>();
+    String gitUrl = getGitURL(ciCodebase, gitConfigDTO.getConnectionType(), gitConfigDTO.getUrl());
     String domain = GitClientHelper.getGitSCM(gitUrl);
 
     envVars.put(DRONE_REMOTE_URL, gitUrl);
     envVars.put(DRONE_NETRC_MACHINE, domain);
-    if (gitConfigDTO.getGitAuthType() == GitAuthType.HTTP) {
-      GitHTTPAuthenticationDTO gitAuth = (GitHTTPAuthenticationDTO) gitConfigDTO.getGitAuth();
-      envVars.put(DRONE_NETRC_USERNAME, gitAuth.getUsername());
+    if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.HTTP) {
+      GithubHttpCredentialsDTO gitAuth = (GithubHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
+
+      if (gitAuth.getType() == GithubHttpAuthenticationType.USERNAME_AND_PASSWORD) {
+        envVars.put(DRONE_NETRC_USERNAME, ((GithubUsernamePasswordDTO) gitAuth.getHttpCredentialsSpec()).getUsername());
+      } else {
+        throw new CIStageExecutionException("Unsupported git connector auth type" + gitAuth.getType());
+      }
+
+    } else {
+      throw new CIStageExecutionException(
+          "Unsupported git connector auth" + gitConfigDTO.getAuthentication().getAuthType());
+    }
+    return envVars;
+  }
+
+  private Map<String, String> retrieveGitlabEnvVar(GitlabConnectorDTO gitConfigDTO, CodeBase ciCodebase) {
+    Map<String, String> envVars = new HashMap<>();
+    String gitUrl = getGitURL(ciCodebase, gitConfigDTO.getConnectionType(), gitConfigDTO.getUrl());
+    String domain = GitClientHelper.getGitSCM(gitUrl);
+
+    envVars.put(DRONE_REMOTE_URL, gitUrl);
+    envVars.put(DRONE_NETRC_MACHINE, domain);
+    if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.HTTP) {
+      GitlabHttpCredentialsDTO gitAuth = (GitlabHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
+      if (gitAuth.getType() == GitlabHttpAuthenticationType.USERNAME_AND_PASSWORD) {
+        envVars.put(DRONE_NETRC_USERNAME, ((GitlabUsernamePasswordDTO) gitAuth.getHttpCredentialsSpec()).getUsername());
+      } else {
+        throw new CIStageExecutionException("Unsupported git connector auth type" + gitAuth.getType());
+      }
+    } else {
+      throw new CIStageExecutionException(
+          "Unsupported git connector auth" + gitConfigDTO.getAuthentication().getAuthType());
+    }
+    return envVars;
+  }
+
+  private Map<String, String> retrieveBitbucketEnvVar(BitbucketConnectorDTO gitConfigDTO, CodeBase ciCodebase) {
+    Map<String, String> envVars = new HashMap<>();
+    String gitUrl = getGitURL(ciCodebase, gitConfigDTO.getConnectionType(), gitConfigDTO.getUrl());
+    String domain = GitClientHelper.getGitSCM(gitUrl);
+
+    envVars.put(DRONE_REMOTE_URL, gitUrl);
+    envVars.put(DRONE_NETRC_MACHINE, domain);
+    if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.HTTP) {
+      BitbucketHttpCredentialsDTO gitAuth =
+          (BitbucketHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
+      if (gitAuth.getType() == BitbucketHttpAuthenticationType.USERNAME_AND_PASSWORD) {
+        envVars.put(
+            DRONE_NETRC_USERNAME, ((BitbucketUsernamePasswordDTO) gitAuth.getHttpCredentialsSpec()).getUsername());
+      } else {
+        throw new CIStageExecutionException("Unsupported git connector auth type" + gitAuth.getType());
+      }
+    } else {
+      throw new CIStageExecutionException(
+          "Unsupported git connector auth" + gitConfigDTO.getAuthentication().getAuthType());
     }
     return envVars;
   }
@@ -404,21 +472,55 @@ public class K8BuildSetupUtils {
     return gitUrl;
   }
 
+  private String getGitURL(CodeBase ciCodebase, GitConnectionType connectionType, String url) {
+    String gitUrl;
+    if (connectionType == GitConnectionType.REPO) {
+      gitUrl = url;
+    } else if (connectionType == GitConnectionType.ACCOUNT) {
+      if (ciCodebase == null) {
+        throw new IllegalArgumentException("CI codebase spec is not set");
+      }
+
+      if (isEmpty(ciCodebase.getRepoName())) {
+        throw new IllegalArgumentException("Repo name is not set in CI codebase spec");
+      }
+
+      String repoName = ciCodebase.getRepoName();
+      if (url.endsWith(PATH_SEPARATOR)) {
+        gitUrl = url + repoName;
+      } else {
+        gitUrl = url + PATH_SEPARATOR + repoName;
+      }
+    } else {
+      throw new InvalidArgumentsException(
+          format("Invalid connection type for git connector: %s", connectionType.toString()), WingsException.USER);
+    }
+
+    if (!url.endsWith(GIT_URL_SUFFIX)) {
+      gitUrl += GIT_URL_SUFFIX;
+    }
+    return gitUrl;
+  }
+
   private void validateGitConnector(ConnectorDetails gitConnector) {
     if (gitConnector == null) {
       log.error("Git connector is not valid {}", gitConnector);
       throw new InvalidArgumentsException("Git connector is not valid", WingsException.USER);
     }
-    if (gitConnector.getConnectorType() != ConnectorType.GIT) {
+    if (gitConnector.getConnectorType() != ConnectorType.GIT && gitConnector.getConnectorType() != ConnectorType.GITHUB
+        && gitConnector.getConnectorType() != ConnectorType.GITLAB) {
       log.error("Git connector ref is not of type git {}", gitConnector);
-      throw new InvalidArgumentsException("Connector type for git connector is not GIT", WingsException.USER);
+      throw new InvalidArgumentsException(
+          "Connector type for git connector is not GITHUB OR GITLAB OR GIT ", WingsException.USER);
     }
 
-    GitConfigDTO gitConfigDTO = (GitConfigDTO) gitConnector.getConnectorConfig();
-    if (gitConfigDTO.getGitAuthType() != GitAuthType.HTTP && gitConfigDTO.getGitAuthType() != GitAuthType.SSH) {
-      log.error("Git connector ref is of invalid auth type {}", gitConnector);
-      throw new InvalidArgumentsException("Invalid auth provided for git connector", WingsException.USER);
-    }
+    // TODO Validate all
+
+    //    GitConfigDTO gitConfigDTO = (GitConfigDTO) gitConnector.getConnectorConfig();
+    //    if (gitConfigDTO.getGitAuthType() != GitAuthType.HTTP && gitConfigDTO.getGitAuthType() != GitAuthType.SSH) {
+    //      log.error("Git connector ref is of invalid auth type {}", gitConnector);
+    //      throw new InvalidArgumentsException("Invalid auth provided for git connector", WingsException.USER);
+    //    }
   }
 
   private ConnectorDetails getGitConnector(NGAccess ngAccess, CodeBase codeBase, boolean skipGitClone) {

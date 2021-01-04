@@ -1,6 +1,9 @@
 package io.harness.stateutils.buildstate;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.connector.ConnectorType.BITBUCKET;
+import static io.harness.delegate.beans.connector.ConnectorType.GITHUB;
+import static io.harness.delegate.beans.connector.ConnectorType.GITLAB;
 
 import static java.lang.String.format;
 
@@ -28,8 +31,13 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDT
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.GitAuthType;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.network.SafeHttpCall;
@@ -109,6 +117,15 @@ public class ConnectorUtils {
       case GIT:
         connectorDetails = getGitConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
         break;
+      case GITHUB:
+        connectorDetails = getGitConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
+        break;
+      case GITLAB:
+        connectorDetails = getGitConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
+        break;
+      case BITBUCKET:
+        connectorDetails = getGitConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
+        break;
       case GCP:
         connectorDetails = getGcpConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
         break;
@@ -176,11 +193,66 @@ public class ConnectorUtils {
 
   private ConnectorDetails getGitConnectorDetails(
       NGAccess ngAccess, ConnectorDTO connectorDTO, ConnectorDetailsBuilder connectorDetailsBuilder) {
+    if (connectorDTO.getConnectorInfo().getConnectorType() == GITHUB) {
+      return buildGithubConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
+    } else if (connectorDTO.getConnectorInfo().getConnectorType() == GITLAB) {
+      return buildGitlabConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
+    } else if (connectorDTO.getConnectorInfo().getConnectorType() == BITBUCKET) {
+      return buildBitBucketConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
+    } else {
+      throw new CIStageExecutionException(
+          "Unsupported git connector " + connectorDTO.getConnectorInfo().getConnectorType());
+    }
+  }
+
+  private ConnectorDetails buildGitlabConnectorDetails(
+      NGAccess ngAccess, ConnectorDTO connectorDTO, ConnectorDetailsBuilder connectorDetailsBuilder) {
     List<EncryptedDataDetail> encryptedDataDetails;
-    GitConfigDTO gitConfigDTO = (GitConfigDTO) connectorDTO.getConnectorInfo().getConnectorConfig();
-    GitAuthenticationDTO gitAuth = gitConfigDTO.getGitAuth();
-    encryptedDataDetails = secretManagerClientService.getEncryptionDetails(ngAccess, gitAuth);
-    return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
+    GitlabConnectorDTO gitConfigDTO = (GitlabConnectorDTO) connectorDTO.getConnectorInfo().getConnectorConfig();
+    if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.HTTP) {
+      GitlabHttpCredentialsDTO gitlabHttpCredentialsDTO =
+          (GitlabHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
+      encryptedDataDetails =
+          secretManagerClientService.getEncryptionDetails(ngAccess, gitlabHttpCredentialsDTO.getHttpCredentialsSpec());
+
+      return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
+    } else {
+      throw new CIStageExecutionException(
+          "Unsupported git connector auth" + gitConfigDTO.getAuthentication().getAuthType());
+    }
+  }
+
+  private ConnectorDetails buildGithubConnectorDetails(
+      NGAccess ngAccess, ConnectorDTO connectorDTO, ConnectorDetailsBuilder connectorDetailsBuilder) {
+    List<EncryptedDataDetail> encryptedDataDetails;
+    GithubConnectorDTO gitConfigDTO = (GithubConnectorDTO) connectorDTO.getConnectorInfo().getConnectorConfig();
+
+    if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.HTTP) {
+      GithubHttpCredentialsDTO githubHttpCredentialsDTO =
+          (GithubHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
+      encryptedDataDetails =
+          secretManagerClientService.getEncryptionDetails(ngAccess, githubHttpCredentialsDTO.getHttpCredentialsSpec());
+      return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
+    } else {
+      throw new CIStageExecutionException(
+          "Unsupported git connector auth" + gitConfigDTO.getAuthentication().getAuthType());
+    }
+  }
+
+  private ConnectorDetails buildBitBucketConnectorDetails(
+      NGAccess ngAccess, ConnectorDTO connectorDTO, ConnectorDetailsBuilder connectorDetailsBuilder) {
+    List<EncryptedDataDetail> encryptedDataDetails;
+    BitbucketConnectorDTO gitConfigDTO = (BitbucketConnectorDTO) connectorDTO.getConnectorInfo().getConnectorConfig();
+    if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.HTTP) {
+      BitbucketHttpCredentialsDTO bitbucketHttpCredentialsDTO =
+          (BitbucketHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
+      encryptedDataDetails = secretManagerClientService.getEncryptionDetails(
+          ngAccess, bitbucketHttpCredentialsDTO.getHttpCredentialsSpec());
+      return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
+    } else {
+      throw new CIStageExecutionException(
+          "Unsupported git connector auth" + gitConfigDTO.getAuthentication().getAuthType());
+    }
   }
 
   private ConnectorDetails getDockerConnectorDetails(
