@@ -62,7 +62,7 @@ public class ViewsQueryBuilder {
     List<QLCEViewFieldInput> groupByEntity = getGroupByEntity(groupByList);
     QLCEViewTimeTruncGroupBy groupByTime = getGroupByTime(groupByList);
 
-    List<ViewField> customFields = collectCustomFieldList(rules, filters);
+    List<ViewField> customFields = collectCustomFieldList(rules, filters, groupByEntity);
     List<String> labelKeysList = new ArrayList<>();
     modifyQueryWithInstanceTypeFilter(rules, filters, groupByEntity, customFields, selectQuery);
 
@@ -159,7 +159,8 @@ public class ViewsQueryBuilder {
     return labelKeyList;
   }
 
-  private List<ViewField> collectCustomFieldList(List<ViewRule> rules, List<QLCEViewFilter> filters) {
+  private List<ViewField> collectCustomFieldList(
+      List<ViewRule> rules, List<QLCEViewFilter> filters, List<QLCEViewFieldInput> groupByEntity) {
     List<ViewField> customFieldLists = new ArrayList<>();
     for (ViewRule rule : rules) {
       for (ViewCondition condition : rule.getViewConditions()) {
@@ -174,6 +175,12 @@ public class ViewsQueryBuilder {
     for (QLCEViewFilter filter : filters) {
       if (filter.getField().getIdentifier().equals(ViewFieldIdentifier.CUSTOM)) {
         customFieldLists.add(getViewField(filter.getField()));
+      }
+    }
+
+    for (QLCEViewFieldInput groupByField : groupByEntity) {
+      if (groupByField.getIdentifier().equals(ViewFieldIdentifier.CUSTOM)) {
+        customFieldLists.add(getViewField(groupByField));
       }
     }
 
@@ -303,7 +310,7 @@ public class ViewsQueryBuilder {
     query.addCustomFromTable(cloudProviderTableName);
 
     boolean isLabelsPresent = false;
-    List<ViewField> customFields = collectCustomFieldList(rules, filters);
+    List<ViewField> customFields = collectCustomFieldList(rules, filters, Collections.EMPTY_LIST);
     List<String> labelKeysList = new ArrayList<>();
 
     if (!customFields.isEmpty()) {
