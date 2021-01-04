@@ -40,5 +40,7 @@ public class ApiKeyEntry implements PersistentEntity, UuidAccess, CreatedAtAcces
   @FdIndex private long createdAt;
   @JsonView(JsonViews.Internal.class) @NotEmpty private char[] encryptedKey;
   @Transient private String decryptedKey;
-  @JsonView(JsonViews.Internal.class) @NotEmpty private String hashOfKey;
+  // todo(abhinav): remove this field when migration is completed.
+  @JsonView(JsonViews.Internal.class) @NotEmpty @Deprecated private String hashOfKey;
+  @JsonView(JsonViews.Internal.class) @NotEmpty private String sha256Hash;
 }

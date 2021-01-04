@@ -409,6 +409,7 @@ public class MigrationList {
         .add(Pair.of(350, CreateCustomDashboardPermissionMigration.class))
         .add(Pair.of(351, AddRestrictionsToSecretManagerConfig.class))
         .add(Pair.of(352, AwsConfigEc2IamRoleMigration.class))
+        .add(Pair.of(353, ChangeApiKeyHashFunction.class))
         .build();
   }
 }
