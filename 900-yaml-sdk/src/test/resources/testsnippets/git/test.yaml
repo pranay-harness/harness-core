@@ -16,4 +16,4 @@ connector:
     type: Http
     spec:
       username: "abhinav.singh@harness.io"
-      passwordRef: "secretRef:harnessAccountPassword"
+      passwordRef: "account.harnessAccountPassword"

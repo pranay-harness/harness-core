@@ -1,5 +1,7 @@
 package io.harness.delegate.beans.connector.splunkconnector;
 
+import static io.harness.yamlSchema.NGSecretReferenceConstants.SECRET_REF_PATTERN;
+
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -14,6 +16,7 @@ import io.swagger.annotations.ApiModelProperty;
 import java.util.Arrays;
 import java.util.List;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -34,7 +37,11 @@ public class SplunkConnectorDTO extends ConnectorConfigDTO implements Decryptabl
     }
     return splunkUrl + "/";
   }
-  @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData passwordRef;
+  @ApiModelProperty(dataType = "string")
+  @NotNull
+  @SecretReference
+  @Pattern(regexp = SECRET_REF_PATTERN)
+  SecretRefData passwordRef;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
