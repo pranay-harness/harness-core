@@ -4,6 +4,7 @@ import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.redis.RedisConfig;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
@@ -13,8 +14,9 @@ import org.redisson.api.StreamMessageId;
 
 @Slf4j
 public class RedisSerialConsumer extends RedisAbstractConsumer {
-  public RedisSerialConsumer(String topicName, String groupName, String consumerName, RedisConfig redisConfig) {
-    super(topicName, groupName, consumerName, redisConfig);
+  public RedisSerialConsumer(
+      String topicName, String groupName, String consumerName, RedisConfig redisConfig, Duration maxProcessingTime) {
+    super(topicName, groupName, consumerName, redisConfig, maxProcessingTime);
   }
 
   private List<Message> getUnackedMessages(long maxWaitTime, TimeUnit unit) throws ConsumerShutdownException {
@@ -38,8 +40,8 @@ public class RedisSerialConsumer extends RedisAbstractConsumer {
     }
   }
 
-  public static RedisSerialConsumer of(
-      String topicName, String groupName, String consumerName, @NotNull RedisConfig redisConfig) {
-    return new RedisSerialConsumer(topicName, groupName, consumerName, redisConfig);
+  public static RedisSerialConsumer of(String topicName, String groupName, String consumerName,
+      @NotNull RedisConfig redisConfig, Duration maxProcessingTime) {
+    return new RedisSerialConsumer(topicName, groupName, consumerName, redisConfig, maxProcessingTime);
   }
 }

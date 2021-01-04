@@ -1,10 +1,6 @@
 package io.harness.cvng.core.jobs;
 
-import static io.harness.EntityCRUDEventsConstants.CONNECTOR_ENTITY;
-import static io.harness.EntityCRUDEventsConstants.ENTITY_CRUD;
-import static io.harness.EntityCRUDEventsConstants.ENTITY_TYPE_METADATA;
-import static io.harness.EntityCRUDEventsConstants.PROJECT_ENTITY;
-
+import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.AbstractConsumer;
 import io.harness.eventsframework.consumer.Message;
 
@@ -25,13 +21,13 @@ public class EntityCRUDStreamConsumer implements Runnable {
   private final Map<String, ConsumerMessageProcessor> processorMap;
 
   @Inject
-  public EntityCRUDStreamConsumer(@Named(ENTITY_CRUD) AbstractConsumer abstractConsumer,
-      @Named(PROJECT_ENTITY) ConsumerMessageProcessor projectChangeEventMessageProcessor,
-      @Named(CONNECTOR_ENTITY) ConsumerMessageProcessor connectorChangeEventMessageProcessor) {
+  public EntityCRUDStreamConsumer(@Named(EventsFrameworkConstants.ENTITY_CRUD) AbstractConsumer abstractConsumer,
+      @Named(EventsFrameworkConstants.PROJECT_ENTITY) ConsumerMessageProcessor projectChangeEventMessageProcessor,
+      @Named(EventsFrameworkConstants.CONNECTOR_ENTITY) ConsumerMessageProcessor connectorChangeEventMessageProcessor) {
     this.consumer = abstractConsumer;
     processorMap = new HashMap<>();
-    processorMap.put(PROJECT_ENTITY, projectChangeEventMessageProcessor);
-    processorMap.put(CONNECTOR_ENTITY, connectorChangeEventMessageProcessor);
+    processorMap.put(EventsFrameworkConstants.PROJECT_ENTITY, projectChangeEventMessageProcessor);
+    processorMap.put(EventsFrameworkConstants.CONNECTOR_ENTITY, connectorChangeEventMessageProcessor);
   }
 
   @Override
@@ -54,8 +50,8 @@ public class EntityCRUDStreamConsumer implements Runnable {
   private void processMessage(Message message) {
     if (message.hasMessage()) {
       Map<String, String> metadataMap = message.getMessage().getMetadataMap();
-      if (metadataMap != null && metadataMap.containsKey(ENTITY_TYPE_METADATA)) {
-        String entityType = metadataMap.get(ENTITY_TYPE_METADATA);
+      if (metadataMap != null && metadataMap.containsKey(EventsFrameworkConstants.ENTITY_TYPE_METADATA)) {
+        String entityType = metadataMap.get(EventsFrameworkConstants.ENTITY_TYPE_METADATA);
         if (processorMap.containsKey(entityType)) {
           try {
             processorMap.get(entityType).processMessage(message);

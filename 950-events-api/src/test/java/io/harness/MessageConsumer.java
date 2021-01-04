@@ -33,9 +33,10 @@ public class MessageConsumer implements Runnable {
     this.channel = channel;
     this.color = color;
     if (readVia.equals("serialConsumerGroups"))
-      this.client = RedisSerialConsumer.of(channel, groupName, "hardcodedconsumer", redisConfig);
+      this.client =
+          RedisSerialConsumer.of(channel, groupName, "hardcodedconsumer", redisConfig, Duration.ofMinutes(10));
     else
-      this.client = RedisConsumer.of(channel, groupName, redisConfig);
+      this.client = RedisConsumer.of(channel, groupName, redisConfig, Duration.ofMinutes(10));
     this.groupName = groupName;
     this.processingTime = processingTime;
   }

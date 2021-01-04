@@ -1,17 +1,12 @@
 package io.harness.ng.core.api.impl;
 
-import static io.harness.EntityCRUDEventsConstants.ACTION_METADATA;
-import static io.harness.EntityCRUDEventsConstants.CREATE_ACTION;
-import static io.harness.EntityCRUDEventsConstants.DELETE_ACTION;
-import static io.harness.EntityCRUDEventsConstants.ENTITY_CRUD;
-import static io.harness.EntityCRUDEventsConstants.ENTITY_TYPE_METADATA;
-import static io.harness.EntityCRUDEventsConstants.SETUP_USAGE_ENTITY;
 import static io.harness.NGConstants.ENTITY_REFERENCE_LOG_PREFIX;
 
 import static software.wings.utils.Utils.emptyIfNull;
 
 import io.harness.entitysetupusageclient.EntitySetupUsageHelper;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
+import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.AbstractProducer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
@@ -39,7 +34,8 @@ public class SecretEntityReferenceHelper {
 
   @Inject
   public SecretEntityReferenceHelper(EntitySetupUsageHelper entityReferenceHelper,
-      EntitySetupUsageClient entitySetupUsageClient, @Named(ENTITY_CRUD) AbstractProducer eventProducer,
+      EntitySetupUsageClient entitySetupUsageClient,
+      @Named(EventsFrameworkConstants.ENTITY_CRUD) AbstractProducer eventProducer,
       IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper) {
     this.entityReferenceHelper = entityReferenceHelper;
     this.entitySetupUsageClient = entitySetupUsageClient;
@@ -77,11 +73,13 @@ public class SecretEntityReferenceHelper {
                                                        .setReferredEntity(secretManagerDetails)
                                                        .build();
     try {
-      eventProducer.send(Message.newBuilder()
-                             .putAllMetadata(ImmutableMap.of("accountId", encryptedDataDTO.getAccount(),
-                                 ENTITY_TYPE_METADATA, SETUP_USAGE_ENTITY, ACTION_METADATA, CREATE_ACTION))
-                             .setData(entityReferenceDTO.toByteString())
-                             .build());
+      eventProducer.send(
+          Message.newBuilder()
+              .putAllMetadata(ImmutableMap.of("accountId", encryptedDataDTO.getAccount(),
+                  EventsFrameworkConstants.ENTITY_TYPE_METADATA, EventsFrameworkConstants.SETUP_USAGE_ENTITY,
+                  EventsFrameworkConstants.ACTION_METADATA, EventsFrameworkConstants.CREATE_ACTION))
+              .setData(entityReferenceDTO.toByteString())
+              .build());
     } catch (Exception ex) {
       log.info(ENTITY_REFERENCE_LOG_PREFIX
               + "The entity reference was not created when the secret [{}] was created from the secret manager [{}]",
@@ -101,11 +99,13 @@ public class SecretEntityReferenceHelper {
                                                     .setReferredByEntityFQN(secretFQN)
                                                     .setReferredEntityFQN(secretMangerFQN)
                                                     .build();
-      eventProducer.send(Message.newBuilder()
-                             .putAllMetadata(ImmutableMap.of("accountId", encryptedDataDTO.getAccount(),
-                                 ENTITY_TYPE_METADATA, SETUP_USAGE_ENTITY, ACTION_METADATA, DELETE_ACTION))
-                             .setData(deleteSetupUsageDTO.toByteString())
-                             .build());
+      eventProducer.send(
+          Message.newBuilder()
+              .putAllMetadata(ImmutableMap.of("accountId", encryptedDataDTO.getAccount(),
+                  EventsFrameworkConstants.ENTITY_TYPE_METADATA, EventsFrameworkConstants.SETUP_USAGE_ENTITY,
+                  EventsFrameworkConstants.ACTION_METADATA, EventsFrameworkConstants.DELETE_ACTION))
+              .setData(deleteSetupUsageDTO.toByteString())
+              .build());
     } catch (Exception ex) {
       log.info(ENTITY_REFERENCE_LOG_PREFIX
               + "The entity reference was not deleted when the secret [{}] was deleted from the secret manager [{}] with the exception [{}]",

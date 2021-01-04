@@ -1,7 +1,6 @@
 package io.harness.ng.core.event;
 
-import static io.harness.ff.FeatureFlagServiceImpl.FEATURE_FLAG_STREAM;
-
+import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.AbstractConsumer;
 import io.harness.eventsframework.consumer.Message;
 
@@ -19,8 +18,9 @@ public class FeatureFlagStreamConsumer implements Runnable {
   private final ConsumerMessageProcessor featureFlagChangeEventMessageProcessor;
 
   @Inject
-  public FeatureFlagStreamConsumer(@Named(FEATURE_FLAG_STREAM) AbstractConsumer redisConsumer,
-      @Named(FEATURE_FLAG_STREAM) ConsumerMessageProcessor featureFlagChangeEventMessageProcessor) {
+  public FeatureFlagStreamConsumer(@Named(EventsFrameworkConstants.FEATURE_FLAG_STREAM) AbstractConsumer redisConsumer,
+      @Named(EventsFrameworkConstants.FEATURE_FLAG_STREAM)
+      ConsumerMessageProcessor featureFlagChangeEventMessageProcessor) {
     this.redisConsumer = redisConsumer;
     this.featureFlagChangeEventMessageProcessor = featureFlagChangeEventMessageProcessor;
   }

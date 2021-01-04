@@ -1,12 +1,8 @@
 package io.harness.ng.core.event;
 
-import static io.harness.EntityCRUDEventsConstants.ACTION_METADATA;
-import static io.harness.EntityCRUDEventsConstants.CREATE_ACTION;
-import static io.harness.EntityCRUDEventsConstants.DELETE_ACTION;
-import static io.harness.EntityCRUDEventsConstants.ENTITY_TYPE_METADATA;
-import static io.harness.EntityCRUDEventsConstants.PROJECT_ENTITY;
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
 import io.harness.exception.InvalidRequestException;
@@ -44,12 +40,12 @@ public class ProjectChangeEventMessageProcessor implements ConsumerMessageProces
     }
 
     Map<String, String> metadataMap = message.getMessage().getMetadataMap();
-    if (metadataMap.get(ACTION_METADATA) != null) {
-      switch (metadataMap.get(ACTION_METADATA)) {
-        case CREATE_ACTION:
+    if (metadataMap.get(EventsFrameworkConstants.ACTION_METADATA) != null) {
+      switch (metadataMap.get(EventsFrameworkConstants.ACTION_METADATA)) {
+        case EventsFrameworkConstants.CREATE_ACTION:
           processCreateAction(projectEntityChangeDTO);
           return;
-        case DELETE_ACTION:
+        case EventsFrameworkConstants.DELETE_ACTION:
           processDeleteAction(projectEntityChangeDTO);
           return;
         default:
@@ -94,6 +90,7 @@ public class ProjectChangeEventMessageProcessor implements ConsumerMessageProces
 
   private boolean validateMessage(Message message) {
     return message != null && message.hasMessage() && message.getMessage().getMetadataMap() != null
-        && PROJECT_ENTITY.equals(message.getMessage().getMetadataMap().get(ENTITY_TYPE_METADATA));
+        && EventsFrameworkConstants.PROJECT_ENTITY.equals(
+            message.getMessage().getMetadataMap().get(EventsFrameworkConstants.ENTITY_TYPE_METADATA));
   }
 }

@@ -1,9 +1,6 @@
 package io.harness.ng.core.entitysetupusage.event;
 
-import static io.harness.EntityCRUDEventsConstants.ACTION_METADATA;
-import static io.harness.EntityCRUDEventsConstants.CREATE_ACTION;
-import static io.harness.EntityCRUDEventsConstants.DELETE_ACTION;
-
+import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.schemas.entitysetupusage.DeleteSetupUsageDTO;
 import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateDTO;
@@ -36,18 +33,18 @@ public class SetupUsageChangeEventMessageProcessor implements ConsumerMessagePro
     String messageId = message.getId();
     log.info("Processing the setup usage crud event with the id {}", messageId);
     Map<String, String> metadataMap = message.getMessage().getMetadataMap();
-    if (metadataMap.containsKey(ACTION_METADATA)) {
-      switch (metadataMap.get(ACTION_METADATA)) {
-        case CREATE_ACTION:
+    if (metadataMap.containsKey(EventsFrameworkConstants.ACTION_METADATA)) {
+      switch (metadataMap.get(EventsFrameworkConstants.ACTION_METADATA)) {
+        case EventsFrameworkConstants.CREATE_ACTION:
           EntitySetupUsageCreateDTO setupUsageCreateDTO = getEntitySetupUsageCreateDTO(message);
           processCreateAction(setupUsageCreateDTO);
           return;
-        case DELETE_ACTION:
+        case EventsFrameworkConstants.DELETE_ACTION:
           DeleteSetupUsageDTO deleteRequestDTO = getEntitySetupUsageDeleteDTO(message);
           processDeleteAction(deleteRequestDTO);
           return;
         default:
-          log.info("Invalid action type: {}", metadataMap.get(ACTION_METADATA));
+          log.info("Invalid action type: {}", metadataMap.get(EventsFrameworkConstants.ACTION_METADATA));
       }
     }
   }

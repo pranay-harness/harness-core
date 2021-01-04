@@ -1,10 +1,5 @@
 package io.harness.cvng.core.jobs;
 
-import static io.harness.EntityCRUDEventsConstants.ACTION_METADATA;
-import static io.harness.EntityCRUDEventsConstants.CONNECTOR_ENTITY;
-import static io.harness.EntityCRUDEventsConstants.ENTITY_TYPE_METADATA;
-import static io.harness.EntityCRUDEventsConstants.UPDATE_ACTION;
-
 import io.harness.beans.IdentifierRef;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
@@ -12,6 +7,7 @@ import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
+import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.connector.ConnectorEntityChangeDTO;
 import io.harness.utils.IdentifierRefHelper;
@@ -45,9 +41,9 @@ public class ConnectorChangeEventMessageProcessor implements ConsumerMessageProc
     }
 
     Map<String, String> metadataMap = message.getMessage().getMetadataMap();
-    if (metadataMap.containsKey(ACTION_METADATA)) {
-      switch (metadataMap.get(ACTION_METADATA)) {
-        case UPDATE_ACTION:
+    if (metadataMap.containsKey(EventsFrameworkConstants.ACTION_METADATA)) {
+      switch (metadataMap.get(EventsFrameworkConstants.ACTION_METADATA)) {
+        case EventsFrameworkConstants.UPDATE_ACTION:
           processUpdateAction(connectorEntityChangeDTO);
           return;
         default:
@@ -84,7 +80,8 @@ public class ConnectorChangeEventMessageProcessor implements ConsumerMessageProc
 
   private boolean validateMessage(Message message) {
     return message != null && message.hasMessage() && message.getMessage().getMetadataMap() != null
-        && message.getMessage().getMetadataMap().containsKey(ENTITY_TYPE_METADATA)
-        && CONNECTOR_ENTITY.equals(message.getMessage().getMetadataMap().get(ENTITY_TYPE_METADATA));
+        && message.getMessage().getMetadataMap().containsKey(EventsFrameworkConstants.ENTITY_TYPE_METADATA)
+        && EventsFrameworkConstants.CONNECTOR_ENTITY.equals(
+            message.getMessage().getMetadataMap().get(EventsFrameworkConstants.ENTITY_TYPE_METADATA));
   }
 }

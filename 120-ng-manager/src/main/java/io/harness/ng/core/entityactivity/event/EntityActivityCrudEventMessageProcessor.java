@@ -1,8 +1,6 @@
 package io.harness.ng.core.entityactivity.event;
 
-import static io.harness.EntityCRUDEventsConstants.ACTION_METADATA;
-import static io.harness.EntityCRUDEventsConstants.CREATE_ACTION;
-
+import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.schemas.entityactivity.EntityActivityCreateDTO;
 import io.harness.ng.core.activityhistory.dto.NGActivityDTO;
@@ -34,14 +32,14 @@ public class EntityActivityCrudEventMessageProcessor implements ConsumerMessageP
     String messageId = message.getId();
     log.info("Processing the activity crud event with the id {}", messageId);
     Map<String, String> metadataMap = message.getMessage().getMetadataMap();
-    if (metadataMap.containsKey(ACTION_METADATA)) {
-      switch (metadataMap.get(ACTION_METADATA)) {
-        case CREATE_ACTION:
+    if (metadataMap.containsKey(EventsFrameworkConstants.ACTION_METADATA)) {
+      switch (metadataMap.get(EventsFrameworkConstants.ACTION_METADATA)) {
+        case EventsFrameworkConstants.CREATE_ACTION:
           EntityActivityCreateDTO entityActivityProtoDTO = getEntityActivityCreateDTO(message);
           processCreateAction(entityActivityProtoDTO);
           return;
         default:
-          log.info("Invalid action type: {}", metadataMap.get(ACTION_METADATA));
+          log.info("Invalid action type: {}", metadataMap.get(EventsFrameworkConstants.ACTION_METADATA));
       }
     }
   }

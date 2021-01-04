@@ -1,12 +1,6 @@
 package io.harness.ng;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
-import static io.harness.EntityCRUDEventsConstants.ACCOUNT_ENTITY;
-import static io.harness.EntityCRUDEventsConstants.ACTIVITY_ENTITY;
-import static io.harness.EntityCRUDEventsConstants.ORGANIZATION_ENTITY;
-import static io.harness.EntityCRUDEventsConstants.PROJECT_ENTITY;
-import static io.harness.EntityCRUDEventsConstants.SETUP_USAGE_ENTITY;
-import static io.harness.ff.FeatureFlagServiceImpl.FEATURE_FLAG_STREAM;
 
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
@@ -24,6 +18,7 @@ import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
+import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.gitsync.GitSyncModule;
 import io.harness.gitsync.core.impl.GitSyncManagerInterfaceImpl;
@@ -262,22 +257,22 @@ public class NextGenModule extends AbstractModule {
     bind(YamlBaseUrlService.class).to(YamlBaseUrlServiceImpl.class);
 
     bind(ConsumerMessageProcessor.class)
-        .annotatedWith(Names.named(ACCOUNT_ENTITY))
+        .annotatedWith(Names.named(EventsFrameworkConstants.ACCOUNT_ENTITY))
         .to(AccountChangeEventMessageProcessor.class);
     bind(ConsumerMessageProcessor.class)
-        .annotatedWith(Names.named(ORGANIZATION_ENTITY))
+        .annotatedWith(Names.named(EventsFrameworkConstants.ORGANIZATION_ENTITY))
         .to(OrganizationChangeEventMessageProcessor.class);
     bind(ConsumerMessageProcessor.class)
-        .annotatedWith(Names.named(PROJECT_ENTITY))
+        .annotatedWith(Names.named(EventsFrameworkConstants.PROJECT_ENTITY))
         .to(ProjectChangeEventMessageProcessor.class);
     bind(ConsumerMessageProcessor.class)
-        .annotatedWith(Names.named(SETUP_USAGE_ENTITY))
+        .annotatedWith(Names.named(EventsFrameworkConstants.SETUP_USAGE_ENTITY))
         .to(SetupUsageChangeEventMessageProcessor.class);
     bind(ConsumerMessageProcessor.class)
-        .annotatedWith(Names.named(ACTIVITY_ENTITY))
+        .annotatedWith(Names.named(EventsFrameworkConstants.ACTIVITY_ENTITY))
         .to(EntityActivityCrudEventMessageProcessor.class);
     bind(ConsumerMessageProcessor.class)
-        .annotatedWith(Names.named(FEATURE_FLAG_STREAM))
+        .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
         .to(FeatureFlagChangeEventMessageProcessor.class);
   }
 

@@ -1,9 +1,6 @@
 package io.harness.rule;
 
-import static io.harness.ff.FeatureFlagServiceImpl.FEATURE_FLAG_STREAM;
-
-import static java.time.Duration.ofSeconds;
-
+import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.AbstractProducer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.factory.ClosingFactory;
@@ -89,7 +86,7 @@ public class FeatureFlagRule implements MethodRule, InjectorRuleMixin, MongoRule
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
         bind(AbstractProducer.class)
-            .annotatedWith(Names.named(FEATURE_FLAG_STREAM))
+            .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
             .toInstance(NoOpProducer.of("dummy_topic_name"));
       }
     });

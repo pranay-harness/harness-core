@@ -1,8 +1,6 @@
 package software.wings.app;
 
 import static io.harness.AuthorizationServiceHeader.MANAGER;
-import static io.harness.EntityCRUDEventsConstants.ENTITY_CRUD;
-import static io.harness.ff.FeatureFlagServiceImpl.FEATURE_FLAG_STREAM;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
 import io.harness.OrchestrationModule;
@@ -82,6 +80,7 @@ import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobServiceImpl;
 import io.harness.event.reconciliation.service.DeploymentReconService;
 import io.harness.event.reconciliation.service.DeploymentReconServiceImpl;
+import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.AbstractProducer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
@@ -838,18 +837,20 @@ public class WingsModule extends AbstractModule implements ServersModule {
         RedisConfig redisConfig = configuration.getEventsFrameworkConfiguration().getRedisConfig();
         if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
           bind(AbstractProducer.class)
-              .annotatedWith(Names.named(ENTITY_CRUD))
-              .toInstance(NoOpProducer.of("dummy_topic_name"));
+              .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
+              .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
           bind(AbstractProducer.class)
-              .annotatedWith(Names.named(FEATURE_FLAG_STREAM))
-              .toInstance(NoOpProducer.of("dummy_topic_name"));
+              .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
+              .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
         } else {
           bind(AbstractProducer.class)
-              .annotatedWith(Names.named(ENTITY_CRUD))
-              .toInstance(RedisProducer.of(ENTITY_CRUD, redisConfig));
+              .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
+              .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_CRUD, redisConfig,
+                  EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE));
           bind(AbstractProducer.class)
-              .annotatedWith(Names.named(FEATURE_FLAG_STREAM))
-              .toInstance(RedisProducer.of(FEATURE_FLAG_STREAM, redisConfig));
+              .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
+              .toInstance(RedisProducer.of(EventsFrameworkConstants.FEATURE_FLAG_STREAM, redisConfig,
+                  EventsFrameworkConstants.FEATURE_FLAG_MAX_TOPIC_SIZE));
         }
       }
     });
