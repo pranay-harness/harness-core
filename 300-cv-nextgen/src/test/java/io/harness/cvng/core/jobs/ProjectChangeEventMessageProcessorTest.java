@@ -77,8 +77,7 @@ public class ProjectChangeEventMessageProcessorTest extends CvNextGenTest {
     });
     assertThat(entitiesWithVerificationTaskId)
         .isEqualTo(withProjectIdentifier)
-        .withFailMessage(
-            "Entities with projectIdentifier found which is not added to ENTITIES_TO_DELETE_BY_PROJECT_IDENTIFIER or ENTITIES_DELETE_BLACKLIST_BY_PROJECT_IDENTIFIER");
+        .withFailMessage("Entities with projectIdentifier found which is not added to ENTITIES_MAP");
   }
 
   private boolean doesClassContainField(Class<?> clazz, String fieldName) {
