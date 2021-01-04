@@ -43,6 +43,7 @@ import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 
 import static com.google.common.base.Charsets.UTF_8;
+import static com.google.common.cache.CacheLoader.InvalidCacheLoadException;
 import static freemarker.template.Configuration.VERSION_2_3_23;
 import static java.lang.String.format;
 import static java.lang.String.join;
@@ -277,10 +278,12 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.jetbrains.annotations.NotNull;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -380,6 +383,25 @@ public class DelegateServiceImpl implements DelegateService {
                                                                       return fetchDelegateMetadataFromStorage();
                                                                     }
                                                                   });
+
+  private LoadingCache<ImmutablePair<String, String>, String> delegateSessionIdentifierCache =
+      CacheBuilder.newBuilder()
+          .maximumSize(10000)
+          .expireAfterWrite(1, TimeUnit.MINUTES)
+          .build(new CacheLoader<ImmutablePair<String, String>, String>() {
+            @Override
+            public String load(ImmutablePair<String, String> delegateSessionIdKey) {
+              Key<Delegate> delegateKey = wingsPersistence.createQuery(Delegate.class)
+                                              .filter(DelegateKeys.accountId, delegateSessionIdKey.getLeft())
+                                              .filter(DelegateKeys.sessionIdentifier, delegateSessionIdKey.getRight())
+                                              .getKey();
+
+              if (delegateKey != null) {
+                return (String) delegateKey.getId();
+              }
+              return null;
+            }
+          });
 
   private LoadingCache<String, Optional<Delegate>> delegateCache =
       CacheBuilder.newBuilder()
@@ -1819,6 +1841,7 @@ public class DelegateServiceImpl implements DelegateService {
     Delegate delegate = Delegate.builder()
                             .uuid(delegateParams.getDelegateId())
                             .accountId(delegateParams.getAccountId())
+                            .sessionIdentifier(delegateParams.getSessionIdentifier())
                             .description(delegateParams.getDescription())
                             .ip(delegateParams.getIp())
                             .hostName(delegateParams.getHostName())
@@ -2144,6 +2167,15 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     return obtainDelegateName(delegate);
+  }
+
+  @Override
+  public String obtainDelegateId(String accountId, String sessionIdentifier) {
+    try {
+      return delegateSessionIdentifierCache.get(ImmutablePair.of(accountId, sessionIdentifier));
+    } catch (ExecutionException | InvalidCacheLoadException e) {
+      return null;
+    }
   }
 
   @VisibleForTesting

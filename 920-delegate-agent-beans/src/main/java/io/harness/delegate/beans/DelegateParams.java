@@ -12,6 +12,7 @@ import lombok.experimental.FieldDefaults;
 public class DelegateParams {
   String delegateId;
   String accountId;
+  String sessionIdentifier;
   String ip;
   String hostName;
   String delegateName;
