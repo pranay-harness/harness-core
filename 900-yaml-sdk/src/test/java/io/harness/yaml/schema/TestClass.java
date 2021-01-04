@@ -2,7 +2,7 @@ package io.harness.yaml.schema;
 
 import io.harness.EntityType;
 import io.harness.validation.OneOfField;
-import io.harness.yamlSchema.YamlSchemaRoot;
+import io.harness.yaml.YamlSchemaRoot;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;

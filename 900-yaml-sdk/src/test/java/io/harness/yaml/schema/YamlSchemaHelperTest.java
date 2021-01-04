@@ -11,6 +11,7 @@ import io.harness.CategoryTest;
 import io.harness.EntityType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.harness.yaml.YamlSdkConfiguration;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
 import java.io.IOException;
@@ -39,10 +40,10 @@ public class YamlSchemaHelperTest extends CategoryTest {
     mockStatic(IOUtils.class);
     Set<Class<?>> classes = new HashSet<>();
     classes.add(TestClass.ClassWhichContainsInterface.class);
-    when(YamlSchemaUtils.getClasses(any(), any())).thenReturn(classes);
+    when(YamlSchemaUtils.getClasses(any())).thenReturn(classes);
     when(IOUtils.resourceToString(any(), any(), any())).thenReturn(schema);
 
-    yamlSchemaHelper.initializeSchemaMaps(null);
+    yamlSchemaHelper.initializeSchemaMaps(YamlSdkConfiguration.schemaBasePath, classes);
     final String schemaForEntityType = yamlSchemaHelper.getSchemaForEntityType(EntityType.CONNECTORS);
     assertThat(schemaForEntityType).isNotNull();
     assertThat(schemaForEntityType).isEqualTo(schema);

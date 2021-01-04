@@ -4,6 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.exception.InvalidRequestException;
+import io.harness.reflection.CodeUtils;
+import io.harness.yaml.YamlSchemaRoot;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
 import io.harness.yaml.schema.beans.OneOfMapping;
 import io.harness.yaml.schema.beans.SchemaConstants;
@@ -12,7 +14,6 @@ import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
 import io.harness.yaml.schema.beans.YamlSchemaConfiguration;
 import io.harness.yaml.utils.YamlConstants;
 import io.harness.yaml.utils.YamlSchemaUtils;
-import io.harness.yamlSchema.YamlSchemaRoot;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
@@ -22,6 +23,9 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.swagger.models.Model;
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +33,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -36,11 +41,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 
 @Slf4j
+@Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class YamlSchemaGenerator {
+  JacksonClassHelper jacksonSubtypeHelper;
+  SwaggerGenerator swaggerGenerator;
+
   /**
    * @param yamlSchemaConfiguration Configuration for generation of YamlSchema
    */
@@ -61,14 +72,16 @@ public class YamlSchemaGenerator {
     log.info("Generated swagger");
 
     final Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap = getSwaggerMetaInfo(rootSchemaClass);
-    log.info("Generated subtype Map");
+    log.info("Generated metainfo");
 
     final String entitySwaggerName = YamlSchemaUtils.getSwaggerName(rootSchemaClass);
     final String entityName = YamlSchemaUtils.getEntityName(rootSchemaClass);
+
     log.info("Generating yaml schema for {}", entityName);
-    final Map<String, JsonNode> stringJsonNodeMap = generateDefinitions(stringModelMap,
-        yamlSchemaConfiguration.getGeneratedPathRoot() + File.separator + entityName, swaggerDefinitionsMetaInfoMap,
-        entitySwaggerName);
+    final String pathForSchemaStorageForEntity =
+        getPathToStoreSchema(yamlSchemaConfiguration, rootSchemaClass, entityName);
+    final Map<String, JsonNode> stringJsonNodeMap = generateDefinitions(
+        stringModelMap, pathForSchemaStorageForEntity, swaggerDefinitionsMetaInfoMap, entitySwaggerName);
     ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
     DefaultPrettyPrinter defaultPrettyPrinter = new SchemaGeneratorUtils.SchemaPrinter();
     ObjectWriter jsonWriter = mapper.writer(defaultPrettyPrinter);
@@ -80,6 +93,23 @@ public class YamlSchemaGenerator {
       }
     });
     log.info("Saved files");
+  }
+
+  @VisibleForTesting
+  String getPathToStoreSchema(
+      YamlSchemaConfiguration yamlSchemaConfiguration, Class<?> rootSchemaClass, String entityName) {
+    List<String> locationList =
+        Arrays.asList(Preconditions.checkNotNull(CodeUtils.location(rootSchemaClass)).split("/"));
+    String moduleBasePath = "";
+    // Bazel do not have target folder, so tha path is directly coming from .m2.
+    // Instead of target we are using 0.0.1-SNAPSHOT to handle bazel build modules.
+    if (locationList.contains("0.0.1-SNAPSHOT")) {
+      moduleBasePath = locationList.get(locationList.indexOf("0.0.1-SNAPSHOT") - 1) + "/src/main/resources/";
+    } else {
+      moduleBasePath = locationList.get(locationList.indexOf("target") - 1) + "/src/main/resources/";
+    }
+
+    return moduleBasePath + yamlSchemaConfiguration.getGeneratedPathRoot() + File.separator + entityName;
   }
 
   @VisibleForTesting
@@ -271,7 +301,6 @@ public class YamlSchemaGenerator {
   @VisibleForTesting
   Map<String, SwaggerDefinitionsMetaInfo> getSwaggerMetaInfo(Class<?> clazz) {
     Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap = new HashMap<>();
-    JacksonClassHelper jacksonSubtypeHelper = new JacksonClassHelper();
     jacksonSubtypeHelper.getRequiredMappings(clazz, swaggerDefinitionsMetaInfoMap);
     return swaggerDefinitionsMetaInfoMap;
   }

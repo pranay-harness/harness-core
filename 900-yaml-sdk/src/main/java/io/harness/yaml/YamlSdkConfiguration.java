@@ -1,23 +1,20 @@
 package io.harness.yaml;
 
-import com.google.inject.Singleton;
-import java.io.InputStream;
-import lombok.Builder;
-import lombok.Data;
-
 /**
- * Configuration required to use SDK
+ * Configuration required to use SDK.
+ * Fixing config as convention.
  */
-@Data
-@Builder
-@Singleton
 public class YamlSdkConfiguration {
   /**
-   * InputStream for index.xml of snippets.
+   * Snippets base path.
    */
-  InputStream snippetIndex;
+  public static final String snippetBasePath = "snippets";
+  /**
+   * Snippets index file.
+   */
+  public static final String snippetIndexFile = "index.xml";
   /**
    * Schema base path.
    */
-  String schemaBasePath;
+  public static final String schemaBasePath = "schema";
 }

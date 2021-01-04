@@ -1,7 +1,7 @@
 package io.harness.connector.apis.dto;
 
 import io.harness.EntityType;
-import io.harness.yamlSchema.YamlSchemaRoot;
+import io.harness.yaml.YamlSchemaRoot;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;

@@ -56,9 +56,7 @@ import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
 import io.harness.waiter.ProgressUpdateService;
-import io.harness.yaml.YamlSdkConfiguration;
-import io.harness.yaml.YamlSdkConstants;
-import io.harness.yaml.YamlSdkModule;
+import io.harness.yaml.YamlSdkInitHelper;
 
 import software.wings.app.CharsetResponseFilter;
 
@@ -77,7 +75,6 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
-import java.io.InputStream;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -162,8 +159,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerExecutionPlanCreators(injector);
     registerAuthFilters(appConfig, environment, injector);
     registerPipelineSDK(appConfig, injector);
-
-    registerYamlSdk();
+    registerYamlSdk(injector);
 
     MaintenanceController.forceMaintenance(false);
     createConsumerThreadsToListenToEvents(injector);
@@ -174,14 +170,14 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     new Thread(injector.getInstance(FeatureFlagStreamConsumer.class)).start();
   }
 
-  private void registerYamlSdk() {
-    final InputStream snippetIndexFile =
-        getClass().getClassLoader().getResourceAsStream(YamlSdkConstants.snippetsResourceFile);
-    YamlSdkConfiguration yamlSdkConfiguration = YamlSdkConfiguration.builder()
-                                                    .snippetIndex(snippetIndexFile)
-                                                    .schemaBasePath(YamlSdkConstants.schemaBasePath)
-                                                    .build();
-    YamlSdkModule.initializeDefaultInstance(yamlSdkConfiguration);
+  private void registerYamlSdk(Injector injector) {
+    //    final InputStream snippetIndexFile =
+    //        getClass().getClassLoader().getResourceAsStream(YamlSdkConstants.snippetsResourceFile);
+    //    YamlSdkConfiguration yamlSdkConfiguration = YamlSdkConfiguration.builder()
+    //                                                    .snippetIndex(snippetIndexFile)
+    //                                                    .schemaBasePath(YamlSdkConstants.schemaBasePath)
+    //                                                    .build();
+    YamlSdkInitHelper.initialize(injector);
   }
 
   public void registerPipelineSDK(NextGenConfiguration appConfig, Injector injector) {

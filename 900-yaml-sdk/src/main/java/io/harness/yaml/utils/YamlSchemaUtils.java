@@ -5,7 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.EntityType;
 import io.harness.packages.HarnessPackages;
-import io.harness.yamlSchema.YamlSchemaRoot;
+import io.harness.yaml.YamlSchemaRoot;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
@@ -44,6 +44,10 @@ public class YamlSchemaUtils {
     return reflections.getTypesAnnotatedWith(annotationClass);
   }
 
+  public Set<Class<?>> getClasses(Class annotationClass) {
+    return getClasses(null, annotationClass);
+  }
+
   /**
    * @param clazz The class.
    * @return Name of the class in the swagger doc.
@@ -69,6 +73,17 @@ public class YamlSchemaUtils {
     final String yamlName = entityType.getYamlName();
     String resourcePath = yamlName + File.separator + YamlConstants.SCHEMA_FILE_NAME;
     return isEmpty(schemaBasePath) ? resourcePath : schemaBasePath + File.separator + resourcePath;
+  }
+
+  /**
+   * @param clazz     Class
+   * @param snippetBasePath the base path inside which schema index is stored.
+   * @param snippetIndexFile the index file name.
+   * @return The path which contains the complete schema for entityType.
+   */
+  public String getSnippetIndexPathForEntityType(Class<?> clazz, String snippetBasePath, String snippetIndexFile) {
+    String entityName = getEntityName(clazz);
+    return snippetBasePath + File.separator + entityName + File.separator + snippetIndexFile;
   }
 
   /**

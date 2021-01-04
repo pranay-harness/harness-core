@@ -1,4 +1,4 @@
-package io.harness.yamlSchema;
+package io.harness.yaml;
 
 import io.harness.EntityType;
 

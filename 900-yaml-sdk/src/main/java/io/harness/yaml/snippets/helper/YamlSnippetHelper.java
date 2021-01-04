@@ -33,7 +33,8 @@ public class YamlSnippetHelper {
   private static Map<String, YamlSnippetMetaData> identifierSnippetMap = new HashMap<>();
 
   /**
-   * @param snippetMetadata is the String representation of index.xml {@link YamlSnippetMetaData}
+   * @param snippetMetadata       is the String representation of index.xml {@link YamlSnippetMetaData}
+   *
    */
   public void preComputeTagsAndNameMap(String snippetMetadata) {
     YamlSnippets yamlSnippets = getYamlSnippets(snippetMetadata);
@@ -71,7 +72,6 @@ public class YamlSnippetHelper {
     XmlMapper xmlMapper = new XmlMapper();
     try {
       yamlSnippets = xmlMapper.readValue(snippetMetadata, YamlSnippets.class);
-
     } catch (Exception e) {
       throw new InvalidRequestException("Cannot parse snippet metadata");
     }
