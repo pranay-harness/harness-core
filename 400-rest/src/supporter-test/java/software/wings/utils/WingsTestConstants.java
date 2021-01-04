@@ -131,6 +131,8 @@ public interface WingsTestConstants {
 
   String PIPELINE_ID = "PIPELINE_ID";
 
+  String CLONED_PIPELINE_ID = "CLONED_PIPELINE_ID";
+
   String PIPELINE_NAME = "PIPELINE_NAME";
 
   String PIPELINE_URL = "PIPELINE_URL";

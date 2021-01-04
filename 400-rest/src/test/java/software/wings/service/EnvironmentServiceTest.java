@@ -9,6 +9,7 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.INDER;
+import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -119,10 +120,12 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlPushService;
+import software.wings.utils.ArtifactType;
 
 import com.google.inject.Inject;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -299,22 +302,13 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   }
 
   private void shouldCloneEnvironment(boolean differentApp) {
-    PhysicalInfrastructureMapping physicalInfrastructureMapping = aPhysicalInfrastructureMapping()
-                                                                      .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
-                                                                      .withComputeProviderSettingId(SETTING_ID)
-                                                                      .withAppId(APP_ID)
-                                                                      .withEnvId(ENV_ID)
-                                                                      .withServiceTemplateId(TEMPLATE_ID)
-                                                                      .build();
-
     doNothing().when(harnessTagService).attachTag(any());
     if (differentApp) {
       when(appService.get(APP_ID)).thenReturn(application);
     }
 
-    Environment environment =
-        anEnvironment().uuid(ENV_ID).appId(APP_ID).name(ENV_NAME).description(ENV_DESCRIPTION).build();
-
+    PhysicalInfrastructureMapping physicalInfrastructureMapping = getPhysicalInfrastructureMapping();
+    Environment environment = getEnvironment();
     Environment clonedEnvironment = environment.cloneInternal();
     when(wingsPersistence.getWithAppId(Environment.class, APP_ID, ENV_ID)).thenReturn(environment);
     when(wingsPersistence.saveAndGet(any(), any(Environment.class))).thenReturn(clonedEnvironment);
@@ -323,14 +317,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     pageRequest.addFilter("appId", SearchFilter.Operator.EQ, environment.getAppId());
     pageRequest.addFilter("envId", EQ, environment.getUuid());
 
-    ServiceTemplate serviceTemplate = aServiceTemplate()
-                                          .withUuid(TEMPLATE_ID)
-                                          .withDescription(TEMPLATE_DESCRIPTION)
-                                          .withServiceId(SERVICE_ID)
-                                          .withEnvId(GLOBAL_ENV_ID)
-                                          .withInfrastructureMappings(asList(physicalInfrastructureMapping))
-                                          .build();
-
+    ServiceTemplate serviceTemplate = getServiceTemplate(null, physicalInfrastructureMapping);
     ServiceTemplate clonedServiceTemplate = serviceTemplate.cloneInternal();
     PageResponse<ServiceTemplate> pageResponse = aPageResponse().withResponse(asList(serviceTemplate)).build();
     when(serviceTemplateService.list(pageRequest, false, OBTAIN_VALUE)).thenReturn(pageResponse);
@@ -345,12 +332,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
         .when(infrastructureDefinitionService)
         .cloneInfrastructureDefinitions(eq(APP_ID), eq(ENV_ID), eq(APP_ID), any());
 
-    ConfigFile configFile = ConfigFile.builder()
-                                .entityId(ENV_ID)
-                                .templateId(DEFAULT_TEMPLATE_ID)
-                                .envId(GLOBAL_ENV_ID)
-                                .entityType(EntityType.ENVIRONMENT)
-                                .build();
+    ConfigFile configFile = getConfigFile();
     configFile.setAppId(APP_ID);
     when(configService.getConfigFilesForEntity(eq(APP_ID), eq(DEFAULT_TEMPLATE_ID), eq(ENV_ID)))
         .thenReturn(Collections.singletonList(configFile));
@@ -368,6 +350,63 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     verify(configService, times(1)).download(eq(APP_ID), anyString());
   }
 
+  private void shouldCloneEnvironmentWithTargetAppId(boolean differentApp) {
+    doNothing().when(harnessTagService).attachTag(any());
+    if (differentApp) {
+      when(appService.get(APP_ID)).thenReturn(application);
+    }
+
+    Service service = getService();
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(service);
+    when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(service);
+
+    PhysicalInfrastructureMapping physicalInfrastructureMapping = getPhysicalInfrastructureMapping();
+    ServiceVariable serviceVariable = getServiceVariable();
+    ServiceTemplate serviceTemplate = getServiceTemplate(serviceVariable, physicalInfrastructureMapping);
+
+    Environment environment = getEnvironment();
+    environment.setServiceTemplates(Arrays.asList(serviceTemplate));
+
+    Map<String, String> serviceMapping = new HashMap<>();
+    serviceMapping.put(SERVICE_ID, SERVICE_ID);
+
+    Environment clonedEnvironment = environment.cloneInternal();
+    when(wingsPersistence.getWithAppId(Environment.class, APP_ID, ENV_ID)).thenReturn(environment);
+    when(wingsPersistence.saveAndGet(any(), any(Environment.class))).thenReturn(clonedEnvironment);
+
+    PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
+    pageRequest.addFilter("appId", SearchFilter.Operator.EQ, environment.getAppId());
+    pageRequest.addFilter("envId", EQ, environment.getUuid());
+
+    ServiceTemplate clonedServiceTemplate = serviceTemplate.cloneInternal();
+    PageResponse<ServiceTemplate> pageResponse = aPageResponse().withResponse(asList(serviceTemplate)).build();
+    when(serviceTemplateService.list(pageRequest, false, OBTAIN_VALUE)).thenReturn(pageResponse);
+    when(serviceTemplateService.save(any(ServiceTemplate.class))).thenReturn(clonedServiceTemplate);
+    when(serviceTemplateService.get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, MASKED))
+        .thenReturn(serviceTemplate);
+
+    CloneMetadata cloneMetadata =
+        CloneMetadata.builder().targetAppId(APP_ID).environment(environment).serviceMapping(serviceMapping).build();
+
+    when(featureFlagService.isEnabled(any(FeatureName.class), any())).thenReturn(Boolean.TRUE);
+    doNothing()
+        .when(infrastructureDefinitionService)
+        .cloneInfrastructureDefinitions(eq(APP_ID), eq(ENV_ID), eq(APP_ID), any());
+
+    ConfigFile configFile = getConfigFile();
+    configFile.setAppId(APP_ID);
+    when(configService.getConfigFilesForEntity(eq(APP_ID), eq(DEFAULT_TEMPLATE_ID), eq(ENV_ID)))
+        .thenReturn(Collections.singletonList(configFile));
+    when(configService.download(eq(APP_ID), anyString())).thenReturn(new File("file"));
+
+    environmentService.cloneEnvironment(APP_ID, ENV_ID, cloneMetadata);
+
+    verify(wingsPersistence).getWithAppId(Environment.class, APP_ID, ENV_ID);
+    verify(wingsPersistence).saveAndGet(any(), any(Environment.class));
+    verify(serviceTemplateService).list(pageRequest, false, OBTAIN_VALUE);
+    verify(configService, times(1)).download(eq(APP_ID), anyString());
+  }
+
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
@@ -380,6 +419,20 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldCloneEnvironmentAcrossApp() {
     shouldCloneEnvironment(true);
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldCloneEnvironmentWithTargetAppId() {
+    shouldCloneEnvironmentWithTargetAppId(false);
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void shouldCloneEnvironmentAcrossAppWithTargetAppId() {
+    shouldCloneEnvironmentWithTargetAppId(true);
   }
 
   /**
@@ -568,21 +621,8 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     pageRequest.addFilter("appId", SearchFilter.Operator.EQ, environment.getAppId());
     pageRequest.addFilter("envId", EQ, environment.getUuid());
 
-    PhysicalInfrastructureMapping physicalInfrastructureMapping = aPhysicalInfrastructureMapping()
-                                                                      .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
-                                                                      .withComputeProviderSettingId(SETTING_ID)
-                                                                      .withAppId(APP_ID)
-                                                                      .withEnvId(ENV_ID)
-                                                                      .withServiceTemplateId(TEMPLATE_ID)
-                                                                      .build();
-
-    ServiceTemplate serviceTemplate = aServiceTemplate()
-                                          .withUuid(TEMPLATE_ID)
-                                          .withDescription(TEMPLATE_DESCRIPTION)
-                                          .withServiceId(SERVICE_ID)
-                                          .withEnvId(GLOBAL_ENV_ID)
-                                          .withInfrastructureMappings(asList(physicalInfrastructureMapping))
-                                          .build();
+    PhysicalInfrastructureMapping physicalInfrastructureMapping = getPhysicalInfrastructureMapping();
+    ServiceTemplate serviceTemplate = getServiceTemplate(null, physicalInfrastructureMapping);
 
     PageResponse<ServiceTemplate> pageResponse = aPageResponse().withResponse(asList(serviceTemplate)).build();
     when(serviceTemplateService.list(pageRequest, false, OBTAIN_VALUE)).thenReturn(pageResponse);
@@ -972,14 +1012,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Owner(developers = INDER)
   @Category(UnitTests.class)
   public void testGetClonedConfigFile_ForAllServiceOverride_SameApp() {
-    ConfigFile configFile = ConfigFile.builder()
-                                .envId(GLOBAL_ENV_ID)
-                                .entityType(EntityType.ENVIRONMENT)
-                                .entityId(ENV_ID)
-                                .templateId(DEFAULT_TEMPLATE_ID)
-                                .relativeFilePath(PATH)
-                                .encrypted(true)
-                                .build();
+    ConfigFile configFile = getEncryptedConfigFile(GLOBAL_ENV_ID, EntityType.ENVIRONMENT, ENV_ID, DEFAULT_TEMPLATE_ID);
     configFile.setAppId(APP_ID);
 
     ServiceTemplate serviceTemplate = ServiceTemplate.Builder.aServiceTemplate().withUuid(SERVICE_TEMPLATE_ID).build();
@@ -997,14 +1030,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Owner(developers = INDER)
   @Category(UnitTests.class)
   public void testGetClonedConfigFile_ForAllServiceOverride_DiffApp() {
-    ConfigFile configFile = ConfigFile.builder()
-                                .envId(GLOBAL_ENV_ID)
-                                .entityType(EntityType.ENVIRONMENT)
-                                .entityId(ENV_ID)
-                                .templateId(DEFAULT_TEMPLATE_ID)
-                                .relativeFilePath(PATH)
-                                .encrypted(true)
-                                .build();
+    ConfigFile configFile = getEncryptedConfigFile(GLOBAL_ENV_ID, EntityType.ENVIRONMENT, ENV_ID, DEFAULT_TEMPLATE_ID);
     configFile.setAppId(APP_ID);
 
     ServiceTemplate serviceTemplate = ServiceTemplate.Builder.aServiceTemplate().withUuid(SERVICE_TEMPLATE_ID).build();
@@ -1022,14 +1048,8 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Owner(developers = INDER)
   @Category(UnitTests.class)
   public void testGetClonedConfigFile_ForAServiceOverride_SameApp() {
-    ConfigFile configFile = ConfigFile.builder()
-                                .envId(ENV_ID)
-                                .entityType(EntityType.SERVICE_TEMPLATE)
-                                .entityId(SERVICE_TEMPLATE_ID)
-                                .templateId(SERVICE_TEMPLATE_ID)
-                                .relativeFilePath(PATH)
-                                .encrypted(true)
-                                .build();
+    ConfigFile configFile =
+        getEncryptedConfigFile(ENV_ID, EntityType.SERVICE_TEMPLATE, SERVICE_TEMPLATE_ID, SERVICE_TEMPLATE_ID);
     configFile.setAppId(APP_ID);
 
     ServiceTemplate serviceTemplate =
@@ -1048,14 +1068,8 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Owner(developers = INDER)
   @Category(UnitTests.class)
   public void testGetClonedConfigFile_ForAServiceOverride_DiffApp() {
-    ConfigFile configFile = ConfigFile.builder()
-                                .envId(ENV_ID)
-                                .entityType(EntityType.SERVICE_TEMPLATE)
-                                .entityId(SERVICE_TEMPLATE_ID)
-                                .templateId(SERVICE_TEMPLATE_ID)
-                                .relativeFilePath(PATH)
-                                .encrypted(true)
-                                .build();
+    ConfigFile configFile =
+        getEncryptedConfigFile(ENV_ID, EntityType.SERVICE_TEMPLATE, SERVICE_TEMPLATE_ID, SERVICE_TEMPLATE_ID);
     configFile.setAppId(APP_ID);
 
     ServiceTemplate serviceTemplate =
@@ -1195,5 +1209,73 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     assertThat(clonedServiceVariable.getEntityId()).isEqualTo(SERVICE_TEMPLATE_ID + "2");
     assertThat(clonedServiceVariable.getTemplateId()).isEqualTo(DEFAULT_TEMPLATE_ID);
     assertThat(clonedServiceVariable.getValue()).isEqualTo("encryptedValue".toCharArray());
+  }
+
+  private PhysicalInfrastructureMapping getPhysicalInfrastructureMapping() {
+    return aPhysicalInfrastructureMapping()
+        .withHostConnectionAttrs(HOST_CONN_ATTR_ID)
+        .withComputeProviderSettingId(SETTING_ID)
+        .withAppId(APP_ID)
+        .withEnvId(ENV_ID)
+        .withServiceTemplateId(TEMPLATE_ID)
+        .build();
+  }
+
+  private Service getService() {
+    return Service.builder()
+        .name(SERVICE_NAME)
+        .accountId(ACCOUNT_ID)
+        .appId(APP_ID)
+        .artifactType(ArtifactType.DOCKER)
+        .build();
+  }
+
+  private ServiceVariable getServiceVariable() {
+    return ServiceVariable.builder()
+        .accountId(ACCOUNT_ID)
+        .serviceId(SERVICE_ID)
+        .envId(GLOBAL_ENV_ID)
+        .entityType(EntityType.ENVIRONMENT)
+        .templateId(DEFAULT_TEMPLATE_ID)
+        .build();
+  }
+
+  private ServiceTemplate getServiceTemplate(
+      ServiceVariable serviceVariable, PhysicalInfrastructureMapping physicalInfrastructureMapping) {
+    ServiceTemplate serviceTemplate = aServiceTemplate()
+                                          .withUuid(TEMPLATE_ID)
+                                          .withDescription(TEMPLATE_DESCRIPTION)
+                                          .withServiceId(SERVICE_ID)
+                                          .withEnvId(GLOBAL_ENV_ID)
+                                          .withInfrastructureMappings(asList(physicalInfrastructureMapping))
+                                          .build();
+    if (serviceVariable != null) {
+      serviceTemplate.setServiceVariablesOverrides(asList(serviceVariable));
+    }
+    return serviceTemplate;
+  }
+
+  private ConfigFile getConfigFile() {
+    return ConfigFile.builder()
+        .entityId(ENV_ID)
+        .templateId(DEFAULT_TEMPLATE_ID)
+        .envId(GLOBAL_ENV_ID)
+        .entityType(EntityType.ENVIRONMENT)
+        .build();
+  }
+
+  private ConfigFile getEncryptedConfigFile(String envId, EntityType entityType, String entityId, String templateId) {
+    return ConfigFile.builder()
+        .envId(envId)
+        .entityType(entityType)
+        .entityId(entityId)
+        .templateId(templateId)
+        .relativeFilePath(PATH)
+        .encrypted(true)
+        .build();
+  }
+
+  private Environment getEnvironment() {
+    return anEnvironment().uuid(ENV_ID).appId(APP_ID).name(ENV_NAME).description(ENV_DESCRIPTION).build();
   }
 }

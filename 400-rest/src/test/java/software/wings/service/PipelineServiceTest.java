@@ -34,6 +34,7 @@ import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
+import static software.wings.utils.WingsTestConstants.CLONED_PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
@@ -45,6 +46,8 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import static java.util.Arrays.asList;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNotSame;
 import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -147,6 +150,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   @Mock private UpdateOperations<Pipeline> updateOperations;
   @Mock private HQuery<PipelineExecution> query;
   @Mock private HQuery<Pipeline> pipelineQuery;
+  @Mock private HQuery<Pipeline> clonedPipelineQuery;
   @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private YamlDirectoryService yamlDirectoryService;
   @Mock private MorphiaIterator<Pipeline, Pipeline> pipelineIterator;
@@ -1295,6 +1299,7 @@ public class PipelineServiceTest extends WingsBaseTest {
       assertThat(exception.getParams().get("message")).isEqualTo("Duplicate name pipeline");
     }
   }
+
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
@@ -1318,6 +1323,177 @@ public class PipelineServiceTest extends WingsBaseTest {
     } catch (InvalidRequestException exception) {
       assertThat(exception.getParams().get("message")).isEqualTo("Duplicate name pipeline");
     }
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testSimpleClonePipeline() {
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_PIPELINE));
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
+        .thenReturn(aWorkflow().orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build());
+    when(workflowService.stencilMap(any())).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
+
+    Pipeline savedPipeline = pipelineService.save(getPipeline("savedPipeline", APP_ID, PIPELINE_ID));
+    assertThat(savedPipeline).isNotNull().hasFieldOrProperty("uuid");
+
+    Pipeline clonedPipeline = pipelineService.clonePipeline(
+        savedPipeline, Pipeline.builder().name("clonedPipeline").appId(APP_ID).uuid(CLONED_PIPELINE_ID).build());
+
+    assertEquals("Account id should be equal", savedPipeline.getAccountId(), clonedPipeline.getAccountId());
+    assertEquals("App id should be equal", savedPipeline.getAppId(), clonedPipeline.getAppId());
+    assertNotSame("Pipeline id should not be same", savedPipeline.getUuid(), clonedPipeline.getUuid());
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testClonePipelineWithStageInParallel() {
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_PIPELINE));
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
+        .thenReturn(aWorkflow().orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build());
+    when(workflowService.stencilMap(any())).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
+
+    Pipeline pipeline = getPipeline("savedPipeline", APP_ID, PIPELINE_ID);
+    pipeline.setPipelineStages(Arrays.asList(getPipelineStage("Stage1", ENV_STATE.name(), true, true)));
+
+    Pipeline savedPipeline = pipelineService.save(pipeline);
+    assertThat(savedPipeline).isNotNull().hasFieldOrProperty("uuid");
+
+    Pipeline clonedPipeline = pipelineService.clonePipeline(
+        savedPipeline, Pipeline.builder().name("clonedPipeline").appId(APP_ID).uuid(CLONED_PIPELINE_ID).build());
+
+    assertEquals("Account id should be equal", savedPipeline.getAccountId(), clonedPipeline.getAccountId());
+    assertEquals("App id should be equal", savedPipeline.getAppId(), clonedPipeline.getAppId());
+    assertNotSame("Pipeline id should not be same", savedPipeline.getUuid(), clonedPipeline.getUuid());
+    assertEquals("Stage name should be equal", savedPipeline.getPipelineStages().get(0).getName(),
+        clonedPipeline.getPipelineStages().get(0).getName());
+    assertEquals("Stage name should be equal", savedPipeline.getPipelineStages().get(0).isParallel(),
+        clonedPipeline.getPipelineStages().get(0).isParallel());
+    assertEquals("Stage name should be equal", savedPipeline.getPipelineStages().get(0).isValid(),
+        clonedPipeline.getPipelineStages().get(0).isValid());
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testClonePipelineWithStageNotInParallel() {
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_PIPELINE));
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
+        .thenReturn(aWorkflow().orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build());
+    when(workflowService.stencilMap(any())).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
+
+    Pipeline pipeline = getPipeline("savedPipeline", APP_ID, PIPELINE_ID);
+    pipeline.setPipelineStages(Arrays.asList(getPipelineStage("Stage1", ENV_STATE.name(), true, false)));
+
+    Pipeline savedPipeline = pipelineService.save(pipeline);
+    assertThat(savedPipeline).isNotNull().hasFieldOrProperty("uuid");
+
+    Pipeline clonedPipeline = pipelineService.clonePipeline(
+        savedPipeline, Pipeline.builder().name("clonedPipeline").appId(APP_ID).uuid(CLONED_PIPELINE_ID).build());
+
+    assertEquals("Account id should be equal", savedPipeline.getAccountId(), clonedPipeline.getAccountId());
+    assertEquals("App id should be equal", savedPipeline.getAppId(), clonedPipeline.getAppId());
+    assertNotSame("Pipeline id should not be same", savedPipeline.getUuid(), clonedPipeline.getUuid());
+    assertEquals("Stage name should be equal", savedPipeline.getPipelineStages().get(0).getName(),
+        clonedPipeline.getPipelineStages().get(0).getName());
+    assertEquals("Stage name should be equal", savedPipeline.getPipelineStages().get(0).isParallel(),
+        clonedPipeline.getPipelineStages().get(0).isParallel());
+    assertEquals("Stage name should be equal", savedPipeline.getPipelineStages().get(0).isValid(),
+        clonedPipeline.getPipelineStages().get(0).isValid());
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testClonePipelineWithSkippedStage() {
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_PIPELINE));
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
+        .thenReturn(aWorkflow().orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build());
+    when(workflowService.stencilMap(any())).thenReturn(ImmutableMap.of("ENV_STATE", StateType.ENV_STATE));
+
+    Pipeline pipeline = getPipeline("savedPipeline", APP_ID, PIPELINE_ID);
+    pipeline.setPipelineStages(Arrays.asList(getPipelineStage("Stage1", ENV_STATE.name(), false, true)));
+
+    Pipeline savedPipeline = pipelineService.save(pipeline);
+    assertThat(savedPipeline).isNotNull().hasFieldOrProperty("uuid");
+
+    Pipeline clonedPipeline = pipelineService.clonePipeline(
+        savedPipeline, Pipeline.builder().name("clonedPipeline").appId(APP_ID).uuid(CLONED_PIPELINE_ID).build());
+
+    assertEquals("Account id should be equal", savedPipeline.getAccountId(), clonedPipeline.getAccountId());
+    assertEquals("App id should be equal", savedPipeline.getAppId(), clonedPipeline.getAppId());
+    assertNotSame("Pipeline id should not be same", savedPipeline.getUuid(), clonedPipeline.getUuid());
+    assertEquals("Stage name should be equal", savedPipeline.getPipelineStages().get(0).getName(),
+        clonedPipeline.getPipelineStages().get(0).getName());
+    assertEquals("Stage name should be equal", savedPipeline.getPipelineStages().get(0).isParallel(),
+        clonedPipeline.getPipelineStages().get(0).isParallel());
+    assertEquals("Stage name should be equal", savedPipeline.getPipelineStages().get(0).isValid(),
+        clonedPipeline.getPipelineStages().get(0).isValid());
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testClonePipelineWithApprovalInParallel() {
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_PIPELINE));
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
+        .thenReturn(aWorkflow().orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build());
+    when(workflowService.stencilMap(any())).thenReturn(ImmutableMap.of("APPROVAL", APPROVAL));
+
+    Pipeline pipeline = getPipeline("savedPipeline", APP_ID, PIPELINE_ID);
+    pipeline.setPipelineStages(Arrays.asList(getPipelineStage("Stage1", APPROVAL.name(), true, true)));
+
+    Pipeline savedPipeline = pipelineService.save(pipeline);
+    assertThat(savedPipeline).isNotNull().hasFieldOrProperty("uuid");
+
+    Pipeline clonedPipeline = pipelineService.clonePipeline(
+        savedPipeline, Pipeline.builder().name("clonedPipeline").appId(APP_ID).uuid(CLONED_PIPELINE_ID).build());
+
+    assertEquals("Account id should be equal", savedPipeline.getAccountId(), clonedPipeline.getAccountId());
+    assertEquals("App id should be equal", savedPipeline.getAppId(), clonedPipeline.getAppId());
+    assertNotSame("Pipeline id should not be same", savedPipeline.getUuid(), clonedPipeline.getUuid());
+    assertEquals("Stage name should be equal", savedPipeline.getPipelineStages().get(0).getName(),
+        clonedPipeline.getPipelineStages().get(0).getName());
+    assertEquals("Stage name should be equal", savedPipeline.getPipelineStages().get(0).isParallel(),
+        clonedPipeline.getPipelineStages().get(0).isParallel());
+    assertEquals("Stage name should be equal", savedPipeline.getPipelineStages().get(0).isValid(),
+        clonedPipeline.getPipelineStages().get(0).isValid());
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testClonePipelineWithApprovalNotInParallel() {
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_PIPELINE)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_PIPELINE));
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
+        .thenReturn(aWorkflow().orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build());
+    when(workflowService.stencilMap(any())).thenReturn(ImmutableMap.of("APPROVAL", APPROVAL));
+
+    Pipeline pipeline = getPipeline("savedPipeline", APP_ID, PIPELINE_ID);
+    pipeline.setPipelineStages(Arrays.asList(getPipelineStage("Stage1", APPROVAL.name(), true, false)));
+
+    Pipeline savedPipeline = pipelineService.save(pipeline);
+    assertThat(savedPipeline).isNotNull().hasFieldOrProperty("uuid");
+
+    Pipeline clonedPipeline = pipelineService.clonePipeline(
+        savedPipeline, Pipeline.builder().name("clonedPipeline").appId(APP_ID).uuid(CLONED_PIPELINE_ID).build());
+
+    assertEquals("Account id should be equal", savedPipeline.getAccountId(), clonedPipeline.getAccountId());
+    assertEquals("App id should be equal", savedPipeline.getAppId(), clonedPipeline.getAppId());
+    assertNotSame("Pipeline id should not be same", savedPipeline.getUuid(), clonedPipeline.getUuid());
+    assertEquals("Stage name should be equal", savedPipeline.getPipelineStages().get(0).getName(),
+        clonedPipeline.getPipelineStages().get(0).getName());
+    assertEquals("Stage name should be equal", savedPipeline.getPipelineStages().get(0).isParallel(),
+        clonedPipeline.getPipelineStages().get(0).isParallel());
+    assertEquals("Stage name should be equal", savedPipeline.getPipelineStages().get(0).isValid(),
+        clonedPipeline.getPipelineStages().get(0).isValid());
   }
 
   @Test
@@ -1583,6 +1759,30 @@ public class PipelineServiceTest extends WingsBaseTest {
                                                              .properties(new HashMap<>())
                                                              .disable(false)
                                                              .build()))
+        .build();
+  }
+
+  private Pipeline getPipeline(String name, String appId, String pipelineId) {
+    return Pipeline.builder().name(name).appId(appId).uuid(pipelineId).build();
+  }
+
+  private PipelineStage getPipelineStage(String name, String stageType, boolean valid, boolean parallel) {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("workflowId", WORKFLOW_ID);
+
+    PipelineStageElement pipelineStageElement = PipelineStageElement.builder()
+                                                    .uuid("stageElementId")
+                                                    .name(name)
+                                                    .valid(valid)
+                                                    .type(stageType)
+                                                    .properties(properties)
+                                                    .build();
+
+    return PipelineStage.builder()
+        .name(name)
+        .valid(valid)
+        .parallel(parallel)
+        .pipelineStageElements(Arrays.asList(pipelineStageElement))
         .build();
   }
 }
