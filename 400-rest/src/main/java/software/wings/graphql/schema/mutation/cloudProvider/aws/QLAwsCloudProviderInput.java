@@ -22,4 +22,5 @@ public class QLAwsCloudProviderInput {
   private RequestField<QLAwsManualCredentials> manualCredentials;
 
   private RequestField<QLAwsCrossAccountAttributes> crossAccountAttributes;
+  private RequestField<String> defaultRegion;
 }

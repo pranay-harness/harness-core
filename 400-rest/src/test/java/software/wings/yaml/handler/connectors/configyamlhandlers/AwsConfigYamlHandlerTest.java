@@ -1,6 +1,7 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
 import static io.harness.rule.OwnerRule.BOJANA;
+import static io.harness.rule.OwnerRule.SAINATH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -111,5 +112,47 @@ public class AwsConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
     assertThat(yaml.getAccessKey()).isEqualTo(String.valueOf(accessKey));
     assertThat(yaml.getAccessKeySecretId()).isEqualTo(null);
     assertThat(yaml.getSecretKey()).isEqualTo(secretKey);
+  }
+
+  @Test
+  @Owner(developers = SAINATH)
+  @Category(UnitTests.class)
+  public void testToYamlRegion() {
+    String defaultRegion = "defaultRegion";
+    String accountId = "accountId";
+    String secretKey = "secretKey";
+
+    AwsConfig awsConfig =
+        AwsConfig.builder().encryptedSecretKey(secretKey).accountId(accountId).defaultRegion(defaultRegion).build();
+    SettingAttribute settingAttribute = new SettingAttribute();
+
+    settingAttribute.setValue(awsConfig);
+    when(secretManager.getEncryptedYamlRef(awsConfig.getAccountId(), awsConfig.getEncryptedSecretKey()))
+        .thenReturn(secretKey);
+    AwsConfig.Yaml yaml = yamlHandler.toYaml(settingAttribute, WingsTestConstants.APP_ID);
+
+    assertThat(yaml.getDefaultRegion()).isEqualTo(defaultRegion);
+  }
+
+  @Test
+  @Owner(developers = SAINATH)
+  @Category(UnitTests.class)
+  public void testToBeanRegion() {
+    String defaultRegion = "defaultRegion";
+    AwsConfig.Yaml yaml = AwsConfig.Yaml.builder().defaultRegion(defaultRegion).build();
+
+    Change change = Change.Builder.aFileChange()
+                        .withAccountId("accountId")
+                        .withFilePath("Setup/Cloud Providers/test-harness.yaml")
+                        .build();
+    ChangeContext<AwsConfig.Yaml> changeContext = ChangeContext.Builder.aChangeContext()
+                                                      .withYamlType(YamlType.CLOUD_PROVIDER)
+                                                      .withYaml(yaml)
+                                                      .withChange(change)
+                                                      .build();
+
+    SettingAttribute settingAttribute = yamlHandler.toBean(null, changeContext, null);
+    AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
+    assertThat(awsConfig.getDefaultRegion()).isEqualTo(defaultRegion);
   }
 }

@@ -34,6 +34,7 @@ public class AwsConfigYamlHandler extends CloudProviderYamlHandler<Yaml, AwsConf
                     .assumeCrossAccountRole(awsConfig.isAssumeCrossAccountRole())
                     .crossAccountAttributes(awsConfig.getCrossAccountAttributes())
                     .tag(awsConfig.getTag())
+                    .defaultRegion(awsConfig.getDefaultRegion())
                     .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
@@ -67,6 +68,7 @@ public class AwsConfigYamlHandler extends CloudProviderYamlHandler<Yaml, AwsConf
                            .tag(yaml.getTag())
                            .assumeCrossAccountRole(yaml.isAssumeCrossAccountRole())
                            .crossAccountAttributes(yaml.getCrossAccountAttributes())
+                           .defaultRegion(yaml.getDefaultRegion())
                            .build();
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);
   }
