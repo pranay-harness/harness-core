@@ -237,6 +237,8 @@ public class AwsECSClusterDataSyncTaskletTest extends CategoryTest {
     CECluster ceCluster = getCeCluster();
     AwsCrossAccountAttributes awsCrossAccountAttributes = getAwsCrossAccountAttributes();
     when(awsECSClusterDataSyncTasklet.listEc2Instances(any(), any(), any())).thenReturn(instanceMap);
+    when(instanceResourceService.getComputeVMResource(any(), any(), any()))
+        .thenReturn(io.harness.ccm.commons.beans.Resource.builder().cpuUnits(1024.0).memoryMb(1024.0).build());
     awsECSClusterDataSyncTasklet.updateContainerInstance(
         ACCOUNT_ID, ceCluster, awsCrossAccountAttributes, Arrays.asList(getContainerInstance()));
 
