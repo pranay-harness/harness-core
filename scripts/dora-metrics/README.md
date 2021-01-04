@@ -9,14 +9,19 @@
 * Output generated in form of csv file
 
 ## HOW TO USE
-1. Use executable file `workflow_driver` to generate the report
-2. Give execution permissions to the file by using following command :
+1. Use python main program file `workflow_driver.py` to generate the report.
+2. Install dependencies as below :
+    ```
+   brew install python3
+   pip3 install requests
+   ```
+2. Give execution permissions to the program file by using following command :
     ```commandline
-    chmod +x workflow_driver
+    chmod +x workflow_driver.py
    ```
 3. Trigger the script using following command with proper input params :
     ```commandline
-    ./workflow_driver <APP_DOMAIN> <API_KEY> <ACCOUNT_ID> <FILE_OPERATION_ID> <OUTPUT_FILE_DIRECTORY_PATH> <OUTPUT_FILE_NAME> <META_FILE_DIRECTORY_PATH> <ENTITY_TYPE> <ENTITY_ID> <SEARCH_INTERVAL_START_TIME> <SEARCH_INTERVAL_END_TIME> <TAG_ENTITY_TYPE> <TAG_PAIR_LIST>
+    python3 workflow_driver.py <APP_DOMAIN> <API_KEY> <ACCOUNT_ID> <FILE_OPERATION_ID> <OUTPUT_FILE_DIRECTORY_PATH> <OUTPUT_FILE_NAME> <META_FILE_DIRECTORY_PATH> <ENTITY_TYPE> <ENTITY_ID> <SEARCH_INTERVAL_START_TIME> <SEARCH_INTERVAL_END_TIME> <TAG_ENTITY_TYPE> <TAG_PAIR_LIST>
    ```
    |Name|Description|Sample Value|
    |----|-----------|------------|
