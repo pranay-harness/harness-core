@@ -4,6 +4,7 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
+import io.harness.encryption.Scope;
 
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,8 @@ public interface CVConfigService extends DeleteEntityByProjectHandler<CVConfig> 
 
   void deleteByIdentifier(
       String accountId, String orgIdentifier, String projectIdentifier, String monitoringSourceIdentifier);
+  List<CVConfig> findByConnectorIdentifier(String accountId, @Nullable String orgIdentifier,
+      @Nullable String projectIdentifier, String connectorIdentifierWithoutScopePrefix, Scope scope);
   List<CVConfig> list(String accountId, String connectorIdentifier);
   List<CVConfig> list(String accountId, String connectorIdentifier, String productName);
   List<CVConfig> list(

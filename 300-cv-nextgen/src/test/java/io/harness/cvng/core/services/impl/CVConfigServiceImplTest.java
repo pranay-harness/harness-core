@@ -25,6 +25,7 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DSConfigService;
 import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
 import io.harness.cvng.models.VerificationType;
+import io.harness.encryption.Scope;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.rule.Owner;
@@ -34,6 +35,8 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -583,5 +586,69 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     for (int i = 1; i < 5; i++) {
       assertThat(cvConfigService.get(cvConfigs.get(i).getUuid())).isNull();
     }
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testFindByConnectorIdentifier_projectScope() {
+    List<CVConfig> cvConfigs = createCVConfigs(5);
+    save(cvConfigs);
+    List<CVConfig> result = cvConfigService.findByConnectorIdentifier(
+        accountId, orgIdentifier, projectIdentifier, connectorIdentifier, Scope.PROJECT);
+    Collections.sort(cvConfigs, Comparator.comparing(CVConfig::getUuid));
+    Collections.sort(result, Comparator.comparing(CVConfig::getUuid));
+    assertThat(result).isEqualTo(cvConfigs);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testFindByConnectorIdentifier_accountScope() {
+    List<CVConfig> projectScoped = createCVConfigs(5);
+    save(projectScoped);
+    String projectScopedConnectorIdentifier = connectorIdentifier;
+    connectorIdentifier = "account.connectorId";
+    List<CVConfig> cvConfigs = createCVConfigs(5);
+    save(cvConfigs);
+    List<CVConfig> result = cvConfigService.findByConnectorIdentifier(accountId, "", "", "connectorId", Scope.ACCOUNT);
+    Collections.sort(cvConfigs, Comparator.comparing(CVConfig::getUuid));
+    Collections.sort(result, Comparator.comparing(CVConfig::getUuid));
+    assertThat(result).isEqualTo(cvConfigs);
+    result = cvConfigService.findByConnectorIdentifier(
+        accountId, orgIdentifier, projectIdentifier, projectScopedConnectorIdentifier, Scope.PROJECT);
+    Collections.sort(projectScoped, Comparator.comparing(CVConfig::getUuid));
+    Collections.sort(result, Comparator.comparing(CVConfig::getUuid));
+    assertThat(result).isEqualTo(projectScoped);
+
+    result =
+        cvConfigService.findByConnectorIdentifier(accountId, orgIdentifier, projectIdentifier, "random", Scope.ACCOUNT);
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testFindByConnectorIdentifier_OrgIdentifierScope() {
+    List<CVConfig> projectScoped = createCVConfigs(5);
+    save(projectScoped);
+    String projectScopedConnectorIdentifier = connectorIdentifier;
+    connectorIdentifier = "org.connectorId";
+    List<CVConfig> cvConfigs = createCVConfigs(5);
+    save(cvConfigs);
+    List<CVConfig> result =
+        cvConfigService.findByConnectorIdentifier(accountId, orgIdentifier, "", "connectorId", Scope.ORG);
+    Collections.sort(cvConfigs, Comparator.comparing(CVConfig::getUuid));
+    Collections.sort(result, Comparator.comparing(CVConfig::getUuid));
+    assertThat(result).isEqualTo(cvConfigs);
+    result = cvConfigService.findByConnectorIdentifier(
+        accountId, orgIdentifier, projectIdentifier, projectScopedConnectorIdentifier, Scope.PROJECT);
+    Collections.sort(projectScoped, Comparator.comparing(CVConfig::getUuid));
+    Collections.sort(result, Comparator.comparing(CVConfig::getUuid));
+    assertThat(result).isEqualTo(projectScoped);
+
+    result =
+        cvConfigService.findByConnectorIdentifier(accountId, orgIdentifier, projectIdentifier, "random", Scope.ACCOUNT);
+    assertThat(result).isEmpty();
   }
 }

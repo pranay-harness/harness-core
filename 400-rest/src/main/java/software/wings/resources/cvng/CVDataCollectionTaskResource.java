@@ -40,6 +40,17 @@ public class CVDataCollectionTaskResource {
     return new RestResponse<>(dataCollectionTaskService.create(accountId, orgIdentifier, projectIdentifier, bundle));
   }
 
+  @POST
+  @Path("reset-task")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Void> resetTask(@QueryParam("accountId") String accountId,
+      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
+      @QueryParam("taskId") String taskId, @Body DataCollectionConnectorBundle bundle) {
+    dataCollectionTaskService.resetTask(accountId, orgIdentifier, projectIdentifier, taskId, bundle);
+    return new RestResponse<>(null);
+  }
+
   @DELETE
   @Path("delete-task")
   @Timed

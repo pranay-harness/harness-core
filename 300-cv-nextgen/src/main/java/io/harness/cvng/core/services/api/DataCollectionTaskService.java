@@ -16,5 +16,6 @@ public interface DataCollectionTaskService {
   void updateTaskStatus(DataCollectionTaskResult dataCollectionTaskResult);
   void deletePerpetualTasks(String accountId, String perpetualTaskId);
   String enqueueFirstTask(CVConfig cvConfig);
+  void resetLiveMonitoringPerpetualTask(CVConfig cvConfig);
   List<String> createSeqTasks(List<DataCollectionTask> dataCollectionTasks);
 }

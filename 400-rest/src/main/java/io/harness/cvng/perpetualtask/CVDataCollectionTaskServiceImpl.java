@@ -49,11 +49,29 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
   @Inject private DelegateProxyFactory delegateProxyFactory;
 
   @Override
+  public void resetTask(String accountId, String orgIdentifier, String projectIdentifier, String taskId,
+      DataCollectionConnectorBundle bundle) {
+    bundle.getParams().put("accountId", accountId);
+    PerpetualTaskExecutionBundle executionBundle;
+    switch (bundle.getDataCollectionType()) {
+      case CV:
+        executionBundle = createCVExecutionBundle(accountId, orgIdentifier, projectIdentifier, bundle);
+        break;
+      case KUBERNETES:
+        executionBundle = createK8ExecutionBundle(accountId, orgIdentifier, projectIdentifier, bundle);
+        break;
+      default:
+        throw new IllegalStateException("Invalid type " + bundle.getDataCollectionType());
+    }
+    perpetualTaskService.resetTask(accountId, taskId, executionBundle);
+  }
+
+  @Override
   public String create(
       String accountId, String orgIdentifier, String projectIdentifier, DataCollectionConnectorBundle bundle) {
     bundle.getParams().put("accountId", accountId);
     String taskType;
-    byte[] executionBundle;
+    PerpetualTaskExecutionBundle executionBundle;
     switch (bundle.getDataCollectionType()) {
       case CV:
         taskType = PerpetualTaskType.DATA_COLLECTION_TASK;
@@ -68,7 +86,7 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
     }
     PerpetualTaskClientContext clientContext = PerpetualTaskClientContext.builder()
                                                    .clientId(bundle.getParams().get("dataCollectionWorkerId"))
-                                                   .executionBundle(executionBundle)
+                                                   .executionBundle(executionBundle.toByteArray())
                                                    .build();
     PerpetualTaskSchedule schedule = PerpetualTaskSchedule.newBuilder()
                                          .setInterval(Durations.fromMinutes(1))
@@ -77,7 +95,7 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
     return perpetualTaskService.createTask(taskType, accountId, clientContext, schedule, false, "");
   }
 
-  private byte[] createCVExecutionBundle(
+  private PerpetualTaskExecutionBundle createCVExecutionBundle(
       String accountId, String orgIdentifier, String projectIdentifier, DataCollectionConnectorBundle bundle) {
     List<EncryptedDataDetail> encryptedDataDetailList =
         getEncryptedDataDetail(accountId, orgIdentifier, projectIdentifier, bundle);
@@ -99,10 +117,10 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
 
     PerpetualTaskExecutionBundle perpetualTaskExecutionBundle =
         createPerpetualTaskExecutionBundle(cvDataCollectionInfo, perpetualTaskPack, executionCapabilities);
-    return perpetualTaskExecutionBundle.toByteArray();
+    return perpetualTaskExecutionBundle;
   }
 
-  private byte[] createK8ExecutionBundle(
+  private PerpetualTaskExecutionBundle createK8ExecutionBundle(
       String accountId, String orgIdentifier, String projectIdentifier, DataCollectionConnectorBundle bundle) {
     List<EncryptedDataDetail> encryptedDataDetailList =
         getEncryptedDataDetail(accountId, orgIdentifier, projectIdentifier, bundle);
@@ -123,7 +141,7 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
     Any perpetualTaskPack = Any.pack(params);
     PerpetualTaskExecutionBundle perpetualTaskExecutionBundle =
         createPerpetualTaskExecutionBundle(k8ActivityDataCollectionInfo, perpetualTaskPack, executionCapabilities);
-    return perpetualTaskExecutionBundle.toByteArray();
+    return perpetualTaskExecutionBundle;
   }
 
   @NotNull

@@ -1,5 +1,6 @@
 package io.harness.cvng.core.jobs;
 
+import static io.harness.EntityCRUDEventsConstants.CONNECTOR_ENTITY;
 import static io.harness.EntityCRUDEventsConstants.ENTITY_CRUD;
 import static io.harness.EntityCRUDEventsConstants.ENTITY_TYPE_METADATA;
 import static io.harness.EntityCRUDEventsConstants.PROJECT_ENTITY;
@@ -25,10 +26,12 @@ public class EntityCRUDStreamConsumer implements Runnable {
 
   @Inject
   public EntityCRUDStreamConsumer(@Named(ENTITY_CRUD) AbstractConsumer abstractConsumer,
-      @Named(PROJECT_ENTITY) ConsumerMessageProcessor projectChangeEventMessageProcessor) {
+      @Named(PROJECT_ENTITY) ConsumerMessageProcessor projectChangeEventMessageProcessor,
+      @Named(CONNECTOR_ENTITY) ConsumerMessageProcessor connectorChangeEventMessageProcessor) {
     this.consumer = abstractConsumer;
     processorMap = new HashMap<>();
     processorMap.put(PROJECT_ENTITY, projectChangeEventMessageProcessor);
+    processorMap.put(CONNECTOR_ENTITY, connectorChangeEventMessageProcessor);
   }
 
   @Override

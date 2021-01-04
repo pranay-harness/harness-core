@@ -39,6 +39,25 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
   }
 
   @Override
+  public void resetDataCollectionTask(String accountId, String orgIdentifier, String projectIdentifier,
+      String perpetualTaskId, DataCollectionConnectorBundle bundle) {
+    Preconditions.checkState(bundle.getParams().containsKey(CVConfigKeys.connectorIdentifier));
+    Optional<ConnectorInfoDTO> connectorDTO = nextGenService.get(
+        accountId, bundle.getParams().get(CVConfigKeys.connectorIdentifier), orgIdentifier, projectIdentifier);
+    if (!connectorDTO.isPresent()) {
+      throw new InternalServerErrorException(
+          "Failed to retrieve connector with id: " + bundle.getParams().get(CVConfigKeys.connectorIdentifier));
+    }
+
+    bundle.setConnectorDTO(connectorDTO.get());
+
+    requestExecutor
+        .execute(verificationManagerClient.resetDataCollectionPerpetualTask(
+            accountId, orgIdentifier, projectIdentifier, perpetualTaskId, bundle))
+        .getResource();
+  }
+
+  @Override
   public void deletePerpetualTask(String accountId, String perpetualTaskId) {
     requestExecutor.execute(verificationManagerClient.deleteDataCollectionPerpetualTask(accountId, perpetualTaskId));
   }

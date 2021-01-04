@@ -272,6 +272,18 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   }
 
   @Override
+  public void resetLiveMonitoringPerpetualTask(CVConfig cvConfig) {
+    Map<String, String> params = new HashMap<>();
+    params.put(DataCollectionTaskKeys.dataCollectionWorkerId, cvConfig.getUuid());
+    params.put(DataCollectionTaskKeys.verificationTaskId,
+        verificationTaskService.getServiceGuardVerificationTaskId(cvConfig.getAccountId(), cvConfig.getUuid()));
+    params.put(CVConfigKeys.connectorIdentifier, cvConfig.getConnectorIdentifier());
+    verificationManagerService.resetDataCollectionTask(cvConfig.getAccountId(), cvConfig.getOrgIdentifier(),
+        cvConfig.getProjectIdentifier(), cvConfig.getPerpetualTaskId(),
+        DataCollectionConnectorBundle.builder().params(params).dataCollectionType(DataCollectionType.CV).build());
+  }
+
+  @Override
   public List<String> createSeqTasks(List<DataCollectionTask> dataCollectionTasks) {
     DataCollectionTask lastTask = null;
     for (DataCollectionTask task : dataCollectionTasks) {
