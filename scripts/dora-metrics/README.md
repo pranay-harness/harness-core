@@ -1,4 +1,4 @@
-# Dora Metrics Report Generator
+# Deployment Executions Metrics Report Generator
 
 ## FEATURES
 * Search based on given workflow id/pipeline id or all executions
