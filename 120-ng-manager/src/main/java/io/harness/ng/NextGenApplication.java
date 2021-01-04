@@ -21,8 +21,7 @@ import io.harness.gitsync.core.runnable.GitChangeSetRunnable;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.EtagFilter;
-import io.harness.ng.core.event.EntityCRUDStreamConsumer;
-import io.harness.ng.core.event.FeatureFlagStreamConsumer;
+import io.harness.ng.core.event.NGEventConsumerService;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.NotFoundExceptionMapper;
@@ -162,12 +161,10 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerYamlSdk(injector);
 
     MaintenanceController.forceMaintenance(false);
-    createConsumerThreadsToListenToEvents(injector);
   }
 
-  private void createConsumerThreadsToListenToEvents(Injector injector) {
-    new Thread(injector.getInstance(EntityCRUDStreamConsumer.class)).start();
-    new Thread(injector.getInstance(FeatureFlagStreamConsumer.class)).start();
+  private void createConsumerThreadsToListenToEvents(Environment environment, Injector injector) {
+    environment.lifecycle().manage(injector.getInstance(NGEventConsumerService.class));
   }
 
   private void registerYamlSdk(Injector injector) {
@@ -216,6 +213,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   private void registerManagedBeans(Environment environment, Injector injector) {
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
+    createConsumerThreadsToListenToEvents(environment, injector);
   }
 
   private void registerCorsFilter(NextGenConfiguration appConfig, Environment environment) {

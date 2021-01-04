@@ -56,7 +56,6 @@ public class AccountChangeEventMessageProcessor implements ConsumerMessageProces
   }
 
   private void processCreateAction(AccountEntityChangeDTO accountEntityChangeDTO) {
-    // TODO{karan} remove this try catch when implementing separately in 400-rest and 120-ng-manager
     try {
       harnessSMManager.createHarnessSecretManager(accountEntityChangeDTO.getAccountId(), null, null);
     } catch (Exception ex) {
