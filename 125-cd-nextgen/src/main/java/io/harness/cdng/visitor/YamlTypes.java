@@ -23,7 +23,6 @@ public interface YamlTypes {
   String MANIFEST_LIST_CONFIG = "manifests";
   String MANIFEST_CONFIG = "manifest";
   String MANIFEST_OVERRIDE_SETS = "manifestOverrideSets";
-  String STORE_CONFIG_WRAPPER = "store";
   String K8S_MANIFEST = ManifestType.K8Manifest;
   String SPEC = "spec";
   String PIPELINE_INFRASTRUCTURE = "infrastructure";

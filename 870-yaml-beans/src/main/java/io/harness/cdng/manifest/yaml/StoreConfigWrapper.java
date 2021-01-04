@@ -3,12 +3,12 @@ package io.harness.cdng.manifest.yaml;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
-import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.manifest.StoreConfigWrapperVisitorHelper;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
+import io.harness.yaml.YamlConstants;
 import io.harness.yaml.core.intfc.OverridesApplier;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -57,6 +57,6 @@ public class StoreConfigWrapper implements OverridesApplier<StoreConfigWrapper>,
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.STORE_CONFIG_WRAPPER).build();
+    return LevelNode.builder().qualifierName(YamlConstants.STORE).build();
   }
 }

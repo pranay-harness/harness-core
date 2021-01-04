@@ -28,8 +28,6 @@ import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestConfig;
 import io.harness.cdng.manifest.yaml.ManifestOverrideSets;
 import io.harness.cdng.manifest.yaml.ManifestsOutcome;
-import io.harness.cdng.manifest.yaml.StoreConfig;
-import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
@@ -74,7 +72,6 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(ServiceOutcome.class, 8018);
     kryo.register(ArtifactsOutcome.class, 8019);
     kryo.register(K8sManifest.class, 8021);
-    kryo.register(StoreConfig.class, 8022);
     kryo.register(GitStore.class, 8023);
     kryo.register(StageOverridesConfig.class, 8024);
     kryo.register(ManifestFetchOutcome.class, 8027);
@@ -90,7 +87,7 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(InfraStepParameters.class, 8042);
     kryo.register(ManifestOverrideSets.class, 8043);
     kryo.register(ArtifactOverrideSets.class, 8044);
-    kryo.register(StoreConfigWrapper.class, 8045);
+
     kryo.register(CDPipelineSetupParameters.class, 8046);
     kryo.register(DeploymentStageStepParameters.class, 8047);
     kryo.register(HttpStepInfo.class, 8048);
