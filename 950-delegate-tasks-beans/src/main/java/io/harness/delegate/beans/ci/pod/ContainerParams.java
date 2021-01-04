@@ -17,6 +17,7 @@ public abstract class ContainerParams {
   private Map<String, String> envVars;
   private Map<String, SecretVarParams> secretEnvVars;
   private Map<String, SecretVolumeParams> secretVolumes;
+  private String imageSecret;
   private Map<String, String> volumeToMountPath;
   private ContainerResourceParams containerResourceParams;
   private ContainerSecrets containerSecrets;

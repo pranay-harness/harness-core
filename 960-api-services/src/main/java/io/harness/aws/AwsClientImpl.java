@@ -2,6 +2,7 @@ package io.harness.aws;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 
 import io.harness.exception.InvalidRequestException;
@@ -16,6 +17,9 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
+import com.amazonaws.services.ecr.AmazonECRClient;
+import com.amazonaws.services.ecr.AmazonECRClientBuilder;
+import com.amazonaws.services.ecr.model.GetAuthorizationTokenRequest;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import com.google.common.annotations.VisibleForTesting;
@@ -48,11 +52,42 @@ public class AwsClientImpl implements AwsClient {
     }
   }
 
+  @Override
+  public String getAmazonEcrAuthToken(AwsConfig awsConfig, String account, String region) {
+    try {
+      AmazonECRClient amazonECRClient = getAmazonEcrClient(region, awsConfig);
+      tracker.trackECRCall("Get Auth Token");
+      return amazonECRClient
+          .getAuthorizationToken(new GetAuthorizationTokenRequest().withRegistryIds(singletonList(account)))
+          .getAuthorizationData()
+          .get(0)
+          .getAuthorizationToken();
+    } catch (AmazonEC2Exception amazonEC2Exception) {
+      if (amazonEC2Exception.getStatusCode() == 401) {
+        if (!awsConfig.isEc2IamCredentials()) {
+          if (isEmpty(awsConfig.getAwsAccessKeyCredential().getAccessKey())) {
+            throw new InvalidRequestException("Access Key should not be empty");
+          } else if (isEmpty(awsConfig.getAwsAccessKeyCredential().getSecretKey())) {
+            throw new InvalidRequestException("Secret Key should not be empty");
+          }
+        }
+      }
+      throw amazonEC2Exception;
+    }
+  }
+
   @VisibleForTesting
   AmazonEC2Client getAmazonEc2Client(String region, AwsConfig awsConfig) {
     AmazonEC2ClientBuilder builder = AmazonEC2ClientBuilder.standard().withRegion(region);
     attachCredentials(builder, awsConfig);
     return (AmazonEC2Client) builder.build();
+  }
+
+  @VisibleForTesting
+  AmazonECRClient getAmazonEcrClient(String region, AwsConfig awsConfig) {
+    AmazonECRClientBuilder builder = AmazonECRClientBuilder.standard().withRegion(region);
+    attachCredentials(builder, awsConfig);
+    return (AmazonECRClient) builder.build();
   }
 
   protected void attachCredentials(AwsClientBuilder builder, AwsConfig awsConfig) {

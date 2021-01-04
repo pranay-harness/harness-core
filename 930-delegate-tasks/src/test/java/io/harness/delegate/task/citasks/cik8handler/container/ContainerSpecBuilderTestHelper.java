@@ -62,10 +62,10 @@ public class ContainerSpecBuilderTestHelper {
   private static String imageName = "IMAGE";
   private static String tag = "TAG";
   private static String imageCtrName = imageName + ":" + tag;
-  private static String namespace = "default";
   private static String registryUrl = "https://index.docker.io/v1/";
   private static String userName = "usr";
   private static String password = "pwd";
+  private static String imageSecret = "img-secret";
   private static String registrySecretName = "hs-index-docker-io-v1-usr-hs";
 
   private static Integer requestMemoryMib = 512;
@@ -254,6 +254,7 @@ public class ContainerSpecBuilderTestHelper {
         .args(args)
         .envVars(envVars)
         .volumeToMountPath(volumeToMountPath)
+        .imageSecret(imageSecret)
         .build();
   }
 
@@ -277,7 +278,7 @@ public class ContainerSpecBuilderTestHelper {
                                    .withVolumeMounts(ctrVolumeMounts);
     return ContainerSpecBuilderResponse.builder()
         .containerBuilder(builder)
-        .imageSecret(new LocalObjectReference(registrySecretName))
+        .imageSecret(new LocalObjectReference(imageSecret))
         .volumes(new ArrayList<>())
         .build();
   }
@@ -312,6 +313,7 @@ public class ContainerSpecBuilderTestHelper {
         .envVars(envVars)
         .volumeToMountPath(volumeToMountPath)
         .containerResourceParams(resourceParams)
+        .imageSecret(imageSecret)
         .build();
   }
 
@@ -347,7 +349,7 @@ public class ContainerSpecBuilderTestHelper {
                                    .withResources(resourceRequirements);
     return ContainerSpecBuilderResponse.builder()
         .containerBuilder(builder)
-        .imageSecret(new LocalObjectReference(registrySecretName))
+        .imageSecret(new LocalObjectReference(imageSecret))
         .volumes(new ArrayList<>())
         .build();
   }
@@ -383,6 +385,7 @@ public class ContainerSpecBuilderTestHelper {
         .args(args)
         .envVars(envVars)
         .volumeToMountPath(volumeToMountPath)
+        .imageSecret(imageSecret)
         .build();
   }
 
@@ -417,7 +420,7 @@ public class ContainerSpecBuilderTestHelper {
                                    .withVolumeMounts(ctrVolumeMounts);
     return ContainerSpecBuilderResponse.builder()
         .containerBuilder(builder)
-        .imageSecret(new LocalObjectReference(registrySecretName))
+        .imageSecret(new LocalObjectReference(imageSecret))
         .volumes(ctrVolumes)
         .build();
   }
