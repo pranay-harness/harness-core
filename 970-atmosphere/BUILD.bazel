@@ -23,7 +23,6 @@ sonarqube_test(
     srcs = ["sources"],
     targets = [
         ":maven_deps",
-        ":module",
     ],
 )
 
