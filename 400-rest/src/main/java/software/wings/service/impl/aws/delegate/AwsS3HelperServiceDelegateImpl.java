@@ -25,7 +25,7 @@ public class AwsS3HelperServiceDelegateImpl extends AwsHelperServiceDelegateBase
   AmazonS3Client getAmazonS3Client(AwsConfig awsConfig) {
     // S3 does not have region selection
     AmazonS3ClientBuilder builder =
-        AmazonS3ClientBuilder.standard().withRegion("us-east-1").withForceGlobalBucketAccessEnabled(true);
+        AmazonS3ClientBuilder.standard().withRegion(getRegion(awsConfig)).withForceGlobalBucketAccessEnabled(true);
     attachCredentials(builder, awsConfig);
     return (AmazonS3Client) builder.build();
   }

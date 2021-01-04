@@ -91,7 +91,7 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testValidateAwsAccountCredentialTrue() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
-    doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(anyString(), any());
+    doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(any());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     doReturn(new DescribeRegionsResult()).when(mockClient).describeRegions();
     doNothing().when(mockTracker).trackEC2Call(anyString());
@@ -106,7 +106,7 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   public void testValidateAwsAccountCredentialFalseIncorrectCredentials() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
     AwsConfig awsConfig = new AwsConfig("ACCESS_KEY".toCharArray(), new char[] {'s', 'e', 'c', 'r', 'e', 't'}, "", "",
-        false, "", null, false, null, false, null);
+        false, "", null, false, null, null, false, null);
     AmazonEC2Exception exception = new AmazonEC2Exception("Invalid Aws Credentials");
     exception.setStatusCode(401);
     doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(anyString(), any());
@@ -124,8 +124,8 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testValidateAwsAccountCredentialFalseAccessKeyEmpty() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
-    AwsConfig awsConfig = new AwsConfig(
-        "".toCharArray(), new char[] {'s', 'e', 'c', 'r', 'e', 't'}, "", "", false, "", null, false, null, false, null);
+    AwsConfig awsConfig = new AwsConfig("".toCharArray(), new char[] {'s', 'e', 'c', 'r', 'e', 't'}, "", "", false, "",
+        null, false, null, null, false, null);
     AmazonEC2Exception exception = new AmazonEC2Exception("Invalid Aws Credentials");
     exception.setStatusCode(401);
     doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(anyString(), any());
@@ -144,7 +144,7 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   public void testValidateAwsAccountCredentialFalseSecretKeyEmpty() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
     AwsConfig awsConfig =
-        new AwsConfig("ACCESS_KEY".toCharArray(), null, "", "", false, "", null, false, null, false, null);
+        new AwsConfig("ACCESS_KEY".toCharArray(), null, "", "", false, "", null, false, null, null, false, null);
     AmazonEC2Exception exception = new AmazonEC2Exception("Invalid Aws Credentials");
     exception.setStatusCode(401);
     doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(anyString(), any());
@@ -162,7 +162,7 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testListRegions() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
-    doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(anyString(), any());
+    doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(any());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     doReturn(new DescribeRegionsResult().withRegions(
                  new Region().withRegionName("us-east-1"), new Region().withRegionName("us-east-2")))

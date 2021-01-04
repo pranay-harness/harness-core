@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.FeatureName.AWS_OVERRIDE_REGION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.PRANJAL;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SAINATH;
@@ -9,7 +11,10 @@ import static io.harness.rule.OwnerRule.UTKARSH;
 
 import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.SSH_KEY;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.SECRET_KEY;
+import static software.wings.utils.WingsTestConstants.SETTING_NAME;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -18,6 +23,7 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -32,11 +38,13 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.GcpConfig;
@@ -44,6 +52,7 @@ import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.HostConnectionAttributes.ConnectionType;
 import software.wings.beans.InstanaConfig;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PrometheusConfig;
@@ -62,8 +71,10 @@ import software.wings.service.impl.analysis.APMDelegateService;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.gcp.GcpHelperServiceManager;
 import software.wings.service.impl.newrelic.NewRelicApplicationsResponse;
+import software.wings.service.intfc.AwsHelperResourceService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
+import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
 import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.elk.ElkDelegateService;
@@ -81,6 +92,7 @@ import com.splunk.JobArgs;
 import com.splunk.JobCollection;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Rule;
@@ -113,6 +125,9 @@ public class SettingValidationServiceTest extends WingsBaseTest {
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private ElkAnalysisService elkAnalysisService;
   @Mock private AWSCEConfigValidationService awsceConfigValidationService;
+  @Mock private AwsEc2HelperServiceManager awsEc2HelperServiceManager;
+  @Mock private FeatureFlagService featureFlagService;
+  @Mock private AwsHelperResourceService awsHelperResourceService;
 
   private String accountId;
   private SplunkDelegateService spySplunkDelegateService;
@@ -137,6 +152,9 @@ public class SettingValidationServiceTest extends WingsBaseTest {
     FieldUtils.writeField(appdynamicsDelegateService, "requestExecutor", spyRequestExecutor, true);
     FieldUtils.writeField(dynaTraceDelegateService, "requestExecutor", spyRequestExecutor, true);
     FieldUtils.writeField(apmDelegateService, "requestExecutor", spyRequestExecutor, true);
+    FieldUtils.writeField(settingValidationService, "awsEc2HelperServiceManager", awsEc2HelperServiceManager, true);
+    FieldUtils.writeField(settingValidationService, "featureFlagService", featureFlagService, true);
+    FieldUtils.writeField(settingValidationService, "awsHelperResourceService", awsHelperResourceService, true);
 
     spySplunkDelegateService = spy(splunkDelegateService);
     when(delegateProxyFactory.get(eq(SplunkDelegateService.class), any(SyncTaskContext.class)))
@@ -832,6 +850,73 @@ public class SettingValidationServiceTest extends WingsBaseTest {
     pcfConfig.setSkipValidation(false);
     settingValidationService.validate(attribute);
     verify(pcfHelperService, times(1)).validate(any(), any());
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testValidateAwsConfig() throws IllegalAccessException {
+    SettingAttribute attribute = aSettingAttribute()
+                                     .withName(SETTING_NAME)
+                                     .withCategory(SettingAttribute.SettingCategory.CLOUD_PROVIDER)
+                                     .withAccountId(ACCOUNT_ID)
+                                     .withValue(AwsConfig.builder()
+                                                    .useEc2IamCredentials(false)
+                                                    .useEncryptedAccessKey(true)
+                                                    .accessKey(ACCESS_KEY.toCharArray())
+                                                    .secretKey(SECRET_KEY)
+                                                    .build())
+                                     .build();
+
+    when(wingsPersistence.createQuery(eq(SettingAttribute.class))).thenReturn(spyQuery);
+
+    doNothing()
+        .when(awsEc2HelperServiceManager)
+        .validateAwsAccountCredential(eq((AwsConfig) attribute.getValue()), anyList());
+
+    settingValidationService.validate(attribute);
+    verify(awsEc2HelperServiceManager).validateAwsAccountCredential(eq((AwsConfig) attribute.getValue()), anyList());
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testValidateAwsConfigWithRegion() throws IllegalAccessException {
+    SettingAttribute attribute = aSettingAttribute()
+                                     .withName(SETTING_NAME)
+                                     .withCategory(SettingAttribute.SettingCategory.CLOUD_PROVIDER)
+                                     .withAccountId(ACCOUNT_ID)
+                                     .withValue(AwsConfig.builder()
+                                                    .useEc2IamCredentials(false)
+                                                    .useEncryptedAccessKey(true)
+                                                    .accessKey(ACCESS_KEY.toCharArray())
+                                                    .secretKey(SECRET_KEY)
+                                                    .defaultRegion("us-east-1")
+                                                    .build())
+                                     .build();
+    when(wingsPersistence.createQuery(eq(SettingAttribute.class))).thenReturn(spyQuery);
+    doNothing()
+        .when(awsEc2HelperServiceManager)
+        .validateAwsAccountCredential(eq((AwsConfig) attribute.getValue()), anyList());
+
+    when(featureFlagService.isNotEnabled(AWS_OVERRIDE_REGION, ACCOUNT_ID)).thenReturn(true);
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> settingValidationService.validate(attribute))
+        .withMessageContaining("AWS Override region support is not enabled");
+    verify(awsEc2HelperServiceManager, times(0))
+        .validateAwsAccountCredential(eq((AwsConfig) attribute.getValue()), anyList());
+
+    when(featureFlagService.isNotEnabled(AWS_OVERRIDE_REGION, ACCOUNT_ID)).thenReturn(false);
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> settingValidationService.validate(attribute))
+        .withMessageContaining("Invalid AWS region provided: ");
+    verify(awsEc2HelperServiceManager, times(0))
+        .validateAwsAccountCredential(eq((AwsConfig) attribute.getValue()), anyList());
+
+    when(awsHelperResourceService.getAwsRegions())
+        .thenReturn(Collections.singletonList(NameValuePair.builder().value("us-east-1").build()));
+    settingValidationService.validate(attribute);
+    verify(awsEc2HelperServiceManager).validateAwsAccountCredential(eq((AwsConfig) attribute.getValue()), anyList());
   }
 
   @Test

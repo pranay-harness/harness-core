@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static software.wings.beans.AmiDeploymentType.AWS_ASG;
 import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_ASG_AMI;
+import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -37,7 +38,7 @@ import org.apache.commons.lang3.StringUtils;
 @FieldNameConstants(innerTypeName = "AwsAmiInfrastructureMappingKeys")
 public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Region")
-  @DefaultValue("us-east-1")
+  @DefaultValue(AWS_DEFAULT_REGION)
   @EnumData(enumDataProvider = AwsRegionDataProvider.class)
   @Blueprint
   private String region;

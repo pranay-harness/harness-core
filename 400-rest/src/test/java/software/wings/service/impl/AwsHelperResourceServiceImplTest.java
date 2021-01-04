@@ -50,7 +50,7 @@ public class AwsHelperResourceServiceImplTest extends WingsBaseTest {
   public void shouldGetRegions() {
     List<NameValuePair> regions = awsHelperResourceService.getAwsRegions();
     assertThat(regions).isNotEmpty().extracting(NameValuePair::getName).contains(Regions.US_EAST_1.getName());
-    assertThat(regions).extracting(NameValuePair::getName).doesNotContain(Regions.GovCloud.getName());
+    assertThat(regions).extracting(NameValuePair::getName).contains(Regions.GovCloud.getName());
   }
 
   @Test

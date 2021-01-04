@@ -1,5 +1,7 @@
 package io.harness.ccm.setup.service.support.impl;
 
+import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
+
 import io.harness.ccm.setup.service.support.AwsCredentialHelper;
 import io.harness.ccm.setup.service.support.impl.pojo.BucketPolicyJson;
 import io.harness.ccm.setup.service.support.impl.pojo.BucketPolicyStatement;
@@ -49,7 +51,7 @@ public class AWSCEConfigValidationServiceImpl implements AWSCEConfigValidationSe
   @Inject private AwsCredentialHelper awsCredentialHelper;
   @Inject private AwsEKSHelperService awsEKSHelperService;
   private static final String rolePrefix = "arn:aws:iam";
-  private static final String ceAWSRegion = "us-east-1";
+  private static final String ceAWSRegion = AWS_DEFAULT_REGION;
   private static final String compression = "GZIP";
   private static final String timeGranularity = "HOURLY";
   private static final String reportVersioning = "OVERWRITE_REPORT";

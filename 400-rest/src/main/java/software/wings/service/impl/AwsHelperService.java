@@ -7,6 +7,8 @@ import static io.harness.eraro.ErrorCode.INVALID_CLOUD_PROVIDER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
 
+import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
+
 import static com.google.common.collect.Lists.newArrayList;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
@@ -230,7 +232,7 @@ public class AwsHelperService {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails, false);
       tracker.trackEC2Call("Describe Regions");
-      getAmazonEc2Client(Regions.US_EAST_1.getName(), awsConfig).describeRegions();
+      getAmazonEc2Client(awsConfig).describeRegions();
     } catch (AmazonEC2Exception amazonEC2Exception) {
       if (amazonEC2Exception.getStatusCode() == 401) {
         throw new InvalidRequestException("Invalid AWS credentials", INVALID_CLOUD_PROVIDER, USER);
@@ -241,8 +243,7 @@ public class AwsHelperService {
 
   public void validateAwsAccountCredential(String accessKey, char[] secretKey) {
     try {
-      getAmazonEc2Client(Regions.US_EAST_1.getName(),
-          AwsConfig.builder().accessKey(accessKey.toCharArray()).secretKey(secretKey).build())
+      getAmazonEc2Client(AwsConfig.builder().accessKey(accessKey.toCharArray()).secretKey(secretKey).build())
           .describeRegions();
       tracker.trackEC2Call("Describe Regions");
     } catch (AmazonEC2Exception amazonEC2Exception) {
@@ -318,6 +319,13 @@ public class AwsHelperService {
     return (AmazonS3Client) builder.build();
   }
 
+  private AmazonS3Client getAmazonS3Client(AwsConfig awsConfig) {
+    AmazonS3ClientBuilder builder =
+        AmazonS3ClientBuilder.standard().withRegion(getRegion(awsConfig)).withForceGlobalBucketAccessEnabled(true);
+    attachCredentials(builder, awsConfig);
+    return (AmazonS3Client) builder.build();
+  }
+
   public void attachCredentials(AwsClientBuilder builder, AwsConfig awsConfig) {
     AWSCredentialsProvider credentialsProvider;
     if (awsConfig.isUseEc2IamCredentials()) {
@@ -329,10 +337,11 @@ public class AwsHelperService {
     }
     if (awsConfig.isAssumeCrossAccountRole()) {
       // For the security token service we default to us-east-1.
-      AWSSecurityTokenService securityTokenService = AWSSecurityTokenServiceClientBuilder.standard()
-                                                         .withRegion("us-east-1")
-                                                         .withCredentials(credentialsProvider)
-                                                         .build();
+      AWSSecurityTokenService securityTokenService =
+          AWSSecurityTokenServiceClientBuilder.standard()
+              .withRegion(isNotBlank(awsConfig.getDefaultRegion()) ? awsConfig.getDefaultRegion() : AWS_DEFAULT_REGION)
+              .withCredentials(credentialsProvider)
+              .build();
       AwsCrossAccountAttributes crossAccountAttributes = awsConfig.getCrossAccountAttributes();
       credentialsProvider = new STSAssumeRoleSessionCredentialsProvider
                                 .Builder(crossAccountAttributes.getCrossAccountRoleArn(), UUID.randomUUID().toString())
@@ -340,11 +349,18 @@ public class AwsHelperService {
                                 .withExternalId(crossAccountAttributes.getExternalId())
                                 .build();
     }
+
     builder.withCredentials(credentialsProvider);
   }
 
   private AmazonEC2Client getAmazonEc2Client(String region, AwsConfig awsConfig) {
     AmazonEC2ClientBuilder builder = AmazonEC2ClientBuilder.standard().withRegion(region);
+    attachCredentials(builder, awsConfig);
+    return (AmazonEC2Client) builder.build();
+  }
+
+  private AmazonEC2Client getAmazonEc2Client(AwsConfig awsConfig) {
+    AmazonEC2ClientBuilder builder = AmazonEC2ClientBuilder.standard().withRegion(getRegion(awsConfig));
     attachCredentials(builder, awsConfig);
     return (AmazonEC2Client) builder.build();
   }
@@ -458,7 +474,7 @@ public class AwsHelperService {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails, false);
       tracker.trackS3Call("List Buckets");
-      return getAmazonS3Client("us-east-1", awsConfig).listBuckets();
+      return getAmazonS3Client(awsConfig).listBuckets();
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
@@ -718,7 +734,7 @@ public class AwsHelperService {
   public List<String> listRegions(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(Regions.US_EAST_1.getName(), awsConfig);
+      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(awsConfig);
       tracker.trackEC2Call("List Regions");
       return amazonEC2Client.describeRegions().getRegions().stream().map(Region::getRegionName).collect(toList());
     } catch (AmazonServiceException amazonServiceException) {
@@ -1534,13 +1550,13 @@ public class AwsHelperService {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails, false);
       // You can query the bucket location using any region, it returns the result. So, using the default
-      String region = getAmazonS3Client("us-east-1", awsConfig).getBucketLocation(bucketName);
+      String region = getAmazonS3Client(awsConfig).getBucketLocation(bucketName);
       // Aws returns US if the bucket was created in the default region. Not sure why it doesn't return just the region
       // name in all cases. Also, their documentation says it would return empty string if its in the default region.
       // http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketGETlocation.html But it returns US. Added additional
       // checks based on other stuff
       if (region == null || region.equals("US")) {
-        return "us-east-1";
+        return AWS_DEFAULT_REGION;
       } else if (region.equals("EU")) {
         return "eu-west-1";
       }
@@ -1658,5 +1674,13 @@ public class AwsHelperService {
         .flatMap(config
             -> ((Map<String, String>) ((Map<String, Object>) config.getValue()).get("Labels")).entrySet().stream())
         .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+  }
+
+  private String getRegion(AwsConfig awsConfig) {
+    if (isNotBlank(awsConfig.getDefaultRegion())) {
+      return awsConfig.getDefaultRegion();
+    } else {
+      return AWS_DEFAULT_REGION;
+    }
   }
 }

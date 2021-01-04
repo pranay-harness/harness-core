@@ -1,5 +1,7 @@
 package io.harness.ccm.setup.service.support;
 
+import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
+
 import io.harness.ccm.setup.config.CESetUpConfig;
 
 import software.wings.app.MainConfiguration;
@@ -13,7 +15,7 @@ import com.google.inject.Inject;
 
 public class AwsCredentialHelper {
   @Inject private MainConfiguration configuration;
-  private static final String ceAWSRegion = "us-east-1";
+  private static final String ceAWSRegion = AWS_DEFAULT_REGION;
 
   public AWSSecurityTokenService constructAWSSecurityTokenService() {
     CESetUpConfig ceSetUpConfig = configuration.getCeSetUpConfig();

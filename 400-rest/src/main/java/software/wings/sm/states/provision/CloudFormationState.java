@@ -9,6 +9,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.Log.Builder.aLog;
+import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
@@ -94,7 +95,11 @@ public abstract class CloudFormationState extends State {
   @Inject protected SweepingOutputService sweepingOutputService;
 
   @Attributes(title = "Provisioner") @Getter @Setter protected String provisionerId;
-  @Attributes(title = "Region") @DefaultValue("us-east-1") @Getter @Setter protected String region = "us-east-1";
+  @Attributes(title = "Region")
+  @DefaultValue(AWS_DEFAULT_REGION)
+  @Getter
+  @Setter
+  protected String region = AWS_DEFAULT_REGION;
   @Attributes(title = "AwsConfigId") @Getter @Setter protected String awsConfigId;
   @Attributes(title = "Variables") @Getter @Setter private List<NameValuePair> variables;
   @Attributes(title = "CloudFormationRoleArn") @Getter @Setter private String cloudFormationRoleArn;

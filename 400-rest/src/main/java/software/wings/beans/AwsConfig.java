@@ -48,6 +48,7 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
   @JsonInclude(Include.NON_NULL) @SchemaIgnore private CCMConfig ccmConfig;
   private boolean assumeCrossAccountRole;
   private AwsCrossAccountAttributes crossAccountAttributes;
+  private String defaultRegion;
 
   @Attributes(title = "Use Encrypted Access Key") private boolean useEncryptedAccessKey;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedAccessKey;
@@ -58,7 +59,8 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
 
   public AwsConfig(char[] accessKey, char[] secretKey, String accountId, String encryptedSecretKey,
       boolean useEc2IamCredentials, String tag, CCMConfig ccmConfig, boolean assumeCrossAccountRole,
-      AwsCrossAccountAttributes crossAccountAttributes, boolean useEncryptedAccessKey, String encryptedAccessKey) {
+      AwsCrossAccountAttributes crossAccountAttributes, String defaultRegion, boolean useEncryptedAccessKey,
+      String encryptedAccessKey) {
     this();
     this.accessKey = accessKey == null ? null : accessKey.clone();
     this.secretKey = secretKey == null ? null : secretKey.clone();
@@ -69,6 +71,7 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
     this.ccmConfig = ccmConfig;
     this.assumeCrossAccountRole = assumeCrossAccountRole;
     this.crossAccountAttributes = crossAccountAttributes;
+    this.defaultRegion = defaultRegion;
     this.useEncryptedAccessKey = useEncryptedAccessKey;
     this.encryptedAccessKey = encryptedAccessKey;
   }
@@ -105,11 +108,12 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
     private String tag;
     private boolean assumeCrossAccountRole;
     private AwsCrossAccountAttributes crossAccountAttributes;
+    private String defaultRegion;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String accessKey, String accessKeySecretId, String secretKey,
         UsageRestrictions.Yaml usageRestrictions, boolean useEc2IamCredentials, String tag,
-        boolean assumeCrossAccountRole, AwsCrossAccountAttributes crossAccountAttributes) {
+        boolean assumeCrossAccountRole, AwsCrossAccountAttributes crossAccountAttributes, String defaultRegion) {
       super(type, harnessApiVersion, usageRestrictions);
       this.accessKey = accessKey;
       this.accessKeySecretId = accessKeySecretId;
@@ -118,6 +122,7 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
       this.tag = tag;
       this.assumeCrossAccountRole = assumeCrossAccountRole;
       this.crossAccountAttributes = crossAccountAttributes;
+      this.defaultRegion = defaultRegion;
     }
   }
 }

@@ -1,5 +1,7 @@
 package io.harness.ccm.setup.service.support.impl;
 
+import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
+
 import io.harness.ccm.setup.service.support.AwsCredentialHelper;
 import io.harness.ccm.setup.service.support.intfc.AWSOrganizationHelperService;
 
@@ -25,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AWSOrganizationHelperServiceImpl implements AWSOrganizationHelperService {
   @Inject private AwsCredentialHelper awsCredentialHelper;
 
-  private static final String ceAWSRegion = "us-east-1";
+  private static final String ceAWSRegion = AWS_DEFAULT_REGION;
 
   @Override
   public List<Account> listAwsAccounts(AwsCrossAccountAttributes awsCrossAccountAttributes) {

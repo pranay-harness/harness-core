@@ -11,7 +11,6 @@ import software.wings.service.intfc.aws.delegate.AwsIamHelperServiceDelegate;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClientBuilder;
 import com.amazonaws.services.identitymanagement.model.InstanceProfile;
@@ -32,7 +31,7 @@ public class AwsIamHelperServiceDelegateImpl
   @VisibleForTesting
   AmazonIdentityManagementClient getAmazonIdentityManagementClient(AwsConfig awsConfig) {
     AmazonIdentityManagementClientBuilder builder =
-        AmazonIdentityManagementClient.builder().withRegion(Regions.US_EAST_1);
+        AmazonIdentityManagementClient.builder().withRegion(getRegion(awsConfig));
     attachCredentials(builder, awsConfig);
     return (AmazonIdentityManagementClient) builder.build();
   }

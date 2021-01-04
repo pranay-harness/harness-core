@@ -1,7 +1,11 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.SATYAM;
 
+import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
+
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.spy;
 
@@ -10,9 +14,11 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
+import software.wings.beans.AwsConfig;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.codedeploy.model.AmazonCodeDeployException;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
 import com.amazonaws.services.ecs.model.AmazonECSException;
@@ -56,5 +62,16 @@ public class AwsHelperServiceDelegateBaseTest extends WingsBaseTest {
     AmazonServiceException exception6 = new AWSLambdaException("Error Message");
     assertThatThrownBy(() -> delegateBase.handleAmazonServiceException(exception6))
         .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGetRegion() {
+    AwsHelperServiceDelegateBase delegateBase = spy(AwsHelperServiceDelegateBase.class);
+    AwsConfig config = AwsConfig.builder().build();
+    assertThat(delegateBase.getRegion(config)).isEqualTo(AWS_DEFAULT_REGION);
+    config.setDefaultRegion(Regions.US_GOV_EAST_1.getName());
+    assertThat(delegateBase.getRegion(config)).isEqualTo(Regions.US_GOV_EAST_1.getName());
   }
 }
