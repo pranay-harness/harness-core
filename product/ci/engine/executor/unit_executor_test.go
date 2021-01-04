@@ -255,7 +255,7 @@ func TestStepPluginSuccess(t *testing.T) {
 
 	oldStep := pluginStep
 	defer func() { pluginStep = oldStep }()
-	pluginStep = func(step *pb.UnitStep, log *zap.SugaredLogger) steps.PluginStep {
+	pluginStep = func(step *pb.UnitStep, so output.StageOutput, log *zap.SugaredLogger) steps.PluginStep {
 		return mockStep
 	}
 

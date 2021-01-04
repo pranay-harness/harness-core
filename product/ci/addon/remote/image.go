@@ -1,4 +1,4 @@
-package imageutil
+package remote
 
 import (
 	"context"
@@ -13,9 +13,9 @@ var (
 	newEngineClient = grpcclient.NewEngineClient
 )
 
-// GetEntrypoint returns the entrypoint of the image.
+// GetImageEntrypoint returns the entrypoint of the image.
 // It calls lite engine via GRPC to fetch the entrypoint.
-func GetEntrypoint(ctx context.Context, id, image, secret string, log *zap.SugaredLogger) ([]string, []string, error) {
+func GetImageEntrypoint(ctx context.Context, id, image, secret string, log *zap.SugaredLogger) ([]string, []string, error) {
 	client, err := newEngineClient(consts.LiteEnginePort, log)
 	if err != nil {
 		log.Errorw("failed to create engine client", zap.Error(err))

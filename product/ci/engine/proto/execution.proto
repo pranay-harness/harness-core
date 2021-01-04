@@ -115,10 +115,27 @@ message GetImageEntrypointResponse {
   repeated string args = 2;
 }
 
+message StepOutput {
+  map<string, string> output = 2;
+}
+
+message EvaluateJEXLRequest {
+  string step_id = 1;
+  repeated string expressions = 2;
+  map<string, StepOutput> step_outputs = 3;  // Output of all the previously executed steps of a stage
+}
+
+message EvaluateJEXLResponse {
+  map<string, string> evaluated_expressions = 1;  // expression is key & value is evaluated expression
+}
+
 service LiteEngine {
   // Synchronous RPC to execute a step
   rpc UpdateState(UpdateStateRequest) returns (UpdateStateResponse);
 
   // Synchronous RPC to fetch image entrypoint
   rpc GetImageEntrypoint(GetImageEntrypointRequest) returns (GetImageEntrypointResponse);
+
+  // Synchronous RPC to evaluate JEXL expression
+  rpc EvaluateJEXL(EvaluateJEXLRequest) returns (EvaluateJEXLResponse);
 }

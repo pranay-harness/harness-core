@@ -2,6 +2,8 @@ package grpc
 
 import (
 	"github.com/wings-software/portal/commons/go/lib/images"
+	"github.com/wings-software/portal/product/ci/engine/jexl"
+	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"github.com/wings-software/portal/product/ci/engine/state"
 	"go.uber.org/zap"
@@ -13,6 +15,7 @@ import (
 var (
 	getPublicImgMetadata  = images.PublicMetadata
 	getPrivateImgMetadata = images.PrivateMetadata
+	evaluateJEXL          = jexl.EvaluateJEXL
 )
 
 // handler is used to implement EngineServer
@@ -69,6 +72,26 @@ func (h *engineHandler) GetImageEntrypoint(ctx context.Context, in *pb.GetImageE
 	response := &pb.GetImageEntrypointResponse{
 		Entrypoint: entrypoint,
 		Args:       args,
+	}
+	return response, nil
+}
+
+// EvaluateJEXL evaluates JEXL expressions.
+func (h *engineHandler) EvaluateJEXL(ctx context.Context, in *pb.EvaluateJEXLRequest) (
+	*pb.EvaluateJEXLResponse, error) {
+	so := make(output.StageOutput)
+	for stepID, stepOutput := range in.GetStepOutputs() {
+		so[stepID] = &output.StepOutput{Output: stepOutput.GetOutput()}
+	}
+
+	result, err := evaluateJEXL(ctx, in.GetStepId(), in.GetExpressions(), so, h.log)
+	if err != nil {
+		h.log.Errorw("failed to evaluate expression", "request_arg", in.String(), zap.Error(err))
+		return &pb.EvaluateJEXLResponse{}, err
+	}
+
+	response := &pb.EvaluateJEXLResponse{
+		EvaluatedExpressions: result,
 	}
 	return response, nil
 }

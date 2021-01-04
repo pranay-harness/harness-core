@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
 	"os/exec"
 	"testing"
 
@@ -44,7 +45,7 @@ func TestPluginSuccess(t *testing.T) {
 	cmdFactory.EXPECT().CmdContextWithSleep(gomock.Any(), cmdExitWaitTime, gomock.Any()).Return(cmd)
 	cmd.EXPECT().WithStdout(&buf).Return(cmd)
 	cmd.EXPECT().WithStderr(&buf).Return(cmd)
-	cmd.EXPECT().WithEnvVarsMap(nil).Return(cmd)
+	cmd.EXPECT().WithEnvVarsMap(gomock.Any()).Return(cmd)
 	cmd.EXPECT().Run().Return(nil)
 
 	retries, err := e.Run(ctx)
@@ -81,7 +82,7 @@ func TestPluginNonZeroStatus(t *testing.T) {
 	cmdFactory.EXPECT().CmdContextWithSleep(gomock.Any(), cmdExitWaitTime, gomock.Any()).Return(cmd)
 	cmd.EXPECT().WithStdout(&buf).Return(cmd)
 	cmd.EXPECT().WithStderr(&buf).Return(cmd)
-	cmd.EXPECT().WithEnvVarsMap(nil).Return(cmd)
+	cmd.EXPECT().WithEnvVarsMap(gomock.Any()).Return(cmd)
 	cmd.EXPECT().Run().Return(&exec.ExitError{})
 
 	retries, err := e.Run(ctx)
@@ -104,7 +105,7 @@ func TestPluginTaskCreate(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	executor := NewPluginTask(step, log.Sugar(), &buf)
+	executor := NewPluginTask(step, nil, log.Sugar(), &buf)
 	assert.NotNil(t, executor)
 }
 
@@ -129,7 +130,7 @@ func TestPluginEntrypointErr(t *testing.T) {
 	defer func() { getImgMetadata = oldImgMetadata }()
 
 	var buf bytes.Buffer
-	executor := NewPluginTask(step, log.Sugar(), &buf)
+	executor := NewPluginTask(step, nil, log.Sugar(), &buf)
 	_, err := executor.Run(ctx)
 	assert.NotNil(t, err)
 }
@@ -155,7 +156,100 @@ func TestPluginEmptyEntrypointErr(t *testing.T) {
 	defer func() { getImgMetadata = oldImgMetadata }()
 
 	var buf bytes.Buffer
-	executor := NewPluginTask(step, log.Sugar(), &buf)
+	executor := NewPluginTask(step, nil, log.Sugar(), &buf)
 	_, err := executor.Run(ctx)
 	assert.NotNil(t, err)
+}
+
+func TestPluginWithJEXlErr(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	k := "PLUGIN_KEY"
+	v := "${foo.bar}"
+	os.Setenv(k, v)
+	defer os.Unsetenv(k)
+
+	numRetries := int32(1)
+	var buf bytes.Buffer
+	commands := []string{"git"}
+	cmdFactory := mexec.NewMockCmdContextFactory(ctrl)
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	e := pluginTask{
+		id:                "step1",
+		image:             "plugin/drone-git",
+		timeoutSecs:       5,
+		numRetries:        numRetries,
+		log:               log.Sugar(),
+		cmdContextFactory: cmdFactory,
+		procWriter:        &buf,
+	}
+
+	oldImgMetadata := getImgMetadata
+	getImgMetadata = func(ctx context.Context, id, image, secret string, log *zap.SugaredLogger) ([]string, []string, error) {
+		return commands, nil, nil
+	}
+	defer func() { getImgMetadata = oldImgMetadata }()
+
+	oldEvaluateJEXL := evaluateJEXL
+	evaluateJEXL = func(ctx context.Context, stepID string, exprs []string, stageOutput map[string]*pb.StepOutput, log *zap.SugaredLogger) (
+		map[string]string, error) {
+		return nil, fmt.Errorf("failed to evaluate JEXL")
+	}
+	defer func() { evaluateJEXL = oldEvaluateJEXL }()
+
+	retries, err := e.Run(ctx)
+	assert.NotNil(t, err)
+	assert.Equal(t, retries, numRetries)
+}
+
+func TestPluginWithJEXlSuccess(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	k := "PLUGIN_KEY"
+	v := "${foo.bar}"
+	os.Setenv(k, v)
+	defer os.Unsetenv(k)
+
+	resolvedExprs := make(map[string]string)
+	resolvedExprs[v] = "test"
+	numRetries := int32(1)
+	var buf bytes.Buffer
+	commands := []string{"git"}
+	cmdFactory := mexec.NewMockCmdContextFactory(ctrl)
+	cmd := mexec.NewMockCommand(ctrl)
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	e := pluginTask{
+		id:                "step1",
+		image:             "plugin/drone-git",
+		timeoutSecs:       5,
+		numRetries:        numRetries,
+		log:               log.Sugar(),
+		cmdContextFactory: cmdFactory,
+		procWriter:        &buf,
+	}
+
+	oldImgMetadata := getImgMetadata
+	getImgMetadata = func(ctx context.Context, id, image, secret string, log *zap.SugaredLogger) ([]string, []string, error) {
+		return commands, nil, nil
+	}
+	defer func() { getImgMetadata = oldImgMetadata }()
+
+	oldEvaluateJEXL := evaluateJEXL
+	evaluateJEXL = func(ctx context.Context, stepID string, exprs []string, stageOutput map[string]*pb.StepOutput, log *zap.SugaredLogger) (
+		map[string]string, error) {
+		return resolvedExprs, nil
+	}
+	defer func() { evaluateJEXL = oldEvaluateJEXL }()
+
+	cmdFactory.EXPECT().CmdContextWithSleep(gomock.Any(), cmdExitWaitTime, gomock.Any()).Return(cmd)
+	cmd.EXPECT().WithStdout(&buf).Return(cmd)
+	cmd.EXPECT().WithStderr(&buf).Return(cmd)
+	cmd.EXPECT().WithEnvVarsMap(gomock.Any()).Return(cmd)
+	cmd.EXPECT().Run().Return(nil)
+
+	retries, err := e.Run(ctx)
+	assert.Nil(t, err)
+	assert.Equal(t, retries, numRetries)
 }

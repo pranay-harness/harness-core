@@ -11,9 +11,7 @@ go_library(
         "//product/ci/engine/consts:go_default_library",
         "//product/ci/engine/executor:go_default_library",
         "//product/ci/engine/grpc:go_default_library",
-        "//product/ci/engine/proto:go_default_library",
         "@com_github_alexflint_go_arg//:go_default_library",
-        "@com_github_golang_protobuf//proto:go_default_library",
         "@org_uber_go_zap//:go_default_library",
     ],
 )

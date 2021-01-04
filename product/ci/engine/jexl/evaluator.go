@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"regexp"
 	"time"
 
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/pkg/errors"
 	pb "github.com/wings-software/portal/960-expression-service/src/main/proto/io/harness/expression/service"
 	"github.com/wings-software/portal/commons/go/lib/expression-service/grpc"
+	jexlexpr "github.com/wings-software/portal/commons/go/lib/expressions"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	"go.uber.org/zap"
@@ -19,7 +19,6 @@ import (
 )
 
 const (
-	jexlRegex              = `\$\{.*\}`
 	delegateSvcEndpointEnv = "DELEGATE_SERVICE_ENDPOINT"
 	delegateSvcTokenEnv    = "DELEGATE_SERVICE_TOKEN"
 	delegateSvcIDEnv       = "DELEGATE_SERVICE_ID"
@@ -31,11 +30,6 @@ const (
 var (
 	newExpressionEvalClient = grpc.NewExpressionEvalClient
 )
-
-// isJEXLExpression returns whether the input is a JEXL expression or not
-func isJEXLExpression(input string) (bool, error) {
-	return regexp.MatchString(jexlRegex, input)
-}
 
 // EvaluateJEXL evaluates list of JEXL expressions based on outputs. It does nothing if expression is not JEXL.
 // Returns a map with key as JEXL expression and value as evaluated value of JEXL expression
@@ -101,9 +95,7 @@ func getRequestArg(stepID string, expressions []string, o output.StageOutput, lo
 
 	var queries []*pb.ExpressionQuery
 	for _, expression := range expressions {
-		if isJEXL, err := isJEXLExpression(expression); err != nil {
-			return nil, err
-		} else if !isJEXL {
+		if !jexlexpr.IsJEXL(expression) {
 			continue
 		}
 

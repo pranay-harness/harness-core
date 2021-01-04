@@ -11,6 +11,7 @@ import (
 	caddon "github.com/wings-software/portal/product/ci/addon/grpc/client"
 	amgrpc "github.com/wings-software/portal/product/ci/addon/grpc/client/mocks"
 	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
+	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 )
@@ -65,7 +66,7 @@ func TestPluginExecuteClientErr(t *testing.T) {
 		return nil, errors.New("client create error")
 	}
 
-	executor := NewPluginStep(step, log.Sugar())
+	executor := NewPluginStep(step, nil, log.Sugar())
 	numRetries, err := executor.Run(ctx)
 	assert.NotNil(t, err)
 	assert.Equal(t, numRetries, int32(1))
@@ -102,7 +103,7 @@ func TestPluginExecuteServerErr(t *testing.T) {
 		return mClient, nil
 	}
 
-	executor := NewPluginStep(step, log.Sugar())
+	executor := NewPluginStep(step, nil, log.Sugar())
 	numRetries, err := executor.Run(ctx)
 	assert.NotNil(t, err)
 	assert.Equal(t, numRetries, int32(1))
@@ -114,6 +115,8 @@ func TestPluginExecuteSuccess(t *testing.T) {
 	defer ctrl.Finish()
 
 	port := uint32(8000)
+	so := make(map[string]*output.StepOutput)
+	so["step1"] = &output.StepOutput{}
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	step := &pb.UnitStep{
 		Id: "test",
@@ -142,7 +145,7 @@ func TestPluginExecuteSuccess(t *testing.T) {
 		return mClient, nil
 	}
 
-	executor := NewPluginStep(step, log.Sugar())
+	executor := NewPluginStep(step, so, log.Sugar())
 	n, err := executor.Run(ctx)
 	assert.Nil(t, err)
 	assert.Equal(t, n, numRetries)

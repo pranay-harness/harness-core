@@ -61,7 +61,7 @@ func (h *handler) ExecuteStep(ctx context.Context, in *pb.ExecuteStepRequest) (*
 		}
 		return response, err
 	case *enginepb.UnitStep_Plugin:
-		numRetries, err := newPluginTask(in.GetStep(), rl.BaseLogger, rl.Writer).Run(ctx)
+		numRetries, err := newPluginTask(in.GetStep(), in.GetPrevStepOutputs(), rl.BaseLogger, rl.Writer).Run(ctx)
 		response := &pb.ExecuteStepResponse{
 			NumRetries: numRetries,
 		}

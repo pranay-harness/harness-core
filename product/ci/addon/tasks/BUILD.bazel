@@ -10,10 +10,11 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//commons/go/lib/exec:go_default_library",
+        "//commons/go/lib/expressions:go_default_library",
         "//commons/go/lib/filesystem:go_default_library",
         "//commons/go/lib/images:go_default_library",
         "//commons/go/lib/utils:go_default_library",
-        "//product/ci/addon/imageutil:go_default_library",
+        "//product/ci/addon/remote:go_default_library",
         "//product/ci/addon/testreports:go_default_library",
         "//product/ci/addon/testreports/junit:go_default_library",
         "//product/ci/common/external:go_default_library",
