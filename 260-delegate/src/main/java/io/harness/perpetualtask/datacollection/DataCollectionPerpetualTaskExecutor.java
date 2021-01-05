@@ -79,7 +79,7 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
             log.info("Nothing to process.");
             break;
           } else {
-            log.info("Next task to process: ", dataCollectionTask);
+            log.info("Next task to process: {}", dataCollectionTask);
             run(taskParams, dataCollectionInfo.getConnectorConfigDTO(), dataCollectionTask);
           }
         }
