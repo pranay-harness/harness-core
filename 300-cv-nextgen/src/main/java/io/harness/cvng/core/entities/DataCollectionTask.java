@@ -5,8 +5,10 @@ import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_D
 import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.beans.DataCollectionExecutionStatus;
 import io.harness.cvng.beans.DataCollectionInfo;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -16,9 +18,11 @@ import io.harness.persistence.UuidAware;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Date;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -38,6 +42,17 @@ import org.mongodb.morphia.annotations.PrePersist;
 @HarnessEntity(exportable = false)
 public abstract class DataCollectionTask
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("verification_task_start_time_unique_idx")
+                 .unique(false)
+                 .field(DataCollectionTaskKeys.accountId)
+                 .field(DataCollectionTaskKeys.verificationTaskId)
+                 .field(DataCollectionTaskKeys.startTime)
+                 .build())
+        .build();
+  }
   @Id private String uuid;
   @NonNull @FdIndex private String accountId;
   @FdIndex private String verificationTaskId;
