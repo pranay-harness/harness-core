@@ -236,7 +236,22 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
       dataCollectionTask.setRetryCount(prevTask.getRetryCount());
       dataCollectionTask.setValidAfter(dataCollectionTask.getNextValidAfter(clock.instant()));
     }
+    validateIfAlreadyExists(dataCollectionTask);
     save(dataCollectionTask);
+  }
+  private void validateIfAlreadyExists(DataCollectionTask dataCollectionTask) {
+    if (hPersistence.createQuery(DataCollectionTask.class)
+            .filter(DataCollectionTaskKeys.accountId, dataCollectionTask.getAccountId())
+            .filter(DataCollectionTaskKeys.verificationTaskId, dataCollectionTask.getVerificationTaskId())
+            .filter(DataCollectionTaskKeys.startTime, dataCollectionTask.getStartTime())
+            .get()
+        != null) {
+      log.error(
+          "DataCollectionTask with same startTime already exist. This shouldn't be happening. Please check delegate logs. verificationTaskId={}, startTime={}",
+          dataCollectionTask.getVerificationTaskId(), dataCollectionTask.getStartTime());
+      throw new IllegalStateException(
+          "DataCollectionTask with same startTime already exist. This shouldn't be happening. Please check delegate logs");
+    }
   }
   private void populateMetricPack(CVConfig cvConfig) {
     if (cvConfig instanceof MetricCVConfig) {

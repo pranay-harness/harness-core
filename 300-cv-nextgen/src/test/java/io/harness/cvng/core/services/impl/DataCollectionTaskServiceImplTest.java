@@ -9,6 +9,7 @@ import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.NEMANJA;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -329,6 +330,21 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     DataCollectionTask updated = dataCollectionTaskService.getDataCollectionTask(dataCollectionTask.getUuid());
     assertThat(updated.getStatus()).isEqualTo(DataCollectionExecutionStatus.SUCCESS);
     assertThat(updated.getException()).isNull();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testUpdateTaskStatus_multipleCallsWithSameResult() {
+    DataCollectionTask dataCollectionTask = createAndSave(QUEUED);
+    DataCollectionTaskResult result = DataCollectionTaskDTO.DataCollectionTaskResult.builder()
+                                          .status(DataCollectionExecutionStatus.SUCCESS)
+                                          .dataCollectionTaskId(dataCollectionTask.getUuid())
+                                          .build();
+    cvConfigService.update(getCVConfig());
+    dataCollectionTaskService.updateTaskStatus(result);
+    assertThatThrownBy(() -> dataCollectionTaskService.updateTaskStatus(result))
+        .isInstanceOf(IllegalStateException.class);
   }
 
   @Test
