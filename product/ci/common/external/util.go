@@ -17,6 +17,7 @@ const (
 	stageIDEnv    = "HARNESS_STAGE_ID"
 	pipelineIDEnv = "HARNESS_PIPELINE_ID"
 	tiSvcEp       = "HARNESS_TI_SERVICE_ENDPOINT"
+	tiSvcToken    = "HARNESS_TI_SERVICE_TOKEN"
 	logSvcEp      = "HARNESS_LOG_SERVICE_ENDPOINT"
 	logSvcToken   = "HARNESS_LOG_SERVICE_TOKEN"
 )
@@ -94,11 +95,15 @@ func GetTiHTTPClient() (ticlient.Client, error) {
 	if !ok {
 		return nil, fmt.Errorf("ti service endpoint variable not set %s", tiSvcEp)
 	}
-	account, ok := os.LookupEnv(accountIDEnv)
-	if !ok {
-		return nil, fmt.Errorf("account ID endpoint variable not set %s", accountIDEnv)
+	account, err := GetAccountId()
+	if err != nil {
+		return nil, err
 	}
-	return ticlient.NewHTTPClient(l, account, false), nil
+	token, ok := os.LookupEnv(tiSvcToken)
+	if !ok {
+		return nil, fmt.Errorf("TI service token not set %s", tiSvcToken)
+	}
+	return ticlient.NewHTTPClient(l, account, token, false), nil
 }
 
 func GetAccountId() (string, error) {

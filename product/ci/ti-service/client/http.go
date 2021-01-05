@@ -32,10 +32,11 @@ var defaultClient = &http.Client{
 }
 
 // NewHTTPClient returns a new HTTPClient.
-func NewHTTPClient(endpoint, accountID string, skipverify bool) *HTTPClient {
+func NewHTTPClient(endpoint, accountID, token string, skipverify bool) *HTTPClient {
 	client := &HTTPClient{
 		Endpoint:   endpoint,
 		AccountID:  accountID,
+		Token:      token,
 		SkipVerify: skipverify,
 	}
 	if skipverify {
@@ -58,6 +59,7 @@ func NewHTTPClient(endpoint, accountID string, skipverify bool) *HTTPClient {
 type HTTPClient struct {
 	Client     *http.Client
 	Endpoint   string // Example: http://localhost:port
+	Token      string
 	AccountID  string
 	SkipVerify bool
 }
@@ -131,6 +133,7 @@ func (c *HTTPClient) do(ctx context.Context, path, method string, in, out interf
 
 	// the request should include the secret shared between
 	// the agent and server for authorization.
+	req.Header.Add("X-Harness-Token", c.Token)
 	res, err := c.client().Do(req)
 	if res != nil {
 		defer func() {
@@ -187,6 +190,7 @@ func (c *HTTPClient) open(ctx context.Context, path, method string, body io.Read
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Add("X-Harness-Token", c.Token)
 	return c.client().Do(req)
 }
 

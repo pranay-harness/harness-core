@@ -6,7 +6,6 @@ package junit
 
 import (
 	"github.com/wings-software/portal/product/ci/ti-service/types"
-	"time"
 )
 
 // Totals contains aggregated results across a set of test runs. Is usually
@@ -31,8 +30,8 @@ type Totals struct {
 	// Error is the total number of tests that resulted in an error.
 	Error int `json:"error" yaml:"error"`
 
-	// Duration is the total time taken to run all tests.
-	Duration time.Duration `json:"duration" yaml:"duration"`
+	// DurationMs is the total time taken to run all tests in milliseconds
+	DurationMs int64 `json:"duration" yaml:"duration"`
 }
 
 // Suite represents a logical grouping (suite) of tests.
@@ -70,7 +69,7 @@ func (s *Suite) Aggregate() {
 	totals := Totals{Tests: len(s.Tests)}
 
 	for _, test := range s.Tests {
-		totals.Duration += test.Duration
+		totals.DurationMs += test.DurationMs
 		switch test.Result.Status {
 		case types.StatusPassed:
 			totals.Passed++
@@ -87,7 +86,7 @@ func (s *Suite) Aggregate() {
 	for _, suite := range s.Suites {
 		suite.Aggregate()
 		totals.Tests += suite.Totals.Tests
-		totals.Duration += suite.Totals.Duration
+		totals.DurationMs += suite.Totals.DurationMs
 		totals.Passed += suite.Totals.Passed
 		totals.Skipped += suite.Totals.Skipped
 		totals.Failed += suite.Totals.Failed
@@ -105,8 +104,8 @@ type Test struct {
 	// Classname is an additional descriptor for the hierarchy of the test.
 	Classname string `json:"classname" yaml:"classname"`
 
-	// Duration is the total time taken to run the tests.
-	Duration time.Duration `json:"duration" yaml:"duration"`
+	// DurationMs is the total time taken to run the tests in milliseconds.
+	DurationMs int64 `json:"duration_ms" yaml:"duration"`
 
 	// Result contains information related to the status of the test execution.
 	Result types.Result `json:"Result" yaml:"Result"`
