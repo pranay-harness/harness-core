@@ -8,7 +8,8 @@ import static software.wings.utils.Utils.emptyIfNull;
 
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.eventsframework.EventsFrameworkConstants;
-import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
@@ -27,13 +28,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class ConnectorHearbeatPublisher {
-  AbstractProducer abstractProducer;
+  Producer eventProducer;
   IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper;
 
   @Inject
-  public ConnectorHearbeatPublisher(@Named(EventsFrameworkConstants.ENTITY_CRUD) AbstractProducer abstractProducer,
+  public ConnectorHearbeatPublisher(@Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer,
       IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper) {
-    this.abstractProducer = abstractProducer;
+    this.eventProducer = eventProducer;
     this.identifierRefProtoDTOHelper = identifierRefProtoDTOHelper;
   }
 
@@ -48,11 +49,11 @@ public class ConnectorHearbeatPublisher {
     }
     EntityActivityCreateDTO ngActivityDTO = createConnectivityCheckActivityDTO(heartbeatDelegateResponse);
     try {
-      abstractProducer.send(
+      eventProducer.send(
           Message.newBuilder()
-              .putAllMetadata(ImmutableMap.of("accountId", accountId, EventsFrameworkConstants.ENTITY_TYPE_METADATA,
-                  EventsFrameworkConstants.ACTIVITY_ENTITY, EventsFrameworkConstants.ACTION_METADATA,
-                  EventsFrameworkConstants.CREATE_ACTION))
+              .putAllMetadata(ImmutableMap.of("accountId", accountId, EventsFrameworkMetadataConstants.ENTITY_TYPE,
+                  EventsFrameworkMetadataConstants.ACTIVITY_ENTITY, EventsFrameworkMetadataConstants.ACTION,
+                  EventsFrameworkMetadataConstants.CREATE_ACTION))
               .setData(ngActivityDTO.toByteString())
               .build());
     } catch (Exception ex) {

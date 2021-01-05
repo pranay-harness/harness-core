@@ -7,7 +7,7 @@ import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
-import io.harness.eventsframework.EventsFrameworkConstants;
+import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.connector.ConnectorEntityChangeDTO;
 import io.harness.utils.IdentifierRefHelper;
@@ -41,9 +41,9 @@ public class ConnectorChangeEventMessageProcessor implements ConsumerMessageProc
     }
 
     Map<String, String> metadataMap = message.getMessage().getMetadataMap();
-    if (metadataMap.containsKey(EventsFrameworkConstants.ACTION_METADATA)) {
-      switch (metadataMap.get(EventsFrameworkConstants.ACTION_METADATA)) {
-        case EventsFrameworkConstants.UPDATE_ACTION:
+    if (metadataMap.containsKey(EventsFrameworkMetadataConstants.ACTION)) {
+      switch (metadataMap.get(EventsFrameworkMetadataConstants.ACTION)) {
+        case EventsFrameworkMetadataConstants.UPDATE_ACTION:
           processUpdateAction(connectorEntityChangeDTO);
           return;
         default:
@@ -80,8 +80,8 @@ public class ConnectorChangeEventMessageProcessor implements ConsumerMessageProc
 
   private boolean validateMessage(Message message) {
     return message != null && message.hasMessage() && message.getMessage().getMetadataMap() != null
-        && message.getMessage().getMetadataMap().containsKey(EventsFrameworkConstants.ENTITY_TYPE_METADATA)
-        && EventsFrameworkConstants.CONNECTOR_ENTITY.equals(
-            message.getMessage().getMetadataMap().get(EventsFrameworkConstants.ENTITY_TYPE_METADATA));
+        && message.getMessage().getMetadataMap().containsKey(EventsFrameworkMetadataConstants.ENTITY_TYPE)
+        && EventsFrameworkMetadataConstants.CONNECTOR_ENTITY.equals(
+            message.getMessage().getMetadataMap().get(EventsFrameworkMetadataConstants.ENTITY_TYPE));
   }
 }

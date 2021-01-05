@@ -1,12 +1,12 @@
 package io.harness.ng.core.entityactivity.event;
 
-import io.harness.eventsframework.EventsFrameworkConstants;
+import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.schemas.entityactivity.EntityActivityCreateDTO;
 import io.harness.ng.core.activityhistory.dto.NGActivityDTO;
 import io.harness.ng.core.activityhistory.service.NGActivityService;
 import io.harness.ng.core.entityactivity.mapper.EntityActivityProtoToRestDTOMapper;
-import io.harness.ng.core.event.ConsumerMessageProcessor;
+import io.harness.ng.core.event.MessageProcessor;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-public class EntityActivityCrudEventMessageProcessor implements ConsumerMessageProcessor {
+public class EntityActivityCrudEventMessageProcessor implements MessageProcessor {
   NGActivityService ngActivityService;
   EntityActivityProtoToRestDTOMapper entityActivityProtoToRestDTOMapper;
 
@@ -32,14 +32,14 @@ public class EntityActivityCrudEventMessageProcessor implements ConsumerMessageP
     String messageId = message.getId();
     log.info("Processing the activity crud event with the id {}", messageId);
     Map<String, String> metadataMap = message.getMessage().getMetadataMap();
-    if (metadataMap.containsKey(EventsFrameworkConstants.ACTION_METADATA)) {
-      switch (metadataMap.get(EventsFrameworkConstants.ACTION_METADATA)) {
-        case EventsFrameworkConstants.CREATE_ACTION:
+    if (metadataMap.containsKey(EventsFrameworkMetadataConstants.ACTION)) {
+      switch (metadataMap.get(EventsFrameworkMetadataConstants.ACTION)) {
+        case EventsFrameworkMetadataConstants.CREATE_ACTION:
           EntityActivityCreateDTO entityActivityProtoDTO = getEntityActivityCreateDTO(message);
           processCreateAction(entityActivityProtoDTO);
           return;
         default:
-          log.info("Invalid action type: {}", metadataMap.get(EventsFrameworkConstants.ACTION_METADATA));
+          log.info("Invalid action type: {}", metadataMap.get(EventsFrameworkMetadataConstants.ACTION));
       }
     }
   }

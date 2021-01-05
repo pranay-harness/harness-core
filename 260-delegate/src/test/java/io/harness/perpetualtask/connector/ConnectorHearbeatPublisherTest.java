@@ -13,7 +13,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
-import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
 import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
@@ -34,7 +34,7 @@ import org.mockito.MockitoAnnotations;
 @Slf4j
 public class ConnectorHearbeatPublisherTest extends CategoryTest {
   @InjectMocks ConnectorHearbeatPublisher connectorHearbeatPublisher;
-  @Mock AbstractProducer eventProducer;
+  @Mock Producer eventProducer;
   @Mock IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper;
   private static final String accountId = "accountId";
 

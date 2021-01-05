@@ -1,7 +1,7 @@
 package io.harness.ng.core.event;
 
 import io.harness.eventsframework.EventsFrameworkConstants;
-import io.harness.eventsframework.api.AbstractConsumer;
+import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.consumer.Message;
 
 import com.google.inject.Inject;
@@ -14,14 +14,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class FeatureFlagStreamConsumer implements Runnable {
-  private final AbstractConsumer redisConsumer;
-  private final ConsumerMessageProcessor featureFlagChangeEventMessageProcessor;
+  private final Consumer eventConsumer;
+  private final MessageProcessor featureFlagChangeEventMessageProcessor;
 
   @Inject
-  public FeatureFlagStreamConsumer(@Named(EventsFrameworkConstants.FEATURE_FLAG_STREAM) AbstractConsumer redisConsumer,
-      @Named(EventsFrameworkConstants.FEATURE_FLAG_STREAM)
-      ConsumerMessageProcessor featureFlagChangeEventMessageProcessor) {
-    this.redisConsumer = redisConsumer;
+  public FeatureFlagStreamConsumer(@Named(EventsFrameworkConstants.FEATURE_FLAG_STREAM) Consumer eventConsumer,
+      @Named(EventsFrameworkConstants.FEATURE_FLAG_STREAM) MessageProcessor featureFlagChangeEventMessageProcessor) {
+    this.eventConsumer = eventConsumer;
     this.featureFlagChangeEventMessageProcessor = featureFlagChangeEventMessageProcessor;
   }
 
@@ -30,7 +29,7 @@ public class FeatureFlagStreamConsumer implements Runnable {
     log.info("Started the consumer for feature flag stream");
     try {
       while (!Thread.currentThread().isInterrupted()) {
-        List<Message> messages = redisConsumer.read(30, TimeUnit.SECONDS);
+        List<Message> messages = eventConsumer.read(30, TimeUnit.SECONDS);
         for (Message message : messages) {
           String messageId = message.getId();
           try {
@@ -39,7 +38,7 @@ public class FeatureFlagStreamConsumer implements Runnable {
             log.error(String.format("Error occurred in processing message with id %s", message.getId()), ex);
             continue;
           }
-          redisConsumer.acknowledge(messageId);
+          eventConsumer.acknowledge(messageId);
         }
       }
     } catch (Exception ex) {

@@ -57,7 +57,8 @@ import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
 import io.harness.event.publisher.EventPublisher;
 import io.harness.eventsframework.EventsFrameworkConstants;
-import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.entity_crud.account.AccountEntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.GeneralException;
@@ -253,7 +254,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private AccountDao accountDao;
   @Inject private AccountDataRetentionService accountDataRetentionService;
   @Inject private PersistentLocker persistentLocker;
-  @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private AbstractProducer eventProducer;
+  @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private GovernanceFeature governanceFeature;
@@ -303,7 +304,7 @@ public class AccountServiceImpl implements AccountService {
       publishAccountChangeEvent(account);
       // TODO {karan} remove this if condition when NG is enabled globally for new accounts
       if (fromDataGen) {
-        publishAccountChangeEventViaEventFramework(account, EventsFrameworkConstants.CREATE_ACTION);
+        publishAccountChangeEventViaEventFramework(account, EventsFrameworkMetadataConstants.CREATE_ACTION);
       }
 
       log.info("Successfully created account.");
@@ -315,9 +316,8 @@ public class AccountServiceImpl implements AccountService {
     try {
       eventProducer.send(
           Message.newBuilder()
-              .putAllMetadata(
-                  ImmutableMap.of("accountId", account.getUuid(), EventsFrameworkConstants.ENTITY_TYPE_METADATA,
-                      EventsFrameworkConstants.ACCOUNT_ENTITY, EventsFrameworkConstants.ACTION_METADATA, action))
+              .putAllMetadata(ImmutableMap.of(EventsFrameworkMetadataConstants.ENTITY_TYPE,
+                  EventsFrameworkMetadataConstants.ACCOUNT_ENTITY, EventsFrameworkMetadataConstants.ACTION, action))
               .setData(AccountEntityChangeDTO.newBuilder().setAccountId(account.getUuid()).build().toByteString())
               .build());
     } catch (Exception ex) {

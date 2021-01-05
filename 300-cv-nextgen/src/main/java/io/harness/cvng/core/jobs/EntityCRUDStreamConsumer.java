@@ -1,7 +1,8 @@
 package io.harness.cvng.core.jobs;
 
 import io.harness.eventsframework.EventsFrameworkConstants;
-import io.harness.eventsframework.api.AbstractConsumer;
+import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.consumer.Message;
 
 import com.google.inject.Inject;
@@ -17,17 +18,19 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class EntityCRUDStreamConsumer implements Runnable {
   private static final int MAX_WAIT_TIME_SEC = 2;
-  private final AbstractConsumer consumer;
+  private final Consumer consumer;
   private final Map<String, ConsumerMessageProcessor> processorMap;
 
   @Inject
-  public EntityCRUDStreamConsumer(@Named(EventsFrameworkConstants.ENTITY_CRUD) AbstractConsumer abstractConsumer,
-      @Named(EventsFrameworkConstants.PROJECT_ENTITY) ConsumerMessageProcessor projectChangeEventMessageProcessor,
-      @Named(EventsFrameworkConstants.CONNECTOR_ENTITY) ConsumerMessageProcessor connectorChangeEventMessageProcessor) {
+  public EntityCRUDStreamConsumer(@Named(EventsFrameworkConstants.ENTITY_CRUD) Consumer abstractConsumer,
+      @Named(
+          EventsFrameworkMetadataConstants.PROJECT_ENTITY) ConsumerMessageProcessor projectChangeEventMessageProcessor,
+      @Named(EventsFrameworkMetadataConstants.CONNECTOR_ENTITY)
+      ConsumerMessageProcessor connectorChangeEventMessageProcessor) {
     this.consumer = abstractConsumer;
     processorMap = new HashMap<>();
-    processorMap.put(EventsFrameworkConstants.PROJECT_ENTITY, projectChangeEventMessageProcessor);
-    processorMap.put(EventsFrameworkConstants.CONNECTOR_ENTITY, connectorChangeEventMessageProcessor);
+    processorMap.put(EventsFrameworkMetadataConstants.PROJECT_ENTITY, projectChangeEventMessageProcessor);
+    processorMap.put(EventsFrameworkMetadataConstants.CONNECTOR_ENTITY, connectorChangeEventMessageProcessor);
   }
 
   @Override
@@ -50,8 +53,8 @@ public class EntityCRUDStreamConsumer implements Runnable {
   private void processMessage(Message message) {
     if (message.hasMessage()) {
       Map<String, String> metadataMap = message.getMessage().getMetadataMap();
-      if (metadataMap != null && metadataMap.containsKey(EventsFrameworkConstants.ENTITY_TYPE_METADATA)) {
-        String entityType = metadataMap.get(EventsFrameworkConstants.ENTITY_TYPE_METADATA);
+      if (metadataMap != null && metadataMap.containsKey(EventsFrameworkMetadataConstants.ENTITY_TYPE)) {
+        String entityType = metadataMap.get(EventsFrameworkMetadataConstants.ENTITY_TYPE);
         if (processorMap.containsKey(entityType)) {
           try {
             processorMap.get(entityType).processMessage(message);

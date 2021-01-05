@@ -18,7 +18,7 @@ import org.springframework.dao.DuplicateKeyException;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
-public class FeatureFlagChangeEventMessageProcessor implements ConsumerMessageProcessor {
+public class FeatureFlagChangeEventMessageProcessor implements MessageProcessor {
   private final HarnessSMManager harnessSMManager;
   private final DefaultOrganizationManager defaultOrganizationManager;
 

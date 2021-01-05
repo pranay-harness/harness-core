@@ -12,7 +12,7 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DeleteEntityByProjectHandler;
 import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
-import io.harness.eventsframework.EventsFrameworkConstants;
+import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
 import io.harness.persistence.HPersistence;
@@ -59,12 +59,12 @@ public class ProjectChangeEventMessageProcessor implements ConsumerMessageProces
     }
 
     Map<String, String> metadataMap = message.getMessage().getMetadataMap();
-    if (metadataMap.containsKey(EventsFrameworkConstants.ACTION_METADATA)) {
-      switch (metadataMap.get(EventsFrameworkConstants.ACTION_METADATA)) {
-        case EventsFrameworkConstants.CREATE_ACTION:
+    if (metadataMap.containsKey(EventsFrameworkMetadataConstants.ACTION)) {
+      switch (metadataMap.get(EventsFrameworkMetadataConstants.ACTION)) {
+        case EventsFrameworkMetadataConstants.CREATE_ACTION:
           processCreateAction(projectEntityChangeDTO);
           return;
-        case EventsFrameworkConstants.DELETE_ACTION:
+        case EventsFrameworkMetadataConstants.DELETE_ACTION:
           processDeleteAction(projectEntityChangeDTO);
           return;
         default:
@@ -84,8 +84,8 @@ public class ProjectChangeEventMessageProcessor implements ConsumerMessageProces
 
   private boolean validateMessage(Message message) {
     return message != null && message.hasMessage() && message.getMessage().getMetadataMap() != null
-        && message.getMessage().getMetadataMap().containsKey(EventsFrameworkConstants.ENTITY_TYPE_METADATA)
-        && EventsFrameworkConstants.PROJECT_ENTITY.equals(
-            message.getMessage().getMetadataMap().get(EventsFrameworkConstants.ENTITY_TYPE_METADATA));
+        && message.getMessage().getMetadataMap().containsKey(EventsFrameworkMetadataConstants.ENTITY_TYPE)
+        && EventsFrameworkMetadataConstants.PROJECT_ENTITY.equals(
+            message.getMessage().getMetadataMap().get(EventsFrameworkMetadataConstants.ENTITY_TYPE));
   }
 }

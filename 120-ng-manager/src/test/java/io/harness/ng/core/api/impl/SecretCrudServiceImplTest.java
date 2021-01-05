@@ -17,7 +17,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
@@ -63,7 +63,7 @@ public class SecretCrudServiceImplTest extends CategoryTest {
   private final FileUploadLimit fileUploadLimit = new FileUploadLimit();
   @Mock private SecretEntityReferenceHelper secretEntityReferenceHelper;
   @Mock private SecretCrudServiceImpl secretCrudService;
-  @Mock private AbstractProducer eventProducer;
+  @Mock private Producer eventProducer;
 
   @Before
   public void setup() {
