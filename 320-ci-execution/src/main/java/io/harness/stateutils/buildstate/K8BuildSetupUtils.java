@@ -17,6 +17,7 @@ import static io.harness.common.CIExecutionConstants.LOG_SERVICE_ENDPOINT_VARIAB
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.PATH_SEPARATOR;
 import static io.harness.common.CIExecutionConstants.TI_SERVICE_ENDPOINT_VARIABLE;
+import static io.harness.common.CIExecutionConstants.TI_SERVICE_TOKEN_VARIABLE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.connector.ConnectorType.BITBUCKET;
@@ -37,7 +38,6 @@ import io.harness.beans.serializer.ExecutionProtobufSerializer;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
-import io.harness.ci.beans.entities.TIServiceConfig;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.delegate.beans.ci.CIK8BuildTaskParams;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
@@ -79,6 +79,7 @@ import io.harness.pms.sdk.core.resolver.RefObjectUtil;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.product.ci.engine.proto.Execution;
 import io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider;
+import io.harness.tiserviceclient.TIServiceUtils;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 
 import com.google.inject.Inject;
@@ -103,8 +104,8 @@ public class K8BuildSetupUtils {
   @Inject private InternalContainerParamsProvider internalContainerParamsProvider;
   @Inject private ExecutionProtobufSerializer protobufSerializer;
   @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
-  @Inject private TIServiceConfig tiServiceConfig;
   @Inject CILogServiceUtils logServiceUtils;
+  @Inject TIServiceUtils tiServiceUtils;
 
   public CIK8BuildTaskParams getCIk8BuildTaskParams(
       LiteEngineTaskStepInfo liteEngineTaskStepInfo, Ambiance ambiance, Map<String, String> taskIds) {
@@ -180,7 +181,7 @@ public class K8BuildSetupUtils {
       LiteEngineTaskStepInfo liteEngineTaskStepInfo, Map<String, String> taskIds, Ambiance ambiance) {
     String accountId = AmbianceHelper.getAccountId(ambiance);
     Map<String, String> logEnvVars = getLogServiceEnvVariables(k8PodDetails, accountId);
-    Map<String, String> tiEnvVars = getTIServiceEnvVariables();
+    Map<String, String> tiEnvVars = getTIServiceEnvVariables(accountId);
     Map<String, String> commonEnvVars = getCommonStepEnvVariables(
         k8PodDetails, logEnvVars, tiEnvVars, gitEnvVars, podSetupInfo.getWorkDirPath(), ambiance);
     Map<String, ConnectorConversionInfo> stepConnectors =
@@ -314,9 +315,23 @@ public class K8BuildSetupUtils {
   }
 
   @NotNull
-  private Map<String, String> getTIServiceEnvVariables() {
+  private Map<String, String> getTIServiceEnvVariables(String accountId) {
     Map<String, String> envVars = new HashMap<>();
-    envVars.put(TI_SERVICE_ENDPOINT_VARIABLE, tiServiceConfig.getBaseUrl());
+    final String tiServiceBaseUrl = tiServiceUtils.getTiServiceConfig().getBaseUrl();
+
+    String tiServiceToken = "token";
+
+    // Make a call to the TI service and get back the token. We do not need TI service token for all steps,
+    // so we can continue even if the service is down.
+    // TODO: (vistaar) Get token only when TI service interaction is required.
+    try {
+      tiServiceToken = tiServiceUtils.getTIServiceToken(accountId);
+    } catch (Exception e) {
+      log.error("Could not call token endpoint for TI service", e);
+    }
+
+    envVars.put(TI_SERVICE_TOKEN_VARIABLE, tiServiceToken);
+    envVars.put(TI_SERVICE_ENDPOINT_VARIABLE, tiServiceBaseUrl);
 
     return envVars;
   }

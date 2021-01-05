@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.category.element.UnitTests;
 import io.harness.ci.beans.entities.LogServiceConfig;
+import io.harness.ci.beans.entities.TIServiceConfig;
 import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
@@ -25,6 +26,7 @@ import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.rule.Owner;
+import io.harness.tiserviceclient.TIServiceUtils;
 
 import com.google.inject.Inject;
 import java.util.HashMap;
@@ -44,6 +46,7 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
   @Mock private PmsEngineExpressionService pmsEngineExpressionService;
   @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Mock CILogServiceUtils logServiceUtils;
+  @Mock TIServiceUtils tiServiceUtils;
 
   private static final String CLUSTER_NAME = "K8";
 
@@ -54,6 +57,7 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
     on(k8BuildSetupUtils).set("connectorUtils", connectorUtils);
     on(k8BuildSetupUtils).set("executionSweepingOutputResolver", executionSweepingOutputResolver);
     on(k8BuildSetupUtils).set("logServiceUtils", logServiceUtils);
+    on(k8BuildSetupUtils).set("tiServiceUtils", tiServiceUtils);
   }
 
   @Test
@@ -82,6 +86,9 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
     LogServiceConfig logServiceConfig = LogServiceConfig.builder().baseUrl("endpoint").globalToken("token").build();
     when(logServiceUtils.getLogServiceConfig()).thenReturn(logServiceConfig);
     when(logServiceUtils.getLogServiceToken(any())).thenReturn("token");
+    TIServiceConfig tiServiceConfig = TIServiceConfig.builder().baseUrl("endpoint").globalToken("token").build();
+    when(tiServiceUtils.getTiServiceConfig()).thenReturn(tiServiceConfig);
+    when(tiServiceUtils.getTIServiceToken(any())).thenReturn("token");
     when(pmsEngineExpressionService.renderExpression(any(), any())).thenReturn(CLUSTER_NAME);
     when(executionSweepingOutputResolver.resolve(any(), any()))
         .thenReturn(K8PodDetails.builder().clusterName("cluster").namespace("namespace").stageID("stage").build());
@@ -91,6 +98,8 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
     assertThat(buildSetupTaskParams).isNotNull();
     verify(logServiceUtils, times(1)).getLogServiceConfig();
     verify(logServiceUtils, times(1)).getLogServiceToken(any());
+    verify(tiServiceUtils, times(1)).getTiServiceConfig();
+    verify(tiServiceUtils, times(1)).getTIServiceToken(any());
   }
 
   @Test
@@ -119,6 +128,9 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
     LogServiceConfig logServiceConfig = LogServiceConfig.builder().baseUrl("endpoint").globalToken("token").build();
     when(logServiceUtils.getLogServiceConfig()).thenReturn(logServiceConfig);
     when(logServiceUtils.getLogServiceToken(any())).thenReturn("token");
+    TIServiceConfig tiServiceConfig = TIServiceConfig.builder().baseUrl("endpoint").globalToken("token").build();
+    when(tiServiceUtils.getTiServiceConfig()).thenReturn(tiServiceConfig);
+    when(tiServiceUtils.getTIServiceToken(any())).thenReturn("token");
     when(pmsEngineExpressionService.renderExpression(any(), any())).thenReturn(CLUSTER_NAME);
     when(executionSweepingOutputResolver.resolve(any(), any()))
         .thenReturn(K8PodDetails.builder().clusterName("cluster").namespace("namespace").stageID("stage").build());
@@ -129,5 +141,7 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
     assertThat(buildSetupTaskParams).isNotNull();
     verify(logServiceUtils, times(1)).getLogServiceConfig();
     verify(logServiceUtils, times(1)).getLogServiceToken(any());
+    verify(tiServiceUtils, times(1)).getTiServiceConfig();
+    verify(tiServiceUtils, times(1)).getTIServiceToken(any());
   }
 }

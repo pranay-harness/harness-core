@@ -13,6 +13,7 @@ import static io.harness.common.CIExecutionConstants.LOG_SERVICE_ENDPOINT_VARIAB
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.SECRET_KEY_MINIO_VARIABLE;
 import static io.harness.common.CIExecutionConstants.TI_SERVICE_ENDPOINT_VARIABLE;
+import static io.harness.common.CIExecutionConstants.TI_SERVICE_TOKEN_VARIABLE;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.VISTAAR;
 
@@ -53,6 +54,7 @@ import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.secrets.remote.SecretNGManagerClient;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tiserviceclient.TIServiceUtils;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -73,13 +75,13 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Inject private K8BuildSetupUtils k8BuildSetupUtils;
   @Inject private SecretVariableUtils secretVariableUtils;
-  @Inject private TIServiceConfig tiServiceConfig;
 
   @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Mock private SecretManagerClientService secretManagerClientService;
   @Mock private SecretNGManagerClient secretNGManagerClient;
   @Mock private ConnectorUtils connectorUtils;
   @Mock CILogServiceUtils logServiceUtils;
+  @Mock TIServiceUtils tiServiceUtils;
 
   @Before
   public void setUp() {
@@ -89,6 +91,7 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     on(k8BuildSetupUtils).set("secretVariableUtils", secretVariableUtils);
     on(k8BuildSetupUtils).set("executionSweepingOutputResolver", executionSweepingOutputResolver);
     on(k8BuildSetupUtils).set("logServiceUtils", logServiceUtils);
+    on(k8BuildSetupUtils).set("tiServiceUtils", tiServiceUtils);
   }
 
   @Test
@@ -108,6 +111,12 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     LogServiceConfig logServiceConfig = LogServiceConfig.builder().baseUrl(logEndpoint).globalToken(logToken).build();
     when(logServiceUtils.getLogServiceConfig()).thenReturn(logServiceConfig);
     when(logServiceUtils.getLogServiceToken(eq(accountID))).thenReturn(logToken);
+
+    String tiEndpoint = "http://localhost:8078";
+    String tiToken = "token";
+    TIServiceConfig tiServiceConfig = TIServiceConfig.builder().baseUrl(tiEndpoint).globalToken(tiToken).build();
+    when(tiServiceUtils.getTiServiceConfig()).thenReturn(tiServiceConfig);
+    when(tiServiceUtils.getTIServiceToken(eq(accountID))).thenReturn(tiToken);
 
     Call<ResponseDTO<SecretResponseWrapper>> getSecretCall = mock(Call.class);
     ResponseDTO<SecretResponseWrapper> responseDTO = ResponseDTO.newResponse(
@@ -164,7 +173,8 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     Map<String, String> stepEnvVars = new HashMap<>();
     stepEnvVars.put(LOG_SERVICE_ENDPOINT_VARIABLE, logEndpoint);
     stepEnvVars.put(LOG_SERVICE_TOKEN_VARIABLE, logToken);
-    stepEnvVars.put(TI_SERVICE_ENDPOINT_VARIABLE, tiServiceConfig.getBaseUrl());
+    stepEnvVars.put(TI_SERVICE_ENDPOINT_VARIABLE, tiEndpoint);
+    stepEnvVars.put(TI_SERVICE_TOKEN_VARIABLE, tiToken);
     stepEnvVars.put(HARNESS_ACCOUNT_ID_VARIABLE, accountID);
     stepEnvVars.put(HARNESS_ORG_ID_VARIABLE, orgID);
     stepEnvVars.put(HARNESS_PROJECT_ID_VARIABLE, projectID);

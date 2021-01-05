@@ -11,4 +11,5 @@ import lombok.Value;
 @Builder
 public class TIServiceConfig {
   String baseUrl;
+  String globalToken;
 }
