@@ -124,6 +124,10 @@ eventsFramework:
 pmsSdkGrpcServerConfig:
   connectors:
     - port: 12101
+      secure: true
+      keyFilePath: key.pem
+      certFilePath: cert.pem
+    - port: 12102
 
 pmsGrpcClientConfig:
   target: localhost:12011

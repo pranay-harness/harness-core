@@ -22,16 +22,24 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.grpc.BindableService;
 import io.grpc.Channel;
+import io.grpc.internal.GrpcUtil;
+import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
+import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
+import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.grpc.services.HealthStatusManager;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import javax.net.ssl.SSLException;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class PipelineServiceGrpcModule extends AbstractModule {
   private static PipelineServiceGrpcModule instance;
+  private final String deployMode = System.getenv().get("DEPLOY_MODE");
 
   public static PipelineServiceGrpcModule getInstance() {
     if (instance == null) {
@@ -54,16 +62,43 @@ public class PipelineServiceGrpcModule extends AbstractModule {
 
   @Provides
   @Singleton
-  public Map<String, PlanCreationServiceBlockingStub> grpcClients(PipelineServiceConfiguration configuration) {
+  public Map<String, PlanCreationServiceBlockingStub> grpcClients(PipelineServiceConfiguration configuration)
+      throws SSLException {
     Map<String, PlanCreationServiceBlockingStub> map = new HashMap<>();
     for (Map.Entry<String, GrpcClientConfig> entry : configuration.getGrpcClientConfigs().entrySet()) {
-      Channel channel = NettyChannelBuilder.forTarget(entry.getValue().getTarget())
-                            .overrideAuthority(entry.getValue().getAuthority())
-                            .usePlaintext()
-                            .build();
-      map.put(entry.getKey(), PlanCreationServiceGrpc.newBlockingStub(channel));
+      map.put(entry.getKey(), PlanCreationServiceGrpc.newBlockingStub(getChannel(entry.getValue())));
     }
     return map;
+  }
+
+  private static boolean isValidAuthority(String authority) {
+    try {
+      GrpcUtil.checkAuthority(authority);
+    } catch (Exception ignore) {
+      log.error("Exception occurred when checking for valid authority", ignore);
+      return false;
+    }
+    return true;
+  }
+
+  private Channel getChannel(GrpcClientConfig clientConfig) throws SSLException {
+    String authorityToUse = clientConfig.getAuthority();
+    Channel channel;
+
+    if (("ONPREM".equals(deployMode) || "KUBERNETES_ONPREM".equals(deployMode))) {
+      channel = NettyChannelBuilder.forTarget(clientConfig.getTarget())
+                    .overrideAuthority(authorityToUse)
+                    .usePlaintext()
+                    .build();
+    } else {
+      SslContext sslContext = GrpcSslContexts.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
+      channel = NettyChannelBuilder.forTarget(clientConfig.getTarget())
+                    .overrideAuthority(authorityToUse)
+                    .sslContext(sslContext)
+                    .build();
+    }
+
+    return channel;
   }
 
   @Provides

@@ -45,6 +45,14 @@ if [[ "" != "$GRPC_SERVER_PORT" ]]; then
   yq write -i $CONFIG_FILE grpcServerConfig.connectors[0].port "$GRPC_SERVER_PORT"
 fi
 
+if [[ "" != "$MANAGER_TARGET" ]]; then
+  yq write -i $CONFIG_FILE managerTarget $MANAGER_TARGET
+fi
+
+if [[ "" != "$MANAGER_AUTHORITY" ]]; then
+  yq write -i $CONFIG_FILE managerAuthority $MANAGER_AUTHORITY
+fi
+
 if [[ "" != "$NG_MANAGER_TARGET" ]]; then
   yq write -i $CONFIG_FILE grpcClientConfigs.cd.target $NG_MANAGER_TARGET
 fi

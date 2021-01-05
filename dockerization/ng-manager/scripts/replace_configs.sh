@@ -6,6 +6,7 @@ yq delete -i $CONFIG_FILE server.applicationConnectors[0]
 yq write -i $CONFIG_FILE server.adminConnectors "[]"
 
 yq delete -i $CONFIG_FILE grpcServer.connectors[0]
+yq delete -i $CONFIG_FILE pmsSdkGrpcServerConfig.connectors[0]
 
 if [[ "" != "$LOGGING_LEVEL" ]]; then
     yq write -i $CONFIG_FILE logging.level "$LOGGING_LEVEL"
@@ -58,6 +59,10 @@ fi
 
 if [[ "" != "$MONGO_INDEX_MANAGER_MODE" ]]; then
   yq write -i $CONFIG_FILE mongo.indexManagerMode $MONGO_INDEX_MANAGER_MODE
+fi
+
+if [[ "" != "$PMS_MONGO_URI" ]]; then
+  yq write -i $CONFIG_FILE pmsMongo.uri "${PMS_MONGO_URI//\\&/&}"
 fi
 
 if [[ "" != "$MANAGER_TARGET" ]]; then

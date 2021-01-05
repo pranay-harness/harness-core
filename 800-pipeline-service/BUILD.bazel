@@ -64,6 +64,10 @@ java_binary(
     srcs = glob([
         "src/main/**/*.java",
     ]),
+    data = [
+        "cert.pem",
+        "key.pem",
+    ],
     main_class = "io.harness.PipelineServiceApplication",
     visibility = ["//visibility:public"],
     runtime_deps = [
