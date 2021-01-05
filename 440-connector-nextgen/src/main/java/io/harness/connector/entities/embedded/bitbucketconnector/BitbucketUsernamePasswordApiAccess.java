@@ -10,5 +10,5 @@ import org.springframework.data.annotation.TypeAlias;
 public class BitbucketUsernamePasswordApiAccess {
   String username;
   String usernameRef;
-  String passwordRef;
+  String tokenRef;
 }

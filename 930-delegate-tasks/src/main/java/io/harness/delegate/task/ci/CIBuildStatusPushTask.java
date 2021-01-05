@@ -20,7 +20,7 @@ import io.harness.delegate.beans.ci.status.BuildStatusPushResponse;
 import io.harness.delegate.beans.ci.status.BuildStatusPushResponse.Status;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketApiAccessType;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePasswordApiAccessDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernameTokenApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessType;
 import io.harness.delegate.beans.connector.scm.github.GithubAppSpecDTO;
@@ -200,11 +200,11 @@ public class CIBuildStatusPushTask extends AbstractDelegateRunnableTask {
           throw new CIStageExecutionException(
               format("Failed to retrieve token info for Bitbucket connector: %s", gitConnector.getIdentifier()));
         }
-        if (bitbucketConnectorDTO.getApiAccess().getType() == BitbucketApiAccessType.USERNAME_AND_PASSWORD) {
-          BitbucketUsernamePasswordApiAccessDTO bitbucketTokenSpecDTO =
-              (BitbucketUsernamePasswordApiAccessDTO) bitbucketConnectorDTO.getApiAccess().getSpec();
+        if (bitbucketConnectorDTO.getApiAccess().getType() == BitbucketApiAccessType.USERNAME_AND_TOKEN) {
+          BitbucketUsernameTokenApiAccessDTO bitbucketTokenSpecDTO =
+              (BitbucketUsernameTokenApiAccessDTO) bitbucketConnectorDTO.getApiAccess().getSpec();
           secretDecryptionService.decrypt(bitbucketTokenSpecDTO, gitConnector.getEncryptedDataDetails());
-          return new String(bitbucketTokenSpecDTO.getPasswordRef().getDecryptedValue());
+          return new String(bitbucketTokenSpecDTO.getTokenRef().getDecryptedValue());
         } else {
           throw new CIStageExecutionException(
               format("Unsupported access type %s for gitlab status", bitbucketConnectorDTO.getApiAccess().getType()));

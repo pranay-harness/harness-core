@@ -20,8 +20,8 @@ import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketCredentialsDTO
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketSshCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePasswordApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePasswordDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernameTokenApiAccessDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.UnknownEnumTypeException;
 
@@ -39,7 +39,7 @@ public class BitbucketDTOToEntity implements ConnectorDTOToEntityMapper<Bitbucke
     BitbucketUsernamePasswordApiAccess bitbucketApiAccess = null;
     if (hasApiAccess) {
       apiAccessType = getApiAccessType(configDTO.getApiAccess());
-      bitbucketApiAccess = getApiAcessByType(configDTO.getApiAccess().getSpec(), apiAccessType);
+      bitbucketApiAccess = getApiAccessByType(configDTO.getApiAccess().getSpec(), apiAccessType);
     }
     return BitbucketConnector.builder()
         .connectionType(configDTO.getConnectionType())
@@ -88,13 +88,13 @@ public class BitbucketDTOToEntity implements ConnectorDTOToEntityMapper<Bitbucke
     return SecretRefHelper.getSecretConfigString(secretRefData);
   }
 
-  private BitbucketUsernamePasswordApiAccess getApiAcessByType(
+  private BitbucketUsernamePasswordApiAccess getApiAccessByType(
       BitbucketApiAccessSpecDTO spec, BitbucketApiAccessType apiAccessType) {
-    final BitbucketUsernamePasswordApiAccessDTO apiAccessDTO = (BitbucketUsernamePasswordApiAccessDTO) spec;
+    final BitbucketUsernameTokenApiAccessDTO apiAccessDTO = (BitbucketUsernameTokenApiAccessDTO) spec;
     return BitbucketUsernamePasswordApiAccess.builder()
         .username(apiAccessDTO.getUsername())
         .usernameRef(getStringSecretForNullableSecret(apiAccessDTO.getUsernameRef()))
-        .passwordRef(getStringSecretForNullableSecret(apiAccessDTO.getPasswordRef()))
+        .tokenRef(getStringSecretForNullableSecret(apiAccessDTO.getTokenRef()))
         .build();
   }
 

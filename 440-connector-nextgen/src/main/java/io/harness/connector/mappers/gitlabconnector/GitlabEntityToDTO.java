@@ -4,6 +4,7 @@ import io.harness.connector.entities.embedded.gitlabconnector.GitlabAuthenticati
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabConnector;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabHttpAuth;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabHttpAuthentication;
+import io.harness.connector.entities.embedded.gitlabconnector.GitlabKerberos;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabSshAuthentication;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabTokenApiAccess;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabUsernamePassword;
@@ -19,6 +20,7 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsSpecDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabKerberosDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentialsSpecDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
@@ -93,6 +95,14 @@ public class GitlabEntityToDTO implements ConnectorEntityToDTOMapper<GitlabConne
                 .username(gitlabUsernamePassword.getUsername())
                 .usernameRef(usernameRef)
                 .build();
+        break;
+      case KERBEROS:
+        final GitlabKerberos gitlabKerberos = (GitlabKerberos) auth;
+        gitlabHttpCredentialsSpecDTO =
+            GitlabKerberosDTO.builder()
+                .kerberosKeyRef(SecretRefHelper.createSecretRef(gitlabKerberos.getKerberosKeyRef()))
+                .build();
+        break;
     }
     return gitlabHttpCredentialsSpecDTO;
   }

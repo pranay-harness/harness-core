@@ -8,7 +8,7 @@
     "type": {
       "type": "string",
       "enum": [
-        "UsernamePassword"
+        "UsernameToken"
       ]
     }
   },
@@ -18,14 +18,14 @@
       "if": {
         "properties": {
           "type": {
-            "const": "UsernamePassword"
+            "const": "UsernameToken"
           }
         }
       },
       "then": {
         "properties": {
           "spec": {
-            "$ref": "#/definitions/BitbucketUsernamePasswordApiAccess"
+            "$ref": "#/definitions/BitbucketUsernameTokenApiAccess"
           }
         }
       }

@@ -92,6 +92,7 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     h.put("connector.entities.embedded.gitlabconnector.GitlabHttpAuthentication", GitlabHttpAuthentication.class);
     h.put("connector.entities.embedded.gitlabconnector.GitlabUsernamePassword", GitlabUsernamePassword.class);
     h.put("connector.entities.embedded.gitlabconnector.GitlabUsernameToken", GitlabUsernameToken.class);
+    h.put("connector.entities.embedded.gitlabconnector.GitlabKerberos", GitlabKerberos.class);
     h.put("connector.entities.ConnectorFilterProperties", ConnectorFilterProperties.class);
     h.put("connector.entities.embedded.bitbucketconnector.BitbucketUsernamePasswordApiAccess",
         BitbucketUsernamePasswordApiAccess.class);

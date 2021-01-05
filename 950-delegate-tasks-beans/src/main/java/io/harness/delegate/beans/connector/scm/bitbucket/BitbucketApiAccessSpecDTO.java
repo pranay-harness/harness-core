@@ -8,6 +8,6 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonSubTypes({
   @JsonSubTypes.
-  Type(value = BitbucketUsernamePasswordApiAccessDTO.class, name = BitbucketConnectorConstants.USERNAME_AND_PASSWORD)
+  Type(value = BitbucketUsernameTokenApiAccessDTO.class, name = BitbucketConnectorConstants.USERNAME_AND_TOKEN)
 })
 public interface BitbucketApiAccessSpecDTO extends DecryptableEntity {}

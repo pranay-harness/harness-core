@@ -9,6 +9,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabConnector;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabHttpAuthentication;
+import io.harness.connector.entities.embedded.gitlabconnector.GitlabKerberos;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabSshAuthentication;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabTokenApiAccess;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabUsernamePassword;
@@ -22,6 +23,7 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabKerberosDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentialsSpecDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
@@ -190,5 +192,46 @@ public class GitlabDTOToEntityTest extends CategoryTest {
     assertThat(gitlabConnector.getAuthenticationDetails())
         .isEqualTo(GitlabSshAuthentication.builder().sshKeyRef(sshKeyRef).build());
     assertThat(gitlabConnector.getGitlabApiAccess()).isNull();
+  }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void testToConnectorEntity_4() {
+    final String url = "url";
+    final String kerberosKeyRef = "tokenRef";
+    final GitlabAuthenticationDTO gitlabAuthenticationDTO =
+        GitlabAuthenticationDTO.builder()
+            .authType(HTTP)
+            .credentials(GitlabHttpCredentialsDTO.builder()
+                             .type(GitlabHttpAuthenticationType.KERBEROS)
+                             .httpCredentialsSpec(GitlabKerberosDTO.builder()
+                                                      .kerberosKeyRef(SecretRefHelper.createSecretRef(kerberosKeyRef))
+                                                      .build())
+                             .build())
+            .build();
+
+    final GitlabApiAccessDTO gitlabApiAccessDTO =
+        GitlabApiAccessDTO.builder()
+            .type(GitlabApiAccessType.TOKEN)
+            .spec(GitlabTokenSpecDTO.builder().tokenRef(SecretRefHelper.createSecretRef(kerberosKeyRef)).build())
+            .build();
+    final GitlabConnectorDTO gitlabConnectorDTO = GitlabConnectorDTO.builder()
+                                                      .url(url)
+                                                      .connectionType(GitConnectionType.REPO)
+                                                      .authentication(gitlabAuthenticationDTO)
+                                                      .apiAccess(gitlabApiAccessDTO)
+                                                      .build();
+    final GitlabConnector gitlabConnector = gitlabDTOToEntity.toConnectorEntity(gitlabConnectorDTO);
+    assertThat(gitlabConnector).isNotNull();
+    assertThat(gitlabConnector.getUrl()).isEqualTo(url);
+    assertThat(gitlabConnector.getAuthType()).isEqualTo(HTTP);
+    assertThat(gitlabConnector.getAuthenticationDetails())
+        .isEqualTo(GitlabHttpAuthentication.builder()
+                       .type(GitlabHttpAuthenticationType.KERBEROS)
+                       .auth(GitlabKerberos.builder().kerberosKeyRef(kerberosKeyRef).build())
+                       .build());
+    assertThat(gitlabConnector.getGitlabApiAccess())
+        .isEqualTo(GitlabTokenApiAccess.builder().tokenRef(kerberosKeyRef).build());
   }
 }

@@ -1,8 +1,7 @@
-package io.harness.delegate.beans.connector.scm.bitbucket;
+package io.harness.delegate.beans.connector.scm.gitlab;
 
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretReference;
-import io.harness.validation.OneOfField;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
@@ -17,10 +16,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@ApiModel("BitbucketUsernamePasswordApiAccess")
-@OneOfField(fields = {"username", "usernameRef"})
-public class BitbucketUsernamePasswordApiAccessDTO implements BitbucketApiAccessSpecDTO {
-  String username;
-  @SecretReference @ApiModelProperty(dataType = "string") SecretRefData usernameRef;
-  @NotNull @SecretReference @ApiModelProperty(dataType = "string") SecretRefData passwordRef;
+@ApiModel("GitlabKerberos")
+public class GitlabKerberosDTO implements GitlabHttpCredentialsSpecDTO {
+  @SecretReference @ApiModelProperty(dataType = "string") @NotNull SecretRefData kerberosKeyRef;
 }

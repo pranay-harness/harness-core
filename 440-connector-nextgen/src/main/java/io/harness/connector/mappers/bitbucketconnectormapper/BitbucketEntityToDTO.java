@@ -21,8 +21,8 @@ import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredential
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentialsSpecDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketSshCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketSshCredentialsSpecDTO;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePasswordApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePasswordDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernameTokenApiAccessDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.UnknownEnumTypeException;
 
@@ -102,13 +102,13 @@ public class BitbucketEntityToDTO implements ConnectorEntityToDTOMapper<Bitbucke
         : null;
     final BitbucketApiAccessSpecDTO bitbucketTokenSpecDTO =
 
-        BitbucketUsernamePasswordApiAccessDTO.builder()
+        BitbucketUsernameTokenApiAccessDTO.builder()
             .username(bitbucketTokenApiAccess.getUsername())
             .usernameRef(usernameRef)
-            .passwordRef(SecretRefHelper.createSecretRef(bitbucketTokenApiAccess.getPasswordRef()))
+            .tokenRef(SecretRefHelper.createSecretRef(bitbucketTokenApiAccess.getTokenRef()))
             .build();
     return BitbucketApiAccessDTO.builder()
-        .type(BitbucketApiAccessType.USERNAME_AND_PASSWORD)
+        .type(BitbucketApiAccessType.USERNAME_AND_TOKEN)
         .spec(bitbucketTokenSpecDTO)
         .build();
   }
