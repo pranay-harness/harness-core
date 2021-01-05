@@ -20,5 +20,5 @@ inputSet:
                         store:
                           type: Git
                           spec:
-                            connectorRef: ${input}
+                            connectorRef: <+input>
                             gitFetchType: Commit

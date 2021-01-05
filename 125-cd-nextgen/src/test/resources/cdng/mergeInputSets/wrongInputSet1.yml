@@ -24,7 +24,7 @@ inputSet:
                           identifier: sidecar1
                           type: Dockerhub
                           spec:
-                            imagePath: ${input}
+                            imagePath: <+input>
                             tag: tag1
                   manifests:
                     - manifest:
@@ -59,7 +59,7 @@ inputSet:
               infrastructureDefinition:
                 type: KubernetesDirect
                 spec:
-                  connectorRef: ${input}
+                  connectorRef: <+input>
                   namespace: prod
             execution:
               steps:

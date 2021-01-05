@@ -11,7 +11,7 @@ inputSet:
           type: Deployment
           spec:
             service:
-              identifier: ${input}
+              identifier: <+input>
               serviceDefinition:
                 type: Kubernetes
                 spec:

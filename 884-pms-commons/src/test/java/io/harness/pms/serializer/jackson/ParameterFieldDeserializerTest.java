@@ -57,27 +57,27 @@ public class ParameterFieldDeserializerTest extends CategoryTest implements Mult
     assertThat(readValue.infrastructure.isExpression()).isEqualTo(false);
     assertThat(readValue.infrastructure.getValue()).isNotNull();
     assertThat(readValue.infrastructure.getValue().inner3.isExpression()).isTrue();
-    assertThat(readValue.infrastructure.getValue().inner3.getExpressionValue()).isEqualTo("${input}");
+    assertThat(readValue.infrastructure.getValue().inner3.getExpressionValue()).isEqualTo("<+input>");
     assertThat(readValue.infrastructure.getValue().inner3.getInputSetValidator()).isNull();
 
     assertThat(readValue.infrastructure.getValue().inner4.isExpression()).isTrue();
-    assertThat(readValue.infrastructure.getValue().inner4.getExpressionValue()).isEqualTo("${input}");
+    assertThat(readValue.infrastructure.getValue().inner4.getExpressionValue()).isEqualTo("<+input>");
     assertThat(readValue.infrastructure.getValue().inner4.getInputSetValidator().getParameters())
         .isEqualTo("dev, ${env}, ${env2}, stage");
 
     assertThat(readValue.infrastructure.getValue().inner5.isExpression()).isTrue();
-    assertThat(readValue.infrastructure.getValue().inner5.getExpressionValue()).isEqualTo("${input}");
+    assertThat(readValue.infrastructure.getValue().inner5.getExpressionValue()).isEqualTo("<+input>");
     assertThat(readValue.infrastructure.getValue().inner5.getInputSetValidator().getParameters())
         .isEqualTo("jexl(${env} == 'prod' ? 'dev, qa':'prod, stage')");
 
     assertThat(readValue.infrastructure.getValue().inner6.isExpression()).isTrue();
-    assertThat(readValue.infrastructure.getValue().inner6.getExpressionValue()).isEqualTo("${input}");
+    assertThat(readValue.infrastructure.getValue().inner6.getExpressionValue()).isEqualTo("<+input>");
     assertThat(readValue.infrastructure.getValue().inner6.getInputSetValidator().getParameters()).isEqualTo("^prod*");
     assertThat(readValue.infrastructure.getValue().inner6.getInputSetValidator().getValidatorType())
         .isEqualTo(InputSetValidatorType.REGEX);
 
     assertThat(readValue.infrastructure.getValue().inner8.isExpression()).isTrue();
-    assertThat(readValue.infrastructure.getValue().inner8.getExpressionValue()).isEqualTo("${input}");
+    assertThat(readValue.infrastructure.getValue().inner8.getExpressionValue()).isEqualTo("<+input>");
     assertThat(readValue.infrastructure.getValue().inner8.getInputSetValidator().getParameters())
         .isEqualTo("jexl(${env} == 'dev' ? (${team} == 'a' ? 'dev_a, dev_b':'dev_qa, dev_qb'):'prod, stage')");
   }
