@@ -205,6 +205,22 @@
       "type": "object",
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "AwsCurAttributes": {
+      "type": "object",
+      "required": [
+        "reportName",
+        "s3BucketName"
+      ],
+      "properties": {
+        "reportName": {
+          "type": "string"
+        },
+        "s3BucketName": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "AwsInheritFromDelegateSpec": {
       "allOf": [
         {
@@ -514,6 +530,39 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "CEAwsConnector": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "crossAccountAccess"
+          ],
+          "properties": {
+            "crossAccountAccess": {
+              "$ref": "#/definitions/CrossAccountAccess"
+            },
+            "curAttributes": {
+              "$ref": "#/definitions/AwsCurAttributes"
+            },
+            "featuresEnabled": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "CUR",
+                  "EVENTS",
+                  "OPTIMIZATION"
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "Connector": {
       "type": "object",
       "required": [
@@ -578,6 +627,7 @@
             "CustomSecretManager",
             "Gcp",
             "Aws",
+            "CEAws",
             "Artifactory",
             "Jira",
             "Nexus",
@@ -809,6 +859,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/LocalConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "CEAws"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/CEAwsConnector"
               }
             }
           }

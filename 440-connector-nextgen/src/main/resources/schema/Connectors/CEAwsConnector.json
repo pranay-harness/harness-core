@@ -1,0 +1,33 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/ConnectorConfigDTO"
+    },
+    {
+      "type": "object",
+      "required": [
+        "crossAccountAccess"
+      ],
+      "properties": {
+        "crossAccountAccess": {
+          "$ref": "#/definitions/CrossAccountAccess"
+        },
+        "curAttributes": {
+          "$ref": "#/definitions/AwsCurAttributes"
+        },
+        "featuresEnabled": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "CUR",
+              "EVENTS",
+              "OPTIMIZATION"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

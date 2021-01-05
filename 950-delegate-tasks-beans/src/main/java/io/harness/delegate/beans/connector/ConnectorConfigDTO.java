@@ -4,6 +4,7 @@ import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
+import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
@@ -34,6 +35,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
       @JsonSubTypes.Type(value = GcpKmsConnectorDTO.class, name = "GcpKms"),
       @JsonSubTypes.Type(value = GcpConnectorDTO.class, name = "Gcp"),
       @JsonSubTypes.Type(value = AwsConnectorDTO.class, name = "Aws"),
+      @JsonSubTypes.Type(value = CEAwsConnectorDTO.class, name = "CEAws"),
       @JsonSubTypes.Type(value = ArtifactoryConnectorDTO.class, name = "Artifactory"),
       @JsonSubTypes.Type(value = JiraConnectorDTO.class, name = "Jira"),
       @JsonSubTypes.Type(value = NexusConnectorDTO.class, name = "Nexus"),

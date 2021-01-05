@@ -46,6 +46,7 @@
         "CustomSecretManager",
         "Gcp",
         "Aws",
+        "CEAws",
         "Artifactory",
         "Jira",
         "Nexus",
@@ -277,6 +278,22 @@
         "properties": {
           "spec": {
             "$ref": "#/definitions/LocalConnectorDTO"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "CEAws"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "spec": {
+            "$ref": "#/definitions/CEAwsConnector"
           }
         }
       }
