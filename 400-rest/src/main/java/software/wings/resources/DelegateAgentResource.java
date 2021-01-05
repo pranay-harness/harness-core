@@ -126,8 +126,8 @@ public class DelegateAgentResource {
       DelegateConfiguration configuration = accountService.getDelegateConfiguration(accountId);
       String primaryDelegateVersion = configurationController.getPrimaryVersion();
       // Adding primary delegate to the last element of delegate versions.
-      if (isNotEmpty(configuration.getDelegateVersions())) {
-        configuration.getDelegateVersions().remove(primaryDelegateVersion);
+      if (isNotEmpty(configuration.getDelegateVersions())
+          && configuration.getDelegateVersions().remove(primaryDelegateVersion)) {
         configuration.getDelegateVersions().add(primaryDelegateVersion);
       }
       return new RestResponse<>(configuration);
