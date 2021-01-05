@@ -1,7 +1,5 @@
 package io.harness.delegate.beans.azure;
 
-import static io.harness.yamlSchema.NGSecretReferenceConstants.SECRET_REF_PATTERN;
-
 import io.harness.azure.AzureEnvironmentType;
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -32,11 +30,7 @@ public class AzureConfigDTO implements DecryptableEntity, ExecutionCapabilityDem
   private String tenantId;
   private AzureEnvironmentType azureEnvironmentType;
 
-  @ApiModelProperty(dataType = "string")
-  @NotNull
-  @SecretReference
-  @Pattern(regexp = SECRET_REF_PATTERN)
-  SecretRefData key;
+  @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData key;
 
   @Builder
   public AzureConfigDTO(

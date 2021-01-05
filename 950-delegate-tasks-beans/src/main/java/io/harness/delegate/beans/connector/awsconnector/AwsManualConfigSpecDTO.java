@@ -1,7 +1,5 @@
 package io.harness.delegate.beans.connector.awsconnector;
 
-import static io.harness.yamlSchema.NGSecretReferenceConstants.SECRET_REF_PATTERN;
-
 import io.harness.beans.DecryptableEntity;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretReference;
@@ -20,9 +18,5 @@ import lombok.Value;
 @ApiModel("AwsManualConfigSpec")
 public class AwsManualConfigSpecDTO implements AwsCredentialSpecDTO, DecryptableEntity {
   @NotNull String accessKey;
-  @ApiModelProperty(dataType = "string")
-  @NotNull
-  @SecretReference
-  @Pattern(regexp = SECRET_REF_PATTERN)
-  SecretRefData secretKeyRef;
+  @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData secretKeyRef;
 }

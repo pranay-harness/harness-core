@@ -1,7 +1,5 @@
 package io.harness.ng.core.dto.secrets;
 
-import static io.harness.yamlSchema.NGSecretReferenceConstants.SECRET_REF_PATTERN;
-
 import io.harness.beans.DecryptableEntity;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretReference;
@@ -24,11 +22,7 @@ import lombok.EqualsAndHashCode;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SSHPasswordCredentialDTO extends SSHCredentialSpecDTO implements DecryptableEntity {
   @NotNull private String userName;
-  @ApiModelProperty(dataType = "string")
-  @NotNull
-  @SecretReference
-  @Pattern(regexp = SECRET_REF_PATTERN)
-  private SecretRefData password;
+  @ApiModelProperty(dataType = "string") @NotNull @SecretReference private SecretRefData password;
 
   @Override
   public SSHCredentialSpec toEntity() {

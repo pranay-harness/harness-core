@@ -35,8 +35,7 @@
               "type": "string"
             },
             "passwordRef": {
-              "type": "string",
-              "pattern": "^(account.)?(org.)?(\\.)?[a-zA-Z0-9_$]*$"
+              "type": "string"
             },
             "username": {
               "type": "string"
@@ -119,8 +118,7 @@
           ],
           "properties": {
             "passwordRef": {
-              "type": "string",
-              "pattern": "^(account.)?(org.)?(\\.)?[a-zA-Z0-9_$]*$"
+              "type": "string"
             },
             "username": {
               "type": "string"
@@ -242,8 +240,7 @@
               "type": "string"
             },
             "secretKeyRef": {
-              "type": "string",
-              "pattern": "^(account.)?(org.)?(\\.)?[a-zA-Z0-9_$]*$"
+              "type": "string"
             }
           }
         }
@@ -963,8 +960,7 @@
           ],
           "properties": {
             "passwordRef": {
-              "type": "string",
-              "pattern": "^(account.)?(org.)?(\\.)?[a-zA-Z0-9_$]*$"
+              "type": "string"
             },
             "username": {
               "type": "string"
@@ -1107,8 +1103,7 @@
           ],
           "properties": {
             "secretKeyRef": {
-              "type": "string",
-              "pattern": "^(account.)?(org.)?(\\.)?[a-zA-Z0-9_$]*$"
+              "type": "string"
             }
           }
         }
@@ -1207,8 +1202,7 @@
           ],
           "properties": {
             "passwordRef": {
-              "type": "string",
-              "pattern": "^(account.)?(org.)?(\\.)?[a-zA-Z0-9_$]*$"
+              "type": "string"
             },
             "username": {
               "type": "string"
@@ -1909,8 +1903,7 @@
               "type": "string"
             },
             "passwordRef": {
-              "type": "string",
-              "pattern": "^(account.)?(org.)?(\\.)?[a-zA-Z0-9_$]*$"
+              "type": "string"
             },
             "username": {
               "type": "string"
@@ -2023,23 +2016,19 @@
           ],
           "properties": {
             "caCertRef": {
-              "type": "string",
-              "pattern": "^(account.)?(org.)?(\\.)?[a-zA-Z0-9_$]*$"
+              "type": "string"
             },
             "clientCertRef": {
-              "type": "string",
-              "pattern": "^(account.)?(org.)?(\\.)?[a-zA-Z0-9_$]*$"
+              "type": "string"
             },
             "clientKeyAlgo": {
               "type": "string"
             },
             "clientKeyPassphraseRef": {
-              "type": "string",
-              "pattern": "^(account.)?(org.)?(\\.)?[a-zA-Z0-9_$]*$"
+              "type": "string"
             },
             "clientKeyRef": {
-              "type": "string",
-              "pattern": "^(account.)?(org.)?(\\.)?[a-zA-Z0-9_$]*$"
+              "type": "string"
             }
           }
         }
@@ -2173,22 +2162,19 @@
           ],
           "properties": {
             "oidcClientIdRef": {
-              "type": "string",
-              "pattern": "^(account.)?(org.)?(\\.)?[a-zA-Z0-9_$]*$"
+              "type": "string"
             },
             "oidcIssuerUrl": {
               "type": "string"
             },
             "oidcPasswordRef": {
-              "type": "string",
-              "pattern": "^(account.)?(org.)?(\\.)?[a-zA-Z0-9_$]*$"
+              "type": "string"
             },
             "oidcScopes": {
               "type": "string"
             },
             "oidcSecretRef": {
-              "type": "string",
-              "pattern": "^(account.)?(org.)?(\\.)?[a-zA-Z0-9_$]*$"
+              "type": "string"
             },
             "oidcUsername": {
               "type": "string"
@@ -2227,8 +2213,7 @@
           ],
           "properties": {
             "serviceAccountTokenRef": {
-              "type": "string",
-              "pattern": "^(account.)?(org.)?(\\.)?[a-zA-Z0-9_$]*$"
+              "type": "string"
             }
           }
         }
@@ -2247,8 +2232,7 @@
           ],
           "properties": {
             "passwordRef": {
-              "type": "string",
-              "pattern": "^(account.)?(org.)?(\\.)?[a-zA-Z0-9_$]*$"
+              "type": "string"
             },
             "username": {
               "type": "string"
@@ -2368,8 +2352,7 @@
           ],
           "properties": {
             "passwordRef": {
-              "type": "string",
-              "pattern": "^(account.)?(org.)?(\\.)?[a-zA-Z0-9_$]*$"
+              "type": "string"
             },
             "username": {
               "type": "string"
@@ -2395,8 +2378,7 @@
               "type": "string"
             },
             "passwordRef": {
-              "type": "string",
-              "pattern": "^(account.)?(org.)?(\\.)?[a-zA-Z0-9_$]*$"
+              "type": "string"
             },
             "splunkUrl": {
               "type": "string"

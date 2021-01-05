@@ -1,7 +1,5 @@
 package io.harness.delegate.beans.connector.k8Connector;
 
-import static io.harness.yamlSchema.NGSecretReferenceConstants.SECRET_REF_PATTERN;
-
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretReference;
 
@@ -18,9 +16,5 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(KubernetesConfigConstants.SERVICE_ACCOUNT)
 public class KubernetesServiceAccountDTO extends KubernetesAuthCredentialDTO {
-  @ApiModelProperty(dataType = "string")
-  @NotNull
-  @SecretReference
-  @Pattern(regexp = SECRET_REF_PATTERN)
-  SecretRefData serviceAccountTokenRef;
+  @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData serviceAccountTokenRef;
 }

@@ -1,7 +1,5 @@
 package io.harness.delegate.beans.connector.jira;
 
-import static io.harness.yamlSchema.NGSecretReferenceConstants.SECRET_REF_PATTERN;
-
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -38,11 +36,7 @@ import org.hibernate.validator.constraints.NotBlank;
 public class JiraConnectorDTO extends ConnectorConfigDTO implements ExecutionCapabilityDemander, DecryptableEntity {
   @NotNull String jiraUrl;
   @NotBlank String username;
-  @ApiModelProperty(dataType = "string")
-  @NotNull
-  @SecretReference
-  @Pattern(regexp = SECRET_REF_PATTERN)
-  SecretRefData passwordRef;
+  @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData passwordRef;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

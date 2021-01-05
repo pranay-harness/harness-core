@@ -12,22 +12,19 @@
       ],
       "properties": {
         "oidcClientIdRef": {
-          "type": "string",
-          "pattern": "^(account.)?(org.)?(\\.)?[a-zA-Z0-9_$]*$"
+          "type": "string"
         },
         "oidcIssuerUrl": {
           "type": "string"
         },
         "oidcPasswordRef": {
-          "type": "string",
-          "pattern": "^(account.)?(org.)?(\\.)?[a-zA-Z0-9_$]*$"
+          "type": "string"
         },
         "oidcScopes": {
           "type": "string"
         },
         "oidcSecretRef": {
-          "type": "string",
-          "pattern": "^(account.)?(org.)?(\\.)?[a-zA-Z0-9_$]*$"
+          "type": "string"
         },
         "oidcUsername": {
           "type": "string"
