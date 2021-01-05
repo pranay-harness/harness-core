@@ -1,13 +1,11 @@
 package io.harness.delegate.task.citasks.cik8handler;
 
-import static io.harness.delegate.beans.ci.k8s.PodStatus.Status.ERROR;
 import static io.harness.delegate.beans.ci.k8s.PodStatus.Status.RUNNING;
 import static io.harness.delegate.task.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getCustomVarSecret;
 import static io.harness.delegate.task.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getDockerSecret;
 import static io.harness.delegate.task.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getPublishArtifactConnectorDetails;
 import static io.harness.delegate.task.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getPublishArtifactSecrets;
 import static io.harness.delegate.task.citasks.cik8handler.CIK8BuildTaskHandlerTestHelper.getSecretVariableDetails;
-import static io.harness.delegate.task.citasks.cik8handler.params.CIConstants.POD_MAX_WAIT_UNTIL_READY_SECS;
 import static io.harness.delegate.task.citasks.cik8handler.params.CIConstants.POD_PENDING_PHASE;
 import static io.harness.delegate.task.citasks.cik8handler.params.CIConstants.POD_RUNNING_PHASE;
 import static io.harness.delegate.task.citasks.cik8handler.params.CIConstants.POD_WAIT_UNTIL_READY_SLEEP_SECS;
@@ -36,6 +34,11 @@ import io.harness.rule.Owner;
 import io.harness.threading.Sleeper;
 
 import com.google.inject.Provider;
+import io.fabric8.kubernetes.api.model.ContainerState;
+import io.fabric8.kubernetes.api.model.ContainerStateBuilder;
+import io.fabric8.kubernetes.api.model.ContainerStateWaiting;
+import io.fabric8.kubernetes.api.model.ContainerStateWaitingBuilder;
+import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.DoneablePersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.DoneableSecret;
@@ -46,6 +49,7 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.api.model.PodStatus;
+import io.fabric8.kubernetes.api.model.PodStatusBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.SecretList;
@@ -68,6 +72,7 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -135,10 +140,19 @@ public class CIK8CtlHandlerTest extends CategoryTest {
   private static final String dashShellArg = "-c";
   private static final Integer timeoutSecs = 100;
 
-  private Pod getPod(String runningState) {
+  private Pod getPendingPod(String runningState) {
     PodStatus podStatus = new PodStatus();
     podStatus.setPhase(runningState);
+    podStatus.setContainerStatuses(Arrays.asList(getPendingContainerStatus()));
     return new PodBuilder().withStatus(podStatus).build();
+  }
+
+  private ContainerStatus getPendingContainerStatus() {
+    ContainerStatus containerStatus = new ContainerStatus();
+    ContainerStateWaiting containerStateWaiting = new ContainerStateWaitingBuilder().withMessage("pending").build();
+    ContainerState containerState = new ContainerStateBuilder().withWaiting(containerStateWaiting).build();
+    containerStatus.setState(containerState);
+    return containerStatus;
   }
 
   @Before
@@ -373,7 +387,7 @@ public class CIK8CtlHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void waitUntilPodIsReadyWithSuccess() throws TimeoutException, InterruptedException {
     KubernetesClient client = mock(KubernetesClient.class);
-    Pod pod = getPod(POD_RUNNING_PHASE);
+    Pod pod = new PodBuilder().withStatus(new PodStatusBuilder().withPhase(POD_RUNNING_PHASE).build()).build();
 
     when(client.pods()).thenReturn(mockKubePod);
     when(mockKubePod.inNamespace(namespace)).thenReturn(mockPodNonNamespacedOp);
@@ -386,25 +400,10 @@ public class CIK8CtlHandlerTest extends CategoryTest {
   @Test()
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
-  public void waitUntilPodIsReadyWithPodInErrorState() throws TimeoutException, InterruptedException {
+  public void waitUntilPodIsReadyWithSuccessAfterOneRetry() throws InterruptedException {
     KubernetesClient client = mock(KubernetesClient.class);
-    Pod pod = getPod("Failed");
-
-    when(client.pods()).thenReturn(mockKubePod);
-    when(mockKubePod.inNamespace(namespace)).thenReturn(mockPodNonNamespacedOp);
-    when(mockPodNonNamespacedOp.withName(podName)).thenReturn(mockPodNamed);
-    when(mockPodNamed.get()).thenReturn(pod);
-
-    assertEquals(ERROR, cik8CtlHandler.waitUntilPodIsReady(client, podName, namespace).getStatus());
-  }
-
-  @Test()
-  @Owner(developers = SHUBHAM)
-  @Category(UnitTests.class)
-  public void waitUntilPodIsReadyWithSuccessAfterOneRetry() throws TimeoutException, InterruptedException {
-    KubernetesClient client = mock(KubernetesClient.class);
-    Pod pod1 = getPod(POD_PENDING_PHASE);
-    Pod pod2 = getPod(POD_RUNNING_PHASE);
+    Pod pod1 = getPendingPod(POD_PENDING_PHASE);
+    Pod pod2 = new PodBuilder().withStatus(new PodStatusBuilder().withPhase(POD_RUNNING_PHASE).build()).build();
 
     when(client.pods()).thenReturn(mockKubePod);
     when(mockKubePod.inNamespace(namespace)).thenReturn(mockPodNonNamespacedOp);
@@ -418,26 +417,6 @@ public class CIK8CtlHandlerTest extends CategoryTest {
     when(mockPodNamed.get()).thenReturn(pod2);
 
     assertEquals(RUNNING, cik8CtlHandler.waitUntilPodIsReady(client, podName, namespace).getStatus());
-  }
-
-  @Test(expected = TimeoutException.class)
-  @Owner(developers = SHUBHAM)
-  @Category(UnitTests.class)
-  public void waitUntilPodIsReadyWithTimeoutException() throws TimeoutException, InterruptedException {
-    KubernetesClient client = mock(KubernetesClient.class);
-    Pod pod1 = getPod(POD_PENDING_PHASE);
-    Pod pod2 = getPod(POD_RUNNING_PHASE);
-
-    int numCalls = (int) Math.floor((POD_MAX_WAIT_UNTIL_READY_SECS * 1.0) / (POD_WAIT_UNTIL_READY_SLEEP_SECS * 1.0));
-    for (int i = 0; i < numCalls; i++) {
-      when(client.pods()).thenReturn(mockKubePod);
-      when(mockKubePod.inNamespace(namespace)).thenReturn(mockPodNonNamespacedOp);
-      when(mockPodNonNamespacedOp.withName(podName)).thenReturn(mockPodNamed);
-      when(mockPodNamed.get()).thenReturn(pod1);
-      doNothing().when(sleeper).sleep(POD_WAIT_UNTIL_READY_SLEEP_SECS * 1000);
-    }
-
-    cik8CtlHandler.waitUntilPodIsReady(client, podName, namespace);
   }
 
   @Test()
