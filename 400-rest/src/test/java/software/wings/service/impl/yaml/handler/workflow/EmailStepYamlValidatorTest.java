@@ -86,6 +86,30 @@ public class EmailStepYamlValidatorTest extends WingsBaseTest {
         .hasMessage("\"subject\" could not be empty or null, please provide a value.");
   }
 
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testValidateEmailStepYamlWithoutBody() {
+    Map<String, Object> properties = getProperties(TO_ADDRESS, CC_ADDRESS, SUBJECT, null, false);
+    ChangeContext changeContext = buildChangeContext(properties);
+
+    assertThatThrownBy(() -> validator.validate(changeContext)).isInstanceOf(IncompleteStateException.class);
+    assertThatThrownBy(() -> validator.validate(changeContext))
+        .hasMessage("\"body\" could not be empty or null, please provide a value.");
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testValidateEmailStepYamlWithEmptyBody() {
+    Map<String, Object> properties = getProperties(TO_ADDRESS, CC_ADDRESS, SUBJECT, " ", false);
+    ChangeContext changeContext = buildChangeContext(properties);
+
+    assertThatThrownBy(() -> validator.validate(changeContext)).isInstanceOf(IncompleteStateException.class);
+    assertThatThrownBy(() -> validator.validate(changeContext))
+        .hasMessage("\"body\" could not be empty or null, please provide a value.");
+  }
+
   private ChangeContext buildChangeContext(Map<String, Object> parameters) {
     return ChangeContext.Builder.aChangeContext()
         .withYaml(StepYaml.builder().properties(parameters).build())
