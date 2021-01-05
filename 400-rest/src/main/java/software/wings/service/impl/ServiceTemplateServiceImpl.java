@@ -25,6 +25,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.validation.PersistenceValidator;
 
+import software.wings.api.DeploymentType;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
@@ -389,6 +390,11 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       return;
     }
 
+    if (DeploymentType.AZURE_WEBAPP == service.getDeploymentType()) {
+      populateAzureAppServiceOverrideApplicationManifest(serviceTemplate);
+      return;
+    }
+
     AppManifestKind appManifestKind = AppManifestKind.VALUES;
     if (ArtifactType.PCF == service.getArtifactType()) {
       appManifestKind = AppManifestKind.PCF_OVERRIDE;
@@ -414,9 +420,21 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     }
   }
 
+  private void populateAzureAppServiceOverrideApplicationManifest(ServiceTemplate serviceTemplate) {
+    serviceTemplate.setAppSettingOverrideManifest(applicationManifestService.getAppManifest(serviceTemplate.getAppId(),
+        serviceTemplate.getEnvId(), serviceTemplate.getServiceId(), AppManifestKind.AZURE_APP_SETTINGS_OVERRIDE));
+    serviceTemplate.setConnStringsOverrideManifest(applicationManifestService.getAppManifest(serviceTemplate.getAppId(),
+        serviceTemplate.getEnvId(), serviceTemplate.getServiceId(), AppManifestKind.AZURE_CONN_STRINGS_OVERRIDE));
+  }
+
   private void populateServiceAndOverrideValuesManifestFile(ServiceTemplate template) {
     Service service = serviceResourceService.get(template.getAppId(), template.getServiceId());
     if (service == null) {
+      return;
+    }
+
+    if (DeploymentType.AZURE_WEBAPP == service.getDeploymentType()) {
+      populateAzureAppServiceOverrideValuesManifestFile(template);
       return;
     }
 
@@ -438,6 +456,26 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     }
 
     template.setValuesOverrideManifestFile(manifestFiles.get(0));
+  }
+
+  private void populateAzureAppServiceOverrideValuesManifestFile(ServiceTemplate serviceTemplate) {
+    serviceTemplate.setAppSettingsOverrideManifestFile(
+        getOverrideManifestFile(serviceTemplate, AppManifestKind.AZURE_APP_SETTINGS_OVERRIDE));
+    serviceTemplate.setConnStringsOverrideManifestFile(
+        getOverrideManifestFile(serviceTemplate, AppManifestKind.AZURE_CONN_STRINGS_OVERRIDE));
+  }
+  private ManifestFile getOverrideManifestFile(ServiceTemplate serviceTemplate, AppManifestKind overrideKind) {
+    ApplicationManifest appManifest = applicationManifestService.getAppManifest(
+        serviceTemplate.getAppId(), serviceTemplate.getEnvId(), serviceTemplate.getServiceId(), overrideKind);
+    if (appManifest == null) {
+      return null;
+    }
+    List<ManifestFile> manifestFiles =
+        applicationManifestService.getManifestFilesByAppManifestId(appManifest.getAppId(), appManifest.getUuid());
+    if (isEmpty(manifestFiles)) {
+      return null;
+    }
+    return manifestFiles.get(0);
   }
 
   /* (non-Javadoc)

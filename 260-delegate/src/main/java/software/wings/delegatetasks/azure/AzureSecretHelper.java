@@ -29,9 +29,6 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.SecretDecryptionService;
 
-import software.wings.beans.LocalEncryptionConfig;
-import software.wings.service.intfc.security.LocalSecretManagerService;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
@@ -46,7 +43,6 @@ import lombok.extern.slf4j.Slf4j;
 public class AzureSecretHelper {
   @Inject private SecretDecryptionService secretDecryptionService;
   @Inject private LocalEncryptor localEncryptor;
-  @Inject private LocalSecretManagerService localSecretManagerService;
 
   public AzureConfig decryptAndGetAzureConfig(
       AzureConfigDTO azureConfigDTO, List<EncryptedDataDetail> azureConfigEncryptionDetails) {
@@ -132,8 +128,7 @@ public class AzureSecretHelper {
     String accountId = configurationSetting.getAccountId();
     EncryptedRecord encryptedRecord = configurationSetting.getEncryptedRecord();
 
-    LocalEncryptionConfig encryptionConfig = localSecretManagerService.getEncryptionConfig(accountId);
-    char[] secretValue = localEncryptor.fetchSecretValue(accountId, encryptedRecord, encryptionConfig);
+    char[] secretValue = localEncryptor.fetchSecretValue(accountId, encryptedRecord, null);
     configurationSetting.setDecryptedValue(new String(secretValue));
   }
 
@@ -172,8 +167,7 @@ public class AzureSecretHelper {
       AzureAppServiceAzureSettingValue configurationSetting, final String accountId) {
     String value = configurationSetting.getDecryptedValue();
 
-    LocalEncryptionConfig encryptionConfig = localSecretManagerService.getEncryptionConfig(accountId);
-    EncryptedRecord encryptedRecord = localEncryptor.encryptSecret(accountId, value, encryptionConfig);
+    EncryptedRecord encryptedRecord = localEncryptor.encryptSecret(accountId, value, null);
     configurationSetting.setEncryptedRecord(encryptedRecord);
     configurationSetting.setDecryptedValue(EMPTY);
     configurationSetting.setAccountId(accountId);

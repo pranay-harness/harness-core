@@ -1,7 +1,9 @@
 package io.harness.azure.model;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public enum AzureAppServiceConnectionStringType {
-  MYSQL("MySQL"),
+  MYSQL("MySql"),
   SQL_SERVER("SQLServer"),
   SQL_AZURE("SQLAzure"),
   POSTGRE_SQL("PostgreSQL"),
@@ -12,6 +14,7 @@ public enum AzureAppServiceConnectionStringType {
     this.value = value;
   }
 
+  @JsonValue
   public String getValue() {
     return value;
   }

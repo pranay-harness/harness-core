@@ -12,6 +12,7 @@ import io.harness.beans.SearchFilter;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
+import io.harness.delegate.task.azure.appservice.webapp.response.DeploymentSlotData;
 import io.harness.delegate.task.spotinst.response.SpotinstElastigroupRunningCountData;
 import io.harness.rest.RestResponse;
 import io.harness.spotinst.model.ElastiGroup;
@@ -472,11 +473,11 @@ public class InfrastructureDefinitionResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
-  public RestResponse<List<String>> getAppServiceDeploymentSlotNames(@QueryParam("appId") String appId,
+  public RestResponse<List<DeploymentSlotData>> getAppServiceDeploymentSlotNames(@QueryParam("appId") String appId,
       @QueryParam("subscriptionId") String subscriptionId, @QueryParam("resourceGroupName") String resourceGroupName,
       @QueryParam("appType") String appType, @PathParam("computeProviderId") String computeProviderId,
       @PathParam("appName") String appName) {
-    return new RestResponse<>(infrastructureDefinitionService.getAppServiceDeploymentSlotNames(
+    return new RestResponse<>(infrastructureDefinitionService.getAppServiceDeploymentSlots(
         appId, computeProviderId, subscriptionId, resourceGroupName, appType, appName));
   }
 
@@ -485,10 +486,10 @@ public class InfrastructureDefinitionResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
-  public RestResponse<List<String>> getDeploymentSlotNames(@QueryParam("appId") String appId,
+  public RestResponse<List<DeploymentSlotData>> getDeploymentSlotNames(@QueryParam("appId") String appId,
       @QueryParam("appType") String appType, @PathParam("infraDefinitionId") String infraDefinitionId,
       @PathParam("appName") String appName) {
     return new RestResponse<>(
-        infrastructureDefinitionService.getDeploymentSlotNames(appId, infraDefinitionId, appType, appName));
+        infrastructureDefinitionService.getAppServiceDeploymentSlots(appId, infraDefinitionId, appType, appName));
   }
 }

@@ -896,8 +896,7 @@ public class DelegateModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), String.class, AbstractAzureAppServiceTaskHandler.class);
     azureAppServiceTaskTypeToTaskHandlerMap.addBinding(AzureAppServiceTaskType.LIST_WEB_APP_NAMES.name())
         .to(AzureWebAppListWebAppNamesTaskHandler.class);
-    azureAppServiceTaskTypeToTaskHandlerMap
-        .addBinding(AzureAppServiceTaskType.LIST_WEB_APP_DEPLOYMENT_SLOT_NAMES.name())
+    azureAppServiceTaskTypeToTaskHandlerMap.addBinding(AzureAppServiceTaskType.LIST_WEB_APP_DEPLOYMENT_SLOTS.name())
         .to(AzureWebAppListWebAppDeploymentSlotNamesTaskHandler.class);
     azureAppServiceTaskTypeToTaskHandlerMap.addBinding(AzureAppServiceTaskType.LIST_WEB_APP_INSTANCES_DATA.name())
         .to(AzureWebAppListWebAppInstancesTaskHandler.class);

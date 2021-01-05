@@ -20,12 +20,12 @@ import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceH
 import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceHarnessSettingValue;
 import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceSettingValue;
 import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceSettingValueType;
+import io.harness.delegate.beans.azure.mapper.AzureAppServiceConfigurationDTOMapper;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
-import software.wings.delegatetasks.azure.appservice.AzureAppServiceConfigurationDTOMapper;
 
 import java.util.Collections;
 import java.util.HashMap;

@@ -1,6 +1,7 @@
 package io.harness.azure.model;
 
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 public interface AzureConstants {
   int DEFAULT_SYNC_AZURE_VMSS_TIMEOUT_MIN = 2;
@@ -150,6 +151,10 @@ public interface AzureConstants {
       + "Description : [%s]";
   String SLOT_SWAP_JOB_PROCESSOR_STR = "SlotSwapJobProcessor";
   String SUCCESS_REQUEST = "Request sent successfully";
+  String DEPLOYMENT_SLOT_FULL_NAME_PATTERN = "%s-%s";
+  String DEPLOYMENT_SLOT_NAME_PREFIX_PATTERN = "%s-";
+  String DEPLOYMENT_SLOT_NON_PRODUCTION_TYPE = "non-production";
+  String DEPLOYMENT_SLOT_PRODUCTION_TYPE = "production";
 
   // Azure App Service Command Units
   String STOP_DEPLOYMENT_SLOT = "Stop Slot";
@@ -169,4 +174,7 @@ public interface AzureConstants {
 
   // Web App Instance status
   String WEB_APP_INSTANCE_STATUS_RUNNING = "Running";
+
+  // App Service Manifest Utils
+  Pattern IS_SETTING_SECRET_REGEX = Pattern.compile("^\\$\\{secrets\\.getValue\\(['\"]+(?<secretName>\\S+)['\"]+\\)}$");
 }

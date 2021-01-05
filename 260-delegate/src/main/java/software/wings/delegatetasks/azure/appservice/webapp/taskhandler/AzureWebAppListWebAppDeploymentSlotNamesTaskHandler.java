@@ -1,13 +1,20 @@
 package software.wings.delegatetasks.azure.appservice.webapp.taskhandler;
 
+import static io.harness.azure.model.AzureConstants.DEPLOYMENT_SLOT_FULL_NAME_PATTERN;
+import static io.harness.azure.model.AzureConstants.DEPLOYMENT_SLOT_NON_PRODUCTION_TYPE;
+import static io.harness.azure.model.AzureConstants.DEPLOYMENT_SLOT_PRODUCTION_TYPE;
+
+import static java.lang.String.format;
+
 import io.harness.azure.client.AzureWebClient;
 import io.harness.azure.context.AzureWebClientContext;
 import io.harness.azure.model.AzureConfig;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskResponse;
-import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppListWebAppDeploymentSlotNamesParameters;
-import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppListWebAppDeploymentSlotNamesResponse;
+import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppListWebAppDeploymentSlotsParameters;
+import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppListWebAppDeploymentSlotsResponse;
+import io.harness.delegate.task.azure.appservice.webapp.response.DeploymentSlotData;
 
 import software.wings.delegatetasks.azure.appservice.webapp.AbstractAzureWebAppTaskHandler;
 
@@ -31,9 +38,8 @@ public class AzureWebAppListWebAppDeploymentSlotNamesTaskHandler extends Abstrac
       AzureConfig azureConfig, ILogStreamingTaskClient logStreamingTaskClient) {
     String subscriptionId = azureAppServiceTaskParameters.getSubscriptionId();
     String resourceGroupName =
-        ((AzureWebAppListWebAppDeploymentSlotNamesParameters) azureAppServiceTaskParameters).getResourceGroupName();
-    String webAppName =
-        ((AzureWebAppListWebAppDeploymentSlotNamesParameters) azureAppServiceTaskParameters).getAppName();
+        ((AzureWebAppListWebAppDeploymentSlotsParameters) azureAppServiceTaskParameters).getResourceGroupName();
+    String webAppName = ((AzureWebAppListWebAppDeploymentSlotsParameters) azureAppServiceTaskParameters).getAppName();
 
     AzureWebClientContext azureWebClientContext = AzureWebClientContext.builder()
                                                       .azureConfig(azureConfig)
@@ -43,14 +49,28 @@ public class AzureWebAppListWebAppDeploymentSlotNamesTaskHandler extends Abstrac
                                                       .build();
 
     List<DeploymentSlot> deploymentSlots = azureWebClient.listDeploymentSlotsByWebAppName(azureWebClientContext);
+    List<DeploymentSlotData> deploymentSlotsData = toDeploymentSlotData(deploymentSlots, webAppName);
 
-    return AzureWebAppListWebAppDeploymentSlotNamesResponse.builder()
-        .deploymentSlotNames(toDeploymentSlotNames(deploymentSlots))
+    return AzureWebAppListWebAppDeploymentSlotsResponse.builder()
+        .deploymentSlots(addProductionDeploymentSlotData(deploymentSlotsData, webAppName))
         .build();
   }
 
   @NotNull
-  private List<String> toDeploymentSlotNames(List<DeploymentSlot> deploymentSlots) {
-    return deploymentSlots.stream().map(DeploymentSlot::name).collect(Collectors.toList());
+  private List<DeploymentSlotData> toDeploymentSlotData(List<DeploymentSlot> deploymentSlots, String webAppName) {
+    return deploymentSlots.stream()
+        .map(DeploymentSlot::name)
+        .map(slotName
+            -> DeploymentSlotData.builder()
+                   .name(format(DEPLOYMENT_SLOT_FULL_NAME_PATTERN, webAppName, slotName))
+                   .type(DEPLOYMENT_SLOT_NON_PRODUCTION_TYPE)
+                   .build())
+        .collect(Collectors.toList());
+  }
+
+  private List<DeploymentSlotData> addProductionDeploymentSlotData(
+      List<DeploymentSlotData> deploymentSlots, String webAppName) {
+    deploymentSlots.add(DeploymentSlotData.builder().name(webAppName).type(DEPLOYMENT_SLOT_PRODUCTION_TYPE).build());
+    return deploymentSlots;
   }
 }

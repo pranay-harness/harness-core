@@ -11,6 +11,10 @@ import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
 import static software.wings.beans.yaml.YamlConstants.TAGS_YAML;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_APP_SETTINGS_ENV_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_APP_SETTINGS_ENV_SERVICE_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_CONN_STRINGS_ENV_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_CONN_STRINGS_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_HELM_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_HELM_OVERRIDES_ALL_SERVICE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_OC_PARAMS_ENV_OVERRIDE;
@@ -788,6 +792,10 @@ public class YamlResourceServiceImpl implements YamlResourceService {
         return APPLICATION_MANIFEST_HELM_ENV_SERVICE_OVERRIDE;
       case OC_PARAMS:
         return APPLICATION_MANIFEST_OC_PARAMS_ENV_SERVICE_OVERRIDE;
+      case AZURE_APP_SETTINGS_OVERRIDE:
+        return APPLICATION_MANIFEST_APP_SETTINGS_ENV_SERVICE_OVERRIDE;
+      case AZURE_CONN_STRINGS_OVERRIDE:
+        return APPLICATION_MANIFEST_CONN_STRINGS_ENV_SERVICE_OVERRIDE;
       default:
         throw new UnexpectedException("Invalid ApplicationManifestKind: " + applicationManifest.getKind());
     }
@@ -806,6 +814,10 @@ public class YamlResourceServiceImpl implements YamlResourceService {
         return APPLICATION_MANIFEST_HELM_OVERRIDES_ALL_SERVICE;
       case OC_PARAMS:
         return APPLICATION_MANIFEST_OC_PARAMS_ENV_OVERRIDE;
+      case AZURE_APP_SETTINGS_OVERRIDE:
+        return APPLICATION_MANIFEST_APP_SETTINGS_ENV_OVERRIDE;
+      case AZURE_CONN_STRINGS_OVERRIDE:
+        return APPLICATION_MANIFEST_CONN_STRINGS_ENV_OVERRIDE;
       default:
         throw new UnexpectedException("Invalid ApplicationManifestKind: " + applicationManifest.getKind());
     }

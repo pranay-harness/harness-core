@@ -19,9 +19,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-import io.harness.azure.model.AzureAppServiceApplicationSetting;
-import io.harness.azure.model.AzureAppServiceConnectionString;
-import io.harness.azure.model.AzureAppServiceConnectionStringType;
+import io.harness.azure.model.AzureAppServiceConfiguration;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
@@ -61,6 +59,7 @@ import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupExecut
 import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupExecutionSummary;
 import software.wings.sm.states.azure.appservices.AzureAppServiceStateData;
 import software.wings.sm.states.azure.appservices.AzureWebAppSlotSetup;
+import software.wings.sm.states.azure.appservices.manifest.AzureAppServiceManifestUtils;
 import software.wings.sm.states.azure.artifact.ArtifactStreamMapper;
 
 import com.google.common.collect.ImmutableMap;
@@ -80,6 +79,7 @@ import org.mockito.Spy;
 public class AzureWebAppSlotSetupTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
   @Mock private AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
+  @Spy @InjectMocks private AzureAppServiceManifestUtils azureAppServiceManifestUtils;
   @Spy @InjectMocks private AzureVMSSStateHelper azureVMSSStateHelper;
   @Spy @InjectMocks AzureWebAppSlotSetup state = new AzureWebAppSlotSetup("Slot Setup state");
 
@@ -146,15 +146,22 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
     doReturn(delegateResult).when(delegateService).queueTask(any());
 
     state.setSlotSteadyStateTimeout("10");
-    state.setApplicationSettings(
-        Collections.singletonList(AzureAppServiceApplicationSetting.builder().name("key1").value("value1").build()));
-    state.setAppServiceConnectionStrings(
-        Collections.singletonList(AzureAppServiceConnectionString.builder()
-                                      .name("conn1")
-                                      .value("url1")
-                                      .sticky(true)
-                                      .type(AzureAppServiceConnectionStringType.SQL_SERVER)
-                                      .build()));
+    AzureAppServiceConfiguration azureAppServiceConfiguration = new AzureAppServiceConfiguration();
+    azureAppServiceConfiguration.setAppSettingsJSON(getAppSettingsJSON());
+    azureAppServiceConfiguration.setConnStringsJSON(getConnStringJSON());
+    doReturn("service-var-value").when(context).renderExpression("${serviceVariable.your_var_name}");
+    doReturn("property-value").when(context).renderExpression("property-value");
+    doReturn("https://harness.jfrog-ui.io").when(context).renderExpression("https://harness.jfrog-ui.io");
+    doReturn("10").when(context).renderExpression("10");
+    doReturn("var_name").when(context).renderExpression("${secrets.getValue(\\\"var_name\\\")");
+    doReturn("Value2").when(context).renderExpression("Value2");
+    doReturn("false").when(context).renderExpression("false");
+    doReturn("jdbc:mysql://localhost/test").when(context).renderExpression("jdbc:mysql://localhost/test");
+    doReturn("jdbc:sqlxxxxxxxx//INNOWAVE-99\\SQLEXPRESS01;databaseName=EDS")
+        .when(context)
+        .renderExpression("jdbc:sqlxxxxxxxx//INNOWAVE-99\\SQLEXPRESS01;databaseName=EDS");
+
+    doReturn(azureAppServiceConfiguration).when(azureAppServiceManifestUtils).getAzureAppServiceConfiguration(any());
     state.setAppService("${webapp}");
     state.setDeploymentSlot("${slot}");
 
@@ -182,6 +189,14 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
     assertThat(stateExecutionData.getExecutionDetails()).isNotEmpty();
     assertThat(stateExecutionData.getExecutionSummary()).isNotEmpty();
     assertThat(stateExecutionData.getStepExecutionSummary()).isNotNull();
+  }
+
+  private String getAppSettingsJSON() {
+    return "[\n  {\n    \"name\": \"DOCKER_REGISTRY_SERVER_URL\",\n    \"value\": \"https://harness.jfrog-ui.io\",\n    \"slotSetting\": false\n  },\n  {\n    \"name\": \"DOCKER_REGISTRY_SERVER_USERNAME\",\n    \"value\": \"${serviceVariable.your_var_name}\",\n    \"slotSetting\": false\n  },\n  {\n    \"name\": \"Key1\",\n    \"value\": \"${secrets.getValue(\\\"var_name\\\")}\",\n    \"slotSetting\": true\n  },\n  {\n    \"name\": \"Key2\",\n    \"value\": \"Value2\",\n    \"slotSetting\": false\n  },\n  {\n    \"name\": \"WEBSITES_ENABLE_APP_SERVICE_STORAGE\",\n    \"value\": \"false\",\n    \"slotSetting\": false\n  }\n]";
+  }
+
+  private String getConnStringJSON() {
+    return "[\n  {\n    \"name\": \"CONN_STRING_WITH_SECRET\",\n    \"value\": \"${secrets.getValue(\\\"var_name\\\")}\",\n    \"type\": \"Custom\",\n    \"slotSetting\": false\n  },\n  {\n    \"name\": \"MY_SQL_CONN_STRING\",\n    \"value\": \"jdbc:mysql://localhost/test\",\n    \"type\": \"MySql\",\n    \"slotSetting\": true\n  },\n  {\n    \"name\": \"SQL_SERVER_CONN_STRING\",\n    \"value\": \"jdbc:sqlxxxxxxxx//INNOWAVE-99\\\\SQLEXPRESS01;databaseName=EDS\",\n    \"type\": \"SQLServer\",\n    \"slotSetting\": true\n  }\n]";
   }
 
   private AzureWebAppInfrastructureMapping getAzureWebAppInfraMapping() {
@@ -230,9 +245,7 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
     List<EncryptedDataDetail> encryptedDataDetailList = new ArrayList<>();
     EncryptedDataDetail mockEncryptedDataDetail = mock(EncryptedDataDetail.class);
     encryptedDataDetailList.add(mockEncryptedDataDetail);
-    doReturn(encryptedDataDetailList)
-        .when(azureVMSSStateHelper)
-        .getConnectorAuthEncryptedDataDetails(anyString(), any());
+    doReturn(encryptedDataDetailList).when(azureVMSSStateHelper).getNgEncryptedDataDetails(anyString(), any());
   }
 
   @Test

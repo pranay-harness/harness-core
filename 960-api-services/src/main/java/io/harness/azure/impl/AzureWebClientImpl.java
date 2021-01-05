@@ -63,12 +63,16 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
     Instant startListingWebApps = Instant.now();
     PagedList<WebApp> webApps = azure.webApps().listByResourceGroup(resourceGroupName);
 
-    List<WebApp> webAppsList = new ArrayList<>(webApps);
+    List<WebApp> webAppList = new ArrayList<>();
+    for (WebApp app : webApps) {
+      webAppList.add(app);
+    }
+
     long elapsedTime = Duration.between(startListingWebApps, Instant.now()).toMillis();
     log.info("Obtained Web Applications items: {} for elapsed time: {}, resourceGroupName: {}, subscriptionId: {} ",
-        webAppsList.size(), elapsedTime, resourceGroupName, subscriptionId);
+        webAppList.size(), elapsedTime, resourceGroupName, subscriptionId);
 
-    return webAppsList;
+    return webAppList;
   }
 
   @Override
@@ -80,10 +84,25 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
 
     log.debug("Start listing deployment slots by subscriptionId: {}, resourceGroupName: {}, webAppName: {}",
         subscriptionId, resourceGroupName, webAppName);
-    PagedList<DeploymentSlot> deploymentSlots =
-        azure.webApps().getByResourceGroup(resourceGroupName, webAppName).deploymentSlots().list();
+    WebApp webApp = getWebApp(azure, resourceGroupName, webAppName);
+    PagedList<DeploymentSlot> deploymentSlots = webApp.deploymentSlots().list();
 
-    return new ArrayList<>(deploymentSlots);
+    List<DeploymentSlot> deploymentSlotList = new ArrayList<>();
+    for (DeploymentSlot slot : deploymentSlots) {
+      deploymentSlotList.add(slot);
+    }
+
+    return deploymentSlotList;
+  }
+
+  @NotNull
+  private WebApp getWebApp(Azure azure, String resourceGroupName, String webAppName) {
+    WebApp webApp = azure.webApps().getByResourceGroup(resourceGroupName, webAppName);
+    if (webApp == null) {
+      throw new IllegalArgumentException(
+          format("Not found web app with name: %s, resource group name: %s", webAppName, resourceGroupName));
+    }
+    return webApp;
   }
 
   @Override
@@ -106,8 +125,7 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
     log.debug(
         "Start getting deployment slot by slotName: {} webAppName: {}, context: {}", slotName, webAppName, context);
     try {
-      return Optional.ofNullable(
-          azure.webApps().getByResourceGroup(resourceGroupName, webAppName).deploymentSlots().getByName(slotName));
+      return Optional.ofNullable(getWebApp(azure, resourceGroupName, webAppName).deploymentSlots().getByName(slotName));
     } catch (NoSuchElementException e) {
       log.warn(format("Unable to find deployment slot with name: %s, for app name: %s", slotName, webAppName), e);
       return Optional.empty();

@@ -1,7 +1,7 @@
 package io.harness.delegate.task.azure.appservice;
 
 import io.harness.delegate.task.azure.AzureTaskResponse;
-import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppListWebAppDeploymentSlotNamesResponse;
+import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppListWebAppDeploymentSlotsResponse;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppListWebAppNamesResponse;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppRollbackResponse;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotSetupResponse;
@@ -11,7 +11,7 @@ import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSwap
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = AzureWebAppListWebAppDeploymentSlotNamesResponse.class,
+  @JsonSubTypes.Type(value = AzureWebAppListWebAppDeploymentSlotsResponse.class,
       name = "azureWebAppListWebAppDeploymentSlotNamesResponse")
   ,
       @JsonSubTypes.Type(value = AzureWebAppListWebAppNamesResponse.class, name = "azureWebAppListWebAppNamesResponse"),

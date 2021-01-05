@@ -85,12 +85,6 @@ public class AzureWebAppSlotSwapTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testSwapSlotExecuteSuccess() {
     ExecutionContextImpl mockContext = initializeMockSetup(true, true, false);
-
-    assertThat(state.validateFields()).isNotEmpty();
-    assertThat(state.validateFields().size()).isEqualTo(1);
-    state.setTargetSlot(SWAP_TARGET_SLOT);
-    assertThat(state.validateFields()).isEmpty();
-
     state.handleAbortEvent(mockContext);
     assertThat(state.skipMessage()).isNotEmpty();
     ExecutionResponse response = state.execute(mockContext);
@@ -184,6 +178,7 @@ public class AzureWebAppSlotSwapTest extends WingsBaseTest {
                                                                      .resourceGroup(SWAP_RESOURCE_GROUP)
                                                                      .webApp(SWAP_APP_NAME)
                                                                      .deploymentSlot(SWAP_DEPLOYMENT_SLOT)
+                                                                     .targetSlot(SWAP_TARGET_SLOT)
                                                                      .appServiceSlotSetupTimeOut(10)
                                                                      .build();
 

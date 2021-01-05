@@ -80,14 +80,13 @@ public class AzureWebAppSlotSetupTaskHandlerTest extends WingsBaseTest {
 
     assertThat(azureAppServiceTaskResponse).isNotNull();
     assertThat(azureAppServiceTaskResponse).isInstanceOf(AzureWebAppSlotSetupResponse.class);
-    AzureWebAppSlotSetupResponse slotSetupResponse = (AzureWebAppSlotSetupResponse) azureAppServiceTaskResponse;
 
+    AzureWebAppSlotSetupResponse slotSetupResponse = (AzureWebAppSlotSetupResponse) azureAppServiceTaskResponse;
     assertThat(slotSetupResponse.getErrorMsg()).isNull();
     assertThat(slotSetupResponse.getAzureAppDeploymentData()).isNotNull();
     assertThat(slotSetupResponse.getAzureAppDeploymentData().size()).isEqualTo(1);
     assertThat(slotSetupResponse.getAzureAppDeploymentData().get(0))
         .isEqualToComparingFieldByField(azureAppDeploymentData);
-
     assertThat(slotSetupResponse.getPreDeploymentData()).isNotNull();
     assertThat(slotSetupResponse.getPreDeploymentData()).isEqualToComparingFieldByField(appServicePreDeploymentData);
   }

@@ -983,16 +983,18 @@ public class WorkflowServiceHelper {
                        .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                        .build());
 
-    Map<String, Object> defaultData = new HashMap<>();
-    defaultData.put(AzureConstants.TRAFFIC_WEIGHT_EXPR, 100);
-    phaseSteps.add(aPhaseStep(PhaseStepType.AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT)
-                       .addStep(GraphNode.builder()
-                                    .id(generateUuid())
-                                    .type(StateType.AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC.name())
-                                    .name(AZURE_WEBAPP_SLOT_TRAFFIC_WEIGHT)
-                                    .properties(defaultData)
-                                    .build())
-                       .build());
+    if (CANARY == orchestrationWorkflowType) {
+      Map<String, Object> defaultData = new HashMap<>();
+      defaultData.put(AzureConstants.TRAFFIC_WEIGHT_EXPR, 0);
+      phaseSteps.add(aPhaseStep(PhaseStepType.AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT)
+                         .addStep(GraphNode.builder()
+                                      .id(generateUuid())
+                                      .type(StateType.AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC.name())
+                                      .name(AZURE_WEBAPP_SLOT_TRAFFIC_WEIGHT)
+                                      .properties(defaultData)
+                                      .build())
+                         .build());
+    }
 
     phaseSteps.add(aPhaseStep(PhaseStepType.AZURE_WEBAPP_SLOT_SWAP, AZURE_WEBAPP_SLOT_SWAP)
                        .addStep(GraphNode.builder()

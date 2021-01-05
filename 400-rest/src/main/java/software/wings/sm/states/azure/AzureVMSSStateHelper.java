@@ -4,6 +4,8 @@ import static io.harness.azure.model.AzureConstants.STEADY_STATE_TIMEOUT_REGEX;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.azure.AzureVMAuthType.SSH_PUBLIC_KEY;
+import static io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceSettingValueType.HARNESS_SETTING;
+import static io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceSettingValueType.HARNESS_SETTING_SECRET;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -17,6 +19,8 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.azure.model.AzureAppServiceApplicationSetting;
+import io.harness.azure.model.AzureAppServiceConnectionString;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.ExecutionStatus;
@@ -28,11 +32,14 @@ import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthType;
 import io.harness.delegate.beans.azure.GalleryImageDefinitionDTO;
+import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceApplicationSettingDTO;
+import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceConnectionStringDTO;
 import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceSettingDTO;
 import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceAzureSettingValue;
 import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceHarnessSettingSecretRef;
 import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceHarnessSettingSecretValue;
 import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceSettingValue;
+import io.harness.delegate.beans.azure.mapper.AzureAppServiceConfigurationDTOMapper;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploymentData;
 import io.harness.delegate.task.azure.response.AzureVMInstanceData;
@@ -87,6 +94,7 @@ import software.wings.sm.states.azure.appservices.AzureAppServiceStateData;
 import software.wings.sm.states.azure.artifact.ArtifactStreamMapper;
 import software.wings.utils.ServiceVersionConvention;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -94,6 +102,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
@@ -532,7 +541,7 @@ public class AzureVMSSStateHelper {
     return ArtifactStreamMapper.getArtifactStreamMapper(artifactStream);
   }
 
-  public List<EncryptedDataDetail> getConnectorAuthEncryptedDataDetails(
+  public List<EncryptedDataDetail> getNgEncryptedDataDetails(
       final String accountId, DecryptableEntity connectorAuthCredentials) {
     NGAccess ngAccess = buildNgAccess(accountId);
     return ngSecretService.getEncryptionDetails(ngAccess, connectorAuthCredentials);
@@ -540,6 +549,26 @@ public class AzureVMSSStateHelper {
 
   private NGAccess buildNgAccess(final String accountId) {
     return BaseNGAccess.builder().accountIdentifier(accountId).build();
+  }
+
+  public List<AzureAppServiceApplicationSettingDTO> createAppSettingDTOs(
+      List<AzureAppServiceApplicationSetting> appSettings, ImmutableList<String> appSettingSecretsImmutableList) {
+    return appSettings.stream()
+        .map(appSetting
+            -> appSettingSecretsImmutableList.contains(appSetting.getName())
+                ? AzureAppServiceConfigurationDTOMapper.toApplicationSettingDTO(appSetting, HARNESS_SETTING_SECRET)
+                : AzureAppServiceConfigurationDTOMapper.toApplicationSettingDTO(appSetting, HARNESS_SETTING))
+        .collect(Collectors.toList());
+  }
+
+  public List<AzureAppServiceConnectionStringDTO> createConnStringDTOs(
+      List<AzureAppServiceConnectionString> connStrings, ImmutableList<String> connStringSecretsImmutableList) {
+    return connStrings.stream()
+        .map(connSetting
+            -> connStringSecretsImmutableList.contains(connSetting.getName())
+                ? AzureAppServiceConfigurationDTOMapper.toConnectionSettingDTO(connSetting, HARNESS_SETTING_SECRET)
+                : AzureAppServiceConfigurationDTOMapper.toConnectionSettingDTO(connSetting, HARNESS_SETTING))
+        .collect(Collectors.toList());
   }
 
   public <T extends AzureAppServiceSettingDTO> void encryptAzureAppServiceSettingDTOs(
@@ -564,7 +593,7 @@ public class AzureVMSSStateHelper {
   private void encryptSettingByNGSecretService(
       String accountId, AzureAppServiceHarnessSettingSecretValue harnessSettingSecretValue) {
     AzureAppServiceHarnessSettingSecretRef settingSecretRef = harnessSettingSecretValue.getSettingSecretRef();
-    List<EncryptedDataDetail> encryptedDataDetails = getConnectorAuthEncryptedDataDetails(accountId, settingSecretRef);
+    List<EncryptedDataDetail> encryptedDataDetails = getNgEncryptedDataDetails(accountId, settingSecretRef);
     harnessSettingSecretValue.setEncryptedDataDetails(encryptedDataDetails);
   }
 }
