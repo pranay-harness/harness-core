@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -38,7 +39,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 public class ConnectorChangeEventMessageProcessorTest extends CvNextGenTest {
@@ -97,7 +97,7 @@ public class ConnectorChangeEventMessageProcessorTest extends CvNextGenTest {
     verificationJobInstanceService = spy(verificationJobInstanceService);
     FieldUtils.writeField(
         connectorChangeEventMessageProcessor, "verificationJobInstanceService", verificationJobInstanceService, true);
-    Mockito.doNothing().when(verificationJobInstanceService).resetPerpetualTask(any(), any());
+    doNothing().when(verificationJobInstanceService).resetVerificationJobPerpetualTasks(any());
     connectorChangeEventMessageProcessor.processUpdateAction(
         ConnectorEntityChangeDTO.newBuilder()
             .setAccountIdentifier(StringValue.newBuilder().setValue(accountIdentifier).build())
@@ -106,7 +106,7 @@ public class ConnectorChangeEventMessageProcessorTest extends CvNextGenTest {
             .setIdentifier(StringValue.newBuilder().setValue(connectorIdentifier).build())
             .build());
 
-    verify(verificationJobInstanceService, times(1)).resetPerpetualTask(verificationJobInstance1, cvConfig);
+    verify(verificationJobInstanceService, times(1)).resetVerificationJobPerpetualTasks(cvConfig);
   }
 
   private CVConfig createCVConfig() {

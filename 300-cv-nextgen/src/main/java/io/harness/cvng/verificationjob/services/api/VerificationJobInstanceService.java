@@ -47,6 +47,5 @@ public interface VerificationJobInstanceService {
       String projectIdentifier, String envIdentifier, String serviceIdentifier, VerificationJobType jobType,
       Instant endTimeBefore);
   List<CVConfig> getCVConfigsForVerificationJob(VerificationJob verificationJob);
-  List<VerificationJobInstance> filterRunningVerificationJobInstances(List<String> verificationJobInstanceIds);
-  void resetPerpetualTask(VerificationJobInstance verificationJobInstance, CVConfig cvConfig);
+  void resetVerificationJobPerpetualTasks(CVConfig cvConfig);
 }
