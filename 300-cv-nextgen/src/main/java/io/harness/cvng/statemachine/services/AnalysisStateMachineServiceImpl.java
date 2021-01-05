@@ -1,6 +1,7 @@
 package io.harness.cvng.statemachine.services;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.cvng.analysis.beans.LogClusterLevel;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
@@ -36,6 +37,7 @@ import com.google.inject.Injector;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Sort;
@@ -100,7 +102,8 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
     }
   }
 
-  private Optional<AnalysisStateMachine> ignoreOldStatemachine(AnalysisStateMachine analysisStateMachine) {
+  @Override
+  public Optional<AnalysisStateMachine> ignoreOldStatemachine(AnalysisStateMachine analysisStateMachine) {
     Instant instantForAnalysis = analysisStateMachine.getAnalysisEndTime();
     if (analysisStateMachine.getStatus() != AnalysisStatus.RUNNING
         && Instant.now().minus(2, ChronoUnit.HOURS).isAfter(instantForAnalysis)) {
@@ -235,6 +238,13 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
         .filter(AnalysisStateMachineKeys.verificationTaskId, verificationTaskId)
         .order(Sort.descending(AnalysisStateMachineKeys.createdAt))
         .get();
+  }
+
+  @Override
+  public void save(List<AnalysisStateMachine> stateMachineList) {
+    if (isNotEmpty(stateMachineList)) {
+      hPersistence.save(stateMachineList);
+    }
   }
 
   @Override

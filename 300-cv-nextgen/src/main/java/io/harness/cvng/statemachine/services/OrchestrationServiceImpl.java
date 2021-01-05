@@ -1,5 +1,6 @@
 package io.harness.cvng.statemachine.services;
 
+import static io.harness.cvng.CVConstants.STATE_MACHINE_IGNORE_LIMIT;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.cvng.core.services.api.VerificationTaskService;
@@ -16,6 +17,8 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -114,10 +117,42 @@ public class OrchestrationServiceImpl implements OrchestrationService {
     stateMachineService.retryStateMachineAfterFailure(currentStateMachine);
   }
 
+  private AnalysisStateMachine getFrontOfStateMachineQueue(AnalysisOrchestrator orchestrator) {
+    return orchestrator.getAnalysisStateMachineQueue() != null && orchestrator.getAnalysisStateMachineQueue().size() > 0
+        ? orchestrator.getAnalysisStateMachineQueue().get(0)
+        : null;
+  }
+
   private void orchestrateNewAnalysisStateMachine(AnalysisOrchestrator orchestrator) {
     if (isNotEmpty(orchestrator.getAnalysisStateMachineQueue())) {
-      AnalysisStateMachine analysisStateMachine = orchestrator.getAnalysisStateMachineQueue().remove(0);
-      stateMachineService.initiateStateMachine(orchestrator.getVerificationTaskId(), analysisStateMachine);
+      AnalysisStateMachine analysisStateMachine = getFrontOfStateMachineQueue(orchestrator);
+
+      Optional<AnalysisStateMachine> ignoredStateMachine = analysisStateMachine == null
+          ? Optional.empty()
+          : stateMachineService.ignoreOldStatemachine(analysisStateMachine);
+      int ignoredCount = 0;
+      List<AnalysisStateMachine> ignoredStatemachines = new ArrayList<>();
+
+      while (ignoredStateMachine.isPresent() && ignoredCount < STATE_MACHINE_IGNORE_LIMIT) {
+        ignoredCount++;
+        // add to ignored list and remove from queue
+        ignoredStatemachines.add(ignoredStateMachine.get());
+        orchestrator.getAnalysisStateMachineQueue().remove(0);
+
+        analysisStateMachine = getFrontOfStateMachineQueue(orchestrator);
+        ignoredStateMachine = analysisStateMachine == null
+            ? Optional.empty()
+            : stateMachineService.ignoreOldStatemachine(analysisStateMachine);
+      }
+      if (ignoredCount > 0) {
+        // save all the ignored state machines.
+        stateMachineService.save(ignoredStatemachines);
+      }
+
+      if (analysisStateMachine != null && ignoredCount < STATE_MACHINE_IGNORE_LIMIT) {
+        stateMachineService.initiateStateMachine(orchestrator.getVerificationTaskId(), analysisStateMachine);
+        orchestrator.getAnalysisStateMachineQueue().remove(0);
+      }
       orchestrator.setStatus(AnalysisStatus.RUNNING);
       hPersistence.save(orchestrator);
     } else {
