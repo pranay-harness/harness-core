@@ -8,6 +8,7 @@ import io.harness.beans.dependencies.DependencyElement;
 import io.harness.beans.yaml.extended.CustomTextVariable;
 import io.harness.beans.yaml.extended.CustomVariable;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
+import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
@@ -33,10 +34,11 @@ public class IntegrationStageStepParametersPMS implements StepParameters {
   ParameterField<List<String>> sharedPaths;
   ParameterField<String> skipCondition;
   ParameterField<Boolean> enableCloneRepo;
+  BuildStatusUpdateParameter buildStatusUpdateParameter;
   String childNodeID;
 
-  public static IntegrationStageStepParametersPMS getStepParameters(
-      StageElementConfig stageElementConfig, String childNodeID) {
+  public static IntegrationStageStepParametersPMS getStepParameters(StageElementConfig stageElementConfig,
+      String childNodeID, BuildStatusUpdateParameter buildStatusUpdateParameter) {
     if (stageElementConfig == null) {
       return IntegrationStageStepParametersPMS.builder().childNodeID(childNodeID).build();
     }
@@ -53,6 +55,7 @@ public class IntegrationStageStepParametersPMS implements StepParameters {
     return IntegrationStageStepParametersPMS.builder()
         .identifier(stageElementConfig.getIdentifier())
         .name(stageElementConfig.getName())
+        .buildStatusUpdateParameter(buildStatusUpdateParameter)
         .description(stageElementConfig.getDescription())
         .infrastructure(integrationStageConfig.getInfrastructure())
         .dependencies(integrationStageConfig.getServiceDependencies())

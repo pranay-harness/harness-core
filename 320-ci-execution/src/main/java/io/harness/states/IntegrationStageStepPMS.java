@@ -7,7 +7,6 @@ import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
-import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -70,14 +69,5 @@ public class IntegrationStageStepPMS implements ChildExecutable<IntegrationStage
     log.info("executed integration stage =[{}]", stepParameters);
 
     return createStepResponseFromChildResponse(responseDataMap);
-  }
-
-  private BuildNumberDetails getBuildNumberDetails(Ambiance ambiance) {
-    return BuildNumberDetails.builder()
-        .accountIdentifier(AmbianceHelper.getAccountId(ambiance))
-        .orgIdentifier(AmbianceHelper.getOrgIdentifier(ambiance))
-        .projectIdentifier(AmbianceHelper.getProjectIdentifier(ambiance))
-        .buildNumber((long) ambiance.getMetadata().getRunSequence())
-        .build();
   }
 }

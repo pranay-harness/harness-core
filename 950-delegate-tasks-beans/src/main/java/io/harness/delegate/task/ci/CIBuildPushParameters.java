@@ -35,7 +35,7 @@ public abstract class CIBuildPushParameters implements TaskParameters, Execution
 
   public CIBuildPushParameters(String buildNumber, String repo, String owner, String sha, String identifier,
       String target_url, String key, String installId, String appId, String token, String userName,
-      GitSCMType gitSCMType) {
+      GitSCMType gitSCMType, ConnectorDetails connectorDetails) {
     this.buildNumber = buildNumber;
     this.repo = repo;
     this.owner = owner;
@@ -48,6 +48,7 @@ public abstract class CIBuildPushParameters implements TaskParameters, Execution
     this.gitSCMType = gitSCMType;
     this.token = token;
     this.userName = userName;
+    this.connectorDetails = connectorDetails;
   }
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

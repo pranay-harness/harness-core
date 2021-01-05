@@ -32,12 +32,20 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsD
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketApiAccessType;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePasswordApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernamePasswordDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernameTokenDTO;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.network.SafeHttpCall;
@@ -143,6 +151,21 @@ public class ConnectorUtils {
     return connectorDetails;
   }
 
+  public String fetchUserName(ConnectorDetails gitConnector) {
+    if (gitConnector.getConnectorType() == GITHUB) {
+      GithubConnectorDTO gitConfigDTO = (GithubConnectorDTO) gitConnector.getConnectorConfig();
+      return fetchUserNameFromGithubConnector(gitConfigDTO);
+    } else if (gitConnector.getConnectorType() == GITLAB) {
+      GitlabConnectorDTO gitConfigDTO = (GitlabConnectorDTO) gitConnector.getConnectorConfig();
+      return fetchUserNameFromGitlabConnector(gitConfigDTO);
+    } else if (gitConnector.getConnectorType() == BITBUCKET) {
+      BitbucketConnectorDTO gitConfigDTO = (BitbucketConnectorDTO) gitConnector.getConnectorConfig();
+      return fetchUserNameFromBitbucketConnector(gitConfigDTO, gitConnector.getIdentifier());
+    } else {
+      throw new CIStageExecutionException("Unsupported git connector " + gitConnector.getConnectorType());
+    }
+  }
+
   private ConnectorDetails getArtifactoryConnectorDetails(
       NGAccess ngAccess, ConnectorDTO connectorDTO, ConnectorDetailsBuilder connectorDetailsBuilder) {
     List<EncryptedDataDetail> encryptedDataDetails;
@@ -214,7 +237,8 @@ public class ConnectorUtils {
           (GitlabHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
       encryptedDataDetails =
           secretManagerClientService.getEncryptionDetails(ngAccess, gitlabHttpCredentialsDTO.getHttpCredentialsSpec());
-
+      encryptedDataDetails.addAll(
+          secretManagerClientService.getEncryptionDetails(ngAccess, gitConfigDTO.getApiAccess().getSpec()));
       return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
     } else {
       throw new CIStageExecutionException(
@@ -232,6 +256,8 @@ public class ConnectorUtils {
           (GithubHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
       encryptedDataDetails =
           secretManagerClientService.getEncryptionDetails(ngAccess, githubHttpCredentialsDTO.getHttpCredentialsSpec());
+      encryptedDataDetails.addAll(
+          secretManagerClientService.getEncryptionDetails(ngAccess, gitConfigDTO.getApiAccess().getSpec()));
       return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
     } else {
       throw new CIStageExecutionException(
@@ -248,6 +274,9 @@ public class ConnectorUtils {
           (BitbucketHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
       encryptedDataDetails = secretManagerClientService.getEncryptionDetails(
           ngAccess, bitbucketHttpCredentialsDTO.getHttpCredentialsSpec());
+      encryptedDataDetails.addAll(
+          secretManagerClientService.getEncryptionDetails(ngAccess, gitConfigDTO.getApiAccess().getSpec()));
+
       return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
     } else {
       throw new CIStageExecutionException(
@@ -309,5 +338,53 @@ public class ConnectorUtils {
           connectorRef.getIdentifier(), connectorRef.getScope()));
     }
     return connectorDTO.get();
+  }
+
+  private String fetchUserNameFromGitlabConnector(GitlabConnectorDTO gitConfigDTO) {
+    if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.HTTP) {
+      GitlabHttpCredentialsDTO gitlabHttpCredentialsDTO =
+          (GitlabHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
+      if (gitlabHttpCredentialsDTO.getType() == GitlabHttpAuthenticationType.USERNAME_AND_PASSWORD) {
+        GitlabUsernamePasswordDTO GitlabHttpCredentialsSpecDTO =
+            (GitlabUsernamePasswordDTO) gitlabHttpCredentialsDTO.getHttpCredentialsSpec();
+        return GitlabHttpCredentialsSpecDTO.getUsername();
+      } else if (gitlabHttpCredentialsDTO.getType() == GitlabHttpAuthenticationType.USERNAME_AND_TOKEN) {
+        GitlabUsernameTokenDTO GitlabHttpCredentialsSpecDTO =
+            (GitlabUsernameTokenDTO) gitlabHttpCredentialsDTO.getHttpCredentialsSpec();
+        return GitlabHttpCredentialsSpecDTO.getUsername();
+      }
+    }
+
+    return null;
+  }
+
+  private String fetchUserNameFromBitbucketConnector(BitbucketConnectorDTO gitConfigDTO, String identifier) {
+    try {
+      if (gitConfigDTO.getApiAccess().getType() == BitbucketApiAccessType.USERNAME_AND_PASSWORD) {
+        return ((BitbucketUsernamePasswordApiAccessDTO) gitConfigDTO.getApiAccess().getSpec()).getUsername();
+      }
+    } catch (Exception ex) {
+      throw new CIStageExecutionException(
+          format("Unable to get username information from api access for identifier %s", identifier), ex);
+    }
+    throw new CIStageExecutionException(
+        format("Unable to get username information from api access for identifier %s", identifier));
+  }
+
+  private String fetchUserNameFromGithubConnector(GithubConnectorDTO gitConfigDTO) {
+    if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.HTTP) {
+      GithubHttpCredentialsDTO githubHttpCredentialsDTO =
+          (GithubHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
+      if (githubHttpCredentialsDTO.getType() == GithubHttpAuthenticationType.USERNAME_AND_PASSWORD) {
+        GithubUsernamePasswordDTO githubHttpCredentialsSpecDTO =
+            (GithubUsernamePasswordDTO) githubHttpCredentialsDTO.getHttpCredentialsSpec();
+        return githubHttpCredentialsSpecDTO.getUsername();
+      } else if (githubHttpCredentialsDTO.getType() == GithubHttpAuthenticationType.USERNAME_AND_TOKEN) {
+        GithubUsernameTokenDTO githubHttpCredentialsSpecDTO =
+            (GithubUsernameTokenDTO) githubHttpCredentialsDTO.getHttpCredentialsSpec();
+        return githubHttpCredentialsSpecDTO.getUsername();
+      }
+    }
+    return null;
   }
 }

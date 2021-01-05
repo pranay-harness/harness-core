@@ -24,7 +24,8 @@ public class OrchestrationExecutionEventHandlerRegistrar {
         engineEventHandlersMap, OrchestrationVisualizationModuleEventHandlerRegistrar.getEngineEventHandlers());
     OrchestrationModuleRegistrarHelper.mergeEventHandlers(
         engineEventHandlersMap, OrchestrationStepsModuleEventHandlerRegistrar.getEngineEventHandlers());
-    engineEventHandlersMap.putAll(OrchestrationModuleEventHandlerRegistrar.getEngineEventHandlers());
+    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
+        engineEventHandlersMap, OrchestrationModuleEventHandlerRegistrar.getEngineEventHandlers());
     return engineEventHandlersMap;
   }
 }
