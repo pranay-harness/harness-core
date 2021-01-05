@@ -3,10 +3,8 @@ package software.wings.service.impl;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.ACCESS_DENIED;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.eraro.ErrorCode.EXPIRED_TOKEN;
-import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
 import static io.harness.eraro.ErrorCode.TOKEN_ALREADY_REFRESHED_ONCE;
@@ -39,6 +37,7 @@ import io.harness.entity.ServiceSecretKey.ServiceType;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.segment.SegmentHandler;
 import io.harness.exception.AccessDeniedException;
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.InvalidTokenException;
 import io.harness.exception.UnauthorizedException;
@@ -352,19 +351,19 @@ public class AuthServiceImpl implements AuthService {
 
     if (user == null) {
       log.error("No user context for authorization request for app: {}", appId);
-      throw new WingsException(ACCESS_DENIED, USER);
+      throw new AccessDeniedException("Access Denied", USER);
     }
 
     UserRequestContext userRequestContext = user.getUserRequestContext();
     if (userRequestContext == null) {
       log.error("User Request Context null for User {}", user.getName());
-      throw new WingsException(ACCESS_DENIED, USER);
+      throw new AccessDeniedException("Access Denied", USER);
     }
 
     UserPermissionInfo userPermissionInfo = userRequestContext.getUserPermissionInfo();
     if (userPermissionInfo == null) {
       log.error("User permission info null for User {}", user.getName());
-      throw new WingsException(ACCESS_DENIED, USER);
+      throw new AccessDeniedException("Access Denied", USER);
     }
     return userPermissionInfo;
   }
@@ -819,7 +818,7 @@ public class AuthServiceImpl implements AuthService {
       String authToken = JWT.decode(token).getClaim("authToken").asString();
       return getAuthToken(authToken);
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
-      throw new WingsException(GENERAL_ERROR, exception).addParam("message", "JWTToken validation failed");
+      throw new GeneralException("JWTToken validation failed", exception);
     } catch (JWTDecodeException | SignatureVerificationException | InvalidClaimException e) {
       throw new WingsException(INVALID_CREDENTIAL, USER, e)
           .addParam("message", "Invalid JWTToken received, failed to decode the token");
@@ -932,7 +931,7 @@ public class AuthServiceImpl implements AuthService {
       addUserPrincipal(authToken, jwtBuilder);
       return jwtBuilder.sign(algorithm);
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
-      throw new WingsException(GENERAL_ERROR, exception).addParam("message", "JWTToken could not be generated");
+      throw new GeneralException("JWTToken could not be generated", exception);
     }
   }
 
@@ -1032,7 +1031,7 @@ public class AuthServiceImpl implements AuthService {
                                                     .getEnvCreatePermissionsForEnvTypes();
 
     if (isEmpty(envCreatePermissions)) {
-      throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
+      throw new AccessDeniedException("Access Denied", USER);
     }
 
     if (envCreatePermissions.contains(EnvironmentType.ALL)) {
@@ -1040,7 +1039,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     if (!envCreatePermissions.contains(envType)) {
-      throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
+      throw new AccessDeniedException("Access Denied", USER);
     }
   }
 
@@ -1067,7 +1066,7 @@ public class AuthServiceImpl implements AuthService {
       if (appPermissionSummary.isCanCreateTemplatizedWorkflow()) {
         return;
       } else {
-        throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
+        throw new AccessDeniedException("Access Denied", USER);
       }
     }
 
@@ -1084,7 +1083,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     if (isEmpty(allowedEnvIds) || !allowedEnvIds.contains(envId)) {
-      throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
+      throw new AccessDeniedException("Access Denied", USER);
     }
   }
 
@@ -1108,7 +1107,7 @@ public class AuthServiceImpl implements AuthService {
         user.getUserRequestContext().getUserPermissionInfo().getAppPermissionMapInternal().get(targetAppId);
 
     if (!appPermissionSummary.isCanCreateTemplatizedWorkflow()) {
-      throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
+      throw new AccessDeniedException("Access Denied", USER);
     }
   }
 
@@ -1136,7 +1135,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     if (!authHandler.checkIfPipelineHasOnlyGivenEnvs(pipeline, allowedEnvIds)) {
-      throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
+      throw new AccessDeniedException("Access Denied", USER);
     }
   }
 

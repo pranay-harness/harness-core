@@ -755,7 +755,7 @@ public class AuthServiceTest extends WingsBaseTest {
 
     assertThatThrownBy(() -> authService.checkWorkflowPermissionsForEnv(application.getUuid(), workflow, Action.CREATE))
         .isInstanceOf(WingsException.class)
-        .hasMessageContaining("ACCESS_DENIED");
+        .hasMessageContaining("Access Denied");
 
     UserThreadLocal.unset();
   }
