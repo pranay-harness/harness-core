@@ -1,6 +1,7 @@
 package io.harness.delegate.task.citasks.cik8handler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.lang.String.format;
 
@@ -35,6 +36,8 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ExecWatch;
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -132,49 +135,70 @@ public class CIK8CtlHandler {
 
   // Waits for the pod to exit PENDING state and returns true if pod is in RUNNING state, else false.
   public PodStatus waitUntilPodIsReady(KubernetesClient kubernetesClient, String podName, String namespace)
-      throws InterruptedException, TimeoutException {
-    int waitTimeSec = 0;
-    while (waitTimeSec < CIConstants.POD_MAX_WAIT_UNTIL_READY_SECS) {
-      Pod pod = kubernetesClient.pods().inNamespace(namespace).withName(podName).get();
+      throws InterruptedException {
+    Pod pod = kubernetesClient.pods().inNamespace(namespace).withName(podName).get();
+    Instant startTime = Instant.now();
+    Instant currTime = startTime;
+    while (Duration.between(startTime, currTime).getSeconds() < CIConstants.POD_MAX_WAIT_UNTIL_READY_SECS) {
       if (pod == null) {
         throw new PodNotFoundException(format("Pod %s is not present in namespace %s", podName, namespace));
       }
 
-      if (isPodInRunningState(pod)) {
+      // Either pod is in pending phase where it is waiting for scheduling / creation of containers
+      // or pod is waiting for containers to move to running state.
+      if (!isPodInPendingPhase(pod) && !isPodInWaitingState(pod)) {
         return PodStatus.builder()
             .status(PodStatus.Status.RUNNING)
-            .ciContainerStatusList(getContainersStatus(pod))
-            .build();
-      } else if (!isPodInPendingState(pod)) {
-        List<String> posStatusLogs = pod.getStatus()
-                                         .getConditions()
-                                         .stream()
-                                         .filter(Objects::nonNull)
-                                         .map(PodCondition::getMessage)
-                                         .collect(Collectors.toList());
-        return PodStatus.builder()
-            .status(PodStatus.Status.ERROR)
-            .errorMessage(String.join(" ", posStatusLogs))
             .ciContainerStatusList(getContainersStatus(pod))
             .build();
       }
 
       sleeper.sleep(CIConstants.POD_WAIT_UNTIL_READY_SLEEP_SECS * 1000L);
-      waitTimeSec += CIConstants.POD_WAIT_UNTIL_READY_SLEEP_SECS;
+      pod = kubernetesClient.pods().inNamespace(namespace).withName(podName).get();
+      currTime = Instant.now();
     }
 
-    throw new TimeoutException(format("Pod %s in namespace %s is in pending state even after %s seconds", podName,
-        namespace, CIConstants.POD_MAX_WAIT_UNTIL_READY_SECS));
+    String errMsg;
+    // If pod's container status list is non-empty, reason for pod not to be in running state is in waiting container's
+    // status message. Else reason is present in pod conditions.
+    if (isNotEmpty(pod.getStatus().getContainerStatuses())) {
+      List<String> containerErrs =
+          pod.getStatus()
+              .getContainerStatuses()
+              .stream()
+              .filter(containerStatus -> containerStatus.getState().getWaiting() != null)
+              .filter(containerStatus -> containerStatus.getState().getWaiting().getMessage() != null)
+              .map(containerStatus -> containerStatus.getState().getWaiting().getMessage())
+              .collect(Collectors.toList());
+      errMsg = String.join(", ", containerErrs);
+    } else {
+      List<String> podConditions = pod.getStatus()
+                                       .getConditions()
+                                       .stream()
+                                       .filter(Objects::nonNull)
+                                       .map(PodCondition::getMessage)
+                                       .collect(Collectors.toList());
+      errMsg = String.join(", ", podConditions);
+    }
+    return PodStatus.builder()
+        .status(PodStatus.Status.ERROR)
+        .errorMessage(errMsg)
+        .ciContainerStatusList(getContainersStatus(pod))
+        .build();
   }
 
-  private boolean isPodInPendingState(Pod pod) {
+  private boolean isPodInWaitingState(Pod pod) {
+    for (ContainerStatus containerStatus : pod.getStatus().getContainerStatuses()) {
+      if (containerStatus.getState().getWaiting() != null) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean isPodInPendingPhase(Pod pod) {
     String podPhase = pod.getStatus().getPhase();
     return podPhase.equals(CIConstants.POD_PENDING_PHASE);
-  }
-
-  private boolean isPodInRunningState(Pod pod) {
-    String podPhase = pod.getStatus().getPhase();
-    return podPhase.equals(CIConstants.POD_RUNNING_PHASE);
   }
 
   private List<CIContainerStatus> getContainersStatus(Pod pod) {

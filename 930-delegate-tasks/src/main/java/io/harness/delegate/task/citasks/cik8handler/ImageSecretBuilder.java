@@ -20,6 +20,7 @@ import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.delegate.task.aws.AwsNgConfigMapper;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.SecretDecryptionService;
 
@@ -55,7 +56,7 @@ public class ImageSecretBuilder {
 
     String imageName = imageDetailsWithConnector.getImageDetails().getName();
     if (connectorDetails.getConnectorType() == ConnectorType.DOCKER) {
-      return getJSONEncodedDockerCredentials(imageName, connectorDetails);
+      return getJSONEncodedDockerCredentials(connectorDetails);
     } else if (connectorDetails.getConnectorType() == ConnectorType.GCP) {
       return getJSONEncodedGCRCredentials(imageName, connectorDetails);
     } else if (connectorDetails.getConnectorType() == ConnectorType.AWS) {
@@ -64,11 +65,12 @@ public class ImageSecretBuilder {
     return null;
   }
 
-  private String getJSONEncodedDockerCredentials(String imageName, ConnectorDetails connectorDetails) {
+  private String getJSONEncodedDockerCredentials(ConnectorDetails connectorDetails) {
     DockerConnectorDTO dockerConfig = (DockerConnectorDTO) connectorDetails.getConnectorConfig();
     if (dockerConfig.getAuth().getAuthType() != DockerAuthType.USER_PASSWORD) {
-      throw new InvalidArgumentsException(format("Invalid auth type: %s for docker image: %s",
-                                              dockerConfig.getAuth().getAuthType().toString(), imageName),
+      throw new InvalidArgumentsException(
+          format("Invalid auth type: %s for docker connector: %s", dockerConfig.getAuth().getAuthType().toString(),
+              connectorDetails.getIdentifier()),
           WingsException.USER);
     }
 
@@ -82,6 +84,7 @@ public class ImageSecretBuilder {
       return null;
     }
 
+    validateDecodeDockerCredentials(username, password, registryUrl, connectorDetails.getIdentifier());
     return jsonEncodeCredentials(registryUrl, username, password);
   }
 
@@ -97,8 +100,8 @@ public class ImageSecretBuilder {
     GcpConnectorDTO gcpConnectorConfig = (GcpConnectorDTO) connectorDetails.getConnectorConfig();
     if (gcpConnectorConfig.getCredential().getGcpCredentialType() != GcpCredentialType.MANUAL_CREDENTIALS) {
       throw new InvalidArgumentsException(
-          format("Invalid auth type: %s for GCR image: %s",
-              gcpConnectorConfig.getCredential().getGcpCredentialType().toString(), imageName),
+          format("Unsupported auth type: %s for GCP connector: %s to pull image",
+              gcpConnectorConfig.getCredential().getGcpCredentialType().toString(), connectorDetails.getIdentifier()),
           WingsException.USER);
     }
 
@@ -107,8 +110,10 @@ public class ImageSecretBuilder {
         connectorDetails.getEncryptedDataDetails());
     String password = String.valueOf(credentialConfig.getSecretKeyRef().getDecryptedValue());
     String username = GCR_USERNAME;
-    if (isEmpty(registryUrl) || isEmpty(username) || isEmpty(password)) {
-      return null;
+    if (isEmpty(password)) {
+      throw new InvalidArgumentsException(
+          format("Password should not be empty for gcp connector %s", connectorDetails.getIdentifier()),
+          WingsException.USER);
     }
 
     return jsonEncodeCredentials(registryUrl, username, password);
@@ -156,5 +161,23 @@ public class ImageSecretBuilder {
     return new JSONObject()
         .put(registryUrl, new JSONObject().put(USERNAME, username).put(PASSWORD, password))
         .toString();
+  }
+
+  private void validateDecodeDockerCredentials(
+      String username, String password, String registryUrl, String connectorId) {
+    if (isEmpty(registryUrl)) {
+      throw new InvalidArgumentsException(
+          format("Registry url should not be empty for docker connector %s", connectorId), WingsException.USER);
+    }
+
+    if (isEmpty(username)) {
+      throw new InvalidArgumentsException(
+          format("Username should not be empty for docker connector %s", connectorId), WingsException.USER);
+    }
+
+    if (isEmpty(password)) {
+      throw new InvalidArgumentsException(
+          format("Password should not be empty for docker connector %s", connectorId), WingsException.USER);
+    }
   }
 }

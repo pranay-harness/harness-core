@@ -112,18 +112,10 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
         } else {
           result = K8sTaskExecutionResponse.builder()
                        .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+                       .errorMessage(podStatus.getErrorMessage())
                        .k8sTaskResponse(k8sTaskResponse)
                        .build();
         }
-      } catch (TimeoutException timeoutException) {
-        log.error("Processing CI K8 build timed out: {}", cik8BuildTaskParamsStr, timeoutException);
-        String errorMessage = k8sTaskResponse.getPodStatus().getErrorMessage();
-        k8sTaskResponse.setPodStatus(PodStatus.builder().status(PENDING).errorMessage(errorMessage).build());
-        result = K8sTaskExecutionResponse.builder()
-                     .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-                     .errorMessage(timeoutException.getMessage())
-                     .k8sTaskResponse(k8sTaskResponse)
-                     .build();
       } catch (Exception ex) {
         log.error("Exception in processing CI K8 build setup task: {}", cik8BuildTaskParamsStr, ex);
         result = K8sTaskExecutionResponse.builder()
