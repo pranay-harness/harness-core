@@ -51,6 +51,6 @@ public class ArtifactSpecWrapper implements Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.ARTIFACT_SPEC_WRAPPER).build();
+    return LevelNode.builder().qualifierName(YamlTypes.PRIMARY_ARTIFACT).build();
   }
 }

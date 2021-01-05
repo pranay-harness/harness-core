@@ -6,11 +6,13 @@ option java_multiple_files = true;
 
 import "io/harness/pms/contracts/plan/plan_node_proto.proto";
 import "io/harness/pms/contracts/plan/graph_layout.proto";
+import "io/harness/pms/contracts/plan/variables.proto";
 import "io/harness/pms/contracts/plan/execution_metadata.proto";
 
 service PlanCreationService {
   rpc createPlan(PlanCreationBlobRequest) returns (PlanCreationBlobResponse);
   rpc createFilter(FilterCreationBlobRequest) returns (FilterCreationBlobResponse);
+  rpc createVariablesYaml(VariablesCreationBlobRequest) returns (VariablesCreationBlobResponse);
 }
 
 message PlanCreationBlobRequest {
@@ -53,4 +55,14 @@ message FilterCreationBlobResponse {
   map<string, YamlFieldBlob> dependencies = 3;
   map<string, YamlFieldBlob> resolvedDependencies = 4;
   string startingNodeId = 6;
+}
+
+message VariablesCreationBlobRequest {
+  map<string, YamlFieldBlob> dependencies = 1;
+}
+
+message VariablesCreationBlobResponse {
+  map<string, YamlProperties> yamlProperties = 1;
+  map<string, YamlFieldBlob> dependencies = 2;
+  map<string, YamlFieldBlob> resolvedDependencies = 3;
 }

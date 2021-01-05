@@ -3,17 +3,13 @@ package io.harness.pms.sdk.core.plan.creation.creators;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
-import io.harness.pms.contracts.plan.FilterCreationBlobRequest;
-import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
-import io.harness.pms.contracts.plan.PlanCreationBlobRequest;
-import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
-import io.harness.pms.contracts.plan.PlanCreationContextValue;
+import io.harness.pms.contracts.plan.*;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc.PlanCreationServiceImplBase;
-import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.pipeline.filters.FilterCreatorService;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
+import io.harness.pms.sdk.core.variables.VariableCreatorService;
 import io.harness.pms.utils.CompletableFutures;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
@@ -38,13 +34,15 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
   private final Executor executor = Executors.newFixedThreadPool(2);
 
   private final FilterCreatorService filterCreatorService;
+  private final VariableCreatorService variableCreatorService;
   private final List<PartialPlanCreator<?>> planCreators;
 
   @Inject
   public PlanCreatorService(@NotNull PipelineServiceInfoProvider pipelineServiceInfoProvider,
-      @NotNull FilterCreatorService filterCreatorService) {
+      @NotNull FilterCreatorService filterCreatorService, VariableCreatorService variableCreatorService) {
     this.planCreators = pipelineServiceInfoProvider.getPlanCreators();
     this.filterCreatorService = filterCreatorService;
+    this.variableCreatorService = variableCreatorService;
   }
 
   @Override
@@ -158,6 +156,14 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
   public void createFilter(
       FilterCreationBlobRequest request, StreamObserver<FilterCreationBlobResponse> responseObserver) {
     FilterCreationBlobResponse response = filterCreatorService.createFilterBlobResponse(request);
+    responseObserver.onNext(response);
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void createVariablesYaml(
+      VariablesCreationBlobRequest request, StreamObserver<VariablesCreationBlobResponse> responseObserver) {
+    VariablesCreationBlobResponse response = variableCreatorService.createVariablesResponse(request);
     responseObserver.onNext(response);
     responseObserver.onCompleted();
   }

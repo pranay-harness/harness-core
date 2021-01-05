@@ -65,6 +65,6 @@ public class KubernetesServiceSpec implements ServiceSpec, Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.KUBERNETES_SERVICE_SPEC).build();
+    return LevelNode.builder().qualifierName(YamlTypes.SERVICE_SPEC).build();
   }
 }
