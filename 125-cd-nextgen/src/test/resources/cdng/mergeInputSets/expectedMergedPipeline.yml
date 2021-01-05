@@ -63,7 +63,7 @@ pipeline:
           infrastructureDefinition:
             type: KubernetesDirect
             spec:
-              connectorRef: ${input}
+              connectorRef: <+input>
               namespace: prod2
           environment:
             name: env
@@ -138,7 +138,7 @@ pipeline:
                     spec:
                       connectorRef: my-connector
                       gitFetchType: Branch
-                      branch: ${input}
+                      branch: <+input>
                       paths:
                       - test/prod/values.yaml
         infrastructure:

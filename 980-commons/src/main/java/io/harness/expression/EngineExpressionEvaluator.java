@@ -35,8 +35,14 @@ import org.hibernate.validator.constraints.NotEmpty;
 @OwnedBy(CDC)
 @Slf4j
 public class EngineExpressionEvaluator {
-  private static final Pattern variablePattern = Pattern.compile("\\$\\{[^{}]*}");
-  private static final Pattern secretVariablePattern = Pattern.compile("\\$\\{secret(Manager|Delegate)\\.[^{}]*}");
+  public static final String EXPR_START = "<+";
+  public static final String EXPR_END = ">";
+  public static final String EXPR_START_ESC = "<\\+";
+  public static final String EXPR_END_ESC = ">";
+
+  private static final Pattern variablePattern = Pattern.compile(EXPR_START_ESC + "[^{}<>]*" + EXPR_END_ESC);
+  private static final Pattern secretVariablePattern =
+      Pattern.compile(EXPR_START_ESC + "secret(Manager|Delegate)\\.[^{}<>]*" + EXPR_END_ESC);
   private static final Pattern validVariableFieldNamePattern = Pattern.compile("^[a-zA-Z_][a-zA-Z_0-9]*$");
   private static final Pattern aliasNamePattern = Pattern.compile("^[a-zA-Z_][a-zA-Z_0-9]*$");
 
@@ -160,7 +166,8 @@ public class EngineExpressionEvaluator {
                                                            .ctx(ctx)
                                                            .prefix(IdentifierName.random())
                                                            .suffix(IdentifierName.random())
-                                                           .build());
+                                                           .build(),
+        EXPR_START, EXPR_END, StrSubstitutor.DEFAULT_ESCAPE);
     return evaluateInternal(strSubstitutor.replace(expression), ctx);
   }
 
@@ -328,7 +335,7 @@ public class EngineExpressionEvaluator {
   }
 
   public static String createExpression(String expr) {
-    return expr == null ? null : "${" + expr + "}";
+    return expr == null ? null : EXPR_START + expr + EXPR_END;
   }
 
   public static class ResolveFunctorImpl implements ExpressionResolveFunctor {

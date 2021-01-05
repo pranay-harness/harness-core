@@ -2,13 +2,17 @@ package io.harness.common;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.expression.EngineExpressionEvaluator;
+
 import java.util.regex.Pattern;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class NGExpressionUtils {
-  private static final Pattern InputSetVariablePattern = Pattern.compile("\\$\\{input}.*");
-  public static final String DEFAULT_INPUT_SET_EXPRESSION = "${input}";
+  private static final Pattern InputSetVariablePattern = Pattern.compile(
+      EngineExpressionEvaluator.EXPR_START_ESC + "input" + EngineExpressionEvaluator.EXPR_END_ESC + ".*");
+  public static final String DEFAULT_INPUT_SET_EXPRESSION =
+      EngineExpressionEvaluator.EXPR_START + "input" + EngineExpressionEvaluator.EXPR_END;
 
   public boolean matchesInputSetPattern(String expression) {
     if (isEmpty(expression)) {
@@ -33,6 +37,7 @@ public class NGExpressionUtils {
   }
 
   public String getInputSetValidatorPattern(String validatorName) {
-    return "\\$\\{input}\\." + validatorName + "\\(";
+    return EngineExpressionEvaluator.EXPR_START_ESC + "input" + EngineExpressionEvaluator.EXPR_END_ESC + "\\."
+        + validatorName + "\\(";
   }
 }

@@ -88,7 +88,7 @@ public class AmbianceExpressionEvaluatorTest extends OrchestrationTestBase {
   public void testWithExpressions() {
     DummyB dummyB1 = DummyB.builder()
                          .cVal1(DummyC.builder().strVal("c11").build())
-                         .cVal2(DummyOrchestrationField.createExpressionField("${c12}"))
+                         .cVal2(DummyOrchestrationField.createExpressionField("<+c12>"))
                          .strVal1("b11")
                          .strVal2(DummyOrchestrationField.createValueField("b12"))
                          .intVal1(11)
@@ -96,11 +96,11 @@ public class AmbianceExpressionEvaluatorTest extends OrchestrationTestBase {
                          .build();
     DummyB dummyB2 = DummyB.builder()
                          .cVal1(DummyC.builder().strVal("c21").build())
-                         .cVal2(DummyOrchestrationField.createExpressionField("${c22}"))
-                         .strVal1("${b21}")
-                         .strVal2(DummyOrchestrationField.createExpressionField("${b22}"))
+                         .cVal2(DummyOrchestrationField.createExpressionField("<+c22>"))
+                         .strVal1("<+b21>")
+                         .strVal2(DummyOrchestrationField.createExpressionField("<+b22>"))
                          .intVal1(21)
-                         .intVal2(DummyOrchestrationField.createExpressionField("${i22}"))
+                         .intVal2(DummyOrchestrationField.createExpressionField("<+i22>"))
                          .build();
     DummyA dummyA = DummyA.builder()
                         .bVal1(dummyB1)
@@ -128,7 +128,7 @@ public class AmbianceExpressionEvaluatorTest extends OrchestrationTestBase {
     validateExpression(evaluator, "bVal2.cVal1.strVal", "c21");
     validateExpression(evaluator, "bVal2.cVal2.strVal", "finalC22", true);
     validateExpression(evaluator, "bVal2.strVal1", "finalB21", true);
-    validateExpression(evaluator, "bVal2.strVal2", "${b22}");
+    validateExpression(evaluator, "bVal2.strVal2", "<+b22>");
     validateExpression(evaluator, "bVal2.intVal1", 21);
     validateExpression(evaluator, "bVal2.intVal2", 222, true);
     validateExpression(evaluator, "strVal1", "a1");
@@ -147,7 +147,7 @@ public class AmbianceExpressionEvaluatorTest extends OrchestrationTestBase {
 
   private void validateSingleExpression(
       EngineExpressionEvaluator evaluator, String expression, Object expected, boolean skipEvaluate) {
-    expression = "${" + expression + "}";
+    expression = "<+" + expression + ">";
     assertThat(evaluator.renderExpression(expression)).isEqualTo(String.valueOf(expected));
     if (!skipEvaluate) {
       assertThat(evaluator.evaluateExpression(expression)).isEqualTo(expected);

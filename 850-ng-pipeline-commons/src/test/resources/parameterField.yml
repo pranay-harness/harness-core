@@ -1,14 +1,14 @@
 infrastructure:
-  inner1: ${input}
-  inner2: ${input}.allowedValues(jexl(${inner02} == 'stringval' ? 'value1, value2':'value3, value4'))
-  inner3: ${input}.allowedValues(4.1, 4.2)
-  inner4: ${input}.allowedValues(1.1, 2.0, 3.0)
+  inner1: <+input>
+  inner2: <+input>.allowedValues(jexl(${inner02} == 'stringval' ? 'value1, value2':'value3, value4'))
+  inner3: <+input>.allowedValues(4.1, 4.2)
+  inner4: <+input>.allowedValues(1.1, 2.0, 3.0)
   definition:
-    inner5: ${input}.regex(^string.*)
-    inner6: ${input}.allowedValues(1,2,4.2)
-    inner7: ${infrastructure.inner1}
+    inner5: <+input>.regex(^string.*)
+    inner6: <+input>.allowedValues(1,2,4.2)
+    inner7: <+infrastructure.inner1>
     # recursive/nested expressions are not working in evaluteExpression as of now, test it when done
-    inner8: ${input}.allowedValues(jexl(${inner02} == 'stringval' ? (${infrastructure.inner1} == 'stringval' ? 'dev_a, dev_b':'dev_qa, dev_qb'):'prod, stage'))
+    inner8: <+input>.allowedValues(jexl(<+inner02> == 'stringval' ? (<+infrastructure.inner1> == 'stringval' ? 'dev_a, dev_b':'dev_qa, dev_qb'):'prod, stage'))
 inner01:
   - value1
   - value2

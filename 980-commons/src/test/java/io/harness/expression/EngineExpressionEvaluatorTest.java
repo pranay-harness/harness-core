@@ -87,7 +87,7 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
   public void testWithExpressions() {
     DummyB dummyB1 = DummyB.builder()
                          .cVal1(DummyC.builder().strVal("c11").build())
-                         .cVal2(DummyField.createExpressionField("${c12}"))
+                         .cVal2(DummyField.createExpressionField("<+c12>"))
                          .strVal1("b11")
                          .strVal2(DummyField.createValueField("b12"))
                          .intVal1(11)
@@ -95,11 +95,11 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
                          .build();
     DummyB dummyB2 = DummyB.builder()
                          .cVal1(DummyC.builder().strVal("c21").build())
-                         .cVal2(DummyField.createExpressionField("${c22}"))
-                         .strVal1("${b21}")
-                         .strVal2(DummyField.createExpressionField("${b22}"))
+                         .cVal2(DummyField.createExpressionField("<+c22>"))
+                         .strVal1("<+b21>")
+                         .strVal2(DummyField.createExpressionField("<+b22>"))
                          .intVal1(21)
-                         .intVal2(DummyField.createExpressionField("${i22}"))
+                         .intVal2(DummyField.createExpressionField("<+i22>"))
                          .build();
     DummyA dummyA = DummyA.builder()
                         .bVal1(dummyB1)
@@ -127,7 +127,7 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
     validateExpression(evaluator, "bVal2.cVal1.strVal", "c21");
     validateExpression(evaluator, "bVal2.cVal2.strVal", "finalC22", true);
     validateExpression(evaluator, "bVal2.strVal1", "finalB21", true);
-    validateExpression(evaluator, "bVal2.strVal2", "${b22}");
+    validateExpression(evaluator, "bVal2.strVal2", "<+b22>");
     validateExpression(evaluator, "bVal2.intVal1", 21);
     validateExpression(evaluator, "bVal2.intVal2", 222, true);
     validateExpression(evaluator, "strVal1", "a1");
@@ -146,7 +146,7 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
 
   private void validateSingleExpression(
       EngineExpressionEvaluator evaluator, String expression, Object expected, boolean skipEvaluate) {
-    expression = "${" + expression + "}";
+    expression = "<+" + expression + ">";
     assertThat(evaluator.renderExpression(expression)).isEqualTo(String.valueOf(expected));
     if (!skipEvaluate) {
       assertThat(evaluator.evaluateExpression(expression)).isEqualTo(expected);
@@ -159,10 +159,10 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
   public void testHasVariables() {
     assertThat(EngineExpressionEvaluator.hasVariables(null)).isFalse();
     assertThat(EngineExpressionEvaluator.hasVariables("abc")).isFalse();
-    assertThat(EngineExpressionEvaluator.hasVariables("abc ${")).isFalse();
-    assertThat(EngineExpressionEvaluator.hasVariables("abc ${}")).isTrue();
-    assertThat(EngineExpressionEvaluator.hasVariables("abc ${ab}")).isTrue();
-    assertThat(EngineExpressionEvaluator.hasVariables("abc ${ab} ${cd}")).isTrue();
+    assertThat(EngineExpressionEvaluator.hasVariables("abc <+")).isFalse();
+    assertThat(EngineExpressionEvaluator.hasVariables("abc <+>")).isTrue();
+    assertThat(EngineExpressionEvaluator.hasVariables("abc <+ab>")).isTrue();
+    assertThat(EngineExpressionEvaluator.hasVariables("abc <+ab> <+cd>")).isTrue();
   }
 
   @Test
@@ -171,10 +171,10 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
   public void testFindVariables() {
     assertThat(EngineExpressionEvaluator.findVariables(null)).isEmpty();
     assertThat(EngineExpressionEvaluator.findVariables("abc")).isEmpty();
-    assertThat(EngineExpressionEvaluator.findVariables("abc ${")).isEmpty();
-    assertThat(EngineExpressionEvaluator.findVariables("abc ${}")).containsExactly("${}");
-    assertThat(EngineExpressionEvaluator.findVariables("abc ${ab}")).containsExactly("${ab}");
-    assertThat(EngineExpressionEvaluator.findVariables("abc ${ab} ${cd}")).containsExactly("${ab}", "${cd}");
+    assertThat(EngineExpressionEvaluator.findVariables("abc <+")).isEmpty();
+    assertThat(EngineExpressionEvaluator.findVariables("abc <+>")).containsExactly("<+>");
+    assertThat(EngineExpressionEvaluator.findVariables("abc <+ab>")).containsExactly("<+ab>");
+    assertThat(EngineExpressionEvaluator.findVariables("abc <+ab> <+cd>")).containsExactly("<+ab>", "<+cd>");
   }
 
   @Test
@@ -183,12 +183,12 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
   public void testHasSecretVariables() {
     assertThat(EngineExpressionEvaluator.hasSecretVariables(null)).isFalse();
     assertThat(EngineExpressionEvaluator.hasSecretVariables("abc")).isFalse();
-    assertThat(EngineExpressionEvaluator.hasSecretVariables("abc ${")).isFalse();
-    assertThat(EngineExpressionEvaluator.hasSecretVariables("abc ${}")).isFalse();
-    assertThat(EngineExpressionEvaluator.hasSecretVariables("abc ${ab}")).isFalse();
-    assertThat(EngineExpressionEvaluator.hasSecretVariables("abc ${secretManager.ab} ${cd}")).isTrue();
-    assertThat(EngineExpressionEvaluator.hasSecretVariables("abc ${ab} ${secretManager.cd}")).isTrue();
-    assertThat(EngineExpressionEvaluator.hasSecretVariables("abc ${secretManager.ab} ${secretManager.cd}")).isTrue();
+    assertThat(EngineExpressionEvaluator.hasSecretVariables("abc <+")).isFalse();
+    assertThat(EngineExpressionEvaluator.hasSecretVariables("abc <+>")).isFalse();
+    assertThat(EngineExpressionEvaluator.hasSecretVariables("abc <+ab}")).isFalse();
+    assertThat(EngineExpressionEvaluator.hasSecretVariables("abc <+secretManager.ab> <+cd>")).isTrue();
+    assertThat(EngineExpressionEvaluator.hasSecretVariables("abc <+ab> <+secretManager.cd>")).isTrue();
+    assertThat(EngineExpressionEvaluator.hasSecretVariables("abc <+secretManager.ab> <+secretManager.cd>")).isTrue();
   }
 
   @Test
@@ -197,16 +197,16 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
   public void testFindSecretVariables() {
     assertThat(EngineExpressionEvaluator.findSecretVariables(null)).isEmpty();
     assertThat(EngineExpressionEvaluator.findSecretVariables("abc")).isEmpty();
-    assertThat(EngineExpressionEvaluator.findSecretVariables("abc ${")).isEmpty();
-    assertThat(EngineExpressionEvaluator.findSecretVariables("abc ${}")).isEmpty();
-    assertThat(EngineExpressionEvaluator.findSecretVariables("abc ${ab}")).isEmpty();
-    assertThat(EngineExpressionEvaluator.findSecretVariables("abc ${ab} ${cd}")).isEmpty();
-    assertThat(EngineExpressionEvaluator.findSecretVariables("abc ${secretManager.ab} ${cd}"))
-        .containsExactly("${secretManager.ab}");
-    assertThat(EngineExpressionEvaluator.findSecretVariables("abc ${ab} ${secretManager.cd}"))
-        .containsExactly("${secretManager.cd}");
-    assertThat(EngineExpressionEvaluator.findSecretVariables("abc ${secretManager.ab} ${secretManager.cd}"))
-        .containsExactly("${secretManager.ab}", "${secretManager.cd}");
+    assertThat(EngineExpressionEvaluator.findSecretVariables("abc <+")).isEmpty();
+    assertThat(EngineExpressionEvaluator.findSecretVariables("abc <+>")).isEmpty();
+    assertThat(EngineExpressionEvaluator.findSecretVariables("abc <+ab>")).isEmpty();
+    assertThat(EngineExpressionEvaluator.findSecretVariables("abc <+ab> <+cd>")).isEmpty();
+    assertThat(EngineExpressionEvaluator.findSecretVariables("abc <+secretManager.ab> <+cd>"))
+        .containsExactly("<+secretManager.ab>");
+    assertThat(EngineExpressionEvaluator.findSecretVariables("abc <+ab> <+secretManager.cd>"))
+        .containsExactly("<+secretManager.cd>");
+    assertThat(EngineExpressionEvaluator.findSecretVariables("abc <+secretManager.ab> <+secretManager.cd>"))
+        .containsExactly("<+secretManager.ab>", "<+secretManager.cd>");
   }
 
   @Test

@@ -10,7 +10,7 @@ pipeline:
       spec:
         service:
           name: service1
-          identifier: ${input}
+          identifier: <+input>
           serviceDefinition:
             type: Kubernetes # Can it be type to make it consistent with other types
             spec:
@@ -19,7 +19,7 @@ pipeline:
                   type: Dockerhub
                   spec:
                     connectorRef: npQuotecenter
-                    imagePath: ${input}
+                    imagePath: <+input>
                     tag: "latest"
                 sidecars:
                 - sidecar:
@@ -28,7 +28,7 @@ pipeline:
                     spec:
                       connectorRef: myDocker2
                       imagePath: "library/redis"
-                      tag: ${input}
+                      tag: <+input>
               manifests:
               - manifest:
                   identifier: specFiles
@@ -40,7 +40,7 @@ pipeline:
                         connectorRef: myGitConnector
                         gitFetchType: Branch
                         branch: master
-                        paths: ${input}.allowedValues(['paths1', 'master/paths2', 'paths3'])
+                        paths: <+input>.allowedValues(['paths1', 'master/paths2', 'paths3'])
               manifestOverrideSets:
               - overrideSet:
                   identifier: overrideSet1
@@ -53,21 +53,21 @@ pipeline:
                           type: Git
                           # Git|Local
                           spec:
-                            connectorRef: ${input}
+                            connectorRef: <+input>
                             gitFetchType: Branch
                             branch: master
                             paths:
                               - test/spec
         infrastructure:
           environment:
-            name: ${input}
-            identifier: ${input}
+            name: <+input>
+            identifier: <+input>
             type: PreProduction
           infrastructureDefinition:
             type: KubernetesDirect
             spec:
               connectorRef: np-quotecenter_quotecenter-yin
-              namespace: ${input}.allowedValues(jexl(${stage.name} == 'qa' ? 'dev1, qa1':'prod1, stage1'))
+              namespace: <+input>.allowedValues(jexl(${stage.name} == 'qa' ? 'dev1, qa1':'prod1, stage1'))
         execution:
           steps:
           - parallel:
@@ -76,8 +76,8 @@ pipeline:
                 identifier: rolloutDeployment
                 type: K8sRollingDeploy
                 spec:
-                  timeout: ${input}.allowedValues(100, 1000, 100)
-                  skipDryRun: ${input}.allowedValues(true, false)
+                  timeout: <+input>.allowedValues(100, 1000, 100)
+                  skipDryRun: <+input>.allowedValues(true, false)
           - stepGroup:
               identifier: HttpValidationSteps
               steps:
@@ -101,7 +101,7 @@ pipeline:
               identifier: rollbackRolloutDeployment1
               type: K8sRollingRollback
               spec:
-                timeout: ${input}.allowedValues(100, 1000, 100)
+                timeout: <+input>.allowedValues(100, 1000, 100)
           - step:
               name: http rollback step 2
               identifier: httpStep4
@@ -117,7 +117,7 @@ pipeline:
       spec:
         service:
           useFromStage:
-            stage: ${input}.regex(^prod*)
+            stage: <+input>.regex(^prod*)
           stageOverrides:
             manifests:
             - manifest:
@@ -127,7 +127,7 @@ pipeline:
                   store:
                     type: Git
                     spec:
-                      connectorRef: ${input}
+                      connectorRef: <+input>
                       gitFetchType: Branch
                       branch: master
                       paths:
@@ -145,7 +145,7 @@ pipeline:
             stage: qaStage
             overrides:
               environment:
-                identifier: ${input}
+                identifier: <+input>
               infrastructureDefinition:
                 type: KubernetesDirect
                 spec:

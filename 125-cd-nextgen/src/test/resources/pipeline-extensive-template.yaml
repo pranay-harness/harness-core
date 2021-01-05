@@ -6,7 +6,7 @@ pipeline:
       type: Deployment
       spec:
         service:
-          identifier: ${input}
+          identifier: <+input>
           serviceDefinition:
             type: Kubernetes
             spec:
@@ -14,13 +14,13 @@ pipeline:
                 primary:
                   type: Dockerhub
                   spec:
-                    imagePath: ${input}
+                    imagePath: <+input>
                 sidecars:
                 - sidecar:
                     identifier: sidecar1
                     type: Dockerhub
                     spec:
-                      tag: ${input}
+                      tag: <+input>
               manifests:
               - manifest:
                   identifier: specFiles
@@ -29,7 +29,7 @@ pipeline:
                     store:
                       type: Git
                       spec:
-                        paths: ${input}.allowedValues(['paths1', 'master/paths2',\
+                        paths: <+input>.allowedValues(['paths1', 'master/paths2',\
                           \ 'paths3'])
               manifestOverrideSets:
               - overrideSet:
@@ -42,16 +42,16 @@ pipeline:
                         store:
                           type: Git
                           spec:
-                            connectorRef: ${input}
+                            connectorRef: <+input>
         infrastructure:
           infrastructureDefinition:
             type: KubernetesDirect
             spec:
-              namespace: ${input}.allowedValues(jexl(${stage.name} == 'qa' ? 'dev1,\
+              namespace: <+input>.allowedValues(jexl(${stage.name} == 'qa' ? 'dev1,\
                 \ qa1':'prod1, stage1'))
           environment:
-            name: ${input}
-            identifier: ${input}
+            name: <+input>
+            identifier: <+input>
         execution:
           steps:
           - parallel:
@@ -59,21 +59,21 @@ pipeline:
                 identifier: rolloutDeployment
                 type: K8sRollingDeploy
                 spec:
-                  timeout: ${input}.allowedValues(100, 1000, 100)
-                  skipDryRun: ${input}.allowedValues(true, false)
+                  timeout: <+input>.allowedValues(100, 1000, 100)
+                  skipDryRun: <+input>.allowedValues(true, false)
           rollbackSteps:
           - step:
               identifier: rollbackRolloutDeployment1
               type: K8sRollingRollback
               spec:
-                timeout: ${input}.allowedValues(100, 1000, 100)
+                timeout: <+input>.allowedValues(100, 1000, 100)
   - stage:
       identifier: prod
       type: Deployment
       spec:
         service:
           useFromStage:
-            stage: ${input}.regex(^prod*)
+            stage: <+input>.regex(^prod*)
           stageOverrides:
             manifests:
             - manifest:
@@ -83,9 +83,9 @@ pipeline:
                   store:
                     type: Git
                     spec:
-                      connectorRef: ${input}
+                      connectorRef: <+input>
         infrastructure:
           useFromStage:
             overrides:
               environment:
-                identifier: ${input}
+                identifier: <+input>

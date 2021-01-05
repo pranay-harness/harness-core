@@ -107,7 +107,7 @@ public class InputSetResourcePMS {
     try {
       yaml = removeRuntimeInputFromYaml(yaml);
     } catch (IOException e) {
-      throw new InvalidRequestException("Could not clear ${input} fields from yaml : " + e.getMessage());
+      throw new InvalidRequestException("Could not clear <+input> fields from yaml : " + e.getMessage());
     }
 
     InputSetErrorWrapperDTOPMS errorWrapperDTO =
@@ -161,7 +161,7 @@ public class InputSetResourcePMS {
     try {
       yaml = removeRuntimeInputFromYaml(yaml);
     } catch (IOException e) {
-      throw new InvalidRequestException("Could not clear ${input} fields from yaml : " + e.getMessage());
+      throw new InvalidRequestException("Could not clear <+input> fields from yaml : " + e.getMessage());
     }
 
     InputSetErrorWrapperDTOPMS errorWrapperDTO =

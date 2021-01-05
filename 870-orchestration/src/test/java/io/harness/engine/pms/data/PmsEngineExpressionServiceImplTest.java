@@ -49,7 +49,7 @@ public class PmsEngineExpressionServiceImplTest extends OrchestrationTestBase {
   @Category(UnitTests.class)
   public void shouldTestRenderExpressionOutcome() {
     String resolvedExpression =
-        pmsEngineExpressionService.renderExpression(ambiance, "${dummyOutcome.test} == \"harness\"");
+        pmsEngineExpressionService.renderExpression(ambiance, "<+dummyOutcome.test> == \"harness\"");
     assertThat(resolvedExpression).isNotNull();
     assertThat(resolvedExpression).isEqualTo("harness == \"harness\"");
   }
@@ -60,7 +60,7 @@ public class PmsEngineExpressionServiceImplTest extends OrchestrationTestBase {
   @Category(UnitTests.class)
   public void shouldTestRenderExpressionOutput() {
     String resolvedExpression =
-        pmsEngineExpressionService.renderExpression(ambiance, "${dummyOutput.test} == \"harness\"");
+        pmsEngineExpressionService.renderExpression(ambiance, "<+dummyOutput.test> == \"harness\"");
     assertThat(resolvedExpression).isNotNull();
     assertThat(resolvedExpression).isEqualTo("harness == \"harness\"");
   }
@@ -70,7 +70,7 @@ public class PmsEngineExpressionServiceImplTest extends OrchestrationTestBase {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestEvaluateExpression() {
-    Object value = pmsEngineExpressionService.evaluateExpression(ambiance, "${dummyOutcome.test} == \"harness\"");
+    Object value = pmsEngineExpressionService.evaluateExpression(ambiance, "<+dummyOutcome.test> == \"harness\"");
     assertThat(value).isNotNull();
     assertThat(value).isEqualTo("true");
   }

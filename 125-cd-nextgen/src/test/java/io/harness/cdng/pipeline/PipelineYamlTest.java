@@ -129,7 +129,7 @@ public class PipelineYamlTest extends CategoryTest {
     assertThat(serviceSpec).isNotNull();
     assertThat(service.getIdentifier()).isInstanceOf(ParameterField.class);
     assertThat(service.getIdentifier().isExpression()).isTrue();
-    assertThat(service.getIdentifier().getExpressionValue()).isEqualTo("${input}");
+    assertThat(service.getIdentifier().getExpressionValue()).isEqualTo("<+input>");
 
     // Service Variables
     assertThat(serviceSpec.getVariables().size()).isEqualTo(2);
@@ -148,7 +148,7 @@ public class PipelineYamlTest extends CategoryTest {
     DockerHubArtifactConfig dockerArtifact = (DockerHubArtifactConfig) primary;
     assertThat(dockerArtifact.getImagePath()).isInstanceOf(ParameterField.class);
     assertThat(dockerArtifact.getImagePath().isExpression()).isTrue();
-    assertThat(dockerArtifact.getImagePath().getExpressionValue()).isEqualTo("${input}");
+    assertThat(dockerArtifact.getImagePath().getExpressionValue()).isEqualTo("<+input>");
 
     // Sidecar Artifact
     SidecarArtifactWrapper sidecarArtifactWrapper = serviceSpec.getArtifacts().getSidecars().get(0);
@@ -157,7 +157,7 @@ public class PipelineYamlTest extends CategoryTest {
     dockerArtifact = (DockerHubArtifactConfig) sidecarArtifact.getArtifactConfig();
     assertThat(dockerArtifact.getTag()).isInstanceOf(ParameterField.class);
     assertThat(dockerArtifact.getTag().isExpression()).isTrue();
-    assertThat(dockerArtifact.getTag().getExpressionValue()).isEqualTo("${input}");
+    assertThat(dockerArtifact.getTag().getExpressionValue()).isEqualTo("<+input>");
     assertThat(dockerArtifact.getTag().getInputSetValidator()).isNull();
 
     // Manifests
@@ -166,7 +166,7 @@ public class PipelineYamlTest extends CategoryTest {
     GitStore storeConfig = (GitStore) manifestConfig.getManifestAttributes().getStoreConfig();
     assertThat(storeConfig.getPaths()).isInstanceOf(ParameterField.class);
     assertThat(storeConfig.getPaths().isExpression()).isTrue();
-    assertThat(storeConfig.getPaths().getExpressionValue()).isEqualTo("${input}");
+    assertThat(storeConfig.getPaths().getExpressionValue()).isEqualTo("<+input>");
     assertThat(storeConfig.getPaths().getInputSetValidator()).isNotNull();
     assertThat(storeConfig.getPaths().getInputSetValidator().getValidatorType())
         .isEqualTo(InputSetValidatorType.ALLOWED_VALUES);
@@ -179,7 +179,7 @@ public class PipelineYamlTest extends CategoryTest {
     storeConfig = (GitStore) manifestConfig.getManifestAttributes().getStoreConfig();
     assertThat(storeConfig.getConnectorRef()).isInstanceOf(ParameterField.class);
     assertThat(storeConfig.getConnectorRef().isExpression()).isTrue();
-    assertThat(storeConfig.getConnectorRef().getExpressionValue()).isEqualTo("${input}");
+    assertThat(storeConfig.getConnectorRef().getExpressionValue()).isEqualTo("<+input>");
     assertThat(storeConfig.getPaths().getInputSetValidator()).isNull();
 
     // VariableOverrideSets
@@ -197,10 +197,10 @@ public class PipelineYamlTest extends CategoryTest {
     EnvironmentYaml environment = infrastructure.getEnvironment();
     assertThat(environment.getIdentifier()).isInstanceOf(ParameterField.class);
     assertThat(environment.getIdentifier().isExpression()).isTrue();
-    assertThat(environment.getIdentifier().getExpressionValue()).isEqualTo("${input}");
+    assertThat(environment.getIdentifier().getExpressionValue()).isEqualTo("<+input>");
     assertThat(environment.getName()).isInstanceOf(ParameterField.class);
     assertThat(environment.getName().isExpression()).isTrue();
-    assertThat(environment.getName().getExpressionValue()).isEqualTo("${input}");
+    assertThat(environment.getName().getExpressionValue()).isEqualTo("<+input>");
 
     // Assert Env Tags
     assertThat(environment.getTags().size()).isEqualTo(2);
@@ -212,7 +212,7 @@ public class PipelineYamlTest extends CategoryTest {
         (K8SDirectInfrastructure) infrastructure.getInfrastructureDefinition().getInfrastructure();
     assertThat(infraDefinition.getNamespace()).isInstanceOf(ParameterField.class);
     assertThat(infraDefinition.getNamespace().isExpression()).isTrue();
-    assertThat(infraDefinition.getNamespace().getExpressionValue()).isEqualTo("${input}");
+    assertThat(infraDefinition.getNamespace().getExpressionValue()).isEqualTo("<+input>");
     assertThat(infraDefinition.getNamespace().getInputSetValidator()).isNotNull();
     assertThat(infraDefinition.getNamespace().getInputSetValidator().getValidatorType())
         .isEqualTo(InputSetValidatorType.ALLOWED_VALUES);
@@ -226,13 +226,13 @@ public class PipelineYamlTest extends CategoryTest {
     K8sRollingStepInfo k8sStepInfo = (K8sRollingStepInfo) stepElement.getStepSpecType();
     assertThat(k8sStepInfo.getTimeout()).isInstanceOf(ParameterField.class);
     assertThat(k8sStepInfo.getTimeout().isExpression()).isTrue();
-    assertThat(k8sStepInfo.getTimeout().getExpressionValue()).isEqualTo("${input}");
+    assertThat(k8sStepInfo.getTimeout().getExpressionValue()).isEqualTo("<+input>");
     assertThat(k8sStepInfo.getTimeout().getInputSetValidator().getParameters()).isEqualTo("100, 1000, 100");
     assertThat(k8sStepInfo.getTimeout().getInputSetValidator().getValidatorType())
         .isEqualTo(InputSetValidatorType.ALLOWED_VALUES);
     assertThat(k8sStepInfo.getSkipDryRun()).isInstanceOf(ParameterField.class);
     assertThat(k8sStepInfo.getSkipDryRun().isExpression()).isTrue();
-    assertThat(k8sStepInfo.getSkipDryRun().getExpressionValue()).isEqualTo("${input}");
+    assertThat(k8sStepInfo.getSkipDryRun().getExpressionValue()).isEqualTo("<+input>");
     assertThat(k8sStepInfo.getSkipDryRun().getInputSetValidator().getParameters()).isEqualTo("true, false");
     assertThat(k8sStepInfo.getSkipDryRun().getInputSetValidator().getValidatorType())
         .isEqualTo(InputSetValidatorType.ALLOWED_VALUES);
@@ -267,7 +267,7 @@ public class PipelineYamlTest extends CategoryTest {
     K8sRollingRollbackStepInfo rollbackStepInfo = (K8sRollingRollbackStepInfo) stepElement.getStepSpecType();
     assertThat(rollbackStepInfo.getTimeout()).isInstanceOf(ParameterField.class);
     assertThat(rollbackStepInfo.getTimeout().isExpression()).isTrue();
-    assertThat(rollbackStepInfo.getTimeout().getExpressionValue()).isEqualTo("${input}");
+    assertThat(rollbackStepInfo.getTimeout().getExpressionValue()).isEqualTo("<+input>");
     assertThat(rollbackStepInfo.getTimeout().getInputSetValidator().getParameters()).isEqualTo("100, 1000, 100");
     assertThat(rollbackStepInfo.getTimeout().getInputSetValidator().getValidatorType())
         .isEqualTo(InputSetValidatorType.ALLOWED_VALUES);
@@ -282,7 +282,7 @@ public class PipelineYamlTest extends CategoryTest {
     assertThat(service.getUseFromStage()).isNotNull();
     assertThat(service.getUseFromStage().getStage()).isInstanceOf(ParameterField.class);
     assertThat(service.getUseFromStage().getStage().isExpression()).isTrue();
-    assertThat(service.getUseFromStage().getStage().getExpressionValue()).isEqualTo("${input}");
+    assertThat(service.getUseFromStage().getStage().getExpressionValue()).isEqualTo("<+input>");
     assertThat(service.getUseFromStage().getStage().getInputSetValidator().getParameters()).isEqualTo("^prod*");
     assertThat(service.getUseFromStage().getStage().getInputSetValidator().getValidatorType())
         .isEqualTo(InputSetValidatorType.REGEX);
@@ -291,7 +291,7 @@ public class PipelineYamlTest extends CategoryTest {
         (GitStore) stageOverrides.getManifests().get(0).getManifest().getManifestAttributes().getStoreConfig();
     assertThat(storeConfig.getConnectorRef()).isInstanceOf(ParameterField.class);
     assertThat(storeConfig.getConnectorRef().isExpression()).isTrue();
-    assertThat(storeConfig.getConnectorRef().getExpressionValue()).isEqualTo("${input}");
+    assertThat(storeConfig.getConnectorRef().getExpressionValue()).isEqualTo("<+input>");
     assertThat(storeConfig.getConnectorRef().getInputSetValidator()).isNull();
 
     // useVariableOverrideSets

@@ -58,13 +58,13 @@ public class ParameterFieldExpressionEvaluatorTest extends NGPipelineTestBase {
 
     // Kind of applying input sets on given pipeline
     Infrastructure infrastructure = pipeline.getInfrastructure();
-    infrastructure.getInner1().updateWithValue("${inner02}");
+    infrastructure.getInner1().updateWithValue("<+inner02>");
     infrastructure.getInner2().updateWithValue(Arrays.asList("value1", "value2"));
-    infrastructure.getInner3().updateWithExpression("${inner03}");
+    infrastructure.getInner3().updateWithExpression("<+inner03>");
     infrastructure.getInner4().updateWithValue(Collections.singleton(2));
     Definition definition = infrastructure.getDefinition();
     definition.getInner5().updateWithValue("string1");
-    definition.getInner6().updateWithExpression("${infrastructure.inner3}");
+    definition.getInner6().updateWithExpression("<+infrastructure.inner3>");
     definition.getInner8().updateWithValue("dev_a");
 
     EngineExpressionEvaluator evaluator =
@@ -79,7 +79,7 @@ public class ParameterFieldExpressionEvaluatorTest extends NGPipelineTestBase {
 
   private void validateExpression(
       EngineExpressionEvaluator evaluator, String expression, Object expected, boolean skipEvaluate) {
-    expression = "${" + expression + "}";
+    expression = "<+" + expression + ">";
     assertThat(evaluator.renderExpression(expression)).isEqualTo(String.valueOf(expected));
     if (!skipEvaluate) {
       assertThat(evaluator.evaluateExpression(expression)).isEqualTo(expected);

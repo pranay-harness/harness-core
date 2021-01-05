@@ -2,7 +2,7 @@ pipeline:
   identifier: "Test_Pipline11"
   variables:
   - name: "port2"
-    value: "${input}"
+    value: "<+input>"
   stages:
   - stage:
       identifier: "qaStage"
@@ -17,37 +17,37 @@ pipeline:
                   spec:
                     store:
                       spec:
-                        gitFetchType: "${input}"
-                        paths: "${input}"
+                        gitFetchType: "<+input>"
+                        paths: "<+input>"
               - manifest:
                   identifier: "qaOverride"
                   spec:
-                    store: "${input}"
+                    store: "<+input>"
         infrastructure:
           environment:
             identifier: "stagingInfra"
             tags:
-              team: "${input}"
+              team: "<+input>"
           infrastructureDefinition:
             spec:
-              connectorRef: "${input}"
-              namespace: "${input}"
-              releaseName: "${input}"
+              connectorRef: "<+input>"
+              namespace: "<+input>"
+              releaseName: "<+input>"
         execution:
           steps:
           - step:
               identifier: "httpStep1"
               spec:
-                url: "${input}"
+                url: "<+input>"
           - parallel:
             - step:
                 identifier: "httpStep2"
                 spec:
-                  method: "${input}"
+                  method: "<+input>"
           - step:
               identifier: "httpStep11"
               spec:
-                socketTimeoutMillis: "${input}"
+                socketTimeoutMillis: "<+input>"
   - parallel:
     - stage:
         identifier: "qaStage2"
@@ -62,17 +62,17 @@ pipeline:
                     spec:
                       store:
                         spec:
-                          connectorRef: "${input}"
+                          connectorRef: "<+input>"
           infrastructure:
             infrastructureDefinition:
               spec:
-                namespace: "${input}"
+                namespace: "<+input>"
           execution:
             steps:
             - step:
                 identifier: "httpStep4"
                 spec:
-                  method: "${input}"
+                  method: "<+input>"
     - stage:
         identifier: "qaStage3"
         spec:
@@ -80,10 +80,10 @@ pipeline:
             identifier: "manager"
             serviceDefinition:
               spec:
-                manifests: "${input}"
+                manifests: "<+input>"
           execution:
             steps:
             - step:
                 identifier: "httpStep5"
                 spec:
-                  method: "${input}"
+                  method: "<+input>"

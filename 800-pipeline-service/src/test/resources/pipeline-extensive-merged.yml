@@ -29,9 +29,9 @@ pipeline:
                       type: Git
                       spec:
                         connectorRef: my_git_connector
-                        gitFetchType: ${input}
+                        gitFetchType: <+input>
                         branch: master
-                        paths: ${input}
+                        paths: <+input>
               - manifest:
                   identifier: qaOverride
                   type: Values
@@ -49,13 +49,13 @@ pipeline:
             type: PreProduction
             tags:
               cloud: GCP
-              team: ${input}
+              team: <+input>
           infrastructureDefinition:
             type: KubernetesDirect
             spec:
-              connectorRef: ${input}
+              connectorRef: <+input>
               namespace: default
-              releaseName: ${input}
+              releaseName: <+input>
         execution:
           steps:
           - step:
@@ -157,7 +157,7 @@ pipeline:
               type: KubernetesDirect
               spec:
                 connectorRef: account.argocd-account
-                namespace: ${input}
+                namespace: <+input>
                 releaseName: testingqa
           execution:
             steps:
