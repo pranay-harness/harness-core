@@ -103,7 +103,7 @@ public class AzureSweepingOutputServiceHelper {
         .collect(toList());
   }
 
-  public String getHostnameFromConvention(Map<String, Object> context, String hostNameConvention) {
+  private String getHostnameFromConvention(Map<String, Object> context, String hostNameConvention) {
     if (isEmpty(hostNameConvention)) {
       hostNameConvention = InfrastructureConstants.DEFAULT_AZURE_VM_HOST_NAME_CONVENTION;
     }
