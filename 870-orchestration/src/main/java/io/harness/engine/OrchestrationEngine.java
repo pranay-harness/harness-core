@@ -17,6 +17,7 @@ import static java.lang.String.format;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationPublisherName;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delay.DelayEventHelper;
 import io.harness.engine.advise.AdviseHandlerFactory;
 import io.harness.engine.advise.AdviserResponseHandler;
@@ -30,7 +31,9 @@ import io.harness.engine.pms.EngineAdviseCallback;
 import io.harness.engine.pms.EngineFacilitationCallback;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.engine.resume.EngineWaitResumeCallback;
+import io.harness.engine.skip.SkipCheck;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.NodeExecutionMapper;
@@ -43,6 +46,8 @@ import io.harness.pms.contracts.data.StepOutcomeRef;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.execution.failure.FailureType;
+import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.plan.PlanNodeProto;
@@ -57,6 +62,7 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.pms.execution.utils.StatusUtils;
+import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
@@ -124,6 +130,7 @@ public class OrchestrationEngine {
   @Inject private OrchestrationModuleConfig config;
   @Inject private NodeExecutionEventQueuePublisher nodeExecutionEventQueuePublisher;
   @Inject private PmsOutcomeService pmsOutcomeService;
+  @Inject private EngineExpressionService engineExpressionService;
 
   public void startNodeExecution(String nodeExecutionId) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
@@ -175,6 +182,15 @@ public class OrchestrationEngine {
         log.info("Suspending Execution. Reason : {}", check.getReason());
         return;
       }
+
+      log.info("Checking If Node should be Skipped");
+      String skipCondition = nodeExecution.getNode().getSkipCondition();
+      if (EmptyPredicate.isNotEmpty(skipCondition)) {
+        SkipCheck skipCheck = shouldSkipNodeExecution(ambiance, skipCondition);
+        skipNodeExecution(nodeExecution.getUuid(), skipCheck);
+        return;
+      }
+
       log.info("Proceeding with  Execution. Reason : {}", check.getReason());
 
       PlanNodeProto node = nodeExecution.getNode();
@@ -469,6 +485,51 @@ public class OrchestrationEngine {
     } catch (RuntimeException ex) {
       log.error("Error when trying to obtain the advice ", ex);
     }
+  }
+
+  public SkipCheck shouldSkipNodeExecution(Ambiance ambiance, String skipCondition) {
+    if (EmptyPredicate.isEmpty(skipCondition)) {
+      return SkipCheck.builder().isSuccessful(false).skipCondition(skipCondition).build();
+    }
+    try {
+      String evaluatedExpression = (String) engineExpressionService.evaluateExpression(ambiance, skipCondition);
+      boolean skipConditionValue = Boolean.parseBoolean(evaluatedExpression);
+      return SkipCheck.builder()
+          .skipCondition(skipCondition)
+          .isSuccessful(true)
+          .evaluatedSkipCondition(skipConditionValue)
+          .build();
+    } catch (Exception exception) {
+      return SkipCheck.builder()
+          .skipCondition(skipCondition)
+          .isSuccessful(false)
+          .errorMessage(String.format("SkipCondition could not be evaluated to boolean for nodeExecutionId: %s",
+              AmbianceUtils.obtainCurrentRuntimeId(ambiance)))
+          .build();
+    }
+  }
+
+  public void skipNodeExecution(String nodeExecutionId, SkipCheck skipCheck) {
+    StepResponseProto response;
+    if (skipCheck.isSuccessful()) {
+      log.info(String.format("Skipping node: %s", nodeExecutionId));
+      response = StepResponseProto.newBuilder()
+                     .setStatus(Status.SKIPPED)
+                     .setSkipInfo(SkipInfo.newBuilder()
+                                      .setSkipCondition(skipCheck.getSkipCondition())
+                                      .setEvaluatedCondition(skipCheck.getEvaluatedSkipCondition())
+                                      .build())
+                     .build();
+    } else {
+      response = StepResponseProto.newBuilder()
+                     .setStatus(FAILED)
+                     .setFailureInfo(FailureInfo.newBuilder()
+                                         .setErrorMessage(skipCheck.getErrorMessage())
+                                         .addFailureTypes(FailureType.SKIPPING_FAILURE)
+                                         .build())
+                     .build();
+    }
+    handleStepResponse(nodeExecutionId, response);
   }
 
   public void handleAdvise(String nodeExecutionId, Status status, AdviserResponse adviserResponse) {

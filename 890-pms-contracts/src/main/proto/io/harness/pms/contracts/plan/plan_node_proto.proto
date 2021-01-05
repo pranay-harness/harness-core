@@ -22,4 +22,5 @@ message PlanNodeProto {
   repeated io.harness.pms.contracts.facilitators.FacilitatorObtainment facilitatorObtainments = 9;
   bool skipExpressionChain = 10;
   io.harness.pms.contracts.steps.SkipType skipType = 11;
+  string skipCondition = 12;
 }

@@ -5,6 +5,7 @@ package io.harness.pms.contracts.steps.io;
 option java_multiple_files = true;
 
 import "io/harness/pms/contracts/execution/failure/failure_info.proto";
+import "io/harness/pms/contracts/execution/skip/skip_info.proto";
 import "io/harness/pms/contracts/execution/status.proto";
 import "io/harness/pms/contracts/steps/io/step_outcome_proto.proto";
 
@@ -12,4 +13,5 @@ message StepResponseProto {
   execution.Status status = 1;
   repeated StepOutcomeProto stepOutcomes = 2;
   execution.failure.FailureInfo failureInfo = 3;
+  execution.skip.SkipInfo skipInfo = 4;
 }

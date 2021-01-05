@@ -35,9 +35,12 @@ public class StageElementConfig {
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   StageInfoConfig stageType;
 
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
+
   @Builder
   public StageElementConfig(String uuid, String identifier, String name, ParameterField<String> description,
-      List<FailureStrategyConfig> failureStrategies, String type, StageInfoConfig stageType) {
+      List<FailureStrategyConfig> failureStrategies, String type, StageInfoConfig stageType,
+      ParameterField<String> skipCondition) {
     this.uuid = uuid;
     this.identifier = identifier;
     this.name = name;
@@ -45,5 +48,6 @@ public class StageElementConfig {
     this.failureStrategies = failureStrategies;
     this.type = type;
     this.stageType = stageType;
+    this.skipCondition = skipCondition;
   }
 }

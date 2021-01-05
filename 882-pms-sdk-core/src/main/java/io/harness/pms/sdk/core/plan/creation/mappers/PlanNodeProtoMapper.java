@@ -23,6 +23,9 @@ public class PlanNodeProtoMapper {
             .addAllFacilitatorObtainments(CollectionUtils.emptyIfNull(node.getFacilitatorObtainments()))
             .setSkipExpressionChain(node.isSkipExpressionChain())
             .setSkipType(node.getSkipGraphType());
+    if (node.getSkipCondition() != null) {
+      builder.setSkipCondition(node.getSkipCondition());
+    }
     if (node.getGroup() != null) {
       builder.setGroup(node.getGroup());
     }

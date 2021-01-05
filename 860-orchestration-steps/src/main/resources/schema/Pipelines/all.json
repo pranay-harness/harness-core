@@ -387,6 +387,9 @@
         "name": {
           "type": "string"
         },
+        "skipCondition": {
+          "type": "string"
+        },
         "spec": {
           "$ref": "#/definitions/StageInfoConfig"
         },
