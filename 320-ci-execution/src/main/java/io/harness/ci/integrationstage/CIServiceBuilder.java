@@ -8,6 +8,7 @@ import io.harness.beans.dependencies.CIServiceInfo;
 import io.harness.beans.dependencies.DependencyElement;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
+import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.beans.yaml.extended.container.quantity.unit.BinaryQuantityUnit;
@@ -70,7 +71,8 @@ public class CIServiceBuilder {
                                    .imageDetails(getImageInfo(service.getImage()))
                                    .connectorIdentifier(service.getConnector())
                                    .build())
-        .containerResourceParams(getServiceContainerResource(service.getResources(), ciExecutionServiceConfig))
+        .containerResourceParams(
+            getServiceContainerResource(service.getResources(), ciExecutionServiceConfig, service.getIdentifier()))
         .ports(Collections.singletonList(port))
         .containerType(CIContainerType.SERVICE)
         .stepIdentifier(service.getIdentifier())
@@ -79,16 +81,20 @@ public class CIServiceBuilder {
   }
 
   private static ContainerResourceParams getServiceContainerResource(
-      ContainerResource resource, CIExecutionServiceConfig ciExecutionServiceConfig) {
+      ContainerResource resource, CIExecutionServiceConfig ciExecutionServiceConfig, String identifier) {
     Integer cpu = ciExecutionServiceConfig.getDefaultCPULimit();
     Integer memory = ciExecutionServiceConfig.getDefaultMemoryLimit();
 
     if (resource != null && resource.getLimits() != null) {
       if (resource.getLimits().getCpu() != null) {
-        cpu = QuantityUtils.getCpuQuantityValueInUnit(resource.getLimits().getCpu(), DecimalQuantityUnit.m);
+        String cpuQuantity = RunTimeInputHandler.resolveStringParameter(
+            "cpu", "Service", identifier, resource.getLimits().getCpu(), false);
+        cpu = QuantityUtils.getCpuQuantityValueInUnit(cpuQuantity, DecimalQuantityUnit.m);
       }
       if (resource.getLimits().getMemory() != null) {
-        memory = QuantityUtils.getMemoryQuantityValueInUnit(resource.getLimits().getMemory(), BinaryQuantityUnit.Mi);
+        String memoryQuantity = RunTimeInputHandler.resolveStringParameter(
+            "memory", "Service", identifier, resource.getLimits().getMemory(), false);
+        memory = QuantityUtils.getMemoryQuantityValueInUnit(memoryQuantity, BinaryQuantityUnit.Mi);
       }
     }
     return ContainerResourceParams.builder()

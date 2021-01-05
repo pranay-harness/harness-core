@@ -85,8 +85,8 @@ managerClientConfig:
 ciExecutionServiceConfig:
   addonImageTag: valpha-1.21.2
   liteEngineImageTag: valpha-1.21.2
-  defaultMemoryLimit: 200
-  defaultCPULimit: 200
+  defaultMemoryLimit: 400
+  defaultCPULimit: 400
   defaultInternalImageConnector: account.harnessimage
   pvcDefaultStorageSize: 25600
   delegateServiceEndpointVariableValue: "delegate-service:8080"
