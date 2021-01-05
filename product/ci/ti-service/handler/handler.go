@@ -16,8 +16,23 @@ import (
 func Handler(db db.Db, config config.Config, log *zap.SugaredLogger) http.Handler {
 	r := chi.NewRouter()
 
+	// Token generation endpoints
+	// Format: /token?accountId=
+	r.Mount("/token", func() http.Handler {
+		sr := chi.NewRouter()
+		// Validate the incoming request with a global secret and return back a token
+		// for the given account ID if the match is successful.
+		sr.Use(TokenGenerationMiddleware(config, true))
+
+		sr.Get("/", HandleToken(config))
+		return sr
+	}()) // Validates against global token
+
 	r.Mount("/reports", func() http.Handler {
 		sr := chi.NewRouter()
+		// Validate the accountId in URL with the token generated above and authorize the request
+		sr.Use(AuthMiddleware(config))
+
 		sr.Post("/write", HandleWrite(db, config, log))
 		sr.Get("/summary", HandleSummary(db, config, log))
 		sr.Get("/test_cases", HandleTestCases(db, config, log))

@@ -118,7 +118,8 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
                                           .build())
             .logServiceConfig(
                 LogServiceConfig.builder().baseUrl("http://localhost-inc:8079").globalToken("global-token").build())
-            .tiServiceConfig(TIServiceConfig.builder().baseUrl("http://localhost-inc:8078").build())
+            .tiServiceConfig(
+                TIServiceConfig.builder().baseUrl("http://localhost-inc:8078").globalToken("global-token").build())
             .scmConnectionConfig(ScmConnectionConfig.builder().url("localhost:8181").build())
             .managerServiceSecret("IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM")
             .ngManagerClientConfig(ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build())

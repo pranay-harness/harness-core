@@ -6,6 +6,7 @@ import static io.harness.common.CIExecutionConstants.LOG_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.SETUP_ADDON_ARGS;
 import static io.harness.common.CIExecutionConstants.SETUP_ADDON_CONTAINER_NAME;
 import static io.harness.common.CIExecutionConstants.TI_SERVICE_ENDPOINT_VARIABLE;
+import static io.harness.common.CIExecutionConstants.TI_SERVICE_TOKEN_VARIABLE;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -67,9 +68,11 @@ public class InternalContainerParamsProviderTest extends CIExecutionTest {
     logEnvVars.put(LOG_SERVICE_ENDPOINT_VARIABLE, logEndpoint);
     logEnvVars.put(LOG_SERVICE_TOKEN_VARIABLE, logSecret);
 
+    String tiToken = "token";
     String tiEndpoint = "http://localhost:8078";
     Map<String, String> tiEnvVars = new HashMap<>();
     tiEnvVars.put(TI_SERVICE_ENDPOINT_VARIABLE, tiEndpoint);
+    tiEnvVars.put(TI_SERVICE_TOKEN_VARIABLE, tiToken);
 
     Map<String, String> volumeToMountPath = new HashMap<>();
 
@@ -85,6 +88,8 @@ public class InternalContainerParamsProviderTest extends CIExecutionTest {
     Map<String, String> expectedEnv = new HashMap<>();
     expectedEnv.put(LOG_SERVICE_ENDPOINT_VARIABLE, logEndpoint);
     expectedEnv.put(LOG_SERVICE_TOKEN_VARIABLE, logSecret);
+    expectedEnv.put(TI_SERVICE_ENDPOINT_VARIABLE, tiEndpoint);
+    expectedEnv.put(TI_SERVICE_TOKEN_VARIABLE, tiToken);
 
     Map<String, String> gotEnv = containerParams.getEnvVars();
     assertThat(gotEnv).containsAllEntriesOf(expectedEnv);
