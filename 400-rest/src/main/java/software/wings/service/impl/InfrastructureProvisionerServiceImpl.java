@@ -57,7 +57,6 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.GitConfig;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisionerDetails;
@@ -383,17 +382,10 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     long startTime = System.currentTimeMillis();
 
     Set<String> settingAttributeIds = new HashSet<>();
-    Set<String> servicesIds = new HashSet<>();
     for (InfrastructureProvisioner infrastructureProvisioner : pageResponse.getResponse()) {
       if (infrastructureProvisioner instanceof TerraformInfrastructureProvisioner) {
         settingAttributeIds.add(
             ((TerraformInfrastructureProvisioner) infrastructureProvisioner).getSourceRepoSettingId());
-      }
-      if (isNotEmpty(infrastructureProvisioner.getMappingBlueprints())) {
-        infrastructureProvisioner.getMappingBlueprints()
-            .stream()
-            .map(InfrastructureMappingBlueprint::getServiceId)
-            .forEach(servicesIds::add);
       }
     }
 
