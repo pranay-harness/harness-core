@@ -17,7 +17,8 @@
       "type": "string",
       "enum": [
         "String",
-        "Number"
+        "Number",
+        "Secret"
       ]
     },
     "value": {
