@@ -14,8 +14,7 @@
           "type": "string"
         },
         "passwordRef": {
-          "type": "string",
-          "pattern": "^(account.)?(org.)?(\\.)?[a-zA-Z0-9_$]*$"
+          "type": "string"
         },
         "username": {
           "type": "string"

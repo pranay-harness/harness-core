@@ -1,7 +1,5 @@
 package io.harness.delegate.beans.connector.nexusconnector;
 
-import static io.harness.yamlSchema.NGSecretReferenceConstants.SECRET_REF_PATTERN;
-
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretReference;
 
@@ -19,9 +17,5 @@ import lombok.Data;
 @JsonTypeName(NexusConstants.USERNAME_PASSWORD)
 public class NexusUsernamePasswordAuthDTO implements NexusAuthCredentialsDTO {
   @NotNull String username;
-  @ApiModelProperty(dataType = "string")
-  @NotNull
-  @SecretReference
-  @Pattern(regexp = SECRET_REF_PATTERN)
-  SecretRefData passwordRef;
+  @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData passwordRef;
 }
