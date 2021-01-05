@@ -15,6 +15,8 @@ public class EmailStepYamlValidator implements StepCompletionYamlValidator {
       throw new IncompleteStateException("\"toAddress\" could not be empty or null, please provide a value.");
     } else if (StringUtils.isBlank((String) stepYaml.getProperties().get("subject"))) {
       throw new IncompleteStateException("\"subject\" could not be empty or null, please provide a value.");
+    } else if (StringUtils.isBlank((String) stepYaml.getProperties().get("body"))) {
+      throw new IncompleteStateException("\"body\" could not be empty or null, please provide a value.");
     }
   }
 }
