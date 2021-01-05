@@ -1,4 +1,4 @@
-package software.wings.delegatetasks.azure.appservice;
+package io.harness.delegate.beans.azure.mapper;
 
 import static io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceSettingValueType.AZURE_SETTING;
 import static io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceSettingValueType.HARNESS_SETTING;
@@ -27,18 +27,17 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
-import org.jetbrains.annotations.NotNull;
 
 @UtilityClass
 public class AzureAppServiceConfigurationDTOMapper {
   public Map<String, AzureAppServiceApplicationSetting> getAzureAppServiceAppSettings(
-      @NotNull Map<String, AzureAppServiceApplicationSettingDTO> appSettingDTOs) {
+      Map<String, AzureAppServiceApplicationSettingDTO> appSettingDTOs) {
     return appSettingDTOs.entrySet().stream().collect(
         Collectors.toMap(Map.Entry::getKey, entry -> toApplicationSetting(entry.getKey(), entry.getValue())));
   }
 
   private AzureAppServiceApplicationSetting toApplicationSetting(
-      final String settingName, @NotNull AzureAppServiceApplicationSettingDTO applicationSettingDTO) {
+      final String settingName, AzureAppServiceApplicationSettingDTO applicationSettingDTO) {
     Objects.requireNonNull(
         applicationSettingDTO, format("Application setting can't be null, settingName: %s", settingName));
     AzureAppServiceSettingValue azureAppServiceSettingValue = applicationSettingDTO.getValue();
@@ -52,13 +51,13 @@ public class AzureAppServiceConfigurationDTOMapper {
   }
 
   public Map<String, AzureAppServiceConnectionString> getAzureAppServiceConnStrings(
-      @NotNull Map<String, AzureAppServiceConnectionStringDTO> connStringDTOs) {
+      Map<String, AzureAppServiceConnectionStringDTO> connStringDTOs) {
     return connStringDTOs.entrySet().stream().collect(
         Collectors.toMap(Map.Entry::getKey, entry -> toConnectionString(entry.getKey(), entry.getValue())));
   }
 
   private AzureAppServiceConnectionString toConnectionString(
-      final String settingName, @NotNull AzureAppServiceConnectionStringDTO connectionStringDTO) {
+      final String settingName, AzureAppServiceConnectionStringDTO connectionStringDTO) {
     Objects.requireNonNull(
         connectionStringDTO, format("Connection string can't be null, settingName: %s", settingName));
     AzureAppServiceSettingValue azureAppServiceSettingValue = connectionStringDTO.getValue();
@@ -73,13 +72,13 @@ public class AzureAppServiceConfigurationDTOMapper {
   }
 
   public Map<String, AzureAppServiceDockerSetting> getAzureAppServiceDockerSettings(
-      @NotNull Map<String, AzureAppServiceDockerSettingDTO> dockerSettingDTOs) {
+      Map<String, AzureAppServiceDockerSettingDTO> dockerSettingDTOs) {
     return dockerSettingDTOs.entrySet().stream().collect(
         Collectors.toMap(Map.Entry::getKey, entry -> toDockerSetting(entry.getKey(), entry.getValue())));
   }
 
   private AzureAppServiceDockerSetting toDockerSetting(
-      final String settingName, @NotNull AzureAppServiceDockerSettingDTO dockerSettingDTO) {
+      final String settingName, AzureAppServiceDockerSettingDTO dockerSettingDTO) {
     Objects.requireNonNull(dockerSettingDTO, format("Docker setting can't be null, settingName: %s", settingName));
     AzureAppServiceSettingValue azureAppServiceSettingValue = dockerSettingDTO.getValue();
     String value = getPlainSettingValue(azureAppServiceSettingValue);
@@ -109,17 +108,22 @@ public class AzureAppServiceConfigurationDTOMapper {
   }
 
   public Map<String, AzureAppServiceApplicationSettingDTO> getAzureAppServiceAppSettingDTOs(
-      @NotNull Map<String, AzureAppServiceApplicationSetting> appSettings, AzureAppServiceSettingValueType type) {
+      Map<String, AzureAppServiceApplicationSetting> appSettings, AzureAppServiceSettingValueType type) {
     return appSettings.entrySet().stream().collect(
         Collectors.toMap(Map.Entry::getKey, entry -> toApplicationSettingDTO(entry.getValue(), type)));
   }
 
-  private AzureAppServiceApplicationSettingDTO toApplicationSettingDTO(
-      @NotNull AzureAppServiceApplicationSetting applicationSetting, AzureAppServiceSettingValueType type) {
+  public AzureAppServiceApplicationSettingDTO toApplicationSettingDTO(
+      AzureAppServiceApplicationSetting applicationSetting, AzureAppServiceSettingValueType type) {
     String name = applicationSetting.getName();
     String value = applicationSetting.getValue();
-    if (isBlank(value) || isBlank(name)) {
-      throw new IllegalArgumentException("Application settings name or value can't be null or empty");
+    if (isBlank(name)) {
+      throw new IllegalArgumentException("Application setting name can't be null or empty");
+    }
+
+    if (isBlank(value)) {
+      throw new IllegalArgumentException(
+          format("Application setting value can't be null or empty, setting name: %s ", name));
     }
 
     AzureAppServiceSettingValue appSettingValue = buildAzureAppServiceSettingValue(value, type);
@@ -132,17 +136,22 @@ public class AzureAppServiceConfigurationDTOMapper {
   }
 
   public Map<String, AzureAppServiceConnectionStringDTO> getAzureAppServiceConnStringDTOs(
-      @NotNull Map<String, AzureAppServiceConnectionString> connSettings, AzureAppServiceSettingValueType type) {
+      Map<String, AzureAppServiceConnectionString> connSettings, AzureAppServiceSettingValueType type) {
     return connSettings.entrySet().stream().collect(
         Collectors.toMap(Map.Entry::getKey, entry -> toConnectionSettingDTO(entry.getValue(), type)));
   }
 
-  private AzureAppServiceConnectionStringDTO toConnectionSettingDTO(
-      @NotNull AzureAppServiceConnectionString connectionString, AzureAppServiceSettingValueType type) {
+  public AzureAppServiceConnectionStringDTO toConnectionSettingDTO(
+      AzureAppServiceConnectionString connectionString, AzureAppServiceSettingValueType type) {
     String name = connectionString.getName();
     String value = connectionString.getValue();
-    if (isBlank(value) || isBlank(name)) {
-      throw new IllegalArgumentException("Connection string name or value can't be null or empty");
+    if (isBlank(name)) {
+      throw new IllegalArgumentException("Connection string name can't be null or empty");
+    }
+
+    if (isBlank(value)) {
+      throw new IllegalArgumentException(
+          format("Connection string value can't be null or empty, string name: %s", name));
     }
 
     AzureAppServiceSettingValue connectionStringValue = buildAzureAppServiceSettingValue(value, type);
@@ -156,13 +165,13 @@ public class AzureAppServiceConfigurationDTOMapper {
   }
 
   public Map<String, AzureAppServiceDockerSettingDTO> getAzureAppServiceDockerSettingDTOs(
-      @NotNull Map<String, AzureAppServiceDockerSetting> dockerSettings, AzureAppServiceSettingValueType type) {
+      Map<String, AzureAppServiceDockerSetting> dockerSettings, AzureAppServiceSettingValueType type) {
     return dockerSettings.entrySet().stream().collect(
         Collectors.toMap(Map.Entry::getKey, entry -> toDockerSettingDTO(entry.getValue(), type)));
   }
 
-  private AzureAppServiceDockerSettingDTO toDockerSettingDTO(
-      @NotNull AzureAppServiceDockerSetting dockerSetting, AzureAppServiceSettingValueType type) {
+  public AzureAppServiceDockerSettingDTO toDockerSettingDTO(
+      AzureAppServiceDockerSetting dockerSetting, AzureAppServiceSettingValueType type) {
     String name = dockerSetting.getName();
     String value = dockerSetting.getValue();
     if (isBlank(value) || isBlank(name)) {

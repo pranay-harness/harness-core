@@ -80,6 +80,10 @@ public class ServiceTemplate extends Base {
   @Getter @Setter private transient ManifestFile valuesOverrideManifestFile;
   @Getter @Setter private transient ApplicationManifest ocParamsOverrideAppManifest;
   @Getter @Setter private transient ManifestFile ocParamsOverrideFile;
+  @Getter @Setter private transient ApplicationManifest appSettingOverrideManifest;
+  @Getter @Setter private transient ApplicationManifest connStringsOverrideManifest;
+  @Getter @Setter private transient ManifestFile appSettingsOverrideManifestFile;
+  @Getter @Setter private transient ManifestFile connStringsOverrideManifestFile;
 
   private boolean defaultServiceTemplate;
 

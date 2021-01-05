@@ -547,7 +547,7 @@ public class AzureVMSSStateHelperTest extends WingsBaseTest {
     doReturn(Collections.emptyList()).when(ngSecretService).getEncryptionDetails(any(), any());
 
     List<EncryptedDataDetail> connectorAuthEncryptedDataDetails =
-        azureVMSSStateHelper.getConnectorAuthEncryptedDataDetails("accountId", mockDecryptableEntity);
+        azureVMSSStateHelper.getNgEncryptedDataDetails("accountId", mockDecryptableEntity);
 
     assertThat(connectorAuthEncryptedDataDetails).isNotNull();
   }
@@ -1098,9 +1098,7 @@ public class AzureVMSSStateHelperTest extends WingsBaseTest {
         Collections.singletonMap("azureAppServiceApplicationSettingDTO",
             AzureAppServiceApplicationSettingDTO.builder().value(secretValue).build());
 
-    doReturn(encryptedDataDetails)
-        .when(azureVMSSStateHelper)
-        .getConnectorAuthEncryptedDataDetails("accountId", secretRef);
+    doReturn(encryptedDataDetails).when(azureVMSSStateHelper).getNgEncryptedDataDetails("accountId", secretRef);
 
     azureVMSSStateHelper.encryptAzureAppServiceSettingDTOs(settings, "accountId");
     assertThat(secretValue.getEncryptedDataDetails()).isEqualTo(encryptedDataDetails);

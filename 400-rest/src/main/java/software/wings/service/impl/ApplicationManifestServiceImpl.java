@@ -168,6 +168,18 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   }
 
   @Override
+  public ManifestFile createManifestFileByServiceId(ManifestFile manifestFile, String serviceId, AppManifestKind kind) {
+    doFileValidations(manifestFile);
+
+    String appId = manifestFile.getAppId();
+    if (!serviceResourceService.exist(appId, serviceId)) {
+      throw new InvalidRequestException(format("Service doesn't exist, service id: %s, app id: %s", serviceId, appId));
+    }
+
+    return upsertApplicationManifestFile(manifestFile, getByServiceId(appId, serviceId, kind), true);
+  }
+
+  @Override
   public ManifestFile updateManifestFileByServiceId(ManifestFile manifestFile, String serviceId) {
     return updateManifestFileByServiceId(manifestFile, serviceId, false);
   }
@@ -179,7 +191,18 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     if (removeNamespace) {
       removeNamespace(manifestFile);
     }
+
+    if (isAzureAppServiceManifestKind(serviceId)) {
+      return upsertApplicationManifestFile(manifestFile,
+          getByServiceId(manifestFile.getAppId(), serviceId, AppManifestKind.AZURE_APP_SERVICE_MANIFEST), false);
+    }
+
     return upsertManifestFileForService(manifestFile, serviceId, false);
+  }
+
+  private boolean isAzureAppServiceManifestKind(String serviceId) {
+    Service service = serviceResourceService.get(serviceId);
+    return service != null && service.getDeploymentType() == DeploymentType.AZURE_WEBAPP;
   }
 
   @Override

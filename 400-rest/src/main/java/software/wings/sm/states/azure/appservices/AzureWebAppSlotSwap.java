@@ -21,22 +21,32 @@ import software.wings.sm.StateExecutionData;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Slf4j
 public class AzureWebAppSlotSwap extends AbstractAzureAppServiceState {
-  @Getter @Setter private String targetSlot;
   public static final String APP_SERVICE_SLOT_SWAP = "App Service Slot Swap";
 
   public AzureWebAppSlotSwap(String name) {
     super(name, AZURE_WEBAPP_SLOT_SWAP);
+  }
+
+  @Override
+  protected boolean shouldExecute(ExecutionContext context) {
+    if (verifyIfContextElementExist(context)) {
+      AzureAppServiceSlotSetupContextElement contextElement = readContextElement(context);
+      String targetSlot = contextElement.getTargetSlot();
+      return !isEmpty(targetSlot);
+    }
+    return false;
+  }
+
+  @Override
+  public String skipMessage() {
+    return "No Target slot detail is found, hence skipping swap slot step";
   }
 
   @Override
@@ -62,7 +72,7 @@ public class AzureWebAppSlotSwap extends AbstractAzureAppServiceState {
         .resourceGroup(contextElement.getResourceGroup())
         .appServiceName(contextElement.getWebApp())
         .deploymentSlot(contextElement.getDeploymentSlot())
-        .targetSlot(context.renderExpression(targetSlot))
+        .targetSlot(contextElement.getTargetSlot())
         .build();
   }
 
@@ -117,17 +127,8 @@ public class AzureWebAppSlotSwap extends AbstractAzureAppServiceState {
         .resourceGroupName(contextElement.getResourceGroup())
         .webAppName(contextElement.getWebApp())
         .sourceSlotName(contextElement.getDeploymentSlot())
-        .targetSlotName(context.renderExpression(targetSlot))
+        .targetSlotName(contextElement.getTargetSlot())
         .preDeploymentData(contextElement.getPreDeploymentData())
         .build();
-  }
-
-  @Override
-  public Map<String, String> validateFields() {
-    Map<String, String> invalidFields = new HashMap<>();
-    if (isEmpty(targetSlot)) {
-      invalidFields.put("Target Slot", "Target Slot name must be specified");
-    }
-    return invalidFields;
   }
 }

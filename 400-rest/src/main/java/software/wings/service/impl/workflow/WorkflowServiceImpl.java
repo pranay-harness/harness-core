@@ -72,6 +72,8 @@ import static software.wings.sm.StepType.ASG_AMI_ALB_SHIFT_SWITCH_ROUTES;
 import static software.wings.sm.StepType.ASG_AMI_ROLLBACK_ALB_SHIFT_SWITCH_ROUTES;
 import static software.wings.sm.StepType.ASG_AMI_SERVICE_ALB_SHIFT_DEPLOY;
 import static software.wings.sm.StepType.ASG_AMI_SERVICE_ALB_SHIFT_SETUP;
+import static software.wings.sm.StepType.AZURE_WEBAPP_SLOT_SETUP;
+import static software.wings.sm.StepType.AZURE_WEBAPP_SLOT_SWAP;
 import static software.wings.sm.StepType.K8S_TRAFFIC_SPLIT;
 import static software.wings.sm.StepType.SPOTINST_LISTENER_ALB_SHIFT;
 import static software.wings.sm.StepType.SPOTINST_LISTENER_ALB_SHIFT_ROLLBACK;
@@ -312,6 +314,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private static final List<String> azureMachineImageArtifactNeededStateTypes =
       Arrays.asList(AZURE_VMSS_SETUP.name(), AZURE_VMSS_DEPLOY.name());
+
+  private static final List<String> azureAppServiceArtifactNeededStateTypes =
+      Arrays.asList(AZURE_WEBAPP_SLOT_SETUP.name(), AZURE_WEBAPP_SLOT_SWAP.name());
 
   private static final List<String> amiArtifactNeededStateTypes =
       Arrays.asList(AWS_AMI_SERVICE_SETUP.name(), AWS_AMI_SERVICE_DEPLOY.name(), ASG_AMI_SERVICE_ALB_SHIFT_SETUP.name(),
@@ -2736,6 +2741,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       } else if (kubernetesArtifactNeededStateTypes.contains(step.getType())
           || ecsArtifactNeededStateTypes.contains(step.getType())
           || azureMachineImageArtifactNeededStateTypes.contains(step.getType())
+          || azureAppServiceArtifactNeededStateTypes.contains(step.getType())
           || amiArtifactNeededStateTypes.contains(step.getType())
           || codeDeployArtifactNeededStateTypes.contains(step.getType())
           || awsLambdaArtifactNeededStateTypes.contains(step.getType())
@@ -3232,6 +3238,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       } else if (kubernetesArtifactNeededStateTypes.contains(step.getType())
           || ecsArtifactNeededStateTypes.contains(step.getType())
           || azureMachineImageArtifactNeededStateTypes.contains(step.getType())
+          || azureAppServiceArtifactNeededStateTypes.contains(step.getType())
           || amiArtifactNeededStateTypes.contains(step.getType())
           || codeDeployArtifactNeededStateTypes.contains(step.getType())
           || awsLambdaArtifactNeededStateTypes.contains(step.getType())
@@ -3441,6 +3448,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
               || InfrastructureMappingType.PCF_PCF.name().equals(infrastructureMapping.getInfraMappingType())
               || InfrastructureMappingType.AWS_AMI.name().equals(infrastructureMapping.getInfraMappingType())
               || InfrastructureMappingType.AWS_ECS.name().equals(infrastructureMapping.getInfraMappingType())
+              || InfrastructureMappingType.AZURE_WEBAPP.name().equals(infrastructureMapping.getInfraMappingType())
               || InfrastructureMappingType.AZURE_VMSS.name().equals(infrastructureMapping.getInfraMappingType()))) {
         throw new InvalidRequestException(
             "Requested Infrastructure Type is not supported using Blue/Green Deployment", USER);

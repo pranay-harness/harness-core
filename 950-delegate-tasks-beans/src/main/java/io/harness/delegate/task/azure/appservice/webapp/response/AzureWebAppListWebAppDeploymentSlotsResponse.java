@@ -8,6 +8,6 @@ import lombok.Data;
 
 @Data
 @Builder
-public class AzureWebAppListWebAppDeploymentSlotNamesResponse implements AzureAppServiceTaskResponse {
-  private List<String> deploymentSlotNames;
+public class AzureWebAppListWebAppDeploymentSlotsResponse implements AzureAppServiceTaskResponse {
+  private List<DeploymentSlotData> deploymentSlots;
 }

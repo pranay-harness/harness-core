@@ -69,12 +69,13 @@ import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceTaskType;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceType;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskResponse;
-import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppListWebAppDeploymentSlotNamesParameters;
+import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppListWebAppDeploymentSlotsParameters;
 import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppListWebAppInstancesParameters;
 import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppListWebAppNamesParameters;
-import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppListWebAppDeploymentSlotNamesResponse;
+import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppListWebAppDeploymentSlotsResponse;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppListWebAppInstancesResponse;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppListWebAppNamesResponse;
+import io.harness.delegate.task.azure.appservice.webapp.response.DeploymentSlotData;
 import io.harness.delegate.task.azure.request.*;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters.AzureVMSSTaskType;
 import io.harness.delegate.task.azure.response.*;
@@ -317,9 +318,9 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(CIBuildPushParameters.class, 19379);
     kryo.register(CIBuildPushTaskType.class, 19380);
     kryo.register(CIBuildStatusPushParameters.class, 19381);
-    kryo.register(AzureWebAppListWebAppDeploymentSlotNamesParameters.class, 19382);
+    kryo.register(AzureWebAppListWebAppDeploymentSlotsParameters.class, 19382);
     kryo.register(AzureWebAppListWebAppNamesParameters.class, 19383);
-    kryo.register(AzureWebAppListWebAppDeploymentSlotNamesResponse.class, 19384);
+    kryo.register(AzureWebAppListWebAppDeploymentSlotsResponse.class, 19384);
     kryo.register(AzureWebAppListWebAppNamesResponse.class, 19385);
     kryo.register(AzureAppServiceTaskParameters.class, 19386);
     kryo.register(AzureAppServiceTaskResponse.class, 19387);
@@ -390,5 +391,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(CEAwsConnectorDTO.class, 19454);
     kryo.register(AwsCurAttributesDTO.class, 19455);
     kryo.register(CEAwsFeatures.class, 19456);
+    kryo.register(DeploymentSlotData.class, 19457);
   }
 }

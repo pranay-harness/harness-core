@@ -26,6 +26,8 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
 
   ManifestFile createManifestFileByServiceId(ManifestFile manifestFile, String serviceId, boolean removeNamespace);
 
+  ManifestFile createManifestFileByServiceId(ManifestFile manifestFile, String serviceId, AppManifestKind kind);
+
   ManifestFile updateManifestFileByServiceId(ManifestFile manifestFile, String serviceId);
 
   ManifestFile updateManifestFileByServiceId(ManifestFile manifestFile, String serviceId, boolean removeNamespace);

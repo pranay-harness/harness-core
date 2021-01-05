@@ -1,6 +1,8 @@
 package io.harness.azure.utility;
 
 import static io.harness.azure.model.AzureConstants.ACTIVITY_LOG_EVENT_DATA_TEMPLATE;
+import static io.harness.azure.model.AzureConstants.DEPLOYMENT_SLOT_NAME_PREFIX_PATTERN;
+import static io.harness.azure.model.AzureConstants.DEPLOYMENT_SLOT_PRODUCTION_NAME;
 import static io.harness.azure.model.AzureConstants.DOCKER_CUSTOM_IMAGE_NAME_PROPERTY_NAME;
 import static io.harness.azure.model.AzureConstants.DOCKER_FX_IMAGE_PREFIX;
 import static io.harness.azure.model.AzureConstants.DOCKER_IMAGE_AND_TAG_PATH_PATTERN;
@@ -12,6 +14,7 @@ import static io.harness.azure.model.AzureConstants.SLOT_SWAP_JOB_PROCESSOR_STR;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.microsoft.azure.CloudException;
@@ -112,5 +115,17 @@ public class AzureResourceUtility {
   @NotNull
   public String removeDockerFxImagePrefix(String windowsFxVersion) {
     return windowsFxVersion.replace(DOCKER_FX_IMAGE_PREFIX, EMPTY);
+  }
+
+  public String fixDeploymentSlotName(String deploymentSlotName, String appName) {
+    if (isBlank(deploymentSlotName) || isBlank(appName)) {
+      return deploymentSlotName;
+    }
+
+    if (deploymentSlotName.equals(appName)) {
+      return DEPLOYMENT_SLOT_PRODUCTION_NAME;
+    }
+
+    return deploymentSlotName.replace(format(DEPLOYMENT_SLOT_NAME_PREFIX_PATTERN, appName), EMPTY);
   }
 }

@@ -6,10 +6,16 @@ import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.AZ
 import static software.wings.sm.StateType.AZURE_WEBAPP_SLOT_SETUP;
 import static software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement.SWEEPING_OUTPUT_APP_SERVICE;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
+import io.harness.azure.model.AzureAppServiceConfiguration;
 import io.harness.azure.model.AzureAppServiceConnectionString;
 import io.harness.azure.model.AzureConstants;
+import io.harness.azure.utility.AzureResourceUtility;
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceApplicationSettingDTO;
+import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceConnectionStringDTO;
 import io.harness.delegate.beans.azure.registry.AzureRegistryType;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
@@ -44,6 +50,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
@@ -55,9 +62,8 @@ import org.jetbrains.annotations.NotNull;
 public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
   @Getter @Setter private String appService;
   @Getter @Setter private String deploymentSlot;
+  @Getter @Setter private String targetSlot;
   @Getter @Setter private String slotSteadyStateTimeout;
-  @Getter @Setter private List<AzureAppServiceApplicationSetting> applicationSettings;
-  @Getter @Setter private List<AzureAppServiceConnectionString> appServiceConnectionStrings;
   public static final String APP_SERVICE_SLOT_SETUP = "App Service Slot Setup";
 
   public AzureWebAppSlotSetup(String name) {
@@ -102,12 +108,18 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
   @Override
   protected StateExecutionData buildPreStateExecutionData(
       Activity activity, ExecutionContext context, AzureAppServiceStateData azureAppServiceStateData) {
+    String appServiceName = context.renderExpression(appService);
+    String deploySlotName =
+        AzureResourceUtility.fixDeploymentSlotName(context.renderExpression(deploymentSlot), appServiceName);
+    String targetSlotName =
+        AzureResourceUtility.fixDeploymentSlotName(context.renderExpression(targetSlot), appServiceName);
     return AzureAppServiceSlotSetupExecutionData.builder()
         .activityId(activity.getUuid())
         .resourceGroup(azureAppServiceStateData.getResourceGroup())
         .subscriptionId(azureAppServiceStateData.getSubscriptionId())
-        .appServiceName(context.renderExpression(appService))
-        .deploySlotName(context.renderExpression(deploymentSlot))
+        .appServiceName(appServiceName)
+        .deploySlotName(deploySlotName)
+        .targetSlotName(targetSlotName)
         .infrastructureMappingId(azureAppServiceStateData.getInfrastructureMapping().getUuid())
         .appServiceSlotSetupTimeOut(getTimeOut(context))
         .build();
@@ -162,6 +174,7 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
             .resourceGroup(stateExecutionData.getResourceGroup())
             .webApp(preDeploymentData.getAppName())
             .deploymentSlot(preDeploymentData.getSlotName())
+            .targetSlot(stateExecutionData.getTargetSlotName())
             .preDeploymentData(preDeploymentData)
             .build();
 
@@ -207,7 +220,7 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
   private AzureWebAppSlotSetupParameters buildSlotSetupParams(
       ExecutionContext context, AzureAppServiceStateData azureAppServiceStateData, Activity activity) {
     AzureWebAppSlotSetupParametersBuilder slotSetupParametersBuilder = AzureWebAppSlotSetupParameters.builder();
-    provideAppServiceSettings(slotSetupParametersBuilder);
+    provideAppServiceSettings(context, slotSetupParametersBuilder);
     provideRegistryDetails(context, azureAppServiceStateData, slotSetupParametersBuilder);
 
     return slotSetupParametersBuilder.accountId(azureAppServiceStateData.getApplication().getAccountId())
@@ -222,21 +235,47 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
         .build();
   }
 
-  private void provideAppServiceSettings(AzureWebAppSlotSetupParametersBuilder slotSetupParametersBuilder) {
-    Map<String, AzureAppServiceApplicationSetting> applicationSettingMap = new HashMap<>();
-    Map<String, AzureAppServiceConnectionString> connectionStringMap = new HashMap<>();
+  private void provideAppServiceSettings(
+      ExecutionContext context, AzureWebAppSlotSetupParametersBuilder slotSetupParametersBuilder) {
+    Map<String, AzureAppServiceApplicationSettingDTO> applicationSettingMap = new HashMap<>();
+    Map<String, AzureAppServiceConnectionStringDTO> connectionStringMap = new HashMap<>();
 
-    if (isNotEmpty(applicationSettings)) {
-      applicationSettingMap = applicationSettings.stream().collect(
-          Collectors.toMap(AzureAppServiceApplicationSetting::getName, setting -> setting));
+    AzureAppServiceConfiguration appServiceConfiguration =
+        azureAppServiceManifestUtils.getAzureAppServiceConfiguration(context);
+    List<AzureAppServiceApplicationSettingDTO> appSettingDTOs =
+        getAppSettingDTOs(context, appServiceConfiguration.getAppSettings());
+    List<AzureAppServiceConnectionStringDTO> connStringDTOs =
+        getConnStringDTOs(context, appServiceConfiguration.getConnStrings());
+
+    if (isNotEmpty(appSettingDTOs)) {
+      applicationSettingMap = appSettingDTOs.stream().collect(
+          Collectors.toMap(AzureAppServiceApplicationSettingDTO::getName, Function.identity()));
     }
-    if (isNotEmpty(appServiceConnectionStrings)) {
-      connectionStringMap = appServiceConnectionStrings.stream().collect(
-          Collectors.toMap(AzureAppServiceConnectionString::getName, setting -> setting));
+    if (isNotEmpty(connStringDTOs)) {
+      connectionStringMap = connStringDTOs.stream().collect(
+          Collectors.toMap(AzureAppServiceConnectionStringDTO::getName, Function.identity()));
     }
 
-    slotSetupParametersBuilder.appSettings(Collections.emptyMap());
-    slotSetupParametersBuilder.connSettings(Collections.emptyMap());
+    azureVMSSStateHelper.encryptAzureAppServiceSettingDTOs(applicationSettingMap, context.getAccountId());
+    azureVMSSStateHelper.encryptAzureAppServiceSettingDTOs(connectionStringMap, context.getAccountId());
+    slotSetupParametersBuilder.appSettings(applicationSettingMap);
+    slotSetupParametersBuilder.connSettings(connectionStringMap);
+  }
+
+  private List<AzureAppServiceApplicationSettingDTO> getAppSettingDTOs(
+      ExecutionContext context, List<AzureAppServiceApplicationSetting> appSettings) {
+    ImmutableList<String> appSettingSecretsImmutableList =
+        azureAppServiceManifestUtils.getAppSettingSecretsImmutableList(appSettings);
+    azureAppServiceManifestUtils.renderAppSettings(context, appSettings, appSettingSecretsImmutableList);
+    return azureVMSSStateHelper.createAppSettingDTOs(appSettings, appSettingSecretsImmutableList);
+  }
+
+  private List<AzureAppServiceConnectionStringDTO> getConnStringDTOs(
+      ExecutionContext context, List<AzureAppServiceConnectionString> connStrings) {
+    ImmutableList<String> connStringSecretsImmutableList =
+        azureAppServiceManifestUtils.getConnStringSecretsImmutableList(connStrings);
+    azureAppServiceManifestUtils.renderConnStrings(context, connStrings, connStringSecretsImmutableList);
+    return azureVMSSStateHelper.createConnStringDTOs(connStrings, connStringSecretsImmutableList);
   }
 
   private void provideRegistryDetails(ExecutionContext context, AzureAppServiceStateData azureAppServiceStateData,
@@ -249,8 +288,7 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
     List<EncryptedDataDetail> encryptedDataDetails =
         artifactStreamMapper.getConnectorDTOAuthCredentials(connectorConfigDTO)
             .map(connectorAuthCredentials
-                -> azureVMSSStateHelper.getConnectorAuthEncryptedDataDetails(
-                    context.getAccountId(), connectorAuthCredentials))
+                -> azureVMSSStateHelper.getNgEncryptedDataDetails(context.getAccountId(), connectorAuthCredentials))
             .orElse(Collections.emptyList());
 
     slotSetupParametersBuilder.connectorConfigDTO(connectorConfigDTO);
@@ -277,5 +315,28 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
 
     return azureSweepingOutputServiceHelper.generateAzureAppInstanceElements(
         context, webAppInfrastructureMapping, slotSetupTaskResponse.getAzureAppDeploymentData());
+  }
+
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> invalidFields = new HashMap<>();
+
+    if (isBlank(deploymentSlot)) {
+      invalidFields.put("deploymentSlot", "Deployment slot cannot be empty");
+    }
+
+    if (isBlank(appService)) {
+      invalidFields.put("appService", "Application name cannot be empty");
+    }
+
+    if (deploymentSlot != null && deploymentSlot.equals(targetSlot)) {
+      invalidFields.put("targetSlot", "Target slot cannot be the same as deployment slot");
+    }
+
+    if (deploymentSlot != null && deploymentSlot.equals(appService)) {
+      invalidFields.put("deploymentSlot", "Deployment slot cannot be production slot");
+    }
+
+    return invalidFields;
   }
 }

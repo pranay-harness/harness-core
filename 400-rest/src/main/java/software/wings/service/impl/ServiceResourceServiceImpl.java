@@ -22,6 +22,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.validation.PersistenceValidator.duplicateCheck;
 import static io.harness.validation.Validator.notNullCheck;
 
+import static software.wings.api.DeploymentType.AZURE_WEBAPP;
 import static software.wings.api.DeploymentType.CUSTOM;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.HELM;
@@ -36,6 +37,8 @@ import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
+import static software.wings.beans.yaml.YamlConstants.APP_SETTINGS_FILE;
+import static software.wings.beans.yaml.YamlConstants.CONN_STRINGS_FILE;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.yaml.YamlHelper.trimYaml;
 
@@ -48,6 +51,7 @@ import static java.util.Comparator.comparingDouble;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -504,6 +508,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       serviceTemplateService.createDefaultTemplatesByService(savedService);
       createDefaultK8sManifests(savedService, service.isSyncFromGit());
       createDefaultPCFManifestsIfApplicable(savedService, service.isSyncFromGit());
+      createDefaultAzureAppServiceManifests(savedService, service.isSyncFromGit());
 
       if (featureFlagService.isEnabled(HARNESS_TAGS, accountId)) {
         setDeploymentTypeTag(savedService);
@@ -2745,6 +2750,39 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     } catch (Exception ex) {
       log.warn("Failed to update the manifest file for PCF spec. ", ex);
     }
+  }
+
+  private void createDefaultAzureAppServiceManifests(Service service, boolean createdFromGit) {
+    if (AZURE_WEBAPP != service.getDeploymentType() || createdFromGit) {
+      return;
+    }
+
+    if (applicationManifestService.getByServiceId(
+            service.getAppId(), service.getUuid(), AppManifestKind.AZURE_APP_SERVICE_MANIFEST)
+        != null) {
+      return;
+    }
+
+    createLocalApplicationManifest(service, AppManifestKind.AZURE_APP_SERVICE_MANIFEST);
+
+    createManifestFile(service, APP_SETTINGS_FILE, EMPTY, AppManifestKind.AZURE_APP_SERVICE_MANIFEST);
+    createManifestFile(service, CONN_STRINGS_FILE, EMPTY, AppManifestKind.AZURE_APP_SERVICE_MANIFEST);
+  }
+
+  private void createLocalApplicationManifest(Service service, AppManifestKind kind) {
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().serviceId(service.getUuid()).storeType(StoreType.Local).kind(kind).build();
+    applicationManifest.setAppId(service.getAppId());
+
+    applicationManifestService.create(applicationManifest);
+  }
+
+  private void createManifestFile(
+      Service service, final String fileName, final String fileContent, AppManifestKind kind) {
+    ManifestFile defaultManifestSpec = ManifestFile.builder().fileName(fileName).fileContent(fileContent).build();
+    defaultManifestSpec.setAppId(service.getAppId());
+
+    applicationManifestService.createManifestFileByServiceId(defaultManifestSpec, service.getUuid(), kind);
   }
 
   @Override

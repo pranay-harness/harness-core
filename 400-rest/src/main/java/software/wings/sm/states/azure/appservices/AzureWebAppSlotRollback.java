@@ -2,8 +2,6 @@ package software.wings.sm.states.azure.appservices;
 
 import static software.wings.sm.StateType.AZURE_WEBAPP_SLOT_ROLLBACK;
 
-import io.harness.azure.model.AzureAppServiceApplicationSetting;
-import io.harness.azure.model.AzureAppServiceConnectionString;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
 import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppRollbackParameters;
@@ -14,7 +12,6 @@ import software.wings.sm.ExecutionContext;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -59,20 +56,14 @@ public class AzureWebAppSlotRollback extends AzureWebAppSlotSetup {
 
   @Override
   @SchemaIgnore
+  public String getTargetSlot() {
+    return super.getTargetSlot();
+  }
+
+  @Override
+  @SchemaIgnore
   public String getSlotSteadyStateTimeout() {
     return super.getSlotSteadyStateTimeout();
-  }
-
-  @Override
-  @SchemaIgnore
-  public List<AzureAppServiceApplicationSetting> getApplicationSettings() {
-    return super.getApplicationSettings();
-  }
-
-  @Override
-  @SchemaIgnore
-  public List<AzureAppServiceConnectionString> getAppServiceConnectionStrings() {
-    return super.getAppServiceConnectionStrings();
   }
 
   @Override
@@ -86,8 +77,21 @@ public class AzureWebAppSlotRollback extends AzureWebAppSlotSetup {
   }
 
   @Override
+  @SchemaIgnore
   public boolean isRollback() {
     return true;
+  }
+
+  @Override
+  @SchemaIgnore
+  public String getAppService() {
+    return super.getAppService();
+  }
+
+  @Override
+  @SchemaIgnore
+  public String getDeploymentSlot() {
+    return super.getDeploymentSlot();
   }
 
   @Override

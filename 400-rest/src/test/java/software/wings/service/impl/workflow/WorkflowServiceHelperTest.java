@@ -1241,10 +1241,6 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
                            -> workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
                                APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.ROLLING, false))
         .isInstanceOf(InvalidRequestException.class);
-    assertThatThrownBy(()
-                           -> workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
-                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.CUSTOM, false))
-        .isInstanceOf(InvalidRequestException.class);
 
     // feature flag test
     when(mockFeatureFlagService.isEnabled(FeatureName.AZURE_WEBAPP, ACCOUNT_ID)).thenReturn(false);

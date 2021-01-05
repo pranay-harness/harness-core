@@ -5,6 +5,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
+import io.harness.delegate.task.azure.appservice.webapp.response.DeploymentSlotData;
 import io.harness.delegate.task.spotinst.response.SpotinstElastigroupRunningCountData;
 import io.harness.spotinst.model.ElastiGroup;
 
@@ -163,10 +164,11 @@ public interface InfrastructureDefinitionService extends OwnedByEnvironment {
 
   List<String> getAppServiceNames(String appId, String infraDefinitionId, String appType);
 
-  List<String> getAppServiceDeploymentSlotNames(String appId, String computeProviderId, String subscriptionId,
+  List<DeploymentSlotData> getAppServiceDeploymentSlots(String appId, String computeProviderId, String subscriptionId,
       String resourceGroupName, String appType, String appName);
 
-  List<String> getDeploymentSlotNames(String appId, String infraDefinitionId, String appType, String appName);
+  List<DeploymentSlotData> getAppServiceDeploymentSlots(
+      String appId, String infraDefinitionId, String appType, String appName);
 
   List<String> listAzureLoadBalancers(String appId, String infraDefinitionId);
 

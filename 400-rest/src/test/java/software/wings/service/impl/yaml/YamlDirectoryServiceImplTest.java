@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.YOGESH;
 
@@ -22,6 +23,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -311,6 +313,167 @@ public class YamlDirectoryServiceImplTest extends WingsBaseTest {
       }
     });
     return structure;
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testGenerateEnvAzureAppSettingsOverridesFolderManifestNonPresent() {
+    Environment env = anEnvironment().uuid(ENV_ID).appId(APP_ID).uuid(ENV_ID).build();
+    DirectoryPath dirPath = new DirectoryPath("Setup/Applications/Test/Environments/Dev");
+    doReturn(null)
+        .when(applicationManifestService)
+        .getAllByEnvIdAndKind(anyString(), anyString(), eq(AppManifestKind.AZURE_APP_SETTINGS_OVERRIDE));
+    FolderNode envAppSettingsOverridesFolder =
+        yamlDirectoryService.generateEnvAzureAppSettingsOverridesFolder(ACCOUNT_ID, env, dirPath);
+
+    assertThat(envAppSettingsOverridesFolder).isNull();
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testGenerateEnvAzureAppSettingsOverridesFolderWithEnvOverrides() {
+    Environment env = anEnvironment().uuid(ENV_ID).appId(APP_ID).uuid(ENV_ID).build();
+    DirectoryPath dirPath = new DirectoryPath("Setup/Applications/Test/Environments/Dev");
+    mockAzureAppServiceOverride(AppManifestKind.AZURE_APP_SETTINGS_OVERRIDE);
+
+    doReturn(null).when(serviceResourceService).get(APP_ID, SERVICE_ID, false);
+
+    FolderNode envAppSettingsOverridesFolder =
+        yamlDirectoryService.generateEnvAzureAppSettingsOverridesFolder(ACCOUNT_ID, env, dirPath);
+
+    assertThat(envAppSettingsOverridesFolder).isNotNull();
+    assertThat(envAppSettingsOverridesFolder.getDirectoryPath().getPath())
+        .isEqualTo("Setup/Applications/Test/Environments/Dev/App Settings Overrides");
+    List<String> folderStructure = getFolderStructure(envAppSettingsOverridesFolder);
+    assertThat(folderStructure.size()).isEqualTo(4);
+    assertThat(folderStructure)
+        .containsExactly("Setup/Applications/Test/Environments/Dev/App Settings Overrides/Index.yaml",
+            "Setup/Applications/Test/Environments/Dev/App Settings Overrides/appsettings",
+            "Setup/Applications/Test/Environments/Dev/App Settings Overrides/connstrings",
+            "Setup/Applications/Test/Environments/Dev/App Settings Overrides/Services");
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testGenerateEnvAzureAppSettingsOverridesFolderWithServiceOverrides() {
+    Environment env = anEnvironment().uuid(ENV_ID).appId(APP_ID).uuid(ENV_ID).build();
+    DirectoryPath dirPath = new DirectoryPath("Setup/Applications/Test/Environments/Dev");
+    mockAzureAppServiceOverride(AppManifestKind.AZURE_APP_SETTINGS_OVERRIDE);
+
+    doReturn(Service.builder().name(SERVICE_NAME).uuid(SERVICE_ID).appId(APP_ID).build())
+        .when(serviceResourceService)
+        .get(APP_ID, SERVICE_ID, false);
+
+    FolderNode envAppSettingsOverridesFolder =
+        yamlDirectoryService.generateEnvAzureAppSettingsOverridesFolder(ACCOUNT_ID, env, dirPath);
+
+    assertThat(envAppSettingsOverridesFolder).isNotNull();
+    assertThat(envAppSettingsOverridesFolder.getDirectoryPath().getPath())
+        .isEqualTo("Setup/Applications/Test/Environments/Dev/App Settings Overrides");
+    List<String> folderStructure = getFolderStructure(envAppSettingsOverridesFolder);
+    assertThat(folderStructure.size()).isEqualTo(8);
+    assertThat(folderStructure)
+        .containsExactly("Setup/Applications/Test/Environments/Dev/App Settings Overrides/Index.yaml",
+            "Setup/Applications/Test/Environments/Dev/App Settings Overrides/appsettings",
+            "Setup/Applications/Test/Environments/Dev/App Settings Overrides/connstrings",
+            "Setup/Applications/Test/Environments/Dev/App Settings Overrides/Services",
+            "Setup/Applications/Test/Environments/Dev/App Settings Overrides/Services/SERVICE_NAME",
+            "Setup/Applications/Test/Environments/Dev/App Settings Overrides/Services/SERVICE_NAME/Index.yaml",
+            "Setup/Applications/Test/Environments/Dev/App Settings Overrides/Services/SERVICE_NAME/appsettings",
+            "Setup/Applications/Test/Environments/Dev/App Settings Overrides/Services/SERVICE_NAME/connstrings");
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testGenerateEnvAzureConnStringsOverridesFolderManifestNonPresent() {
+    Environment env = anEnvironment().uuid(ENV_ID).appId(APP_ID).uuid(ENV_ID).build();
+    DirectoryPath dirPath = new DirectoryPath("Setup/Applications/Test/Environments/Dev");
+    doReturn(null)
+        .when(applicationManifestService)
+        .getAllByEnvIdAndKind(anyString(), anyString(), eq(AppManifestKind.AZURE_APP_SETTINGS_OVERRIDE));
+    FolderNode envConnStringsOverridesFolder =
+        yamlDirectoryService.generateEnvAzureConnStringsOverridesFolder(ACCOUNT_ID, env, dirPath);
+
+    assertThat(envConnStringsOverridesFolder).isNull();
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testGenerateEnvAzureConnStringsOverridesFolderWithEnvOverrides() {
+    Environment env = anEnvironment().uuid(ENV_ID).appId(APP_ID).uuid(ENV_ID).build();
+    DirectoryPath dirPath = new DirectoryPath("Setup/Applications/Test/Environments/Dev");
+    mockAzureAppServiceOverride(AppManifestKind.AZURE_CONN_STRINGS_OVERRIDE);
+
+    doReturn(null).when(serviceResourceService).get(APP_ID, SERVICE_ID, false);
+
+    FolderNode envAppSettingsOverridesFolder =
+        yamlDirectoryService.generateEnvAzureConnStringsOverridesFolder(ACCOUNT_ID, env, dirPath);
+
+    assertThat(envAppSettingsOverridesFolder).isNotNull();
+    assertThat(envAppSettingsOverridesFolder.getDirectoryPath().getPath())
+        .isEqualTo("Setup/Applications/Test/Environments/Dev/Conn Strings Overrides");
+    List<String> folderStructure = getFolderStructure(envAppSettingsOverridesFolder);
+    assertThat(folderStructure.size()).isEqualTo(4);
+    assertThat(folderStructure)
+        .containsExactly("Setup/Applications/Test/Environments/Dev/Conn Strings Overrides/Index.yaml",
+            "Setup/Applications/Test/Environments/Dev/Conn Strings Overrides/appsettings",
+            "Setup/Applications/Test/Environments/Dev/Conn Strings Overrides/connstrings",
+            "Setup/Applications/Test/Environments/Dev/Conn Strings Overrides/Services");
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testGenerateEnvAzureConnStringsOverridesFolderrWithServiceOverrides() {
+    Environment env = anEnvironment().uuid(ENV_ID).appId(APP_ID).uuid(ENV_ID).build();
+    DirectoryPath dirPath = new DirectoryPath("Setup/Applications/Test/Environments/Dev");
+    mockAzureAppServiceOverride(AppManifestKind.AZURE_CONN_STRINGS_OVERRIDE);
+
+    doReturn(Service.builder().name(SERVICE_NAME).uuid(SERVICE_ID).appId(APP_ID).build())
+        .when(serviceResourceService)
+        .get(APP_ID, SERVICE_ID, false);
+
+    FolderNode envAppSettingsOverridesFolder =
+        yamlDirectoryService.generateEnvAzureConnStringsOverridesFolder(ACCOUNT_ID, env, dirPath);
+
+    assertThat(envAppSettingsOverridesFolder).isNotNull();
+    assertThat(envAppSettingsOverridesFolder.getDirectoryPath().getPath())
+        .isEqualTo("Setup/Applications/Test/Environments/Dev/Conn Strings Overrides");
+    List<String> folderStructure = getFolderStructure(envAppSettingsOverridesFolder);
+    assertThat(folderStructure.size()).isEqualTo(8);
+    assertThat(folderStructure)
+        .containsExactly("Setup/Applications/Test/Environments/Dev/Conn Strings Overrides/Index.yaml",
+            "Setup/Applications/Test/Environments/Dev/Conn Strings Overrides/appsettings",
+            "Setup/Applications/Test/Environments/Dev/Conn Strings Overrides/connstrings",
+            "Setup/Applications/Test/Environments/Dev/Conn Strings Overrides/Services",
+            "Setup/Applications/Test/Environments/Dev/Conn Strings Overrides/Services/SERVICE_NAME",
+            "Setup/Applications/Test/Environments/Dev/Conn Strings Overrides/Services/SERVICE_NAME/Index.yaml",
+            "Setup/Applications/Test/Environments/Dev/Conn Strings Overrides/Services/SERVICE_NAME/appsettings",
+            "Setup/Applications/Test/Environments/Dev/Conn Strings Overrides/Services/SERVICE_NAME/connstrings");
+  }
+
+  private void mockAzureAppServiceOverride(AppManifestKind kind) {
+    ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                  .envId(ENV_ID)
+                                                  .storeType(StoreType.Local)
+                                                  .serviceId(SERVICE_ID)
+                                                  .kind(AppManifestKind.AZURE_APP_SERVICE_MANIFEST)
+                                                  .build();
+
+    doReturn(Collections.singletonList(applicationManifest))
+        .when(applicationManifestService)
+        .getAllByEnvIdAndKind(anyString(), anyString(), eq(kind));
+
+    doReturn(applicationManifest).when(applicationManifestService).getByEnvId(anyString(), anyString(), eq(kind));
+    List<ManifestFile> manifestFiles = new ArrayList<>();
+    manifestFiles.add(ManifestFile.builder().fileName("appsettings").build());
+    manifestFiles.add(ManifestFile.builder().fileName("connstrings").build());
+    doReturn(manifestFiles).when(applicationManifestService).getManifestFilesByAppManifestId(anyString(), anyString());
   }
 
   @Owner(developers = ANSHUL)

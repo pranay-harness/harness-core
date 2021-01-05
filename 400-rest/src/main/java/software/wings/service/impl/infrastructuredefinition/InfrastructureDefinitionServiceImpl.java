@@ -66,6 +66,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
+import io.harness.delegate.task.azure.appservice.webapp.response.DeploymentSlotData;
 import io.harness.delegate.task.spotinst.response.SpotinstElastigroupRunningCountData;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
@@ -2023,12 +2024,12 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   }
 
   @Override
-  public List<String> getAppServiceDeploymentSlotNames(String appId, String computeProviderId, String subscriptionId,
-      String resourceGroupName, String appType, String appName) {
+  public List<DeploymentSlotData> getAppServiceDeploymentSlots(String appId, String computeProviderId,
+      String subscriptionId, String resourceGroupName, String appType, String appName) {
     AzureConfig azureConfig = validateAndGetAzureConfig(computeProviderId);
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, appId, null);
     try {
-      return azureAppServiceManager.getAppServiceDeploymentSlotNames(
+      return azureAppServiceManager.getAppServiceDeploymentSlots(
           azureConfig, encryptionDetails, appId, subscriptionId, resourceGroupName, appType, appName);
     } catch (Exception exception) {
       log.warn(ExceptionUtils.getMessage(exception), exception);
@@ -2037,7 +2038,8 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   }
 
   @Override
-  public List<String> getDeploymentSlotNames(String appId, String infraDefinitionId, String appType, String appName) {
+  public List<DeploymentSlotData> getAppServiceDeploymentSlots(
+      String appId, String infraDefinitionId, String appType, String appName) {
     InfrastructureDefinition infrastructureDefinition = get(appId, infraDefinitionId);
     notNullCheck("Infrastructure Definition", infrastructureDefinition);
     if (!(infrastructureDefinition.getInfrastructure() instanceof AzureWebAppInfra)) {
@@ -2050,7 +2052,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       AzureWebAppInfra infrastructure = (AzureWebAppInfra) infrastructureDefinition.getInfrastructure();
       AzureConfig azureConfig = validateAndGetAzureConfig(infrastructure.getCloudProviderId());
       List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, appId, null);
-      return azureAppServiceManager.getAppServiceDeploymentSlotNames(azureConfig, encryptionDetails, appId,
+      return azureAppServiceManager.getAppServiceDeploymentSlots(azureConfig, encryptionDetails, appId,
           infrastructure.getSubscriptionId(), infrastructure.getResourceGroup(), appType, appName);
     } catch (Exception exception) {
       log.warn(ExceptionUtils.getMessage(exception), exception);

@@ -119,6 +119,17 @@ public interface YamlConstants {
   String OC_PARAMS_FOLDER = "OC Params";
   String OC_PARAMS_FILE = "params";
 
+  // AZURE APP SERVICES
+  String APP_SETTINGS_ENTITY = "APP_SETTINGS";
+  String AZURE_APP_SETTINGS_OVERRIDES_FOLDER = "App Settings Overrides";
+  String APP_SETTINGS_FILE = "appsettings";
+
+  String CONN_STRINGS_ENTITY = "CONN_STRINGS";
+  String AZURE_CONN_STRINGS_OVERRIDES_FOLDER = "Conn Strings Overrides";
+  String CONN_STRINGS_FILE = "connstrings";
+
+  String APP_SERVICE_MANIFEST_FILE_NAME = "appsettings";
+
   // ECS PARAMS
   String ECS_NOT_USED = "ECS_NOT_USED";
 }

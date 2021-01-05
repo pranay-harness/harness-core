@@ -142,8 +142,6 @@ public class AzureWebAppSlotRollbackTest extends WingsBaseTest {
 
   private void verifyStateExecutionData(ExecutionResponse response) {
     assertThat(state.isRollback()).isTrue();
-    assertThat(state.getApplicationSettings()).isNull();
-    assertThat(state.getAppServiceConnectionStrings()).isNull();
     assertThat(state.getSlotSteadyStateTimeout()).isNull();
 
     assertThat(response).isNotNull();

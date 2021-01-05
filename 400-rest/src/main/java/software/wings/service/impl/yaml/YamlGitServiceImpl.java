@@ -707,6 +707,18 @@ public class YamlGitServiceImpl implements YamlGitService {
                .matches()
         || Pattern.compile(YamlType.MANIFEST_FILE_PCF_OVERRIDE_ENV_SERVICE_OVERRIDE.getPathExpression())
                .matcher(filePath)
+               .matches()
+        || Pattern.compile(YamlType.MANIFEST_FILE_APP_SETTINGS_ENV_OVERRIDE.getPathExpression())
+               .matcher(filePath)
+               .matches()
+        || Pattern.compile(YamlType.MANIFEST_FILE_APP_SETTINGS_ENV_SERVICE_OVERRIDE.getPathExpression())
+               .matcher(filePath)
+               .matches()
+        || Pattern.compile(YamlType.MANIFEST_FILE_CONN_STRINGS_ENV_OVERRIDE.getPathExpression())
+               .matcher(filePath)
+               .matches()
+        || Pattern.compile(YamlType.MANIFEST_FILE_CONN_STRINGS_ENV_SERVICE_OVERRIDE.getPathExpression())
+               .matcher(filePath)
                .matches()) {
       return;
     }
