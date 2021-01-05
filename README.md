@@ -123,7 +123,7 @@ NOTE: the data from it is used for every git operation github does on you behave
    to setup your SSH keys. You can then use SSH to interact with git
 
 2. Update your maven settings file
-    a. Download the credentials for the Datacollection artifact from here : https://vault-internal.harness.io:8200/ui/vault/secrets/secret/show/cv/datacollection-artifactory
+    a. Download the credentials for the Datacollection artifact from here : https://vault-internal.harness.io:8200/ui/vault/secrets/secret/show/credentials/artifactory-internal-read
     b. Copy the settings.xml file present under tools/build/custom-settings.xml and paste this file into ~/.m2/settings.xml (Remember to rename the file to settings.xml)
     c. Edit the file and replace the text "${REPLACE_USERNAME_HERE}" with the username from vault secret
     d. Replace "${REPLACE_PASSWORD_HERE}" with the encrypted password that was present in the vault secret
