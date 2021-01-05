@@ -5,13 +5,14 @@ import io.harness.batch.processing.anomalydetection.types.TimeGranularity;
 
 import lombok.Data;
 import lombok.experimental.SuperBuilder;
+import lombok.extern.slf4j.Slf4j;
 
 @Data
 @SuperBuilder
+@Slf4j
 public abstract class AnomalyDetectionInfo {
   private String accountId;
   private TimeGranularity timeGranularity;
-  private String entityId;
   private EntityType entityType;
   private String clusterId;
   private String clusterName;
@@ -31,4 +32,28 @@ public abstract class AnomalyDetectionInfo {
   private String awsService;
   private String awsInstanceType;
   private String awsUsageType;
+
+  public String getEntityId() {
+    switch (entityType) {
+      case CLUSTER:
+        return clusterId;
+      case NAMESPACE:
+        return namespace;
+      case WORKLOAD:
+        return workloadName;
+      case GCP_PRODUCT:
+        return gcpProduct;
+      case GCP_SKU_ID:
+        return gcpSKUId;
+      case GCP_PROJECT:
+        return gcpProject;
+      case AWS_ACCOUNT:
+        return awsAccount;
+      case AWS_SERVICE:
+        return awsService;
+      default:
+        log.error("Unknown Entity Type [{}] please add support for it ", entityType);
+    }
+    return null;
+  }
 }

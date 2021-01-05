@@ -1,8 +1,8 @@
 package io.harness.batch.processing.anomalydetection.processor;
 
-import io.harness.batch.processing.anomalydetection.Anomaly;
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionTimeSeries;
 import io.harness.batch.processing.anomalydetection.models.StatsModel;
+import io.harness.batch.processing.anomalydetection.types.Anomaly;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.ExitStatus;
