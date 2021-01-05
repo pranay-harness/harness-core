@@ -80,8 +80,11 @@ func (j *Junit) GetTests(ctx context.Context) (<-chan *types.TestCase, <-chan er
 			for _, suite := range suites {
 				for _, test := range suite.Tests {
 					ct := convert(test, suite)
-					testc <- ct
-					total = total + 1
+					if ct.Name != "" {
+						testc <- ct
+						total = total + 1
+					}
+
 				}
 			}
 		}
@@ -95,13 +98,13 @@ func convert(testCase gojunit.Test, testSuite gojunit.Suite) *types.TestCase {
 	testCase.Result.Desc = restrictLength(testCase.Result.Desc)
 	testCase.Result.Message = restrictLength(testCase.Result.Message)
 	return &types.TestCase{
-		Name:      testCase.Name,
-		SuiteName: testSuite.Name,
-		ClassName: testCase.Classname,
-		Duration:  testCase.Duration,
-		Result:    testCase.Result,
-		SystemOut: restrictLength(testCase.SystemOut),
-		SystemErr: restrictLength(testCase.SystemErr),
+		Name:       testCase.Name,
+		SuiteName:  testSuite.Name,
+		ClassName:  testCase.Classname,
+		DurationMs: testCase.DurationMs,
+		Result:     testCase.Result,
+		SystemOut:  restrictLength(testCase.SystemOut),
+		SystemErr:  restrictLength(testCase.SystemErr),
 	}
 }
 

@@ -1,9 +1,5 @@
 package types
 
-import (
-	"time"
-)
-
 type Status string
 
 const (
@@ -47,13 +43,13 @@ type TestSuites struct {
 }
 
 type TestCase struct {
-	Name      string        `json:"name"`
-	ClassName string        `json:"class_name"`
-	SuiteName string        `json:"suite_name"`
-	Result    Result        `json:"result"`
-	Duration  time.Duration `json:"duration_ms"`
-	SystemOut string        `json:"stdout"`
-	SystemErr string        `json:"stderr"`
+	Name       string `json:"name"`
+	ClassName  string `json:"class_name"`
+	SuiteName  string `json:"suite_name"`
+	Result     Result `json:"result"`
+	DurationMs int64  `json:"duration_ms"`
+	SystemOut  string `json:"stdout"`
+	SystemErr  string `json:"stderr"`
 }
 
 type TestSummary struct {
@@ -63,13 +59,13 @@ type TestSummary struct {
 
 type SummaryResponse struct {
 	TotalTests int           `json:"total_tests"`
-	TimeMs     int           `json:"duration_ms"`
+	TimeMs     int64         `json:"duration_ms"`
 	Tests      []TestSummary `json:"tests"`
 }
 
 type TestSuite struct {
 	Name         string `json:"name"`
-	TimeMs       int    `json:"duration_ms"`
+	DurationMs   int64  `json:"duration_ms"`
 	TotalTests   int    `json:"total_tests"`
 	FailedTests  int    `json:"failed_tests"`
 	SkippedTests int    `json:"skipped_tests"`

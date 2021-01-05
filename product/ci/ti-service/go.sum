@@ -124,7 +124,9 @@ github.com/wings-software/portal v0.0.0-20201217080510-1e7faca14f19 h1:eEUb0RyH/
 github.com/wings-software/portal v0.0.0-20201217173428-9874ee1a262f h1:+ZHdDwhStiUv4jnsHsB3JhQ4aaqBVGfjHlqEYcGCOYA=
 github.com/wings-software/portal v0.0.0-20201217183107-cbed50ec83ad h1:/U/LCjWrKYQhr/7Ibefqp2H/FzEqacBLjF1W33s0ZfI=
 github.com/wings-software/portal v0.0.0-20201228052814-14970a133334 h1:umnlCesEhnBfPnGWJ20Vd+hv2FPVgwA1sTDCHOMGO8k=
+github.com/wings-software/portal v0.0.0-20210104124511-ae4ae263d713 h1:pljLt978PjpHlFx5qsoLpdZ1Ph3dATTTNO2JpPOv1JU=
 github.com/wings-software/portal/commons/go/lib v0.0.0-20201228052814-14970a133334 h1:JrT2iZlnR4YjgYEqPe1nHKwdH2OIaOJcbAoBLiCmx0I=
+github.com/wings-software/portal/commons/go/lib v0.0.0-20210104124511-ae4ae263d713 h1:+FWIHh1FDWFAedYyXeCDVDc57AyGQ4HnvO8BDRNFcDs=
 github.com/wings-software/portal/product/ci/addon v0.0.0-20201217173428-9874ee1a262f h1:7O1OC5j5xD/FQ3X949iwNr4DgSD8FVl6HYhs41Xe6U0=
 github.com/zenazn/goji v0.9.0/go.mod h1:7S9M489iMyHBNxwZnk9/EHS098H4/F6TATF2mIxtB1Q=
 go.uber.org/atomic v1.3.2/go.mod h1:gD2HeocX3+yG+ygLZcrzQJaqmWj9AIm7n08wl/qW/PE=
@@ -187,6 +189,8 @@ gopkg.in/alecthomas/kingpin.v2 v2.2.6/go.mod h1:FMv+mEhP44yOT+4EoQTLFTRgOQ1FBLks
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/errgo.v2 v2.1.0/go.mod h1:hNsd1EY+bozCKY1Ytp96fpM3vjJbqLJn88ws8XvfDNI=
+gopkg.in/guregu/null.v4 v4.0.0 h1:1Wm3S1WEA2I26Kq+6vcW+w0gcDo44YKYD7YIEJNHDjg=
+gopkg.in/guregu/null.v4 v4.0.0/go.mod h1:YoQhUrADuG3i9WqesrCmpNRwm1ypAgSHYqoOcTu/JrI=
 gopkg.in/inconshreveable/log15.v2 v2.0.0-20180818164646-67afb5ed74ec/go.mod h1:aPpfJ7XW+gOuirDoZ8gHhLh3kZ1B08FtV2bbmy7Jv3s=
 gopkg.in/yaml.v2 v2.2.2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
 honnef.co/go/tools v0.0.1-2019.2.3/go.mod h1:a3bituU0lyd329TUQxRnasdCoJDkEUEAqEt0JzvZhAg=
