@@ -547,6 +547,7 @@ public class Host extends Base {
       host.setLastUpdatedAt(lastUpdatedAt);
       host.setProperties(properties);
       host.setEc2Instance(ec2Instance);
+      host.setInfraDefinitionId(infraDefinitionId);
       return host;
     }
   }

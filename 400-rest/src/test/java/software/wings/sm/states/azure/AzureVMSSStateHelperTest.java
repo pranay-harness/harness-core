@@ -1,26 +1,55 @@
 package software.wings.sm.states.azure;
 
+import static io.harness.azure.AzureEnvironmentType.AZURE;
+import static io.harness.beans.ExecutionStatus.RUNNING;
+import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
+import static io.harness.context.ContextElementType.AZURE_VMSS_SETUP;
+import static io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO.ImageType.IMAGE_GALLERY;
+import static io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO.OSType.LINUX;
+
+import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.EncryptedData;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.beans.azure.AzureConfigDTO;
+import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO;
+import io.harness.delegate.beans.azure.AzureVMAuthDTO;
+import io.harness.delegate.beans.azure.AzureVMAuthType;
+import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceApplicationSettingDTO;
+import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceAzureSettingValue;
+import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceHarnessSettingSecretRef;
+import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceHarnessSettingSecretValue;
+import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
+import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploymentData;
+import io.harness.delegate.task.azure.response.AzureVMInstanceData;
+import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
+import io.harness.deployment.InstanceDetails;
+import io.harness.encryption.Scope;
+import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.WingsBaseTest;
+import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Activity;
@@ -33,12 +62,19 @@ import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.VMSSAuthType;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.artifact.DockerArtifactStream;
+import software.wings.beans.command.AzureWebAppCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.container.UserDataSpecification;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -47,13 +83,19 @@ import software.wings.service.intfc.security.NGSecretService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
+import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.sm.states.azure.appservices.AzureAppServiceStateData;
+import software.wings.sm.states.azure.artifact.ArtifactStreamMapper;
+import software.wings.sm.states.azure.artifact.DockerArtifactStreamMapper;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -70,6 +112,8 @@ public class AzureVMSSStateHelperTest extends WingsBaseTest {
   @Mock private SecretManager secretManager;
   @Mock private LogService logService;
   @Mock private NGSecretService ngSecretService;
+  @Mock private ArtifactStreamService artifactStreamService;
+  @Mock private AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
 
   @Spy @Inject @InjectMocks AzureVMSSStateHelper azureVMSSStateHelper;
 
@@ -222,7 +266,7 @@ public class AzureVMSSStateHelperTest extends WingsBaseTest {
     WorkflowStandardParams workflowStandardParams = Mockito.mock(WorkflowStandardParams.class);
 
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
-    when(workflowStandardParams.getEnv()).thenReturn(Environment.Builder.anEnvironment().uuid(envId).build());
+    when(workflowStandardParams.getEnv()).thenReturn(anEnvironment().uuid(envId).build());
 
     Environment result = azureVMSSStateHelper.getEnvironment(context);
 
@@ -425,7 +469,7 @@ public class AzureVMSSStateHelperTest extends WingsBaseTest {
             .build();
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
 
-    when(context.getContextElement(ContextElementType.AZURE_VMSS_SETUP)).thenReturn(azureVMSSSetupContextElement);
+    when(context.getContextElement(AZURE_VMSS_SETUP)).thenReturn(azureVMSSSetupContextElement);
 
     Integer result = azureVMSSStateHelper.getAzureVMSSStateTimeoutFromContext(context);
 
@@ -444,7 +488,7 @@ public class AzureVMSSStateHelperTest extends WingsBaseTest {
             .build();
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
 
-    when(context.getContextElement(ContextElementType.AZURE_VMSS_SETUP)).thenReturn(azureVMSSSetupContextElement);
+    when(context.getContextElement(AZURE_VMSS_SETUP)).thenReturn(azureVMSSSetupContextElement);
 
     Integer result = azureVMSSStateHelper.getAzureVMSSStateTimeoutFromContext(context);
 
@@ -466,13 +510,14 @@ public class AzureVMSSStateHelperTest extends WingsBaseTest {
     String activityId = "activityId";
     CommandUnitDetails.CommandUnitType commandUnitType = CommandUnitDetails.CommandUnitType.AZURE_VMSS_SETUP;
     Application app = Application.Builder.anApplication().uuid(appId).name(appName).build();
-    Environment env = Environment.Builder.anEnvironment().uuid(envId).build();
+    Environment env = anEnvironment().uuid(envId).build();
     Service service = Service.builder().uuid(serviceId).build();
     Activity activity = Activity.builder().uuid(activityId).build();
     EmbeddedUser embeddedUser = EmbeddedUser.builder().email(userEmail).name(userName).build();
     Command command = Command.Builder.aCommand().withName(commandName).build();
     List<CommandUnit> commandUnitList = new ArrayList<>();
     commandUnitList.add(command);
+    Artifact artifact = anArtifact().withDisplayName("dysplayName").withUuid("uuid").build();
 
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     PhaseElement phaseElement = Mockito.mock(PhaseElement.class);
@@ -487,11 +532,11 @@ public class AzureVMSSStateHelperTest extends WingsBaseTest {
     doReturn(embeddedUser).when(workflowStandardParams).getCurrentUser();
 
     Activity result = azureVMSSStateHelper.createAndSaveActivity(
-        context, null, commandName, commandType, commandUnitType, commandUnitList);
+        context, artifact, commandName, commandType, commandUnitType, commandUnitList);
 
     assertThat(result).isNotNull();
     assertThat(result.getUuid()).isEqualTo(activityId);
-    assertThat(result.getStatus()).isEqualTo(ExecutionStatus.RUNNING);
+    assertThat(result.getStatus()).isEqualTo(RUNNING);
   }
 
   @Test
@@ -539,7 +584,7 @@ public class AzureVMSSStateHelperTest extends WingsBaseTest {
     when(phaseElement.getServiceElement()).thenReturn(ServiceElement.builder().uuid(serviceId).build());
     doReturn(service).when(serviceResourceService).getWithDetails(appId, serviceId);
     when(context.getDefaultArtifactForService(serviceId)).thenReturn(artifact);
-    when(workflowStandardParams.getEnv()).thenReturn(Environment.Builder.anEnvironment().uuid(envId).build());
+    when(workflowStandardParams.getEnv()).thenReturn(anEnvironment().uuid(envId).build());
     when(settingsService.get(computeProviderSettingId)).thenReturn(settingAttribute);
     when(settingAttribute.getValue()).thenReturn(AzureConfig.builder().accountId(accountId).build());
     when(context.fetchInfraMappingId()).thenReturn(infraMappingId);
@@ -557,5 +602,507 @@ public class AzureVMSSStateHelperTest extends WingsBaseTest {
     assertThat(azureAppServiceStateData.getServiceId()).isEqualTo(serviceId);
     assertThat(azureAppServiceStateData.getResourceGroup()).isEqualTo(resourceGroup);
     assertThat(azureAppServiceStateData.getSubscriptionId()).isEqualTo(subscriptionId);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testGetAzureMachineImageArtifactDTO() {
+    DeploymentExecutionContext context = Mockito.mock(DeploymentExecutionContext.class);
+    Artifact artifact = anArtifact().withArtifactStreamId("artifactStreamId").withRevision("v1").build();
+    ArtifactStream artifactStream = Mockito.mock(ArtifactStream.class);
+    ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder()
+                                                            .osType("LINUX")
+                                                            .imageType("IMAGE_GALLERY")
+                                                            .azureImageGalleryName("galleryName")
+                                                            .azureImageDefinition("imageDefinition")
+                                                            .build();
+
+    doReturn(artifact).when(context).getDefaultArtifactForService("serviceId");
+    doReturn(artifactStream).when(artifactStreamService).get("artifactStreamId");
+    doReturn(artifactStreamAttributes).when(artifactStream).fetchArtifactStreamAttributes();
+
+    AzureMachineImageArtifactDTO azureMachineImageArtifactDTO =
+        azureVMSSStateHelper.getAzureMachineImageArtifactDTO(context, "serviceId");
+
+    assertThat(azureMachineImageArtifactDTO.getImageOSType()).isEqualTo(LINUX);
+    assertThat(azureMachineImageArtifactDTO.getImageType()).isEqualTo(IMAGE_GALLERY);
+    assertThat(azureMachineImageArtifactDTO.getImageDefinition().getDefinitionName()).isEqualTo("imageDefinition");
+    assertThat(azureMachineImageArtifactDTO.getImageDefinition().getGalleryName()).isEqualTo("galleryName");
+    assertThat(azureMachineImageArtifactDTO.getImageDefinition().getVersion()).isEqualTo("v1");
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testGetAzureMachineImageArtifactDTOnoArtifactFound() {
+    DeploymentExecutionContext context = Mockito.mock(DeploymentExecutionContext.class);
+    doReturn(null).when(context).getDefaultArtifactForService("serviceId");
+
+    assertThatThrownBy(() -> azureVMSSStateHelper.getAzureMachineImageArtifactDTO(context, "serviceId"))
+        .hasMessageContaining("Unable to find artifact for service id")
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testGetAzureMachineImageArtifactDTOnoArtifactStreamFound() {
+    DeploymentExecutionContext context = Mockito.mock(DeploymentExecutionContext.class);
+
+    doReturn(anArtifact().withArtifactStreamId("artifactStreamId").build())
+        .when(context)
+        .getDefaultArtifactForService("serviceId");
+    doReturn(null).when(artifactStreamService).get("artifactStreamId");
+
+    assertThatThrownBy(() -> azureVMSSStateHelper.getAzureMachineImageArtifactDTO(context, "serviceId"))
+        .hasMessageContaining("Unable to find artifact stream for artifact stream id:")
+        .isInstanceOf(InvalidRequestException.class);
+  }
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testGetExecutionLogCallback() {
+    Activity activity = Activity.builder()
+                            .appId("appId")
+                            .uuid("uuId")
+                            .commandUnits(Collections.singletonList(new AzureWebAppCommandUnit("name")))
+                            .build();
+    ManagerExecutionLogCallback logCallback = azureVMSSStateHelper.getExecutionLogCallback(activity);
+    assertThat(logCallback.getLogService()).isEqualTo(logService);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testUpdateActivityStatus() {
+    azureVMSSStateHelper.updateActivityStatus("appId", "activityId", RUNNING);
+    verify(activityService, times(1)).updateStatus("activityId", "appId", RUNNING);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testGetBase64EncodedUserData() {
+    ExecutionContext executionContext = mock(ExecutionContext.class);
+
+    doReturn(UserDataSpecification.builder().data("data").build())
+        .when(serviceResourceService)
+        .getUserDataSpecification("appId", "serviceId");
+    doReturn("renderedData").when(executionContext).renderExpression("data");
+
+    String encodedData = azureVMSSStateHelper.getBase64EncodedUserData(executionContext, "appId", "serviceId");
+
+    assertThat(encodedData).isEqualTo("cmVuZGVyZWREYXRh");
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testGetNonAzureVMSSInfrastructureMapping() {
+    String infraMappingId = "infraMappingId";
+    String appId = "appId";
+    InfrastructureMapping infrastructureMapping = AzureWebAppInfrastructureMapping.builder().build();
+
+    when(infrastructureMappingService.get(appId, infraMappingId)).thenReturn(infrastructureMapping);
+
+    assertThatThrownBy(() -> azureVMSSStateHelper.getAzureVMSSInfrastructureMapping(infraMappingId, appId))
+        .hasMessageContaining("Infrastructure Mapping is not instance of AzureVMSSInfrastructureMapping")
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testGetNonAzureWebAppInfrastructureMapping() {
+    String infraMappingId = "infraMappingId";
+    String appId = "appId";
+    InfrastructureMapping infrastructureMapping = AzureVMSSInfrastructureMapping.builder().build();
+
+    when(infrastructureMappingService.get(appId, infraMappingId)).thenReturn(infrastructureMapping);
+
+    assertThatThrownBy(() -> azureVMSSStateHelper.getAzureWebAppInfrastructureMapping(infraMappingId, appId))
+        .hasMessageContaining("Infrastructure Mapping is not instance of AzureVMSSInfrastructureMapping")
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testGetStateTimeOutFromContext() {
+    ExecutionContext executionContext = mock(ExecutionContext.class);
+    AzureVMSSSetupContextElement azureVMSSSetupContextElement =
+        AzureVMSSSetupContextElement.builder().autoScalingSteadyStateVMSSTimeout(1).build();
+
+    doReturn(azureVMSSSetupContextElement).when(executionContext).getContextElement(AZURE_VMSS_SETUP);
+
+    Integer stateTimeout = azureVMSSStateHelper.getStateTimeOutFromContext(executionContext, AZURE_VMSS_SETUP);
+    assertThat(stateTimeout).isEqualTo(60000);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testGetNewInstance() {
+    List<InstanceElement> newInstanceElements = Arrays.asList(new InstanceElement(), new InstanceElement());
+
+    azureVMSSStateHelper.setNewInstance(newInstanceElements, true);
+
+    newInstanceElements.forEach(instanceElement -> assertThat(instanceElement.isNewInstance()).isTrue());
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testGetInstanceStatusSummaries() {
+    List<InstanceElement> newInstanceElements = Arrays.asList(new InstanceElement(), new InstanceElement());
+    List<InstanceStatusSummary> instanceStatusSummaries =
+        azureVMSSStateHelper.getInstanceStatusSummaries(SUCCESS, newInstanceElements);
+
+    assertThat(instanceStatusSummaries.size()).isEqualTo(2);
+    instanceStatusSummaries.forEach(
+        instanceStatusSummary -> assertThat(instanceStatusSummary.getStatus()).isEqualTo(SUCCESS));
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testGenerateInstanceElements() {
+    ExecutionContext executionContext = mock(ExecutionContext.class);
+    AzureVMSSInfrastructureMapping azureVMSSInfrastructureMapping = AzureVMSSInfrastructureMapping.builder().build();
+    List<AzureVMInstanceData> vmInstances = new ArrayList<>();
+
+    azureVMSSStateHelper.generateInstanceElements(executionContext, azureVMSSInfrastructureMapping, vmInstances);
+
+    verify(azureSweepingOutputServiceHelper, times(1))
+        .generateInstanceElements(executionContext, azureVMSSInfrastructureMapping, vmInstances);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testSaveInstanceInfoToSweepingOutput() {
+    ExecutionContext executionContext = mock(ExecutionContext.class);
+    List<InstanceElement> instanceElements = Collections.singletonList(new InstanceElement());
+    List<InstanceDetails> instanceDetails = new ArrayList<>();
+
+    doReturn(instanceDetails).when(azureSweepingOutputServiceHelper).generateAzureVMSSInstanceDetails(instanceElements);
+
+    azureVMSSStateHelper.saveInstanceInfoToSweepingOutput(executionContext, instanceElements);
+
+    verify(azureSweepingOutputServiceHelper, times(1)).generateAzureVMSSInstanceDetails(instanceElements);
+    verify(azureSweepingOutputServiceHelper, times(1))
+        .saveInstanceDetails(executionContext, instanceElements, instanceDetails);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testSaveAzureAppInfoToSweepingOutput() {
+    ExecutionContext executionContext = mock(ExecutionContext.class);
+    List<InstanceElement> instanceElements = new ArrayList<>();
+    List<AzureAppDeploymentData> appDeploymentData =
+        Collections.singletonList(AzureAppDeploymentData.builder().build());
+    List<InstanceDetails> instanceDetails = new ArrayList<>();
+
+    doReturn(instanceDetails)
+        .when(azureSweepingOutputServiceHelper)
+        .generateAzureAppServiceInstanceDetails(appDeploymentData);
+
+    azureVMSSStateHelper.saveAzureAppInfoToSweepingOutput(executionContext, instanceElements, appDeploymentData);
+
+    verify(azureSweepingOutputServiceHelper, times(1)).generateAzureAppServiceInstanceDetails(appDeploymentData);
+    verify(azureSweepingOutputServiceHelper, times(1))
+        .saveInstanceDetails(executionContext, instanceElements, instanceDetails);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testGetExecutionStatus() {
+    ExecutionStatus successExecutionStatus = azureVMSSStateHelper.getExecutionStatus(
+        AzureVMSSTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build());
+    assertThat(successExecutionStatus).isEqualTo(ExecutionStatus.SUCCESS);
+
+    ExecutionStatus nonSuccessExecutionStatus = azureVMSSStateHelper.getExecutionStatus(
+        AzureVMSSTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build());
+    assertThat(nonSuccessExecutionStatus).isEqualTo(ExecutionStatus.FAILED);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testGetAppServiceExecutionStatus() {
+    ExecutionStatus successExecutionStatus = azureVMSSStateHelper.getAppServiceExecutionStatus(
+        AzureTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build());
+    assertThat(successExecutionStatus).isEqualTo(ExecutionStatus.SUCCESS);
+
+    ExecutionStatus nonSuccessExecutionStatus = azureVMSSStateHelper.getAppServiceExecutionStatus(
+        AzureTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build());
+    assertThat(nonSuccessExecutionStatus).isEqualTo(ExecutionStatus.FAILED);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testPopulateStateData() {
+    DeploymentExecutionContext executionContext = mock(DeploymentExecutionContext.class);
+    Application application = new Application();
+    application.setUuid("appUUID");
+    Service service = Service.builder().uuid("serviceUUID").build();
+    PhaseElement phaseElement =
+        PhaseElement.builder().serviceElement(ServiceElement.builder().uuid("serviceElementUUID").build()).build();
+    Artifact artifact = anArtifact().build();
+    Environment environment = anEnvironment().build();
+    AzureVMSSInfrastructureMapping azureVMSSInfrastructureMapping = mock(AzureVMSSInfrastructureMapping.class);
+    AzureConfig azureConfig = AzureConfig.builder().build();
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+
+    doReturn(application).when(azureVMSSStateHelper).getApplication(executionContext);
+    doReturn(service).when(azureVMSSStateHelper).getServiceByAppId(executionContext, "appUUID");
+    doReturn(phaseElement).when(executionContext).getContextElement(any(), any());
+    doReturn(artifact).when(azureVMSSStateHelper).getArtifact(any(), eq("serviceUUID"));
+    doReturn(environment).when(azureVMSSStateHelper).getEnvironment(executionContext);
+    doReturn(azureVMSSInfrastructureMapping)
+        .when(azureVMSSStateHelper)
+        .getAzureVMSSInfrastructureMapping(any(), eq("appUUID"));
+    doReturn("computeProviderSettingId").when(azureVMSSInfrastructureMapping).getComputeProviderSettingId();
+    doReturn(azureConfig).when(azureVMSSStateHelper).getAzureConfig("computeProviderSettingId");
+    doReturn(encryptedDataDetails)
+        .when(azureVMSSStateHelper)
+        .getEncryptedDataDetails(executionContext, "computeProviderSettingId");
+
+    AzureVMSSStateData azureVMSSStateData = azureVMSSStateHelper.populateStateData(executionContext);
+
+    assertThat(azureVMSSStateData.getApplication()).isEqualTo(application);
+    assertThat(azureVMSSStateData.getService()).isEqualTo(service);
+    assertThat(azureVMSSStateData.getServiceId()).isEqualTo("serviceElementUUID");
+    assertThat(azureVMSSStateData.getArtifact()).isEqualTo(artifact);
+    assertThat(azureVMSSStateData.getEnvironment()).isEqualTo(environment);
+    assertThat(azureVMSSStateData.getInfrastructureMapping()).isEqualTo(azureVMSSInfrastructureMapping);
+    assertThat(azureVMSSStateData.getAzureConfig()).isEqualTo(azureConfig);
+    assertThat(azureVMSSStateData.getAzureEncryptedDataDetails()).isEqualTo(encryptedDataDetails);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testCreateAzureConfigDTO() {
+    AzureConfig azureConfig = AzureConfig.builder()
+                                  .tenantId("tenantId")
+                                  .azureEnvironmentType(AZURE)
+                                  .encryptedKey("encryptionKey")
+                                  .clientId("clientId")
+                                  .build();
+
+    AzureConfigDTO azureConfigDTO = azureVMSSStateHelper.createAzureConfigDTO(azureConfig);
+
+    assertThat(azureConfigDTO.getClientId()).isEqualTo("clientId");
+    assertThat(azureConfigDTO.getTenantId()).isEqualTo("tenantId");
+    assertThat(azureConfigDTO.getAzureEnvironmentType()).isEqualTo(AZURE);
+    assertThat(azureConfigDTO.getKey().getIdentifier()).isEqualTo("encryptionKey");
+    assertThat(azureConfigDTO.getKey().getScope()).isEqualTo(Scope.ACCOUNT);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testCreateVMAuthDTO() {
+    AzureVMSSInfrastructureMapping azureVMSSInfrastructureMapping = AzureVMSSInfrastructureMapping.builder()
+                                                                        .passwordSecretTextName("password")
+                                                                        .hostConnectionAttrs("hostConnectionAttr")
+                                                                        .userName("username")
+                                                                        .vmssAuthType(VMSSAuthType.PASSWORD)
+                                                                        .build();
+
+    AzureVMAuthDTO azureVMAuthDTO = azureVMSSStateHelper.createVMAuthDTO(azureVMSSInfrastructureMapping);
+
+    assertThat(azureVMAuthDTO.getUserName()).isEqualTo("username");
+    assertThat(azureVMAuthDTO.getAzureVmAuthType()).isEqualTo(AzureVMAuthType.PASSWORD);
+    assertThat(azureVMAuthDTO.getSecretRef().getIdentifier()).isEqualTo("password");
+    assertThat(azureVMAuthDTO.getSecretRef().getScope()).isEqualTo(Scope.ACCOUNT);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testCreateVMAuthDTOUnsupportedAuthType() {
+    AzureVMSSInfrastructureMapping azureVMSSInfrastructureMapping =
+        AzureVMSSInfrastructureMapping.builder().vmssAuthType(null).build();
+
+    assertThatThrownBy(() -> azureVMSSStateHelper.createVMAuthDTO(azureVMSSInfrastructureMapping))
+        .hasMessageContaining("Unsupported Azure VMSS Auth type")
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testGetVMAuthDTOEncryptionDetailsPassword() {
+    ExecutionContext executionContext = mock(ExecutionContext.class);
+    AzureVMAuthDTO azureVMAuthDTO = AzureVMAuthDTO.builder()
+                                        .azureVmAuthType(AzureVMAuthType.PASSWORD)
+                                        .secretRef(new SecretRefData("secretRefIdentifier", Scope.ACCOUNT, null))
+                                        .build();
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+
+    doReturn("appId").when(executionContext).getAppId();
+    doReturn("accountId").when(executionContext).getAccountId();
+    doReturn("executionId").when(executionContext).getWorkflowExecutionId();
+    doReturn(EncryptedData.builder().uuid("secretUUID").build())
+        .when(secretManager)
+        .getSecretMappedToAppByName(eq("accountId"), eq("appId"), eq("envId"), eq("secretRefIdentifier"));
+    doReturn(encryptedDataDetails).when(secretManager).getEncryptionDetails(any(), eq("appId"), eq("executionId"));
+
+    List<EncryptedDataDetail> resultEncryptedDataDetails =
+        azureVMSSStateHelper.getVMAuthDTOEncryptionDetails(executionContext, azureVMAuthDTO, "accountId", "envId");
+
+    assertThat(resultEncryptedDataDetails).isEqualTo(encryptedDataDetails);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testGetVMAuthDTOEncryptionDetailsSSH() {
+    ExecutionContext executionContext = mock(ExecutionContext.class);
+    AzureVMAuthDTO azureVMAuthDTO = AzureVMAuthDTO.builder()
+                                        .azureVmAuthType(AzureVMAuthType.SSH_PUBLIC_KEY)
+                                        .secretRef(new SecretRefData("secretRefIdentifier", Scope.ACCOUNT, null))
+                                        .build();
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+
+    doReturn("appId").when(executionContext).getAppId();
+    doReturn("accountId").when(executionContext).getAccountId();
+    doReturn("executionId").when(executionContext).getWorkflowExecutionId();
+    doReturn(new SettingAttribute())
+        .when(settingsService)
+        .getSettingAttributeByName(eq("accountId"), eq("secretRefIdentifier"));
+    doReturn(encryptedDataDetails).when(secretManager).getEncryptionDetails(any(), eq("appId"), eq("executionId"));
+
+    List<EncryptedDataDetail> resultEncryptedDataDetails =
+        azureVMSSStateHelper.getVMAuthDTOEncryptionDetails(executionContext, azureVMAuthDTO, "accountId", "envId");
+
+    assertThat(resultEncryptedDataDetails).isEqualTo(encryptedDataDetails);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testGetVMAuthDTOEncryptionDetailsSSHSettingsNotFound() {
+    ExecutionContext executionContext = mock(ExecutionContext.class);
+    AzureVMAuthDTO azureVMAuthDTO = AzureVMAuthDTO.builder()
+                                        .azureVmAuthType(AzureVMAuthType.SSH_PUBLIC_KEY)
+                                        .secretRef(new SecretRefData("secretRefIdentifier", Scope.ACCOUNT, null))
+                                        .build();
+
+    doReturn("appId").when(executionContext).getAppId();
+    doReturn("accountId").when(executionContext).getAccountId();
+    doReturn("executionId").when(executionContext).getWorkflowExecutionId();
+    doReturn(null).when(settingsService).getSettingAttributeByName(eq("accountId"), eq("secretRefIdentifier"));
+
+    assertThatThrownBy(()
+                           -> azureVMSSStateHelper.getVMAuthDTOEncryptionDetails(
+                               executionContext, azureVMAuthDTO, "accountId", "envId"))
+        .hasMessageContaining("Unable to find setting by accountId")
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testGetVMAuthDTOEncryptionDetailsSecretNotFound() {
+    ExecutionContext executionContext = mock(ExecutionContext.class);
+    AzureVMAuthDTO azureVMAuthDTO = AzureVMAuthDTO.builder()
+                                        .azureVmAuthType(AzureVMAuthType.PASSWORD)
+                                        .secretRef(new SecretRefData("secretRefIdentifier", Scope.ACCOUNT, null))
+                                        .build();
+
+    doReturn("appId").when(executionContext).getAppId();
+    doReturn("accountId").when(executionContext).getAccountId();
+    doReturn("executionId").when(executionContext).getWorkflowExecutionId();
+    doReturn(null).when(settingsService).getSettingAttributeByName(eq("accountId"), eq("secretRefIdentifier"));
+
+    assertThatThrownBy(()
+                           -> azureVMSSStateHelper.getVMAuthDTOEncryptionDetails(
+                               executionContext, azureVMAuthDTO, "accountId", "envId"))
+        .hasMessageContaining("No secret found with name")
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testUpdateEncryptedDataDetailSecretFieldName() {
+    List<EncryptedDataDetail> encryptedDataDetails =
+        Arrays.asList(EncryptedDataDetail.builder().build(), EncryptedDataDetail.builder().build());
+    AzureVMAuthDTO azureVMAuthDTO = AzureVMAuthDTO.builder().build();
+    azureVMAuthDTO.setSecretRefFieldName("secretRefFieldName");
+
+    azureVMSSStateHelper.updateEncryptedDataDetailSecretFieldName(azureVMAuthDTO, encryptedDataDetails);
+
+    encryptedDataDetails.forEach(
+        encryptedDataDetail -> assertThat(encryptedDataDetail.getFieldName()).isEqualTo("secretRefFieldName"));
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testGetVMSSIdFromName() {
+    String name =
+        azureVMSSStateHelper.getVMSSIdFromName("subscriptionId", "resourceGroupName", "newVirtualMachineScaleSetName");
+    assertThat(name).isEqualTo(
+        "/subscriptions/subscriptionId/resourceGroups/resourceGroupName/providers/Microsoft.Compute/virtualMachineScaleSets/newVirtualMachineScaleSetName");
+
+    String emptyName = azureVMSSStateHelper.getVMSSIdFromName("subscriptionId", "resourceGroupName", "");
+    assertThat(emptyName).isEqualTo("");
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testGetConnectorMapper() {
+    Artifact artifact = anArtifact().withArtifactStreamId("artifactStreamId").build();
+
+    doReturn(new DockerArtifactStream()).when(azureVMSSStateHelper).getArtifactStream("artifactStreamId");
+
+    ArtifactStreamMapper artifactStreamMapper = azureVMSSStateHelper.getConnectorMapper(artifact);
+    assertThat(artifactStreamMapper).isInstanceOf(DockerArtifactStreamMapper.class);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testEncryptAzureAppServiceSettingDTOsUnsupportedEncryption() {
+    Map<String, AzureAppServiceApplicationSettingDTO> settings =
+        Collections.singletonMap("azureAppServiceApplicationSettingDTO",
+            AzureAppServiceApplicationSettingDTO.builder()
+                .value(AzureAppServiceAzureSettingValue.builder().build())
+                .build());
+
+    assertThatThrownBy(() -> azureVMSSStateHelper.encryptAzureAppServiceSettingDTOs(settings, "accountId"))
+        .hasMessageContaining("Unsupported encryption on manager for Azure App Service setting value type")
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.TMACARI)
+  @Category(UnitTests.class)
+  public void testEncryptAzureAppServiceSettingDTOs() {
+    AzureAppServiceHarnessSettingSecretRef secretRef = AzureAppServiceHarnessSettingSecretRef.builder().build();
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+    AzureAppServiceHarnessSettingSecretValue secretValue =
+        AzureAppServiceHarnessSettingSecretValue.builder()
+            .settingSecretRef(AzureAppServiceHarnessSettingSecretRef.builder().build())
+            .build();
+    Map<String, AzureAppServiceApplicationSettingDTO> settings =
+        Collections.singletonMap("azureAppServiceApplicationSettingDTO",
+            AzureAppServiceApplicationSettingDTO.builder().value(secretValue).build());
+
+    doReturn(encryptedDataDetails)
+        .when(azureVMSSStateHelper)
+        .getConnectorAuthEncryptedDataDetails("accountId", secretRef);
+
+    azureVMSSStateHelper.encryptAzureAppServiceSettingDTOs(settings, "accountId");
+    assertThat(secretValue.getEncryptedDataDetails()).isEqualTo(encryptedDataDetails);
   }
 }
