@@ -13,6 +13,7 @@ import io.harness.pms.sdk.core.pipeline.filters.ParallelFilterJsonCreator;
 import io.harness.pms.sdk.core.pipeline.filters.PipelineFilterJsonCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
+import io.harness.pms.sdk.core.variables.VariableCreator;
 import io.harness.pms.utils.InjectorUtils;
 
 import com.google.inject.Inject;
@@ -47,6 +48,11 @@ public class CIPipelineServiceInfoProvider implements PipelineServiceInfoProvide
     injectorUtils.injectMembers(filterJsonCreators);
 
     return filterJsonCreators;
+  }
+
+  @Override
+  public List<VariableCreator> getVariableCreators() {
+    return null;
   }
 
   @Override

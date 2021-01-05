@@ -23,6 +23,7 @@ import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionDetailDTO;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionSummaryDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
+import io.harness.pms.variables.VariableMergeServiceResponse;
 import io.harness.serializer.JsonUtils;
 import io.harness.tasks.ProgressData;
 import io.harness.utils.PageUtils;
@@ -89,6 +90,22 @@ public class PipelineResource {
     PipelineEntity createdEntity = pmsPipelineService.create(pipelineEntity);
 
     return ResponseDTO.newResponse(createdEntity.getVersion().toString(), createdEntity.getIdentifier());
+  }
+
+  @POST
+  @Path("/{pipelineIdentifier}/variables")
+  @ApiOperation(value = "Create variables for Pipeline", nickname = "createVariables")
+  public ResponseDTO<VariableMergeServiceResponse> createVariables(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
+      @NotNull @ApiParam(hidden = true, type = "") String yaml) throws IOException {
+    log.info("Creating variables for pipeline.");
+
+    PipelineEntity pipelineEntity = PMSPipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
+    VariableMergeServiceResponse variablesResponse = pmsPipelineService.createVariablesResponse(pipelineEntity);
+
+    return ResponseDTO.newResponse(variablesResponse);
   }
 
   @GET

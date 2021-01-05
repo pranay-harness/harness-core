@@ -80,8 +80,47 @@ public class YamlUtils {
         getPipelineField(rootYamlNode), "Invalid pipeline YAML: root of the yaml needs to be an object");
   }
 
-  private YamlField getPipelineField(YamlNode rootYamlNode) {
+  public YamlField getPipelineField(YamlNode rootYamlNode) {
     return (rootYamlNode == null || !rootYamlNode.isObject()) ? null : rootYamlNode.getField("pipeline");
+  }
+
+  public YamlField injectUuidWithLeafUuid(String content) throws IOException {
+    JsonNode rootJsonNode = mapper.readTree(content);
+    if (rootJsonNode == null) {
+      return null;
+    }
+    injectUuidWithLeafUuid(rootJsonNode);
+    YamlNode rootYamlNode = new YamlNode(rootJsonNode, null);
+    return new YamlField(rootYamlNode);
+  }
+
+  private void injectUuidWithLeafUuid(JsonNode node) {
+    if (node.isObject()) {
+      injectUuidInObjectWithLeafValues(node);
+    } else if (node.isArray()) {
+      injectUuidInArray(node);
+    }
+  }
+
+  private void injectUuidInObjectWithLeafValues(JsonNode node) {
+    ObjectNode objectNode = (ObjectNode) node;
+    objectNode.put(YamlNode.UUID_FIELD_NAME, generateUuid());
+    for (Iterator<Entry<String, JsonNode>> it = objectNode.fields(); it.hasNext();) {
+      Entry<String, JsonNode> field = it.next();
+      if (field.getValue().isValueNode()) {
+        switch (field.getKey()) {
+          case YamlNode.UUID_FIELD_NAME:
+          case YamlNode.IDENTIFIER_FIELD_NAME:
+          case YamlNode.TYPE_FIELD_NAME:
+            break;
+          default:
+            objectNode.put(field.getKey(), generateUuid());
+            break;
+        }
+      } else {
+        injectUuidWithLeafUuid(field.getValue());
+      }
+    }
   }
 
   public String injectUuid(String content) throws IOException {

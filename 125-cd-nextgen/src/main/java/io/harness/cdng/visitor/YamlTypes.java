@@ -5,7 +5,7 @@ import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.walktree.visitor.utilities.VisitorParentPathUtils;
 
 public interface YamlTypes {
-  String ARTIFACT_SPEC_WRAPPER = "primary";
+  String PRIMARY_ARTIFACT = "primary";
   String ARTIFACT_LIST_CONFIG = "artifacts";
   String ARTIFACT_OVERRIDE_SETS = "artifactOverrideSets";
   String SIDECAR_ARTIFACT_CONFIG = "sidecar";
@@ -28,12 +28,21 @@ public interface YamlTypes {
   String PIPELINE_INFRASTRUCTURE = "infrastructure";
   String HTTP_STEP = StepSpecTypeConstants.HTTP;
   String SHELL_SCRIPT_STEP = StepSpecTypeConstants.SHELL_SCRIPT;
-  String KUBERNETES_SERVICE_SPEC = "spec";
   String SERVICE_CONFIG = "service";
   String SERVICE_DEFINITION = "serviceDefinition";
+  String SERVICE_SPEC = "spec";
   String SERVICE_USE_FROM_STAGE = "useFromStage";
   String SERVICE_USE_FROM_STAGE_OVERRIDES = "overrides";
   String STAGE_OVERRIDES_CONFIG = "stageOverrides";
   String PATH_CONNECTOR = VisitorParentPathUtils.PATH_CONNECTOR;
   String VARIABLE_OVERRIDE_SETS = "variableOverrideSets";
+  String CONNECTOR_REF = "connectorRef";
+  String TAG = "tag";
+  String TAG_REGEX = "tagRegex";
+  String IMAGE_PATH = "imagePath";
+  String BRANCH = "branch";
+  String COMMIT_ID = "commitId";
+  String NAMESPACE = "namespace";
+  String RELEASE_NAME = "releaseName";
+  String STORE_CONFIG_WRAPPER = "store";
 }

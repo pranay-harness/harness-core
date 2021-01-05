@@ -14,6 +14,8 @@ import io.harness.pms.filter.creation.FilterCreatorMergeServiceResponse;
 import io.harness.pms.pipeline.*;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.sdk.PmsSdkInstanceService;
+import io.harness.pms.variables.VariableCreatorMergeService;
+import io.harness.pms.variables.VariableMergeServiceResponse;
 import io.harness.repositories.pipeline.PMSPipelineRepository;
 import io.harness.service.GraphGenerationService;
 
@@ -139,6 +141,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   @Inject private FilterCreatorMergeService filterCreatorMergeService;
   @Inject private PmsSdkInstanceService pmsSdkInstanceService;
   @Inject private GraphGenerationService graphGenerationService;
+  @Inject private VariableCreatorMergeService variableCreatorMergeService;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "Pipeline [%s] under Project[%s], Organization [%s] already exists";
@@ -253,6 +256,16 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     } catch (Exception ex) {
       throw new InvalidRequestException(
           format("Error happened while creating filters for pipeline: %s", ex.getMessage(), ex));
+    }
+  }
+
+  @Override
+  public VariableMergeServiceResponse createVariablesResponse(PipelineEntity pipelineEntity) {
+    try {
+      return variableCreatorMergeService.createVariablesResponse(pipelineEntity.getYaml());
+    } catch (Exception ex) {
+      throw new InvalidRequestException(
+          format("Error happened while creating variables for pipeline: %s", ex.getMessage(), ex));
     }
   }
 

@@ -3,6 +3,7 @@ package io.harness.pms.pipeline.service;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.StepCategory;
+import io.harness.pms.variables.VariableMergeServiceResponse;
 
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -29,4 +30,6 @@ public interface PMSPipelineService {
 
   Optional<PipelineEntity> incrementRunSequence(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean b);
+
+  VariableMergeServiceResponse createVariablesResponse(PipelineEntity pipelineEntity);
 }

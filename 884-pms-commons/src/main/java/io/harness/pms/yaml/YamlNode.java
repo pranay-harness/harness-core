@@ -1,5 +1,7 @@
 package io.harness.pms.yaml;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,7 +27,9 @@ public class YamlNode {
     this.parentNode = null;
   }
 
-  public YamlNode(JsonNode currJsonNode, YamlNode parentNode) {
+  @JsonCreator
+  public YamlNode(
+      @JsonProperty("currJsonNode") JsonNode currJsonNode, @JsonProperty("parentNode") YamlNode parentNode) {
     this.currJsonNode = currJsonNode;
     this.parentNode = parentNode;
   }
