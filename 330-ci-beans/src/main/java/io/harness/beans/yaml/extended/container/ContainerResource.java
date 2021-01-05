@@ -1,7 +1,6 @@
 package io.harness.beans.yaml.extended.container;
 
-import io.harness.beans.yaml.extended.container.quantity.CpuQuantity;
-import io.harness.beans.yaml.extended.container.quantity.MemoryQuantity;
+import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -26,12 +25,13 @@ public class ContainerResource {
   @Data
   @TypeAlias("resource_limits")
   public static class Limits {
-    @Min(0) private MemoryQuantity memory;
-    @Min(0) private CpuQuantity cpu;
+    @Min(0) private ParameterField<String> memory;
+    @Min(0) private ParameterField<String> cpu;
 
     @Builder
     @JsonCreator
-    public Limits(@JsonProperty("memory") MemoryQuantity memory, @JsonProperty("cpu") CpuQuantity cpu) {
+    public Limits(
+        @JsonProperty("memory") ParameterField<String> memory, @JsonProperty("cpu") ParameterField<String> cpu) {
       this.memory = memory;
       this.cpu = cpu;
     }

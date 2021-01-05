@@ -44,16 +44,16 @@ public class RunStepInfo implements CIStepInfo {
   private List<UnitTestReport> reports;
 
   @NotNull private ParameterField<String> image;
-  private ParameterField<String> connector;
+  private ParameterField<String> connectorRef;
   private ContainerResource resources;
 
   @Builder
-  @ConstructorProperties(
-      {"identifier", "name", "retry", "command", "output", "reports", "environment", "image", "connector", "resources"})
+  @ConstructorProperties({"identifier", "name", "retry", "command", "output", "reports", "environment", "image",
+      "connectorRef", "resources"})
   public RunStepInfo(String identifier, String name, Integer retry, ParameterField<String> command,
       ParameterField<List<String>> output, List<UnitTestReport> reports,
-      ParameterField<Map<String, String>> environment, ParameterField<String> image, ParameterField<String> connector,
-      ContainerResource resources) {
+      ParameterField<Map<String, String>> environment, ParameterField<String> image,
+      ParameterField<String> connectorRef, ContainerResource resources) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -63,7 +63,7 @@ public class RunStepInfo implements CIStepInfo {
     this.reports = reports;
     this.output = output;
     this.image = image;
-    this.connector = connector;
+    this.connectorRef = connectorRef;
     this.resources = resources;
   }
 

@@ -64,8 +64,6 @@ import io.harness.beans.yaml.extended.CustomVariable;
 import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.beans.yaml.extended.container.Container;
 import io.harness.beans.yaml.extended.container.ContainerResource;
-import io.harness.beans.yaml.extended.container.quantity.CpuQuantity;
-import io.harness.beans.yaml.extended.container.quantity.MemoryQuantity;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.ci.beans.entities.BuildNumberDetails;
@@ -427,18 +425,19 @@ public class CIExecutionPlanTestHelper {
   private DependencyElement getServiceDependencyElement() {
     return DependencyElement.builder()
         .identifier(SERVICE_ID)
-        .dependencySpecType(CIServiceInfo.builder()
-                                .identifier(SERVICE_ID)
-                                .args(Collections.singletonList(SERVICE_ARGS))
-                                .entrypoint(Collections.singletonList(SERVICE_ENTRYPOINT))
-                                .image(SERVICE_IMAGE)
-                                .resources(ContainerResource.builder()
-                                               .limits(ContainerResource.Limits.builder()
-                                                           .cpu(CpuQuantity.fromString(SERVICE_LIMIT_CPU_STRING))
-                                                           .memory(MemoryQuantity.fromString(SERVICE_LIMIT_MEM_STRING))
-                                                           .build())
-                                               .build())
-                                .build())
+        .dependencySpecType(
+            CIServiceInfo.builder()
+                .identifier(SERVICE_ID)
+                .args(Collections.singletonList(SERVICE_ARGS))
+                .entrypoint(Collections.singletonList(SERVICE_ENTRYPOINT))
+                .image(SERVICE_IMAGE)
+                .resources(ContainerResource.builder()
+                               .limits(ContainerResource.Limits.builder()
+                                           .cpu(ParameterField.createValueField(SERVICE_LIMIT_CPU_STRING))
+                                           .memory(ParameterField.createValueField(SERVICE_LIMIT_MEM_STRING))
+                                           .build())
+                               .build())
+                .build())
         .build();
   }
 
@@ -452,7 +451,7 @@ public class CIExecutionPlanTestHelper {
                           .name(RUN_STEP_NAME)
                           .command(ParameterField.createValueField("./test-script1.sh"))
                           .image(ParameterField.createValueField(RUN_STEP_IMAGE))
-                          .connector(ParameterField.createValueField(RUN_STEP_CONNECTOR))
+                          .connectorRef(ParameterField.createValueField(RUN_STEP_CONNECTOR))
                           .build())
         .build();
   }
@@ -565,18 +564,19 @@ public class CIExecutionPlanTestHelper {
         .identifier(PLUGIN_STEP_ID)
         .type("plugin")
         .name(PLUGIN_STEP_NAME)
-        .stepSpecType(PluginStepInfo.builder()
-                          .identifier(PLUGIN_STEP_ID)
-                          .name(PLUGIN_STEP_NAME)
-                          .image(ParameterField.createValueField(PLUGIN_STEP_IMAGE))
-                          .resources(ContainerResource.builder()
-                                         .limits(ContainerResource.Limits.builder()
-                                                     .cpu(CpuQuantity.fromString(PLUGIN_STEP_LIMIT_CPU_STRING))
-                                                     .memory(MemoryQuantity.fromString(PLUGIN_STEP_LIMIT_MEM_STRING))
-                                                     .build())
-                                         .build())
-                          .settings(ParameterField.createValueField(settings))
-                          .build())
+        .stepSpecType(
+            PluginStepInfo.builder()
+                .identifier(PLUGIN_STEP_ID)
+                .name(PLUGIN_STEP_NAME)
+                .image(ParameterField.createValueField(PLUGIN_STEP_IMAGE))
+                .resources(ContainerResource.builder()
+                               .limits(ContainerResource.Limits.builder()
+                                           .cpu(ParameterField.createValueField(PLUGIN_STEP_LIMIT_CPU_STRING))
+                                           .memory(ParameterField.createValueField(PLUGIN_STEP_LIMIT_MEM_STRING))
+                                           .build())
+                               .build())
+                .settings(ParameterField.createValueField(settings))
+                .build())
         .build();
   }
 
