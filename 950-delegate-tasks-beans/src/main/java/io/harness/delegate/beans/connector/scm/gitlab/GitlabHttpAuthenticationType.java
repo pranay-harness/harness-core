@@ -7,7 +7,8 @@ public enum GitlabHttpAuthenticationType {
   @JsonProperty(GitlabConnectorConstants.USERNAME_AND_PASSWORD)
   USERNAME_AND_PASSWORD(GitlabConnectorConstants.USERNAME_AND_PASSWORD),
   @JsonProperty(GitlabConnectorConstants.USERNAME_AND_TOKEN)
-  USERNAME_AND_TOKEN(GitlabConnectorConstants.USERNAME_AND_TOKEN);
+  USERNAME_AND_TOKEN(GitlabConnectorConstants.USERNAME_AND_TOKEN),
+  @JsonProperty(GitlabConnectorConstants.KERBEROS) KERBEROS(GitlabConnectorConstants.KERBEROS);
 
   private final String displayName;
 

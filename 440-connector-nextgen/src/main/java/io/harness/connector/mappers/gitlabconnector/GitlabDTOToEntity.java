@@ -4,6 +4,7 @@ import io.harness.connector.entities.embedded.gitlabconnector.GitlabAuthenticati
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabConnector;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabHttpAuth;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabHttpAuthentication;
+import io.harness.connector.entities.embedded.gitlabconnector.GitlabKerberos;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabSshAuthentication;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabTokenApiAccess;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabUsernamePassword;
@@ -20,6 +21,7 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabKerberosDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernamePasswordDTO;
@@ -90,6 +92,11 @@ public class GitlabDTOToEntity implements ConnectorDTOToEntityMapper<GitlabConne
             .tokenRef(SecretRefHelper.getSecretConfigString(gitlabUsernameTokenDTO.getTokenRef()))
             .username(gitlabUsernameTokenDTO.getUsername())
             .usernameRef(usernameReference)
+            .build();
+      case KERBEROS:
+        final GitlabKerberosDTO gitlabKerberosDTO = (GitlabKerberosDTO) httpCredentialsDTO.getHttpCredentialsSpec();
+        return GitlabKerberos.builder()
+            .kerberosKeyRef(SecretRefHelper.getSecretConfigString(gitlabKerberosDTO.getKerberosKeyRef()))
             .build();
       default:
         throw new UnknownEnumTypeException("Gitlab Http Auth Type", type == null ? null : type.getDisplayName());

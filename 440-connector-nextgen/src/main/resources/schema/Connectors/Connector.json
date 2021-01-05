@@ -1,8 +1,5 @@
 {
   "type": "object",
-  "required": [
-    "connector"
-  ],
   "properties": {
     "connector": {
       "$ref": "#/definitions/ConnectorInfoDTO"

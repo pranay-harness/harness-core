@@ -18,8 +18,8 @@ import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketAuthentication
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePasswordApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePasswordDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernameTokenApiAccessDTO;
 import io.harness.rule.Owner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -61,10 +61,10 @@ public class BitbucketEntityToDTOTest {
 
     final BitbucketApiAccessDTO bitbucketApiAccessDTO =
         BitbucketApiAccessDTO.builder()
-            .type(BitbucketApiAccessType.USERNAME_AND_PASSWORD)
-            .spec(BitbucketUsernamePasswordApiAccessDTO.builder()
+            .type(BitbucketApiAccessType.USERNAME_AND_TOKEN)
+            .spec(BitbucketUsernameTokenApiAccessDTO.builder()
                       .usernameRef(SecretRefHelper.createSecretRef(privateKeyRef))
-                      .passwordRef(SecretRefHelper.createSecretRef(privateKeyRef))
+                      .tokenRef(SecretRefHelper.createSecretRef(privateKeyRef))
                       .build())
             .build();
     final BitbucketConnectorDTO bitbucketConnectorDTO = BitbucketConnectorDTO.builder()
@@ -78,10 +78,8 @@ public class BitbucketEntityToDTOTest {
         BitbucketConnector.builder()
             .hasApiAccess(true)
             .url(url)
-            .bitbucketApiAccess(BitbucketUsernamePasswordApiAccess.builder()
-                                    .usernameRef(privateKeyRef)
-                                    .passwordRef(privateKeyRef)
-                                    .build())
+            .bitbucketApiAccess(
+                BitbucketUsernamePasswordApiAccess.builder().usernameRef(privateKeyRef).tokenRef(privateKeyRef).build())
             .connectionType(GitConnectionType.REPO)
             .authType(HTTP)
             .authenticationDetails(
