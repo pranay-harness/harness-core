@@ -10,7 +10,7 @@ public enum ConnectorCategory {
   SECRET_MANAGER(new HashSet(
       Arrays.asList(ConnectorType.VAULT, ConnectorType.KMS, ConnectorType.GCP_KMS, ConnectorType.AWS_SECRETS_MANAGER,
           ConnectorType.AZURE_VAULT, ConnectorType.CYBERARK, ConnectorType.CUSTOM, ConnectorType.LOCAL))),
-  CONNECTOR(new HashSet(Arrays.asList())),
+  CLOUD_COST(new HashSet(Arrays.asList(ConnectorType.CE_AWS))),
   ARTIFACTORY(new HashSet(Arrays.asList(ConnectorType.DOCKER, ConnectorType.ARTIFACTORY, ConnectorType.NEXUS))),
   CODE_REPO(new HashSet(Arrays.asList(
       ConnectorType.GITHUB, ConnectorType.GITLAB, ConnectorType.BITBUCKET))), // removed ConnectorType.GIT for now.
