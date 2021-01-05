@@ -529,6 +529,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(K8sBGDeployResponse.class, 19436);
     kryo.register(K8sApplyRequest.class, 19437);
     kryo.register(HttpTaskParametersNg.class, 19438);
+    kryo.register(HttpStepResponse.class, 19439);
     kryo.register(GithubHttpCredentialsDTO.class, 19440);
     kryo.register(GithubHttpAuthenticationType.class, 19441);
     kryo.register(GithubUsernamePasswordDTO.class, 19442);
