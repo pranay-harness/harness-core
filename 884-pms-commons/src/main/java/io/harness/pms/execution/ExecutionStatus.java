@@ -21,7 +21,8 @@ public enum ExecutionStatus {
   @JsonProperty("Paused") PAUSED(Sets.newHashSet(Status.PAUSED), "Paused"),
   @JsonProperty("Waiting") WAITING(Sets.newHashSet(Status.INTERVENTION_WAITING), "Waiting"),
   @JsonProperty("Success") SUCCESS(Sets.newHashSet(Status.SUCCEEDED), "Success"),
-  @JsonProperty("Suspended") SUSPENDED(Sets.newHashSet(Status.SUSPENDED), "Suspended");
+  @JsonProperty("Suspended") SUSPENDED(Sets.newHashSet(Status.SUSPENDED), "Suspended"),
+  @JsonProperty("Skipped") SKIPPED(Sets.newHashSet(Status.SKIPPED), "Skipped");
 
   static final Set<ExecutionStatus> TERMINAL_STATUSES = Sets.newHashSet(FAILED, SUCCESS, ABORTED, EXPIRED);
   public static final Set<Status> BROKE_STATUSES = EnumSet.of(Status.FAILED, Status.ERRORED);

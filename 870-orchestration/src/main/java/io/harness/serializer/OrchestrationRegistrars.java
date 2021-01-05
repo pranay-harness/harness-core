@@ -55,6 +55,8 @@ import io.harness.serializer.spring.converters.refobject.RefObjectReadConverter;
 import io.harness.serializer.spring.converters.refobject.RefObjectWriteConverter;
 import io.harness.serializer.spring.converters.reftype.RefTypeReadConverter;
 import io.harness.serializer.spring.converters.reftype.RefTypeWriteConverter;
+import io.harness.serializer.spring.converters.skip.SkipInfoReadConverter;
+import io.harness.serializer.spring.converters.skip.SkipInfoWriteConverter;
 import io.harness.serializer.spring.converters.stepoutcomeref.StepOutcomeRefReadConverter;
 import io.harness.serializer.spring.converters.stepoutcomeref.StepOutcomeRefWriteConverter;
 import io.harness.serializer.spring.converters.steps.StepInfoReadConverter;
@@ -131,5 +133,5 @@ public class OrchestrationRegistrars {
       LayoutNodeInfoWriteConverter.class, ExecutionTriggerInfoReadConverter.class,
       ExecutionTriggerInfoWriteConverter.class, TriggeredByReadConverter.class, TriggeredByWriteConverter.class,
       ExecutionMetadataReadConverter.class, ExecutionMetadataWriteConverter.class, TriggerPayloadReadConverter.class,
-      TriggerPayloadWriteConverter.class);
+      TriggerPayloadWriteConverter.class, SkipInfoReadConverter.class, SkipInfoWriteConverter.class);
 }

@@ -15,8 +15,10 @@ import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.commons.RepairActionCode;
 import io.harness.pms.contracts.execution.failure.FailureType;
+import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.execution.utils.SkipInfoUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.adviser.abort.OnAbortAdviser;
 import io.harness.pms.sdk.core.adviser.abort.OnAbortAdviserParameters;
@@ -102,6 +104,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
                                                     .build())
                                        .build())
             .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
+            .skipCondition(SkipInfoUtils.getSkipCondition(stepElement.getSkipCondition()))
             .build();
     return PlanCreationResponse.builder().node(stepPlanNode.getUuid(), stepPlanNode).build();
   }

@@ -22,6 +22,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.DelegateTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
@@ -48,7 +49,7 @@ public class StepUtils {
     StepResponseBuilder responseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
     for (ResponseData responseData : responseDataMap.values()) {
       Status executionStatus = ((StepResponseNotifyData) responseData).getStatus();
-      if (executionStatus != Status.SUCCEEDED && executionStatus != Status.SUSPENDED) {
+      if (!StatusUtils.positiveStatuses().contains(executionStatus)) {
         responseBuilder.status(executionStatus);
       }
     }

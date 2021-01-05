@@ -98,6 +98,7 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
         .group(StepOutcomeGroup.STAGE.name())
         .stepParameters(stepParameters)
         .stepType(DeploymentStageStep.STEP_TYPE)
+        .skipCondition(config.getSkipCondition() != null ? config.getSkipCondition().getValue() : null)
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
         .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
         .build();
