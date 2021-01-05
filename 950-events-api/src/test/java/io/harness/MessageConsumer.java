@@ -21,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 public class MessageConsumer implements Runnable {
   private final String color;
   private final String readVia;
-  private final String channel;
   private final String groupName;
   private final Integer processingTime;
   private final AbstractConsumer client;
@@ -30,7 +29,6 @@ public class MessageConsumer implements Runnable {
   public MessageConsumer(
       String readVia, RedisConfig redisConfig, String channel, String groupName, Integer processingTime, String color) {
     this.readVia = readVia;
-    this.channel = channel;
     this.color = color;
     if (readVia.equals("serialConsumerGroups"))
       this.client =

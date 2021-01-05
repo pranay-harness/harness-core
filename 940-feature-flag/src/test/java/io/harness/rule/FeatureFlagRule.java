@@ -1,7 +1,7 @@
 package io.harness.rule;
 
 import io.harness.eventsframework.EventsFrameworkConstants;
-import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
@@ -85,7 +85,7 @@ public class FeatureFlagRule implements MethodRule, InjectorRuleMixin, MongoRule
       @Override
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
-        bind(AbstractProducer.class)
+        bind(Producer.class)
             .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
             .toInstance(NoOpProducer.of("dummy_topic_name"));
       }

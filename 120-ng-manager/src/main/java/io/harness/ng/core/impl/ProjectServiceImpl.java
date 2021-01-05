@@ -14,7 +14,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConstants;
-import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
@@ -62,13 +63,13 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class ProjectServiceImpl implements ProjectService {
   private final ProjectRepository projectRepository;
   private final OrganizationService organizationService;
-  private final AbstractProducer eventProducer;
+  private final Producer eventProducer;
   private final NgUserService ngUserService;
   private static final String PROJECT_ADMIN_ROLE_NAME = "Project Admin";
 
   @Inject
   public ProjectServiceImpl(ProjectRepository projectRepository, OrganizationService organizationService,
-      @Named(EventsFrameworkConstants.ENTITY_CRUD) AbstractProducer eventProducer, NgUserService ngUserService) {
+      @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer, NgUserService ngUserService) {
     this.projectRepository = projectRepository;
     this.organizationService = organizationService;
     this.eventProducer = eventProducer;
@@ -95,7 +96,7 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   private void performActionsPostProjectCreation(Project project) {
-    publishEvent(project, EventsFrameworkConstants.CREATE_ACTION);
+    publishEvent(project, EventsFrameworkMetadataConstants.CREATE_ACTION);
     createUserProjectMap(project);
   }
 
@@ -149,7 +150,7 @@ public class ProjectServiceImpl implements ProjectService {
       project.setModules(moduleTypeList);
       validate(project);
       Project updatedProject = projectRepository.save(project);
-      publishEvent(existingProject, EventsFrameworkConstants.UPDATE_ACTION);
+      publishEvent(existingProject, EventsFrameworkMetadataConstants.UPDATE_ACTION);
       return updatedProject;
     }
     throw new InvalidRequestException(
@@ -159,12 +160,13 @@ public class ProjectServiceImpl implements ProjectService {
 
   private void publishEvent(Project project, String action) {
     try {
-      eventProducer.send(Message.newBuilder()
-                             .putAllMetadata(ImmutableMap.of("accountId", project.getAccountIdentifier(),
-                                 EventsFrameworkConstants.ENTITY_TYPE_METADATA, EventsFrameworkConstants.PROJECT_ENTITY,
-                                 EventsFrameworkConstants.ACTION_METADATA, action))
-                             .setData(getProjectPayload(project))
-                             .build());
+      eventProducer.send(
+          Message.newBuilder()
+              .putAllMetadata(ImmutableMap.of("accountId", project.getAccountIdentifier(),
+                  EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.PROJECT_ENTITY,
+                  EventsFrameworkMetadataConstants.ACTION, action))
+              .setData(getProjectPayload(project))
+              .build());
     } catch (ProducerShutdownException e) {
       log.error("Failed to send event to events framework projectIdentifier: " + project.getIdentifier(), e);
     }
@@ -241,7 +243,7 @@ public class ProjectServiceImpl implements ProjectService {
                        .orgIdentifier(orgIdentifier)
                        .identifier(projectIdentifier)
                        .build(),
-          EventsFrameworkConstants.DELETE_ACTION);
+          EventsFrameworkMetadataConstants.DELETE_ACTION);
     }
     return delete;
   }

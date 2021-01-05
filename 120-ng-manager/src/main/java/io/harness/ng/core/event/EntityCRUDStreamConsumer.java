@@ -1,7 +1,8 @@
 package io.harness.ng.core.event;
 
 import io.harness.eventsframework.EventsFrameworkConstants;
-import io.harness.eventsframework.api.AbstractConsumer;
+import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.consumer.Message;
 
 import com.google.inject.Inject;
@@ -16,26 +17,26 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class EntityCRUDStreamConsumer implements Runnable {
-  private final AbstractConsumer redisConsumer;
-  private final Map<String, ConsumerMessageProcessor> processorMap;
+  private final Consumer redisConsumer;
+  private final Map<String, MessageProcessor> processorMap;
 
   @Inject
-  public EntityCRUDStreamConsumer(@Named(EventsFrameworkConstants.ENTITY_CRUD) AbstractConsumer redisConsumer,
-      @Named(EventsFrameworkConstants.ACCOUNT_ENTITY) ConsumerMessageProcessor accountChangeEventMessageProcessor,
-      @Named(EventsFrameworkConstants.ORGANIZATION_ENTITY)
-      ConsumerMessageProcessor organizationChangeEventMessageProcessor,
-      @Named(EventsFrameworkConstants.PROJECT_ENTITY) ConsumerMessageProcessor projectChangeEventMessageProcessor,
+  public EntityCRUDStreamConsumer(@Named(EventsFrameworkConstants.ENTITY_CRUD) Consumer redisConsumer,
+      @Named(EventsFrameworkMetadataConstants.ACCOUNT_ENTITY) MessageProcessor accountChangeEventMessageProcessor,
+      @Named(EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY)
+      MessageProcessor organizationChangeEventMessageProcessor,
+      @Named(EventsFrameworkMetadataConstants.PROJECT_ENTITY) MessageProcessor projectChangeEventMessageProcessor,
       @Named(
-          EventsFrameworkConstants.SETUP_USAGE_ENTITY) ConsumerMessageProcessor setupUsageChangeEventMessageProcessor,
+          EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY) MessageProcessor setupUsageChangeEventMessageProcessor,
       @Named(
-          EventsFrameworkConstants.ACTIVITY_ENTITY) ConsumerMessageProcessor entityActivityCrudEventMessageProcessor) {
+          EventsFrameworkMetadataConstants.ACTIVITY_ENTITY) MessageProcessor entityActivityCrudEventMessageProcessor) {
     this.redisConsumer = redisConsumer;
     processorMap = new HashMap<>();
-    processorMap.put(EventsFrameworkConstants.ACCOUNT_ENTITY, accountChangeEventMessageProcessor);
-    processorMap.put(EventsFrameworkConstants.ORGANIZATION_ENTITY, organizationChangeEventMessageProcessor);
-    processorMap.put(EventsFrameworkConstants.PROJECT_ENTITY, projectChangeEventMessageProcessor);
-    processorMap.put(EventsFrameworkConstants.SETUP_USAGE_ENTITY, setupUsageChangeEventMessageProcessor);
-    processorMap.put(EventsFrameworkConstants.ACTIVITY_ENTITY, entityActivityCrudEventMessageProcessor);
+    processorMap.put(EventsFrameworkMetadataConstants.ACCOUNT_ENTITY, accountChangeEventMessageProcessor);
+    processorMap.put(EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY, organizationChangeEventMessageProcessor);
+    processorMap.put(EventsFrameworkMetadataConstants.PROJECT_ENTITY, projectChangeEventMessageProcessor);
+    processorMap.put(EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY, setupUsageChangeEventMessageProcessor);
+    processorMap.put(EventsFrameworkMetadataConstants.ACTIVITY_ENTITY, entityActivityCrudEventMessageProcessor);
   }
 
   @Override
@@ -63,8 +64,8 @@ public class EntityCRUDStreamConsumer implements Runnable {
   private void processMessage(Message message) {
     if (message.hasMessage()) {
       Map<String, String> metadataMap = message.getMessage().getMetadataMap();
-      if (metadataMap != null && metadataMap.get(EventsFrameworkConstants.ENTITY_TYPE_METADATA) != null) {
-        String entityType = metadataMap.get(EventsFrameworkConstants.ENTITY_TYPE_METADATA);
+      if (metadataMap != null && metadataMap.get(EventsFrameworkMetadataConstants.ENTITY_TYPE) != null) {
+        String entityType = metadataMap.get(EventsFrameworkMetadataConstants.ENTITY_TYPE);
         if (processorMap.get(entityType) != null) {
           processorMap.get(entityType).processMessage(message);
         }

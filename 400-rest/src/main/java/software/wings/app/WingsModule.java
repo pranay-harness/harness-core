@@ -81,7 +81,7 @@ import io.harness.event.handler.impl.segment.SegmentGroupEventJobServiceImpl;
 import io.harness.event.reconciliation.service.DeploymentReconService;
 import io.harness.event.reconciliation.service.DeploymentReconServiceImpl;
 import io.harness.eventsframework.EventsFrameworkConstants;
-import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.exception.InvalidArgumentsException;
@@ -836,18 +836,18 @@ public class WingsModule extends AbstractModule implements ServersModule {
       protected void configure() {
         RedisConfig redisConfig = configuration.getEventsFrameworkConfiguration().getRedisConfig();
         if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
-          bind(AbstractProducer.class)
+          bind(Producer.class)
               .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
               .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
-          bind(AbstractProducer.class)
+          bind(Producer.class)
               .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
               .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
         } else {
-          bind(AbstractProducer.class)
+          bind(Producer.class)
               .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
               .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_CRUD, redisConfig,
                   EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE));
-          bind(AbstractProducer.class)
+          bind(Producer.class)
               .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
               .toInstance(RedisProducer.of(EventsFrameworkConstants.FEATURE_FLAG_STREAM, redisConfig,
                   EventsFrameworkConstants.FEATURE_FLAG_MAX_TOPIC_SIZE));

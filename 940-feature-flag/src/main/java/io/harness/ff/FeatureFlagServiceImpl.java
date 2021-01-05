@@ -19,7 +19,7 @@ import io.harness.beans.FeatureFlag.Scope;
 import io.harness.beans.FeatureName;
 import io.harness.configuration.DeployMode;
 import io.harness.eventsframework.EventsFrameworkConstants;
-import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.featureflag.FeatureFlagChangeDTO;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
@@ -54,7 +54,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   @Inject(optional = true)
   @Nullable
   @Named(EventsFrameworkConstants.FEATURE_FLAG_STREAM)
-  private AbstractProducer eventProducer;
+  private Producer eventProducer;
 
   private long lastEpoch;
   private final Map<FeatureName, FeatureFlag> cache = new HashMap<>();

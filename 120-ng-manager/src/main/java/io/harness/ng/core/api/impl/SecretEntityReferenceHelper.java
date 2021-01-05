@@ -7,7 +7,8 @@ import static software.wings.utils.Utils.emptyIfNull;
 import io.harness.entitysetupusageclient.EntitySetupUsageHelper;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.eventsframework.EventsFrameworkConstants;
-import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
@@ -29,13 +30,13 @@ import lombok.extern.slf4j.Slf4j;
 public class SecretEntityReferenceHelper {
   EntitySetupUsageHelper entityReferenceHelper;
   EntitySetupUsageClient entitySetupUsageClient;
-  AbstractProducer eventProducer;
+  Producer eventProducer;
   IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper;
 
   @Inject
   public SecretEntityReferenceHelper(EntitySetupUsageHelper entityReferenceHelper,
       EntitySetupUsageClient entitySetupUsageClient,
-      @Named(EventsFrameworkConstants.ENTITY_CRUD) AbstractProducer eventProducer,
+      @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer,
       IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper) {
     this.entityReferenceHelper = entityReferenceHelper;
     this.entitySetupUsageClient = entitySetupUsageClient;
@@ -76,8 +77,8 @@ public class SecretEntityReferenceHelper {
       eventProducer.send(
           Message.newBuilder()
               .putAllMetadata(ImmutableMap.of("accountId", encryptedDataDTO.getAccount(),
-                  EventsFrameworkConstants.ENTITY_TYPE_METADATA, EventsFrameworkConstants.SETUP_USAGE_ENTITY,
-                  EventsFrameworkConstants.ACTION_METADATA, EventsFrameworkConstants.CREATE_ACTION))
+                  EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY,
+                  EventsFrameworkMetadataConstants.ACTION, EventsFrameworkMetadataConstants.CREATE_ACTION))
               .setData(entityReferenceDTO.toByteString())
               .build());
     } catch (Exception ex) {
@@ -102,8 +103,8 @@ public class SecretEntityReferenceHelper {
       eventProducer.send(
           Message.newBuilder()
               .putAllMetadata(ImmutableMap.of("accountId", encryptedDataDTO.getAccount(),
-                  EventsFrameworkConstants.ENTITY_TYPE_METADATA, EventsFrameworkConstants.SETUP_USAGE_ENTITY,
-                  EventsFrameworkConstants.ACTION_METADATA, EventsFrameworkConstants.DELETE_ACTION))
+                  EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY,
+                  EventsFrameworkMetadataConstants.ACTION, EventsFrameworkMetadataConstants.DELETE_ACTION))
               .setData(deleteSetupUsageDTO.toByteString())
               .build());
     } catch (Exception ex) {

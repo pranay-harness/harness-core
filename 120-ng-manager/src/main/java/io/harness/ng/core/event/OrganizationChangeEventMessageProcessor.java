@@ -2,7 +2,7 @@ package io.harness.ng.core.event;
 
 import static io.harness.exception.WingsException.USER;
 
-import io.harness.eventsframework.EventsFrameworkConstants;
+import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.organization.OrganizationEntityChangeDTO;
 import io.harness.exception.InvalidRequestException;
@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
-public class OrganizationChangeEventMessageProcessor implements ConsumerMessageProcessor {
+public class OrganizationChangeEventMessageProcessor implements MessageProcessor {
   private final HarnessSMManager harnessSMManager;
 
   @Override
@@ -40,12 +40,12 @@ public class OrganizationChangeEventMessageProcessor implements ConsumerMessageP
     }
 
     Map<String, String> metadataMap = message.getMessage().getMetadataMap();
-    if (metadataMap.get(EventsFrameworkConstants.ACTION_METADATA) != null) {
-      switch (metadataMap.get(EventsFrameworkConstants.ACTION_METADATA)) {
-        case EventsFrameworkConstants.CREATE_ACTION:
+    if (metadataMap.get(EventsFrameworkMetadataConstants.ACTION) != null) {
+      switch (metadataMap.get(EventsFrameworkMetadataConstants.ACTION)) {
+        case EventsFrameworkMetadataConstants.CREATE_ACTION:
           processCreateAction(organizationEntityChangeDTO);
           return;
-        case EventsFrameworkConstants.DELETE_ACTION:
+        case EventsFrameworkMetadataConstants.DELETE_ACTION:
           processDeleteAction(organizationEntityChangeDTO);
           return;
         default:
@@ -84,7 +84,7 @@ public class OrganizationChangeEventMessageProcessor implements ConsumerMessageP
 
   private boolean validateMessage(Message message) {
     return message != null && message.hasMessage() && message.getMessage().getMetadataMap() != null
-        && EventsFrameworkConstants.ORGANIZATION_ENTITY.equals(
-            message.getMessage().getMetadataMap().get(EventsFrameworkConstants.ENTITY_TYPE_METADATA));
+        && EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY.equals(
+            message.getMessage().getMetadataMap().get(EventsFrameworkMetadataConstants.ENTITY_TYPE));
   }
 }

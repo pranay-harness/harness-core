@@ -1,13 +1,13 @@
 package io.harness.ng.core.entitysetupusage.event;
 
-import io.harness.eventsframework.EventsFrameworkConstants;
+import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.schemas.entitysetupusage.DeleteSetupUsageDTO;
 import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateDTO;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.ng.core.entitysetupusage.mapper.EntitySetupUsageEventDTOToRestDTOMapper;
 import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
-import io.harness.ng.core.event.ConsumerMessageProcessor;
+import io.harness.ng.core.event.MessageProcessor;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-public class SetupUsageChangeEventMessageProcessor implements ConsumerMessageProcessor {
+public class SetupUsageChangeEventMessageProcessor implements MessageProcessor {
   EntitySetupUsageService entitySetupUsageService;
   EntitySetupUsageEventDTOToRestDTOMapper entitySetupUsageEventDTOToRestDTOMapper;
 
@@ -33,18 +33,18 @@ public class SetupUsageChangeEventMessageProcessor implements ConsumerMessagePro
     String messageId = message.getId();
     log.info("Processing the setup usage crud event with the id {}", messageId);
     Map<String, String> metadataMap = message.getMessage().getMetadataMap();
-    if (metadataMap.containsKey(EventsFrameworkConstants.ACTION_METADATA)) {
-      switch (metadataMap.get(EventsFrameworkConstants.ACTION_METADATA)) {
-        case EventsFrameworkConstants.CREATE_ACTION:
+    if (metadataMap.containsKey(EventsFrameworkMetadataConstants.ACTION)) {
+      switch (metadataMap.get(EventsFrameworkMetadataConstants.ACTION)) {
+        case EventsFrameworkMetadataConstants.CREATE_ACTION:
           EntitySetupUsageCreateDTO setupUsageCreateDTO = getEntitySetupUsageCreateDTO(message);
           processCreateAction(setupUsageCreateDTO);
           return;
-        case EventsFrameworkConstants.DELETE_ACTION:
+        case EventsFrameworkMetadataConstants.DELETE_ACTION:
           DeleteSetupUsageDTO deleteRequestDTO = getEntitySetupUsageDeleteDTO(message);
           processDeleteAction(deleteRequestDTO);
           return;
         default:
-          log.info("Invalid action type: {}", metadataMap.get(EventsFrameworkConstants.ACTION_METADATA));
+          log.info("Invalid action type: {}", metadataMap.get(EventsFrameworkMetadataConstants.ACTION));
       }
     }
   }

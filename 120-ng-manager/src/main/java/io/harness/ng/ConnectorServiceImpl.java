@@ -24,7 +24,8 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.encryption.Scope;
 import io.harness.eventsframework.EventsFrameworkConstants;
-import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.entity_crud.connector.ConnectorEntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
@@ -51,15 +52,15 @@ public class ConnectorServiceImpl implements ConnectorService {
   private final ConnectorActivityService connectorActivityService;
   private final ConnectorHeartbeatService connectorHeartbeatService;
   private final ConnectorRepository connectorRepository;
-  private final AbstractProducer eventProducer;
+  private final Producer eventProducer;
   private final KryoSerializer kryoSerializer;
 
   @Inject
   public ConnectorServiceImpl(@Named(DEFAULT_CONNECTOR_SERVICE) ConnectorService defaultConnectorService,
       @Named(SECRET_MANAGER_CONNECTOR_SERVICE) ConnectorService secretManagerConnectorService,
       ConnectorActivityService connectorActivityService, ConnectorHeartbeatService connectorHeartbeatService,
-      ConnectorRepository connectorRepository,
-      @Named(EventsFrameworkConstants.ENTITY_CRUD) AbstractProducer eventProducer, KryoSerializer kryoSerializer) {
+      ConnectorRepository connectorRepository, @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer,
+      KryoSerializer kryoSerializer) {
     this.defaultConnectorService = defaultConnectorService;
     this.secretManagerConnectorService = secretManagerConnectorService;
     this.connectorActivityService = connectorActivityService;
@@ -127,8 +128,8 @@ public class ConnectorServiceImpl implements ConnectorService {
       eventProducer.send(
           Message.newBuilder()
               .putAllMetadata(ImmutableMap.of("accountId", accountIdentifier,
-                  EventsFrameworkConstants.ENTITY_TYPE_METADATA, EventsFrameworkConstants.CONNECTOR_ENTITY,
-                  EventsFrameworkConstants.ACTION_METADATA, EventsFrameworkConstants.UPDATE_ACTION))
+                  EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.CONNECTOR_ENTITY,
+                  EventsFrameworkMetadataConstants.ACTION, EventsFrameworkMetadataConstants.UPDATE_ACTION))
               .setData(connectorUpdateDTOBuilder.build().toByteString())
               .build());
     } catch (Exception ex) {

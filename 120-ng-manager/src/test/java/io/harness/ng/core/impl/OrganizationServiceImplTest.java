@@ -19,7 +19,7 @@ import static org.springframework.data.domain.Pageable.unpaged;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.eventsframework.producer.Message;
@@ -47,7 +47,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class OrganizationServiceImplTest extends CategoryTest {
   private OrganizationRepository organizationRepository;
   private OrganizationServiceImpl organizationService;
-  private AbstractProducer eventProducer;
+  private Producer eventProducer;
   private NgUserService ngUserService;
 
   @Before

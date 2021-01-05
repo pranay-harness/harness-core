@@ -21,7 +21,7 @@ import static org.springframework.data.domain.Pageable.unpaged;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.eventsframework.producer.Message;
@@ -52,7 +52,7 @@ public class ProjectServiceImplTest extends CategoryTest {
   private ProjectRepository projectRepository;
   private OrganizationService organizationService;
   private ProjectServiceImpl projectService;
-  private AbstractProducer eventProducer;
+  private Producer eventProducer;
   private NgUserService ngUserService;
 
   @Before
