@@ -839,6 +839,12 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>960-continuous-features</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>960-notification-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

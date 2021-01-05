@@ -28,6 +28,7 @@
         <module>400-rest</module>
         <module>899-yaml-schema-plugin</module>
         <module>930-notification-service</module>
+        <module>960-continuous-features</module>
         <module>980-java-agent</module>
     </modules>
     <scm>
@@ -1765,7 +1766,7 @@
         <repository>
             <id>harness-internal</id>
             <name>harness-internal-releases</name>
-            <url>https://harness.jfrog.io/harness/datacollection-dsl</url>
+            <url>https://harness.jfrog.io/artifactory/harness-internal</url>
         </repository>
         <repository>
             <id>spring-io</id>
