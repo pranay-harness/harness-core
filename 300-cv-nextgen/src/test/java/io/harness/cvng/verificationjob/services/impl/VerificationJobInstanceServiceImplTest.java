@@ -62,7 +62,6 @@ import io.harness.cvng.verificationjob.entities.VerificationJob.RuntimeParameter
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.AnalysisProgressLog;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ExecutionStatus;
-import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
@@ -96,7 +95,7 @@ import org.mockito.MockitoAnnotations;
 
 public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
   @Inject private VerificationJobService verificationJobService;
-  @Inject private VerificationJobInstanceService verificationJobInstanceService;
+  @Inject private VerificationJobInstanceServiceImpl verificationJobInstanceService;
   @Inject private CVConfigService cvConfigService;
   @Mock private VerificationManagerService verificationManagerService;
   @Inject private DataCollectionTaskService dataCollectionTaskService;
@@ -774,6 +773,33 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
     connectorToPerpetualTaskIdMap.put(cvConfig.getConnectorIdentifier(), perpetualTaskId);
     verificationJobInstance.setConnectorsToPerpetualTaskIdsMap(connectorToPerpetualTaskIdMap);
     verificationJobInstanceService.resetPerpetualTask(verificationJobInstance, cvConfig);
+    ArgumentCaptor<DataCollectionConnectorBundle> captor = ArgumentCaptor.forClass(DataCollectionConnectorBundle.class);
+    verify(verificationManagerService, times(1))
+        .resetDataCollectionTask(
+            eq(accountId), eq(orgIdentifier), eq(projectIdentifier), eq(perpetualTaskId), captor.capture());
+    DataCollectionConnectorBundle dataCollectionConnectorBundle = captor.getValue();
+    Map<String, String> params = new HashMap<>();
+    params.put(DataCollectionTaskKeys.dataCollectionWorkerId,
+        getDataCollectionWorkerId(verificationJobInstance.getUuid(), cvConfig.getConnectorIdentifier()));
+    params.put(CVConfigKeys.connectorIdentifier, cvConfig.getConnectorIdentifier());
+    assertThat(dataCollectionConnectorBundle.getParams()).isEqualTo(params);
+    assertThat(dataCollectionConnectorBundle.getDataCollectionType()).isEqualTo(DataCollectionType.CV);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testResetVerificationJobPerpetualTasks() {
+    CVConfig cvConfig = cvConfigService.save(newCVConfig());
+    cvConfigId = cvConfig.getUuid();
+    VerificationJobInstance verificationJobInstance =
+        createVerificationJobInstance("devVerificationJobInstance", "dev", ExecutionStatus.RUNNING, CANARY);
+    String perpetualTaskId = generateUuid();
+    HashMap<String, String> connectorToPerpetualTaskIdMap = new HashMap<>();
+    connectorToPerpetualTaskIdMap.put(cvConfig.getConnectorIdentifier(), perpetualTaskId);
+    verificationJobInstance.setConnectorsToPerpetualTaskIdsMap(connectorToPerpetualTaskIdMap);
+    hPersistence.save(verificationJobInstance);
+    verificationJobInstanceService.resetVerificationJobPerpetualTasks(cvConfig);
     ArgumentCaptor<DataCollectionConnectorBundle> captor = ArgumentCaptor.forClass(DataCollectionConnectorBundle.class);
     verify(verificationManagerService, times(1))
         .resetDataCollectionTask(

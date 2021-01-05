@@ -5,7 +5,6 @@ import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
-import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
@@ -66,16 +65,8 @@ public class ConnectorChangeEventMessageProcessor implements ConsumerMessageProc
             connectorEntityChangeDTO.getIdentifier().getValue(), identifierRef.getScope());
     cvConfigsWithConnector.forEach(cvConfig -> {
       dataCollectionTaskService.resetLiveMonitoringPerpetualTask(cvConfig);
-      resetVerificationJobPerpetualTasks(cvConfig);
+      verificationJobInstanceService.resetVerificationJobPerpetualTasks(cvConfig);
     });
-  }
-  private void resetVerificationJobPerpetualTasks(CVConfig cvConfig) {
-    List<String> verificationJobInstanceIds =
-        verificationTaskService.getAllVerificationJobInstanceIdsForCVConfig(cvConfig.getUuid());
-    List<VerificationJobInstance> verificationJobInstances =
-        verificationJobInstanceService.filterRunningVerificationJobInstances(verificationJobInstanceIds);
-    verificationJobInstances.forEach(verificationJobInstance
-        -> verificationJobInstanceService.resetPerpetualTask(verificationJobInstance, cvConfig));
   }
 
   private boolean validateMessage(Message message) {

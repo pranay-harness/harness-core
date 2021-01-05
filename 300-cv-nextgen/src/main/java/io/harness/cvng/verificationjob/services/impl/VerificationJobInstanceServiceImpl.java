@@ -58,6 +58,7 @@ import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.persistence.HPersistence;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -251,8 +252,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         verificationJob.getEnvIdentifier(), verificationJob.getDataSources());
   }
 
-  @Override
-  public List<VerificationJobInstance> filterRunningVerificationJobInstances(List<String> verificationJobInstanceIds) {
+  @VisibleForTesting
+  List<VerificationJobInstance> filterRunningVerificationJobInstances(List<String> verificationJobInstanceIds) {
     if (verificationJobInstanceIds.isEmpty()) {
       return Collections.emptyList();
     }
@@ -263,8 +264,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         .asList();
   }
 
-  @Override
-  public void resetPerpetualTask(VerificationJobInstance verificationJobInstance, CVConfig cvConfig) {
+  @VisibleForTesting
+  void resetPerpetualTask(VerificationJobInstance verificationJobInstance, CVConfig cvConfig) {
     Preconditions.checkNotNull(verificationJobInstance);
     VerificationJob verificationJob = verificationJobInstance.getResolvedJob();
     Preconditions.checkNotNull(verificationJob);
@@ -279,6 +280,15 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier(),
         verificationJobInstance.getConnectorsToPerpetualTaskIdsMap().get(cvConfig.getConnectorIdentifier()),
         DataCollectionConnectorBundle.builder().params(params).dataCollectionType(DataCollectionType.CV).build());
+  }
+
+  @Override
+  public void resetVerificationJobPerpetualTasks(CVConfig cvConfig) {
+    List<String> verificationJobInstanceIds =
+        verificationTaskService.getAllVerificationJobInstanceIdsForCVConfig(cvConfig.getUuid());
+    List<VerificationJobInstance> verificationJobInstances =
+        filterRunningVerificationJobInstances(verificationJobInstanceIds);
+    verificationJobInstances.forEach(verificationJobInstance -> resetPerpetualTask(verificationJobInstance, cvConfig));
   }
 
   @Override
