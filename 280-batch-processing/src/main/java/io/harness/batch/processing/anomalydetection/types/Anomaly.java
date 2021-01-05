@@ -1,7 +1,6 @@
-package io.harness.batch.processing.anomalydetection;
+package io.harness.batch.processing.anomalydetection.types;
 
-import io.harness.batch.processing.anomalydetection.types.AnomalyDetectionModel;
-import io.harness.batch.processing.anomalydetection.types.AnomalyType;
+import io.harness.batch.processing.anomalydetection.AnomalyDetectionInfo;
 
 import java.time.Instant;
 import lombok.Data;

@@ -1,7 +1,7 @@
 package io.harness.batch.processing.anomalydetection.writer;
 
-import io.harness.batch.processing.anomalydetection.Anomaly;
 import io.harness.batch.processing.anomalydetection.service.impl.AnomalyDetectionTimescaleDataServiceImpl;
+import io.harness.batch.processing.anomalydetection.types.Anomaly;
 
 import java.util.ArrayList;
 import java.util.List;

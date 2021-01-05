@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
@@ -44,14 +45,17 @@ import software.wings.service.impl.EnvironmentServiceImpl;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
+import com.healthmarketscience.sqlbuilder.AliasedObject;
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
 import com.healthmarketscience.sqlbuilder.Converter;
 import com.healthmarketscience.sqlbuilder.CustomExpression;
+import com.healthmarketscience.sqlbuilder.CustomSql;
 import com.healthmarketscience.sqlbuilder.FunctionCall;
 import com.healthmarketscience.sqlbuilder.InCondition;
 import com.healthmarketscience.sqlbuilder.OrderObject;
 import com.healthmarketscience.sqlbuilder.OrderObject.Dir;
 import com.healthmarketscience.sqlbuilder.SelectQuery;
+import com.healthmarketscience.sqlbuilder.SqlObject;
 import com.healthmarketscience.sqlbuilder.UnaryCondition;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import io.fabric8.utils.Lists;
@@ -1591,5 +1595,72 @@ public class BillingDataQueryBuilder {
                 || aggregationFunction.getColumnName().equalsIgnoreCase(schema.getUnallocatedCost().getColumnNameSQL())
                 || aggregationFunction.getColumnName().equalsIgnoreCase(schema.getSystemCost().getColumnNameSQL()))
         .collect(Collectors.toList());
+  }
+
+  //-------------- Anomaly Detection -------------
+
+  public String formADQuery(String accountId, List<QLBillingDataFilter> filters,
+      List<QLCCMAggregationFunction> aggregateFunction, List<QLCCMEntityGroupBy> groupBy,
+      List<QLBillingSortCriteria> sortCriteria, List<DbColumn> selectColumns) {
+    SelectQuery query = new SelectQuery();
+
+    query.addCustomColumns(getHashColumn(groupBy));
+    query.addCustomColumns(
+        AliasedObject.toAliasedObject(FunctionCall.sum().addColumnParams(schema.getBillingAmount()), "cost"));
+    addAccountFilter(query, accountId);
+
+    for (DbColumn column : selectColumns) {
+      query.addColumns(column);
+    }
+
+    List<BillingDataQueryMetadata.BillingDataMetaDataFields> fieldNames = new ArrayList<>();
+    List<BillingDataQueryMetadata.BillingDataMetaDataFields> groupByFields = new ArrayList<>();
+
+    decorateQueryWithAggregations(query, aggregateFunction, fieldNames);
+
+    if (isValidGroupBy(groupBy)) {
+      decorateQueryWithGroupBy(fieldNames, query, groupBy, groupByFields);
+    }
+
+    if (!Lists.isNullOrEmpty(filters)) {
+      decorateQueryWithFilters(query, filters);
+    }
+
+    validateAndAddSortCriteria(query, sortCriteria, fieldNames);
+
+    return query.toString();
+  }
+
+  public SqlObject getHashColumn(List<QLCCMEntityGroupBy> groupByList) {
+    FunctionCall concatFunction = new FunctionCall(new CustomSql("CONCAT"));
+    FunctionCall md5HashFunction = new FunctionCall(new CustomSql("MD5"));
+
+    DbColumn column;
+
+    for (QLCCMEntityGroupBy groupBy : groupByList) {
+      column = convertEntityGroupByToDbColumn(groupBy);
+      if (column != null) {
+        concatFunction.addColumnParams(column);
+      }
+    }
+    md5HashFunction.addCustomParams(new CustomSql(concatFunction.toString()));
+    return AliasedObject.toAliasedObject(md5HashFunction, "hashcode");
+  }
+
+  public DbColumn convertEntityGroupByToDbColumn(QLCCMEntityGroupBy groupBy) {
+    switch (groupBy) {
+      case Cluster:
+        return schema.getClusterId();
+      case Namespace:
+        return schema.getNamespace();
+      case WorkloadName:
+        return schema.getWorkloadName();
+      case ClusterName:
+      case StartTime:
+        return null;
+      default:
+        log.warn("group by : {} is not used for hashing while query building", groupBy);
+        throw new InvalidArgumentsException("GroupBy not supported in conversion of hash");
+    }
   }
 }

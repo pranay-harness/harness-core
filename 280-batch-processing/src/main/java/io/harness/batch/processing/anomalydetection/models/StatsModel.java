@@ -1,8 +1,8 @@
 package io.harness.batch.processing.anomalydetection.models;
 
-import io.harness.batch.processing.anomalydetection.Anomaly;
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionTimeSeries;
-import io.harness.batch.processing.anomalydetection.TimeSeriesUtils;
+import io.harness.batch.processing.anomalydetection.helpers.TimeSeriesUtils;
+import io.harness.batch.processing.anomalydetection.types.Anomaly;
 import io.harness.batch.processing.anomalydetection.types.AnomalyDetectionModel;
 import io.harness.batch.processing.anomalydetection.types.AnomalyType;
 
@@ -42,7 +42,6 @@ public class StatsModel {
                                    .actualCost(currentValue)
                                    .expectedCost(mean)
                                    .timeGranularity(data.getTimeGranularity())
-                                   .entityId(data.getEntityId())
                                    .entityType(data.getEntityType())
                                    .clusterId(data.getClusterId())
                                    .clusterName(data.getClusterName())

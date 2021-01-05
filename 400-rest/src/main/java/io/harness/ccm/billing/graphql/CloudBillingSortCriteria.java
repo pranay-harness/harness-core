@@ -30,11 +30,29 @@ public class CloudBillingSortCriteria {
       case gcpCost:
         orderIdentifier = PreAggregateConstants.entityConstantGcpCost;
         break;
+      case gcpProjectId:
+        orderIdentifier = PreAggregateConstants.entityConstantGcpProjectId;
+        break;
+      case gcpProduct:
+        orderIdentifier = PreAggregateConstants.entityConstantGcpProduct;
+        break;
+      case gcpSkuId:
+        orderIdentifier = PreAggregateConstants.entityConstantGcpSkuId;
+        break;
+      case gcpSkuDescription:
+        orderIdentifier = PreAggregateConstants.entityConstantGcpSku;
+        break;
       case awsBlendedCost:
         orderIdentifier = PreAggregateConstants.entityConstantAwsBlendedCost;
         break;
       case awsUnblendedCost:
         orderIdentifier = PreAggregateConstants.entityConstantAwsUnBlendedCost;
+        break;
+      case awsService:
+        orderIdentifier = PreAggregateConstants.entityConstantAwsService;
+        break;
+      case awsLinkedAccount:
+        orderIdentifier = PreAggregateConstants.entityConstantAwsLinkedAccount;
         break;
       default:
         break;

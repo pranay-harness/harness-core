@@ -1,7 +1,9 @@
-package io.harness.batch.processing.anomalydetection.reader;
+package io.harness.batch.processing.anomalydetection.reader.k8s;
 
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionTimeSeries;
 import io.harness.batch.processing.anomalydetection.service.impl.AnomalyDetectionTimescaleDataServiceImpl;
+
+import software.wings.graphql.datafetcher.billing.BillingDataTableSchema;
 
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public abstract class AnomalyDetectionTimescaleReader
     implements ItemReader<AnomalyDetectionTimeSeries>, StepExecutionListener {
   @Autowired AnomalyDetectionTimescaleDataServiceImpl dataService;
+  BillingDataTableSchema tableSchema = new BillingDataTableSchema();
   List<AnomalyDetectionTimeSeries> listAnomalyDetectionTimeSeries;
   JobParameters parameters;
   String accountId;

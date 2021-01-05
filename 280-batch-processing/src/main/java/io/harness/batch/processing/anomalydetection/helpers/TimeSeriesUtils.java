@@ -1,5 +1,8 @@
-package io.harness.batch.processing.anomalydetection;
+package io.harness.batch.processing.anomalydetection.helpers;
 
+import io.harness.batch.processing.anomalydetection.AnomalyDetectionConstants;
+import io.harness.batch.processing.anomalydetection.AnomalyDetectionTimeSeries;
+import io.harness.batch.processing.anomalydetection.TimeSeriesMetaData;
 import io.harness.batch.processing.anomalydetection.types.TimeGranularity;
 
 import java.util.Arrays;
@@ -19,9 +22,10 @@ public class TimeSeriesUtils {
     return Arrays.asList(descriptiveStatistics.getMean(), descriptiveStatistics.getStandardDeviation());
   }
 
-  public static boolean validate(AnomalyDetectionTimeSeries anomalyDetectionTimeSeries, TimeSeriesSpec timeSeriesSpec) {
+  public static boolean validate(
+      AnomalyDetectionTimeSeries anomalyDetectionTimeSeries, TimeSeriesMetaData timeSeriesMetaData) {
     return validateTimeSeriesTestData(anomalyDetectionTimeSeries)
-        && validateTimeSeriesTrainData(anomalyDetectionTimeSeries, timeSeriesSpec);
+        && validateTimeSeriesTrainData(anomalyDetectionTimeSeries, timeSeriesMetaData);
   }
 
   public static boolean validateTimeSeriesTestData(AnomalyDetectionTimeSeries anomalyDetectionTimeSeries) {
@@ -31,16 +35,14 @@ public class TimeSeriesUtils {
   }
 
   public static boolean validateTimeSeriesTrainData(
-      AnomalyDetectionTimeSeries anomalyDetectionTimeSeries, TimeSeriesSpec timeSeriesSpec) {
+      AnomalyDetectionTimeSeries anomalyDetectionTimeSeries, TimeSeriesMetaData timeSeriesMetaData) {
     int age = anomalyDetectionTimeSeries.getTrainDataPoints().size();
     for (Double current : anomalyDetectionTimeSeries.getTrainDataPoints()) {
       if (current.equals(AnomalyDetectionConstants.DEFAULT_COST)) {
         age = age - 1;
-      } else {
-        break;
       }
     }
-    if (timeSeriesSpec.getTimeGranularity() == TimeGranularity.DAILY) {
+    if (timeSeriesMetaData.getTimeGranularity() == TimeGranularity.DAILY) {
       return age >= AnomalyDetectionConstants.MIN_DAYS_REQUIRED_DAILY;
     }
     return false;

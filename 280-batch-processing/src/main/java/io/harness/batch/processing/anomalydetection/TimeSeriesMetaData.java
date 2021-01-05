@@ -12,7 +12,7 @@ import lombok.experimental.FieldDefaults;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
-public class TimeSeriesSpec {
+public class TimeSeriesMetaData {
   String accountId;
   Instant trainStart;
   Instant trainEnd;
@@ -21,4 +21,7 @@ public class TimeSeriesSpec {
   TimeGranularity timeGranularity;
   EntityType entityType;
   String entityIdentifier;
+
+  K8sQueryMetaData k8sQueryMetaData;
+  CloudQueryMetaData cloudQueryMetaData;
 }

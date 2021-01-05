@@ -48,4 +48,10 @@ public class CloudBillingGroupBy {
     }
     return null;
   }
+  public boolean isEntityGroupBY() {
+    return entityGroupBy != null;
+  }
+  public boolean isTimeGroupBY() {
+    return timeTruncGroupby != null;
+  }
 }

@@ -34,7 +34,7 @@ public enum CloudEntityGroupBy {
     this.awsRawDbColumn = awsRawDbColumn;
   }
 
-  DbColumn getDbObject() {
+  public DbColumn getDbObject() {
     return dbColumn;
   }
 
