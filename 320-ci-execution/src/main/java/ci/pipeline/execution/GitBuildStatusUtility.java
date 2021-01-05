@@ -1,28 +1,30 @@
 package ci.pipeline.execution;
 
-import static io.harness.delegate.beans.connector.scm.GitAuthType.HTTP;
-import static io.harness.delegate.beans.connector.scm.GitAuthType.SSH;
+import static io.harness.delegate.beans.connector.ConnectorType.BITBUCKET;
+import static io.harness.delegate.beans.connector.ConnectorType.GITHUB;
+import static io.harness.delegate.beans.connector.ConnectorType.GITLAB;
 import static io.harness.govern.Switch.unhandled;
 
 import io.harness.beans.DelegateTaskRequest;
-import io.harness.beans.stages.IntegrationStageStepParameters;
+import io.harness.beans.stages.IntegrationStageStepParametersPMS;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.task.ci.CIBuildStatusPushParameters;
 import io.harness.delegate.task.ci.GitSCMType;
-import io.harness.exception.InvalidRequestException;
+import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.execution.NodeExecution;
 import io.harness.git.GitClientHelper;
 import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
-import io.harness.plancreators.IntegrationStagePlanCreator;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.stateutils.buildstate.ConnectorUtils;
+import io.harness.steps.StepOutcomeGroup;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -51,12 +53,13 @@ public class GitBuildStatusUtility {
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
 
   public boolean shouldSendStatus(NodeExecution nodeExecution) {
-    return Objects.equals(nodeExecution.getNode().getGroup(), IntegrationStagePlanCreator.GROUP_NAME);
+    return Objects.equals(nodeExecution.getNode().getGroup(), StepOutcomeGroup.STAGE.name());
   }
 
   public void sendStatusToGit(NodeExecution nodeExecution, Ambiance ambiance, String accountId) {
-    IntegrationStageStepParameters integrationStageStepParameters = JsonOrchestrationUtils.asObject(
-        nodeExecution.getResolvedStepParameters().toJson(), IntegrationStageStepParameters.class);
+    IntegrationStageStepParametersPMS integrationStageStepParameters = JsonOrchestrationUtils.asObject(
+        nodeExecution.getResolvedStepParameters().toJson(), IntegrationStageStepParametersPMS.class);
+
     BuildStatusUpdateParameter buildStatusUpdateParameter =
         integrationStageStepParameters.getBuildStatusUpdateParameter();
 
@@ -91,80 +94,52 @@ public class GitBuildStatusUtility {
     NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
     ConnectorDetails gitConnector = getGitConnector(ngAccess, buildStatusUpdateParameter.getConnectorIdentifier());
 
-    GitConfigDTO gitConfigDTO = (GitConfigDTO) gitConnector.getConnectorConfig();
-    String userName = "";
-    if (gitConfigDTO.getGitAuthType() == HTTP) {
-      GitHTTPAuthenticationDTO gitAuth = (GitHTTPAuthenticationDTO) gitConfigDTO.getGitAuth();
-      userName = gitAuth.getUsername();
-    } else if (gitConfigDTO.getGitAuthType() == SSH) {
-      // TODO Require UserName in git ssh DTO
-    }
-
-    GitSCMType gitSCMType = retrieveSCMType(gitConfigDTO.getUrl());
+    GitSCMType gitSCMType = retrieveSCMType(gitConnector);
     CIBuildStatusPushParameters ciBuildPushStatusParameters =
         CIBuildStatusPushParameters.builder()
-            .desc(generateDesc(buildStatusUpdateParameter.getIdentifier(), status.name()))
+            .desc(generateDesc(
+                buildStatusUpdateParameter.getIdentifier(), buildStatusUpdateParameter.getName(), status.name()))
             .sha(buildStatusUpdateParameter.getSha())
             .gitSCMType(gitSCMType)
-            .token(retrieveAuthToken(gitSCMType))
-            .userName(userName)
-            .owner(gitClientHelper.getGitOwner(gitConfigDTO.getUrl()))
-            .repo(gitClientHelper.getGitRepo(gitConfigDTO.getUrl()))
+            .connectorDetails(gitConnector)
+            .userName(connectorUtils.fetchUserName(gitConnector))
+            .owner(gitClientHelper.getGitOwner(retrieveURL(gitConnector)))
+            .repo(gitClientHelper.getGitRepo(retrieveURL(gitConnector)))
             .identifier(buildStatusUpdateParameter.getIdentifier())
             .state(retrieveBuildStatusState(gitSCMType, status))
             .build();
 
-    ciBuildPushStatusParameters.setKey("-----BEGIN PRIVATE KEY-----\n"
-        + "MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQC18V6lyGHt6q9u\n"
-        + "GSZV94j0Flt6d9/AQmVACyGHKu25IO6v0pRB3YA7zHllc+ZViI+VQpfvkIFUakcO\n"
-        + "7nneDsczQ4tFYWcZx5CMxwV4RF+FGBrKOspsKqsQ33IL7CyF40vOtnf7NZRMl0Lh\n"
-        + "MIg3FXhCk/4X2MNosCFUyEUGJKJwepXTH9tgAMLpwc5InnOSRpG8+3lWzGREOUDd\n"
-        + "ZyGnkEG/gG5aiHyjpp0xu1ixiXsRp8cSq4WveAzT7kwioTDOY91jStx1wun58goT\n"
-        + "nEaocIercyQApEcdfvgWEN04+xiO4LUCnUrLpomxkwweVFZ9qOH6KsSHo6ZIfsp2\n"
-        + "kgo12x5LAgMBAAECggEAQ8+kQRHAPhZcMCK7gQrzRlYW3jxTbqrQZeBALMq5M2is\n"
-        + "zWckzq+pnaAGFuPtky+EpFLfofAv47CAr3X+gd7sK5UfEUrOTHNu0qlSxpJlL4ve\n"
-        + "YEUtMMduXqmJLhxmM7iVhoPHkB9WGH2/9YJLIoyj99yEtYqauif7JEhIQZPh3x2P\n"
-        + "lHEdsa395BIeTHVyKuYIh44bbt4mmmp29YXXCyk2rc70gAdSVUOYf+IyIS4pVxv8\n"
-        + "pkOLqQhH+bkIa/eXR4DTr5mP1oFtrbYFj9miFaNZozRQs+HeiRcZT4oI7Nm7opoC\n"
-        + "iJgriDI/QtEG0wmVyJXNw08KcMQDbrTTPWiEQkZv4QKBgQDuPASsfGUV8X0RS+Gw\n"
-        + "8sf7gIK194x+y0J3TlcHtqlbxC7lLizawB8Hhp5sFJc37eOnXfom5FkE7E5/Cf+i\n"
-        + "BXFsDpzqK28Z3UlNMYVCSk26VOg6u1hXhrvkWh+eY3fedqwiTAoqBIM+wmMabN1Z\n"
-        + "d+1V4k4evJaDzpQnZmpcADr1AwKBgQDDgrl7M2PW3ufACqMo88xxaV01r0NcS8gC\n"
-        + "Iikk5K3H1CVN58ulR0OcFog+7zy7ca+rDcFX9DoU0R9JPUVw3JuLt2+Xsez5mnNr\n"
-        + "g0pfc7tjBEUnMC7A4IytqsLPtYTQnSqaxuVrsIs+zrx45IsKKc+v951zt/4lMZOV\n"
-        + "2uUcamC7GQKBgG6tpYI43IGgSnlxpm2drTjz0EYXtsblSYDB/X7Q5seCUkMY+6+5\n"
-        + "F/FYIluWCVbrhxsnduMArTazThiJHaE5JCOOemn0Oc5rVvWs7vsIKCpL7gPzK6ym\n"
-        + "JL6G/C+KiJLq0Tex2fsBU7QhfQc20nMRW0rOM3rmJIshuwS++OS7GqjfAoGALvuK\n"
-        + "IS4fTvJwFLk5rkywE4zzZkRA1rwrSz/0TTZbAItdj5QlXwl6GNddVGpfWNggE+YR\n"
-        + "UVaSYpBCiXIc7ttE0dV6DqUmQnE4TVzWkYuZO1k6WQl+IsGTbOR9PjbrvMoYA+vK\n"
-        + "FA/v1l8N8atSMlYL38iMYNOVUlDQm5Fnv2Vc63kCgYBp0tdIpLCJtSzZ7w1VNk6X\n"
-        + "5UeQWqNGZoXPc4rsX8xe3HBO4Fuw7hmXL2KgfLbTRSpfV32zSkdmWHUlMoZAHaMt\n"
-        + "cPRXcs2AlHrsOiF7RhiUT/2Nz+WNyzCIovDP7a0bAaMB1S2rlfuyOnFs4CcPLJDL\n"
-        + "3N+Xjw5xLWBb1oDXF3UKuA==\n"
-        + "-----END PRIVATE KEY-----");
-
-    ciBuildPushStatusParameters.setInstallId("13076271");
-    ciBuildPushStatusParameters.setAppId("84820");
-
     return ciBuildPushStatusParameters;
   }
 
-  private String generateDesc(String identifier, String status) {
-    return String.format("Execution status of stage %s:  %s  ", identifier, status);
+  private String generateDesc(String identifier, String name, String status) {
+    return String.format("Execution status of stage  [%s (%s)]: %s ", name, identifier, status);
   }
 
-  // TODO Change it via proper grouping
-  private GitSCMType retrieveSCMType(String url) {
-    String scmType = gitClientHelper.getGitSCM(url);
-
-    if (url.contains("github")) {
+  private GitSCMType retrieveSCMType(ConnectorDetails gitConnector) {
+    if (gitConnector.getConnectorType() == GITHUB) {
       return GitSCMType.GITHUB;
-    } else if (url.contains("bitbucket")) {
+    } else if (gitConnector.getConnectorType() == BITBUCKET) {
       return GitSCMType.BITBUCKET;
-    } else if (url.contains("gitlab")) {
+    } else if (gitConnector.getConnectorType() == GITLAB) {
       return GitSCMType.GITLAB;
     } else {
-      throw new InvalidRequestException("scmType " + scmType + "is not supported");
+      throw new CIStageExecutionException("scmType " + gitConnector.getConnectorType() + "is not supported");
+    }
+  }
+
+  private String retrieveURL(ConnectorDetails gitConnector) {
+    if (gitConnector.getConnectorType() == GITHUB) {
+      GithubConnectorDTO gitConfigDTO = (GithubConnectorDTO) gitConnector.getConnectorConfig();
+      return gitConfigDTO.getUrl();
+    } else if (gitConnector.getConnectorType() == BITBUCKET) {
+      BitbucketConnectorDTO gitConfigDTO = (BitbucketConnectorDTO) gitConnector.getConnectorConfig();
+      return gitConfigDTO.getUrl();
+    } else if (gitConnector.getConnectorType() == GITLAB) {
+      GitlabConnectorDTO gitConfigDTO = (GitlabConnectorDTO) gitConnector.getConnectorConfig();
+      return gitConfigDTO.getUrl();
+    } else {
+      throw new CIStageExecutionException("scmType " + gitConnector.getConnectorType() + "is not supported");
     }
   }
 
@@ -176,20 +151,6 @@ public class GitBuildStatusUtility {
         return getGitLabStatus(status);
       case BITBUCKET:
         return getBitBucketStatus(status);
-      default:
-        unhandled(gitSCMType);
-        return UNSUPPORTED;
-    }
-  }
-
-  private String retrieveAuthToken(GitSCMType gitSCMType) {
-    switch (gitSCMType) {
-      case GITHUB:
-        return ""; // It does not require token because auth occur via github app
-      case GITLAB:
-        return "p_wmFaUMEL8zZAe8hcM_";
-      case BITBUCKET:
-        return "c9yZThYsTMQFHXWDjD8j";
       default:
         unhandled(gitSCMType);
         return UNSUPPORTED;

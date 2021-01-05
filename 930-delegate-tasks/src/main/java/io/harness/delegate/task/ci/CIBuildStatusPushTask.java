@@ -1,6 +1,9 @@
 package io.harness.delegate.task.ci;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessType.TOKEN;
+
+import static java.lang.String.format;
 
 import io.harness.cistatus.service.GithubAppConfig;
 import io.harness.cistatus.service.GithubService;
@@ -12,12 +15,24 @@ import io.harness.cistatus.service.gitlab.GitlabServiceImpl;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.status.BuildStatusPushResponse;
 import io.harness.delegate.beans.ci.status.BuildStatusPushResponse.Status;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketApiAccessType;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePasswordApiAccessDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccessType;
+import io.harness.delegate.beans.connector.scm.github.GithubAppSpecDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.ci.CIBuildPushParameters.CIBuildPushTaskType;
+import io.harness.exception.ngexception.CIStageExecutionException;
+import io.harness.security.encryption.SecretDecryptionService;
 
 import com.google.inject.Inject;
 import java.util.HashMap;
@@ -32,6 +47,7 @@ public class CIBuildStatusPushTask extends AbstractDelegateRunnableTask {
   @Inject private GithubService githubService;
   @Inject private BitbucketService bitbucketService;
   @Inject private GitlabService gitlabService;
+  @Inject private SecretDecryptionService secretDecryptionService;
 
   private static final String DESC = "description";
   private static final String STATE = "state";
@@ -54,11 +70,7 @@ public class CIBuildStatusPushTask extends AbstractDelegateRunnableTask {
     if (((CIBuildPushParameters) parameters).commandType == CIBuildPushTaskType.STATUS) {
       try {
         CIBuildStatusPushParameters ciBuildStatusPushParameters = (CIBuildStatusPushParameters) parameters;
-
-        // TODO encryption details are null because key is not stored in github app config
-
         boolean statusSent = false;
-        // TODO encryption details are null because key is not stored in github app config
         if (ciBuildStatusPushParameters.getGitSCMType() == GitSCMType.GITHUB) {
           statusSent = sendBuildStatusToGitHub(ciBuildStatusPushParameters);
         } else if (ciBuildStatusPushParameters.getGitSCMType() == GitSCMType.BITBUCKET) {
@@ -82,13 +94,32 @@ public class CIBuildStatusPushTask extends AbstractDelegateRunnableTask {
     return BuildStatusPushResponse.builder().status(Status.ERROR).build();
   }
 
+  private GithubAppSpecDTO retrieveGithubAppSpecDTO(
+      GithubConnectorDTO gitConfigDTO, ConnectorDetails connectorDetails) {
+    GithubApiAccessDTO githubApiAccessDTO = gitConfigDTO.getApiAccess();
+    if (githubApiAccessDTO.getType() == GithubApiAccessType.GITHUB_APP) {
+      GithubAppSpecDTO githubAppSpecDTO = (GithubAppSpecDTO) githubApiAccessDTO.getSpec();
+      secretDecryptionService.decrypt(githubAppSpecDTO, connectorDetails.getEncryptedDataDetails());
+      return githubAppSpecDTO;
+    } else {
+      throw new CIStageExecutionException(
+          format("Unsupported access type %s for github status", githubApiAccessDTO.getType()));
+    }
+  }
+
   private boolean sendBuildStatusToGitHub(CIBuildStatusPushParameters ciBuildStatusPushParameters) {
-    GithubAppConfig githubAppConfig = GithubAppConfig.builder()
-                                          .installationId(ciBuildStatusPushParameters.getInstallId())
-                                          .appId(ciBuildStatusPushParameters.getAppId())
-                                          .privateKey(ciBuildStatusPushParameters.getKey())
-                                          .githubUrl(GITHUB_API_URL)
-                                          .build();
+    GithubConnectorDTO gitConfigDTO =
+        (GithubConnectorDTO) ciBuildStatusPushParameters.getConnectorDetails().getConnectorConfig();
+    GithubAppSpecDTO githubAppSpecDTO =
+        retrieveGithubAppSpecDTO(gitConfigDTO, ciBuildStatusPushParameters.getConnectorDetails());
+    GithubAppConfig githubAppConfig =
+        GithubAppConfig.builder()
+            .installationId(githubAppSpecDTO.getInstallationId())
+            .appId(githubAppSpecDTO.getApplicationId())
+            .privateKey(new String(githubAppSpecDTO.getPrivateKeyRef().getDecryptedValue()))
+            .githubUrl(GITHUB_API_URL)
+            .build();
+
     String token = githubService.getToken(githubAppConfig, null);
 
     if (isNotEmpty(token)) {
@@ -101,7 +132,7 @@ public class CIBuildStatusPushTask extends AbstractDelegateRunnableTask {
           ciBuildStatusPushParameters.getOwner(), ciBuildStatusPushParameters.getRepo(), bodyObjectMap);
     } else {
       log.error("Not sending status because token is empty for appId {}, installationId {}, sha {}",
-          ciBuildStatusPushParameters.getInstallId(), ciBuildStatusPushParameters.getInstallId(),
+          githubAppSpecDTO.getApplicationId(), githubAppSpecDTO.getInstallationId(),
           ciBuildStatusPushParameters.getSha());
       return false;
     }
@@ -114,11 +145,12 @@ public class CIBuildStatusPushTask extends AbstractDelegateRunnableTask {
     bodyObjectMap.put(STATE, ciBuildStatusPushParameters.getState());
     bodyObjectMap.put(URL, APP_URL); // Retrieve it via vanity URL
 
-    if (isNotEmpty(ciBuildStatusPushParameters.getToken())) {
+    String token = retrieveAuthToken(
+        ciBuildStatusPushParameters.getGitSCMType(), ciBuildStatusPushParameters.getConnectorDetails());
+    if (isNotEmpty(token)) {
       return bitbucketService.sendStatus(BitbucketConfig.builder().bitbucketUrl(BITBUCKET_API_URL).build(),
-          ciBuildStatusPushParameters.getUserName(), ciBuildStatusPushParameters.getToken(), null,
-          ciBuildStatusPushParameters.getSha(), ciBuildStatusPushParameters.getOwner(),
-          ciBuildStatusPushParameters.getRepo(), bodyObjectMap);
+          ciBuildStatusPushParameters.getUserName(), token, null, ciBuildStatusPushParameters.getSha(),
+          ciBuildStatusPushParameters.getOwner(), ciBuildStatusPushParameters.getRepo(), bodyObjectMap);
     } else {
       log.error("Not sending status because token is empty sha {}", ciBuildStatusPushParameters.getSha());
       return false;
@@ -131,14 +163,55 @@ public class CIBuildStatusPushTask extends AbstractDelegateRunnableTask {
     bodyObjectMap.put(GitlabServiceImpl.CONTEXT, ciBuildStatusPushParameters.getIdentifier());
     bodyObjectMap.put(GitlabServiceImpl.STATE, ciBuildStatusPushParameters.getState());
 
-    if (isNotEmpty(ciBuildStatusPushParameters.getToken())) {
+    String token = retrieveAuthToken(
+        ciBuildStatusPushParameters.getGitSCMType(), ciBuildStatusPushParameters.getConnectorDetails());
+
+    if (isNotEmpty(token)) {
       return gitlabService.sendStatus(GitlabConfig.builder().gitlabUrl(GITLAB_API_URL).build(),
-          ciBuildStatusPushParameters.getUserName(), ciBuildStatusPushParameters.getToken(), null,
-          ciBuildStatusPushParameters.getSha(), ciBuildStatusPushParameters.getOwner(),
-          ciBuildStatusPushParameters.getRepo(), bodyObjectMap);
+          ciBuildStatusPushParameters.getUserName(), token, null, ciBuildStatusPushParameters.getSha(),
+          ciBuildStatusPushParameters.getOwner(), ciBuildStatusPushParameters.getRepo(), bodyObjectMap);
     } else {
       log.error("Not sending status because token is empty sha {}", ciBuildStatusPushParameters.getSha());
       return false;
+    }
+  }
+
+  private String retrieveAuthToken(GitSCMType gitSCMType, ConnectorDetails gitConnector) {
+    switch (gitSCMType) {
+      case GITHUB:
+        return ""; // It does not require token because auth occurs via github app
+      case GITLAB:
+        GitlabConnectorDTO gitConfigDTO = (GitlabConnectorDTO) gitConnector.getConnectorConfig();
+        if (gitConfigDTO.getApiAccess() == null) {
+          throw new CIStageExecutionException(
+              format("Failed to retrieve token info for gitlab connector: ", gitConnector.getIdentifier()));
+        }
+        if (gitConfigDTO.getApiAccess().getType() == TOKEN) {
+          GitlabTokenSpecDTO gitlabTokenSpecDTO = (GitlabTokenSpecDTO) gitConfigDTO.getApiAccess().getSpec();
+          secretDecryptionService.decrypt(gitlabTokenSpecDTO, gitConnector.getEncryptedDataDetails());
+          return new String(gitlabTokenSpecDTO.getTokenRef().getDecryptedValue());
+        } else {
+          throw new CIStageExecutionException(
+              format("Unsupported access type %s for gitlab status", gitConfigDTO.getApiAccess().getType()));
+        }
+      case BITBUCKET:
+        BitbucketConnectorDTO bitbucketConnectorDTO = (BitbucketConnectorDTO) gitConnector.getConnectorConfig();
+        if (bitbucketConnectorDTO.getApiAccess() == null) {
+          throw new CIStageExecutionException(
+              format("Failed to retrieve token info for Bitbucket connector: %s", gitConnector.getIdentifier()));
+        }
+        if (bitbucketConnectorDTO.getApiAccess().getType() == BitbucketApiAccessType.USERNAME_AND_PASSWORD) {
+          BitbucketUsernamePasswordApiAccessDTO bitbucketTokenSpecDTO =
+              (BitbucketUsernamePasswordApiAccessDTO) bitbucketConnectorDTO.getApiAccess().getSpec();
+          secretDecryptionService.decrypt(bitbucketTokenSpecDTO, gitConnector.getEncryptedDataDetails());
+          return new String(bitbucketTokenSpecDTO.getPasswordRef().getDecryptedValue());
+        } else {
+          throw new CIStageExecutionException(
+              format("Unsupported access type %s for gitlab status", bitbucketConnectorDTO.getApiAccess().getType()));
+        }
+
+      default:
+        throw new CIStageExecutionException(format("Unsupported scm type %s for git status", gitSCMType));
     }
   }
 

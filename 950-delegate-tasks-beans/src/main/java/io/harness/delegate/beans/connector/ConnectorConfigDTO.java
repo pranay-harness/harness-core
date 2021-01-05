@@ -41,6 +41,6 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
       @JsonSubTypes.Type(value = GitlabConnectorDTO.class, name = "Gitlab"),
       @JsonSubTypes.Type(value = BitbucketConnectorDTO.class, name = "Bitbucket")
 })
-public abstract class ConnectorConfigDTO {
+public abstract class ConnectorConfigDTO implements DecryptableEntity {
   @JsonIgnore public abstract DecryptableEntity getDecryptableEntity();
 }
