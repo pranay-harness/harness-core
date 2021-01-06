@@ -8,6 +8,7 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.delegate.command.CommandExecutionResultMapper;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.exception.CommandExecutionException;
 
@@ -53,7 +54,7 @@ public class ShellScriptTaskHandler {
       if (parameters.isLocalOverrideFeatureFlag()) {
         parameters.setScript(delegateLocalConfigService.replacePlaceholdersWithLocalConfig(parameters.getScript()));
       }
-      return executor.executeCommandString(parameters.getScript(), items);
+      return CommandExecutionResultMapper.from(executor.executeCommandString(parameters.getScript(), items));
     }
 
     switch (parameters.getConnectionType()) {
@@ -67,7 +68,7 @@ public class ShellScriptTaskHandler {
             items = Arrays.asList(parameters.getOutputVars().split("\\s*,\\s*"));
             items.replaceAll(String::trim);
           }
-          return executor.executeCommandString(parameters.getScript(), items);
+          return CommandExecutionResultMapper.from(executor.executeCommandString(parameters.getScript(), items));
         } catch (Exception e) {
           throw new CommandExecutionException("Bash Script Failed to execute", e);
         } finally {
@@ -84,7 +85,7 @@ public class ShellScriptTaskHandler {
             items = Arrays.asList(parameters.getOutputVars().split("\\s*,\\s*"));
             items.replaceAll(String::trim);
           }
-          return executor.executeCommandString(parameters.getScript(), items);
+          return CommandExecutionResultMapper.from(executor.executeCommandString(parameters.getScript(), items));
         } catch (Exception e) {
           throw new CommandExecutionException("Powershell script Failed to execute", e);
         }

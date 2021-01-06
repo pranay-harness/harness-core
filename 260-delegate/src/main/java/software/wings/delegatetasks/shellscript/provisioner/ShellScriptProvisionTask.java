@@ -12,7 +12,6 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.shell.ScriptType;
@@ -20,6 +19,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.shell.ExecuteCommandResponse;
 
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
 import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParameters;
@@ -86,16 +86,13 @@ public class ShellScriptProvisionTask extends AbstractDelegateRunnableTask {
                                                     .scriptType(ScriptType.BASH)
                                                     .build();
       ScriptProcessExecutor executor = shellExecutorFactory.getExecutor(shellExecutorConfig);
-      CommandExecutionResult commandExecutionResult =
+      ExecuteCommandResponse executeCommandResponse =
           executor.executeCommandString(parameters.getScriptBody(), emptyList());
 
-      saveExecutionLog(parameters, "Execution finished with status: " + commandExecutionResult.getStatus(),
-          commandExecutionResult.getStatus());
-      if (commandExecutionResult.getStatus() == CommandExecutionStatus.FAILURE) {
-        return ShellScriptProvisionExecutionData.builder()
-            .executionStatus(ExecutionStatus.FAILED)
-            .errorMsg(commandExecutionResult.getErrorMessage())
-            .build();
+      saveExecutionLog(parameters, "Execution finished with status: " + executeCommandResponse.getStatus(),
+          executeCommandResponse.getStatus());
+      if (executeCommandResponse.getStatus() == CommandExecutionStatus.FAILURE) {
+        return ShellScriptProvisionExecutionData.builder().executionStatus(ExecutionStatus.FAILED).build();
       }
 
       try {

@@ -39,6 +39,7 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
+import io.harness.shell.ExecuteCommandResponse;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.HostConnectionAttributes;
@@ -129,7 +130,7 @@ public class ShellScriptTaskTest extends WingsBaseTest {
     map.put("A", "aaa");
     map.put("B", "bbb");
     when(scriptProcessExecutor.executeCommandString(anyString(), anyList()))
-        .thenReturn(CommandExecutionResult.builder()
+        .thenReturn(ExecuteCommandResponse.builder()
                         .status(CommandExecutionStatus.SUCCESS)
                         .commandExecutionData(ShellExecutionData.builder().sweepingOutputEnvVariables(map).build())
                         .build());
@@ -184,7 +185,7 @@ public class ShellScriptTaskTest extends WingsBaseTest {
                                        .build();
     when(shellExecutorFactory.getExecutor(any(), eq(true))).thenReturn(scriptProcessExecutor);
     when(scriptProcessExecutor.executeCommandString(anyString(), anyList()))
-        .thenReturn(CommandExecutionResult.builder().status(CommandExecutionStatus.FAILURE).build());
+        .thenReturn(ExecuteCommandResponse.builder().status(CommandExecutionStatus.FAILURE).build());
     CommandExecutionResult commandExecutionResult = shellScriptTask.run(params);
     assertThat(commandExecutionResult).isNotNull();
     assertThat(commandExecutionResult.getStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
@@ -209,7 +210,7 @@ public class ShellScriptTaskTest extends WingsBaseTest {
     ArgumentCaptor<String> scriptStringCaptor = ArgumentCaptor.forClass(String.class);
     when(shellExecutorFactory.getExecutor(any(ShellExecutorConfig.class), eq(true))).thenReturn(scriptProcessExecutor);
     when(scriptProcessExecutor.executeCommandString(scriptStringCaptor.capture(), anyList()))
-        .thenReturn(CommandExecutionResult.builder()
+        .thenReturn(ExecuteCommandResponse.builder()
                         .status(CommandExecutionStatus.SUCCESS)
                         .commandExecutionData(ShellExecutionData.builder().build())
                         .build());
@@ -260,7 +261,7 @@ public class ShellScriptTaskTest extends WingsBaseTest {
     ArgumentCaptor<SshSessionConfig> sshSessionConfigArgumentCaptor = ArgumentCaptor.forClass(SshSessionConfig.class);
     when(sshExecutorFactory.getExecutor(any(SshSessionConfig.class), eq(true))).thenReturn(scriptSshExecutor);
     when(scriptSshExecutor.executeCommandString(anyString(), anyList()))
-        .thenReturn(CommandExecutionResult.builder().status(CommandExecutionStatus.SUCCESS).build());
+        .thenReturn(ExecuteCommandResponse.builder().status(CommandExecutionStatus.SUCCESS).build());
     CommandExecutionResult commandExecutionResult = shellScriptTask.run(params);
     assertThat(commandExecutionResult).isNotNull();
     assertThat(commandExecutionResult.getStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
@@ -315,7 +316,7 @@ public class ShellScriptTaskTest extends WingsBaseTest {
     when(winrmExecutorFactory.getExecutor(any(WinRmSessionConfig.class), anyBoolean(), eq(true)))
         .thenReturn(defaultWinRmExecutor);
     when(defaultWinRmExecutor.executeCommandString(anyString(), anyList()))
-        .thenReturn(CommandExecutionResult.builder().status(CommandExecutionStatus.SUCCESS).build());
+        .thenReturn(ExecuteCommandResponse.builder().status(CommandExecutionStatus.SUCCESS).build());
     CommandExecutionResult commandExecutionResult = shellScriptTask.run(params);
     assertThat(commandExecutionResult).isNotNull();
     assertThat(commandExecutionResult.getStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);

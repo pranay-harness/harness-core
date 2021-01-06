@@ -5,13 +5,13 @@ import static io.harness.network.SafeHttpCall.execute;
 import static java.util.Collections.emptyList;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.instancesync.CustomDeploymentInstanceSyncTaskParams;
+import io.harness.shell.ExecuteCommandResponse;
 
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
 import software.wings.core.local.executors.ShellExecutorConfig;
@@ -82,21 +82,17 @@ public class CustomDeploymentPerpetualTaskExecutor implements PerpetualTaskExecu
               .build();
 
       final ScriptProcessExecutor executor = shellExecutorFactory.getExecutor(shellExecutorConfig);
-      final CommandExecutionResult commandExecutionResult =
+      final ExecuteCommandResponse executeCommandResponse =
           executor.executeCommandString(taskParams.getScript(), emptyList());
 
-      if (CommandExecutionStatus.SUCCESS == commandExecutionResult.getStatus()) {
+      if (CommandExecutionStatus.SUCCESS == executeCommandResponse.getStatus()) {
         return ShellScriptProvisionExecutionData.builder()
             .executionStatus(ExecutionStatus.SUCCESS)
             .output(new String(Files.readAllBytes(Paths.get(outputPath)), StandardCharsets.UTF_8))
             .build();
       } else {
-        log.error("Error Occured While Running Custom Deployment Perpetual Task:{}, Message: {}", taskId,
-            commandExecutionResult.getErrorMessage());
-        return ShellScriptProvisionExecutionData.builder()
-            .executionStatus(ExecutionStatus.FAILED)
-            .errorMsg(commandExecutionResult.getErrorMessage())
-            .build();
+        log.error("Error Occured While Running Custom Deployment Perpetual Task:{}", taskId);
+        return ShellScriptProvisionExecutionData.builder().executionStatus(ExecutionStatus.FAILED).build();
       }
     } catch (Exception ex) {
       log.error("Exception Occured While Running Custom Deployment Perpetual Task:{}, Message: {}", taskId,

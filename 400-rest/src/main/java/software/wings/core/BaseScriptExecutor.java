@@ -1,7 +1,7 @@
 package software.wings.core;
 
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.shell.ExecuteCommandResponse;
 
 import java.util.List;
 
@@ -14,5 +14,5 @@ public interface BaseScriptExecutor {
 
   CommandExecutionStatus executeCommandString(String command, StringBuffer output, boolean displayCommand);
 
-  CommandExecutionResult executeCommandString(String command, List<String> envVariablesToCollect);
+  ExecuteCommandResponse executeCommandString(String command, List<String> envVariablesToCollect);
 }

@@ -14,11 +14,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
+import io.harness.shell.ExecuteCommandResponse;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.command.ShellExecutionData;
@@ -75,12 +75,12 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
 
     String command = "export A=\"aaa\"\n"
         + "export B=\"bbb\"";
-    CommandExecutionResult commandExecutionResult =
+    ExecuteCommandResponse executeCommandResponse =
         scriptProcessExecutor.executeCommandString(command, asList("A", "B", "${C}", "${A}"));
-    assertThat(commandExecutionResult).isNotNull();
-    assertThat(commandExecutionResult.getStatus()).isEqualTo(SUCCESS);
-    assertThat(commandExecutionResult.getCommandExecutionData()).isNotNull();
-    ShellExecutionData shellExecutionData = (ShellExecutionData) commandExecutionResult.getCommandExecutionData();
+    assertThat(executeCommandResponse).isNotNull();
+    assertThat(executeCommandResponse.getStatus()).isEqualTo(SUCCESS);
+    assertThat(executeCommandResponse.getCommandExecutionData()).isNotNull();
+    ShellExecutionData shellExecutionData = (ShellExecutionData) executeCommandResponse.getCommandExecutionData();
     assertThat(shellExecutionData.getSweepingOutputEnvVariables()).isNotEmpty();
     assertThat(shellExecutionData.getSweepingOutputEnvVariables()).containsEntry("A", "aaa");
     assertThat(shellExecutionData.getSweepingOutputEnvVariables()).containsEntry("B", "bbb");
@@ -107,12 +107,12 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
     on(scriptProcessExecutor).set("delegateFileManager", delegateFileManager);
 
     String command = "exit 1";
-    CommandExecutionResult commandExecutionResult =
+    ExecuteCommandResponse executeCommandResponse =
         scriptProcessExecutor.executeCommandString(command, asList("A", "B"));
-    assertThat(commandExecutionResult).isNotNull();
-    assertThat(commandExecutionResult.getStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
-    assertThat(commandExecutionResult.getCommandExecutionData()).isNotNull();
-    ShellExecutionData shellExecutionData = (ShellExecutionData) commandExecutionResult.getCommandExecutionData();
+    assertThat(executeCommandResponse).isNotNull();
+    assertThat(executeCommandResponse.getStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
+    assertThat(executeCommandResponse.getCommandExecutionData()).isNotNull();
+    ShellExecutionData shellExecutionData = (ShellExecutionData) executeCommandResponse.getCommandExecutionData();
     assertThat(shellExecutionData.getSweepingOutputEnvVariables()).isEmpty();
   }
 
