@@ -1,4 +1,4 @@
-package io.harness.notification.service;
+package io.harness.notification.service.senders;
 
 import io.harness.notification.beans.NotificationProcessingResponse;
 

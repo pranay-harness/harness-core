@@ -22,6 +22,7 @@ import io.harness.notification.remote.dto.PagerDutySettingDTO;
 import io.harness.notification.service.api.ChannelService;
 import io.harness.notification.service.api.NotificationSettingsService;
 import io.harness.notification.service.api.NotificationTemplateService;
+import io.harness.notification.service.senders.PagerDutySenderImpl;
 import io.harness.serializer.YamlUtils;
 import io.harness.service.DelegateGrpcClientWrapper;
 

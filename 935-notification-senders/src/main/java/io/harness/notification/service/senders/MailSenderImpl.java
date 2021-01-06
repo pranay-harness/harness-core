@@ -1,4 +1,4 @@
-package io.harness.notification.service;
+package io.harness.notification.service.senders;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.notification.constant.NotificationClientConstants.HARNESS_NAME;
