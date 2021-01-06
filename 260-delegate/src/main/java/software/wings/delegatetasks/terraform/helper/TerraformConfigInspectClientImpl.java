@@ -1,6 +1,9 @@
-package software.wings.helpers.ext.terraform;
+package software.wings.delegatetasks.terraform.helper;
+
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.SPACE;
 
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.delegate.configuration.InstallUtils;
@@ -8,37 +11,45 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 
+import software.wings.delegatetasks.terraform.TerraformConfigInspectClient;
+
 import com.google.inject.Singleton;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.zeroturnaround.exec.ProcessExecutor;
 
 @Slf4j
 @Singleton
-public final class TerraformConfigInspectClientImpl implements TerraformConfigInspectClient {
+public class TerraformConfigInspectClientImpl implements TerraformConfigInspectClient {
   private static final String jsonArg = "--json";
 
   @Override
   public List<String> parseFieldsUnderBlock(String directory, String category) {
     try {
-      String cmd = InstallUtils.getTerraformConfigInspectPath();
-      String config = executeShellCommand(HarnessStringUtils.join(StringUtils.SPACE, cmd, jsonArg, directory));
+      String config = executeTerraformInspect(directory);
       JSONObject parsedConfig = new JSONObject(config);
       JSONObject blockVariables = parsedConfig.getJSONObject(category);
       List<String> fields = new ArrayList<>(blockVariables.keySet());
-      Optional<String> parseStatus = parseError(parsedConfig);
-      parseStatus.ifPresent(
-          error -> { throw new InvalidRequestException("Parse Error :" + error, WingsException.USER); });
+      if (!fields.isEmpty()) {
+        return fields;
+      }
+      Optional<String> parsingError = parseError(parsedConfig);
+      parsingError.ifPresent(error -> { throw new InvalidRequestException(error, WingsException.USER); });
       return fields;
     } catch (JSONException err) {
-      throw new InvalidRequestException("Parse Error :", WingsException.USER);
+      throw new InvalidRequestException(err.getMessage(), WingsException.USER);
     }
+  }
+
+  String executeTerraformInspect(String directory) {
+    String cmd = InstallUtils.getTerraformConfigInspectPath();
+    return executeShellCommand(HarnessStringUtils.join(SPACE, cmd, jsonArg, directory));
   }
 
   /*
@@ -55,6 +66,13 @@ public final class TerraformConfigInspectClientImpl implements TerraformConfigIn
       String errorType = errorBlock.getString(BLOCK_TYPE.SEVERITY.name().toLowerCase());
       if (errorType.equalsIgnoreCase(ERROR_TYPE.ERROR.name().toLowerCase())) {
         String error = errorBlock.getString(BLOCK_TYPE.DETAIL.name().toLowerCase());
+        JSONObject positionDetails = errorBlock.getJSONObject(BLOCK_TYPE.POS.name().toLowerCase());
+        if (positionDetails != null) {
+          String fileName =
+              Paths.get(positionDetails.getString(BLOCK_TYPE.FILENAME.name().toLowerCase())).getFileName().toString();
+          int line = positionDetails.getInt(BLOCK_TYPE.LINE.name().toLowerCase());
+          error = isNotEmpty(fileName) ? error + "\nFile: " + fileName + SPACE + "Line: " + line : error;
+        }
         return Optional.of(error);
       }
     } catch (JSONException e) {
@@ -74,7 +92,8 @@ public final class TerraformConfigInspectClientImpl implements TerraformConfigIn
       throw new UnexpectedException(format("Could not execute command %s, env %s", cmd, env));
     }
   }
-  private String executeShellCommand(String cmd) {
+
+  String executeShellCommand(String cmd) {
     return executeShellCommand(null, cmd);
   }
 }
