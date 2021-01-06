@@ -6,10 +6,10 @@ import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.logging.LogLevel.WARN;
 
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
+import io.harness.shell.ExecuteCommandResponse;
 
 import software.wings.core.BaseScriptExecutor;
 import software.wings.delegatetasks.DelegateFileManager;
@@ -71,7 +71,7 @@ public abstract class AbstractScriptExecutor implements BaseScriptExecutor {
       String command, StringBuffer output, boolean displayCommand);
 
   @Override
-  public abstract CommandExecutionResult executeCommandString(String command, List<String> envVariablesToCollect);
+  public abstract ExecuteCommandResponse executeCommandString(String command, List<String> envVariablesToCollect);
 
   public abstract String getAccountId();
 

@@ -16,12 +16,12 @@ import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
 import static com.google.common.collect.Sets.newHashSet;
 import static java.lang.String.format;
 
-import io.harness.delegate.command.CommandExecutionResult;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionResultBuilder;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
+import io.harness.shell.ExecuteCommandResponse;
+import io.harness.shell.ExecuteCommandResponse.ExecuteCommandResponseBuilder;
 
 import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.command.ShellExecutionData.ShellExecutionDataBuilder;
@@ -169,8 +169,8 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
   }
 
   @Override
-  public CommandExecutionResult executeCommandString(String command, List<String> envVariablesToCollect) {
-    CommandExecutionResult commandExecutionResult = null;
+  public ExecuteCommandResponse executeCommandString(String command, List<String> envVariablesToCollect) {
+    ExecuteCommandResponse executeCommandResponse = null;
 
     saveExecutionLog("Executing command ...", INFO);
 
@@ -178,7 +178,7 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
       case POWERSHELL:
       case BASH:
         try {
-          commandExecutionResult = executeBashScript(command, envVariablesToCollect);
+          executeCommandResponse = executeBashScript(command, envVariablesToCollect);
         } catch (Exception e) {
           saveExecutionLog(format("Exception: %s", e), ERROR, FAILURE);
         }
@@ -188,13 +188,13 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
         unhandled(this.scriptType);
     }
 
-    return commandExecutionResult;
+    return executeCommandResponse;
   }
 
-  private CommandExecutionResult executeBashScript(String command, List<String> envVariablesToCollect)
+  private ExecuteCommandResponse executeBashScript(String command, List<String> envVariablesToCollect)
       throws IOException {
     ShellExecutionDataBuilder executionDataBuilder = ShellExecutionData.builder();
-    CommandExecutionResultBuilder commandExecutionResult = CommandExecutionResult.builder();
+    ExecuteCommandResponseBuilder executeCommandResponseBuilder = ExecuteCommandResponse.builder();
     CommandExecutionStatus commandExecutionStatus = FAILURE;
     File workingDirectory;
 
@@ -293,9 +293,9 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
         }
       }
     }
-    commandExecutionResult.status(commandExecutionStatus);
-    commandExecutionResult.commandExecutionData(executionDataBuilder.build());
-    return commandExecutionResult.build();
+    executeCommandResponseBuilder.status(commandExecutionStatus);
+    executeCommandResponseBuilder.commandExecutionData(executionDataBuilder.build());
+    return executeCommandResponseBuilder.build();
   }
 
   private void handleException(ShellExecutionDataBuilder executionDataBuilder, Map<String, String> envVariablesMap,

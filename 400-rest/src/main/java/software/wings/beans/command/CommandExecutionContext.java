@@ -13,12 +13,12 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
-import io.harness.delegate.command.CommandExecutionData;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.shell.CommandExecutionData;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.AppContainer;

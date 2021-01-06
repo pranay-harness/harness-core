@@ -51,6 +51,7 @@ import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.shell.CommandExecutionData;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 
@@ -202,8 +203,8 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(PushResultGit.class, 1425);
     kryo.register(PushResultGit.RefUpdate.class, 1426);
     kryo.register(FetchFilesResult.class, 1427);
+    kryo.register(CommandExecutionData.class, 5035);
     kryo.register(GitRepositoryType.class, 5270);
-
     kryo.register(JiraAction.class, 5580);
     kryo.register(JiraCustomFieldValue.class, 7177);
     kryo.register(JiraProjectData.class, 7198);

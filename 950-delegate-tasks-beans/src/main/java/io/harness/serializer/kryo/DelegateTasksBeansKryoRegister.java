@@ -48,7 +48,6 @@ import io.harness.delegate.beans.logstreaming.CommandUnitStatusProgress;
 import io.harness.delegate.beans.secrets.SSHConfigValidationTaskResponse;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
-import io.harness.delegate.command.CommandExecutionData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
@@ -140,7 +139,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(CapabilityType.class, 19004);
     kryo.register(ChartMuseumCapability.class, 19038);
     kryo.register(TaskType.class, 5005);
-    kryo.register(CommandExecutionData.class, 5035);
     kryo.register(CommandExecutionResult.class, 5036);
     kryo.register(ConnectorValidationResult.class, 19059);
     kryo.register(CustomCommitAttributes.class, 19070);

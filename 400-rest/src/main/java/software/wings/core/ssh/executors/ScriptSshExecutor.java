@@ -13,14 +13,14 @@ import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.delegate.command.CommandExecutionResult;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionResultBuilder;
 import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.Misc;
+import io.harness.shell.ExecuteCommandResponse;
+import io.harness.shell.ExecuteCommandResponse.ExecuteCommandResponseBuilder;
 import io.harness.stream.BoundedInputStream;
 
 import software.wings.beans.command.ShellExecutionData;
@@ -163,9 +163,9 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
   }
 
   @Override
-  public CommandExecutionResult executeCommandString(String command, List<String> envVariablesToCollect) {
+  public ExecuteCommandResponse executeCommandString(String command, List<String> envVariablesToCollect) {
     ShellExecutionDataBuilder executionDataBuilder = ShellExecutionData.builder();
-    CommandExecutionResultBuilder commandExecutionResult = CommandExecutionResult.builder();
+    ExecuteCommandResponseBuilder executeCommandResponseBuilder = ExecuteCommandResponse.builder();
     CommandExecutionStatus commandExecutionStatus = FAILURE;
     Channel channel = null;
     long start = System.currentTimeMillis();
@@ -245,9 +245,9 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
               }
             }
             executionDataBuilder.sweepingOutputEnvVariables(envVariablesMap);
-            commandExecutionResult.status(commandExecutionStatus);
-            commandExecutionResult.commandExecutionData(executionDataBuilder.build());
-            return commandExecutionResult.build();
+            executeCommandResponseBuilder.status(commandExecutionStatus);
+            executeCommandResponseBuilder.commandExecutionData(executionDataBuilder.build());
+            return executeCommandResponseBuilder.build();
           }
           sleep(Duration.ofSeconds(1));
         }
@@ -257,9 +257,9 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
       log.error("ex-Session fetched in " + (System.currentTimeMillis() - start) / 1000);
       log.error("Command execution failed with error", ex);
       executionDataBuilder.sweepingOutputEnvVariables(envVariablesMap);
-      commandExecutionResult.status(commandExecutionStatus);
-      commandExecutionResult.commandExecutionData(executionDataBuilder.build());
-      return commandExecutionResult.build();
+      executeCommandResponseBuilder.status(commandExecutionStatus);
+      executeCommandResponseBuilder.commandExecutionData(executionDataBuilder.build());
+      return executeCommandResponseBuilder.build();
     } finally {
       if (channel != null && !channel.isClosed()) {
         log.info("Disconnect channel if still open post execution command");

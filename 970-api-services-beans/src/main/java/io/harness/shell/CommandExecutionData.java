@@ -1,3 +1,3 @@
-package io.harness.delegate.command;
+package io.harness.shell;
 
 public interface CommandExecutionData {}

@@ -14,12 +14,12 @@ import static software.wings.utils.WinRmHelperUtils.buildErrorDetailsFromWinRmCl
 
 import static java.lang.String.format;
 
-import io.harness.delegate.command.CommandExecutionResult;
-import io.harness.delegate.command.CommandExecutionResult.CommandExecutionResultBuilder;
 import io.harness.eraro.ResponseMessage;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
+import io.harness.shell.ExecuteCommandResponse;
+import io.harness.shell.ExecuteCommandResponse.ExecuteCommandResponseBuilder;
 
 import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.command.ShellExecutionData.ShellExecutionDataBuilder;
@@ -149,9 +149,9 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
   }
 
   @Override
-  public CommandExecutionResult executeCommandString(String command, List<String> envVariablesToCollect) {
+  public ExecuteCommandResponse executeCommandString(String command, List<String> envVariablesToCollect) {
     ShellExecutionDataBuilder executionDataBuilder = ShellExecutionData.builder();
-    CommandExecutionResultBuilder commandExecutionResult = CommandExecutionResult.builder();
+    ExecuteCommandResponseBuilder executeCommandResponseBuilder = ExecuteCommandResponse.builder();
     CommandExecutionStatus commandExecutionStatus;
 
     saveExecutionLog(format("Initializing WinRM connection to %s ...", config.getHostname()), INFO);
@@ -192,10 +192,10 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
       }
 
       saveExecutionLog(format("%nCommand completed with ExitCode (%d)", exitCode), INFO, commandExecutionStatus);
-      commandExecutionResult.status(commandExecutionStatus);
-      commandExecutionResult.commandExecutionData(executionDataBuilder.build());
+      executeCommandResponseBuilder.status(commandExecutionStatus);
+      executeCommandResponseBuilder.commandExecutionData(executionDataBuilder.build());
       WinRmExecutorHelper.cleanupFiles(session, psScriptFile, powershell, disableCommandEncoding);
-      return commandExecutionResult.build();
+      return executeCommandResponseBuilder.build();
     } catch (RuntimeException re) {
       throw re;
     } catch (Exception e) {
@@ -205,9 +205,9 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
       saveExecutionLog(
           format("Command execution failed. Error: %s", details.getMessage()), ERROR, commandExecutionStatus);
     }
-    commandExecutionResult.status(commandExecutionStatus);
-    commandExecutionResult.commandExecutionData(executionDataBuilder.build());
-    return commandExecutionResult.build();
+    executeCommandResponseBuilder.status(commandExecutionStatus);
+    executeCommandResponseBuilder.commandExecutionData(executionDataBuilder.build());
+    return executeCommandResponseBuilder.build();
   }
 
   private Map<String, String> collectOutputEnvironmentVariables(WinRmSession session, String envVariablesOutputFile) {

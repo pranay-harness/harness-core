@@ -16,11 +16,11 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.shell.ExecuteCommandResponse;
 
 import software.wings.api.ShellScriptApprovalExecutionData;
 import software.wings.beans.ApprovalDetails.Action;
@@ -84,15 +84,15 @@ public class ShellScriptApprovalTask extends AbstractDelegateRunnableTask {
     }
 
     saveExecutionLog(parameters, "Starting Script Execution ...", RUNNING);
-    CommandExecutionResult commandExecutionResult = executor.executeCommandString(parameters.getScript(), items);
+    ExecuteCommandResponse executeCommandResponse = executor.executeCommandString(parameters.getScript(), items);
     saveExecutionLog(parameters, "End of Script Execution ...", RUNNING);
     saveExecutionLog(parameters, "\n---------------------------------------------------\n", RUNNING);
 
     Action action = null;
     ExecutionStatus executionStatus = ExecutionStatus.RUNNING;
-    if (SUCCESS == commandExecutionResult.getStatus()) {
+    if (SUCCESS == executeCommandResponse.getStatus()) {
       Map<String, String> sweepingOutputEnvVariables =
-          ((ShellExecutionData) commandExecutionResult.getCommandExecutionData()).getSweepingOutputEnvVariables();
+          ((ShellExecutionData) executeCommandResponse.getCommandExecutionData()).getSweepingOutputEnvVariables();
 
       if (MapUtils.isNotEmpty(sweepingOutputEnvVariables)
           && EmptyPredicate.isNotEmpty(sweepingOutputEnvVariables.get(SCRIPT_APPROVAL_ENV_VARIABLE))) {
