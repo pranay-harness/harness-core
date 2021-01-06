@@ -12,6 +12,8 @@ import software.wings.sm.ExecutionContext;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import java.util.Collections;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -97,5 +99,10 @@ public class AzureWebAppSlotRollback extends AzureWebAppSlotSetup {
   @Override
   public String skipMessage() {
     return "No Azure App service setup context element found. Skipping rollback";
+  }
+
+  @Override
+  public Map<String, String> validateFields() {
+    return Collections.emptyMap();
   }
 }
