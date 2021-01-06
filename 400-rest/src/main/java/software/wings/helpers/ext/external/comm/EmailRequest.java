@@ -1,10 +1,10 @@
 package software.wings.helpers.ext.external.comm;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.SmtpCapability;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
-import software.wings.delegatetasks.validation.capabilities.SmtpCapability;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.mail.SmtpConfig;
 
@@ -49,7 +49,12 @@ public class EmailRequest extends CollaborationProviderRequest {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return Collections.singletonList(
-        SmtpCapability.builder().smtpConfig(smtpConfig).encryptionDetails(encryptionDetails).build());
+    return Collections.singletonList(SmtpCapability.builder()
+                                         .useSSL(smtpConfig.isUseSSL())
+                                         .startTLS(smtpConfig.isStartTLS())
+                                         .host(smtpConfig.getHost())
+                                         .port(smtpConfig.getPort())
+                                         .username(smtpConfig.getUsername())
+                                         .build());
   }
 }

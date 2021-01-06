@@ -198,6 +198,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(SelectorCapability.class, 19098);
     kryo.register(ShellScriptApprovalTaskParameters.class, 20001);
     kryo.register(SmbConnectionCapability.class, 19119);
+    kryo.register(SmtpCapability.class, 19121);
     kryo.register(SocketConnectivityExecutionCapability.class, 19009);
     kryo.register(SpotInstDeployTaskParameters.class, 19018);
     kryo.register(SpotInstDeployTaskResponse.class, 19017);
