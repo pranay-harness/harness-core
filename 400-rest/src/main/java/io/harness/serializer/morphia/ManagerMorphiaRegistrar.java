@@ -478,7 +478,6 @@ import software.wings.delegatetasks.validation.capabilities.PcfAutoScalarCapabil
 import software.wings.delegatetasks.validation.capabilities.PcfConnectivityCapability;
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
 import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;
-import software.wings.delegatetasks.validation.capabilities.SmtpCapability;
 import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
 import software.wings.helpers.ext.cloudformation.CloudFormationCompletionFlag;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;
@@ -1373,7 +1372,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("delegatetasks.validation.capabilities.GitConnectionCapability", GitConnectionCapability.class);
     w.put("delegatetasks.validation.capabilities.PcfAutoScalarCapability", PcfAutoScalarCapability.class);
     w.put("delegatetasks.validation.capabilities.PcfConnectivityCapability", PcfConnectivityCapability.class);
-    w.put("delegatetasks.validation.capabilities.SmtpCapability", SmtpCapability.class);
     w.put("delegatetasks.validation.capabilities.SSHHostValidationCapability", SSHHostValidationCapability.class);
     w.put("delegatetasks.validation.capabilities.WinrmHostValidationCapability", WinrmHostValidationCapability.class);
     w.put("delegatetasks.validation.capabilities.ShellConnectionCapability", ShellConnectionCapability.class);

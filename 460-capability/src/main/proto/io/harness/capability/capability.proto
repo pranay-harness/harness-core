@@ -5,7 +5,7 @@ package io.harness.capability;
 option java_multiple_files = true;
 option go_package = "240_capability";
 
-// Next ID: 11
+// Next ID: 13
 message CapabilityParameters {
   oneof capability {
     AwsRegionParameters aws_region_parameters = 4;
@@ -15,6 +15,7 @@ message CapabilityParameters {
     ProcessExecutorParameters process_executor_parameters = 7;
     SftpCapabilityParameters sftp_capability_parameters = 3;
     SmbConnectionParameters smb_connection_parameters = 2;
+    SmtpParameters smtp_parameters = 12;
     SocketConnectivityParameters socket_connectivity_parameters = 8;
     SystemEnvParameters system_env_parameters = 9;
     TestingCapability testing_capability = 1;
@@ -59,6 +60,14 @@ message HelmInstallationParameters {
     V3 = 2;
   }
   HelmVersion helm_version = 1;
+}
+
+message SmtpParameters {
+  bool use_ssl = 1;
+  bool start_tls = 2;
+  string host = 3;
+  int32 port = 4;
+  string username = 5;
 }
 
 // Testing whether a connection can be established to a given URL

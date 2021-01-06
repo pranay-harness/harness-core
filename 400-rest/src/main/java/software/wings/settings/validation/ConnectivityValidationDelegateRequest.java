@@ -3,6 +3,7 @@ package software.wings.settings.validation;
 import io.harness.delegate.beans.executioncapability.AlwaysFalseValidationCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.beans.executioncapability.SmtpCapability;
 import io.harness.delegate.task.mixin.SocketConnectivityCapabilityGenerator;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -11,7 +12,6 @@ import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
-import software.wings.delegatetasks.validation.capabilities.SmtpCapability;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.settings.SettingValue;
 
@@ -50,9 +50,13 @@ public class ConnectivityValidationDelegateRequest implements ExecutionCapabilit
           SocketConnectivityCapabilityGenerator.buildSocketConnectivityCapability(hostName, Integer.toString(port)));
       return executionCapabilities;
     } else if (settingValue instanceof SmtpConfig) {
+      SmtpConfig smtpConfig = (SmtpConfig) settingValue;
       executionCapabilities.add(SmtpCapability.builder()
-                                    .smtpConfig((SmtpConfig) settingValue)
-                                    .encryptionDetails(encryptedDataDetails)
+                                    .useSSL(smtpConfig.isUseSSL())
+                                    .startTLS(smtpConfig.isStartTLS())
+                                    .host(smtpConfig.getHost())
+                                    .port(smtpConfig.getPort())
+                                    .username(smtpConfig.getUsername())
                                     .build());
       return executionCapabilities;
     } else {

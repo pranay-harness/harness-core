@@ -1,12 +1,4 @@
-package software.wings.delegatetasks.validation.capabilities;
-
-import io.harness.annotations.dev.Module;
-import io.harness.annotations.dev.TargetModule;
-import io.harness.delegate.beans.executioncapability.CapabilityType;
-import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.security.encryption.EncryptedDataDetail;
-
-import software.wings.helpers.ext.mail.SmtpConfig;
+package io.harness.delegate.beans.executioncapability;
 
 import java.time.Duration;
 import java.util.List;
@@ -16,10 +8,12 @@ import lombok.Value;
 
 @Value
 @Builder
-@TargetModule(Module._930_DELEGATE_TASKS)
 public class SmtpCapability implements ExecutionCapability {
-  @NotNull private SmtpConfig smtpConfig;
-  private List<EncryptedDataDetail> encryptionDetails;
+  private boolean useSSL;
+  private boolean startTLS;
+  private String host;
+  private int port;
+  private String username;
 
   @Builder.Default private final CapabilityType capabilityType = CapabilityType.SMTP;
 
@@ -30,7 +24,7 @@ public class SmtpCapability implements ExecutionCapability {
 
   @Override
   public String fetchCapabilityBasis() {
-    return smtpConfig.getHost() + ":" + smtpConfig.getPort();
+    return host + ":" + port;
   }
 
   @Override

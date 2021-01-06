@@ -1,42 +1,44 @@
-package software.wings.delegatetasks.validation.capabilitycheck;
+package io.harness.delegate.task.executioncapability;
 
 import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Mockito.when;
 
-import io.harness.annotations.dev.Module;
-import io.harness.annotations.dev.TargetModule;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
+import io.harness.delegate.beans.executioncapability.SmtpCapability;
 import io.harness.rule.Owner;
-
-import software.wings.WingsBaseTest;
-import software.wings.delegatetasks.validation.capabilities.SmtpCapability;
-import software.wings.helpers.ext.external.comm.handlers.EmailHandler;
-import software.wings.helpers.ext.mail.SmtpConfig;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
-public class SmtpCapabilityCheckTest extends WingsBaseTest {
-  private SmtpCapability smtpCapability =
-      SmtpCapability.builder().smtpConfig(SmtpConfig.builder().build()).encryptionDetails(new ArrayList<>()).build();
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({SmtpCapabilityCheck.class})
+public class SmtpCapabilityCheckTest extends CategoryTest {
+  private SmtpCapability smtpCapability = SmtpCapability.builder().build();
 
-  @Mock private EmailHandler emailHandler;
   @Inject @InjectMocks SmtpCapabilityCheck smtpCapabilityCheck;
 
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldPerformCapabilityCheck() {
-    Mockito.when(emailHandler.validateDelegateConnection(any(), any())).thenReturn(true);
+    PowerMockito.mockStatic(SmtpCapabilityCheck.class);
+    when(SmtpCapabilityCheck.isCapable(anyBoolean(), anyBoolean(), any(), anyInt(), any())).thenReturn(true);
     CapabilityResponse capabilityResponse = smtpCapabilityCheck.performCapabilityCheck(smtpCapability);
     assertThat(capabilityResponse).isNotNull();
     assertThat(capabilityResponse.isValidated()).isTrue();
