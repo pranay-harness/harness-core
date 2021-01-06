@@ -196,6 +196,6 @@ public class NGTriggerElementMapperTest extends CategoryTest {
     assertThat(responseDTO.getIdentifier()).isEqualTo(ngTriggerEntity.getIdentifier());
     assertThat(responseDTO.getName()).isEqualTo(ngTriggerEntity.getName());
     assertThat(responseDTO.getDescription()).isEqualTo(ngTriggerEntity.getDescription());
-    assertThat(responseDTO.getDescription()).isEqualTo(ngTriggerEntity.getDescription());
+    assertThat(responseDTO.isEnabled()).isEqualTo(ngTriggerEntity.getEnabled());
   }
 }
