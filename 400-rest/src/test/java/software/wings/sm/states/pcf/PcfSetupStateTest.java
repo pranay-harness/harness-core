@@ -14,6 +14,7 @@ import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
+import static software.wings.beans.TaskType.PCF_COMMAND_TASK;
 import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.beans.appmanifest.StoreType.Remote;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -76,6 +77,7 @@ import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.ff.FeatureFlagService;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
 
@@ -117,6 +119,7 @@ import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
+import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.infra.InfrastructureDefinition;
@@ -473,6 +476,25 @@ public class PcfSetupStateTest extends WingsBaseTest {
 
     pcfSetupState.handleAsyncInternal(context, response);
     verify(activityService, times(1)).updateStatus("activityId", APP_ID, FAILED);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseForPcfTaskInErrorCase() {
+    PcfCommandExecutionResponse pcfCommandExecutionResponse =
+        PcfCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
+
+    Map<String, ResponseData> response = new HashMap<>();
+    response.put("activityId", pcfCommandExecutionResponse);
+
+    PcfSetupStateExecutionData pcfSetupStateExecutionData =
+        (PcfSetupStateExecutionData) context.getStateExecutionData();
+    pcfSetupStateExecutionData.setTaskType(PCF_COMMAND_TASK);
+    pcfSetupStateExecutionData.setActivityId("activityId");
+
+    ExecutionResponse executionResponse = pcfSetupState.handleAsyncInternal(context, response);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(FAILED);
   }
 
   @Test
