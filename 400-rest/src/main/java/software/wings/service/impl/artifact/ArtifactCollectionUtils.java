@@ -117,7 +117,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -148,6 +147,8 @@ public class ArtifactCollectionUtils {
   @Transient
   private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =
       "{\"%s\":{\"username\":\"%s\",\"password\":\"%s\"}}";
+
+  public static final Long DELEGATE_QUEUE_TIMEOUT = Duration.ofSeconds(6).toMillis();
 
   public Artifact getArtifact(ArtifactStream artifactStream, BuildDetails buildDetails) {
     String accountId = null;
@@ -294,7 +295,10 @@ public class ArtifactCollectionUtils {
       ArtifactStreamAttributes artifactStreamAttributes, boolean isCollection) {
     DelegateTaskBuilder delegateTaskBuilder =
         DelegateTask.builder().setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID).waitId(waitId);
-    final TaskDataBuilder dataBuilder = TaskData.builder().async(true).taskType(TaskType.BUILD_SOURCE_TASK.name());
+    final TaskDataBuilder dataBuilder = TaskData.builder()
+                                            .async(true)
+                                            .taskType(TaskType.BUILD_SOURCE_TASK.name())
+                                            .timeout(System.currentTimeMillis() + DELEGATE_QUEUE_TIMEOUT);
 
     BuildSourceRequestType requestType = BuildSourceRequestType.GET_BUILDS;
 
@@ -752,7 +756,7 @@ public class ArtifactCollectionUtils {
                   .async(false)
                   .taskType(TaskType.BUILD_SOURCE_TASK.name())
                   .parameters(new Object[] {parametersBuilder.build()})
-                  .timeout(TimeUnit.MINUTES.toMillis(1))
+                  .timeout(System.currentTimeMillis() + DELEGATE_QUEUE_TIMEOUT)
                   .build())
         .tags(tags)
         .build();

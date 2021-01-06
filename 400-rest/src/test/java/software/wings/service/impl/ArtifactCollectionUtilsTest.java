@@ -21,6 +21,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
+import static software.wings.service.impl.artifact.ArtifactCollectionUtils.DELEGATE_QUEUE_TIMEOUT;
 import static software.wings.utils.ArtifactType.JAR;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -68,7 +69,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -171,7 +171,7 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
     assertThat(delegateTask.getTags()).contains("Delegate Tag");
     TaskData data = delegateTask.getData();
     assertThat(data.getTaskType()).isEqualTo(TaskType.BUILD_SOURCE_TASK.name());
-    assertThat(data.getTimeout()).isEqualTo(TimeUnit.MINUTES.toMillis(1));
+    assertThat(data.getTimeout()).isLessThanOrEqualTo(System.currentTimeMillis() + DELEGATE_QUEUE_TIMEOUT);
     BuildSourceParameters parameters = (BuildSourceParameters) data.getParameters()[0];
     assertThat(parameters.getBuildSourceRequestType()).isEqualTo(BuildSourceRequestType.GET_BUILDS);
   }
@@ -212,7 +212,7 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
     assertThat(delegateTask.getTags()).contains("AWS Tag");
     TaskData data = delegateTask.getData();
     assertThat(data.getTaskType()).isEqualTo(TaskType.BUILD_SOURCE_TASK.name());
-    assertThat(data.getTimeout()).isEqualTo(TimeUnit.MINUTES.toMillis(1));
+    assertThat(data.getTimeout()).isLessThanOrEqualTo(System.currentTimeMillis() + DELEGATE_QUEUE_TIMEOUT);
     BuildSourceParameters parameters = (BuildSourceParameters) data.getParameters()[0];
     assertThat(parameters.getBuildSourceRequestType()).isEqualTo(BuildSourceRequestType.GET_BUILDS);
     assertThat(parameters.getSettingValue()).isNotNull();
