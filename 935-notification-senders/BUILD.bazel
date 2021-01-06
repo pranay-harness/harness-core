@@ -15,7 +15,6 @@ java_library(
         "//920-delegate-service-beans:module",
         "//920-delegate-service-beans/src/main/proto:920_delegate_service_beans_java_proto",
         "//930-delegate-tasks:module",
-        "//935-notification-senders:module",
         "//940-notification-client:module",
         "//950-ng-project-n-orgs:module",
         "//960-ng-core-beans:module",
@@ -345,27 +344,18 @@ java_library(
     ],
 )
 
-java_binary(
+java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
     data = ["//:resource"],
-    main_class = "io.harness.notification.NotificationApplication",
-    resources = [
-        "//930-notification-service/src/main/resources:resource",
-    ],
+    resources = [],
     visibility = ["//visibility:public"],
     runtime_deps = [
-        "//930-notification-service/src/main/resources",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
     deps = [
-        "@maven//:com_google_guava_guava",
-        # keeping guava on top of maven_deps for right version resoulution
-        "@maven//:io_netty_netty_all",
-        # keeping guava on top of maven_deps for right version resoulution
         "maven_deps",
         "//:lombok",
-        "//960-notification-beans/src/main/proto:960_notification_beans_java_proto",
     ],
 )
 

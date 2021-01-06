@@ -3,11 +3,11 @@ package io.harness.delegate.task;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.MailTaskParams;
 import io.harness.delegate.beans.NotificationTaskResponse;
+import io.harness.delegate.beans.PagerDutyTaskParams;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.notification.beans.NotificationProcessingResponse;
-import io.harness.notification.service.MailSenderImpl;
+import io.harness.notification.service.senders.PagerDutySenderImpl;
 
 import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;
@@ -16,11 +16,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
-public class MailSenderDelegateTask extends AbstractDelegateRunnableTask {
-  @Inject private MailSenderImpl mailSender;
+public class PagerDutySenderDelegateTask extends AbstractDelegateRunnableTask {
+  @Inject private PagerDutySenderImpl pagerDutySender;
 
-  public MailSenderDelegateTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
-      Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
+  public PagerDutySenderDelegateTask(DelegateTaskPackage delegateTaskPackage,
+      ILogStreamingTaskClient logStreamingTaskClient, Consumer<DelegateTaskResponse> consumer,
+      BooleanSupplier preExecute) {
     super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
   }
 
@@ -31,10 +32,10 @@ public class MailSenderDelegateTask extends AbstractDelegateRunnableTask {
 
   @Override
   public DelegateResponseData run(TaskParameters parameters) {
-    MailTaskParams mailTaskParams = (MailTaskParams) parameters;
+    PagerDutyTaskParams pagerDutyTaskParams = (PagerDutyTaskParams) parameters;
     try {
-      NotificationProcessingResponse processingResponse = mailSender.send(mailTaskParams.getEmailIds(),
-          mailTaskParams.getSubject(), mailTaskParams.getBody(), mailTaskParams.getNotificationId());
+      NotificationProcessingResponse processingResponse = pagerDutySender.send(pagerDutyTaskParams.getPagerDutyKeys(),
+          pagerDutyTaskParams.getPayload(), pagerDutyTaskParams.getLinks(), pagerDutyTaskParams.getNotificationId());
       return NotificationTaskResponse.builder().processingResponse(processingResponse).build();
     } catch (Exception e) {
       return NotificationTaskResponse.builder()

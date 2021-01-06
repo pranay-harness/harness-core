@@ -8,7 +8,7 @@ import io.harness.notification.entities.NotificationTemplate;
 
 import java.util.Set;
 
-public class NotificationMorphiaRegistrar implements MorphiaRegistrar {
+public class NotificationSenderMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
     set.add(Notification.class);

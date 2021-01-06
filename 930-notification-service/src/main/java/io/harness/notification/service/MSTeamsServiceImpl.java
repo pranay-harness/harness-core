@@ -32,6 +32,7 @@ import io.harness.notification.remote.dto.NotificationSettingDTO;
 import io.harness.notification.service.api.ChannelService;
 import io.harness.notification.service.api.NotificationSettingsService;
 import io.harness.notification.service.api.NotificationTemplateService;
+import io.harness.notification.service.senders.MSTeamsSenderImpl;
 import io.harness.service.DelegateGrpcClientWrapper;
 
 import com.google.common.collect.ImmutableList;

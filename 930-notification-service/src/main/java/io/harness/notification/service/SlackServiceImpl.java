@@ -22,6 +22,7 @@ import io.harness.notification.remote.dto.SlackSettingDTO;
 import io.harness.notification.service.api.ChannelService;
 import io.harness.notification.service.api.NotificationSettingsService;
 import io.harness.notification.service.api.NotificationTemplateService;
+import io.harness.notification.service.senders.SlackSenderImpl;
 import io.harness.service.DelegateGrpcClientWrapper;
 
 import com.google.inject.Inject;

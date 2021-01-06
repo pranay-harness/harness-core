@@ -1,4 +1,4 @@
-package io.harness.notification.service;
+package io.harness.notification.service.senders;
 
 import static org.apache.http.entity.mime.MIME.CONTENT_TYPE;
 import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;

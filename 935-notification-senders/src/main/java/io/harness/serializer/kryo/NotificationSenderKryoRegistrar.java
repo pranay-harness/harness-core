@@ -13,7 +13,7 @@ import com.github.dikhan.pagerduty.client.events.domain.LinkContext;
 import com.github.dikhan.pagerduty.client.events.domain.Payload;
 import com.github.dikhan.pagerduty.client.events.domain.Severity;
 
-public class NotificationKryoRegistrar implements KryoRegistrar {
+public class NotificationSenderKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
     kryo.register(SlackTaskParams.class, 55210);

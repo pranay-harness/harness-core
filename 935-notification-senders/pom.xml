@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>930-notification-service</artifactId>
+    <artifactId>935-notification-senders</artifactId>
     <dependencies>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -91,12 +91,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>935-notification-senders</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>940-notification-client</artifactId>
             <version>${project.parent.version}</version>
             <scope>compile</scope>
@@ -157,7 +151,7 @@
         </dependency>
     </dependencies>
     <build>
-        <finalName>notification-service</finalName>
+        <finalName>notification-senders</finalName>
         <plugins>
             <plugin>
                 <groupId>com.github.chrisdchristo</groupId>

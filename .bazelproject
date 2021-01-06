@@ -32,6 +32,7 @@ directories:
   930-delegate-tasks
   930-ng-core-clients
   930-notification-service
+  935-notification-senders
   940-delegate-beans
   940-feature-flag
   940-notification-client
