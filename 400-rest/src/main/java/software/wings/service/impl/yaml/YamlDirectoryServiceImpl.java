@@ -1250,8 +1250,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   private FolderNode generateManifestFileFoldeNodeForServiceView(String accountId, Service service) {
-    ApplicationManifest applicationManifest =
-        applicationManifestService.getManifestByServiceId(service.getAppId(), service.getUuid());
+    ApplicationManifest applicationManifest = getApplicationManifestByService(service);
     DirectoryPath manifestFilePath = new DirectoryPath(MANIFEST_FILE_FOLDER);
     return generateManifestFileFolderNode(accountId, service, applicationManifest, manifestFilePath);
   }
