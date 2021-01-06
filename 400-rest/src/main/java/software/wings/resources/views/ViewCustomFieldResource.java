@@ -4,6 +4,7 @@ import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unif
 
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.views.dao.ViewCustomFieldDao;
+import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.entities.ViewCustomField;
 import io.harness.ccm.views.entities.ViewCustomFunction;
 import io.harness.ccm.views.entities.ViewField;
@@ -149,8 +150,9 @@ public class ViewCustomFieldResource {
   @DELETE
   @Timed
   @ExceptionMetered
-  public Response delete(@QueryParam("accountId") String accountId, @QueryParam("customFieldId") String customFieldId) {
-    viewCustomFieldService.delete(customFieldId, accountId);
+  public Response delete(@QueryParam("accountId") String accountId, @QueryParam("customFieldId") String customFieldId,
+      @Valid @RequestBody CEView ceView) {
+    viewCustomFieldService.delete(customFieldId, accountId, ceView);
     RestResponse rr = new RestResponse("Successfully deleted the view");
     return prepareResponse(rr, Response.Status.OK);
   }
