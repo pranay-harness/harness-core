@@ -26,7 +26,8 @@ public enum QLBillingDataFilterType {
   Tag(null),
   Label(null),
   EnvironmentType(null),
-  AlertTime(null);
+  AlertTime(null),
+  View(null);
 
   private QLDataType dataType;
   private BillingDataMetaDataFields metaDataFields;

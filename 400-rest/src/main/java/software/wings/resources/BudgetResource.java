@@ -68,6 +68,15 @@ public class BudgetResource {
     return new RestResponse<>(budgetService.list(accountId, count, startIndex));
   }
 
+  @GET
+  @Path("perspectiveBudgets")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<Budget>> list(
+      @NotEmpty @QueryParam("accountId") String accountId, @QueryParam("viewId") String viewId) {
+    return new RestResponse<>(budgetService.list(accountId, viewId));
+  }
+
   @PUT
   @Path("{id}")
   @Timed

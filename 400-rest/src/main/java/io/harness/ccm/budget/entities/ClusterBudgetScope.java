@@ -6,6 +6,7 @@ import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilte
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -26,5 +27,10 @@ public class ClusterBudgetScope implements BudgetScope {
     return QLBillingDataFilter.builder()
         .cluster(QLIdFilter.builder().operator(QLIdOperator.IN).values(clusterIds).build())
         .build();
+  }
+
+  @Override
+  public List<String> getEntityNames() {
+    return null;
   }
 }

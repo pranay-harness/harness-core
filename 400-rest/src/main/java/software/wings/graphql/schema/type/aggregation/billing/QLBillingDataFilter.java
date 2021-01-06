@@ -41,6 +41,7 @@ public class QLBillingDataFilter implements EntityFilter {
   private QLCEEnvironmentTypeFilter envType;
   // For budget alerts
   private QLTimeFilter alertTime;
+  private QLIdFilter view;
 
   public static Set<QLBillingDataFilterType> getFilterTypes(QLBillingDataFilter filter) {
     Set<QLBillingDataFilterType> filterTypes = new HashSet<>();
@@ -113,6 +114,9 @@ public class QLBillingDataFilter implements EntityFilter {
     if (filter.getAlertTime() != null) {
       filterTypes.add(QLBillingDataFilterType.AlertTime);
     }
+    if (filter.getView() != null) {
+      filterTypes.add(QLBillingDataFilterType.View);
+    }
     return filterTypes;
   }
 
@@ -164,6 +168,8 @@ public class QLBillingDataFilter implements EntityFilter {
         return filter.getAlertTime();
       case InstanceName:
         return filter.getInstanceName();
+      case View:
+        return filter.getView();
       default:
         throw new InvalidRequestException("Unsupported type " + type);
     }
