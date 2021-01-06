@@ -64,7 +64,8 @@ public class VariableCreatorMergeService {
     VariablesCreationBlobResponse response = createVariablesForDependenciesRecursive(services, dependencies);
     validateVariableCreationResponse(response);
 
-    return VariableCreationBlobResponseUtils.getMergeServiceResponse(processedYaml.getNode().toString(), response);
+    return VariableCreationBlobResponseUtils.getMergeServiceResponse(
+        YamlUtils.writeYamlString(processedYaml), response);
   }
 
   private VariablesCreationBlobResponse createVariablesForDependenciesRecursive(

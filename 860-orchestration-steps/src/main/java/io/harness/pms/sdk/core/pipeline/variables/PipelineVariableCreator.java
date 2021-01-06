@@ -46,12 +46,6 @@ public class PipelineVariableCreator extends ChildrenVariableCreator {
       yamlPropertiesMap.put(nameField.getNode().getCurrJsonNode().textValue(),
           YamlProperties.newBuilder().setLocalName(nameFQN).setFqn(nameFQN).build());
     }
-    YamlField identifierField = yamlNode.getField(YAMLFieldNameConstants.IDENTIFIER);
-    if (identifierField != null) {
-      String identifierFQN = YamlUtils.getFullyQualifiedName(identifierField.getNode());
-      yamlPropertiesMap.put(identifierField.getNode().getCurrJsonNode().textValue(),
-          YamlProperties.newBuilder().setLocalName(identifierFQN).setFqn(identifierFQN).build());
-    }
     YamlField descriptionField = yamlNode.getField(YAMLFieldNameConstants.DESCRIPTION);
     if (descriptionField != null) {
       String descriptionFQN = YamlUtils.getFullyQualifiedName(descriptionField.getNode());
