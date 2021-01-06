@@ -591,7 +591,6 @@ public class ActivityServiceImpl implements ActivityService {
     }
     UpdateOperations<ActivitySource> updateOperations = hPersistence.createUpdateOperations(ActivitySource.class)
                                                             .set(ActivitySourceKeys.name, activitySourceDTO.getName())
-
                                                             .unset(ActivitySourceKeys.dataCollectionTaskId);
 
     switch (activitySourceDTO.getType()) {
