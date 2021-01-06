@@ -21,13 +21,21 @@ public class DeploymentStageVariableCreator extends ChildrenVariableCreator {
   public LinkedHashMap<String, VariableCreationResponse> createVariablesForChildrenNodes(
       VariableCreationContext ctx, YamlField config) {
     LinkedHashMap<String, VariableCreationResponse> responseMap = new LinkedHashMap<>();
-    YamlField serviceField = config.getNode().getField(YamlTypes.SERVICE_CONFIG);
+    YamlField serviceField =
+        config.getNode().getField(YAMLFieldNameConstants.SPEC).getNode().getField(YamlTypes.SERVICE_CONFIG);
     VariableCreationResponse serviceVariableResponse = ServiceVariableCreator.createVariableResponse(serviceField);
     responseMap.put(serviceField.getNode().getUuid(), serviceVariableResponse);
 
-    YamlField infraNode = config.getNode().getField(YamlTypes.PIPELINE_INFRASTRUCTURE);
+    YamlField infraNode =
+        config.getNode().getField(YAMLFieldNameConstants.SPEC).getNode().getField(YamlTypes.PIPELINE_INFRASTRUCTURE);
     VariableCreationResponse infraVariableResponse = InfraVariableCreator.createVariableResponse(infraNode);
     responseMap.put(infraNode.getNode().getUuid(), infraVariableResponse);
+
+    YamlField executionField =
+        config.getNode().getField(YAMLFieldNameConstants.SPEC).getNode().getField(YAMLFieldNameConstants.EXECUTION);
+    responseMap.put(executionField.getNode().getUuid(),
+        VariableCreationResponse.builder().dependency(executionField.getNode().getUuid(), executionField).build());
+
     return responseMap;
   }
 

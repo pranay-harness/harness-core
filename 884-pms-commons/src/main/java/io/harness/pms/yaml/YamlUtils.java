@@ -98,7 +98,14 @@ public class YamlUtils {
     if (node.isObject()) {
       injectUuidInObjectWithLeafValues(node);
     } else if (node.isArray()) {
-      injectUuidInArray(node);
+      injectUuidInArrayWithLeafUuid(node);
+    }
+  }
+
+  private void injectUuidInArrayWithLeafUuid(JsonNode node) {
+    ArrayNode arrayNode = (ArrayNode) node;
+    for (Iterator<JsonNode> it = arrayNode.elements(); it.hasNext();) {
+      injectUuidWithLeafUuid(it.next());
     }
   }
 
@@ -330,5 +337,11 @@ public class YamlUtils {
       }
     }
     return null;
+  }
+
+  public String writeYamlString(YamlField yamlField) throws IOException {
+    String json = yamlField.getNode().toString();
+    JsonNode jsonNode = mapper.readTree(json);
+    return mapper.writeValueAsString(jsonNode);
   }
 }

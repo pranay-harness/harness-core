@@ -45,4 +45,6 @@ public interface YamlTypes {
   String NAMESPACE = "namespace";
   String RELEASE_NAME = "releaseName";
   String STORE_CONFIG_WRAPPER = "store";
+
+  String SKIP_DRY_RUN = "skipDryRun";
 }
