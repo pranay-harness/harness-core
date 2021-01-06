@@ -50,12 +50,7 @@ public class PcfRunPluginCommandRequest
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return Arrays.asList(PcfConnectivityCapability.builder()
-                             .pcfConfig(getPcfConfig())
-                             .encryptionDetails(encryptedDataDetails)
-                             .limitPcfThreads(isLimitPcfThreads())
-                             .ignorePcfConnectionContextCache(isIgnorePcfConnectionContextCache())
-                             .build(),
+    return Arrays.asList(PcfConnectivityCapability.builder().endpointUrl(getPcfConfig().getEndpointUrl()).build(),
         ProcessExecutorCapabilityGenerator.buildProcessExecutorCapability(
             "PCF", Arrays.asList("/bin/sh", "-c", "cf --version")));
   }

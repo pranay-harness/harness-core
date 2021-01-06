@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.pcf.request;
 
+import static software.wings.delegatetasks.delegatecapability.CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails;
+
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
@@ -24,12 +26,9 @@ public class PcfCommandTaskParameters implements ExecutionCapabilityDemander {
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> capabilities = new ArrayList<>();
-    capabilities.add(PcfConnectivityCapability.builder()
-                         .limitPcfThreads(pcfCommandRequest.isLimitPcfThreads())
-                         .ignorePcfConnectionContextCache(pcfCommandRequest.isIgnorePcfConnectionContextCache())
-                         .pcfConfig(pcfCommandRequest.getPcfConfig())
-                         .encryptionDetails(encryptedDataDetails)
-                         .build());
+    capabilities.add(
+        PcfConnectivityCapability.builder().endpointUrl(pcfCommandRequest.getPcfConfig().getEndpointUrl()).build());
+    capabilities.addAll(fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails, maskingEvaluator));
     if (pcfCommandRequest.isUseCfCLI() || needToCheckAppAutoscalarPluginInstall()) {
       capabilities.add(ProcessExecutorCapabilityGenerator.buildProcessExecutorCapability(
           "PCF", Arrays.asList("/bin/sh", "-c", "cf --version")));
