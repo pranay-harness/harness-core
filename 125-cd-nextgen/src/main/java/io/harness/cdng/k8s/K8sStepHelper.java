@@ -280,8 +280,8 @@ public class K8sStepHelper {
             .async(true)
             .build();
 
-    final TaskRequest taskRequest = prepareTaskRequest(
-        ambiance, taskData, kryoSerializer, StepUtils.generateLogAbstractions(ambiance), TaskCategory.DELEGATE_TASK_V2);
+    final TaskRequest taskRequest = prepareTaskRequest(ambiance, taskData, kryoSerializer,
+        StepUtils.generateLogAbstractions(ambiance), TaskCategory.DELEGATE_TASK_V2, Collections.emptyList());
 
     return TaskChainResponse.builder().taskRequest(taskRequest).chainEnd(true).passThroughData(infrastructure).build();
   }
@@ -334,16 +334,14 @@ public class K8sStepHelper {
     LinkedHashMap<String, String> logAbstractions = StepUtils.generateLogAbstractions(ambiance);
     String baseLoggingKey = LogHelper.generateLogBaseKey(logAbstractions);
 
+    List<String> commandUnits =
+        Arrays.asList(K8sCommandUnitConstants.FetchFiles, K8sCommandUnitConstants.Init, K8sCommandUnitConstants.Prepare,
+            K8sCommandUnitConstants.Apply, K8sCommandUnitConstants.WaitForSteadyState, K8sCommandUnitConstants.WrapUp);
     LoggingMetadata loggingMetadata =
-        LoggingMetadata.builder()
-            .baseLoggingKey(baseLoggingKey)
-            .commandUnits(Arrays.asList(K8sCommandUnitConstants.FetchFiles, K8sCommandUnitConstants.Init,
-                K8sCommandUnitConstants.Prepare, K8sCommandUnitConstants.Apply,
-                K8sCommandUnitConstants.WaitForSteadyState, K8sCommandUnitConstants.WrapUp))
-            .build();
+        LoggingMetadata.builder().baseLoggingKey(baseLoggingKey).commandUnits(commandUnits).build();
 
-    final TaskRequest taskRequest =
-        prepareTaskRequest(ambiance, taskData, kryoSerializer, logAbstractions, TaskCategory.DELEGATE_TASK_V2);
+    final TaskRequest taskRequest = prepareTaskRequest(
+        ambiance, taskData, kryoSerializer, logAbstractions, TaskCategory.DELEGATE_TASK_V2, commandUnits);
 
     K8sStepPassThroughData k8sStepPassThroughData = K8sStepPassThroughData.builder()
                                                         .k8sManifestOutcome(k8sManifestOutcome)

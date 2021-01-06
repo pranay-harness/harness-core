@@ -1,5 +1,7 @@
 package io.harness.logstreaming;
 
+import static software.wings.beans.LogHelper.COMMAND_UNIT_PLACEHOLDER;
+
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -24,8 +26,6 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 @Builder
 @Slf4j
 public class LogStreamingTaskClient implements ILogStreamingTaskClient {
-  public static final String COMMAND_UNIT_PLACEHOLDER = "-commandUnit:%s";
-
   private final DelegateLogService logService;
   private final DelegateAgentLogStreamingClient delegateAgentLogStreamingClient;
   private final LogStreamingSanitizer logStreamingSanitizer;

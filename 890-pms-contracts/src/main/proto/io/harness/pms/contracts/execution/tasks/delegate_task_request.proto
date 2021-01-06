@@ -8,10 +8,12 @@ import "920-delegate-service-beans/src/main/proto/io/harness/delegate/task.proto
 import "940-delegate-beans/src/main/proto/io/harness/delegate/capability.proto";
 
 message DelegateTaskRequest {
-  string account_id = 2;
-  io.harness.delegate.TaskSetupAbstractions setup_abstractions = 3;
-  io.harness.delegate.TaskLogAbstractions log_abstractions = 7;
+  string account_id = 1;
+  io.harness.delegate.TaskSetupAbstractions setup_abstractions = 2;
+  io.harness.delegate.TaskLogAbstractions log_abstractions = 3;
   io.harness.delegate.TaskDetails details = 4;
   repeated io.harness.delegate.Capability capabilities = 5;
   repeated io.harness.delegate.TaskSelector selectors = 6;
+  repeated string units = 7;
+  repeated string logKeys = 8;
 }
