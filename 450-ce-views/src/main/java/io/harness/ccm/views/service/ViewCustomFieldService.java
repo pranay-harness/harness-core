@@ -1,5 +1,6 @@
 package io.harness.ccm.views.service;
 
+import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.entities.ViewCustomField;
 import io.harness.ccm.views.entities.ViewField;
 
@@ -19,7 +20,7 @@ public interface ViewCustomFieldService {
 
   boolean validate(ViewCustomField viewCustomField, BigQuery bigQuery, String cloudProviderTableName);
 
-  boolean delete(String uuid, String accountId);
+  boolean delete(String uuid, String accountId, CEView ceView);
 
   boolean deleteByViewId(String viewId, String accountId);
 }
