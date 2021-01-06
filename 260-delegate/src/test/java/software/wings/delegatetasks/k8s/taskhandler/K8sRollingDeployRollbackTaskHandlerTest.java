@@ -109,14 +109,14 @@ public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testFirstDeploymentFailsRollBack() throws Exception {
     on(k8sRollingDeployRollbackTaskHandler).set("releaseHistory", null);
-    doReturn("").when(taskHelperBase).getReleaseHistoryData(any(KubernetesConfig.class), anyString(), anyBoolean());
+    doReturn("").when(taskHelperBase).getReleaseHistoryData(any(KubernetesConfig.class), anyString());
     k8sRollingDeployRollbackTaskHandler.executeTaskInternal(
         K8sRollingDeployRollbackTaskParameters.builder().build(), K8sDelegateTaskParams.builder().build());
 
     assertThat((String) on(k8sRollingDeployRollbackTaskHandler).get("release")).isNull();
     assertThat((String) on(k8sRollingDeployRollbackTaskHandler).get("releaseHistory")).isNull();
     verify(taskHelperBase, never()).doStatusCheck(any(), any(), any(), any());
-    verify(taskHelperBase, never()).saveReleaseHistory(any(), any(), any(), eq(false), eq(false));
+    verify(taskHelperBase, never()).saveReleaseHistory(any(), any(), any(), eq(false));
     final ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
     verify(logCallback, times(1)).saveExecutionLog(captor.capture(), eq(INFO), eq(CommandExecutionStatus.SUCCESS));
     assertThat(captor.getValue())
@@ -184,7 +184,7 @@ public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
     Release releaseToSave = on(k8sRollingDeployRollbackTaskHandler).get("release");
     assertThat(releaseToSave).isNotNull();
     assertThat(releaseToSave.getStatus()).isEqualTo(Failed);
-    verify(taskHelperBase, never()).saveReleaseHistory(any(), any(), any(), eq(false), eq(false));
+    verify(taskHelperBase, never()).saveReleaseHistory(any(), any(), any(), eq(false));
   }
 
   @Test
@@ -380,7 +380,7 @@ public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
     k8sRollingDeployRollbackTaskHandler.executeTaskInternal(
         K8sRollingDeployRollbackTaskParameters.builder().build(), K8sDelegateTaskParams.builder().build());
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean());
-    verify(taskHelperBase, times(1)).getReleaseHistoryData(any(KubernetesConfig.class), anyString(), anyBoolean());
+    verify(taskHelperBase, times(1)).getReleaseHistoryData(any(KubernetesConfig.class), anyString());
   }
 
   @Test
@@ -492,12 +492,12 @@ public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testPrintManagedWorkloads() throws Exception {
     on(k8sRollingDeployRollbackTaskHandler).set("releaseHistory", null);
-    doReturn("").when(taskHelperBase).getReleaseHistoryData(any(KubernetesConfig.class), anyString(), anyBoolean());
+    doReturn("").when(taskHelperBase).getReleaseHistoryData(any(KubernetesConfig.class), anyString());
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
     releaseHistory.getReleases().add(buildReleaseMultipleManagedWorkloads(Succeeded));
     String releaseHistoryData = releaseHistory.getAsYaml();
 
-    doReturn(releaseHistoryData).when(taskHelperBase).getReleaseHistoryData(any(), any(), anyBoolean());
+    doReturn(releaseHistoryData).when(taskHelperBase).getReleaseHistoryData(any(), any());
     K8sRollingDeployRollbackTaskParameters k8sRollingDeployRollbackTaskParameters =
         K8sRollingDeployRollbackTaskParameters.builder().build();
     K8sDelegateTaskParams k8sDelegateTaskParams = K8sDelegateTaskParams.builder().build();
@@ -506,7 +506,7 @@ public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
 
     assertThat((Release) on(k8sRollingDeployRollbackTaskHandler).get("release")).isNotNull();
     verify(taskHelperBase, never()).doStatusCheck(any(), any(), any(), any());
-    verify(taskHelperBase, never()).saveReleaseHistory(any(), any(), any(), eq(true), eq(false));
+    verify(taskHelperBase, never()).saveReleaseHistory(any(), any(), any(), eq(true));
     final ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
     verify(logCallback, times(1)).saveExecutionLog(captor.capture(), eq(INFO), eq(CommandExecutionStatus.SUCCESS));
     assertThat(captor.getValue())

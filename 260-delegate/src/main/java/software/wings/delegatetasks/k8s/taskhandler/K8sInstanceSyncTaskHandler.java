@@ -48,9 +48,8 @@ public class K8sInstanceSyncTaskHandler extends K8sTaskHandler {
 
     String namespace = k8sInstanceSyncTaskParameters.getNamespace();
     String releaseName = k8sInstanceSyncTaskParameters.getReleaseName();
-    List<K8sPod> k8sPodList = k8sInstanceSyncTaskParameters.isDeprecateFabric8Enabled()
-        ? k8sTaskHelperBase.getPodDetails(kubernetesConfig, namespace, releaseName, steadyStateTimeoutInMillis)
-        : k8sTaskHelperBase.getPodDetailsFabric8(kubernetesConfig, namespace, releaseName, steadyStateTimeoutInMillis);
+    List<K8sPod> k8sPodList =
+        k8sTaskHelperBase.getPodDetails(kubernetesConfig, namespace, releaseName, steadyStateTimeoutInMillis);
 
     K8sInstanceSyncResponse k8sInstanceSyncResponse =
         K8sInstanceSyncResponse.builder().k8sPodInfoList(k8sPodList).build();

@@ -644,26 +644,6 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
-  public void testGetServiceFabric8() {
-    kubernetesContainerService.getServiceFabric8(KUBERNETES_CONFIG, "service");
-
-    ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
-    verify(namespacedServices).withName(args.capture());
-    assertThat(args.getValue()).isEqualTo("service");
-    verify(serviceResource).get();
-
-    kubernetesContainerService.getServiceFabric8(KUBERNETES_CONFIG, "service", "testNamespace");
-    verify(services, times(2)).inNamespace(args.capture());
-    assertThat(args.getValue()).isEqualTo("testNamespace");
-    verify(serviceResource, times(2)).get();
-
-    kubernetesContainerService.createOrReplaceService(KUBERNETES_CONFIG, service);
-    verify(namespacedServices).createOrReplace(service);
-  }
-
-  @Test
-  @Owner(developers = ANSHUL)
-  @Category(UnitTests.class)
   public void testGetAutoscaler() {
     when(horizontalPodAutoscalerResource.get()).thenReturn(horizontalPodAutoscaler);
     HorizontalPodAutoscaler autoscaler =
@@ -763,106 +743,6 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
     when(deploymentFilteredList.list()).thenReturn(new DeploymentList());
     activeServiceCounts = kubernetesContainerService.getActiveServiceCountsWithLabels(KUBERNETES_CONFIG, emptyMap());
     assertThat(activeServiceCounts).isEmpty();
-  }
-
-  @Test
-  @Owner(developers = ACASIAN)
-  @Category(UnitTests.class)
-  public void testShouldFetchReleaseHistoryFromSecretsFabric8() {
-    String releaseHistory =
-        kubernetesContainerService.fetchReleaseHistoryFromSecretsFabric8(KUBERNETES_CONFIG, "secret");
-    ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
-    verify(namespacedSecrets).withName(args.capture());
-    assertThat(args.getValue()).isEqualTo("secret");
-    verify(secretResource).get();
-
-    assertThat(releaseHistory).isEqualTo("test");
-  }
-
-  @Test
-  @Owner(developers = ACASIAN)
-  @Category(UnitTests.class)
-  public void testShouldFetchReleaseHistoryFromConfigMapFabric8() {
-    String releaseHistory =
-        kubernetesContainerService.fetchReleaseHistoryFromConfigMapFabric8(KUBERNETES_CONFIG, "configmap");
-    ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
-    verify(namespacedConfigMaps).withName(args.capture());
-    assertThat(args.getValue()).isEqualTo("configmap");
-    verify(configMapResource).get();
-
-    assertThat(releaseHistory).isEqualTo("test");
-  }
-
-  @Test
-  @Owner(developers = ACASIAN)
-  @Category(UnitTests.class)
-  public void testShouldSaveReleaseHistoryInConfigMapFabric8() {
-    kubernetesContainerService.saveReleaseHistoryInConfigMapFabric8(KUBERNETES_CONFIG, "release", "version=1.0");
-    ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
-    verify(namespacedConfigMaps, times(2)).withName(args.capture());
-    assertThat(args.getValue()).isEqualTo("test-rn");
-    verify(configMapResource, times(2)).get();
-
-    ArgumentCaptor<ConfigMap> configMapCaptor = ArgumentCaptor.forClass(ConfigMap.class);
-    verify(namespacedConfigMaps, times(1)).createOrReplace(configMapCaptor.capture());
-
-    assertThat(configMapCaptor.getValue().getData()).containsKey(ReleaseHistoryKeyName);
-    assertThat(configMapCaptor.getValue().getData().get(ReleaseHistoryKeyName)).isEqualTo("version=1.0");
-    assertThat(configMapCaptor.getValue().getMetadata().getName()).isEqualTo("test-rn");
-  }
-
-  @Test
-  @Owner(developers = ACASIAN)
-  @Category(UnitTests.class)
-  public void testShouldSaveReleaseHistoryInConfigMapFabric8WhenFalse() {
-    kubernetesContainerService.saveReleaseHistoryFabric8(KUBERNETES_CONFIG, "release", "version=1.0", false);
-    ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
-    verify(namespacedConfigMaps, times(2)).withName(args.capture());
-    assertThat(args.getValue()).isEqualTo("test-rn");
-    verify(configMapResource, times(2)).get();
-
-    ArgumentCaptor<ConfigMap> configMapCaptor = ArgumentCaptor.forClass(ConfigMap.class);
-    verify(namespacedConfigMaps, times(1)).createOrReplace(configMapCaptor.capture());
-
-    assertThat(configMapCaptor.getValue().getData()).containsKey(ReleaseHistoryKeyName);
-    assertThat(configMapCaptor.getValue().getData().get(ReleaseHistoryKeyName)).isEqualTo("version=1.0");
-    assertThat(configMapCaptor.getValue().getMetadata().getName()).isEqualTo("test-rn");
-  }
-
-  @Test
-  @Owner(developers = ACASIAN)
-  @Category(UnitTests.class)
-  public void testShouldSaveReleaseHistoryInSecretsFabric8() {
-    kubernetesContainerService.saveReleaseHistoryInSecretsFabric8(KUBERNETES_CONFIG, "release", "version=2.0");
-    ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
-    verify(namespacedSecrets, times(1)).withName(args.capture());
-    assertThat(args.getValue()).isEqualTo("release");
-    verify(secretResource, times(1)).get();
-
-    ArgumentCaptor<Secret> secretCaptor = ArgumentCaptor.forClass(Secret.class);
-    verify(namespacedSecrets, times(1)).createOrReplace(secretCaptor.capture());
-
-    assertThat(secretCaptor.getValue().getData()).containsKey(ReleaseHistoryKeyName);
-    assertThat(secretCaptor.getValue().getData().get(ReleaseHistoryKeyName)).isEqualTo(encodeBase64("version=2.0"));
-    assertThat(secretCaptor.getValue().getMetadata().getName()).isEqualTo("test-rn");
-  }
-
-  @Test
-  @Owner(developers = ACASIAN)
-  @Category(UnitTests.class)
-  public void testShouldSaveReleaseHistoryInSecretsFabric8WhenTrue() {
-    kubernetesContainerService.saveReleaseHistoryFabric8(KUBERNETES_CONFIG, "release", "version=2.0", true);
-    ArgumentCaptor<String> args = ArgumentCaptor.forClass(String.class);
-    verify(namespacedSecrets, times(1)).withName(args.capture());
-    assertThat(args.getValue()).isEqualTo("release");
-    verify(secretResource, times(1)).get();
-
-    ArgumentCaptor<Secret> secretCaptor = ArgumentCaptor.forClass(Secret.class);
-    verify(namespacedSecrets, times(1)).createOrReplace(secretCaptor.capture());
-
-    assertThat(secretCaptor.getValue().getData()).containsKey(ReleaseHistoryKeyName);
-    assertThat(secretCaptor.getValue().getData().get(ReleaseHistoryKeyName)).isEqualTo(encodeBase64("version=2.0"));
-    assertThat(secretCaptor.getValue().getMetadata().getName()).isEqualTo("test-rn");
   }
 
   @Test
@@ -1012,22 +892,6 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
                                       .build();
     String configFileContent = kubernetesContainerService.getConfigFileContent(kubeConfig);
     assertThat(expected).isEqualTo(configFileContent);
-  }
-
-  @Test
-  @Owner(developers = ABOSII)
-  @Category(UnitTests.class)
-  public void testGetVersionAsStringFabric8() throws Exception {
-    Map<String, String> jsonData = new HashMap<>();
-    jsonData.put("major", "1");
-    jsonData.put("minor", "16");
-    jsonData.put("buildDate", "2020-06-06T10:54:00Z");
-    io.fabric8.kubernetes.client.VersionInfo version = new io.fabric8.kubernetes.client.VersionInfo(jsonData);
-
-    when(kubernetesClient.getVersion()).thenReturn(version);
-
-    String result = kubernetesContainerService.getVersionAsStringFabric8(KUBERNETES_CONFIG);
-    assertThat(result).isEqualTo("1.16");
   }
 
   @Test

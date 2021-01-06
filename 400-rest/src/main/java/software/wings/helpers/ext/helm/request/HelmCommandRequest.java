@@ -58,7 +58,6 @@ public class HelmCommandRequest implements TaskParameters, ActivityAccess, Execu
   @Expression(ALLOW_SECRETS) private List<String> variableOverridesYamlFiles;
   private GitFileConfig gitFileConfig;
   private boolean k8SteadyStateCheckEnabled;
-  private boolean deprecateFabric8Enabled;
 
   public HelmCommandRequest(HelmCommandType helmCommandType) {
     this.helmCommandType = helmCommandType;

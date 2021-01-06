@@ -30,7 +30,6 @@ import software.wings.beans.LogColor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import io.fabric8.kubernetes.api.model.Service;
 import io.kubernetes.client.openapi.models.V1Service;
 import java.util.ArrayList;
 import java.util.List;
@@ -96,23 +95,6 @@ public class K8sBGBaseHandler {
     executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
   }
 
-  private String getColorFromService(Service service) {
-    return service.getSpec().getSelector().get(HarnessLabels.color);
-  }
-
-  public String getPrimaryColorUsingFabric8(
-      KubernetesResource primaryService, KubernetesConfig kubernetesConfig, LogCallback executionLogCallback) {
-    Service primaryServiceInCluster =
-        kubernetesContainerService.getServiceFabric8(kubernetesConfig, primaryService.getResourceId().getName());
-    if (primaryServiceInCluster == null) {
-      executionLogCallback.saveExecutionLog(
-          "Primary Service [" + primaryService.getResourceId().getName() + "] not found in cluster.");
-    }
-
-    return (primaryServiceInCluster != null) ? getColorFromService(primaryServiceInCluster)
-                                             : HarnessLabelValues.colorDefault;
-  }
-
   public String getPrimaryColor(
       KubernetesResource primaryService, KubernetesConfig kubernetesConfig, LogCallback executionLogCallback) {
     V1Service primaryServiceInCluster =
@@ -128,20 +110,13 @@ public class K8sBGBaseHandler {
 
   @VisibleForTesting
   public List<K8sPod> getAllPods(long timeoutInMillis, KubernetesConfig kubernetesConfig,
-      KubernetesResource managedWorkload, String primaryColor, String stageColor, String releaseName,
-      boolean isDeprecateFabric8Enabled) throws Exception {
+      KubernetesResource managedWorkload, String primaryColor, String stageColor, String releaseName) throws Exception {
     List<K8sPod> allPods = new ArrayList<>();
     String namespace = managedWorkload.getResourceId().getNamespace();
-    final List<K8sPod> stagePods = isDeprecateFabric8Enabled
-        ? k8sTaskHelperBase.getPodDetailsWithColor(
-            kubernetesConfig, namespace, releaseName, stageColor, timeoutInMillis)
-        : k8sTaskHelperBase.getPodDetailsWithColorFabric8(
-            kubernetesConfig, namespace, releaseName, stageColor, timeoutInMillis);
-    final List<K8sPod> primaryPods = isDeprecateFabric8Enabled
-        ? k8sTaskHelperBase.getPodDetailsWithColor(
-            kubernetesConfig, namespace, releaseName, primaryColor, timeoutInMillis)
-        : k8sTaskHelperBase.getPodDetailsWithColorFabric8(
-            kubernetesConfig, namespace, releaseName, primaryColor, timeoutInMillis);
+    final List<K8sPod> stagePods =
+        k8sTaskHelperBase.getPodDetailsWithColor(kubernetesConfig, namespace, releaseName, stageColor, timeoutInMillis);
+    final List<K8sPod> primaryPods = k8sTaskHelperBase.getPodDetailsWithColor(
+        kubernetesConfig, namespace, releaseName, primaryColor, timeoutInMillis);
     stagePods.forEach(pod -> pod.setNewPod(true));
     allPods.addAll(stagePods);
     allPods.addAll(primaryPods);

@@ -125,7 +125,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
 
     if (!isNoopRollBack) {
       k8sTaskHelperBase.saveReleaseHistory(kubernetesConfig, request.getReleaseName(), releaseHistory.getAsYaml(),
-          !previousCustomManagedWorkloads.isEmpty(), request.isDeprecateFabric8Enabled());
+          !previousCustomManagedWorkloads.isEmpty());
     }
 
     return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
@@ -140,9 +140,8 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
 
     client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
 
-    String releaseHistoryData = k8sTaskHelperBase.getReleaseHistoryData(kubernetesConfig,
-        k8sRollingDeployRollbackTaskParameters.getReleaseName(),
-        k8sRollingDeployRollbackTaskParameters.isDeprecateFabric8Enabled());
+    String releaseHistoryData = k8sTaskHelperBase.getReleaseHistoryData(
+        kubernetesConfig, k8sRollingDeployRollbackTaskParameters.getReleaseName());
 
     if (StringUtils.isEmpty(releaseHistoryData)) {
       isNoopRollBack = true;

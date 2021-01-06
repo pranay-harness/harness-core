@@ -85,7 +85,6 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
   private KubernetesResourceId previousManagedWorkload;
   private String releaseName;
   private String manifestFilesDirectory;
-  private boolean isDeprecateFabric8Enabled;
 
   @Override
   public K8sTaskExecutionResponse executeTaskInternal(
@@ -97,7 +96,6 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
 
     K8sCanaryDeployTaskParameters k8sCanaryDeployTaskParameters = (K8sCanaryDeployTaskParameters) k8sTaskParameters;
 
-    isDeprecateFabric8Enabled = k8sCanaryDeployTaskParameters.isDeprecateFabric8Enabled();
     releaseName = k8sCanaryDeployTaskParameters.getReleaseName();
     manifestFilesDirectory = Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString();
     final long timeoutInMillis = getTimeoutMillisFromMinutes(k8sTaskParameters.getTimeoutIntervalInMin());
@@ -125,8 +123,8 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
         client, resources, k8sDelegateTaskParams, getLogCallBack(k8sCanaryDeployTaskParameters, Apply), true);
     if (!success) {
       releaseHistory.setReleaseStatus(Status.Failed);
-      k8sTaskHelperBase.saveReleaseHistoryInConfigMap(kubernetesConfig, k8sCanaryDeployTaskParameters.getReleaseName(),
-          releaseHistory.getAsYaml(), k8sCanaryDeployTaskParameters.isDeprecateFabric8Enabled());
+      k8sTaskHelperBase.saveReleaseHistoryInConfigMap(
+          kubernetesConfig, k8sCanaryDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
       return getFailureResponse();
     }
 
@@ -137,8 +135,8 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
 
     if (!success) {
       releaseHistory.setReleaseStatus(Status.Failed);
-      k8sTaskHelperBase.saveReleaseHistoryInConfigMap(kubernetesConfig, k8sCanaryDeployTaskParameters.getReleaseName(),
-          releaseHistory.getAsYaml(), k8sCanaryDeployTaskParameters.isDeprecateFabric8Enabled());
+      k8sTaskHelperBase.saveReleaseHistoryInConfigMap(
+          kubernetesConfig, k8sCanaryDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
       return getFailureResponse();
     }
 
@@ -148,8 +146,8 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
 
     wrapUp(k8sDelegateTaskParams, getLogCallBack(k8sCanaryDeployTaskParameters, WrapUp));
 
-    k8sTaskHelperBase.saveReleaseHistoryInConfigMap(kubernetesConfig, k8sCanaryDeployTaskParameters.getReleaseName(),
-        releaseHistory.getAsYaml(), k8sCanaryDeployTaskParameters.isDeprecateFabric8Enabled());
+    k8sTaskHelperBase.saveReleaseHistoryInConfigMap(
+        kubernetesConfig, k8sCanaryDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
 
     K8sCanaryDeployResponse k8sCanaryDeployResponse =
         K8sCanaryDeployResponse.builder()
@@ -168,13 +166,9 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
   @VisibleForTesting
   List<K8sPod> getAllPods(long timeoutInMillis) throws Exception {
     String namespace = canaryWorkload.getResourceId().getNamespace();
-    List<K8sPod> allPods = isDeprecateFabric8Enabled
-        ? k8sTaskHelperBase.getPodDetails(kubernetesConfig, namespace, releaseName, timeoutInMillis)
-        : k8sTaskHelperBase.getPodDetailsFabric8(kubernetesConfig, namespace, releaseName, timeoutInMillis);
-    List<K8sPod> canaryPods = isDeprecateFabric8Enabled
-        ? k8sTaskHelperBase.getPodDetailsWithTrack(kubernetesConfig, namespace, releaseName, "canary", timeoutInMillis)
-        : k8sTaskHelperBase.getPodDetailsWithTrackFabric8(
-            kubernetesConfig, namespace, releaseName, "canary", timeoutInMillis);
+    List<K8sPod> allPods = k8sTaskHelperBase.getPodDetails(kubernetesConfig, namespace, releaseName, timeoutInMillis);
+    List<K8sPod> canaryPods =
+        k8sTaskHelperBase.getPodDetailsWithTrack(kubernetesConfig, namespace, releaseName, "canary", timeoutInMillis);
     Set<String> canaryPodNames = canaryPods.stream().map(K8sPod::getName).collect(Collectors.toSet());
     allPods.forEach(pod -> {
       if (canaryPodNames.contains(pod.getName())) {
@@ -211,8 +205,8 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
 
     client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
 
-    String releaseHistoryData = k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(kubernetesConfig,
-        k8sCanaryDeployTaskParameters.getReleaseName(), k8sCanaryDeployTaskParameters.isDeprecateFabric8Enabled());
+    String releaseHistoryData = k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(
+        kubernetesConfig, k8sCanaryDeployTaskParameters.getReleaseName());
 
     releaseHistory = (StringUtils.isEmpty(releaseHistoryData)) ? ReleaseHistory.createNew()
                                                                : ReleaseHistory.createFromData(releaseHistoryData);

@@ -1,7 +1,6 @@
 package software.wings.helpers.ext.container;
 
 import static io.harness.k8s.model.KubernetesClusterAuthType.OIDC;
-import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
@@ -140,7 +139,7 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
     doReturn(version).when(kubernetesContainerService).getVersionAsString(kubernetesConfig);
 
     boolean result = containerDeploymentDelegateHelper.useK8sSteadyStateCheck(
-        true, true, containerServiceParams, new ExecutionLogCallback());
+        true, containerServiceParams, new ExecutionLogCallback());
     assertThat(result).isTrue();
   }
 
@@ -162,7 +161,7 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
     doReturn(version).when(kubernetesContainerService).getVersionAsString(kubernetesConfig);
 
     boolean result = containerDeploymentDelegateHelper.useK8sSteadyStateCheck(
-        true, true, containerServiceParams, new ExecutionLogCallback());
+        true, containerServiceParams, new ExecutionLogCallback());
     assertThat(result).isTrue();
   }
 
@@ -184,30 +183,8 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
     doReturn(version).when(kubernetesContainerService).getVersionAsString(kubernetesConfig);
 
     boolean result = containerDeploymentDelegateHelper.useK8sSteadyStateCheck(
-        true, true, containerServiceParams, new ExecutionLogCallback());
+        true, containerServiceParams, new ExecutionLogCallback());
     assertThat(result).isFalse();
-  }
-
-  @Test
-  @Owner(developers = ABOSII)
-  @Category(UnitTests.class)
-  public void k8sVersionUsingFabric8() throws Exception {
-    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().namespace("default").build();
-    ContainerServiceParams containerServiceParams =
-        ContainerServiceParams.builder()
-            .settingAttribute(SettingAttribute.Builder.aSettingAttribute()
-                                  .withValue(KubernetesClusterConfig.builder().build())
-                                  .build())
-            .encryptionDetails(Collections.emptyList())
-            .build();
-    String version = "1.16";
-
-    doReturn(kubernetesConfig).when(containerDeploymentDelegateHelper).getKubernetesConfig(containerServiceParams);
-    doReturn(version).when(kubernetesContainerService).getVersionAsStringFabric8(kubernetesConfig);
-
-    boolean result = containerDeploymentDelegateHelper.useK8sSteadyStateCheck(
-        true, false, containerServiceParams, new ExecutionLogCallback());
-    assertThat(result).isTrue();
   }
 
   @Test
@@ -215,7 +192,7 @@ public class ContainerDeploymentDelegateHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testIsK8sVersion116OrAboveWithFeatureFlagDisabled() {
     boolean result = containerDeploymentDelegateHelper.useK8sSteadyStateCheck(
-        false, false, ContainerServiceParams.builder().build(), new ExecutionLogCallback());
+        false, ContainerServiceParams.builder().build(), new ExecutionLogCallback());
     assertThat(result).isFalse();
   }
 

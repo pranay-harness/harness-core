@@ -119,31 +119,6 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = ABOSII)
-  @Category(UnitTests.class)
-  public void testGetPodDetailsWithLabelsFabric8() throws Exception {
-    KubernetesConfig config = KubernetesConfig.builder().build();
-    Map<String, String> labelsQuery = ImmutableMap.of("release-name", "releaseName");
-    List<Pod> existingPods =
-        asList(k8sApiMockPodWith("uid-1", ImmutableMap.of("marker", "marker-value"), singletonList("container")),
-            k8sApiMockPodWith("uid-2", ImmutableMap.of("release", "releaseName", "color", "green"), emptyList()),
-            k8sApiMockPodWith("uid-3", ImmutableMap.of(), asList("container-1", "container-2", "container-3")));
-
-    doReturn(existingPods)
-        .when(mockKubernetesContainerService)
-        .getRunningPodsWithLabelsFabric8(config, "default", labelsQuery);
-    List<K8sPod> pods = k8sTaskHelperBase.getPodDetailsWithLabelsFabric8(
-        config, "default", "releaseName", labelsQuery, LONG_TIMEOUT_INTERVAL);
-
-    assertThat(pods).isNotEmpty();
-    assertThat(pods).hasSize(3);
-    assertThat(pods.get(0).getUid()).isEqualTo("uid-1");
-    assertThatK8sPodHas(pods.get(0), "uid-1", ImmutableMap.of("marker", "marker-value"), singletonList("container"));
-    assertThatK8sPodHas(pods.get(1), "uid-2", ImmutableMap.of("release", "releaseName", "color", "green"), emptyList());
-    assertThatK8sPodHas(pods.get(2), "uid-3", ImmutableMap.of(), asList("container-1", "container-2", "container-3"));
-  }
-
-  @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void testShouldGetEmptyPodListWhenReleaseLabelIsMissing() throws Exception {
@@ -562,49 +537,15 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
-  public void testShouldGetReleaseHistoryFromConfigMapUsingFabric8() {
-    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
-    when(mockKubernetesContainerService.fetchReleaseHistoryFromConfigMapFabric8(any(), any())).thenReturn("secret");
-    String releaseHistory = k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(kubernetesConfig, "release", false);
-    ArgumentCaptor<String> releaseArgumentCaptor = ArgumentCaptor.forClass(String.class);
-    verify(mockKubernetesContainerService)
-        .fetchReleaseHistoryFromConfigMapFabric8(any(), releaseArgumentCaptor.capture());
-    verify(mockKubernetesContainerService, times(0)).fetchReleaseHistoryFromConfigMap(any(), any());
-
-    assertThat(releaseArgumentCaptor.getValue()).isEqualTo("release");
-    assertThat(releaseHistory).isEqualTo("secret");
-  }
-
-  @Test
-  @Owner(developers = ACASIAN)
-  @Category(UnitTests.class)
   public void testShouldGetReleaseHistoryFromConfigMapUsingK8sClient() {
     KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
     when(mockKubernetesContainerService.fetchReleaseHistoryFromConfigMap(any(), any())).thenReturn("secret");
-    String releaseHistory = k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(kubernetesConfig, "release", true);
+    String releaseHistory = k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(kubernetesConfig, "release");
     ArgumentCaptor<String> releaseArgumentCaptor = ArgumentCaptor.forClass(String.class);
     verify(mockKubernetesContainerService).fetchReleaseHistoryFromConfigMap(any(), releaseArgumentCaptor.capture());
-    verify(mockKubernetesContainerService, times(0)).fetchReleaseHistoryFromConfigMapFabric8(any(), any());
 
     assertThat(releaseArgumentCaptor.getValue()).isEqualTo("release");
     assertThat(releaseHistory).isEqualTo("secret");
-  }
-
-  @Test
-  @Owner(developers = ACASIAN)
-  @Category(UnitTests.class)
-  public void testShouldSaveReleaseHistoryInConfigMapUsingFabric8() {
-    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
-    doNothing().when(mockKubernetesContainerService).saveReleaseHistoryInConfigMapFabric8(any(), any(), anyString());
-    k8sTaskHelperBase.saveReleaseHistoryInConfigMap(kubernetesConfig, "release", "secret", false);
-    ArgumentCaptor<String> releaseNameCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<String> releaseHistoryCaptor = ArgumentCaptor.forClass(String.class);
-    verify(mockKubernetesContainerService)
-        .saveReleaseHistoryInConfigMapFabric8(any(), releaseNameCaptor.capture(), releaseHistoryCaptor.capture());
-    verify(mockKubernetesContainerService, times(0)).saveReleaseHistoryInConfigMap(any(), any(), anyString());
-
-    assertThat(releaseNameCaptor.getValue()).isEqualTo("release");
-    assertThat(releaseHistoryCaptor.getValue()).isEqualTo("secret");
   }
 
   @Test
@@ -613,29 +554,11 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   public void testShouldSaveReleaseHistoryInConfigMapUsingK8sClient() {
     KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
     when(mockKubernetesContainerService.saveReleaseHistoryInConfigMap(any(), any(), anyString())).thenReturn(null);
-    k8sTaskHelperBase.saveReleaseHistoryInConfigMap(kubernetesConfig, "release", "secret", true);
+    k8sTaskHelperBase.saveReleaseHistoryInConfigMap(kubernetesConfig, "release", "secret");
     ArgumentCaptor<String> releaseNameCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<String> releaseHistoryCaptor = ArgumentCaptor.forClass(String.class);
     verify(mockKubernetesContainerService)
         .saveReleaseHistoryInConfigMap(any(), releaseNameCaptor.capture(), releaseHistoryCaptor.capture());
-    verify(mockKubernetesContainerService, times(0)).saveReleaseHistoryInConfigMapFabric8(any(), any(), anyString());
-
-    assertThat(releaseNameCaptor.getValue()).isEqualTo("release");
-    assertThat(releaseHistoryCaptor.getValue()).isEqualTo("secret");
-  }
-
-  @Test
-  @Owner(developers = ACASIAN)
-  @Category(UnitTests.class)
-  public void testShouldSaveReleaseHistoryUsingFabric8() {
-    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
-    doNothing().when(mockKubernetesContainerService).saveReleaseHistoryFabric8(any(), any(), anyString(), anyBoolean());
-    k8sTaskHelperBase.saveReleaseHistory(kubernetesConfig, "release", "secret", true, false);
-    ArgumentCaptor<String> releaseNameCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<String> releaseHistoryCaptor = ArgumentCaptor.forClass(String.class);
-    verify(mockKubernetesContainerService)
-        .saveReleaseHistoryFabric8(any(), releaseNameCaptor.capture(), releaseHistoryCaptor.capture(), anyBoolean());
-    verify(mockKubernetesContainerService, times(0)).saveReleaseHistory(any(), any(), anyString(), anyBoolean());
 
     assertThat(releaseNameCaptor.getValue()).isEqualTo("release");
     assertThat(releaseHistoryCaptor.getValue()).isEqualTo("secret");
@@ -647,12 +570,11 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   public void testShouldSaveReleaseHistoryUsingK8sClient() {
     KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
     doNothing().when(mockKubernetesContainerService).saveReleaseHistory(any(), any(), anyString(), anyBoolean());
-    k8sTaskHelperBase.saveReleaseHistory(kubernetesConfig, "release", "secret", true, true);
+    k8sTaskHelperBase.saveReleaseHistory(kubernetesConfig, "release", "secret", true);
     ArgumentCaptor<String> releaseNameCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<String> releaseHistoryCaptor = ArgumentCaptor.forClass(String.class);
     verify(mockKubernetesContainerService)
         .saveReleaseHistory(any(), releaseNameCaptor.capture(), releaseHistoryCaptor.capture(), anyBoolean());
-    verify(mockKubernetesContainerService, times(0)).saveReleaseHistoryFabric8(any(), any(), anyString(), anyBoolean());
 
     assertThat(releaseNameCaptor.getValue()).isEqualTo("release");
     assertThat(releaseHistoryCaptor.getValue()).isEqualTo("secret");
@@ -661,29 +583,12 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
-  public void testShouldGetReleaseHistoryFromSecretUsingFabric8() {
-    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
-    when(mockKubernetesContainerService.fetchReleaseHistoryFromSecretsFabric8(any(), any())).thenReturn("secret");
-    String releaseHistory = k8sTaskHelperBase.getReleaseHistoryFromSecret(kubernetesConfig, "release", false);
-    ArgumentCaptor<String> releaseArgumentCaptor = ArgumentCaptor.forClass(String.class);
-    verify(mockKubernetesContainerService)
-        .fetchReleaseHistoryFromSecretsFabric8(any(), releaseArgumentCaptor.capture());
-    verify(mockKubernetesContainerService, times(0)).fetchReleaseHistoryFromSecrets(any(), any());
-
-    assertThat(releaseArgumentCaptor.getValue()).isEqualTo("release");
-    assertThat(releaseHistory).isEqualTo("secret");
-  }
-
-  @Test
-  @Owner(developers = ACASIAN)
-  @Category(UnitTests.class)
   public void testShouldGetReleaseHistoryFromSecretUsingK8sClient() {
     KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
     when(mockKubernetesContainerService.fetchReleaseHistoryFromSecrets(any(), any())).thenReturn("secret");
-    String releaseHistory = k8sTaskHelperBase.getReleaseHistoryFromSecret(kubernetesConfig, "release", true);
+    String releaseHistory = k8sTaskHelperBase.getReleaseHistoryFromSecret(kubernetesConfig, "release");
     ArgumentCaptor<String> releaseArgumentCaptor = ArgumentCaptor.forClass(String.class);
     verify(mockKubernetesContainerService).fetchReleaseHistoryFromSecrets(any(), releaseArgumentCaptor.capture());
-    verify(mockKubernetesContainerService, times(0)).fetchReleaseHistoryFromSecretsFabric8(any(), any());
 
     assertThat(releaseArgumentCaptor.getValue()).isEqualTo("release");
     assertThat(releaseHistory).isEqualTo("secret");
