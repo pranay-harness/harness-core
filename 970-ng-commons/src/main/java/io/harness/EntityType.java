@@ -26,7 +26,9 @@ public enum EntityType {
   @JsonProperty(EntityTypeConstants.ENVIRONMENT)
   ENVIRONMENT(ModuleType.CORE, EntityTypeConstants.ENVIRONMENT, IdentifierRef.class),
   @JsonProperty(EntityTypeConstants.INPUT_SETS)
-  INPUT_SETS(ModuleType.CORE, EntityTypeConstants.INPUT_SETS, InputSetReference.class);
+  INPUT_SETS(ModuleType.CORE, EntityTypeConstants.INPUT_SETS, InputSetReference.class),
+  @JsonProperty(EntityTypeConstants.CV_CONFIG)
+  CV_CONFIG(ModuleType.CV, EntityTypeConstants.CV_CONFIG, IdentifierRef.class);
 
   private final ModuleType moduleType;
   String yamlName;

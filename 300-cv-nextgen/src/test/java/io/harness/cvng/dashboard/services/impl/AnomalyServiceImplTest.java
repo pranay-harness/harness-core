@@ -220,6 +220,7 @@ public class AnomalyServiceImplTest extends CvNextGenTest {
     appDynamicsCVConfig.setServiceIdentifier(serviceIdentifier);
     appDynamicsCVConfig.setEnvIdentifier(envIdentifier);
     appDynamicsCVConfig.setProjectIdentifier(projectIdentifier);
+    appDynamicsCVConfig.setOrgIdentifier(orgIdentifier);
     appDynamicsCVConfig.setAccountId(accountId);
     appDynamicsCVConfig.setCategory(category);
     appDynamicsCVConfig.setMetricPack(MetricPack.builder()

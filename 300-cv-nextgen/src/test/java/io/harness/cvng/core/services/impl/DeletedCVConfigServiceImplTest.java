@@ -39,6 +39,7 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.reflections.Reflections;
 
@@ -50,6 +51,7 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTest {
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private CVConfigService cvConfigService;
   @Inject private LogRecordService logRecordService;
+  @Mock private CVEventServiceImpl eventService;
 
   private String accountId;
   private String connectorId;
@@ -66,6 +68,7 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTest {
     this.serviceInstanceIdentifier = generateUuid();
     FieldUtils.writeField(
         deletedCVConfigServiceWithMocks, "dataCollectionTaskService", dataCollectionTaskService, true);
+    FieldUtils.writeField(deletedCVConfigServiceWithMocks, "eventService", eventService, true);
   }
 
   private DeletedCVConfig save(DeletedCVConfig deletedCVConfig) {
@@ -96,6 +99,9 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTest {
         .isInstanceOf(NullPointerException.class)
         .hasMessage("VerificationTask mapping does not exist for cvConfigId " + cvConfig.getUuid()
             + ". Please check cvConfigId");
+
+    ArgumentCaptor<CVConfig> argumentCaptor = ArgumentCaptor.forClass(CVConfig.class);
+    verify(eventService, times(1)).sendConnectorDeleteEvent(argumentCaptor.capture());
   }
 
   @Test
@@ -124,6 +130,9 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTest {
     List<LogRecord> logRecords = hPersistence.createQuery(LogRecord.class).asList();
     assertThat(logRecords).hasSize(1);
     assertThat(logRecords.get(0).getVerificationTaskId()).isEqualTo(logRecord2.getVerificationTaskId());
+
+    ArgumentCaptor<CVConfig> argumentCaptor = ArgumentCaptor.forClass(CVConfig.class);
+    verify(eventService, times(1)).sendConnectorDeleteEvent(argumentCaptor.capture());
   }
 
   @Test
@@ -179,6 +188,7 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTest {
     cvConfig.setAccountId(accountId);
     cvConfig.setConnectorIdentifier(connectorId);
     cvConfig.setServiceIdentifier(generateUuid());
+    cvConfig.setOrgIdentifier(generateUuid());
     cvConfig.setEnvIdentifier(generateUuid());
     cvConfig.setProjectIdentifier(generateUuid());
     cvConfig.setIdentifier(groupId);

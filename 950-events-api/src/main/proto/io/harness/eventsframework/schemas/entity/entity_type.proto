@@ -11,4 +11,5 @@ enum EntityTypeProtoEnum {
   SERVICE = 4;
   ENVIRONMENT = 5;
   INPUT_SETS = 6;
+  CV_CONFIG = 7;
 }

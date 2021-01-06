@@ -15,6 +15,7 @@ import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.DeletedCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.services.api.CVEventService;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
@@ -48,6 +49,7 @@ public class CVConfigServiceImpl implements CVConfigService {
   @Inject private DeletedCVConfigService deletedCVConfigService;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private NextGenService nextGenService;
+  @Inject private CVEventService eventService;
 
   @Override
   public CVConfig save(CVConfig cvConfig) {
@@ -55,6 +57,9 @@ public class CVConfigServiceImpl implements CVConfigService {
     cvConfig.validate();
     hPersistence.save(cvConfig);
     verificationTaskService.create(cvConfig.getAccountId(), cvConfig.getUuid());
+
+    eventService.sendConnectorCreateEvent(cvConfig);
+
     return cvConfig;
   }
 
