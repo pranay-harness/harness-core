@@ -28,7 +28,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
@@ -599,9 +598,6 @@ public class K8sStateHelper {
     String waitId = generateUuid();
     int expressionFunctorToken = HashGenerator.generateIntegerHash();
 
-    k8sTaskParameters.setDeprecateFabric8Enabled(
-        featureFlagService.isEnabled(FeatureName.DEPRECATE_FABRIC8_FOR_K8S, context.getAccountId()));
-
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(app.getAccountId())
@@ -773,8 +769,6 @@ public class K8sStateHelper {
             .k8sClusterConfig(
                 containerDeploymentManagerHelper.getK8sClusterConfig(containerInfrastructureMapping, null))
             .namespace(namespace)
-            .deprecateFabric8Enabled(featureFlagService.isEnabled(
-                FeatureName.DEPRECATE_FABRIC8_FOR_K8S, containerInfrastructureMapping.getAccountId()))
             .releaseName(releaseName)
             .build();
 

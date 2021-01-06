@@ -137,12 +137,10 @@ public class ContainerInstanceSyncPerpetualTaskExecutor implements PerpetualTask
       KubernetesConfig kubernetesConfig) {
     try {
       long timeoutMillis = K8sTaskHelperBase.getTimeoutMillisFromMinutes(DEFAULT_STEADY_STATE_TIMEOUT);
-      boolean isDeprecateFabric8Enabled = k8sContainerInstanceSyncPerpetualTaskParams.getDeprecateFabric8Enabled();
       String namespace = k8sContainerInstanceSyncPerpetualTaskParams.getNamespace();
       String releaseName = k8sContainerInstanceSyncPerpetualTaskParams.getReleaseName();
-      List<K8sPod> k8sPodList = isDeprecateFabric8Enabled
-          ? k8sTaskHelperBase.getPodDetails(kubernetesConfig, namespace, releaseName, timeoutMillis)
-          : k8sTaskHelperBase.getPodDetailsFabric8(kubernetesConfig, namespace, releaseName, timeoutMillis);
+      List<K8sPod> k8sPodList =
+          k8sTaskHelperBase.getPodDetails(kubernetesConfig, namespace, releaseName, timeoutMillis);
 
       return K8sTaskExecutionResponse.builder()
           .k8sTaskResponse(K8sInstanceSyncResponse.builder().k8sPodInfoList(k8sPodList).build())

@@ -56,7 +56,6 @@ import io.harness.logging.LogCallback;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
-import io.fabric8.kubernetes.api.model.Service;
 import io.kubernetes.client.openapi.models.V1Service;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -87,7 +86,6 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
   private String stageColor;
   private String releaseName;
   private String manifestFilesDirectory;
-  private boolean isDeprecateFabric8Enabled;
 
   @Override
   protected K8sDeployResponse executeTaskInternal(K8sDeployRequest k8sDeployRequest,
@@ -98,7 +96,6 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
 
     K8sBGDeployRequest k8sBGDeployRequest = (K8sBGDeployRequest) k8sDeployRequest;
 
-    isDeprecateFabric8Enabled = k8sBGDeployRequest.isDeprecateFabric8Enabled();
     releaseName = k8sBGDeployRequest.getReleaseName();
     manifestFilesDirectory = Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString();
     final long timeoutInMillis = getTimeoutMillisFromMinutes(k8sBGDeployRequest.getTimeoutIntervalInMin());
@@ -117,8 +114,8 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
       return getFailureResponse();
     }
 
-    success = prepareForBlueGreen(k8sBGDeployRequest, k8sDelegateTaskParams,
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, Prepare));
+    success = prepareForBlueGreen(
+        k8sDelegateTaskParams, k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, Prepare));
     if (!success) {
       return getFailureResponse();
     }
@@ -129,13 +126,13 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
         k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, Apply), true);
     if (!success) {
       releaseHistory.setReleaseStatus(Status.Failed);
-      k8sTaskHelperBase.saveReleaseHistoryInConfigMap(kubernetesConfig, k8sBGDeployRequest.getReleaseName(),
-          releaseHistory.getAsYaml(), k8sBGDeployRequest.isDeprecateFabric8Enabled());
+      k8sTaskHelperBase.saveReleaseHistoryInConfigMap(
+          kubernetesConfig, k8sBGDeployRequest.getReleaseName(), releaseHistory.getAsYaml());
       return getFailureResponse();
     }
 
-    k8sTaskHelperBase.saveReleaseHistoryInConfigMap(kubernetesConfig, k8sBGDeployRequest.getReleaseName(),
-        releaseHistory.getAsYaml(), k8sBGDeployRequest.isDeprecateFabric8Enabled());
+    k8sTaskHelperBase.saveReleaseHistoryInConfigMap(
+        kubernetesConfig, k8sBGDeployRequest.getReleaseName(), releaseHistory.getAsYaml());
 
     currentRelease.setManagedWorkloadRevision(
         k8sTaskHelperBase.getLatestRevision(client, managedWorkload.getResourceId(), k8sDelegateTaskParams));
@@ -145,22 +142,22 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
 
     if (!success) {
       releaseHistory.setReleaseStatus(Status.Failed);
-      k8sTaskHelperBase.saveReleaseHistoryInConfigMap(kubernetesConfig, k8sBGDeployRequest.getReleaseName(),
-          releaseHistory.getAsYaml(), k8sBGDeployRequest.isDeprecateFabric8Enabled());
+      k8sTaskHelperBase.saveReleaseHistoryInConfigMap(
+          kubernetesConfig, k8sBGDeployRequest.getReleaseName(), releaseHistory.getAsYaml());
       return getFailureResponse();
     }
 
     k8sBGBaseHandler.wrapUp(
         k8sDelegateTaskParams, k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, WrapUp), client);
 
-    final List<K8sPod> podList = k8sBGBaseHandler.getAllPods(timeoutInMillis, kubernetesConfig, managedWorkload,
-        primaryColor, stageColor, releaseName, isDeprecateFabric8Enabled);
+    final List<K8sPod> podList = k8sBGBaseHandler.getAllPods(
+        timeoutInMillis, kubernetesConfig, managedWorkload, primaryColor, stageColor, releaseName);
 
     currentRelease.setManagedWorkloadRevision(
         k8sTaskHelperBase.getLatestRevision(client, managedWorkload.getResourceId(), k8sDelegateTaskParams));
     releaseHistory.setReleaseStatus(Status.Succeeded);
-    k8sTaskHelperBase.saveReleaseHistoryInConfigMap(kubernetesConfig, k8sBGDeployRequest.getReleaseName(),
-        releaseHistory.getAsYaml(), k8sBGDeployRequest.isDeprecateFabric8Enabled());
+    k8sTaskHelperBase.saveReleaseHistoryInConfigMap(
+        kubernetesConfig, k8sBGDeployRequest.getReleaseName(), releaseHistory.getAsYaml());
 
     K8sBGDeployResponse k8sBGDeployResponse = K8sBGDeployResponse.builder()
                                                   .releaseNumber(currentRelease.getNumber())
@@ -193,8 +190,8 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
         containerDeploymentDelegateBaseHelper.createKubernetesConfig(request.getK8sInfraDelegateConfig());
 
     client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
-    String releaseHistoryData = k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(
-        kubernetesConfig, request.getReleaseName(), request.isDeprecateFabric8Enabled());
+    String releaseHistoryData =
+        k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(kubernetesConfig, request.getReleaseName());
     releaseHistory = (StringUtils.isEmpty(releaseHistoryData)) ? ReleaseHistory.createNew()
                                                                : ReleaseHistory.createFromData(releaseHistoryData);
 
@@ -228,8 +225,7 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
   }
 
   @VisibleForTesting
-  boolean prepareForBlueGreen(
-      K8sBGDeployRequest request, K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback) {
+  boolean prepareForBlueGreen(K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback) {
     try {
       markVersionedResources(resources);
 
@@ -283,23 +279,12 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
       }
 
       try {
-        if (request.isDeprecateFabric8Enabled()) {
-          primaryColor = k8sBGBaseHandler.getPrimaryColor(primaryService, kubernetesConfig, executionLogCallback);
-          V1Service stageServiceInCluster =
-              kubernetesContainerService.getService(kubernetesConfig, stageService.getResourceId().getName());
-          if (stageServiceInCluster == null) {
-            executionLogCallback.saveExecutionLog(
-                "Stage Service [" + stageService.getResourceId().getName() + "] not found in cluster.");
-          }
-        } else {
-          primaryColor =
-              k8sBGBaseHandler.getPrimaryColorUsingFabric8(primaryService, kubernetesConfig, executionLogCallback);
-          Service stageServiceInCluster =
-              kubernetesContainerService.getServiceFabric8(kubernetesConfig, stageService.getResourceId().getName());
-          if (stageServiceInCluster == null) {
-            executionLogCallback.saveExecutionLog(
-                "Stage Service [" + stageService.getResourceId().getName() + "] not found in cluster.");
-          }
+        primaryColor = k8sBGBaseHandler.getPrimaryColor(primaryService, kubernetesConfig, executionLogCallback);
+        V1Service stageServiceInCluster =
+            kubernetesContainerService.getService(kubernetesConfig, stageService.getResourceId().getName());
+        if (stageServiceInCluster == null) {
+          executionLogCallback.saveExecutionLog(
+              "Stage Service [" + stageService.getResourceId().getName() + "] not found in cluster.");
         }
 
         if (primaryColor == null) {

@@ -299,7 +299,6 @@ public class ContainerInstanceSyncPerpetualTaskExecutorTest extends DelegateTest
                                                     .setAccountId("accountId")
                                                     .setNamespace("namespace")
                                                     .setReleaseName("release")
-                                                    .setDeprecateFabric8Enabled(true)
                                                     .build())
             .build();
     return PerpetualTaskExecutionParams.newBuilder().setCustomizedParams(Any.pack(params)).build();

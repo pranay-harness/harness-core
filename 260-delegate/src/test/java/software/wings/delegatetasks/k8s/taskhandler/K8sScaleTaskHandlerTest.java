@@ -93,9 +93,6 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
   public void testExecuteForNamespaceFromKubeConfig() throws Exception {
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean()))
         .thenReturn(kubernetesConfig);
-    when(k8sTaskHelperBase.getPodDetailsFabric8(
-             kubernetesConfig, kubeConfigNamespace, releaseName, LONG_TIMEOUT_INTERVAL))
-        .thenReturn(null);
     when(k8sTaskHelperBase.scale(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(KubernetesResourceId.class),
              anyInt(), any(ExecutionLogCallback.class)))
         .thenReturn(false);
@@ -106,8 +103,7 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
             any(ExecutionLogCallback.class));
     ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
     verify(k8sTaskHelperBase, times(1))
-        .getPodDetailsFabric8(
-            any(KubernetesConfig.class), argumentCaptor.capture(), anyString(), eq(LONG_TIMEOUT_INTERVAL));
+        .getPodDetails(any(KubernetesConfig.class), argumentCaptor.capture(), anyString(), eq(LONG_TIMEOUT_INTERVAL));
     assertThat(argumentCaptor.getValue()).isEqualTo(kubeConfigNamespace);
   }
 
@@ -121,7 +117,7 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
 
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean()))
         .thenReturn(kubernetesConfig);
-    when(k8sTaskHelperBase.getPodDetailsFabric8(kubernetesConfig, namespace, releaseName, LONG_TIMEOUT_INTERVAL))
+    when(k8sTaskHelperBase.getPodDetails(kubernetesConfig, namespace, releaseName, LONG_TIMEOUT_INTERVAL))
         .thenReturn(null);
     when(k8sTaskHelperBase.scale(any(Kubectl.class), any(K8sDelegateTaskParams.class), any(KubernetesResourceId.class),
              anyInt(), any(ExecutionLogCallback.class)))
@@ -133,8 +129,7 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
             any(ExecutionLogCallback.class));
     ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
     verify(k8sTaskHelperBase, times(1))
-        .getPodDetailsFabric8(
-            any(KubernetesConfig.class), argumentCaptor.capture(), anyString(), eq(LONG_TIMEOUT_INTERVAL));
+        .getPodDetails(any(KubernetesConfig.class), argumentCaptor.capture(), anyString(), eq(LONG_TIMEOUT_INTERVAL));
     assertThat(argumentCaptor.getValue()).isEqualTo(namespace);
   }
 
@@ -178,7 +173,6 @@ public class K8sScaleTaskHandlerTest extends WingsBaseTest {
     Reflect.on(k8sScaleTaskHandler).set("k8sTaskHelper", new K8sTaskHelper());
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean()))
         .thenReturn(kubernetesConfig);
-    k8sScaleTaskParameters.setDeprecateFabric8Enabled(true);
     k8sScaleTaskParameters.setInstanceUnitType(InstanceUnitType.PERCENTAGE);
 
     // max instances is not present

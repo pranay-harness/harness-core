@@ -137,12 +137,6 @@ public class K8sRollingBaseHandler {
 
   public List<K8sPod> getPods(long timeoutInMillis, List<KubernetesResource> managedWorkloads,
       KubernetesConfig kubernetesConfig, String releaseName) throws Exception {
-    return getPods(true, timeoutInMillis, managedWorkloads, kubernetesConfig, releaseName);
-  }
-
-  public List<K8sPod> getPods(boolean isDeprecateFabric8Enabled, long timeoutInMillis,
-      List<KubernetesResource> managedWorkloads, KubernetesConfig kubernetesConfig, String releaseName)
-      throws Exception {
     List<K8sPod> k8sPods = new ArrayList<>();
 
     if (isEmpty(managedWorkloads)) {
@@ -155,9 +149,8 @@ public class K8sRollingBaseHandler {
                                         .distinct()
                                         .collect(Collectors.toList());
     for (String namespace : namespaces) {
-      List<K8sPod> podDetails = isDeprecateFabric8Enabled
-          ? k8sTaskHelperBase.getPodDetails(kubernetesConfig, namespace, releaseName, timeoutInMillis)
-          : k8sTaskHelperBase.getPodDetailsFabric8(kubernetesConfig, namespace, releaseName, timeoutInMillis);
+      List<K8sPod> podDetails =
+          k8sTaskHelperBase.getPodDetails(kubernetesConfig, namespace, releaseName, timeoutInMillis);
 
       if (isNotEmpty(podDetails)) {
         k8sPods.addAll(podDetails);

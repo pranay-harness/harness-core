@@ -108,13 +108,9 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
-import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
-import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1LoadBalancerIngress;
 import io.kubernetes.client.openapi.models.V1LoadBalancerStatus;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
@@ -258,35 +254,6 @@ public class K8sTaskHelperBase {
         && !StringUtils.equals(filename, values_filename);
   }
 
-  public List<K8sPod> getPodDetailsWithLabelsFabric8(KubernetesConfig kubernetesConfig, String namespace,
-      String releaseName, Map<String, String> labels, long timeoutInMillis) throws Exception {
-    return timeLimiter.callWithTimeout(
-        ()
-            -> kubernetesContainerService.getRunningPodsWithLabelsFabric8(kubernetesConfig, namespace, labels)
-                   .stream()
-                   .map(pod
-                       -> K8sPod.builder()
-                              .uid(pod.getMetadata().getUid())
-                              .name(pod.getMetadata().getName())
-                              .namespace(pod.getMetadata().getNamespace())
-                              .releaseName(releaseName)
-                              .podIP(pod.getStatus().getPodIP())
-                              .containerList(pod.getStatus()
-                                                 .getContainerStatuses()
-                                                 .stream()
-                                                 .map(container
-                                                     -> K8sContainer.builder()
-                                                            .containerId(container.getContainerID())
-                                                            .name(container.getName())
-                                                            .image(container.getImage())
-                                                            .build())
-                                                 .collect(toList()))
-                              .labels(pod.getMetadata().getLabels())
-                              .build())
-                   .collect(toList()),
-        timeoutInMillis, TimeUnit.MILLISECONDS, true);
-  }
-
   public List<K8sPod> getPodDetailsWithLabels(KubernetesConfig kubernetesConfig, String namespace, String releaseName,
       Map<String, String> labels, long timeoutinMillis) throws Exception {
     return timeLimiter.callWithTimeout(
@@ -322,42 +289,16 @@ public class K8sTaskHelperBase {
         timeoutinMillis, TimeUnit.MILLISECONDS, true);
   }
 
-  public List<K8sPod> getPodDetailsWithTrackFabric8(KubernetesConfig kubernetesConfig, String namespace,
-      String releaseName, String track, long timeoutInMillis) throws Exception {
-    Map<String, String> labels = ImmutableMap.of(HarnessLabels.releaseName, releaseName, HarnessLabels.track, track);
-    return getPodDetailsWithLabelsFabric8(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis);
-  }
-
   public List<K8sPod> getPodDetailsWithTrack(KubernetesConfig kubernetesConfig, String namespace, String releaseName,
       String track, long timeoutInMillis) throws Exception {
     Map<String, String> labels = ImmutableMap.of(HarnessLabels.releaseName, releaseName, HarnessLabels.track, track);
     return getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis);
   }
 
-  public List<K8sPod> getPodDetailsWithColorFabric8(KubernetesConfig kubernetesConfig, String namespace,
-      String releaseName, String color, long timeoutInMillis) throws Exception {
-    Map<String, String> labels = ImmutableMap.of(HarnessLabels.releaseName, releaseName, HarnessLabels.color, color);
-    return getPodDetailsWithLabelsFabric8(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis);
-  }
-
   public List<K8sPod> getPodDetailsWithColor(KubernetesConfig kubernetesConfig, String namespace, String releaseName,
       String color, long timeoutInMillis) throws Exception {
     Map<String, String> labels = ImmutableMap.of(HarnessLabels.releaseName, releaseName, HarnessLabels.color, color);
     return getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis);
-  }
-
-  private Service waitForLoadBalancerServiceFabric8(
-      KubernetesConfig kubernetesConfig, String serviceName, String namespace, int timeoutInSeconds) {
-    return waitForLoadBalancerService(serviceName, () -> {
-      Service service = kubernetesContainerService.getServiceFabric8(kubernetesConfig, serviceName, namespace);
-
-      LoadBalancerStatus loadBalancerStatus = service.getStatus().getLoadBalancer();
-      if (!loadBalancerStatus.getIngress().isEmpty()) {
-        return service;
-      }
-
-      return null;
-    }, timeoutInSeconds);
   }
 
   private V1Service waitForLoadBalancerService(
@@ -457,29 +398,6 @@ public class K8sTaskHelperBase {
         loadBalancerHost, service.getSpec().getPorts().stream().map(V1ServicePort::getPort).iterator());
   }
 
-  public String getLoadBalancerEndpointFabric8(KubernetesConfig kubernetesConfig, List<KubernetesResource> resources) {
-    KubernetesResource loadBalancerResource = getFirstLoadBalancerService(resources);
-    if (loadBalancerResource == null) {
-      return null;
-    }
-
-    // NOTE(hindwani): We are not using timeOutInMillis for waiting because of the bug: CDP-13872
-    Service service = waitForLoadBalancerServiceFabric8(kubernetesConfig,
-        loadBalancerResource.getResourceId().getName(), loadBalancerResource.getResourceId().getNamespace(), 60);
-
-    if (service == null) {
-      log.warn("Could not get the Service Status {} from cluster.", loadBalancerResource.getResourceId().getName());
-      return null;
-    }
-
-    LoadBalancerIngress loadBalancerIngress = service.getStatus().getLoadBalancer().getIngress().get(0);
-    String loadBalancerHost =
-        isNotBlank(loadBalancerIngress.getHostname()) ? loadBalancerIngress.getHostname() : loadBalancerIngress.getIp();
-
-    return getLoadBalancerEndpoint(
-        loadBalancerHost, service.getSpec().getPorts().stream().map(ServicePort::getPort).iterator());
-  }
-
   public void setNamespaceToKubernetesResourcesIfRequired(
       List<KubernetesResource> kubernetesResources, String namespace) {
     if (isEmpty(kubernetesResources)) {
@@ -491,12 +409,6 @@ public class K8sTaskHelperBase {
         kubernetesResource.getResourceId().setNamespace(namespace);
       }
     }
-  }
-
-  public List<K8sPod> getPodDetailsFabric8(
-      KubernetesConfig kubernetesConfig, String namespace, String releaseName, long timeoutInMillis) throws Exception {
-    Map<String, String> labels = ImmutableMap.of(HarnessLabels.releaseName, releaseName);
-    return getPodDetailsWithLabelsFabric8(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis);
   }
 
   public List<K8sPod> getPodDetails(
@@ -740,35 +652,15 @@ public class K8sTaskHelperBase {
     return isEmpty(pod.getContainerList()) ? EMPTY : pod.getContainerList().get(0).getContainerId();
   }
 
-  private List<K8sPod> getHelmPodDetails(boolean useFabric8, KubernetesConfig kubernetesConfig, String namespace,
-      String releaseName, long timeoutInMillis) throws Exception {
+  private List<K8sPod> getHelmPodDetails(
+      KubernetesConfig kubernetesConfig, String namespace, String releaseName, long timeoutInMillis) throws Exception {
     Map<String, String> labels = ImmutableMap.of(HELM_RELEASE_LABEL, releaseName);
-    return useFabric8
-        ? getPodDetailsWithLabelsFabric8(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis)
-        : getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis);
-  }
-
-  public List<ContainerInfo> getContainerInfosFabric8(
-      KubernetesConfig kubernetesConfig, String releaseName, String namespace, long timeoutInMillis) throws Exception {
-    List<K8sPod> helmPods = getHelmPodDetails(true, kubernetesConfig, namespace, releaseName, timeoutInMillis);
-
-    return helmPods.stream()
-        .map(pod
-            -> ContainerInfo.builder()
-                   .hostName(pod.getName())
-                   .ip(pod.getPodIP())
-                   .containerId(getPodContainerId(pod))
-                   .podName(pod.getName())
-                   .newContainer(true)
-                   .status(ContainerInfo.Status.SUCCESS)
-                   .releaseName(releaseName)
-                   .build())
-        .collect(Collectors.toList());
+    return getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis);
   }
 
   public List<ContainerInfo> getContainerInfos(
       KubernetesConfig kubernetesConfig, String releaseName, String namespace, long timeoutInMillis) throws Exception {
-    List<K8sPod> helmPods = getHelmPodDetails(false, kubernetesConfig, namespace, releaseName, timeoutInMillis);
+    List<K8sPod> helmPods = getHelmPodDetails(kubernetesConfig, namespace, releaseName, timeoutInMillis);
 
     return helmPods.stream()
         .map(pod
@@ -1628,7 +1520,7 @@ public class K8sTaskHelperBase {
       String releaseName, KubernetesConfig kubernetesConfig, LogCallback executionLogCallback) throws IOException {
     executionLogCallback.saveExecutionLog("Fetching all resources created for release: " + releaseName);
 
-    ConfigMap configMap = kubernetesContainerService.getConfigMapFabric8(kubernetesConfig, releaseName);
+    V1ConfigMap configMap = kubernetesContainerService.getConfigMap(kubernetesConfig, releaseName);
 
     if (configMap == null || isEmpty(configMap.getData()) || isBlank(configMap.getData().get(ReleaseHistoryKeyName))) {
       executionLogCallback.saveExecutionLog("No resource history was available");
@@ -1859,22 +1751,8 @@ public class K8sTaskHelperBase {
     };
   }
 
-  public String getReleaseHistoryData(
-      KubernetesConfig kubernetesConfig, String releaseName, boolean isDeprecateFabric8Enabled) {
-    return isDeprecateFabric8Enabled ? getReleaseHistoryDataK8sClient(kubernetesConfig, releaseName)
-                                     : getReleaseHistoryDataFabric8(kubernetesConfig, releaseName);
-  }
-
-  private String getReleaseHistoryDataFabric8(KubernetesConfig kubernetesConfig, String releaseName) {
-    String releaseHistoryData =
-        kubernetesContainerService.fetchReleaseHistoryFromSecretsFabric8(kubernetesConfig, releaseName);
-
-    if (isEmpty(releaseHistoryData)) {
-      releaseHistoryData =
-          kubernetesContainerService.fetchReleaseHistoryFromConfigMapFabric8(kubernetesConfig, releaseName);
-    }
-
-    return releaseHistoryData;
+  public String getReleaseHistoryData(KubernetesConfig kubernetesConfig, String releaseName) {
+    return getReleaseHistoryDataK8sClient(kubernetesConfig, releaseName);
   }
 
   private String getReleaseHistoryDataK8sClient(KubernetesConfig kubernetesConfig, String releaseName) {
@@ -1888,41 +1766,22 @@ public class K8sTaskHelperBase {
     return releaseHistoryData;
   }
 
-  public String getReleaseHistoryDataFromConfigMap(
-      KubernetesConfig kubernetesConfig, String releaseName, boolean isDeprecateFabric8Enabled) {
-    if (isDeprecateFabric8Enabled) {
-      return kubernetesContainerService.fetchReleaseHistoryFromConfigMap(kubernetesConfig, releaseName);
-    }
-
-    return kubernetesContainerService.fetchReleaseHistoryFromConfigMapFabric8(kubernetesConfig, releaseName);
+  public String getReleaseHistoryDataFromConfigMap(KubernetesConfig kubernetesConfig, String releaseName) {
+    return kubernetesContainerService.fetchReleaseHistoryFromConfigMap(kubernetesConfig, releaseName);
   }
 
-  public void saveReleaseHistoryInConfigMap(KubernetesConfig kubernetesConfig, String releaseName,
-      String releaseHistoryAsYaml, boolean isDeprecateFabric8Enabled) {
-    if (isDeprecateFabric8Enabled) {
-      kubernetesContainerService.saveReleaseHistoryInConfigMap(kubernetesConfig, releaseName, releaseHistoryAsYaml);
-    } else {
-      kubernetesContainerService.saveReleaseHistoryInConfigMapFabric8(
-          kubernetesConfig, releaseName, releaseHistoryAsYaml);
-    }
+  public void saveReleaseHistoryInConfigMap(
+      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistoryAsYaml) {
+    kubernetesContainerService.saveReleaseHistoryInConfigMap(kubernetesConfig, releaseName, releaseHistoryAsYaml);
   }
 
-  public void saveReleaseHistory(KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory,
-      boolean storeInSecrets, boolean isDeprecateFabric8Enabled) {
-    if (isDeprecateFabric8Enabled) {
-      kubernetesContainerService.saveReleaseHistory(kubernetesConfig, releaseName, releaseHistory, storeInSecrets);
-    } else {
-      kubernetesContainerService.saveReleaseHistoryFabric8(
-          kubernetesConfig, releaseName, releaseHistory, storeInSecrets);
-    }
+  public void saveReleaseHistory(
+      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory, boolean storeInSecrets) {
+    kubernetesContainerService.saveReleaseHistory(kubernetesConfig, releaseName, releaseHistory, storeInSecrets);
   }
 
-  public String getReleaseHistoryFromSecret(
-      KubernetesConfig kubernetesConfig, String releaseName, boolean isDeprecateFabric8Enabled) {
-    if (isDeprecateFabric8Enabled) {
-      return kubernetesContainerService.fetchReleaseHistoryFromSecrets(kubernetesConfig, releaseName);
-    }
-    return kubernetesContainerService.fetchReleaseHistoryFromSecretsFabric8(kubernetesConfig, releaseName);
+  public String getReleaseHistoryFromSecret(KubernetesConfig kubernetesConfig, String releaseName) {
+    return kubernetesContainerService.fetchReleaseHistoryFromSecrets(kubernetesConfig, releaseName);
   }
 
   public LogCallback getExecutionLogCallback(ILogStreamingTaskClient logStreamingTaskClient, String commandUnitName) {

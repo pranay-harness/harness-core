@@ -75,8 +75,6 @@ public interface KubernetesContainerService {
 
   Service createOrReplaceService(KubernetesConfig kubernetesConfig, Service definition);
 
-  Service getServiceFabric8(KubernetesConfig kubernetesConfig, String name, String namespace);
-
   Service getServiceFabric8(KubernetesConfig kubernetesConfig, String name);
 
   V1Service getService(KubernetesConfig kubernetesConfig, String name, String namespace);
@@ -136,26 +134,14 @@ public interface KubernetesContainerService {
   void waitForPodsToStop(KubernetesConfig kubernetesConfig, Map<String, String> labels, int serviceSteadyStateTimeout,
       List<Pod> originalPods, long startTime, LogCallback logCallback);
 
-  String fetchReleaseHistoryFromConfigMapFabric8(KubernetesConfig kubernetesConfig, String infraMappingId);
-
-  String fetchReleaseHistoryFromSecretsFabric8(KubernetesConfig kubernetesConfig, String infraMappingId);
-
   String fetchReleaseHistoryFromConfigMap(KubernetesConfig kubernetesConfig, String infraMappingId);
 
   String fetchReleaseHistoryFromSecrets(KubernetesConfig kubernetesConfig, String infraMappingId);
-
-  void saveReleaseHistoryInConfigMapFabric8(
-      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory);
-
-  void saveReleaseHistoryInSecretsFabric8(KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory);
 
   V1ConfigMap saveReleaseHistoryInConfigMap(
       KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory);
 
   V1Secret saveReleaseHistoryInSecrets(KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory);
-
-  void saveReleaseHistoryFabric8(
-      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory, boolean storeInSecrets);
 
   void saveReleaseHistory(
       KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory, boolean storeInSecrets);
@@ -170,8 +156,6 @@ public interface KubernetesContainerService {
   VirtualService getIstioVirtualService(KubernetesConfig kubernetesConfig, String name);
 
   CustomResourceDefinition getCustomResourceDefinition(KubernetesClient client, IstioResource resource);
-
-  String getVersionAsStringFabric8(KubernetesConfig kubernetesConfig);
 
   VersionInfo getVersion(KubernetesConfig kubernetesConfig);
 

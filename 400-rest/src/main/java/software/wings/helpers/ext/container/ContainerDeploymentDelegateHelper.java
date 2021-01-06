@@ -150,16 +150,15 @@ public class ContainerDeploymentDelegateHelper {
     return kubernetesConfig;
   }
 
-  public boolean useK8sSteadyStateCheck(boolean isK8sSteadyStateCheckEnabled, boolean deprecateFabric8Enabled,
-      ContainerServiceParams containerServiceParams, LogCallback logCallback) {
+  public boolean useK8sSteadyStateCheck(
+      boolean isK8sSteadyStateCheckEnabled, ContainerServiceParams containerServiceParams, LogCallback logCallback) {
     if (!isK8sSteadyStateCheckEnabled) {
       return false;
     }
 
     KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
-    String versionAsString = deprecateFabric8Enabled
-        ? kubernetesContainerService.getVersionAsString(kubernetesConfig)
-        : kubernetesContainerService.getVersionAsStringFabric8(kubernetesConfig);
+    String versionAsString = kubernetesContainerService.getVersionAsString(kubernetesConfig);
+
     logCallback.saveExecutionLog(format("Kubernetes version [%s]", versionAsString));
     int versionMajorMin = Integer.parseInt(escapeNonDigitsAndTruncate(versionAsString));
 

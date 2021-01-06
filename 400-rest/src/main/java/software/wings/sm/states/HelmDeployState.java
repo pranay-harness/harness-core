@@ -900,9 +900,6 @@ public class HelmDeployState extends State {
     commandRequest.setK8SteadyStateCheckEnabled(
         featureFlagService.isEnabled(FeatureName.HELM_STEADY_STATE_CHECK_1_16, context.getAccountId()));
 
-    commandRequest.setDeprecateFabric8Enabled(
-        featureFlagService.isEnabled(FeatureName.DEPRECATE_FABRIC8_FOR_K8S, context.getAccountId()));
-
     List<String> tags = new ArrayList<>();
     tags.addAll(k8sStateHelper.fetchTagsFromK8sCloudProvider(containerServiceParams));
 

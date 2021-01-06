@@ -14,7 +14,6 @@ import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -93,7 +92,7 @@ public class K8sTrafficSplitTaskHandlerTest extends WingsBaseTest {
 
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean()))
         .thenReturn(KubernetesConfig.builder().build());
-    when(k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(any(KubernetesConfig.class), anyString(), anyBoolean()))
+    when(k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(any(KubernetesConfig.class), anyString()))
         .thenReturn(releaseHistory.getAsYaml());
     when(kubernetesContainerService.getIstioVirtualService(any(KubernetesConfig.class), anyString())).thenReturn(null);
 
@@ -161,12 +160,11 @@ public class K8sTrafficSplitTaskHandlerTest extends WingsBaseTest {
             .virtualServiceName(K8sExpressions.virtualServiceNameExpression)
             .istioDestinationWeights(Arrays.asList(new IstioDestinationWeight()))
             .build();
-    when(k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(any(KubernetesConfig.class), anyString(), anyBoolean()))
+    when(k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(any(KubernetesConfig.class), anyString()))
         .thenReturn(null);
     k8sTrafficSplitTaskHandler.executeTaskInternal(k8sTrafficSplitTaskParams, K8sDelegateTaskParams.builder().build());
     verify(containerDeploymentDelegateHelper, times(2)).getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean());
-    verify(k8sTaskHelperBase, times(1))
-        .getReleaseHistoryDataFromConfigMap(any(KubernetesConfig.class), anyString(), eq(false));
+    verify(k8sTaskHelperBase, times(1)).getReleaseHistoryDataFromConfigMap(any(KubernetesConfig.class), anyString());
     verify(kubernetesContainerService, times(1))
         .createOrReplaceIstioResource(any(KubernetesConfig.class), any(IstioResource.class));
     verify(k8sTaskHelper, times(1))
@@ -182,7 +180,7 @@ public class K8sTrafficSplitTaskHandlerTest extends WingsBaseTest {
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
     releaseHistory.createNewRelease(ImmutableList.of(
         KubernetesResourceId.builder().kind("VirtualService").name(VIRTUAL_SERVICE).namespace("default").build()));
-    when(k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(any(KubernetesConfig.class), anyString(), anyBoolean()))
+    when(k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(any(KubernetesConfig.class), anyString()))
         .thenReturn(releaseHistory.getAsYaml());
     VirtualService istioVirtualService = Mockito.mock(VirtualService.class);
     ObjectMeta metadata = Mockito.mock(ObjectMeta.class);
@@ -194,8 +192,7 @@ public class K8sTrafficSplitTaskHandlerTest extends WingsBaseTest {
         .thenReturn(istioVirtualService);
     boolean status = k8sTrafficSplitTaskHandler.init(k8sTrafficSplitTaskParams, executionLogCallback);
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean());
-    verify(k8sTaskHelperBase, times(1))
-        .getReleaseHistoryDataFromConfigMap(any(KubernetesConfig.class), anyString(), eq(false));
+    verify(k8sTaskHelperBase, times(1)).getReleaseHistoryDataFromConfigMap(any(KubernetesConfig.class), anyString());
     verify(kubernetesContainerService, times(2)).getIstioVirtualService(any(KubernetesConfig.class), anyString());
     assertThat(status).isTrue();
   }
@@ -219,7 +216,7 @@ public class K8sTrafficSplitTaskHandlerTest extends WingsBaseTest {
 
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean()))
         .thenReturn(KubernetesConfig.builder().build());
-    when(k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(any(KubernetesConfig.class), anyString(), anyBoolean()))
+    when(k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(any(KubernetesConfig.class), anyString()))
         .thenReturn(releaseHistory.getAsYaml());
     when(kubernetesContainerService.getIstioVirtualService(any(KubernetesConfig.class), anyString())).thenReturn(null);
 
@@ -254,7 +251,7 @@ public class K8sTrafficSplitTaskHandlerTest extends WingsBaseTest {
     releaseHistory.createNewRelease(ImmutableList.of(
         KubernetesResourceId.builder().kind("VirtualService").name(VIRTUAL_SERVICE).namespace("default").build(),
         KubernetesResourceId.builder().kind("VirtualService").build()));
-    when(k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(any(KubernetesConfig.class), anyString(), anyBoolean()))
+    when(k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(any(KubernetesConfig.class), anyString()))
         .thenReturn(releaseHistory.getAsYaml());
 
     VirtualService istioVirtualService = Mockito.mock(VirtualService.class);
@@ -287,14 +284,11 @@ public class K8sTrafficSplitTaskHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetReleaseDataUsingK8sClient() throws Exception {
     K8sTrafficSplitTaskParameters k8sTrafficSplitTaskParams =
-        K8sTrafficSplitTaskParameters.builder()
-            .deprecateFabric8Enabled(true)
-            .virtualServiceName(K8sExpressions.virtualServiceNameExpression)
-            .build();
+        K8sTrafficSplitTaskParameters.builder().virtualServiceName(K8sExpressions.virtualServiceNameExpression).build();
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
     releaseHistory.createNewRelease(ImmutableList.of(
         KubernetesResourceId.builder().kind("VirtualService").name(VIRTUAL_SERVICE).namespace("default").build()));
-    when(k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(any(KubernetesConfig.class), anyString(), anyBoolean()))
+    when(k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(any(KubernetesConfig.class), anyString()))
         .thenReturn(releaseHistory.getAsYaml());
     VirtualService istioVirtualService = Mockito.mock(VirtualService.class);
     ObjectMeta metadata = Mockito.mock(ObjectMeta.class);
@@ -306,7 +300,6 @@ public class K8sTrafficSplitTaskHandlerTest extends WingsBaseTest {
         .thenReturn(istioVirtualService);
 
     k8sTrafficSplitTaskHandler.init(k8sTrafficSplitTaskParams, executionLogCallback);
-    verify(k8sTaskHelperBase, times(1))
-        .getReleaseHistoryDataFromConfigMap(any(KubernetesConfig.class), anyString(), eq(true));
+    verify(k8sTaskHelperBase, times(1)).getReleaseHistoryDataFromConfigMap(any(KubernetesConfig.class), anyString());
   }
 }

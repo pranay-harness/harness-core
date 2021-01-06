@@ -10,7 +10,6 @@ message K8sContainerInstanceSyncPerpetualTaskParams {
   bytes k8s_cluster_config = 3;
   string namespace = 4;
   string release_name = 5;
-  bool deprecate_fabric8_enabled = 6;
 }
 
 message ContainerServicePerpetualTaskParams {

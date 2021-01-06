@@ -12,7 +12,6 @@ import static software.wings.utils.Utils.emptyIfNull;
 import static java.util.Objects.nonNull;
 
 import io.harness.beans.DelegateTask;
-import io.harness.beans.FeatureName;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.TaskData;
 import io.harness.ff.FeatureFlagService;
@@ -103,8 +102,6 @@ public class ContainerInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
                                                 .setK8SClusterConfig(clusterConfig)
                                                 .setNamespace(taskData.getNamespace())
                                                 .setReleaseName(taskData.getReleaseName())
-                                                .setDeprecateFabric8Enabled(featureFlagService.isEnabled(
-                                                    FeatureName.DEPRECATE_FABRIC8_FOR_K8S, taskData.getAccountId()))
                                                 .build())
         .build();
   }

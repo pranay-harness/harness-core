@@ -123,8 +123,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
     List<KubernetesResource> allWorkloads = ListUtils.union(managedWorkloads, customWorkloads);
     List<K8sPod> existingPodList =
-        k8sRollingBaseHandler.getPods(k8sRollingDeployTaskParameters.isDeprecateFabric8Enabled(),
-            steadyStateTimeoutInMillis, allWorkloads, kubernetesConfig, releaseName);
+        k8sRollingBaseHandler.getPods(steadyStateTimeoutInMillis, allWorkloads, kubernetesConfig, releaseName);
 
     success = k8sTaskHelperBase.applyManifests(client, resources, k8sDelegateTaskParams,
         k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, Apply), true);
@@ -140,8 +139,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       k8sRollingBaseHandler.setCustomWorkloadsInRelease(customWorkloads, release);
 
       k8sTaskHelperBase.saveReleaseHistory(kubernetesConfig, k8sRollingDeployTaskParameters.getReleaseName(),
-          releaseHistory.getAsYaml(), !customWorkloads.isEmpty(),
-          k8sRollingDeployTaskParameters.isDeprecateFabric8Enabled());
+          releaseHistory.getAsYaml(), !customWorkloads.isEmpty());
 
       List<KubernetesResourceId> managedWorkloadKubernetesResourceIds =
           managedWorkloads.stream().map(KubernetesResource::getResourceId).collect(Collectors.toList());
@@ -162,8 +160,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       if (!success || !customWorkloadsStatusSuccess) {
         releaseHistory.setReleaseStatus(Status.Failed);
         k8sTaskHelperBase.saveReleaseHistory(kubernetesConfig, k8sRollingDeployTaskParameters.getReleaseName(),
-            releaseHistory.getAsYaml(), !customWorkloads.isEmpty(),
-            k8sRollingDeployTaskParameters.isDeprecateFabric8Enabled());
+            releaseHistory.getAsYaml(), !customWorkloads.isEmpty());
         return getFailureResponse();
       }
     }
@@ -176,19 +173,15 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
     releaseHistory.setReleaseStatus(Status.Succeeded);
     k8sTaskHelperBase.saveReleaseHistory(kubernetesConfig, k8sRollingDeployTaskParameters.getReleaseName(),
-        releaseHistory.getAsYaml(), !customWorkloads.isEmpty(),
-        k8sRollingDeployTaskParameters.isDeprecateFabric8Enabled());
+        releaseHistory.getAsYaml(), !customWorkloads.isEmpty());
 
     K8sRollingDeployResponse rollingSetupResponse =
         K8sRollingDeployResponse.builder()
             .releaseNumber(release.getNumber())
             .k8sPodList(k8sRollingBaseHandler.tagNewPods(
-                k8sRollingBaseHandler.getPods(k8sRollingDeployTaskParameters.isDeprecateFabric8Enabled(),
-                    steadyStateTimeoutInMillis, allWorkloads, kubernetesConfig, releaseName),
+                k8sRollingBaseHandler.getPods(steadyStateTimeoutInMillis, allWorkloads, kubernetesConfig, releaseName),
                 existingPodList))
-            .loadBalancer(k8sRollingDeployTaskParameters.isDeprecateFabric8Enabled()
-                    ? k8sTaskHelperBase.getLoadBalancerEndpoint(kubernetesConfig, resources)
-                    : k8sTaskHelperBase.getLoadBalancerEndpointFabric8(kubernetesConfig, resources))
+            .loadBalancer(k8sTaskHelperBase.getLoadBalancerEndpoint(kubernetesConfig, resources))
             .helmChartInfo(helmChartInfo)
             .build();
 
@@ -213,8 +206,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(request.getK8sClusterConfig(), false);
     client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
     try {
-      String releaseHistoryData = k8sTaskHelperBase.getReleaseHistoryData(
-          kubernetesConfig, request.getReleaseName(), request.isDeprecateFabric8Enabled());
+      String releaseHistoryData = k8sTaskHelperBase.getReleaseHistoryData(kubernetesConfig, request.getReleaseName());
       releaseHistory = (StringUtils.isEmpty(releaseHistoryData)) ? ReleaseHistory.createNew()
                                                                  : ReleaseHistory.createFromData(releaseHistoryData);
 
