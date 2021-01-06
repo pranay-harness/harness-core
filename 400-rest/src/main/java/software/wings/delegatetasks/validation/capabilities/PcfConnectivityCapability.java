@@ -4,12 +4,8 @@ import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.security.encryption.EncryptedDataDetail;
-
-import software.wings.beans.PcfConfig;
 
 import java.time.Duration;
-import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
@@ -18,10 +14,8 @@ import lombok.Value;
 @Builder
 @TargetModule(Module._930_DELEGATE_TASKS)
 public class PcfConnectivityCapability implements ExecutionCapability {
-  @NotNull private PcfConfig pcfConfig;
-  List<EncryptedDataDetail> encryptionDetails;
-  boolean limitPcfThreads;
-  boolean ignorePcfConnectionContextCache;
+  @NotNull private String endpointUrl;
+
   private final CapabilityType capabilityType = CapabilityType.PCF_CONNECTIVITY;
 
   @Override
@@ -31,7 +25,7 @@ public class PcfConnectivityCapability implements ExecutionCapability {
 
   @Override
   public String fetchCapabilityBasis() {
-    return "Pcf:" + pcfConfig.getEndpointUrl();
+    return "Pcf:" + endpointUrl;
   }
 
   @Override
