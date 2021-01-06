@@ -38,6 +38,7 @@ import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.shell.BaseScriptExecutor;
 
 import software.wings.WingsBaseTest;
 import software.wings.annotation.EncryptableSetting;
@@ -57,7 +58,6 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
-import software.wings.core.BaseScriptExecutor;
 import software.wings.core.ssh.executors.FileBasedScriptExecutor;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackageFileInfo;

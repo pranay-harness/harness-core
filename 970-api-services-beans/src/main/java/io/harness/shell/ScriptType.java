@@ -1,4 +1,4 @@
-package io.harness.delegate.task.shell;
+package io.harness.shell;
 
 public enum ScriptType {
   BASH("Bash Script"),

@@ -1,5 +1,5 @@
 package software.wings.core.winrm.executors;
 
-import software.wings.core.BaseScriptExecutor;
+import io.harness.shell.BaseScriptExecutor;
 
 public interface WinRmExecutor extends BaseScriptExecutor {}

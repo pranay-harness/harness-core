@@ -7,8 +7,8 @@ import static software.wings.beans.command.CommandUnitType.COMMAND;
 
 import static java.util.stream.Collectors.toList;
 
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.shell.ScriptType;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentType;

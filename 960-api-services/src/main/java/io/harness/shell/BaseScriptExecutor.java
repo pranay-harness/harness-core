@@ -1,7 +1,6 @@
-package software.wings.core;
+package io.harness.shell;
 
 import io.harness.logging.CommandExecutionStatus;
-import io.harness.shell.ExecuteCommandResponse;
 
 import java.util.List;
 

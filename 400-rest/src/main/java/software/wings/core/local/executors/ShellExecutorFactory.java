@@ -16,11 +16,11 @@ public class ShellExecutorFactory {
   @Inject private DelegateFileManager fileService;
 
   public ScriptProcessExecutor getExecutor(ShellExecutorConfig config) {
-    return new ScriptProcessExecutor(fileService, getExecutionLogCallback(config), true, config);
+    return new ScriptProcessExecutor(getExecutionLogCallback(config), true, config);
   }
 
   public ScriptProcessExecutor getExecutor(ShellExecutorConfig config, boolean shouldSaveExecutionLogs) {
-    return new ScriptProcessExecutor(fileService, getExecutionLogCallback(config), shouldSaveExecutionLogs, config);
+    return new ScriptProcessExecutor(getExecutionLogCallback(config), shouldSaveExecutionLogs, config);
   }
 
   public FileBasedScriptExecutor getFileBasedExecutor(ShellExecutorConfig config) {

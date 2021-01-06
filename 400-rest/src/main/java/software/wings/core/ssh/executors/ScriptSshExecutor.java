@@ -13,19 +13,19 @@ import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.Misc;
+import io.harness.shell.AbstractScriptExecutor;
 import io.harness.shell.ExecuteCommandResponse;
 import io.harness.shell.ExecuteCommandResponse.ExecuteCommandResponseBuilder;
+import io.harness.shell.ScriptType;
 import io.harness.stream.BoundedInputStream;
 
 import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.command.ShellExecutionData.ShellExecutionDataBuilder;
-import software.wings.delegatetasks.DelegateFileManager;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -78,13 +78,11 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
 
   /**
    * Instantiates a new abstract ssh executor.
-   *  @param delegateFileManager the file service
    * @param logCallback          the log service
    */
   @Inject
-  public ScriptSshExecutor(DelegateFileManager delegateFileManager, LogCallback logCallback,
-      boolean shouldSaveExecutionLogs, ScriptExecutionContext config) {
-    super(delegateFileManager, logCallback, shouldSaveExecutionLogs);
+  public ScriptSshExecutor(LogCallback logCallback, boolean shouldSaveExecutionLogs, ScriptExecutionContext config) {
+    super(logCallback, shouldSaveExecutionLogs);
     if (isEmpty(((SshSessionConfig) config).getExecutionId())) {
       throw new WingsException(INVALID_EXECUTION_ID);
     }

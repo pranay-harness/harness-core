@@ -2,11 +2,11 @@ package software.wings.sm.states;
 
 import static io.harness.beans.SweepingOutputInstance.Scope.PIPELINE;
 import static io.harness.beans.SweepingOutputInstance.Scope.WORKFLOW;
-import static io.harness.delegate.task.shell.ScriptType.BASH;
-import static io.harness.delegate.task.shell.ScriptType.POWERSHELL;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.PRABU;
+import static io.harness.shell.ScriptType.BASH;
+import static io.harness.shell.ScriptType.POWERSHELL;
 
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;

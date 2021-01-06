@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.shell.ScriptType;
 import io.harness.timeout.TimeoutObtainment;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutParameters;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;

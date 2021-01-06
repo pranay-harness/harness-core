@@ -21,7 +21,6 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.encryptors.CustomEncryptor;
 import io.harness.encryptors.CustomEncryptorsRegistry;
 import io.harness.exception.GeneralException;
@@ -31,6 +30,7 @@ import io.harness.exception.SecretManagementException;
 import io.harness.exception.UnexpectedException;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataParams;
+import io.harness.shell.ScriptType;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;

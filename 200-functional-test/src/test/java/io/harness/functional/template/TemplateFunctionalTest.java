@@ -16,7 +16,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.category.element.FunctionalTests;
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.AccountGenerator;
 import io.harness.generator.ApplicationGenerator;
@@ -26,6 +25,7 @@ import io.harness.generator.TemplateFolderGenerator;
 import io.harness.generator.WorkflowGenerator;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+import io.harness.shell.ScriptType;
 import io.harness.testframework.framework.Setup;
 import io.harness.testframework.framework.utils.TestUtils;
 

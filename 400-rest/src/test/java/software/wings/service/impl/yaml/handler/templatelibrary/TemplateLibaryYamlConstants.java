@@ -9,7 +9,7 @@ import static software.wings.common.TemplateConstants.PCF_PLUGIN;
 import static software.wings.common.TemplateConstants.SHELL_SCRIPT;
 import static software.wings.common.TemplateConstants.SSH;
 
-import io.harness.delegate.task.shell.ScriptType;
+import io.harness.shell.ScriptType;
 
 import software.wings.beans.Variable;
 import software.wings.beans.VariableType;

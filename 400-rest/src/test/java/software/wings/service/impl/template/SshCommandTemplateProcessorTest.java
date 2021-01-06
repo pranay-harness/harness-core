@@ -30,10 +30,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
+import io.harness.shell.ScriptType;
 
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;

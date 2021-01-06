@@ -33,10 +33,10 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
+import io.harness.shell.BaseScriptExecutor;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;
-import software.wings.core.BaseScriptExecutor;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.rules.SshRule;
 
@@ -117,7 +117,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
                         .withSshConnectionTimeout(5000)
                         .withAccountId(ACCOUNT_ID)
                         .withCommandUnitName("test");
-    executor = new ScriptSshExecutor(fileService, logCallback, true, configBuilder.but().build());
+    executor = new ScriptSshExecutor(logCallback, true, configBuilder.but().build());
     fileBasedScriptExecutor =
         new FileBasedSshScriptExecutor(fileService, logCallback, true, configBuilder.but().build());
   }
@@ -129,8 +129,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldThrowUnknownHostExceptionForInvalidHost() {
-    executor =
-        new ScriptSshExecutor(fileService, logCallback, true, configBuilder.but().withHost("INVALID_HOST").build());
+    executor = new ScriptSshExecutor(logCallback, true, configBuilder.but().withHost("INVALID_HOST").build());
     assertThatThrownBy(() -> executor.executeCommandString("ls"))
         .isInstanceOf(WingsException.class)
         .hasMessage(UNKNOWN_HOST.name());
@@ -143,7 +142,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldThrowUnknownHostExceptionForInvalidPort() {
-    executor = new ScriptSshExecutor(fileService, logCallback, true, configBuilder.but().withPort(3333).build());
+    executor = new ScriptSshExecutor(logCallback, true, configBuilder.but().withPort(3333).build());
     assertThatThrownBy(() -> executor.executeCommandString("ls"))
         .isInstanceOf(WingsException.class)
         .hasMessage(SOCKET_CONNECTION_ERROR.name());
@@ -158,7 +157,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldThrowExceptionForInvalidCredential() {
     executor = new ScriptSshExecutor(
-        fileService, logCallback, true, configBuilder.but().withPassword("INVALID_PASSWORD".toCharArray()).build());
+        logCallback, true, configBuilder.but().withPassword("INVALID_PASSWORD".toCharArray()).build());
     assertThatThrownBy(() -> executor.executeCommandString("ls"))
         .isInstanceOf(WingsException.class)
         .hasMessageContaining(INVALID_CREDENTIAL.name());
@@ -172,7 +171,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   @Category(UnitTests.class)
   // Too unstable to keep even with repeats
   public void shouldReturnSuccessForSuccessfulCommandExecution() {
-    executor = new ScriptSshExecutor(fileService, logCallback, true, configBuilder.but().build());
+    executor = new ScriptSshExecutor(logCallback, true, configBuilder.but().build());
 
     String fileName = generateUuid();
     CommandExecutionStatus execute = executor.executeCommandString("pwd && whoami");
@@ -187,7 +186,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
   public void shouldReturnFailureForFailedCommandExecution() {
-    executor = new ScriptSshExecutor(fileService, logCallback, true, configBuilder.but().build());
+    executor = new ScriptSshExecutor(logCallback, true, configBuilder.but().build());
     CommandExecutionStatus execute = executor.executeCommandString(format("rm %s", "FILE_DOES_NOT_EXIST"));
     assertThat(execute).isEqualTo(FAILURE);
   }
@@ -200,8 +199,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
   public void shouldThrowExceptionForConnectionTimeout() {
-    executor =
-        new ScriptSshExecutor(fileService, logCallback, true, configBuilder.but().withSshConnectionTimeout(1).build());
+    executor = new ScriptSshExecutor(logCallback, true, configBuilder.but().withSshConnectionTimeout(1).build());
     assertThatThrownBy(() -> executor.executeCommandString("ls"))
         .isInstanceOf(WingsException.class)
         .hasMessage(SOCKET_CONNECTION_TIMEOUT.name());
@@ -215,8 +213,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldThrowExceptionForSessionTimeout() {
-    executor =
-        new ScriptSshExecutor(fileService, logCallback, true, configBuilder.but().withSshSessionTimeout(1).build());
+    executor = new ScriptSshExecutor(logCallback, true, configBuilder.but().withSshSessionTimeout(1).build());
     assertThatThrownBy(() -> executor.executeCommandString("sleep 10"))
         .isInstanceOf(WingsException.class)
         .hasMessage(SSH_SESSION_TIMEOUT.name());
@@ -229,7 +226,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldThrowExceptionForConnectTimeout() {
-    executor = new ScriptSshExecutor(fileService, logCallback, true,
+    executor = new ScriptSshExecutor(logCallback, true,
         configBuilder.but().withHost("host1.app.com").withPort(22).withSocketConnectTimeout(2000).build());
     assertThatThrownBy(() -> executor.executeCommandString("ls"))
         .isInstanceOf(WingsException.class)
@@ -259,7 +256,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
         .thenReturn(aDelegateFile().withFileName("text.txt").withLength(file.length()).build());
     when(fileService.downloadArtifactByFileId(any(FileBucket.class), anyString(), anyString()))
         .thenReturn(fileInputStream);
-    executor = new ScriptSshExecutor(fileService, logCallback, true, configBuilder.but().build());
+    executor = new ScriptSshExecutor(logCallback, true, configBuilder.but().build());
 
     assertThat(fileBasedScriptExecutor.copyGridFsFiles("/", CONFIGS, asList(Pair.of(FILE_ID, null))))
         .isEqualTo(SUCCESS);
@@ -290,7 +287,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
         .thenReturn(aDelegateFile().withFileName("text.txt").withLength(file.length()).build());
     when(fileService.downloadArtifactByFileId(any(FileBucket.class), anyString(), anyString()))
         .thenReturn(fileInputStream);
-    executor = new ScriptSshExecutor(fileService, logCallback, true, configBuilder.but().build());
+    executor = new ScriptSshExecutor(logCallback, true, configBuilder.but().build());
 
     assertThat(fileBasedScriptExecutor.copyGridFsFiles("/", CONFIGS, asList(Pair.of(FILE_ID, "text1.txt"))))
         .isEqualTo(SUCCESS);
@@ -312,7 +309,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     File file = testFolder.newFile();
     CharStreams.asWriter(new FileWriter(file)).append("ANY_TEXT").close();
 
-    executor = new ScriptSshExecutor(fileService, logCallback, true, configBuilder.but().build());
+    executor = new ScriptSshExecutor(logCallback, true, configBuilder.but().build());
 
     assertThat(fileBasedScriptExecutor.copyFiles("/tmp/", asList(file.getAbsolutePath()))).isEqualTo(SUCCESS);
 

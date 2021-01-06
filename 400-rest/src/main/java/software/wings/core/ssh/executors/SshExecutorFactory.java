@@ -1,7 +1,8 @@
 package software.wings.core.ssh.executors;
 
+import io.harness.shell.BaseScriptExecutor;
+
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.core.BaseScriptExecutor;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 
@@ -23,12 +24,11 @@ public class SshExecutorFactory {
    * @return the executor
    */
   public BaseScriptExecutor getExecutor(SshSessionConfig sshSessionConfig) {
-    return new ScriptSshExecutor(fileService, getExecutionLogCallback(sshSessionConfig), true, sshSessionConfig);
+    return new ScriptSshExecutor(getExecutionLogCallback(sshSessionConfig), true, sshSessionConfig);
   }
 
   public BaseScriptExecutor getExecutor(SshSessionConfig sshSessionConfig, boolean shouldSaveExecutionLogs) {
-    return new ScriptSshExecutor(
-        fileService, getExecutionLogCallback(sshSessionConfig), shouldSaveExecutionLogs, sshSessionConfig);
+    return new ScriptSshExecutor(getExecutionLogCallback(sshSessionConfig), shouldSaveExecutionLogs, sshSessionConfig);
   }
 
   public FileBasedScriptExecutor getFileBasedExecutor(SshSessionConfig sshSessionConfig) {

@@ -5,13 +5,13 @@ import static io.harness.network.SafeHttpCall.execute;
 import static java.util.Collections.emptyList;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.instancesync.CustomDeploymentInstanceSyncTaskParams;
 import io.harness.shell.ExecuteCommandResponse;
+import io.harness.shell.ScriptType;
 
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
 import software.wings.core.local.executors.ShellExecutorConfig;
