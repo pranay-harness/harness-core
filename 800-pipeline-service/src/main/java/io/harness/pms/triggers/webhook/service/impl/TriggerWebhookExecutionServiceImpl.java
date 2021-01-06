@@ -1,4 +1,4 @@
-package io.harness.pms.triggers.service.impl;
+package io.harness.pms.triggers.webhook.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -8,7 +8,6 @@ import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalSta
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
-import io.harness.helpers.TriggerWebhookExecutionHelper;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
@@ -21,7 +20,8 @@ import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEven
 import io.harness.ngtriggers.beans.response.WebhookEventResponse;
 import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
-import io.harness.pms.triggers.service.TriggerWebhookExecutionService;
+import io.harness.pms.triggers.webhook.helpers.TriggerWebhookExecutionHelper;
+import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
 import io.harness.repositories.ng.core.spring.TriggerEventHistoryRepository;
 
 import com.google.inject.Inject;
@@ -35,7 +35,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Singleton
 @Slf4j
 public class TriggerWebhookExecutionServiceImpl
-    implements TriggerWebhookExecutionService, MongoPersistenceIterator.Handler<TriggerWebhookEvent> {
+    implements io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService,
+               MongoPersistenceIterator.Handler<TriggerWebhookEvent> {
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private MongoTemplate mongoTemplate;
   @Inject private TriggerWebhookExecutionHelper ngTriggerWebhookExecutionHelper;

@@ -1,4 +1,4 @@
-package io.harness.helpers;
+package io.harness.pms.triggers.webhook.helpers;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -11,7 +11,6 @@ import io.harness.exception.TriggerException;
 import io.harness.execution.PlanExecution;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
-import io.harness.ngtriggers.beans.dto.WebhookEventHeaderData;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventProcessingResult;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventProcessingResult.WebhookEventProcessingResultBuilder;
@@ -21,14 +20,15 @@ import io.harness.ngtriggers.beans.response.TargetExecutionSummary;
 import io.harness.ngtriggers.beans.response.WebhookEventResponse;
 import io.harness.ngtriggers.beans.target.TargetSpec;
 import io.harness.ngtriggers.beans.target.pipeline.PipelineTargetSpec;
+import io.harness.ngtriggers.helpers.WebhookEventMapperHelper;
 import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
-import io.harness.ngtriggers.helpers.WebhookEventToTriggerMapper;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.contracts.triggers.ParsedPayload;
 import io.harness.pms.contracts.triggers.TriggerPayload;
+import io.harness.pms.contracts.triggers.TriggerPayload.Builder;
 import io.harness.pms.merger.helpers.MergeHelper;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
@@ -47,16 +47,15 @@ import lombok.extern.slf4j.Slf4j;
 public class TriggerWebhookExecutionHelper {
   private final PipelineExecuteHelper pipelineExecuteHelper;
   private final WebhookEventPayloadParser webhookEventPayloadParser;
-  private final WebhookEventToTriggerMapper webhookEventToTriggerMapper;
+  private final WebhookEventMapperHelper webhookEventMapperHelper;
   private final PMSPipelineService pmsPipelineService;
 
   public static final String WEBHOOK_EVENT_PAYLOAD_EVENT_REPO_TYPE = "webhookEventRepoType";
   public static final String WEBHOOK_EVENT_PAYLOAD_EVENT_TYPE = "webhookEventType";
 
   public WebhookEventProcessingResult handleTriggerWebhookEvent(TriggerWebhookEvent triggerWebhookEvent) {
-    ParseWebhookResponse parseWebhookResponse = webhookEventPayloadParser.invokeScmService(triggerWebhookEvent);
     WebhookEventMappingResponse webhookEventMappingResponse =
-        webhookEventToTriggerMapper.mapWebhookEventToTriggers(triggerWebhookEvent, parseWebhookResponse);
+        webhookEventMapperHelper.mapWebhookEventToTriggers(triggerWebhookEvent);
 
     WebhookEventProcessingResultBuilder resultBuilder = WebhookEventProcessingResult.builder();
     List<WebhookEventResponse> eventResponses = new ArrayList<>();
@@ -66,7 +65,7 @@ public class TriggerWebhookExecutionHelper {
       if (isNotEmpty(webhookEventMappingResponse.getTriggers())) {
         for (TriggerDetails triggerDetails : webhookEventMappingResponse.getTriggers()) {
           eventResponses.add(triggerPipelineExecution(triggerWebhookEvent, triggerDetails,
-              getTriggerPayload(parseWebhookResponse, triggerWebhookEvent.getPayload())));
+              getTriggerPayload(webhookEventMappingResponse, triggerWebhookEvent.getPayload())));
         }
       }
     } else {
@@ -77,17 +76,22 @@ public class TriggerWebhookExecutionHelper {
     return resultBuilder.responses(eventResponses).build();
   }
 
-  private TriggerPayload getTriggerPayload(ParseWebhookResponse parseWebhookResponse, String jsonPayload) {
-    if (parseWebhookResponse.hasPr()) {
-      return TriggerPayload.newBuilder()
-          .setJsonPayload(jsonPayload)
-          .setParsedPayload(ParsedPayload.newBuilder().setPr(parseWebhookResponse.getPr()).build())
-          .build();
+  private TriggerPayload getTriggerPayload(
+      WebhookEventMappingResponse webhookEventMappingResponse, String jsonPayload) {
+    Builder builder = TriggerPayload.newBuilder().setJsonPayload(jsonPayload);
+
+    if (webhookEventMappingResponse.isCustomTrigger()) {
+      return builder.build();
     }
-    return TriggerPayload.newBuilder()
-        .setJsonPayload(jsonPayload)
-        .setParsedPayload(ParsedPayload.newBuilder().setPush(parseWebhookResponse.getPush()).build())
-        .build();
+
+    ParseWebhookResponse parseWebhookResponse = webhookEventMappingResponse.getParseWebhookResponse();
+    if (parseWebhookResponse.hasPr()) {
+      builder.setParsedPayload(ParsedPayload.newBuilder().setPr(parseWebhookResponse.getPr()).build()).build();
+    } else {
+      builder.setParsedPayload(ParsedPayload.newBuilder().setPush(parseWebhookResponse.getPush()).build()).build();
+    }
+
+    return builder.build();
   }
 
   private WebhookEventResponse triggerPipelineExecution(

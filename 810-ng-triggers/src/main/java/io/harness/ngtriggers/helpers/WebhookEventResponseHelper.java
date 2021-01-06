@@ -108,7 +108,8 @@ public class WebhookEventResponseHelper {
         status = SCM_SERVICE_CONNECTION_FAILED;
       }
     }
-    return toResponse(status, parsePayloadReponse.getOriginalEvent(), null, null, exception.getMessage(), null);
+    return toResponse(status, parsePayloadReponse.getWebhookPayloadData().getOriginalEvent(), null, null,
+        exception.getMessage(), null);
   }
 
   public TargetExecutionSummary prepareTargetExecutionSummary(

@@ -12,7 +12,7 @@ public enum WebhookEvent {
   @JsonProperty("Merge Request") MERGE_REQUEST,
   @JsonProperty("Repository") REPOSITORY;
 
-  public static final Set<WebhookEvent> githubEvents = EnumSet.of(PULL_REQUEST, PUSH, DELETE);
+  public static final Set<WebhookEvent> githubEvents = EnumSet.of(PULL_REQUEST, PUSH);
   public static final Set<WebhookEvent> gitlabEvents = EnumSet.of(PUSH, MERGE_REQUEST);
-  public static final Set<WebhookEvent> bitbucketEvents = EnumSet.of(PULL_REQUEST, REPOSITORY, ISSUE);
+  public static final Set<WebhookEvent> bitbucketEvents = EnumSet.of(PULL_REQUEST, PUSH);
 }

@@ -5,13 +5,13 @@ import static java.util.Collections.emptySet;
 import io.harness.exception.InvalidRequestException;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 public enum WebhookAction {
+  // Github
   @JsonProperty("created") CREATED("create", "created"),
   @JsonProperty("closed") CLOSED("close", "closed"),
   @JsonProperty("edited") EDITED("edit", "edited"),
@@ -25,6 +25,7 @@ public enum WebhookAction {
   @JsonProperty("synced") SYNC("sync", "synced"),
   @JsonProperty("merged") MERGED("merge", "merged"),
 
+  // Gitlab
   @JsonProperty("sync") GITLAB_SYNC("sync", "sync"),
   @JsonProperty("open") GITLAB_OPEN("open", "open"),
   @JsonProperty("close") GITLAB_CLOSE("close", "close"),
@@ -32,10 +33,11 @@ public enum WebhookAction {
   @JsonProperty("merge") GITLAB_MERGED("merge", "merge"),
   @JsonProperty("update") GITLAB_UPDATED("update", "update"),
 
-  @JsonProperty("pull request created") PULL_REQUEST_CREATED("open", "pull request created"),
-  @JsonProperty("pull request updated") PULL_REQUEST_UPDATED("sync", "pull request updated"),
-  @JsonProperty("pull request merged") PULL_REQUEST_MERGED("merge", "pull request merged"),
-  @JsonProperty("pull request declined") PULL_REQUEST_DECLINED("close", "pull request declined");
+  // BitBucket
+  @JsonProperty("pull request created") BT_PULL_REQUEST_CREATED("open", "pull request created"),
+  @JsonProperty("pull request updated") BT_PULL_REQUEST_UPDATED("sync", "pull request updated"),
+  @JsonProperty("pull request merged") BT_PULL_REQUEST_MERGED("merge", "pull request merged"),
+  @JsonProperty("pull request declined") BT_PULL_REQUEST_DECLINED("close", "pull request declined");
 
   // TODO: Add more support for more actions we need to support
   private String value;
@@ -68,12 +70,7 @@ public enum WebhookAction {
     switch (event) {
       case PULL_REQUEST:
         return EnumSet.of(CLOSED, EDITED, LABELED, OPENED, REOPENED, SYNCHRONIZED, UNLABELED);
-        //      case PACKAGE:
-        //        return EnumSet.of(PUBLISHED);
-        //      case RELEASE:
-        //        return EnumSet.of(CREATED, DELETED, EDITED, PRE_RELEASED, PUBLISHED, RELEASED, UNPUBLISHED);
       case PUSH:
-      case DELETE:
         return emptySet();
       default:
         throw new InvalidRequestException("Event " + event.name() + " not a github event");
@@ -83,9 +80,9 @@ public enum WebhookAction {
   public static Set<WebhookAction> getBitbucketActionForEvent(WebhookEvent event) {
     switch (event) {
       case PULL_REQUEST:
-        return EnumSet.of(PULL_REQUEST_CREATED, PULL_REQUEST_UPDATED, PULL_REQUEST_MERGED, PULL_REQUEST_DECLINED);
-      case REPOSITORY:
-      case ISSUE:
+        return EnumSet.of(
+            BT_PULL_REQUEST_CREATED, BT_PULL_REQUEST_UPDATED, BT_PULL_REQUEST_MERGED, BT_PULL_REQUEST_DECLINED);
+      case PUSH:
         return emptySet();
       default:
         throw new InvalidRequestException("Event " + event.name() + " not a bitbucket event");

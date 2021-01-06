@@ -27,6 +27,7 @@ import io.harness.ngtriggers.beans.response.WebhookEventResponse;
 import io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus;
 import io.harness.ngtriggers.beans.scm.ParsePayloadResponse;
 import io.harness.ngtriggers.beans.scm.ParsePayloadResponse.ParsePayloadResponseBuilder;
+import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.rule.Owner;
 
 import io.grpc.StatusRuntimeException;
@@ -101,8 +102,10 @@ public class WebhookEventResponseHelperTest extends CategoryTest {
         TriggerWebhookEvent.builder().createdAt(123l).payload("payload").accountId("accountId").build();
 
     ParsePayloadResponseBuilder parsePayloadResponse =
-        ParsePayloadResponse.builder().originalEvent(event).exceptionOccured(true).exception(
-            new InvalidRequestException("test"));
+        ParsePayloadResponse.builder()
+            .webhookPayloadData(WebhookPayloadData.builder().originalEvent(event).build())
+            .exceptionOccured(true)
+            .exception(new InvalidRequestException("test"));
 
     WebhookEventResponse webhookEventResponse =
         WebhookEventResponseHelper.prepareResponseForScmException(parsePayloadResponse.build());

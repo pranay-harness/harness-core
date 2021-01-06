@@ -1,4 +1,4 @@
-package io.harness.ngtriggers.helpers;
+package io.harness.ngtriggers.eventmapper.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_ENABLED_TRIGGER_FOUND_FOR_REPO;
@@ -16,6 +16,8 @@ import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.beans.source.NGTriggerSpec;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
+import io.harness.ngtriggers.eventmapper.WebhookEventToTriggerMapper;
+import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
@@ -24,6 +26,7 @@ import io.harness.product.ci.scm.proto.ParseWebhookResponse;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -34,25 +37,23 @@ import org.springframework.data.domain.Page;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
-public class WebhookEventToTriggerMapper {
+@Singleton
+public class GitWebhookEventToTriggerMapper implements WebhookEventToTriggerMapper {
   private final NGTriggerService ngTriggerService;
   private final WebhookEventPayloadParser webhookEventPayloadParser;
   private final NGTriggerElementMapper ngTriggerElementMapper;
 
-  public WebhookEventMappingResponse mapWebhookEventToTriggers(
-      TriggerWebhookEvent triggerWebhookEvent, ParseWebhookResponse webhookResponse) {
-    WebhookPayloadData webhookPayloadData;
-
+  public WebhookEventMappingResponse mapWebhookEventToTriggers(TriggerWebhookEvent triggerWebhookEvent) {
     // 1. Parse Payload
-    ParsePayloadResponse parsePayloadResponse = convertWebhookResponse(triggerWebhookEvent, webhookResponse);
+    ParsePayloadResponse parsePayloadResponse = convertWebhookResponse(triggerWebhookEvent);
     if (parsePayloadResponse.isExceptionOccured()) {
       return WebhookEventMappingResponse.builder()
           .webhookEventResponse(WebhookEventResponseHelper.prepareResponseForScmException(parsePayloadResponse))
           .build();
     }
 
+    WebhookPayloadData webhookPayloadData = parsePayloadResponse.getWebhookPayloadData();
     // 2. Get Trigger for Repo
-    webhookPayloadData = parsePayloadResponse.getWebhookPayloadData();
     List<NGTriggerEntity> triggersForRepo =
         retrieveTriggersConfiguredForRepo(triggerWebhookEvent, webhookPayloadData.getRepository().getLink());
     if (isEmpty(triggersForRepo)) {
@@ -88,21 +89,26 @@ public class WebhookEventToTriggerMapper {
           .build();
     }
 
-    return WebhookEventMappingResponse.builder().failedToFindTrigger(false).triggers(matchedTriggers).build();
+    return WebhookEventMappingResponse.builder()
+        .failedToFindTrigger(false)
+        .triggers(matchedTriggers)
+        .parseWebhookResponse(parsePayloadResponse.getWebhookPayloadData().getParseWebhookResponse())
+        .build();
   }
 
   // Add error handling
   @VisibleForTesting
-  ParsePayloadResponse convertWebhookResponse(
-      TriggerWebhookEvent triggerWebhookEvent, ParseWebhookResponse webhookResponse) {
-    ParsePayloadResponseBuilder builder = ParsePayloadResponse.builder().originalEvent(triggerWebhookEvent);
+  ParsePayloadResponse convertWebhookResponse(TriggerWebhookEvent triggerWebhookEvent) {
+    ParsePayloadResponseBuilder builder = ParsePayloadResponse.builder();
     try {
-      WebhookPayloadData webhookPayloadData =
-          webhookEventPayloadParser.convertWebhookResponse(webhookResponse, triggerWebhookEvent);
+      WebhookPayloadData webhookPayloadData = webhookEventPayloadParser.parseEvent(triggerWebhookEvent);
       builder.webhookPayloadData(webhookPayloadData).build();
     } catch (Exception e) {
       log.error("Exception while invoking SCM service for webhook trigger payload parsing", e);
-      builder.exceptionOccured(true).exception(e).build();
+      builder.exceptionOccured(true)
+          .exception(e)
+          .webhookPayloadData(WebhookPayloadData.builder().originalEvent(triggerWebhookEvent).build())
+          .build();
     }
 
     return builder.build();

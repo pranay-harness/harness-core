@@ -6,7 +6,7 @@ import static java.util.stream.Collectors.toSet;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;
-import io.harness.pms.triggers.scm.ScmConnectionConfig;
+import io.harness.pms.triggers.webhook.scm.ScmConnectionConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
 import com.fasterxml.jackson.annotation.JsonProperty;
