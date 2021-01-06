@@ -1031,7 +1031,8 @@ public class StateMachineExecutor implements StateInspectionListener {
       workflowNotificationHelper.renderExpressions(context, notificationRule);
     }
 
-    Map<String, String> placeholderValues = getManualInterventionPlaceholderValues(context);
+    Map<String, String> placeholderValues =
+        workflowNotificationHelper.getPlaceholderValues(context, app, context.getEnv(), PAUSED, null);
     notificationService.sendNotificationAsync(
         InformationNotification.builder()
             .appId(app.getName())

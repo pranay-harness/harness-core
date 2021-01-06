@@ -1,5 +1,6 @@
 package software.wings.service.impl.workflow;
 
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.HARSH;
@@ -59,6 +60,8 @@ import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
+import software.wings.infra.InfrastructureDefinition;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -97,6 +100,11 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   private static final String EXPECTED_SERVICE_URL =
       "*Services:* <<<https://env.harness.io/#/account/ACCOUNT_ID/app/null/services/service-1/details|-|Service One>>>, <<<https://env.harness.io/#/account/ACCOUNT_ID/app/null/services/service-2/details|-|Service Two>>>";
 
+  private static final String EXPECTED_INFRA =
+      "*Infrastructure Definitions:* <<<https://env.harness.io/#/account/ACCOUNT_ID/app/APP_ID/environments/ENV_ID/infrastructure-definitions/infra-1/details|-|Infrastructure Definition One>>>, <<<https://env.harness.io/#/account/ACCOUNT_ID/app/APP_ID/environments/ENV_ID/infrastructure-definitions/infra-2/details|-|Infrastructure Definition Two>>>";
+
+  private static final String EXPECTED_INFRA_URL =
+      "https://env.harness.io/#/account/ACCOUNT_ID/app/APP_ID/environments/ENV_ID/infrastructure-definitions/infra-1/details,https://env.harness.io/#/account/ACCOUNT_ID/app/APP_ID/environments/ENV_ID/infrastructure-definitions/infra-2/details";
   private static final String ARTIFACT_STREAM_ID_1 = "ARTIFACT_STREAM_ID_1";
   private static final String ARTIFACT_STREAM_ID_2 = "ARTIFACT_STREAM_ID_2";
   private static final String ARTIFACT_STREAM_ID_3 = "ARTIFACT_STREAM_ID_3";
@@ -108,6 +116,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   @Mock private MainConfiguration configuration;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
+  @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject @InjectMocks private WorkflowNotificationHelper workflowNotificationHelper;
 
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private ExecutionContextImpl executionContext;
@@ -175,6 +184,10 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     when(wingsPersistence.createQuery(WorkflowExecution.class)).thenReturn(workflowExecutionQuery);
     when(workflowExecutionQuery.filter(any(), any())).thenReturn(workflowExecutionQuery);
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn(BASE_URL);
+    when(infrastructureDefinitionService.get(APP_ID, "infra-1"))
+        .thenReturn(InfrastructureDefinition.builder().name("Infrastructure Definition One").build());
+    when(infrastructureDefinitionService.get(APP_ID, "infra-2"))
+        .thenReturn(InfrastructureDefinition.builder().name("Infrastructure Definition Two").build());
   }
 
   @Test
@@ -312,6 +325,7 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
             .put("ARTIFACTS_NAME", "Service One: artifact-1 (build# build-1), Service Two: artifact-2 (build# build-2)")
             .put("ARTIFACTS_URL", "")
             .put("TRIGGER_NAME", USER_NAME)
+            .put("PIPELINE_NAME_EMAIL_SUBJECT", " in pipeline Pipeline Name")
             .put(TRIGGER_URL, "")
             .build();
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
@@ -534,6 +548,43 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
             .put("ARTIFACTS_URL", "")
             .put("SERVICE_NAME", "no service")
             .put("SERVICE_URL", "")
+            .build();
+    assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldSendWorkflowStatusChangeWithInfraDefinitions() {
+    when(executionContext.getArtifacts())
+        .thenReturn(ImmutableList.of(anArtifact()
+                                         .withArtifactSourceName("artifact-1")
+                                         .withMetadata(ImmutableMap.of(ArtifactMetadataKeys.buildNo, "build-1"))
+                                         .withArtifactStreamId(ARTIFACT_STREAM_ID_1)
+                                         .build()));
+    when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID, true))
+        .thenReturn(WorkflowExecution.builder()
+                        .serviceIds(asList("service-1", "service-2"))
+                        .triggeredBy(EmbeddedUser.builder().name(USER_NAME).build())
+                        .infraDefinitionIds(asList("infra-1", "infra-2"))
+                        .build());
+    NotificationRule notificationRule =
+        setupNotificationRule(ExecutionScope.WORKFLOW, asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS));
+
+    workflowNotificationHelper.sendWorkflowStatusChangeNotification(executionContext, ExecutionStatus.FAILED);
+
+    ArgumentCaptor<Notification> notificationArgumentCaptor = ArgumentCaptor.forClass(Notification.class);
+
+    verify(notificationService)
+        .sendNotificationAsync(notificationArgumentCaptor.capture(), eq(singletonList(notificationRule)));
+    Notification notification = notificationArgumentCaptor.getAllValues().get(0);
+    assertThat(notification).isInstanceOf(FailureNotification.class);
+    assertThat(notification.getNotificationTemplateId()).isEqualTo(WORKFLOW_NOTIFICATION.name());
+    ImmutableMap<String, String> placeholders =
+        ImmutableMap.<String, String>builder()
+            .put("INFRA", EXPECTED_INFRA)
+            .put("INFRA_NAME", "Infrastructure Definition One,Infrastructure Definition Two")
+            .put("INFRA_URL", EXPECTED_INFRA_URL)
             .build();
     assertThat(notification.getNotificationTemplateVariables()).containsAllEntriesOf(placeholders);
   }

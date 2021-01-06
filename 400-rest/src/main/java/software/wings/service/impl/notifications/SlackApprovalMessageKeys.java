@@ -36,6 +36,7 @@ public class SlackApprovalMessageKeys {
   public static final String APP_NAME = "appName";
   public static final String SERVICES = "services";
   public static final String ENVIRONMENTS = "environments";
+  public static final String INFRASTRUCTURE_DEFINITIONS = "infrastructureDefinitions";
   public static final String ARTIFACTS = "artifacts";
 
   // approval-message.json and additional-confirmation.json template placeholder keys

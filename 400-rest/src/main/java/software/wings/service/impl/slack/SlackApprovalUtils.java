@@ -125,6 +125,8 @@ public class SlackApprovalUtils {
     templateFillers.put(SlackApprovalMessageKeys.APP_NAME, slackApprovalParams.getAppName());
     templateFillers.put(SlackApprovalMessageKeys.SERVICES, slackApprovalParams.getServicesInvolved());
     templateFillers.put(SlackApprovalMessageKeys.ENVIRONMENTS, slackApprovalParams.getEnvironmentsInvolved());
+    templateFillers.put(
+        SlackApprovalMessageKeys.INFRASTRUCTURE_DEFINITIONS, slackApprovalParams.getInfraDefinitionsInvolved());
     templateFillers.put(SlackApprovalMessageKeys.ARTIFACTS, slackApprovalParams.getArtifactsInvolved());
 
     return createMessageFromTemplate(url, templateFillers);
@@ -148,7 +150,13 @@ public class SlackApprovalUtils {
     } catch (IOException e) {
       log.error("Error in loading given template");
     }
-    return sub.replace(loadedTemplate);
+    return sub.replace(loadedTemplate)
+        .replaceAll("<<<", "*<")
+        .replaceAll("\\|-\\|", "|")
+        .replaceAll(">>>", ">*")
+        .replaceAll("\\\\n", "\n")
+        .replaceAll("\\\\\\*", "*")
+        .replaceAll("\\*<\\|>\\*", "");
   }
 
   public static RestResponse<Boolean> slackPostRequest(RequestBody body, String responseUrl) throws IOException {
