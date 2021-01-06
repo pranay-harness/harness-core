@@ -27,29 +27,6 @@ public class StagesFilterJsonCreator {
     return getStageYamlFields(stagesYamlField).get(0).getNode().getUuid();
   }
 
-  public Map<String, GraphLayoutNode> getStagesGraphLayoutNode(YamlField stagesYamlNode) {
-    Map<String, GraphLayoutNode> stageYamlFieldMap = new HashMap<>();
-    List<YamlField> stagesYamlField = getStageYamlFields(stagesYamlNode);
-    List<EdgeLayoutList> edgeLayoutLists = new ArrayList<>();
-    for (YamlField stageYamlField : stagesYamlField) {
-      EdgeLayoutList.Builder stageEdgesBuilder = EdgeLayoutList.newBuilder();
-      stageEdgesBuilder.addNextIds(stageYamlField.getNode().getUuid());
-      edgeLayoutLists.add(stageEdgesBuilder.build());
-    }
-    for (int i = 0; i < edgeLayoutLists.size(); i++) {
-      YamlField stageYamlField = stagesYamlField.get(i);
-      stageYamlFieldMap.put(stageYamlField.getNode().getUuid(),
-          GraphLayoutNode.newBuilder()
-              .setNodeUUID(stageYamlField.getNode().getUuid())
-              .setNodeType("stage")
-              .setNodeIdentifier(stageYamlField.getNode().getIdentifier())
-              .setEdgeLayoutList(
-                  i + 1 < edgeLayoutLists.size() ? edgeLayoutLists.get(i + 1) : EdgeLayoutList.newBuilder().build())
-              .build());
-    }
-    return stageYamlFieldMap;
-  }
-
   private List<YamlField> getStageYamlFields(YamlField stagesYamlField) {
     List<YamlNode> yamlNodes = Optional.of(stagesYamlField.getNode().asArray()).orElse(Collections.emptyList());
     List<YamlField> stageFields = new LinkedList<>();

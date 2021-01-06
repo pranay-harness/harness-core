@@ -18,6 +18,7 @@ import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.serializer.KryoSerializer;
+import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.common.NGForkStep;
 import io.harness.steps.fork.ForkStepParameters;
 
@@ -99,13 +100,15 @@ public class ParallelPlanCreator extends ChildrenPlanCreator<YamlField> {
         stageField
         -> GraphLayoutNode.newBuilder()
                .setNodeUUID(stageField.getNode().getUuid())
-               .setNodeType("stage")
+               .setNodeGroup(StepOutcomeGroup.STAGE.name())
+               .setNodeType(stageField.getNode().getType())
                .setNodeIdentifier(stageField.getNode().getIdentifier())
                .setEdgeLayoutList(EdgeLayoutList.newBuilder().build())
                .build()));
     GraphLayoutNode parallelNode = GraphLayoutNode.newBuilder()
                                        .setNodeUUID(config.getNode().getUuid())
                                        .setNodeType("parallel")
+                                       .setNodeGroup(StepOutcomeGroup.STAGE.name())
                                        .setNodeIdentifier("parallel" + config.getNode().getUuid())
                                        .setEdgeLayoutList(stagesEdgesBuilder.build())
                                        .build();

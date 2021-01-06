@@ -12,25 +12,32 @@ import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.TriggerType;
 import io.harness.pms.pipeline.mappers.GraphLayoutDtoMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
+import io.harness.pms.plan.creation.NodeTypeLookupService;
 import io.harness.pms.plan.execution.SetupAbstractionKeys;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.GraphLayoutNodeDTO;
+import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.events.SyncOrchestrationEventHandler;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import org.bson.Document;
 
 @Singleton
 public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEventHandler {
   @Inject PMSPipelineService pmsPipelineService;
   @Inject private PlanExecutionService planExecutionService;
+  @Inject private NodeTypeLookupService nodeTypeLookupService;
   @Inject private PmsExecutionSummaryRespository pmsExecutionSummaryRespository;
 
   @Override
@@ -53,7 +60,13 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
     String startingNodeId = planExecution.getPlan().getGraphLayoutInfo().getStartingNodeId();
     Map<String, GraphLayoutNodeDTO> layoutNodeDTOMap = new HashMap<>();
     for (Map.Entry<String, GraphLayoutNode> entry : layoutNodeMap.entrySet()) {
-      layoutNodeDTOMap.put(entry.getKey(), GraphLayoutDtoMapper.toDto(entry.getValue()));
+      GraphLayoutNodeDTO graphLayoutNodeDTO = GraphLayoutDtoMapper.toDto(entry.getValue());
+      String moduleName = nodeTypeLookupService.findNodeTypeServiceName(entry.getValue().getNodeType());
+      graphLayoutNodeDTO.setModule(moduleName);
+      Map<String, Document> moduleInfo = new HashMap<>();
+      moduleInfo.put(moduleName, new Document());
+      graphLayoutNodeDTO.setModuleInfo(moduleInfo);
+      layoutNodeDTOMap.put(entry.getKey(), graphLayoutNodeDTO);
     }
     PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity =
         PipelineExecutionSummaryEntity.builder()

@@ -53,7 +53,8 @@ public class StagesPlanCreator extends ChildrenPlanCreator<StagesConfig> {
       stageYamlFieldMap.put(stageYamlField.getNode().getUuid(),
           GraphLayoutNode.newBuilder()
               .setNodeUUID(stageYamlField.getNode().getUuid())
-              .setNodeType("stage")
+              .setNodeType(stageYamlField.getNode().getType())
+              .setNodeGroup(StepOutcomeGroup.STAGE.name())
               .setNodeIdentifier(stageYamlField.getNode().getIdentifier())
               .setEdgeLayoutList(
                   i + 1 < edgeLayoutLists.size() ? edgeLayoutLists.get(i + 1) : EdgeLayoutList.newBuilder().build())

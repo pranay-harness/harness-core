@@ -14,6 +14,7 @@ import lombok.Value;
 public class ExecutionNode {
   String uuid;
   String name;
+  String identifier;
   Long startTs;
   Long endTs;
   String stepType;

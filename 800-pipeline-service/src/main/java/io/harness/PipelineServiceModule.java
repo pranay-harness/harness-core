@@ -25,6 +25,8 @@ import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetServiceImpl;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
+import io.harness.pms.plan.creation.NodeTypeLookupService;
+import io.harness.pms.plan.creation.NodeTypeLookupServiceImpl;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.plan.execution.service.PMSExecutionServiceImpl;
 import io.harness.pms.sdk.StepTypeLookupServiceImpl;
@@ -115,6 +117,8 @@ public class PipelineServiceModule extends AbstractModule {
     bind(PMSExecutionService.class).to(PMSExecutionServiceImpl.class);
 
     bind(StepTypeLookupService.class).to(StepTypeLookupServiceImpl.class);
+    bind(NodeTypeLookupService.class).to(NodeTypeLookupServiceImpl.class);
+
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("taskPollExecutor"))
         .toInstance(new ManagedScheduledExecutorService("TaskPoll-Thread"));
