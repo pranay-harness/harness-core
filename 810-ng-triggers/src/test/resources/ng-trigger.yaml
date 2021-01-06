@@ -1,6 +1,7 @@
 trigger:
   name: first trigger
   identifier: first_trigger
+  enabled: true
   target:
     targetIdentifier: myPipeline
     type: Pipeline

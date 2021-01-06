@@ -30,4 +30,5 @@ public class WebhookEventResponse {
   private boolean exceptionOccurred;
   private String triggerIdentifier;
   private TargetExecutionSummary targetExecutionSummary;
+  private boolean enabled;
 }
