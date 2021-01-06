@@ -8,11 +8,12 @@ import io.swagger.annotations.ApiModel;
 import java.util.Map;
 import lombok.AccessLevel;
 import lombok.Builder;
+import lombok.Data;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import org.bson.Document;
 
-@Value
+@Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -20,9 +21,11 @@ import org.bson.Document;
 @ApiModel("GraphLayoutNode")
 public class GraphLayoutNodeDTO {
   String nodeType;
+  String nodeGroup;
   String nodeIdentifier;
   String nodeUuid;
   ExecutionStatus status;
+  String module;
   Map<String, Document> moduleInfo;
 
   EdgeLayoutListDTO edgeLayoutList;
