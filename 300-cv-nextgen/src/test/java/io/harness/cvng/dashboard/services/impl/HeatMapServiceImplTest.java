@@ -100,6 +100,7 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     dsConfig.setConnectorIdentifier(generateUuid());
     dsConfig.setProductName(generateUuid());
     dsConfig.setIdentifier(generateUuid());
+    dsConfig.setOrgIdentifier(generateUuid());
     dsConfig.setMonitoringSourceName(generateUuid());
     dsConfig.setAppConfigs(Lists.newArrayList(
         AppdynamicsAppConfig.builder()

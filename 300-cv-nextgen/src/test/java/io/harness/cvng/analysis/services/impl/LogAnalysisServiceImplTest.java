@@ -487,6 +487,7 @@ public class LogAnalysisServiceImplTest extends CvNextGenTest {
     cvConfig.setServiceIdentifier(generateUuid());
     cvConfig.setEnvIdentifier(generateUuid());
     cvConfig.setProjectIdentifier(generateUuid());
+    cvConfig.setOrgIdentifier(generateUuid());
     cvConfig.setIdentifier(generateUuid());
     cvConfig.setMonitoringSourceName(generateUuid());
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);

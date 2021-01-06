@@ -8,4 +8,5 @@ public interface EntityTypeConstants {
   String SERVICE = "Service";
   String ENVIRONMENT = "Environment";
   String INPUT_SETS = "InputSets";
+  String CV_CONFIG = "CvConfig";
 }

@@ -398,6 +398,7 @@ public class CVConfigResourceTest extends CvNextGenTest {
     cvConfig.setServiceIdentifier(generateUuid());
     cvConfig.setEnvIdentifier(generateUuid());
     cvConfig.setProjectIdentifier(generateUuid());
+    cvConfig.setOrgIdentifier(generateUuid());
     cvConfig.setIdentifier(monitoringSourceIdentifier);
     cvConfig.setMonitoringSourceName(monitoringSourceName);
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
