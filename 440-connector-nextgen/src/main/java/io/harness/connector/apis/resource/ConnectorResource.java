@@ -28,12 +28,14 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -69,8 +71,13 @@ public class ConnectorResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier) {
-    return ResponseDTO.newResponse(
-        connectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier).orElse(null));
+    Optional<ConnectorResponseDTO> connectorResponseDTO =
+        connectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+    if (!connectorResponseDTO.isPresent()) {
+      throw new NotFoundException(String.format("Connector with identifier [%s] in project [%s], org [%s] not found",
+          connectorIdentifier, projectIdentifier, orgIdentifier));
+    }
+    return ResponseDTO.newResponse(connectorResponseDTO.get());
   }
 
   @GET
