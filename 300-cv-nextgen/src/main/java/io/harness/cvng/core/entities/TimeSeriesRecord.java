@@ -83,7 +83,7 @@ public class TimeSeriesRecord implements CreatedAtAware, AccountAccess, Persiste
     private String groupName;
     private Instant timeStamp;
     private double metricValue;
-    private double riskScore;
+    @Builder.Default private double riskScore = -1;
     private Double percentValue;
 
     @Override

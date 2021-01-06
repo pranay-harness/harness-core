@@ -7,10 +7,9 @@ import io.harness.ng.beans.PageResponse;
 public interface TimeSeriesDashboardService {
   PageResponse<TimeSeriesMetricDataDTO> getSortedMetricData(String accountId, String projectIdentifier,
       String orgIdentifier, String environmentIdentifier, String serviceIdentifier,
-      CVMonitoringCategory monitoringCategory, Long startTimeMillis, Long endTimeMillis, int page, int size);
-  PageResponse<TimeSeriesMetricDataDTO> getSortedAnomalousMetricData(String accountId, String projectIdentifier,
-      String orgIdentifier, String environmentIdentifier, String serviceIdentifier,
-      CVMonitoringCategory monitoringCategory, Long startTimeMillis, Long endTimeMillis, int page, int size);
+      CVMonitoringCategory monitoringCategory, Long startTimeMillis, Long endTimeMillis, Long analysisStartTimeMillis,
+      boolean anomalous, int page, int size, String filter);
+
   PageResponse<TimeSeriesMetricDataDTO> getActivityMetrics(String activityId, String accountId,
       String projectIdentifier, String orgIdentifier, String environmentIdentifier, String serviceIdentifier,
       Long startTimeMillis, Long endTimeMillis, boolean anomalousOnly, int page, int size);

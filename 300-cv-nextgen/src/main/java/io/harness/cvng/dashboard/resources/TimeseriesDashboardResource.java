@@ -43,11 +43,12 @@ public class TimeseriesDashboardResource {
       @QueryParam("serviceIdentifier") String serviceIdentifier,
       @QueryParam("monitoringCategory") String monitoringCategory,
       @NotNull @QueryParam("startTime") Long startTimeMillis, @NotNull @QueryParam("endTime") Long endTimeMillis,
-      @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size) {
-    return new RestResponse<>(timeSeriesDashboardService.getSortedAnomalousMetricData(accountId, projectIdentifier,
+      @NotNull @QueryParam("analysisStartTime") Long analysisStartTime, @QueryParam("page") @DefaultValue("0") int page,
+      @QueryParam("size") @DefaultValue("10") int size, @QueryParam("filter") String filter) {
+    return new RestResponse<>(timeSeriesDashboardService.getSortedMetricData(accountId, projectIdentifier,
         orgIdentifier, environmentIdentifier, serviceIdentifier,
         monitoringCategory != null ? CVMonitoringCategory.valueOf(monitoringCategory) : null, startTimeMillis,
-        endTimeMillis, page, size));
+        endTimeMillis, analysisStartTime, true, page, size, filter));
   }
 
   @GET
@@ -63,11 +64,12 @@ public class TimeseriesDashboardResource {
       @QueryParam("serviceIdentifier") String serviceIdentifier,
       @QueryParam("monitoringCategory") String monitoringCategory,
       @NotNull @QueryParam("startTime") Long startTimeMillis, @NotNull @QueryParam("endTime") Long endTimeMillis,
-      @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size) {
+      @NotNull @QueryParam("analysisStartTime") Long analysisStartTime, @QueryParam("page") @DefaultValue("0") int page,
+      @QueryParam("size") @DefaultValue("10") int size, @QueryParam("filter") String filter) {
     return new RestResponse<>(timeSeriesDashboardService.getSortedMetricData(accountId, projectIdentifier,
         orgIdentifier, environmentIdentifier, serviceIdentifier,
         monitoringCategory != null ? CVMonitoringCategory.valueOf(monitoringCategory) : null, startTimeMillis,
-        endTimeMillis, page, size));
+        endTimeMillis, analysisStartTime, false, page, size, filter));
   }
 
   @GET
