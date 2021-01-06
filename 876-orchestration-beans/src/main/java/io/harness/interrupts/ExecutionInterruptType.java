@@ -45,6 +45,10 @@ public enum ExecutionInterruptType {
    */
   IGNORE("Ignore error and go to next"),
   /**
+   * Waiting for Manual Intervention.
+   */
+  WAITING_FOR_MANUAL_INTERVENTION("Waiting for manual intervention on the current node failure"),
+  /**
    * Mark as failed.
    */
   MARK_FAILED("Mark the node as failed"),

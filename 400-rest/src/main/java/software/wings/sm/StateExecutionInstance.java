@@ -11,6 +11,7 @@ import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.delegate.beans.DelegateTaskDetails;
+import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.RepairActionCode;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
@@ -91,6 +92,8 @@ public class StateExecutionInstance implements PersistentEntity, AccountDataRete
   // For when the State was waiting for Inputs.
   private RepairActionCode actionOnTimeout;
   private boolean continued;
+  private boolean waitingForManualIntervention;
+  private ExecutionInterruptType actionAfterManualInterventionTimeout;
 
   @Deprecated
   /**
