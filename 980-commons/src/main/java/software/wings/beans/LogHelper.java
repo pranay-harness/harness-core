@@ -7,6 +7,7 @@ import javax.annotation.Nonnull;
 public class LogHelper {
   static final String END_MARK = "#==#";
   static final String NO_FORMATTING = "\033[0m";
+  public static final String COMMAND_UNIT_PLACEHOLDER = "-commandUnit:%s";
 
   static int getBackgroundColorValue(LogColor background) {
     return background.value + 10;

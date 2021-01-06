@@ -46,9 +46,13 @@ message TaskChainExecutableResponse {
   io.harness.pms.contracts.execution.tasks.TaskCategory taskCategory = 2;
   bool chainEnd = 3;
   bytes passThroughData = 4;
+  repeated string logKeys = 5;
+  repeated string units = 6;
 }
 
 message TaskExecutableResponse {
   string taskId = 1;
   io.harness.pms.contracts.execution.tasks.TaskCategory taskCategory = 2;
+  repeated string logKeys = 3;
+  repeated string units = 4;
 }

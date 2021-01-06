@@ -68,6 +68,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
 import com.google.inject.Inject;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -229,8 +230,8 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
                             .parameters(new Object[] {shellScriptParameters.build()})
                             .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                             .build();
-    return StepUtils.prepareTaskRequest(
-        ambiance, taskData, kryoSerializer, new LinkedHashMap<>(), TaskCategory.DELEGATE_TASK_V1);
+    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer, new LinkedHashMap<>(),
+        TaskCategory.DELEGATE_TASK_V1, Collections.emptyList());
   }
 
   @Override

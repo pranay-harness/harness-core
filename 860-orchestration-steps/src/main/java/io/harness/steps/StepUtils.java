@@ -1,10 +1,14 @@
 package io.harness.steps;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import static software.wings.beans.LogHelper.COMMAND_UNIT_PLACEHOLDER;
 
 import static java.util.stream.Collectors.toList;
 
 import io.harness.data.algorithm.HashGenerator;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.delegate.Capability;
 import io.harness.delegate.TaskDetails;
 import io.harness.delegate.TaskLogAbstractions;
@@ -31,10 +35,13 @@ import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
 
+import software.wings.beans.LogHelper;
+
 import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -89,11 +96,12 @@ public class StepUtils {
   }
 
   public static TaskRequest prepareTaskRequest(Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer) {
-    return prepareTaskRequest(ambiance, taskData, kryoSerializer, new LinkedHashMap<>(), TaskCategory.DELEGATE_TASK_V2);
+    return prepareTaskRequest(ambiance, taskData, kryoSerializer, new LinkedHashMap<>(), TaskCategory.DELEGATE_TASK_V2,
+        Collections.emptyList());
   }
 
   public static TaskRequest prepareTaskRequest(Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer,
-      LinkedHashMap<String, String> logAbstractions, TaskCategory taskCategory) {
+      LinkedHashMap<String, String> logAbstractions, TaskCategory taskCategory, List<String> units) {
     String accountId = Preconditions.checkNotNull(ambiance.getSetupAbstractionsMap().get("accountId"));
     TaskParameters taskParameters = (TaskParameters) taskData.getParameters()[0];
     List<ExecutionCapability> capabilities = new ArrayList<>();
@@ -101,6 +109,10 @@ public class StepUtils {
       capabilities = ListUtils.emptyIfNull(
           ((ExecutionCapabilityDemander) taskParameters).fetchRequiredExecutionCapabilities(null));
     }
+    LinkedHashMap<String, String> logAbstractionMap = new LinkedHashMap<>();
+    logAbstractionMap.putAll(MapUtils.emptyIfNull(logAbstractions));
+    logAbstractionMap.put(Cd1SetupFields.APP_ID_FIELD, accountId);
+
     DelegateTaskRequest.Builder requestBuilder =
         DelegateTaskRequest.newBuilder()
             .setAccountId(accountId)
@@ -116,10 +128,9 @@ public class StepUtils {
                     .setParked(taskData.isParked())
                     .setType(TaskType.newBuilder().setType(taskData.getTaskType()).build())
                     .build())
-            .setLogAbstractions(TaskLogAbstractions.newBuilder()
-                                    .putAllValues(logAbstractions)
-                                    .putValues(Cd1SetupFields.APP_ID_FIELD, accountId)
-                                    .build())
+            .addAllUnits(CollectionUtils.emptyIfNull(units))
+            .addAllLogKeys(CollectionUtils.emptyIfNull(generateLogKeys(logAbstractionMap, units)))
+            .setLogAbstractions(TaskLogAbstractions.newBuilder().putAllValues(logAbstractionMap).build())
             .setSetupAbstractions(TaskSetupAbstractions.newBuilder()
                                       .putAllValues((MapUtils.emptyIfNull(ambiance.getSetupAbstractionsMap())))
                                       .build());
@@ -140,5 +151,15 @@ public class StepUtils {
         .setDelegateTaskRequest(requestBuilder.build())
         .setTaskCategory(taskCategory)
         .build();
+  }
+
+  private static List<String> generateLogKeys(LinkedHashMap<String, String> logAbstractionMap, List<String> units) {
+    List<String> unitKeys = new ArrayList<>();
+    String baseLogKey = LogHelper.generateLogBaseKey(logAbstractionMap);
+    for (String unit : units) {
+      String logKey = baseLogKey + (isEmpty(baseLogKey) ? "" : String.format(COMMAND_UNIT_PLACEHOLDER, unit));
+      unitKeys.add(logKey);
+    }
+    return unitKeys;
   }
 }

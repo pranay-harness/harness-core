@@ -23,6 +23,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.util.Collections;
 import lombok.NonNull;
+import org.apache.commons.collections4.CollectionUtils;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 @OwnedBy(CDC)
@@ -63,10 +64,12 @@ public class TaskStrategy implements ExecuteStrategy {
     // Update Execution Node Instance state to TASK_WAITING
     pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), TASK_WAITING,
         ExecutableResponse.newBuilder()
-            .setTask(TaskExecutableResponse.newBuilder()
-                         .setTaskId(taskId)
-                         .setTaskCategory(taskRequest.getTaskCategory())
-                         .build())
+            .setTask(
+                TaskExecutableResponse.newBuilder()
+                    .setTaskId(taskId)
+                    .setTaskCategory(taskRequest.getTaskCategory())
+                    .addAllUnits(CollectionUtils.emptyIfNull(taskRequest.getDelegateTaskRequest().getLogKeysList()))
+                    .addAllUnits(CollectionUtils.emptyIfNull(taskRequest.getDelegateTaskRequest().getUnitsList())))
             .build(),
         Collections.emptyList());
   }

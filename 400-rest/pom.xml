@@ -840,8 +840,7 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>960-continuous-features</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>

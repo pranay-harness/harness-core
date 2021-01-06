@@ -8,6 +8,7 @@ import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.TaskChainExecutableResponse;
+import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.data.Metadata;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
@@ -31,6 +32,7 @@ import com.google.protobuf.ByteString;
 import java.util.Collections;
 import java.util.Objects;
 import lombok.NonNull;
+import org.apache.commons.collections4.CollectionUtils;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 @OwnedBy(CDC)
@@ -107,15 +109,19 @@ public class TaskChainStrategy implements ExecuteStrategy {
     String taskId = Preconditions.checkNotNull(pmsNodeExecutionService.queueTask(
         nodeExecution.getUuid(), ambiance.getSetupAbstractionsMap(), taskChainResponse.getTaskRequest()));
     // Update Execution Node Instance state to TASK_WAITING
+    TaskRequest taskRequest = taskChainResponse.getTaskRequest();
     pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.TASK_WAITING,
         ExecutableResponse.newBuilder()
-            .setTaskChain(TaskChainExecutableResponse.newBuilder()
-                              .setTaskId(taskId)
-                              .setTaskCategory(taskChainResponse.getTaskRequest().getTaskCategory())
-                              .setChainEnd(taskChainResponse.isChainEnd())
-                              .setPassThroughData(
-                                  ByteString.copyFrom(kryoSerializer.asBytes(taskChainResponse.getPassThroughData())))
-                              .build())
+            .setTaskChain(
+                TaskChainExecutableResponse.newBuilder()
+                    .setTaskId(taskId)
+                    .setTaskCategory(taskChainResponse.getTaskRequest().getTaskCategory())
+                    .setChainEnd(taskChainResponse.isChainEnd())
+                    .setPassThroughData(
+                        ByteString.copyFrom(kryoSerializer.asBytes(taskChainResponse.getPassThroughData())))
+                    .addAllLogKeys(CollectionUtils.emptyIfNull(taskRequest.getDelegateTaskRequest().getLogKeysList()))
+                    .addAllUnits(CollectionUtils.emptyIfNull(taskRequest.getDelegateTaskRequest().getUnitsList()))
+                    .build())
             .setMetadata(taskChainResponse.getMetadata() == null ? new Metadata() {}.toJson()
                                                                  : taskChainResponse.getMetadata().toJson())
             .build(),
