@@ -83,6 +83,13 @@ public class OrchestrationServiceImpl implements OrchestrationService {
       return;
     }
 
+    if (isNotEmpty(orchestrator.getAnalysisStateMachineQueue())
+        && orchestrator.getAnalysisStateMachineQueue().size() > 5) {
+      log.info("For verification task ID {}, orchestrator has more than 5 tasks waiting."
+              + " Please check if there is a growing backlog.",
+          orchestrator.getVerificationTaskId());
+    }
+
     AnalysisStateMachine currentlyExecutingStateMachine =
         stateMachineService.getExecutingStateMachine(orchestrator.getVerificationTaskId());
     if (orchestrator.getStatus() == AnalysisStatus.CREATED) {

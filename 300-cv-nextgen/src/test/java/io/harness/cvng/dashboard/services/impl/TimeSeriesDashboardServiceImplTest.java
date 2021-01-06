@@ -98,9 +98,9 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
              serviceIdentifier, CVMonitoringCategory.PERFORMANCE))
         .thenReturn(Arrays.asList(cvConfig));
 
-    PageResponse<TimeSeriesMetricDataDTO> response =
-        timeSeriesDashboardService.getSortedMetricData(accountId, projectIdentifier, orgIdentifier, envIdentifier,
-            serviceIdentifier, CVMonitoringCategory.PERFORMANCE, start.toEpochMilli(), end.toEpochMilli(), 0, 10);
+    PageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getSortedMetricData(accountId,
+        projectIdentifier, orgIdentifier, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE,
+        start.toEpochMilli(), end.toEpochMilli(), start.toEpochMilli(), false, 0, 10, null);
 
     verify(cvConfigService)
         .getConfigsOfProductionEnvironments(accountId, orgIdentifier, projectIdentifier, envIdentifier,
@@ -159,9 +159,9 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
              serviceIdentifier, CVMonitoringCategory.PERFORMANCE))
         .thenReturn(Arrays.asList(cvConfig));
 
-    PageResponse<TimeSeriesMetricDataDTO> response =
-        timeSeriesDashboardService.getSortedMetricData(accountId, projectIdentifier, orgIdentifier, envIdentifier,
-            serviceIdentifier, CVMonitoringCategory.PERFORMANCE, start.toEpochMilli(), end.toEpochMilli(), 0, 10);
+    PageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getSortedMetricData(accountId,
+        projectIdentifier, orgIdentifier, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE,
+        start.toEpochMilli(), end.toEpochMilli(), start.toEpochMilli(), false, 0, 10, null);
     List<TimeSeriesMetricDataDTO> timeSeriesMetricDTOs = response.getContent();
     assertThat(timeSeriesMetricDTOs.size()).isEqualTo(4);
     TimeSeriesMetricDataDTO timeSeriesMetricDataDTO = timeSeriesMetricDTOs.get(0);
@@ -196,6 +196,146 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
+  public void testGetSortedMetricErrorData_withFilter() throws Exception {
+    Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
+    Instant end = start.plus(5, ChronoUnit.MINUTES);
+    String cvConfigId = generateUuid();
+    List<TimeSeriesRecord> timeSeriesRecords = new ArrayList<>();
+    timeSeriesRecords.add(TimeSeriesRecord.builder()
+                              .verificationTaskId(cvConfigId)
+                              .bucketStartTime(start)
+                              .metricName("m1")
+                              .metricType(TimeSeriesMetricType.THROUGHPUT)
+                              .timeSeriesGroupValues(Sets.newHashSet(TimeSeriesRecord.TimeSeriesGroupValue.builder()
+                                                                         .groupName("g1")
+                                                                         .metricValue(1.0)
+                                                                         .timeStamp(start)
+                                                                         .build(),
+                                  TimeSeriesRecord.TimeSeriesGroupValue.builder()
+                                      .groupName("g2")
+                                      .metricValue(2.0)
+                                      .timeStamp(start)
+                                      .build()))
+                              .build());
+
+    timeSeriesRecords.add(TimeSeriesRecord.builder()
+                              .verificationTaskId(cvConfigId)
+                              .bucketStartTime(start)
+                              .metricName("m2")
+                              .metricType(TimeSeriesMetricType.ERROR)
+                              .timeSeriesGroupValues(Sets.newHashSet(TimeSeriesRecord.TimeSeriesGroupValue.builder()
+                                                                         .groupName("g1")
+                                                                         .metricValue(1.0)
+                                                                         .percentValue(2.0)
+                                                                         .timeStamp(start)
+                                                                         .build(),
+                                  TimeSeriesRecord.TimeSeriesGroupValue.builder()
+                                      .groupName("g2")
+                                      .metricValue(2.0)
+                                      .timeStamp(start)
+                                      .build()))
+                              .build());
+    when(timeSeriesService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
+        .thenReturn(timeSeriesRecords);
+    AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
+    cvConfig.setUuid(cvConfigId);
+    when(cvConfigService.getConfigsOfProductionEnvironments(accountId, orgIdentifier, projectIdentifier, envIdentifier,
+             serviceIdentifier, CVMonitoringCategory.PERFORMANCE))
+        .thenReturn(Arrays.asList(cvConfig));
+
+    PageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getSortedMetricData(accountId,
+        projectIdentifier, orgIdentifier, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE,
+        start.toEpochMilli(), end.toEpochMilli(), start.toEpochMilli(), false, 0, 10, "m1");
+    List<TimeSeriesMetricDataDTO> timeSeriesMetricDTOs = response.getContent();
+    assertThat(timeSeriesMetricDTOs.size()).isEqualTo(2);
+    TimeSeriesMetricDataDTO timeSeriesMetricDataDTO = timeSeriesMetricDTOs.get(0);
+    assertThat(timeSeriesMetricDataDTO.getMetricType()).isEqualTo(TimeSeriesMetricType.THROUGHPUT);
+    assertThat(timeSeriesMetricDataDTO.getMetricName()).isEqualTo("m1");
+    assertThat(timeSeriesMetricDataDTO.getGroupName()).isEqualTo("g1");
+    assertThat(timeSeriesMetricDataDTO.getMetricDataList().size()).isEqualTo(1);
+    assertThat(timeSeriesMetricDataDTO.getMetricDataList().first().getValue()).isEqualTo(1.0, offset(0.00001));
+
+    timeSeriesMetricDataDTO = timeSeriesMetricDTOs.get(1);
+    assertThat(timeSeriesMetricDataDTO.getMetricType()).isEqualTo(TimeSeriesMetricType.THROUGHPUT);
+    assertThat(timeSeriesMetricDataDTO.getMetricName()).isEqualTo("m1");
+    assertThat(timeSeriesMetricDataDTO.getGroupName()).isEqualTo("g2");
+    assertThat(timeSeriesMetricDataDTO.getMetricDataList().size()).isEqualTo(1);
+    assertThat(timeSeriesMetricDataDTO.getMetricDataList().first().getValue()).isEqualTo(2.0, offset(0.00001));
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetSortedMetricErrorData_withTxnFilter() throws Exception {
+    Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
+    Instant end = start.plus(5, ChronoUnit.MINUTES);
+    String cvConfigId = generateUuid();
+    List<TimeSeriesRecord> timeSeriesRecords = new ArrayList<>();
+    timeSeriesRecords.add(TimeSeriesRecord.builder()
+                              .verificationTaskId(cvConfigId)
+                              .bucketStartTime(start)
+                              .metricName("m1")
+                              .metricType(TimeSeriesMetricType.THROUGHPUT)
+                              .timeSeriesGroupValues(Sets.newHashSet(TimeSeriesRecord.TimeSeriesGroupValue.builder()
+                                                                         .groupName("g1")
+                                                                         .metricValue(1.0)
+                                                                         .timeStamp(start)
+                                                                         .build(),
+                                  TimeSeriesRecord.TimeSeriesGroupValue.builder()
+                                      .groupName("g2")
+                                      .metricValue(2.0)
+                                      .timeStamp(start)
+                                      .build()))
+                              .build());
+
+    timeSeriesRecords.add(TimeSeriesRecord.builder()
+                              .verificationTaskId(cvConfigId)
+                              .bucketStartTime(start)
+                              .metricName("m2")
+                              .metricType(TimeSeriesMetricType.ERROR)
+                              .timeSeriesGroupValues(Sets.newHashSet(TimeSeriesRecord.TimeSeriesGroupValue.builder()
+                                                                         .groupName("g1")
+                                                                         .metricValue(1.0)
+                                                                         .percentValue(2.0)
+                                                                         .timeStamp(start)
+                                                                         .build(),
+                                  TimeSeriesRecord.TimeSeriesGroupValue.builder()
+                                      .groupName("g2")
+                                      .metricValue(2.0)
+                                      .timeStamp(start)
+                                      .build()))
+                              .build());
+    when(timeSeriesService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
+        .thenReturn(timeSeriesRecords);
+    AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
+    cvConfig.setUuid(cvConfigId);
+    when(cvConfigService.getConfigsOfProductionEnvironments(accountId, orgIdentifier, projectIdentifier, envIdentifier,
+             serviceIdentifier, CVMonitoringCategory.PERFORMANCE))
+        .thenReturn(Arrays.asList(cvConfig));
+
+    PageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getSortedMetricData(accountId,
+        projectIdentifier, orgIdentifier, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE,
+        start.toEpochMilli(), end.toEpochMilli(), start.toEpochMilli(), false, 0, 10, "g1");
+    List<TimeSeriesMetricDataDTO> timeSeriesMetricDTOs = response.getContent();
+    assertThat(timeSeriesMetricDTOs.size()).isEqualTo(2);
+    TimeSeriesMetricDataDTO timeSeriesMetricDataDTO = timeSeriesMetricDTOs.get(0);
+    assertThat(timeSeriesMetricDataDTO.getMetricType()).isEqualTo(TimeSeriesMetricType.THROUGHPUT);
+    assertThat(timeSeriesMetricDataDTO.getMetricName()).isEqualTo("m1");
+    assertThat(timeSeriesMetricDataDTO.getGroupName()).isEqualTo("g1");
+    assertThat(timeSeriesMetricDataDTO.getMetricDataList().size()).isEqualTo(1);
+    assertThat(timeSeriesMetricDataDTO.getMetricDataList().first().getValue()).isEqualTo(1.0, offset(0.00001));
+
+    timeSeriesMetricDataDTO = timeSeriesMetricDTOs.get(1);
+    assertThat(timeSeriesMetricDataDTO.getMetricType()).isEqualTo(TimeSeriesMetricType.ERROR);
+    assertThat(timeSeriesMetricDataDTO.getMetricName()).isEqualTo("m2");
+    assertThat(timeSeriesMetricDataDTO.getGroupName()).isEqualTo("g1");
+    assertThat(timeSeriesMetricDataDTO.getMetricDataList().size()).isEqualTo(1);
+    assertThat(timeSeriesMetricDataDTO.getMetricDataList().first().getValue()).isEqualTo(2.0, offset(0.00001));
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
   public void testGetSortedAnomalousMetricData() throws Exception {
     Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
     Instant end = start.plus(5, ChronoUnit.MINUTES);
@@ -209,9 +349,9 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
              serviceIdentifier, CVMonitoringCategory.PERFORMANCE))
         .thenReturn(Arrays.asList(cvConfig));
 
-    PageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getSortedAnomalousMetricData(accountId,
+    PageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getSortedMetricData(accountId,
         projectIdentifier, orgIdentifier, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE,
-        start.toEpochMilli(), end.toEpochMilli(), 0, 10);
+        start.toEpochMilli(), end.toEpochMilli(), start.toEpochMilli(), true, 0, 10, null);
     verify(cvConfigService)
         .getConfigsOfProductionEnvironments(accountId, orgIdentifier, projectIdentifier, envIdentifier,
             serviceIdentifier, CVMonitoringCategory.PERFORMANCE);
@@ -242,9 +382,9 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
              serviceIdentifier, CVMonitoringCategory.PERFORMANCE))
         .thenReturn(Arrays.asList(cvConfig));
 
-    PageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getSortedAnomalousMetricData(accountId,
+    PageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getSortedMetricData(accountId,
         projectIdentifier, orgIdentifier, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE,
-        start.toEpochMilli(), end.toEpochMilli(), 0, 10);
+        start.toEpochMilli(), end.toEpochMilli(), start.toEpochMilli(), true, 0, 10, null);
     verify(cvConfigService)
         .getConfigsOfProductionEnvironments(accountId, orgIdentifier, projectIdentifier, envIdentifier,
             serviceIdentifier, CVMonitoringCategory.PERFORMANCE);
@@ -269,8 +409,8 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
         .thenReturn(Arrays.asList(cvConfig));
 
     PageResponse<TimeSeriesMetricDataDTO> response =
-        timeSeriesDashboardService.getSortedAnomalousMetricData(accountId, projectIdentifier, orgIdentifier,
-            envIdentifier, serviceIdentifier, null, start.toEpochMilli(), end.toEpochMilli(), 0, 10);
+        timeSeriesDashboardService.getSortedMetricData(accountId, projectIdentifier, orgIdentifier, envIdentifier,
+            serviceIdentifier, null, start.toEpochMilli(), end.toEpochMilli(), start.toEpochMilli(), true, 0, 10, null);
 
     assertThat(response).isNotNull();
     assertThat(response.getContent()).isNotEmpty();
@@ -301,13 +441,13 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
              serviceIdentifier, CVMonitoringCategory.PERFORMANCE))
         .thenReturn(Arrays.asList(cvConfig));
 
-    PageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getSortedAnomalousMetricData(accountId,
+    PageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getSortedMetricData(accountId,
         projectIdentifier, orgIdentifier, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE,
-        start.toEpochMilli(), end.toEpochMilli(), 0, 3);
+        start.toEpochMilli(), end.toEpochMilli(), start.toEpochMilli(), true, 0, 3, null);
 
     assertThat(response).isNotNull();
     assertThat(response.getContent()).isNotEmpty();
-    assertThat(response.getTotalPages()).isEqualTo(62);
+    assertThat(response.getTotalPages()).isEqualTo(61);
     assertThat(response.getContent().size()).isEqualTo(3);
     response.getContent().forEach(timeSeriesMetricDataDTO -> {
       assertThat(timeSeriesMetricDataDTO.getMetricDataList()).isNotEmpty();

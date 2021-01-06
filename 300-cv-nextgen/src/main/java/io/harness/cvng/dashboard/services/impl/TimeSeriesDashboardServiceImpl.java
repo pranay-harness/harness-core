@@ -2,6 +2,7 @@ package io.harness.cvng.dashboard.services.impl;
 
 import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SERVICE_GUARD_WINDOW_SIZE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.services.api.ActivityService;
@@ -18,6 +19,7 @@ import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO.MetricData;
 import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO.TimeSeriesRisk;
 import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
 import io.harness.ng.beans.PageResponse;
+import io.harness.utils.PageUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -29,7 +31,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -49,17 +50,10 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
   @Override
   public PageResponse<TimeSeriesMetricDataDTO> getSortedMetricData(String accountId, String projectIdentifier,
       String orgIdentifier, String environmentIdentifier, String serviceIdentifier,
-      CVMonitoringCategory monitoringCategory, Long startTimeMillis, Long endTimeMillis, int page, int size) {
+      CVMonitoringCategory monitoringCategory, Long startTimeMillis, Long endTimeMillis, Long analysisStartTimeMillis,
+      boolean anomalous, int page, int size, String filter) {
     return getMetricData(accountId, projectIdentifier, orgIdentifier, environmentIdentifier, serviceIdentifier,
-        monitoringCategory, startTimeMillis, endTimeMillis, false, page, size);
-  }
-
-  @Override
-  public PageResponse<TimeSeriesMetricDataDTO> getSortedAnomalousMetricData(String accountId, String projectIdentifier,
-      String orgIdentifier, String environmentIdentifier, String serviceIdentifier,
-      CVMonitoringCategory monitoringCategory, Long startTimeMillis, Long endTimeMillis, int page, int size) {
-    return getMetricData(accountId, projectIdentifier, orgIdentifier, environmentIdentifier, serviceIdentifier,
-        monitoringCategory, startTimeMillis, endTimeMillis, true, page, size);
+        monitoringCategory, startTimeMillis, endTimeMillis, analysisStartTimeMillis, anomalous, page, size, filter);
   }
 
   @Override
@@ -80,15 +74,17 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
                                    .map(verificationTaskId -> verificationTaskService.getCVConfigId(verificationTaskId))
                                    .collect(Collectors.toList());
     return getMetricData(cvConfigIds, projectIdentifier, orgIdentifier, environmentIdentifier, serviceIdentifier, null,
-        Instant.ofEpochMilli(startTimeMillis), Instant.ofEpochMilli(endTimeMillis), anomalousOnly, page, size);
+        Instant.ofEpochMilli(startTimeMillis), Instant.ofEpochMilli(endTimeMillis), activity.getActivityStartTime(),
+        anomalousOnly, page, size, null);
   }
 
   private PageResponse<TimeSeriesMetricDataDTO> getMetricData(String accountId, String projectIdentifier,
       String orgIdentifier, String environmentIdentifier, String serviceIdentifier,
-      CVMonitoringCategory monitoringCategory, Long startTimeMillis, Long endTimeMillis, boolean anomalousOnly,
-      int page, int size) {
+      CVMonitoringCategory monitoringCategory, Long startTimeMillis, Long endTimeMillis, Long analysisStartTimeMillis,
+      boolean anomalousOnly, int page, int size, String filter) {
     Instant startTime = Instant.ofEpochMilli(startTimeMillis);
     Instant endTime = Instant.ofEpochMilli(endTimeMillis);
+    Instant analysisStartTime = Instant.ofEpochMilli(analysisStartTimeMillis);
 
     // get all the cvConfigs that belong to
     List<CVConfig> cvConfigList = cvConfigService.getConfigsOfProductionEnvironments(
@@ -96,13 +92,13 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
     List<String> cvConfigIds = cvConfigList.stream().map(CVConfig::getUuid).collect(Collectors.toList());
 
     return getMetricData(cvConfigIds, projectIdentifier, orgIdentifier, environmentIdentifier, serviceIdentifier,
-        monitoringCategory, startTime, endTime, anomalousOnly, page, size);
+        monitoringCategory, startTime, endTime, analysisStartTime, anomalousOnly, page, size, filter);
   }
 
   private PageResponse<TimeSeriesMetricDataDTO> getMetricData(List<String> cvConfigIds, String projectIdentifier,
       String orgIdentifier, String environmentIdentifier, String serviceIdentifier,
-      CVMonitoringCategory monitoringCategory, Instant startTime, Instant endTime, boolean anomalousOnly, int page,
-      int size) {
+      CVMonitoringCategory monitoringCategory, Instant startTime, Instant endTime, Instant analysisStartTime,
+      boolean anomalousOnly, int page, int size, String filter) {
     List<Callable<List<TimeSeriesRecord>>> recordsPerId = new ArrayList<>();
 
     cvConfigIds.forEach(cvConfigId -> recordsPerId.add(() -> {
@@ -117,23 +113,23 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
       } else {
         // it is possible that there are some transactions with good risk and some with bad.
         // We want to surface only those with bad. So filter out the good ones.
-        SortedSet<TimeSeriesRecord> recordsForConfig = new TreeSet<>();
-        recordsForConfig.addAll(timeSeriesRecordsfromDB);
-        Instant analysisTime = recordsForConfig.last().getBucketStartTime();
 
         List<TimeSeriesRecord> lastAnalysisRecords =
             timeSeriesRecordsfromDB.stream()
-                .filter(record -> record.getBucketStartTime().equals(analysisTime))
+                .filter(record -> !record.getBucketStartTime().isBefore(analysisStartTime))
                 .collect(Collectors.toList());
 
-        Map<String, List<String>> riskMetricGroupNamesMap = new HashMap<>();
+        Map<String, Set<String>> riskMetricGroupNamesMap = new HashMap<>();
 
         lastAnalysisRecords.forEach(timeSeriesRecord -> {
           Set<TimeSeriesRecord.TimeSeriesGroupValue> groupValuesWithRisk = timeSeriesRecord.getTimeSeriesGroupValues()
                                                                                .stream()
                                                                                .filter(gv -> gv.getRiskScore() > 0)
                                                                                .collect(Collectors.toSet());
-          riskMetricGroupNamesMap.put(timeSeriesRecord.getMetricName(), new ArrayList<>());
+
+          if (!riskMetricGroupNamesMap.containsKey(timeSeriesRecord.getMetricName())) {
+            riskMetricGroupNamesMap.put(timeSeriesRecord.getMetricName(), new HashSet<>());
+          }
 
           groupValuesWithRisk.forEach(
               gv -> riskMetricGroupNamesMap.get(timeSeriesRecord.getMetricName()).add(gv.getGroupName()));
@@ -142,34 +138,14 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
         for (TimeSeriesRecord tsRecord : timeSeriesRecordsfromDB) {
           String metricName = tsRecord.getMetricName();
           if (riskMetricGroupNamesMap.containsKey(metricName)) {
-            Iterator<TimeSeriesRecord.TimeSeriesGroupValue> groupValueIterator =
-                tsRecord.getTimeSeriesGroupValues().iterator();
-            Set<TimeSeriesRecord.TimeSeriesGroupValue> badGroupValues = new HashSet<>();
-            for (; groupValueIterator.hasNext();) {
-              TimeSeriesRecord.TimeSeriesGroupValue gv = groupValueIterator.next();
-              String groupName = gv.getGroupName();
-              if (!riskMetricGroupNamesMap.get(metricName).contains(groupName)) {
-                groupValueIterator.remove();
-              } else {
-                badGroupValues.add(gv);
-              }
-            }
+            Set<TimeSeriesRecord.TimeSeriesGroupValue> badGroupValues =
+                tsRecord.getTimeSeriesGroupValues()
+                    .stream()
+                    .filter(timeSeriesGroupValue
+                        -> riskMetricGroupNamesMap.get(metricName).contains(timeSeriesGroupValue.getGroupName()))
+                    .collect(Collectors.toSet());
 
             tsRecord.setTimeSeriesGroupValues(badGroupValues);
-            // remove all those GroupValues that doent belong in the risk list.
-            //              Set<TimeSeriesRecord.TimeSeriesGroupValue> groupValuesWithLowRisk =
-            //                  tsRecord.getTimeSeriesGroupValues()
-            //                      .stream()
-            //                      .filter(gv ->
-            //                      !riskMetricGroupNamesMap.get(metricName).contains(gv.getGroupName()))
-            //                      .collect(Collectors.toSet());
-            //              Set<TimeSeriesRecord.TimeSeriesGroupValue> groupValues =
-            //              tsRecord.getTimeSeriesGroupValues(); groupValues.stream().filter(gv -> gv.getRiskScore() >
-            //              0).map(tsRecord.getTimeSeriesGroupValues()::remove); for
-            //              (TimeSeriesRecord.TimeSeriesGroupValue groupValue : groupValuesWithLowRisk) {
-            //                groupValues.remove(groupValue);
-            //              }
-            // groupValuesWithLowRisk.stream().map(tsRecord.getTimeSeriesGroupValues()::remove);
             timeSeriesRecords.add(tsRecord);
           }
         }
@@ -190,6 +166,10 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
       record.getTimeSeriesGroupValues().forEach(timeSeriesGroupValue -> {
         String txnName = timeSeriesGroupValue.getGroupName();
         String key = txnName + "." + metricName;
+        if (isNotEmpty(filter) && !txnName.toLowerCase().contains(filter)
+            && !metricName.toLowerCase().contains(filter.toLowerCase())) {
+          return;
+        }
         if (!transactionMetricDataMap.containsKey(key)) {
           transactionMetricDataMap.put(key,
               TimeSeriesMetricDataDTO.builder()
@@ -219,11 +199,13 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
       });
     });
     SortedSet<TimeSeriesMetricDataDTO> sortedMetricData = new TreeSet<>(transactionMetricDataMap.values());
-    updateLastWindowRisk(sortedMetricData, endTime);
-    return formPageResponse(sortedMetricData, page, size);
+    // updateLastWindowRisk(sortedMetricData, endTime);
+    return PageUtils.offsetAndLimit(new ArrayList<>(sortedMetricData), page, size);
   }
 
   private void updateLastWindowRisk(SortedSet<TimeSeriesMetricDataDTO> sortedMetricData, Instant endTime) {
+    // TODO: This seems buggy. Need to fix this with Sowmya's help.
+
     /*
      * We need to update the last 15 minutes in the UI to reflect the state which was present just after instant endTime
      * as these risks might later get updated if the next analysis window risk is high (as we use 15 min as test data in
@@ -242,32 +224,5 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
                  .filter(data -> data.getTimestamp() >= lastWindowStartTime.toEpochMilli())
                  .forEach(data -> data.setRisk(timeSeriesRisk)));
     }
-  }
-
-  private PageResponse<TimeSeriesMetricDataDTO> formPageResponse(
-      SortedSet<TimeSeriesMetricDataDTO> sortedMetricdata, int page, int size) {
-    List<TimeSeriesMetricDataDTO> returnList = new ArrayList<>();
-
-    int startIndex = page * size;
-    Iterator<TimeSeriesMetricDataDTO> iterator = sortedMetricdata.iterator();
-    int i = 0;
-    while (iterator.hasNext()) {
-      TimeSeriesMetricDataDTO metricDataDTO = iterator.next();
-      if (i >= startIndex && returnList.size() < size) {
-        returnList.add(metricDataDTO);
-      }
-      i++;
-    }
-
-    int totalNumPages = sortedMetricdata.size() / size + 1;
-
-    return PageResponse.<TimeSeriesMetricDataDTO>builder()
-        .pageSize(size)
-        .totalPages(totalNumPages)
-        .totalItems(sortedMetricdata.size())
-        .pageIndex(returnList.size() == 0 ? -1 : page)
-        .empty(returnList.size() == 0)
-        .content(returnList)
-        .build();
   }
 }
