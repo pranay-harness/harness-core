@@ -1,4 +1,4 @@
-package io.harness.ngtriggers.helpers;
+package io.harness.ngtriggers.eventmapper.impl;
 
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_ENABLED_TRIGGER_FOUND_FOR_REPO;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_CONDITIONS;
@@ -20,6 +20,8 @@ import io.harness.ngtriggers.beans.response.WebhookEventResponse;
 import io.harness.ngtriggers.beans.scm.ParsePayloadResponse;
 import io.harness.ngtriggers.beans.scm.Repository;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
+import io.harness.ngtriggers.eventmapper.impl.GitWebhookEventToTriggerMapper;
+import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
@@ -43,15 +45,15 @@ public class WebhookEventToTriggerMapTest extends CategoryTest {
   @Mock WebhookEventPayloadParser webhookEventPayloadParser;
   @Mock NGTriggerElementMapper ngTriggerElementMapper;
   @Mock NGTriggerService ngTriggerService;
-  @InjectMocks @Inject WebhookEventToTriggerMapper webhookEventToTriggerMapper;
+  @InjectMocks @Inject GitWebhookEventToTriggerMapper gitWebhookEventToTriggerMapper;
 
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testMapWebhookEventToTriggers() {
-    WebhookEventToTriggerMapper mapper =
-        new WebhookEventToTriggerMapper(ngTriggerService, webhookEventPayloadParser, ngTriggerElementMapper);
-    WebhookEventToTriggerMapper spyMapper = spy(mapper);
+    GitWebhookEventToTriggerMapper mapper =
+        new GitWebhookEventToTriggerMapper(ngTriggerService, webhookEventPayloadParser, ngTriggerElementMapper);
+    GitWebhookEventToTriggerMapper spyMapper = spy(mapper);
 
     TriggerWebhookEvent event = TriggerWebhookEvent.builder().build();
     ParsePayloadResponse response = ParsePayloadResponse.builder().exceptionOccured(true).build();
@@ -61,9 +63,8 @@ public class WebhookEventToTriggerMapTest extends CategoryTest {
     mockStatic(WebhookEventResponseHelper.class);
     eventResponse = WebhookEventResponse.builder().message("parsing failed").build();
     when(WebhookEventResponseHelper.prepareResponseForScmException(response)).thenReturn(eventResponse);
-    doReturn(response).when(spyMapper).convertWebhookResponse(event, ParseWebhookResponse.newBuilder().build());
-    WebhookEventMappingResponse webhookEventMappingResponse =
-        spyMapper.mapWebhookEventToTriggers(event, ParseWebhookResponse.newBuilder().build());
+    doReturn(response).when(spyMapper).convertWebhookResponse(event);
+    WebhookEventMappingResponse webhookEventMappingResponse = spyMapper.mapWebhookEventToTriggers(event);
     assertThat(webhookEventMappingResponse.getWebhookEventResponse()).isEqualTo(eventResponse);
     assertThat(webhookEventMappingResponse.getWebhookEventResponse().getMessage()).isEqualTo("parsing failed");
 
@@ -71,14 +72,14 @@ public class WebhookEventToTriggerMapTest extends CategoryTest {
     WebhookPayloadData webhookPayloadData =
         WebhookPayloadData.builder().repository(Repository.builder().link("abc.com").build()).build();
     response = ParsePayloadResponse.builder().webhookPayloadData(webhookPayloadData).build();
-    doReturn(response).when(spyMapper).convertWebhookResponse(event, ParseWebhookResponse.newBuilder().build());
+    doReturn(response).when(spyMapper).convertWebhookResponse(event);
 
     doReturn(null).when(spyMapper).retrieveTriggersConfiguredForRepo(event, "abc.com");
     eventResponse = WebhookEventResponse.builder().message("No Trigger was configured for Repo: abc.com").build();
     when(WebhookEventResponseHelper.toResponse(
              NO_MATCHING_TRIGGER_FOR_REPO, event, null, null, "No Trigger was configured for Repo: abc.com", null))
         .thenReturn(eventResponse);
-    webhookEventMappingResponse = spyMapper.mapWebhookEventToTriggers(event, ParseWebhookResponse.newBuilder().build());
+    webhookEventMappingResponse = spyMapper.mapWebhookEventToTriggers(event);
     assertThat(webhookEventMappingResponse.isFailedToFindTrigger()).isTrue();
     assertThat(webhookEventMappingResponse.getTriggers()).isEmpty();
     assertThat(webhookEventMappingResponse.getWebhookEventResponse().getMessage())
@@ -93,7 +94,7 @@ public class WebhookEventToTriggerMapTest extends CategoryTest {
     when(WebhookEventResponseHelper.toResponse(NO_ENABLED_TRIGGER_FOUND_FOR_REPO, event, null, null,
              "No Trigger configured for Repo was in ENABLED status: abc.com", null))
         .thenReturn(eventResponse);
-    webhookEventMappingResponse = spyMapper.mapWebhookEventToTriggers(event, ParseWebhookResponse.newBuilder().build());
+    webhookEventMappingResponse = spyMapper.mapWebhookEventToTriggers(event);
     assertThat(webhookEventMappingResponse.isFailedToFindTrigger()).isTrue();
     assertThat(webhookEventMappingResponse.getTriggers()).isEmpty();
     assertThat(webhookEventMappingResponse.getWebhookEventResponse().getMessage())
@@ -108,14 +109,14 @@ public class WebhookEventToTriggerMapTest extends CategoryTest {
     when(WebhookEventResponseHelper.toResponse(NO_MATCHING_TRIGGER_FOR_CONDITIONS, event, null, null,
              "No Trigger matched conditions for payload event", null))
         .thenReturn(eventResponse);
-    webhookEventMappingResponse = spyMapper.mapWebhookEventToTriggers(event, ParseWebhookResponse.newBuilder().build());
+    webhookEventMappingResponse = spyMapper.mapWebhookEventToTriggers(event);
     assertThat(webhookEventMappingResponse.isFailedToFindTrigger()).isTrue();
     assertThat(webhookEventMappingResponse.getWebhookEventResponse().getMessage())
         .isEqualTo("No Trigger matched conditions for payload event");
 
     // Trigger found
     doReturn(ngTriggerEntities).when(spyMapper).applyFilters(webhookPayloadData, ngTriggerEntities);
-    webhookEventMappingResponse = spyMapper.mapWebhookEventToTriggers(event, ParseWebhookResponse.newBuilder().build());
+    webhookEventMappingResponse = spyMapper.mapWebhookEventToTriggers(event);
     assertThat(webhookEventMappingResponse.isFailedToFindTrigger()).isFalse();
     assertThat(webhookEventMappingResponse.getTriggers()).isEqualTo(ngTriggerEntities);
   }

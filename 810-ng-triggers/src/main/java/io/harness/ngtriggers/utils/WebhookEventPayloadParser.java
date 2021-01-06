@@ -2,6 +2,11 @@ package io.harness.ngtriggers.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.ngtriggers.Constants.BITBUCKET_CLOUD_HEADER_KEY;
+import static io.harness.ngtriggers.Constants.BITBUCKET_SERVER_HEADER_KEY;
+import static io.harness.ngtriggers.Constants.X_BIT_BUCKET_EVENT;
+import static io.harness.ngtriggers.Constants.X_GIT_HUB_EVENT;
+import static io.harness.ngtriggers.Constants.X_GIT_LAB_EVENT;
 
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -27,12 +32,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class WebhookEventPayloadParser {
-  private static final String X_GIT_HUB_EVENT = "X-GitHub-Event";
-  private static final String X_GIT_LAB_EVENT = "X-Gitlab-Event";
-  private static final String X_BIT_BUCKET_EVENT = "X-Event-Key";
-  public static final String BITBUCKET_SERVER_HEADER_KEY = "X-Request-Id";
-  public static final String BITBUCKET_CLOUD_HEADER_KEY = "X-Request-UUID";
-
   @Inject private SCMGrpc.SCMBlockingStub scmBlockingStub;
 
   public WebhookPayloadData parseEvent(TriggerWebhookEvent triggerWebhookEvent) {
@@ -82,8 +81,9 @@ public class WebhookEventPayloadParser {
       throw new InvalidRequestException("Unknown webhook event", USER);
     }
 
-    webhookPayloadDataBuilder.originalEvent(triggerWebhookEvent);
-    return webhookPayloadDataBuilder.build();
+    return webhookPayloadDataBuilder.originalEvent(triggerWebhookEvent)
+        .parseWebhookResponse(parseWebhookResponse)
+        .build();
   }
 
   private WebhookPayloadDataBuilder convertPullRequestHook(PullRequestHook prHook) {
@@ -233,8 +233,9 @@ public class WebhookEventPayloadParser {
         USER);
   }
 
-  private GitProvider getBitbucketProvider(Set<String> headerKeys) {
-    if (containsHeaderKey(headerKeys, BITBUCKET_SERVER_HEADER_KEY)) {
+  @VisibleForTesting
+  GitProvider getBitbucketProvider(Set<String> headerKeys) {
+    if (isBitbucketServer(headerKeys)) {
       return GitProvider.STASH;
     } else if (containsHeaderKey(headerKeys, BITBUCKET_CLOUD_HEADER_KEY)) {
       return GitProvider.BITBUCKET;
@@ -247,7 +248,12 @@ public class WebhookEventPayloadParser {
     }
   }
 
-  private boolean containsHeaderKey(Set<String> headerKeys, String key) {
+  @VisibleForTesting
+  boolean isBitbucketServer(Set<String> headerKeys) {
+    return containsHeaderKey(headerKeys, BITBUCKET_SERVER_HEADER_KEY);
+  }
+
+  public boolean containsHeaderKey(Set<String> headerKeys, String key) {
     if (isEmpty(headerKeys) || isBlank(key)) {
       return false;
     }

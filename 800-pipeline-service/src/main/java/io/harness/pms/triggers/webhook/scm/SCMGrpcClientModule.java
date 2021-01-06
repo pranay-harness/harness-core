@@ -1,4 +1,4 @@
-package io.harness.pms.triggers.scm;
+package io.harness.pms.triggers.webhook.scm;
 
 import static io.harness.product.ci.scm.proto.SCMGrpc.newBlockingStub;
 

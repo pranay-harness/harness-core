@@ -1,7 +1,9 @@
-package io.harness.ngtriggers.helpers;
+package io.harness.ngtriggers.eventmapper.impl;
 
+import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.SCM_SERVICE_CONNECTION_FAILED;
 import static io.harness.rule.OwnerRule.ADWAIT;
 
+import static io.grpc.Status.UNAVAILABLE;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
@@ -11,8 +13,10 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
+import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
+import io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus;
 import io.harness.ngtriggers.beans.scm.PRWebhookEvent;
 import io.harness.ngtriggers.beans.scm.ParsePayloadResponse;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
@@ -21,6 +25,7 @@ import io.harness.ngtriggers.beans.source.NGTriggerSpec;
 import io.harness.ngtriggers.beans.source.webhook.WebhookEvent;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
+import io.harness.ngtriggers.eventmapper.impl.GitWebhookEventToTriggerMapper;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
@@ -28,6 +33,8 @@ import io.harness.product.ci.scm.proto.ParseWebhookResponse;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.Before;
@@ -37,11 +44,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class WebhookEventToTriggerMapperTest extends CategoryTest {
+public class GitWebhookEventToTriggerMapperTest extends CategoryTest {
   @Mock WebhookEventPayloadParser webhookEventPayloadParser;
   @Mock NGTriggerElementMapper ngTriggerElementMapper;
   @Mock NGTriggerService ngTriggerService;
-  @InjectMocks @Inject WebhookEventToTriggerMapper webhookEventToTriggerMapper;
+  @InjectMocks @Inject GitWebhookEventToTriggerMapper gitWebhookEventToTriggerMapper;
 
   @Before
   public void setup() {
@@ -49,17 +56,19 @@ public class WebhookEventToTriggerMapperTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = ADWAIT, intermittent = true)
+  @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testParseEventData() {
-    TriggerWebhookEvent event = TriggerWebhookEvent.builder().build();
-    RuntimeException runtimeException = new RuntimeException("fake");
-    doThrow(runtimeException).when(webhookEventPayloadParser).parseEvent(event);
+    TriggerWebhookEvent event = TriggerWebhookEvent.builder().createdAt(1l).build();
+    StatusRuntimeException statusRuntimeException = new StatusRuntimeException(UNAVAILABLE);
+    doThrow(statusRuntimeException).when(webhookEventPayloadParser).parseEvent(event);
 
-    ParsePayloadResponse parsePayloadResponse =
-        webhookEventToTriggerMapper.convertWebhookResponse(event, ParseWebhookResponse.newBuilder().build());
-    assertThat(parsePayloadResponse.isExceptionOccured()).isTrue();
-    assertThat(parsePayloadResponse.getException()).isEqualTo(runtimeException);
+    WebhookEventMappingResponse webhookEventMappingResponse =
+        gitWebhookEventToTriggerMapper.mapWebhookEventToTriggers(event);
+    assertThat(webhookEventMappingResponse.isFailedToFindTrigger()).isTrue();
+    assertThat(webhookEventMappingResponse.getWebhookEventResponse().isExceptionOccurred()).isTrue();
+    assertThat(webhookEventMappingResponse.getWebhookEventResponse().getFinalStatus())
+        .isEqualTo(SCM_SERVICE_CONNECTION_FAILED);
   }
 
   @Test
@@ -104,7 +113,7 @@ public class WebhookEventToTriggerMapperTest extends CategoryTest {
         WebhookPayloadData.builder().webhookEvent(PRWebhookEvent.builder().build()).build();
 
     NGTriggerEntity ngTriggerEntity = NGTriggerEntity.builder().yaml("yaml").build();
-    List<TriggerDetails> triggerDetails = webhookEventToTriggerMapper.applyFilters(
+    List<TriggerDetails> triggerDetails = gitWebhookEventToTriggerMapper.applyFilters(
         webhookPayloadData, Arrays.asList(ngTriggerEntity, ngTriggerEntity, ngTriggerEntity));
 
     assertThat(triggerDetails.size()).isEqualTo(2);

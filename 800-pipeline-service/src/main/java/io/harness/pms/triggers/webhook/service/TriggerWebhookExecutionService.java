@@ -1,4 +1,4 @@
-package io.harness.pms.triggers.service;
+package io.harness.pms.triggers.webhook.service;
 
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 

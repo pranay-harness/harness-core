@@ -1,6 +1,9 @@
 package io.harness.ngtriggers.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.ngtriggers.Constants.BITBUCKET_SERVER_HEADER_KEY;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.BT_PULL_REQUEST_CREATED;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.BT_PULL_REQUEST_UPDATED;
 
 import static java.util.stream.Collectors.toSet;
 
@@ -54,8 +57,29 @@ public class WebhookTriggerFilterUtil {
     }
 
     Set<String> parsedActionValueSet = actions.stream().map(action -> action.getParsedValue()).collect(toSet());
+    if (actions.contains(BT_PULL_REQUEST_UPDATED)) {
+      specialHandlingForBBSPullReqUpdate(webhookPayloadData, actions, parsedActionValueSet);
+    }
+
     String eventActionReceived = webhookPayloadData.getWebhookEvent().getBaseAttributes().getAction();
     return parsedActionValueSet.contains(eventActionReceived);
+  }
+
+  // SCM returns "sync" for pr:open for BitbucketCloud and "open" for BitbucketServer.
+  // So, For BT_PULL_REQUEST_UPDATED, we have associated "sync" as parsedValue,
+  // So, here are adding "open" in case, it was bitbucker server payload
+  private static void specialHandlingForBBSPullReqUpdate(
+      WebhookPayloadData webhookPayloadData, List<WebhookAction> actions, Set<String> parsedActionValueSet) {
+    Set<String> headerKeys = webhookPayloadData.getOriginalEvent()
+                                 .getHeaders()
+                                 .stream()
+                                 .map(headerConfig -> headerConfig.getKey())
+                                 .collect(toSet());
+
+    if (headerKeys.contains(BITBUCKET_SERVER_HEADER_KEY)
+        || headerKeys.contains(BITBUCKET_SERVER_HEADER_KEY.toLowerCase())) {
+      parsedActionValueSet.add(BT_PULL_REQUEST_CREATED.getParsedValue());
+    }
   }
 
   public boolean checkIfPayloadConditionsMatch(

@@ -3,6 +3,7 @@ package io.harness.ngtriggers.utils;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.CLOSED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.OPENED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.MERGE_REQUEST;
+import static io.harness.ngtriggers.utils.WebhookTriggerFilterUtil.checkIfActionMatches;
 import static io.harness.rule.OwnerRule.ADWAIT;
 
 import static java.util.Collections.emptyList;
@@ -77,23 +78,19 @@ public class WebhookTriggerFilterUtilTest extends CategoryTest {
     List<WebhookAction> webhookActions = new ArrayList<>();
     webhookActions.add(OPENED);
     WebhookTriggerSpec webhookTriggerSpec = WebhookTriggerSpec.builder().actions(webhookActions).build();
-    assertThat(WebhookTriggerFilterUtil.checkIfActionMatches(webhookPayloadDataBuilder.build(), webhookTriggerSpec))
-        .isTrue();
+    assertThat(checkIfActionMatches(webhookPayloadDataBuilder.build(), webhookTriggerSpec)).isTrue();
 
     webhookActions.clear();
-    assertThat(WebhookTriggerFilterUtil.checkIfActionMatches(webhookPayloadDataBuilder.build(), webhookTriggerSpec))
-        .isTrue();
+    assertThat(checkIfActionMatches(webhookPayloadDataBuilder.build(), webhookTriggerSpec)).isTrue();
     webhookActions.add(CLOSED);
-    assertThat(WebhookTriggerFilterUtil.checkIfActionMatches(webhookPayloadDataBuilder.build(), webhookTriggerSpec))
-        .isFalse();
+    assertThat(checkIfActionMatches(webhookPayloadDataBuilder.build(), webhookTriggerSpec)).isFalse();
 
     baseAttributesBuilder.action("close");
     webhookPayloadDataBuilder.webhookEvent(prWebhookEventBuilder.baseAttributes(baseAttributesBuilder.build()).build())
         .build();
     webhookActions.clear();
     webhookActions.add(CLOSED);
-    assertThat(WebhookTriggerFilterUtil.checkIfActionMatches(webhookPayloadDataBuilder.build(), webhookTriggerSpec))
-        .isTrue();
+    assertThat(checkIfActionMatches(webhookPayloadDataBuilder.build(), webhookTriggerSpec)).isTrue();
   }
 
   @Test
@@ -144,7 +141,7 @@ public class WebhookTriggerFilterUtilTest extends CategoryTest {
             .build();
 
     assertThat(WebhookTriggerFilterUtil.checkIfEventTypeMatches(Type.PR, webhookTriggerSpec.getEvent())).isTrue();
-    assertThat(WebhookTriggerFilterUtil.checkIfActionMatches(webhookPayloadData, webhookTriggerSpec)).isTrue();
+    assertThat(checkIfActionMatches(webhookPayloadData, webhookTriggerSpec)).isTrue();
     assertThat(WebhookTriggerFilterUtil.checkIfPayloadConditionsMatch(
                    webhookPayloadData, webhookTriggerSpec.getPayloadConditions()))
         .isTrue();

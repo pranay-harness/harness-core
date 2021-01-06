@@ -28,7 +28,6 @@ import io.harness.rule.Owner;
 import io.harness.yaml.utils.YamlPipelineUtils;
 
 import com.google.common.io.Resources;
-import com.google.inject.Inject;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
