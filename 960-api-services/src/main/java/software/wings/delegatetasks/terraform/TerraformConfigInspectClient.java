@@ -1,4 +1,4 @@
-package software.wings.helpers.ext.terraform;
+package software.wings.delegatetasks.terraform;
 
 import java.util.Collection;
 
