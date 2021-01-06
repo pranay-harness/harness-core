@@ -33,7 +33,7 @@ import migrations.Migration;
 @Slf4j
 public class SetDefaultTimeOutAndActionForManualInterventionFailureStrategy implements Migration {
   private static final ExecutionInterruptType DEFAULT_ACTION_AFTER_TIMEOUT = ExecutionInterruptType.END_EXECUTION;
-  private static final long DEFAULT_TIMEOUT = 86400000L;
+  private static final long DEFAULT_TIMEOUT = 1209600000L; // 14days
   private static final String LOG_PREFIX = "MANUAL_INTERVENTION_TIMEOUT_MIGRATION:";
 
   @Inject AccountService accountService;

@@ -30,7 +30,7 @@ import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class SetDefaultTimeOutAndActionForManualInterventionFailureStrategyTest {
-  private static final long DEFAULT_TIMEOUT = 86400000L;
+  private static final long DEFAULT_TIMEOUT = 1209600000L;
   private final SetDefaultTimeOutAndActionForManualInterventionFailureStrategy migration =
       new SetDefaultTimeOutAndActionForManualInterventionFailureStrategy();
   private final FailureStrategy migrated = FailureStrategy.builder()
