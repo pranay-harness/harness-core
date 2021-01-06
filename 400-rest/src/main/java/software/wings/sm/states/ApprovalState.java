@@ -65,8 +65,8 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
-import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
+import software.wings.beans.ExecutionScope;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NameValuePair.NameValuePairKeys;
@@ -82,8 +82,6 @@ import software.wings.beans.approval.JiraApprovalParams;
 import software.wings.beans.approval.ServiceNowApprovalParams;
 import software.wings.beans.approval.ShellScriptApprovalParams;
 import software.wings.beans.approval.SlackApprovalParams;
-import software.wings.beans.artifact.Artifact;
-import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.security.UserGroup;
@@ -99,6 +97,7 @@ import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ApprovalPolingService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.UserGroupService;
@@ -132,7 +131,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
@@ -181,6 +179,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   @Inject private transient SweepingOutputService sweepingOutputService;
   @Inject private UserGroupService userGroupService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
 
   @Inject @Transient private TemplateExpressionProcessor templateExpressionProcessor;
   @Transient @Inject KryoSerializer kryoSerializer;
@@ -790,9 +789,10 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   private void updatePlaceholderValuesForSlackApproval(
       String approvalId, String accountId, Map<String, String> placeHolderValues, ExecutionContext context) {
     String pausedStageName = null;
-    StringJoiner environments = new StringJoiner(", ");
-    StringJoiner services = new StringJoiner(", ");
-    StringJoiner artifacts = new StringJoiner(", ");
+    StringBuilder environments = new StringBuilder();
+    StringBuilder services = new StringBuilder();
+    StringBuilder artifacts = new StringBuilder();
+    StringBuilder infrastructureDefinitions = new StringBuilder();
 
     int tokenValidDuration = getTimeoutMillis();
 
@@ -803,27 +803,41 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       pausedStageName = context.getStateExecutionInstanceName();
     }
 
-    WorkflowExecution workflowExecution =
-        workflowExecutionService.fetchWorkflowExecution(context.getAppId(), context.getWorkflowExecutionId(),
-            WorkflowExecutionKeys.artifacts, WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds);
+    WorkflowExecution workflowExecution = workflowExecutionService.fetchWorkflowExecution(context.getAppId(),
+        context.getWorkflowExecutionId(), WorkflowExecutionKeys.artifacts, WorkflowExecutionKeys.environments,
+        WorkflowExecutionKeys.serviceIds, WorkflowExecutionKeys.infraDefinitionIds);
 
     if (isNotEmpty(workflowExecution.getArtifacts())) {
-      for (Artifact artifact : workflowExecution.getArtifacts()) {
-        artifacts.add(
-            artifact.getArtifactSourceName() + ": " + artifact.getMetadata().get(ArtifactMetadataKeys.buildNo));
-      }
+      artifacts.append(
+          workflowNotificationHelper.getArtifactsDetails(context, workflowExecution, ExecutionScope.WORKFLOW, null)
+              .getMessage());
+    } else {
+      artifacts.append("*Artifacts* : no artifacts");
     }
     if (isNotEmpty(workflowExecution.getEnvironments())) {
-      for (EnvSummary envSummary : workflowExecution.getEnvironments()) {
-        environments.add(envSummary.getName());
-      }
+      environments.append(
+          workflowNotificationHelper
+              .calculateEnvironmentDetails(accountId, context.getAppId(), ((ExecutionContextImpl) context).getEnv())
+              .getMessage());
+    } else {
+      environments.append("*Environments* : no environments");
     }
     if (isNotEmpty(workflowExecution.getServiceIds())) {
-      List<String> serviceNames =
-          serviceResourceService.fetchServiceNamesByUuids(context.getAppId(), workflowExecution.getServiceIds());
-      for (String serviceName : serviceNames) {
-        services.add(serviceName);
-      }
+      services.append(workflowNotificationHelper
+                          .calculateServiceDetailsForAllServices(
+                              accountId, context.getAppId(), context, workflowExecution, ExecutionScope.WORKFLOW, null)
+                          .getMessage());
+    } else {
+      services.append("*Services* : no services");
+    }
+    List<String> infraDefinitionIds = workflowExecution.getInfraDefinitionIds();
+    if (isNotEmpty(infraDefinitionIds)) {
+      infrastructureDefinitions.append(workflowNotificationHelper
+                                           .calculateInfraDetails(accountId, context.getAppId(), workflowExecution,
+                                               ((ExecutionContextImpl) context).getEnv())
+                                           .getMessage());
+    } else {
+      infrastructureDefinitions.append("*Infrastructure Definitions* : no infrastructure definitions");
     }
 
     Map<String, String> claims = new HashMap<>();
@@ -833,25 +847,29 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     String jwtToken = secretManager.generateJWTTokenWithCustomTimeOut(
         claims, secretManager.getJWTSecret(EXTERNAL_SERVICE_SECRET), tokenValidDuration);
 
-    SlackApprovalParams slackApprovalParams = SlackApprovalParams.builder()
-                                                  .appId(context.getAppId())
-                                                  .appName(context.getApp().getName())
-                                                  .routingId(accountId)
-                                                  .deploymentId(context.getWorkflowExecutionId())
-                                                  .workflowId(context.getWorkflowId())
-                                                  .workflowExecutionName(context.getWorkflowExecutionName())
-                                                  .stateExecutionId(context.getStateExecutionInstanceId())
-                                                  .stateExecutionInstanceName(context.getStateExecutionInstanceName())
-                                                  .approvalId(approvalId)
-                                                  .pausedStageName(pausedStageName)
-                                                  .servicesInvolved(services.toString())
-                                                  .environmentsInvolved(environments.toString())
-                                                  .artifactsInvolved(artifacts.toString())
-                                                  .confirmation(false)
-                                                  .pipeline(isPipeline)
-                                                  .workflowUrl(workflowURL)
-                                                  .jwtToken(jwtToken)
-                                                  .build();
+    SlackApprovalParams slackApprovalParams =
+        SlackApprovalParams.builder()
+            .appId(context.getAppId())
+            .appName(
+                workflowNotificationHelper.calculateApplicationDetails(accountId, context.getAppId(), context.getApp())
+                    .getMessage())
+            .routingId(accountId)
+            .deploymentId(context.getWorkflowExecutionId())
+            .workflowId(context.getWorkflowId())
+            .workflowExecutionName(context.getWorkflowExecutionName())
+            .stateExecutionId(context.getStateExecutionInstanceId())
+            .stateExecutionInstanceName(context.getStateExecutionInstanceName())
+            .approvalId(approvalId)
+            .pausedStageName(pausedStageName)
+            .servicesInvolved(services.toString())
+            .environmentsInvolved(environments.toString())
+            .artifactsInvolved(artifacts.toString())
+            .infraDefinitionsInvolved(infrastructureDefinitions.toString())
+            .confirmation(false)
+            .pipeline(isPipeline)
+            .workflowUrl(workflowURL)
+            .jwtToken(jwtToken)
+            .build();
     JSONObject customData = new JSONObject(slackApprovalParams);
 
     URL notificationTemplateUrl;
@@ -1213,8 +1231,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       userName = workflowExecution.getTriggeredBy().getName();
     }
 
-    return notificationMessageResolver.getPlaceholderValues(
-        context, userName, startTs, System.currentTimeMillis(), "", statusMsg, "", status, ApprovalNeeded);
+    return notificationMessageResolver.getPlaceholderValues(context, userName, startTs, System.currentTimeMillis(),
+        getTimeoutMillis().toString(), statusMsg, "", status, ApprovalNeeded);
   }
 
   private Map<String, String> getPlaceholderValues(ExecutionContext context, String timeout) {

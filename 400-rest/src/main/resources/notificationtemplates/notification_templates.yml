@@ -36,10 +36,10 @@ ARTIFACT_APPROVAL_NOTIFICATION_STATUS:
 
 WORKFLOW_NOTIFICATION:
       web: <<top-div>>${PHASE_NAME}<b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> ${VERB} for <b>${ARTIFACTS}</b> in <b>${ENV_NAME}</b>, triggered by <b>${USER_NAME}</b>${PIPELINE} in <b>${APP_NAME}</b> application</div><<bottom-div>><<${VERB}-color>><i>Started ${START_DATE} and ${VERB} at ${END_DATE}</i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
-      slack: ${PHASE_NAME} Workflow \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* ${PIPELINE} ${VERB}\n || ${APPLICATION}\n${SERVICE}\n${ARTIFACTS}\n${ENVIRONMENT} \n${TRIGGER}\n _Started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${VERB} at <!date^${END_TS_SECS}^{time}|${END_DATE}>_ \n ${FAILED_PHASE} ${ERRORS} \*<${ERROR_URL}|${MORE_ERRORS}>\* ||${DURATION}||${VERB}
+      slack: ${PHASE_NAME} Workflow \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* ${PIPELINE} ${VERB}\n || ${APPLICATION}\n${SERVICE}\n${ARTIFACTS}\n${ENVIRONMENT}\n${INFRA} \n${TRIGGER}\n _Started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${VERB} at <!date^${END_TS_SECS}^{time}|${END_DATE}>_ \n ${FAILED_PHASE} ${ERRORS} \*<${ERROR_URL}|${MORE_ERRORS}>\* ||${DURATION}||${VERB}
       email:
-          subject: ${PHASE_NAME}${WORKFLOW_NAME} ${VERB}
-          body: <<top-div>>${PHASE_NAME}<b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> ${VERB} for <b>${ARTIFACTS}</b> in <b>${ENV_NAME}</b>, triggered by <b>${USER_NAME}</b>${PIPELINE} in <b>${APP_NAME}</b> application</div><<bottom-div>><<${VERB}-color>><i>Started ${START_DATE} and ${VERB} at ${END_DATE}</i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
+          subject: Workflow ${PHASE_NAME}${WORKFLOW_NAME} ${PIPELINE_NAME_EMAIL_SUBJECT} ${VERB}
+          body: <<bottom-div>><<${VERB}-color>> ${PHASE_NAME}<b> Workflow <<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a> ${PIPELINE} ${VERB}</b> <br> ${APPLICATION} <br> ${SERVICE} <br> ${ARTIFACTS} <br> ${ENVIRONMENT} <br> ${INFRA} <br>${TRIGGER} <br><i>Started ${START_DATE} and ${VERB} at ${END_DATE}</i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
       pagerDuty:
           summary: ${PHASE_NAME} ${WORKFLOW_NAME} ${VERB} for ${ARTIFACTS} in ${ENV_NAME}, triggered by ${USER_NAME}, in ${APP_NAME} application Started ${START_DATE} and ${VERB} at ${END_DATE} duration ${DURATION}
           link:
@@ -108,10 +108,10 @@ GENERIC_ALERT_NOTIFICATION:
 
 APPROVAL_NEEDED_NOTIFICATION:
       web: Approval Required - ${WORKFLOW_NAME} in ${APP_NAME} is waiting for approval.
-      slack: Approval Required - \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* triggered by \*${USER_NAME}\* is waiting for approval in \*${APP_NAME}\* application|| ${APPROVAL_TYPE} _started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${VERB} for approval at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||||${VERB}
+      slack: Approval Required - \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* triggered by \*${USER_NAME}\* is waiting for approval in \*${APP_NAME}\* application|| ${APPROVAL_TYPE} _started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${VERB} for approval at <!date^${END_TS_SECS}^{time}|${END_DATE}>_\n _Expires <!date^${EXPIRES_TS_SECS}^ {date_short_pretty} at {time}| ${EXPIRES_DATE}>_ ||${DURATION}||${VERB}
       email:
           subject: Approval Required for ${WORKFLOW_NAME}
-          body: <<top-div>><b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> triggered by <b>${USER_NAME}</b> is waiting for approval in <b>${APP_NAME}</b> application</div> <<bottom-div>><<${VERB}-color>><i>  ${APPROVAL_TYPE} started ${START_DATE} and ${VERB} for approval at ${END_DATE}</i></span></div></div>
+          body: <<top-div>><b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> triggered by <b>${USER_NAME}</b> is waiting for approval in <b>${APP_NAME}</b> application</div> <<bottom-div>><<${VERB}-color>><i>  ${APPROVAL_TYPE} started ${START_DATE} and ${VERB} for approval at ${END_DATE} and will expire on ${EXPIRES_DATE}</i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
       pagerDuty:
         summary: Approval Required - ${WORKFLOW_NAME}> triggered by ${USER_NAME} is waiting for approval in ${APP_NAME} application|| ${APPROVAL_TYPE} started ${START_DATE} and ${VERB} for approval at ${END_DATE}
         link:
@@ -192,10 +192,10 @@ APPROVAL_EXPIRED_WORKFLOW_NOTIFICATION:
 
 MANUAL_INTERVENTION_NEEDED_NOTIFICATION:
       web: Manual Intervention Needed - ${WORKFLOW_NAME} in ${APP_NAME} requires manual intervention
-      slack: Manual Intervention Needed - \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* requires manual intervention for \*${ARTIFACT}\* in \*${ENV}\*, triggered by \*${USER_NAME}\* in \*${APP_NAME}\* application||_Started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${VERB} at <!date^${END_TS_SECS}^{time}|${END_DATE}>_||${DURATION}||${VERB}
+      slack: Manual Intervention Needed for ${PHASE_NAME} Workflow \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* ${PIPELINE} || ${PHASE_NAME} Workflow \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* ${PIPELINE} ${VERB}\n ${APPLICATION}\n${SERVICE}\n${ARTIFACTS}\n${ENVIRONMENT}\n${INFRA} \n${TRIGGER}\n _Started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${VERB} at <!date^${END_TS_SECS}^{time}|${END_DATE}>_ \n ${FAILED_PHASE} ${ERRORS} \*<${ERROR_URL}|${MORE_ERRORS}>\* ||${DURATION}||${VERB}
       email:
-          subject: Manual Intervention Needed for ${WORKFLOW_NAME}
-          body: <<top-div>><b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> requires manual intervention for <b>${ARTIFACT}</b> in <b>${ENV}</b>, triggered by <b>${USER_NAME}</b> in <b>${APP_NAME}</b> application</div> <<bottom-div>><<${VERB}-color>><i> Started ${START_DATE} and ${VERB} at ${END_DATE}</i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
+          subject: Manual Intervention Needed for ${WORKFLOW_NAME} ${PIPELINE_NAME_EMAIL_SUBJECT}
+          body: <<bottom-div>><<${VERB}-color>> ${PHASE_NAME}<b> Workflow <<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> ${VERB} <br> ${APPLICATION} <br> ${SERVICE} <br> ${ARTIFACTS} <br> ${ENVIRONMENT} <br> ${INFRA} <br>${TRIGGER} <br><i>Started ${START_DATE} and ${VERB} at ${END_DATE}</i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
       pagerDuty:
         summary: Manual Intervention Needed - ${WORKFLOW_NAME}> requires manual intervention for ${ARTIFACT} in ${ENV}, triggered by ${USER_NAME} in ${APP_NAME} application Started ${START_DATE} and ${VERB} at ${END_DATE} duration ${DURATION}
         link:

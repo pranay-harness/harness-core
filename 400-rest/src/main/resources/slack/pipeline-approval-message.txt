@@ -1,7 +1,10 @@
 *Approval Required*
->*Approval Step*: <${workflowUrl}|${pausedStageName}>
->*Pipeline* : ${workflowExecutionName}
->*Application* : ${appName}
->*Services* : ${services}
->*Environments* : ${environments}
->*Artifacts* : ${artifacts}
+>*Approval Step*: *<${workflowUrl}|${pausedStageName}>*
+>*Pipeline* : *<${workflowUrl}|${workflowExecutionName}>*
+>${appName}
+>${services}
+>${artifacts}
+>${environments}
+>${infrastructureDefinitions}
+>_Started<!date^${START_TS_SECS}^ {date_short_pretty} at {time}| ${START_DATE}> and ${VERB} at <!date^${END_TS_SECS}^{time}| ${END_DATE}>_
+>_Expires<!date^${EXPIRES_TS_SECS}^ {date_short_pretty} at {time}| ${EXPIRES_DATE}>_

@@ -49,8 +49,10 @@ import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.workflow.WorkflowNotificationDetails.WorkflowNotificationDetailsBuilder;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -111,6 +113,7 @@ public class WorkflowNotificationHelper {
   @Inject private UserGroupService userGroupService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private SubdomainUrlHelperIntfc subdomainUrlHelper;
+  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
 
   private final DateFormat dateFormat = new SimpleDateFormat("MMM d");
   private final DateFormat timeFormat = new SimpleDateFormat("HH:mm z");
@@ -339,7 +342,7 @@ public class WorkflowNotificationHelper {
     }
   }
 
-  private Map<String, String> getPlaceholderValues(ExecutionContext context, Application app, Environment env,
+  public Map<String, String> getPlaceholderValues(ExecutionContext context, Application app, Environment env,
       ExecutionStatus status, @Nullable PhaseSubWorkflow phaseSubWorkflow) {
     WorkflowExecution workflowExecution =
         workflowExecutionService.getExecutionDetails(app.getUuid(), context.getWorkflowExecutionId(), true);
@@ -382,6 +385,8 @@ public class WorkflowNotificationHelper {
     final WorkflowNotificationDetails pipelineDetails = calculatePipelineDetails(app, workflowExecution, context);
     final WorkflowNotificationDetails environmentDetails =
         calculateEnvironmentDetails(app.getAccountId(), app.getAppId(), env);
+    String pipelineNameForSubject =
+        isEmpty(pipelineDetails.getName()) ? "" : String.format(" in pipeline %s", pipelineDetails.getName());
 
     Map<String, String> placeHolderValues = new HashMap<>();
     placeHolderValues.put("WORKFLOW_NAME", context.getWorkflowExecutionName());
@@ -402,6 +407,7 @@ public class WorkflowNotificationHelper {
     placeHolderValues.put(PIPELINE, pipelineDetails.getMessage());
     placeHolderValues.put(PIPELINE + NAME, pipelineDetails.getName());
     placeHolderValues.put(PIPELINE + URL, pipelineDetails.getUrl());
+    placeHolderValues.put("PIPELINE_NAME_EMAIL_SUBJECT", pipelineNameForSubject);
     placeHolderValues.put(ENVIRONMENT, environmentDetails.getMessage());
     placeHolderValues.put(ENVIRONMENT + URL, environmentDetails.getUrl());
     placeHolderValues.put("FAILED_PHASE", "");
@@ -426,6 +432,12 @@ public class WorkflowNotificationHelper {
       serviceDetails = calculateServiceDetailsForAllServices(
           app.getAccountId(), app.getAppId(), context, workflowExecution, WORKFLOW, null);
     }
+    WorkflowNotificationDetails infraDetails =
+        calculateInfraDetails(app.getAccountId(), context.getAppId(), workflowExecution, env);
+
+    placeHolderValues.put("INFRA", infraDetails.getMessage());
+    placeHolderValues.put("INFRA_NAME", infraDetails.getName());
+    placeHolderValues.put("INFRA_URL", infraDetails.getUrl());
     placeHolderValues.put(ARTIFACTS, artifactsDetails.getMessage());
     placeHolderValues.put(ARTIFACTS + NAME, artifactsDetails.getName());
     placeHolderValues.put(ARTIFACTS + URL, artifactsDetails.getUrl());
@@ -484,6 +496,50 @@ public class WorkflowNotificationHelper {
       }
     }
     return pipelineDetails.build();
+  }
+
+  public WorkflowNotificationDetails calculateInfraDetails(
+      String accountId, String appId, WorkflowExecution workflowExecution, Environment env) {
+    WorkflowNotificationDetailsBuilder infraDetails = WorkflowNotificationDetails.builder();
+    List<String> infraIds = workflowExecution.getInfraDefinitionIds();
+
+    StringBuilder infraMsg = new StringBuilder();
+    StringBuilder infraDetailsName = new StringBuilder();
+    StringBuilder infraDetailsUrl = new StringBuilder();
+
+    if (isNotEmpty(infraIds)) {
+      boolean firstInfra = true;
+      for (String infraId : infraIds) {
+        InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraId);
+        if (!firstInfra) {
+          infraMsg.append(", ");
+          infraDetailsName.append(',');
+          infraDetailsUrl.append(',');
+        }
+        notNullCheck("Infrastructure Definition might have been deleted", infrastructureDefinition, USER);
+        String infraUrl = calculateInfraUrl(accountId, appId, infraId, env == null ? null : env.getUuid());
+        infraMsg.append(format("<<<%s|-|%s>>>", infraUrl, infrastructureDefinition.getName()));
+        infraDetailsName.append(infrastructureDefinition.getName());
+        infraDetailsUrl.append(infraUrl);
+        firstInfra = false;
+      }
+
+    } else {
+      infraDetailsName.append("no infrastructure definitions");
+      infraMsg.append("no infrastructure definitions");
+    }
+    infraDetails.name(infraDetailsName.toString());
+    infraDetails.url(infraDetailsUrl.toString());
+    infraDetails.message(format("*Infrastructure Definitions:* %s", infraMsg));
+    return infraDetails.build();
+  }
+
+  private String calculateInfraUrl(String accountId, String appId, String infraId, String envId) {
+    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
+    return NotificationMessageResolver.buildAbsoluteUrl(configuration,
+        format("/account/%s/app/%s/environments/%s/infrastructure-definitions/%s/details", accountId, appId, envId,
+            infraId),
+        baseUrl);
   }
 
   public WorkflowNotificationDetails calculateServiceDetailsForAllServices(String accountId, String appId,

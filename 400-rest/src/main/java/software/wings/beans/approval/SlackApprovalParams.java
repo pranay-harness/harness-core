@@ -24,6 +24,7 @@ public class SlackApprovalParams {
   private final String pausedStageName;
   private final String servicesInvolved;
   private final String environmentsInvolved;
+  private final String infraDefinitionsInvolved;
   private final String artifactsInvolved;
   private final String workflowUrl;
   private final boolean pipeline;

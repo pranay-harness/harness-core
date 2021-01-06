@@ -37,6 +37,7 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.BUILD_JOB_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
+import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_WORKFLOW_EXECUTION_ID;
@@ -85,6 +86,7 @@ import software.wings.api.jira.JiraExecutionData;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.ExecutionScope;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NameValuePair.NameValuePairKeys;
 import software.wings.beans.Pipeline;
@@ -109,6 +111,7 @@ import software.wings.common.TemplateExpressionProcessor;
 import software.wings.security.SecretManager;
 import software.wings.service.ApprovalUtils;
 import software.wings.service.impl.JiraHelperService;
+import software.wings.service.impl.workflow.WorkflowNotificationDetails;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ApprovalPolingService;
@@ -196,6 +199,20 @@ public class ApprovalStateTest extends WingsBaseTest {
 
   private static JSONArray projects;
   private static Object statuses;
+  private static WorkflowExecution execution =
+      WorkflowExecution.builder()
+          .status(ExecutionStatus.NEW)
+          .appId(APP_ID)
+          .triggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
+          .serviceIds(asList(SERVICE_ID))
+          .environments(asList(EnvSummary.builder().name(ENV_NAME).build()))
+          .artifacts(asList(Artifact.Builder.anArtifact()
+                                .withArtifactSourceName(ARTIFACT_SOURCE_NAME)
+                                .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                                .build()))
+          .createdAt(70L)
+          .infraDefinitionIds(asList(INFRA_DEFINITION_ID))
+          .build();
 
   @BeforeClass
   public static void readMockData() throws IOException {
@@ -277,20 +294,20 @@ public class ApprovalStateTest extends WingsBaseTest {
         .thenReturn(placeholders);
 
     when(workflowExecutionService.fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID,
-             WorkflowExecutionKeys.artifacts, WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds))
-        .thenReturn(WorkflowExecution.builder()
-                        .status(ExecutionStatus.NEW)
-                        .appId(APP_ID)
-                        .triggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
-                        .serviceIds(asList(SERVICE_ID))
-                        .environments(asList(EnvSummary.builder().name(ENV_NAME).build()))
-                        .artifacts(asList(Artifact.Builder.anArtifact()
-                                              .withArtifactSourceName(ARTIFACT_SOURCE_NAME)
-                                              .withArtifactStreamId(ARTIFACT_STREAM_ID)
-                                              .build()))
-                        .createdAt(70L)
-                        .build());
+             WorkflowExecutionKeys.artifacts, WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds,
+             WorkflowExecutionKeys.infraDefinitionIds))
+        .thenReturn(execution);
     when(serviceResourceService.fetchServiceNamesByUuids(APP_ID, asList(SERVICE_ID))).thenReturn(asList(SERVICE_NAME));
+    when(workflowNotificationHelper.getArtifactsDetails(any(), any(), any(), any()))
+        .thenReturn(WorkflowNotificationDetails.builder().message("artifacts").build());
+    when(workflowNotificationHelper.calculateEnvironmentDetails(any(), any(), any()))
+        .thenReturn(WorkflowNotificationDetails.builder().message("env").build());
+    when(workflowNotificationHelper.calculateServiceDetailsForAllServices(any(), any(), any(), any(), any(), any()))
+        .thenReturn(WorkflowNotificationDetails.builder().message("services").build());
+    when(workflowNotificationHelper.calculateInfraDetails(any(), any(), any(), any()))
+        .thenReturn(WorkflowNotificationDetails.builder().message("infra").build());
+    when(workflowNotificationHelper.calculateApplicationDetails(any(), any(), any()))
+        .thenReturn(WorkflowNotificationDetails.builder().message("app").build());
   }
 
   @Test
@@ -315,10 +332,16 @@ public class ApprovalStateTest extends WingsBaseTest {
             Mockito.any(), Mockito.eq(ApprovalStateType.USER_GROUP));
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
 
-    verify(serviceResourceService, times(1)).fetchServiceNamesByUuids(APP_ID, asList(SERVICE_ID));
+    verify(workflowNotificationHelper, times(1))
+        .calculateServiceDetailsForAllServices(ACCOUNT_ID, APP_ID, context, execution, ExecutionScope.WORKFLOW, null);
+    verify(workflowNotificationHelper, times(1)).calculateInfraDetails(ACCOUNT_ID, APP_ID, execution, context.getEnv());
+    verify(workflowNotificationHelper, times(1)).calculateApplicationDetails(ACCOUNT_ID, APP_ID, context.getApp());
+    verify(workflowNotificationHelper, times(1)).calculateEnvironmentDetails(ACCOUNT_ID, APP_ID, context.getEnv());
+    verify(workflowNotificationHelper, times(1)).getArtifactsDetails(context, execution, ExecutionScope.WORKFLOW, null);
     verify(workflowExecutionService, times(1))
         .fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.artifacts,
-            WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds);
+            WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds,
+            WorkflowExecutionKeys.infraDefinitionIds);
   }
 
   @Test
@@ -342,10 +365,16 @@ public class ApprovalStateTest extends WingsBaseTest {
             Mockito.any(), Mockito.eq(ApprovalStateType.USER_GROUP));
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
 
-    verify(serviceResourceService, times(1)).fetchServiceNamesByUuids(APP_ID, asList(SERVICE_ID));
+    verify(workflowNotificationHelper, times(1))
+        .calculateServiceDetailsForAllServices(ACCOUNT_ID, APP_ID, context, execution, ExecutionScope.WORKFLOW, null);
+    verify(workflowNotificationHelper, times(1)).calculateInfraDetails(ACCOUNT_ID, APP_ID, execution, context.getEnv());
+    verify(workflowNotificationHelper, times(1)).calculateApplicationDetails(ACCOUNT_ID, APP_ID, context.getApp());
+    verify(workflowNotificationHelper, times(1)).calculateEnvironmentDetails(ACCOUNT_ID, APP_ID, context.getEnv());
+    verify(workflowNotificationHelper, times(1)).getArtifactsDetails(context, execution, ExecutionScope.WORKFLOW, null);
     verify(workflowExecutionService, times(1))
         .fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.artifacts,
-            WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds);
+            WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds,
+            WorkflowExecutionKeys.infraDefinitionIds);
   }
 
   @Test
@@ -405,10 +434,16 @@ public class ApprovalStateTest extends WingsBaseTest {
 
     ExecutionResponse executionResponse = approvalState.execute(context);
 
-    verify(serviceResourceService, times(1)).fetchServiceNamesByUuids(APP_ID, asList(SERVICE_ID));
+    verify(workflowNotificationHelper, times(1))
+        .calculateServiceDetailsForAllServices(ACCOUNT_ID, APP_ID, context, execution, ExecutionScope.WORKFLOW, null);
+    verify(workflowNotificationHelper, times(1)).calculateInfraDetails(ACCOUNT_ID, APP_ID, execution, context.getEnv());
+    verify(workflowNotificationHelper, times(1)).calculateApplicationDetails(ACCOUNT_ID, APP_ID, context.getApp());
+    verify(workflowNotificationHelper, times(1)).calculateEnvironmentDetails(ACCOUNT_ID, APP_ID, context.getEnv());
+    verify(workflowNotificationHelper, times(1)).getArtifactsDetails(context, execution, ExecutionScope.WORKFLOW, null);
     verify(workflowExecutionService, times(1))
         .fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.artifacts,
-            WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds);
+            WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds,
+            WorkflowExecutionKeys.infraDefinitionIds);
     verify(workflowExecutionService, times(0))
         .triggerOrchestrationExecution(
             eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
@@ -535,22 +570,23 @@ public class ApprovalStateTest extends WingsBaseTest {
   public void testGetPlaceholderValues() {
     ApprovalStateExecutionData approvalStateExecutionData = ApprovalStateExecutionData.builder().build();
     approvalStateExecutionData.setStartTs(100L);
+    approvalState.setTimeoutMillis(100);
 
     when(context.getStateExecutionData()).thenReturn(approvalStateExecutionData);
 
     approvalState.getPlaceholderValues(context, USER_NAME_1_KEY, ABORTED);
     verify(notificationMessageResolver)
-        .getPlaceholderValues(any(), eq(USER_NAME_1_KEY), eq(100L), any(Long.class), eq(""), eq("aborted"), any(),
+        .getPlaceholderValues(any(), eq(USER_NAME_1_KEY), eq(100L), any(Long.class), eq("100"), eq("aborted"), any(),
             eq(ABORTED), eq(AlertType.ApprovalNeeded));
 
     approvalState.getPlaceholderValues(context, USER_NAME_1_KEY, PAUSED);
     verify(notificationMessageResolver)
-        .getPlaceholderValues(any(), eq(USER_NAME), eq(70L), any(Long.class), eq(""), eq("paused"), any(), eq(PAUSED),
-            eq(AlertType.ApprovalNeeded));
+        .getPlaceholderValues(any(), eq(USER_NAME), eq(70L), any(Long.class), eq("100"), eq("paused"), any(),
+            eq(PAUSED), eq(AlertType.ApprovalNeeded));
 
     approvalState.getPlaceholderValues(context, USER_NAME_1_KEY, SUCCESS);
     verify(notificationMessageResolver)
-        .getPlaceholderValues(any(), eq(USER_NAME_1_KEY), any(Long.class), any(Long.class), eq(""), eq("approved"),
+        .getPlaceholderValues(any(), eq(USER_NAME_1_KEY), any(Long.class), any(Long.class), eq("100"), eq("approved"),
             any(), eq(SUCCESS), eq(AlertType.ApprovalNeeded));
   }
 
@@ -572,10 +608,16 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(approvalNeededAlert.getWorkflowExecutionId()).isEqualTo(PIPELINE_WORKFLOW_EXECUTION_ID);
     assertThat(approvalNeededAlert.getPipelineExecutionId()).isEqualTo(null);
 
-    verify(serviceResourceService, times(1)).fetchServiceNamesByUuids(APP_ID, asList(SERVICE_ID));
+    verify(workflowNotificationHelper, times(1))
+        .calculateServiceDetailsForAllServices(ACCOUNT_ID, APP_ID, context, execution, ExecutionScope.WORKFLOW, null);
+    verify(workflowNotificationHelper, times(1)).calculateInfraDetails(ACCOUNT_ID, APP_ID, execution, context.getEnv());
+    verify(workflowNotificationHelper, times(1)).calculateApplicationDetails(ACCOUNT_ID, APP_ID, context.getApp());
+    verify(workflowNotificationHelper, times(1)).calculateEnvironmentDetails(ACCOUNT_ID, APP_ID, context.getEnv());
+    verify(workflowNotificationHelper, times(1)).getArtifactsDetails(context, execution, ExecutionScope.WORKFLOW, null);
     verify(workflowExecutionService, times(1))
         .fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.artifacts,
-            WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds);
+            WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds,
+            WorkflowExecutionKeys.infraDefinitionIds);
   }
 
   @Test
@@ -594,10 +636,16 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(approvalNeededAlert.getWorkflowType()).isEqualTo(WorkflowType.PIPELINE);
     assertThat(approvalNeededAlert.getWorkflowExecutionId()).isEqualTo(null);
     assertThat(approvalNeededAlert.getPipelineExecutionId()).isEqualTo(PIPELINE_WORKFLOW_EXECUTION_ID);
-    verify(serviceResourceService, times(1)).fetchServiceNamesByUuids(APP_ID, asList(SERVICE_ID));
+    verify(workflowNotificationHelper, times(1))
+        .calculateServiceDetailsForAllServices(ACCOUNT_ID, APP_ID, context, execution, ExecutionScope.WORKFLOW, null);
+    verify(workflowNotificationHelper, times(1)).calculateInfraDetails(ACCOUNT_ID, APP_ID, execution, context.getEnv());
+    verify(workflowNotificationHelper, times(1)).calculateApplicationDetails(ACCOUNT_ID, APP_ID, context.getApp());
+    verify(workflowNotificationHelper, times(1)).calculateEnvironmentDetails(ACCOUNT_ID, APP_ID, context.getEnv());
+    verify(workflowNotificationHelper, times(1)).getArtifactsDetails(context, execution, ExecutionScope.WORKFLOW, null);
     verify(workflowExecutionService, times(1))
         .fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.artifacts,
-            WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds);
+            WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds,
+            WorkflowExecutionKeys.infraDefinitionIds);
   }
 
   @Test
@@ -625,10 +673,16 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(approvalNeededAlert.getWorkflowExecutionId()).isEqualTo(PIPELINE_WORKFLOW_EXECUTION_ID);
     assertThat(approvalNeededAlert.getPipelineExecutionId()).isEqualTo(PIPELINE_EXECUTION_ID);
 
-    verify(serviceResourceService, times(1)).fetchServiceNamesByUuids(APP_ID, asList(SERVICE_ID));
+    verify(workflowNotificationHelper, times(1))
+        .calculateServiceDetailsForAllServices(ACCOUNT_ID, APP_ID, context, execution, ExecutionScope.WORKFLOW, null);
+    verify(workflowNotificationHelper, times(1)).calculateInfraDetails(ACCOUNT_ID, APP_ID, execution, context.getEnv());
+    verify(workflowNotificationHelper, times(1)).calculateApplicationDetails(ACCOUNT_ID, APP_ID, context.getApp());
+    verify(workflowNotificationHelper, times(1)).calculateEnvironmentDetails(ACCOUNT_ID, APP_ID, context.getEnv());
+    verify(workflowNotificationHelper, times(1)).getArtifactsDetails(context, execution, ExecutionScope.WORKFLOW, null);
     verify(workflowExecutionService, times(1))
         .fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.artifacts,
-            WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds);
+            WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds,
+            WorkflowExecutionKeys.infraDefinitionIds);
   }
 
   @Test
@@ -1260,10 +1314,16 @@ public class ApprovalStateTest extends WingsBaseTest {
             Mockito.any(), Mockito.eq(ApprovalStateType.USER_GROUP));
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
 
-    verify(serviceResourceService, times(1)).fetchServiceNamesByUuids(APP_ID, asList(SERVICE_ID));
+    verify(workflowNotificationHelper, times(1))
+        .calculateServiceDetailsForAllServices(ACCOUNT_ID, APP_ID, context, execution, ExecutionScope.WORKFLOW, null);
+    verify(workflowNotificationHelper, times(1)).calculateInfraDetails(ACCOUNT_ID, APP_ID, execution, context.getEnv());
+    verify(workflowNotificationHelper, times(1)).calculateApplicationDetails(ACCOUNT_ID, APP_ID, context.getApp());
+    verify(workflowNotificationHelper, times(1)).calculateEnvironmentDetails(ACCOUNT_ID, APP_ID, context.getEnv());
+    verify(workflowNotificationHelper, times(1)).getArtifactsDetails(context, execution, ExecutionScope.WORKFLOW, null);
     verify(workflowExecutionService, times(1))
         .fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.artifacts,
-            WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds);
+            WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds,
+            WorkflowExecutionKeys.infraDefinitionIds);
   }
 
   @Test
@@ -1301,10 +1361,16 @@ public class ApprovalStateTest extends WingsBaseTest {
         .sendApprovalNotification(Mockito.eq(ACCOUNT_ID), Mockito.eq(WORKFLOW_PAUSE_NOTIFICATION), Mockito.anyMap(),
             Mockito.any(), Mockito.eq(ApprovalStateType.USER_GROUP));
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(PAUSED);
-    verify(serviceResourceService, times(1)).fetchServiceNamesByUuids(APP_ID, asList(SERVICE_ID));
+    verify(workflowNotificationHelper, times(1))
+        .calculateServiceDetailsForAllServices(ACCOUNT_ID, APP_ID, context, execution, ExecutionScope.WORKFLOW, null);
+    verify(workflowNotificationHelper, times(1)).calculateInfraDetails(ACCOUNT_ID, APP_ID, execution, context.getEnv());
+    verify(workflowNotificationHelper, times(1)).calculateApplicationDetails(ACCOUNT_ID, APP_ID, context.getApp());
+    verify(workflowNotificationHelper, times(1)).calculateEnvironmentDetails(ACCOUNT_ID, APP_ID, context.getEnv());
+    verify(workflowNotificationHelper, times(1)).getArtifactsDetails(context, execution, ExecutionScope.WORKFLOW, null);
     verify(workflowExecutionService, times(1))
         .fetchWorkflowExecution(APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID, WorkflowExecutionKeys.artifacts,
-            WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds);
+            WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds,
+            WorkflowExecutionKeys.infraDefinitionIds);
   }
 
   private void verifyJiraSweepingOutput() {
