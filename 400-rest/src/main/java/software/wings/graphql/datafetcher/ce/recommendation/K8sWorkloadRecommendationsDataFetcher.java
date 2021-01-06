@@ -12,6 +12,7 @@ import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8SWorkloadRec
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8SWorkloadRecommendationConnection.QLK8SWorkloadRecommendationConnectionBuilder;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8sWorkloadFilter;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8sWorkloadRecommendation;
+import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8sWorkloadRecommendationPreset;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLResourceEntry;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLResourceRequirement;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerRecommendation;
@@ -96,6 +97,14 @@ public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2D
                                  .workloadType(k8sWorkloadRecommendation.getWorkloadType())
                                  .estimatedSavings(k8sWorkloadRecommendation.getEstimatedSavings())
                                  .numDays(k8sWorkloadRecommendation.getNumDays())
+                                 .preset(QLK8sWorkloadRecommendationPreset.builder()
+                                             .cpuRequest(0.8)
+                                             .memoryRequest(0.8)
+                                             .memoryLimit(0.95)
+                                             .safetyMargin(0.15)
+                                             .minCpuMilliCores(25L)
+                                             .minMemoryBytes(250_000_000L)
+                                             .build())
                                  .build());
     }));
     return connectionBuilder.build();

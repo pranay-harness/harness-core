@@ -11,4 +11,5 @@ public class QLHistogramExp {
   int numBuckets;
   double[] bucketWeights;
   double totalWeight;
+  double[] precomputed;
 }

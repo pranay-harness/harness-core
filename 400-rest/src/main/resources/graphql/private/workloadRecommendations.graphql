@@ -32,6 +32,7 @@ type WorkloadRecommendation {
   containerRecommendations: [ContainerRecommendation]
   estimatedSavings: Number
   numDays: Int
+  preset: K8sWorkloadRecommendationPreset
 }
 
 type ContainerRecommendation {
@@ -71,4 +72,15 @@ type HistogramExp {
   numBuckets: Int
   bucketWeights: [Number]
   totalWeight: Number
+  precomputed: [Number]
+}
+
+type K8sWorkloadRecommendationPreset {
+  cpuRequest: Number
+  cpuLimit: Number
+  memoryRequest: Number
+  memoryLimit: Number
+  safetyMargin: Number
+  minCpuMilliCores: Long
+  minMemoryBytes: Long
 }
