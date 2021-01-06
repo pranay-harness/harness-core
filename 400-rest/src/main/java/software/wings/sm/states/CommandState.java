@@ -31,7 +31,6 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.ExceptionUtils;
@@ -39,6 +38,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.shell.ScriptType;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 

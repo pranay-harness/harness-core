@@ -14,11 +14,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
+import io.harness.shell.AbstractScriptExecutor;
 import io.harness.shell.ExecuteCommandResponse;
+import io.harness.shell.ScriptType;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.command.ShellExecutionData;
@@ -67,11 +68,10 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
                               .workingDirectory("/tmp")
                               .environment(env)
                               .build();
-    scriptProcessExecutor = new ScriptProcessExecutor(delegateFileManager, logCallback, true, shellExecutorConfig);
+    scriptProcessExecutor = new ScriptProcessExecutor(logCallback, true, shellExecutorConfig);
     fileBasedProcessScriptExecutor =
         new FileBasedProcessScriptExecutor(delegateFileManager, logCallback, true, shellExecutorConfig);
     on(scriptProcessExecutor).set("logCallback", logCallback);
-    on(scriptProcessExecutor).set("delegateFileManager", delegateFileManager);
 
     String command = "export A=\"aaa\"\n"
         + "export B=\"bbb\"";
@@ -102,9 +102,8 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
                               .scriptType(ScriptType.BASH)
                               .environment(env)
                               .build();
-    scriptProcessExecutor = new ScriptProcessExecutor(delegateFileManager, logCallback, true, shellExecutorConfig);
+    scriptProcessExecutor = new ScriptProcessExecutor(logCallback, true, shellExecutorConfig);
     on(scriptProcessExecutor).set("logCallback", logCallback);
-    on(scriptProcessExecutor).set("delegateFileManager", delegateFileManager);
 
     String command = "exit 1";
     ExecuteCommandResponse executeCommandResponse =
@@ -131,9 +130,8 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
                               .workingDirectory("/tmp")
                               .environment(env)
                               .build();
-    scriptProcessExecutor = new ScriptProcessExecutor(delegateFileManager, logCallback, true, shellExecutorConfig);
+    scriptProcessExecutor = new ScriptProcessExecutor(logCallback, true, shellExecutorConfig);
     on(scriptProcessExecutor).set("logCallback", logCallback);
-    on(scriptProcessExecutor).set("delegateFileManager", delegateFileManager);
 
     String command = "export A=\"aaa\"\n"
         + "export B=\"bbb\"";
@@ -155,9 +153,8 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
                               .scriptType(ScriptType.BASH)
                               .environment(env)
                               .build();
-    scriptProcessExecutor = new ScriptProcessExecutor(delegateFileManager, logCallback, true, shellExecutorConfig);
+    scriptProcessExecutor = new ScriptProcessExecutor(logCallback, true, shellExecutorConfig);
     on(scriptProcessExecutor).set("logCallback", logCallback);
-    on(scriptProcessExecutor).set("delegateFileManager", delegateFileManager);
 
     String command = "export A=\"aaa\"\n"
         + "export B=\"bbb\"";
@@ -169,12 +166,10 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testScpOneFileSuccess() throws IOException {
-    scriptProcessExecutor =
-        new ScriptProcessExecutor(delegateFileManager, logCallback, true, ShellExecutorConfig.builder().build());
+    scriptProcessExecutor = new ScriptProcessExecutor(logCallback, true, ShellExecutorConfig.builder().build());
     fileBasedProcessScriptExecutor = new FileBasedProcessScriptExecutor(
         delegateFileManager, logCallback, true, ShellExecutorConfig.builder().build());
     on(scriptProcessExecutor).set("logCallback", logCallback);
-    on(scriptProcessExecutor).set("delegateFileManager", delegateFileManager);
 
     File file = testFolder.newFile();
     CharStreams.asWriter(new FileWriter(file)).append("ANY_TEXT").close();
@@ -207,12 +202,10 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testScpOneFileFails() {
-    scriptProcessExecutor =
-        new ScriptProcessExecutor(delegateFileManager, logCallback, true, ShellExecutorConfig.builder().build());
+    scriptProcessExecutor = new ScriptProcessExecutor(logCallback, true, ShellExecutorConfig.builder().build());
     fileBasedProcessScriptExecutor = new FileBasedProcessScriptExecutor(
         delegateFileManager, logCallback, true, ShellExecutorConfig.builder().build());
     on(scriptProcessExecutor).set("logCallback", logCallback);
-    on(scriptProcessExecutor).set("delegateFileManager", delegateFileManager);
 
     AbstractScriptExecutor.FileProvider fileProvider = new AbstractScriptExecutor.FileProvider() {
       @Override

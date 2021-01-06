@@ -17,13 +17,13 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.ExceptionLogger;
+import io.harness.shell.BaseScriptExecutor;
 
 import software.wings.beans.Log.Builder;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ShellCommandExecutionContext;
 import software.wings.beans.infrastructure.Host;
-import software.wings.core.BaseScriptExecutor;
 import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.core.local.executors.ShellExecutorFactory;
 import software.wings.core.ssh.executors.FileBasedScriptExecutor;

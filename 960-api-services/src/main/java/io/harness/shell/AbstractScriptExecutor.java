@@ -1,4 +1,4 @@
-package software.wings.core.ssh.executors;
+package io.harness.shell;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
@@ -6,13 +6,8 @@ import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.logging.LogLevel.WARN;
 
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
-import io.harness.shell.ExecuteCommandResponse;
-
-import software.wings.core.BaseScriptExecutor;
-import software.wings.delegatetasks.DelegateFileManager;
 
 import com.google.inject.Inject;
 import java.io.BufferedReader;
@@ -46,23 +41,15 @@ public abstract class AbstractScriptExecutor implements BaseScriptExecutor {
    * The Log service.
    */
   protected LogCallback logCallback;
-  /**
-   * The File service.
-   */
-  protected DelegateFileManager delegateFileManager;
-
   protected boolean shouldSaveExecutionLogs;
 
   /**
    * Instantiates a new abstract ssh executor.
-   *  @param delegateFileManager the file service
    * @param logCallback          the log service
    */
   @Inject
-  public AbstractScriptExecutor(
-      DelegateFileManager delegateFileManager, LogCallback logCallback, boolean shouldSaveExecutionLogs) {
+  public AbstractScriptExecutor(LogCallback logCallback, boolean shouldSaveExecutionLogs) {
     this.logCallback = logCallback;
-    this.delegateFileManager = delegateFileManager;
     this.shouldSaveExecutionLogs = shouldSaveExecutionLogs;
   }
 

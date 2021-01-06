@@ -41,7 +41,6 @@ import io.harness.delegate.TaskSetupAbstractions;
 import io.harness.delegate.TaskType;
 import io.harness.delegate.beans.DelegateStringProgressData;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.engine.interrupts.steps.TestTransportEntity;
 import io.harness.exception.DelegateServiceDriverException;
 import io.harness.exception.DelegateServiceLiteException;
@@ -60,6 +59,7 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateAsyncService;
 import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateSyncService;
+import io.harness.shell.ScriptType;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ProgressData;
 

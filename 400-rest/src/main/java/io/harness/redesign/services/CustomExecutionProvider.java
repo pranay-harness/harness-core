@@ -5,7 +5,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.config.MockServerConfig;
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.plan.Plan;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
@@ -38,6 +37,7 @@ import io.harness.redesign.states.shell.ShellScriptStepParameters;
 import io.harness.redesign.states.wait.WaitStep;
 import io.harness.redesign.states.wait.WaitStepParameters;
 import io.harness.serializer.KryoSerializer;
+import io.harness.shell.ScriptType;
 import io.harness.steps.barriers.BarrierStep;
 import io.harness.steps.barriers.BarrierStepParameters;
 import io.harness.steps.dummy.DummySectionStep;

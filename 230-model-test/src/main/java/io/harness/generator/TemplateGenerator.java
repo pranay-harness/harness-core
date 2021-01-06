@@ -20,7 +20,7 @@ import static software.wings.beans.command.ScpCommandUnit.ScpFileCategory.ARTIFA
 
 import static java.util.Arrays.asList;
 
-import io.harness.delegate.task.shell.ScriptType;
+import io.harness.shell.ScriptType;
 
 import software.wings.beans.Account;
 import software.wings.beans.Variable;

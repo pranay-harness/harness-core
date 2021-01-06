@@ -1,6 +1,6 @@
 package software.wings.utils;
 
-import static io.harness.delegate.task.shell.ScriptType.POWERSHELL;
+import static io.harness.shell.ScriptType.POWERSHELL;
 
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.graphIdGenerator;

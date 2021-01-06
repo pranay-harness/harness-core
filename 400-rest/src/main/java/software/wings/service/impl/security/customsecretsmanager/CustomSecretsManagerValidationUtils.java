@@ -11,9 +11,9 @@ import static software.wings.sm.states.ShellScriptState.ConnectionType.WINRM;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.security.encryption.EncryptedDataParams;
+import io.harness.shell.ScriptType;
 
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.WinRmConnectionAttributes;

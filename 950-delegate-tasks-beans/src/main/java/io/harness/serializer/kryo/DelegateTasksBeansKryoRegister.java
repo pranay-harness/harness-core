@@ -97,7 +97,6 @@ import io.harness.delegate.task.jira.response.JiraTaskNGResponse;
 import io.harness.delegate.task.jira.response.JiraTaskNGResponse.JiraIssueData;
 import io.harness.delegate.task.k8s.*;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
 import io.harness.delegate.task.spotinst.request.*;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters.SpotInstTaskType;
@@ -193,7 +192,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(PcfManifestsPackage.class, 19033);
     kryo.register(ProcessExecutorCapability.class, 19007);
     kryo.register(RemoteMethodReturnValueData.class, 5122);
-    kryo.register(ScriptType.class, 5253);
     kryo.register(SecretDetail.class, 19001);
     kryo.register(SelectorCapability.class, 19098);
     kryo.register(ShellScriptApprovalTaskParameters.class, 20001);

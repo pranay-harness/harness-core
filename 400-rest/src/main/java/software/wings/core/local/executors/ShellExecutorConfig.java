@@ -1,6 +1,6 @@
 package software.wings.core.local.executors;
 
-import io.harness.delegate.task.shell.ScriptType;
+import io.harness.shell.ScriptType;
 
 import software.wings.core.ssh.executors.ScriptExecutionContext;
 

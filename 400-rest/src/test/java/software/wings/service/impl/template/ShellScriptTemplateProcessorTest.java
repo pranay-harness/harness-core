@@ -32,8 +32,8 @@ import static org.mockito.Mockito.when;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.rule.Owner;
+import io.harness.shell.ScriptType;
 
 import software.wings.beans.EntityType;
 import software.wings.beans.GraphNode;

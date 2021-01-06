@@ -18,8 +18,8 @@ import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.security.encryption.EncryptedDataParams;
+import io.harness.shell.ScriptType;
 
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;

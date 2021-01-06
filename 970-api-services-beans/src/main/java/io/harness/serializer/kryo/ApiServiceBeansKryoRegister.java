@@ -52,6 +52,7 @@ import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.shell.CommandExecutionData;
+import io.harness.shell.ScriptType;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 
@@ -185,6 +186,7 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(AzureVMData.class, 1417);
 
     kryo.register(SettingVariableTypes.class, 5131);
+    kryo.register(ScriptType.class, 5253);
 
     kryo.register(GitFile.class, 5574);
     kryo.register(EncryptableSettingWithEncryptionDetails.class, 7258);

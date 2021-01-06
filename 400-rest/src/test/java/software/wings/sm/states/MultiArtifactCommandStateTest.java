@@ -49,9 +49,9 @@ import io.harness.CategoryTest;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
+import io.harness.shell.ScriptType;
 
 import software.wings.api.DeploymentType;
 import software.wings.api.SimpleWorkflowParam;

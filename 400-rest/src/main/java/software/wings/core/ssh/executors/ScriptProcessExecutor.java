@@ -16,17 +16,17 @@ import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
 import static com.google.common.collect.Sets.newHashSet;
 import static java.lang.String.format;
 
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
+import io.harness.shell.AbstractScriptExecutor;
 import io.harness.shell.ExecuteCommandResponse;
 import io.harness.shell.ExecuteCommandResponse.ExecuteCommandResponseBuilder;
+import io.harness.shell.ScriptType;
 
 import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.command.ShellExecutionData.ShellExecutionDataBuilder;
 import software.wings.core.local.executors.ShellExecutorConfig;
-import software.wings.delegatetasks.DelegateFileManager;
 
 import com.google.inject.Inject;
 import java.io.BufferedReader;
@@ -58,13 +58,12 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
   private ScriptType scriptType;
   /**
    * Instantiates a new abstract ssh executor.
-   *  @param delegateFileManager the file service
    * @param logCallback          the log service
    */
   @Inject
-  public ScriptProcessExecutor(DelegateFileManager delegateFileManager, LogCallback logCallback,
-      boolean shouldSaveExecutionLogs, ScriptExecutionContext shellExecutorConfig) {
-    super(delegateFileManager, logCallback, shouldSaveExecutionLogs);
+  public ScriptProcessExecutor(
+      LogCallback logCallback, boolean shouldSaveExecutionLogs, ScriptExecutionContext shellExecutorConfig) {
+    super(logCallback, shouldSaveExecutionLogs);
     this.config = (ShellExecutorConfig) shellExecutorConfig;
     this.scriptType = ((ShellExecutorConfig) shellExecutorConfig).getScriptType();
   }

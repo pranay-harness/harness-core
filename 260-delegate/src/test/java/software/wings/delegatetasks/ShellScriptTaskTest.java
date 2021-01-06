@@ -1,10 +1,10 @@
 package software.wings.delegatetasks;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
-import static io.harness.delegate.task.shell.ScriptType.BASH;
-import static io.harness.delegate.task.shell.ScriptType.POWERSHELL;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.PRABU;
+import static io.harness.shell.ScriptType.BASH;
+import static io.harness.shell.ScriptType.POWERSHELL;
 
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme.NTLM;
