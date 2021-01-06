@@ -69,6 +69,14 @@ if [[ "" != "$CV_MANAGER_AUTHORITY" ]]; then
   yq write -i $CONFIG_FILE grpcClientConfigs.cv.authority $CV_MANAGER_AUTHORITY
 fi
 
+if [[ "" != "$CI_MANAGER_TARGET" ]]; then
+  yq write -i $CONFIG_FILE grpcClientConfigs.ci.target $CI_MANAGER_TARGET
+fi
+
+if [[ "" != "$CI_MANAGER_AUTHORITY" ]]; then
+  yq write -i $CONFIG_FILE grpcClientConfigs.ci.authority $CI_MANAGER_AUTHORITY
+fi
+
 if [[ "" != "$SCM_SERVICE_URI" ]]; then
   yq write -i $CONFIG_FILE scmConnectionConfig.url "$SCM_SERVICE_URI"
 fi

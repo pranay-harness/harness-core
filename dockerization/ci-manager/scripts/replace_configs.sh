@@ -5,6 +5,8 @@ CONFIG_FILE=/opt/harness/ci-manager-config.yml
 yq delete -i $CONFIG_FILE server.applicationConnectors[0]
 yq write -i $CONFIG_FILE server.adminConnectors "[]"
 
+yq delete -i $CONFIG_FILE pmsSdkGrpcServerConfig.connectors[0]
+
 if [[ "" != "$LOGGING_LEVEL" ]]; then
     yq write -i $CONFIG_FILE logging.level "$LOGGING_LEVEL"
 fi
@@ -93,6 +95,27 @@ fi
 
 if [[ "" != "$TI_SERVICE_ENDPOINT" ]]; then
   yq write -i $CONFIG_FILE tiServiceConfig.baseUrl "$TI_SERVICE_ENDPOINT"
+fi
+
+
+if [[ "" != "$PMS_TARGET" ]]; then
+  yq write -i $CONFIG_FILE pmsGrpcClientConfig.target $PMS_TARGET
+fi
+
+if [[ "" != "$PMS_AUTHORITY" ]]; then
+  yq write -i $CONFIG_FILE pmsGrpcClientConfig.authority $PMS_AUTHORITY
+fi
+
+if [[ "" != "$SHOULD_CONFIGURE_WITH_PMS" ]]; then
+  yq write -i $CONFIG_FILE shouldConfigureWithPMS $SHOULD_CONFIGURE_WITH_PMS
+fi
+
+if [[ "" != "$PMS_MONGO_URI" ]]; then
+  yq write -i $CONFIG_FILE pmsMongo.uri "${PMS_MONGO_URI//\\&/&}"
+fi
+
+if [[ "" != "$GRPC_SERVER_PORT" ]]; then
+  yq write -i $CONFIG_FILE pmsSdkGrpcServerConfig.connectors[0].port "$GRPC_SERVER_PORT"
 fi
 
 if [[ "" != "$TI_SERVICE_GLOBAL_TOKEN" ]]; then

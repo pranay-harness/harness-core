@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+set -x
 if [[ -v "{hostname}" ]]; then
    export HOSTNAME=$(hostname)
 fi
