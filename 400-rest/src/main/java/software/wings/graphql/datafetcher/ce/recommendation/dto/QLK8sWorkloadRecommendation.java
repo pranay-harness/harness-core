@@ -21,4 +21,5 @@ public class QLK8sWorkloadRecommendation {
   @Singular List<QLContainerRecommendation> containerRecommendations;
   BigDecimal estimatedSavings;
   int numDays;
+  QLK8sWorkloadRecommendationPreset preset;
 }

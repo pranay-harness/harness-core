@@ -114,7 +114,6 @@ public class K8sWorkloadHistogramDataFetcherTest extends AbstractDataFetcherTest
                                                   .endDate(refDate.plus(Duration.ofDays(10)).toEpochMilli())
                                                   .build(),
             ACCOUNT1_ID);
-    System.out.println(qlK8SWorkloadHistogramData);
     assertThat(qlK8SWorkloadHistogramData.getContainerHistogramDataList()).hasSize(1);
     QLContainerHistogramData qlContainerHistogramData =
         qlK8SWorkloadHistogramData.getContainerHistogramDataList().get(0);
@@ -123,16 +122,16 @@ public class K8sWorkloadHistogramDataFetcherTest extends AbstractDataFetcherTest
     assertThat(cpuHistogram.getFirstBucketSize()).isEqualTo(0.01);
     assertThat(cpuHistogram.getGrowthRatio()).isEqualTo(0.05);
     assertThat(cpuHistogram.getTotalWeight()).isEqualTo(2.0);
-    assertThat(cpuHistogram.getNumBuckets()).isEqualTo(176);
+    assertThat(cpuHistogram.getNumBuckets()).isEqualTo(3);
     assertThat(cpuHistogram.getBucketWeights()[0]).isEqualTo(1.0);
     assertThat(cpuHistogram.getBucketWeights()[2]).isEqualTo(1.0);
 
     QLHistogramExp memoryHistogram = qlContainerHistogramData.getMemoryHistogram();
-    assertThat(memoryHistogram.getFirstBucketSize()).isEqualTo(1E7);
+    assertThat(memoryHistogram.getFirstBucketSize()).isEqualTo(8.149666932873309E7);
     assertThat(memoryHistogram.getGrowthRatio()).isEqualTo(0.05);
     assertThat(memoryHistogram.getTotalWeight()).isEqualTo(2.0);
-    assertThat(memoryHistogram.getNumBuckets()).isEqualTo(176);
-    assertThat(memoryHistogram.getBucketWeights()[43]).isEqualTo(1.0);
-    assertThat(memoryHistogram.getBucketWeights()[49]).isEqualTo(1.0);
+    assertThat(memoryHistogram.getNumBuckets()).isEqualTo(7);
+    assertThat(memoryHistogram.getBucketWeights()[0]).isEqualTo(1.0);
+    assertThat(memoryHistogram.getBucketWeights()[6]).isEqualTo(1.0);
   }
 }
