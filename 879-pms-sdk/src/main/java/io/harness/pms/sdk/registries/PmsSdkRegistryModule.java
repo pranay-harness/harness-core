@@ -128,6 +128,12 @@ public class PmsSdkRegistryModule extends AbstractModule {
         value.forEach(v -> eventHandlerSet.add(injector.getInstance(v)));
         handlerRegistry.register(key, eventHandlerSet);
       });
+    } else {
+      PmsSdkOrchestrationEventRegistrars.getHandlers().forEach((key, value) -> {
+        Set<OrchestrationEventHandler> eventHandlerSet = new HashSet<>();
+        value.forEach(v -> eventHandlerSet.add(injector.getInstance(v)));
+        handlerRegistry.register(key, eventHandlerSet);
+      });
     }
     return handlerRegistry;
   }

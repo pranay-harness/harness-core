@@ -29,7 +29,6 @@ public class OrchestrationVisualizationModuleEventHandlerRegistrar {
     engineEventHandlersMap.put(ORCHESTRATION_END, Sets.newHashSet(OrchestrationEndEventHandler.class));
     engineEventHandlersMap.put(
         PLAN_EXECUTION_STATUS_UPDATE, Sets.newHashSet(PlanExecutionStatusUpdateEventHandler.class));
-
     return engineEventHandlersMap;
   }
 }

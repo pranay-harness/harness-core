@@ -205,7 +205,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .engineSteps(NgStepRegistrar.getEngineSteps())
         .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers())
         .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
-        .engineEventHandlersMap(NGExecutionEventHandlerRegistrar.getEngineEventHandlers())
+        .engineEventHandlersMap(NGExecutionEventHandlerRegistrar.getEngineEventHandlers(remote))
         .executionSummaryModuleInfoProviderClass(CDNGModuleInfoProvider.class)
         .build();
   }

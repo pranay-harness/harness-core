@@ -12,6 +12,7 @@ import io.harness.pms.contracts.plan.FilterCreationBlobRequest;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc.PlanCreationServiceBlockingStub;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
+import io.harness.pms.exception.PmsExceptionUtil;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.utils.CompletableFutures;
@@ -21,6 +22,7 @@ import io.harness.pms.yaml.YamlUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import io.grpc.StatusRuntimeException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -29,6 +31,7 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -72,16 +75,16 @@ public class FilterCreatorMergeService {
   }
 
   @VisibleForTesting
-  public void validateFilterCreationBlobResponse(FilterCreationBlobResponse response) {
+  public void validateFilterCreationBlobResponse(FilterCreationBlobResponse response) throws IOException {
     if (isNotEmpty(response.getDependenciesMap())) {
       throw new InvalidRequestException(
-          format("Unable to resolve all dependencies: %s", response.getDependenciesMap().keySet().toString()));
+          PmsExceptionUtil.getUnresolvedDependencyErrorMessage(response.getDependenciesMap().values()));
     }
   }
 
   @VisibleForTesting
   public FilterCreationBlobResponse obtainFiltersRecursively(Map<String, PlanCreatorServiceInfo> services,
-      Map<String, YamlFieldBlob> dependencies, Map<String, String> filters) {
+      Map<String, YamlFieldBlob> dependencies, Map<String, String> filters) throws IOException {
     FilterCreationBlobResponse.Builder responseBuilder =
         FilterCreationBlobResponse.newBuilder().putAllDependencies(dependencies);
 
@@ -95,8 +98,8 @@ public class FilterCreatorMergeService {
 
       FilterCreationBlobResponseUtils.mergeResolvedDependencies(responseBuilder, currIterResponse);
       if (isNotEmpty(responseBuilder.getDependenciesMap())) {
-        throw new InvalidRequestException(format(
-            "Some YAML nodes could not be parsed: %s", responseBuilder.getDependenciesMap().keySet().toString()));
+        throw new InvalidRequestException(
+            PmsExceptionUtil.getUnresolvedDependencyErrorMessage(responseBuilder.getDependenciesMap().values()));
       }
       FilterCreationBlobResponseUtils.mergeDependencies(responseBuilder, currIterResponse);
       FilterCreationBlobResponseUtils.updateStageCount(responseBuilder, currIterResponse);
@@ -117,8 +120,8 @@ public class FilterCreatorMergeService {
               .response(entry.getValue().getPlanCreationClient().createFilter(
                   FilterCreationBlobRequest.newBuilder().putAllDependencies(dependencies).build()))
               .build();
-        } catch (Exception ex) {
-          log.error("Error fetching filter from service " + entry.getKey(), ex);
+        } catch (StatusRuntimeException ex) {
+          log.error(String.format("Error connecting with service: [%s]. Is this service Running?", entry.getKey()));
           return null;
         }
       });

@@ -129,13 +129,13 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
     FilterCreationBlobResponse filterCreationBlobResponse =
         FilterCreationBlobResponse.newBuilder().putAllDependencies(dependencies).build();
     assertThatThrownBy(() -> filterCreatorMergeService.validateFilterCreationBlobResponse(filterCreationBlobResponse))
-        .isInstanceOf(InvalidRequestException.class);
+        .isInstanceOf(RuntimeException.class);
   }
 
   @Test
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
-  public void testObtainFiltersRecursivelyNoDependencies() {
+  public void testObtainFiltersRecursivelyNoDependencies() throws IOException {
     Map<String, PlanCreatorServiceInfo> services = new HashMap<>();
     services.put("cd", new PlanCreatorServiceInfo(new HashMap<>(), null));
 
@@ -148,7 +148,7 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
   @Test
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
-  public void testObtainFiltersRecursivelyNoServices() {
+  public void testObtainFiltersRecursivelyNoServices() throws IOException {
     Map<String, PlanCreatorServiceInfo> services = new HashMap<>();
     FilterCreationBlobResponse response =
         filterCreatorMergeService.obtainFiltersRecursively(services, new HashMap<>(), new HashMap<>());
@@ -158,7 +158,7 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
   @Test
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
-  public void testObtainFiltersRecursively() {
+  public void testObtainFiltersRecursively() throws IOException {
     Map<String, PlanCreatorServiceInfo> services = new HashMap<>();
     services.put("cd", new PlanCreatorServiceInfo(new HashMap<>(), null));
     Map<String, YamlFieldBlob> dependencies = new HashMap<>();
@@ -192,7 +192,7 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
 
     assertThatThrownBy(
         () -> filterCreatorMergeService.obtainFiltersRecursively(services, dependencies, new HashMap<>()))
-        .isInstanceOf(InvalidRequestException.class);
+        .isInstanceOf(RuntimeException.class);
 
     verify(filterCreatorMergeService).obtainFiltersPerIteration(any(), any(), any());
   }
