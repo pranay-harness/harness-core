@@ -96,7 +96,9 @@ func (e *runTask) Run(ctx context.Context) (map[string]string, int32, error) {
 				e.log.Errorw("unable to collect test reports", zap.Error(err))
 				continue // Retry if specified
 			}
-			e.log.Infow(fmt.Sprintf("collected test reports in %s time", time.Since(st)))
+			if len(e.reports) > 0 {
+				e.log.Infow(fmt.Sprintf("collected test reports in %s time", time.Since(st)))
+			}
 			return o, i, nil
 		}
 	}
