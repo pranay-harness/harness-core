@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.RedissonShutdownException;
 import org.redisson.api.PendingResult;
 import org.redisson.api.StreamMessageId;
+import org.redisson.client.RedisException;
 
 @Slf4j
 public class RedisConsumer extends RedisAbstractConsumer {
@@ -22,19 +23,24 @@ public class RedisConsumer extends RedisAbstractConsumer {
 
   private List<Message> getUnackedMessages() throws ConsumerShutdownException {
     List<Message> result = Collections.emptyList();
-    try {
-      String groupName = getGroupName();
-      PendingResult pendingResult = stream.getPendingInfo(groupName);
-      if (pendingResult.getTotal() != 0) {
-        Map<StreamMessageId, Map<String, String>> messages = stream.claim(
-            groupName, getName(), maxProcessingTime.toMillis(), TimeUnit.MILLISECONDS, pendingResult.getLowestId());
-        if (messages.size() != 0)
-          // Claim will return the claimed messages after which have been undelivered for a specific time
-          result = RedisUtils.getMessageObject(messages);
+    String groupName = getGroupName();
+    while (true) {
+      try {
+        PendingResult pendingResult = stream.getPendingInfo(groupName);
+        if (pendingResult.getTotal() != 0) {
+          Map<StreamMessageId, Map<String, String>> messages = stream.claim(
+              groupName, getName(), maxProcessingTime.toMillis(), TimeUnit.MILLISECONDS, pendingResult.getLowestId());
+          if (messages.size() != 0)
+            // Claim will return the claimed messages after which have been undelivered for a specific time
+            result = RedisUtils.getMessageObject(messages);
+        }
+        return result;
+      } catch (RedissonShutdownException e) {
+        throw new ConsumerShutdownException("Consumer " + getName() + " is shutdown.");
+      } catch (RedisException e) {
+        log.warn("Consumer " + getName() + " failed getUnackedMessage", e);
+        waitForRedisToComeUp();
       }
-      return result;
-    } catch (RedissonShutdownException e) {
-      throw new ConsumerShutdownException("Consumer " + getName() + "is shutdown.");
     }
   }
 
