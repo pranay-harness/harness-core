@@ -67,8 +67,7 @@ public class EnvironmentResource {
   @Path("{environmentIdentifier}")
   @ApiOperation(value = "Gets a Environment by identifier", nickname = "getEnvironment")
   public ResponseDTO<EnvironmentResponseDTO> get(@PathParam("environmentIdentifier") String environmentIdentifier,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam("accountId") String accountId, @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.DELETED_KEY) @DefaultValue("false") boolean deleted) {
     Optional<Environment> environment =
@@ -79,8 +78,8 @@ public class EnvironmentResource {
 
   @POST
   @ApiOperation(value = "Create an Environment", nickname = "createEnvironment")
-  public ResponseDTO<EnvironmentResponseDTO> create(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @Valid EnvironmentRequestDTO environmentRequestDTO) {
+  public ResponseDTO<EnvironmentResponseDTO> create(
+      @QueryParam("accountId") String accountId, @NotNull @Valid EnvironmentRequestDTO environmentRequestDTO) {
     Environment environmentEntity = EnvironmentMapper.toEnvironmentEntity(accountId, environmentRequestDTO);
     Environment createdEnvironment = environmentService.create(environmentEntity);
     return ResponseDTO.newResponse(
@@ -91,8 +90,7 @@ public class EnvironmentResource {
   @Path("{environmentIdentifier}")
   @ApiOperation(value = "Delete en environment by identifier", nickname = "deleteEnvironment")
   public ResponseDTO<Boolean> delete(@HeaderParam(IF_MATCH) String ifMatch,
-      @PathParam("environmentIdentifier") String environmentIdentifier,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @PathParam("environmentIdentifier") String environmentIdentifier, @QueryParam("accountId") String accountId,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     return ResponseDTO.newResponse(environmentService.delete(accountId, orgIdentifier, projectIdentifier,
@@ -102,8 +100,7 @@ public class EnvironmentResource {
   @PUT
   @ApiOperation(value = "Update an environment by identifier", nickname = "updateEnvironment")
   public ResponseDTO<EnvironmentResponseDTO> update(@HeaderParam(IF_MATCH) String ifMatch,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @Valid EnvironmentRequestDTO environmentRequestDTO) {
+      @QueryParam("accountId") String accountId, @NotNull @Valid EnvironmentRequestDTO environmentRequestDTO) {
     Environment requestEnvironment = EnvironmentMapper.toEnvironmentEntity(accountId, environmentRequestDTO);
     requestEnvironment.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
     Environment updatedEnvironment = environmentService.update(requestEnvironment);
@@ -115,8 +112,7 @@ public class EnvironmentResource {
   @Path("upsert")
   @ApiOperation(value = "Upsert an environment by identifier", nickname = "upsertEnvironment")
   public ResponseDTO<EnvironmentResponseDTO> upsert(@HeaderParam(IF_MATCH) String ifMatch,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @Valid EnvironmentRequestDTO environmentRequestDTO) {
+      @QueryParam("accountId") String accountId, @NotNull @Valid EnvironmentRequestDTO environmentRequestDTO) {
     Environment requestEnvironment = EnvironmentMapper.toEnvironmentEntity(accountId, environmentRequestDTO);
     requestEnvironment.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
     Environment upsertedEnvironment = environmentService.upsert(requestEnvironment);
@@ -128,8 +124,7 @@ public class EnvironmentResource {
   @ApiOperation(value = "Gets environment list for a project", nickname = "getEnvironmentListForProject")
   public ResponseDTO<PageResponse<EnvironmentResponseDTO>> listEnvironmentsForProject(
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("100") int size,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam("accountId") String accountId, @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam("sort") List<String> sort) {
     Criteria criteria =
