@@ -1,6 +1,7 @@
 package io.harness;
 
 import static java.time.Duration.ofSeconds;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.harness.config.PublisherConfiguration;
@@ -62,17 +63,15 @@ public class OrchestrationQueueModule extends AbstractModule {
 
   @Provides
   @Singleton
-  QueuePublisher<OrchestrationEvent> orchestrationEventQueuePublisher(Injector injector,
-      VersionInfoManager versionInfoManager, PublisherConfiguration config, MongoTemplate mongoTemplate) {
-    return QueueFactory.createNgQueuePublisher(injector, OrchestrationEvent.class,
-        singletonList(versionInfoManager.getVersionInfo().getVersion()), config, mongoTemplate);
+  QueuePublisher<OrchestrationEvent> orchestrationEventQueuePublisher(
+      Injector injector, PublisherConfiguration config, MongoTemplate mongoTemplate) {
+    return QueueFactory.createNgQueuePublisher(injector, OrchestrationEvent.class, emptyList(), config, mongoTemplate);
   }
 
   @Provides
   @Singleton
-  QueuePublisher<NodeExecutionEvent> executionEventQueuePublisher(Injector injector,
-      VersionInfoManager versionInfoManager, PublisherConfiguration config, MongoTemplate mongoTemplate) {
-    return QueueFactory.createNgQueuePublisher(injector, NodeExecutionEvent.class,
-        singletonList(versionInfoManager.getVersionInfo().getVersion()), config, mongoTemplate);
+  QueuePublisher<NodeExecutionEvent> executionEventQueuePublisher(
+      Injector injector, PublisherConfiguration config, MongoTemplate mongoTemplate) {
+    return QueueFactory.createNgQueuePublisher(injector, NodeExecutionEvent.class, emptyList(), config, mongoTemplate);
   }
 }
