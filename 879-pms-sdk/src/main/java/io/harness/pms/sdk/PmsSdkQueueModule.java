@@ -1,6 +1,7 @@
 package io.harness.pms.sdk;
 
 import static java.time.Duration.ofSeconds;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.harness.config.PublisherConfiguration;
@@ -11,7 +12,6 @@ import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
-import io.harness.version.VersionInfoManager;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.*;
@@ -45,19 +45,16 @@ public class PmsSdkQueueModule extends AbstractModule {
   @Provides
   @Singleton
   public QueueConsumer<NodeExecutionEvent> nodeExecutionEventQueueConsumer(
-      Injector injector, PublisherConfiguration publisherConfiguration, VersionInfoManager versionInfoManager) {
+      Injector injector, PublisherConfiguration publisherConfiguration) {
     if (this.config.getDeploymentMode().equals(DeployMode.REMOTE)) {
       MongoTemplate sdkTemplate =
           injector.getInstance(Key.get(MongoTemplate.class, Names.named("pmsSdkMongoTemplate")));
-      List<List<String>> topicExpressions =
-          ImmutableList.of(ImmutableList.of(versionInfoManager.getVersionInfo().getVersion()),
-              ImmutableList.of(config.getServiceName()));
+      List<List<String>> topicExpressions = singletonList(singletonList(config.getServiceName()));
       return QueueFactory.createNgQueueConsumer(
           injector, NodeExecutionEvent.class, ofSeconds(5), topicExpressions, publisherConfiguration, sdkTemplate);
     }
     MongoTemplate mongoTemplate = injector.getInstance(MongoTemplate.class);
-    List<List<String>> topicExpressions =
-        ImmutableList.of(singletonList(versionInfoManager.getVersionInfo().getVersion()), singletonList("_pms_"));
+    List<List<String>> topicExpressions = ImmutableList.of(singletonList("_pms_"));
     return QueueFactory.createNgQueueConsumer(
         injector, NodeExecutionEvent.class, ofSeconds(3), topicExpressions, publisherConfiguration, mongoTemplate);
   }
@@ -65,20 +62,16 @@ public class PmsSdkQueueModule extends AbstractModule {
   @Provides
   @Singleton
   public QueueConsumer<OrchestrationEvent> orchestrationEventQueueConsumer(
-      Injector injector, PublisherConfiguration publisherConfiguration, VersionInfoManager versionInfoManager) {
+      Injector injector, PublisherConfiguration publisherConfiguration) {
     if (this.config.getDeploymentMode().equals(DeployMode.REMOTE)) {
       MongoTemplate sdkTemplate =
           injector.getInstance(Key.get(MongoTemplate.class, Names.named("pmsSdkMongoTemplate")));
-      List<List<String>> topicExpressions =
-          ImmutableList.of(ImmutableList.of(versionInfoManager.getVersionInfo().getVersion()),
-              ImmutableList.of(config.getServiceName()));
+      List<List<String>> topicExpressions = singletonList(singletonList(config.getServiceName()));
       return QueueFactory.createNgQueueConsumer(
           injector, OrchestrationEvent.class, ofSeconds(5), topicExpressions, publisherConfiguration, sdkTemplate);
     }
-
     MongoTemplate mongoTemplate = injector.getInstance(MongoTemplate.class);
-    return QueueFactory.createNgQueueConsumer(injector, OrchestrationEvent.class, ofSeconds(5),
-        singletonList(singletonList(versionInfoManager.getVersionInfo().getVersion())), publisherConfiguration,
-        mongoTemplate);
+    return QueueFactory.createNgQueueConsumer(
+        injector, OrchestrationEvent.class, ofSeconds(5), emptyList(), publisherConfiguration, mongoTemplate);
   }
 }
