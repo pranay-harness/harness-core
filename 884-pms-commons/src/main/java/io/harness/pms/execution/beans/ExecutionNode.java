@@ -1,5 +1,6 @@
 package io.harness.pms.execution.beans;
 
+import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.tasks.ProgressData;
@@ -20,6 +21,6 @@ public class ExecutionNode {
   String stepType;
   ExecutionStatus status;
   FailureInfo failureInfo;
-  List<Map<String, Object>> executableResponsesMetadata;
+  List<ExecutableResponse> executableResponses;
   Map<String, List<ProgressData>> taskIdToProgressDataMap;
 }

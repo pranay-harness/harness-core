@@ -1,6 +1,7 @@
 package io.harness.dto;
 
 import io.harness.interrupts.InterruptEffect;
+import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
@@ -37,7 +38,7 @@ public class GraphVertexDTO {
   Map<String, Object> stepParameters;
   ExecutionMode mode;
 
-  List<Map<String, Object>> executableResponsesMetadata;
+  List<ExecutableResponse> executableResponses;
   List<InterruptEffect> interruptHistories;
   List<Document> outcomes;
   List<String> retryIds;

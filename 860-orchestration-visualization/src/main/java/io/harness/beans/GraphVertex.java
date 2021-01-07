@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
@@ -44,7 +45,7 @@ public class GraphVertex implements Serializable {
   private Map<String, Object> stepParameters;
   private ExecutionMode mode;
 
-  private List<Map<String, Object>> executableResponsesMetadata;
+  private List<ExecutableResponse> executableResponses;
   private List<InterruptEffect> interruptHistories;
   private List<Document> outcomeDocuments;
   private List<String> retryIds;
