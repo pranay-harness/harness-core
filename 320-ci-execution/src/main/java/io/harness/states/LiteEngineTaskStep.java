@@ -14,8 +14,8 @@ import io.harness.ci.integrationstage.IntegrationStageUtils;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
 import io.harness.delegate.beans.ci.k8s.CIContainerStatus;
+import io.harness.delegate.beans.ci.k8s.CiK8sTaskResponse;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
-import io.harness.delegate.beans.ci.k8s.PodStatus;
 import io.harness.delegate.task.HDelegateTask;
 import io.harness.delegate.task.stepstatus.StepStatusTaskParameters;
 import io.harness.exception.InvalidRequestException;
@@ -26,12 +26,14 @@ import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.serializer.KryoSerializer;
 import io.harness.stateutils.buildstate.BuildSetupUtils;
 import io.harness.steps.StepOutcomeGroup;
@@ -92,7 +94,7 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
         (K8sTaskExecutionResponse) responseDataMap.values().iterator().next();
 
     DependencyOutcome dependencyOutcome =
-        getDependencyOutcome(stepParameters, k8sTaskExecutionResponse.getK8sTaskResponse().getPodStatus());
+        getDependencyOutcome(stepParameters, k8sTaskExecutionResponse.getK8sTaskResponse());
     StepResponse.StepOutcome stepOutcome =
         StepResponse.StepOutcome.builder().name(DEPENDENCY_OUTCOME).outcome(dependencyOutcome).build();
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
@@ -103,11 +105,18 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
     } else {
       log.error("LiteEngineTaskStep execution finished with status [{}] and response [{}]",
           k8sTaskExecutionResponse.getCommandExecutionStatus(), k8sTaskExecutionResponse);
-      return StepResponse.builder().status(Status.FAILED).stepOutcome(stepOutcome).build();
+
+      StepResponseBuilder stepResponseBuilder = StepResponse.builder().status(Status.FAILED).stepOutcome(stepOutcome);
+      if (k8sTaskExecutionResponse.getErrorMessage() != null) {
+        stepResponseBuilder.failureInfo(
+            FailureInfo.newBuilder().setErrorMessage(k8sTaskExecutionResponse.getErrorMessage()).build());
+      }
+      return stepResponseBuilder.build();
     }
   }
 
-  private DependencyOutcome getDependencyOutcome(LiteEngineTaskStepInfo stepParameters, PodStatus podStatus) {
+  private DependencyOutcome getDependencyOutcome(
+      LiteEngineTaskStepInfo stepParameters, CiK8sTaskResponse ciK8sTaskResponse) {
     List<ContainerDefinitionInfo> serviceContainers = buildSetupUtils.getBuildServiceContainers(stepParameters);
     List<ServiceDependency> serviceDependencyList = new ArrayList<>();
     if (serviceContainers == null) {
@@ -115,8 +124,9 @@ public class LiteEngineTaskStep implements TaskExecutable<LiteEngineTaskStepInfo
     }
 
     Map<String, CIContainerStatus> containerStatusMap = new HashMap<>();
-    if (podStatus != null && podStatus.getCiContainerStatusList() != null) {
-      for (CIContainerStatus containerStatus : podStatus.getCiContainerStatusList()) {
+    if (ciK8sTaskResponse != null && ciK8sTaskResponse.getPodStatus() != null
+        && ciK8sTaskResponse.getPodStatus().getCiContainerStatusList() != null) {
+      for (CIContainerStatus containerStatus : ciK8sTaskResponse.getPodStatus().getCiContainerStatusList()) {
         containerStatusMap.put(containerStatus.getName(), containerStatus);
       }
     }
