@@ -36,7 +36,7 @@ public class LogHelper {
     StringBuilder logBaseKey = new StringBuilder();
     for (Map.Entry<String, String> entry : logStreamingAbstractions.entrySet()) {
       if (logBaseKey.length() != 0) {
-        logBaseKey.append("-");
+        logBaseKey.append("/");
       }
       logBaseKey.append(entry.getKey()).append(":").append(entry.getValue());
     }

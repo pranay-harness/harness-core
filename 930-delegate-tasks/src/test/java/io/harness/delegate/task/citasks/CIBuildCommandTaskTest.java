@@ -13,6 +13,7 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.rule.Owner;
 
 import java.util.ArrayList;
@@ -27,6 +28,7 @@ import org.mockito.MockitoAnnotations;
 
 public class CIBuildCommandTaskTest extends CategoryTest {
   @Mock private CIBuildTaskHandler ciBuildTaskHandler;
+  @Mock private ILogStreamingTaskClient logStreamingTaskClient;
 
   @InjectMocks
   private CIBuildCommandTask task =
@@ -47,7 +49,7 @@ public class CIBuildCommandTaskTest extends CategoryTest {
   public void runWithTaskParams() {
     CIBuildSetupTaskParams params = mock(CIBuildSetupTaskParams.class);
     K8sTaskExecutionResponse response = mock(K8sTaskExecutionResponse.class);
-    when(ciBuildTaskHandler.executeTaskInternal(params)).thenReturn(response);
+    when(ciBuildTaskHandler.executeTaskInternal(params, logStreamingTaskClient)).thenReturn(response);
     assertEquals(task.run(params), response);
   }
 
