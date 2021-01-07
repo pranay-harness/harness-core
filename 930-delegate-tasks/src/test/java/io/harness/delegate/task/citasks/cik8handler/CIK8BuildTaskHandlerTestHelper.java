@@ -63,10 +63,12 @@ public class CIK8BuildTaskHandlerTestHelper {
   private static String volume1 = "volume1";
 
   public static CIK8BuildTaskParams buildGitSecretErrorTaskParams() {
+    List<CIK8ContainerParams> containerParamsList = new ArrayList<>();
     CIK8PodParams<CIK8ContainerParams> cik8PodParams = CIK8PodParams.<CIK8ContainerParams>builder()
                                                            .name(podName)
                                                            .namespace(namespace)
                                                            .gitConnector(ConnectorDetails.builder().build())
+                                                           .containerParamsList(containerParamsList)
                                                            .build();
     return CIK8BuildTaskParams.builder().cik8PodParams(cik8PodParams).build();
   }

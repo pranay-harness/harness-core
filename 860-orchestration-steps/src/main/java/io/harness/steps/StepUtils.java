@@ -86,11 +86,14 @@ public class StepUtils {
   @Nonnull
   public static LinkedHashMap<String, String> generateLogAbstractions(Ambiance ambiance) {
     LinkedHashMap<String, String> logAbstractions = new LinkedHashMap<>();
+    logAbstractions.put("accountId", ambiance.getSetupAbstractionsMap().get("accountId"));
+    logAbstractions.put("orgId", ambiance.getSetupAbstractionsMap().get("orgIdentifier"));
+    logAbstractions.put("projectId", ambiance.getSetupAbstractionsMap().get("projectIdentifier"));
     logAbstractions.put("pipelineExecutionId", ambiance.getPlanExecutionId());
     Level stageLevel = ambiance.getLevels(2);
-    logAbstractions.put("stageIdentifier", stageLevel.getIdentifier());
+    logAbstractions.put("stageId", stageLevel.getIdentifier());
     Level currentStepLevel = ambiance.getLevels(ambiance.getLevelsCount() - 1);
-    logAbstractions.put("stepId", currentStepLevel.getRuntimeId());
+    logAbstractions.put("stepRuntimeId", currentStepLevel.getRuntimeId());
 
     return logAbstractions;
   }
@@ -109,9 +112,8 @@ public class StepUtils {
       capabilities = ListUtils.emptyIfNull(
           ((ExecutionCapabilityDemander) taskParameters).fetchRequiredExecutionCapabilities(null));
     }
-    LinkedHashMap<String, String> logAbstractionMap = new LinkedHashMap<>();
+    LinkedHashMap<String, String> logAbstractionMap = generateLogAbstractions(ambiance);
     logAbstractionMap.putAll(MapUtils.emptyIfNull(logAbstractions));
-    logAbstractionMap.put(Cd1SetupFields.APP_ID_FIELD, accountId);
 
     DelegateTaskRequest.Builder requestBuilder =
         DelegateTaskRequest.newBuilder()
