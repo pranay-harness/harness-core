@@ -65,7 +65,7 @@ public class PauseAndResumeHandlerTest extends WingsBaseTest {
 
   @Test
   @RealMongo
-  @Owner(developers = PRASHANT)
+  @Owner(developers = PRASHANT, intermittent = true)
   @Category(UnitTests.class)
   public void shouldTestRegisterAndHandleInterrupt() {
     // Execute Plan And wait it to be in RUNNING status

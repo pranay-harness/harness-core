@@ -1,6 +1,7 @@
 package software.wings.sm.status.handlers;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static software.wings.beans.Account.Builder.anAccount;
@@ -78,7 +79,7 @@ public class WorkflowResumePropagatorTest extends WingsBaseTest {
 
   @Test
   @RealMongo
-  @Owner(developers = PRASHANT)
+  @Owner(developers = POOJA, intermittent = true)
   @Category(UnitTests.class)
   public void shouldTestHandleStatusUpdateForWorkflowPaused() {
     buildAndSave(ExecutionStatus.PAUSED);
