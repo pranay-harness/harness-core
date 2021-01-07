@@ -200,6 +200,119 @@ func Test_RemoteWriter_MultipleCharacters(t *testing.T) {
 	assert.Equal(t, rw.history[1].Args, map[string]string{})
 }
 
+func Test_RemoteWriter_VariousCases(t *testing.T) {
+	ctrl, _ := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	key := "key"
+
+	/* There are many possible orderings of how Write() is internally called by
+	   shell functions. This test will test out various combinations.
+	   Write order:
+			Write("A")
+			Write("B")
+			Write("C\nD")
+			Write("EF\n")
+			Write("GHI\n")
+			Write("J")
+			Write("K")
+			Write("L")
+			Write("\nMNO\nPQR\nS")
+			Write("TU\nFIN\n")
+
+			Expected output:
+			ABC\n
+			DEF\n
+			GHI\n
+			JKL\n
+			MNO\n
+			PQR\n
+			STU\n
+			FIN\n
+	*/
+
+	s := []string{"A", "B", "C\nD", "EF\n", "GHI\n", "J", "K", "L", "\nMNO\nPQR\nS", "TU\nVWX\n"}
+
+	mclient := mock.NewMockClient(ctrl)
+	mclient.EXPECT().Write(context.Background(), key, gomock.Any())
+	rw, _ := NewRemoteWriter(mclient, key)
+	rw.SetInterval(time.Duration(100) * time.Second)
+
+	// Write character by character followed by new line
+	for _, w := range s {
+		rw.Write([]byte(w))
+	}
+	rw.flush()
+
+	assert.Equal(t, len(rw.history), 8)
+	assert.Equal(t, rw.history[0].Message, "ABC\n")
+	assert.Equal(t, rw.history[1].Message, "DEF\n")
+	assert.Equal(t, rw.history[2].Message, "GHI\n")
+	assert.Equal(t, rw.history[3].Message, "JKL\n")
+	assert.Equal(t, rw.history[4].Message, "MNO\n")
+	assert.Equal(t, rw.history[5].Message, "PQR\n")
+	assert.Equal(t, rw.history[6].Message, "STU\n")
+	assert.Equal(t, rw.history[7].Message, "VWX\n")
+}
+
+func Test_RemoteWriter_VariousCases_WithFlushes(t *testing.T) {
+	ctrl, _ := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	key := "key"
+
+	/* There are many possible orderings of how Write() is internally called.
+	   This test will test out various combinations with added flushes in b/w.
+	   Write order:
+			Write("A")
+			flush()
+			Write("B")
+			flush()
+			Write("C\nD")
+			...
+			Write("EF\n")
+			Write("GHI\n")
+			Write("J")
+			Write("K")
+			Write("L")
+			Write("\nMNO\nPQR\nS")
+			Write("TU\nFIN\n")
+
+			Expected output:
+			ABC\n
+			DEF\n
+			GHI\n
+			JKL\n
+			MNO\n
+			PQR\n
+			STU\n
+			FIN\n
+	*/
+
+	s := []string{"A", "B", "C\nD", "EF\n", "GHI\n", "J", "K", "L", "\nMNO\nPQR\nS", "TU\nVWX\n"}
+
+	mclient := mock.NewMockClient(ctrl)
+	mclient.EXPECT().Write(context.Background(), key, gomock.Any()).Times(5)
+	rw, _ := NewRemoteWriter(mclient, key)
+	rw.SetInterval(time.Duration(100) * time.Second)
+
+	// Write character by character followed by new line
+	for _, w := range s {
+		rw.Write([]byte(w))
+		rw.flush()
+	}
+
+	assert.Equal(t, len(rw.history), 8)
+	assert.Equal(t, rw.history[0].Message, "ABC\n")
+	assert.Equal(t, rw.history[1].Message, "DEF\n")
+	assert.Equal(t, rw.history[2].Message, "GHI\n")
+	assert.Equal(t, rw.history[3].Message, "JKL\n")
+	assert.Equal(t, rw.history[4].Message, "MNO\n")
+	assert.Equal(t, rw.history[5].Message, "PQR\n")
+	assert.Equal(t, rw.history[6].Message, "STU\n")
+	assert.Equal(t, rw.history[7].Message, "VWX\n")
+}
+
 func Test_RemoteWriter_JSON(t *testing.T) {
 	ctrl, _ := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
