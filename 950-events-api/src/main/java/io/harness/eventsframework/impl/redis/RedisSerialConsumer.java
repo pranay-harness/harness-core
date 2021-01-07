@@ -11,6 +11,7 @@ import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.RedissonShutdownException;
 import org.redisson.api.StreamMessageId;
+import org.redisson.client.RedisException;
 
 @Slf4j
 public class RedisSerialConsumer extends RedisAbstractConsumer {
@@ -20,12 +21,17 @@ public class RedisSerialConsumer extends RedisAbstractConsumer {
   }
 
   private List<Message> getUnackedMessages(long maxWaitTime, TimeUnit unit) throws ConsumerShutdownException {
-    try {
-      Map<StreamMessageId, Map<String, String>> messages =
-          stream.readGroup(getGroupName(), getName(), 1, maxWaitTime, unit, StreamMessageId.ALL);
-      return RedisUtils.getMessageObject(messages);
-    } catch (RedissonShutdownException e) {
-      throw new ConsumerShutdownException("Consumer " + getName() + "is shutdown.");
+    while (true) {
+      try {
+        Map<StreamMessageId, Map<String, String>> messages =
+            stream.readGroup(getGroupName(), getName(), 1, maxWaitTime, unit, StreamMessageId.ALL);
+        return RedisUtils.getMessageObject(messages);
+      } catch (RedissonShutdownException e) {
+        throw new ConsumerShutdownException("Consumer " + getName() + " is shutdown.");
+      } catch (RedisException e) {
+        log.warn("Consumer " + getName() + " failed getUnackedMessages", e);
+        waitForRedisToComeUp();
+      }
     }
   }
 

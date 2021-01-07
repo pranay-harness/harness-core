@@ -60,12 +60,12 @@ public class MessageConsumer implements Runnable {
     while (true) {
       try {
         messages = client.read(2, TimeUnit.SECONDS);
+        for (Message message : messages) {
+          processMessage(message);
+        }
       } catch (ConsumerShutdownException e) {
         e.printStackTrace();
         break;
-      }
-      for (Message message : messages) {
-        processMessage(message);
       }
     }
   }
@@ -82,30 +82,28 @@ public class MessageConsumer implements Runnable {
 
       try {
         messages = client.read(2, TimeUnit.SECONDS);
+        for (Message message : messages) {
+          processMessage(message);
+        }
       } catch (ConsumerShutdownException e) {
         e.printStackTrace();
+        redisLocker.destroy(lock);
         break;
+      } finally {
+        redisLocker.destroy(lock);
+        Thread.sleep(200);
       }
-      for (Message message : messages) {
-        processMessage(message);
-      }
-      redisLocker.destroy(lock);
-
-      Thread.sleep(200);
     }
   }
 
-  private void processMessage(Message message) throws InterruptedException, InvalidProtocolBufferException {
+  private void processMessage(Message message)
+      throws InterruptedException, InvalidProtocolBufferException, ConsumerShutdownException {
     ProjectEntityChangeDTO p = ProjectEntityChangeDTO.parseFrom(message.getMessage().getData());
     log.info("{}Reading messageId: {} for Consumer - {} - pid: {}{}", color, message.getId(), this.client.getName(),
         p.getIdentifier(), ColorConstants.TEXT_RESET);
     Thread.sleep(processingTime);
     log.info("{}Done processing for Consumer - {} - pid: {}{}", color, this.client.getName(), p.getIdentifier(),
         ColorConstants.TEXT_RESET);
-    try {
-      client.acknowledge(message.getId());
-    } catch (ConsumerShutdownException e) {
-      e.printStackTrace();
-    }
+    client.acknowledge(message.getId());
   }
 }

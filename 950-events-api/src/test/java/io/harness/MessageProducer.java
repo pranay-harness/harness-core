@@ -31,19 +31,19 @@ public class MessageProducer implements Runnable {
     while (true) {
       Message projectEvent =
           Message.newBuilder()
-              .putAllMetadata(ImmutableMap.of("accountId", "account1"))
+              .putAllMetadata(ImmutableMap.of("accountId", String.valueOf(count)))
               .setData(ProjectEntityChangeDTO.newBuilder().setIdentifier(String.valueOf(count)).build().toByteString())
               .build();
 
       String messageId = null;
       try {
         messageId = client.send(projectEvent);
+        log.info("{}Pushed pid: {} in redis, received: {}{}", color, count, messageId, ColorConstants.TEXT_RESET);
       } catch (ProducerShutdownException e) {
         e.printStackTrace();
         log.error("{}Pushing message {} failed due to producer shutdown.{}", color, count, ColorConstants.TEXT_RESET);
         break;
       }
-      log.info("{}Pushed pid: {} in redis, received: {}{}", color, count, messageId, ColorConstants.TEXT_RESET);
 
       count += 1;
       Thread.sleep(500);

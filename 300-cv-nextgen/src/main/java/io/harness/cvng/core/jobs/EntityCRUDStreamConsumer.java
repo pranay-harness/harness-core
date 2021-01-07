@@ -3,6 +3,7 @@ package io.harness.cvng.core.jobs;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.Consumer;
+import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
 
 import com.google.inject.Inject;
@@ -38,15 +39,36 @@ public class EntityCRUDStreamConsumer implements Runnable {
     log.info("Started the consumer for entity crud stream");
     try {
       while (true) {
-        List<Message> messages = consumer.read(MAX_WAIT_TIME_SEC, TimeUnit.SECONDS);
-        for (Message message : messages) {
-          String messageId = message.getId();
-          processMessage(message);
-          consumer.acknowledge(messageId);
-        }
+        pollAndProcessMessages();
       }
     } catch (Exception ex) {
-      log.info("The consumer for entity crud stream ended", ex);
+      log.error("Entity crud stream consumer unexpectedly stopped", ex);
+    }
+  }
+
+  private void pollAndProcessMessages() throws ConsumerShutdownException {
+    List<Message> messages;
+    String messageId;
+    boolean messageProcessed;
+    messages = consumer.read(MAX_WAIT_TIME_SEC, TimeUnit.SECONDS);
+    for (Message message : messages) {
+      messageId = message.getId();
+      messageProcessed = handleMessage(message);
+      if (messageProcessed) {
+        consumer.acknowledge(messageId);
+      }
+    }
+  }
+
+  private boolean handleMessage(Message message) {
+    try {
+      processMessage(message);
+      return true;
+    } catch (Exception ex) {
+      // This is not evicted from events framework so that it can be processed
+      // by other consumer if the error is a runtime error
+      log.error(String.format("Error occurred in processing message with id %s", message.getId()), ex);
+      return false;
     }
   }
 

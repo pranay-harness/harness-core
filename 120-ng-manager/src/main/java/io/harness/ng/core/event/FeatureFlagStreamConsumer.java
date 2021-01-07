@@ -2,6 +2,7 @@ package io.harness.ng.core.event;
 
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
+import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
 
 import com.google.inject.Inject;
@@ -29,20 +30,37 @@ public class FeatureFlagStreamConsumer implements Runnable {
     log.info("Started the consumer for feature flag stream");
     try {
       while (!Thread.currentThread().isInterrupted()) {
-        List<Message> messages = eventConsumer.read(30, TimeUnit.SECONDS);
-        for (Message message : messages) {
-          String messageId = message.getId();
-          try {
-            featureFlagChangeEventMessageProcessor.processMessage(message);
-          } catch (Exception ex) {
-            log.error(String.format("Error occurred in processing message with id %s", message.getId()), ex);
-            continue;
-          }
-          eventConsumer.acknowledge(messageId);
-        }
+        pollAndProcessMessages();
       }
     } catch (Exception ex) {
       log.error("Feature flag stream consumer unexpectedly stopped", ex);
+    }
+  }
+
+  private void pollAndProcessMessages() throws ConsumerShutdownException {
+    String messageId;
+    boolean messageProcessed;
+    List<Message> messages;
+    messages = eventConsumer.read(30, TimeUnit.SECONDS);
+    for (Message message : messages) {
+      messageId = message.getId();
+
+      messageProcessed = handleMessage(message);
+      if (messageProcessed) {
+        eventConsumer.acknowledge(messageId);
+      }
+    }
+  }
+
+  private boolean handleMessage(Message message) {
+    try {
+      featureFlagChangeEventMessageProcessor.processMessage(message);
+      return true;
+    } catch (Exception ex) {
+      // This is not evicted from events framework so that it can be processed
+      // by other consumer if the error is a runtime error
+      log.error(String.format("Error occurred in processing message with id %s", message.getId()), ex);
+      return false;
     }
   }
 }

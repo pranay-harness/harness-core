@@ -10,12 +10,14 @@ import io.harness.redis.RedisConfig;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.RedissonShutdownException;
 import org.redisson.api.RStream;
 import org.redisson.api.RedissonClient;
 import org.redisson.api.StreamMessageId;
+import org.redisson.client.RedisException;
 
 @Slf4j
 public class RedisProducer extends AbstractProducer {
@@ -38,11 +40,16 @@ public class RedisProducer extends AbstractProducer {
   public String send(Message message) throws ProducerShutdownException {
     Map<String, String> redisData = new HashMap<>(message.getMetadataMap());
     redisData.put(REDIS_STREAM_INTERNAL_KEY, Base64.getEncoder().encodeToString(message.getData().toByteArray()));
-    try {
-      StreamMessageId messageId = stream.addAll(redisData, maxTopicSize, false);
-      return messageId.toString();
-    } catch (RedissonShutdownException e) {
-      throw new ProducerShutdownException("Producer for topic: " + getTopicName() + " is shutdown.");
+    while (true) {
+      try {
+        StreamMessageId messageId = stream.addAll(redisData, maxTopicSize, false);
+        return messageId.toString();
+      } catch (RedissonShutdownException e) {
+        throw new ProducerShutdownException("Producer for topic: " + getTopicName() + " is shutdown.");
+      } catch (RedisException e) {
+        log.warn("Producer for topic: " + getTopicName() + " failed. Redis is not up", e);
+        waitForRedisToComeUp();
+      }
     }
   }
 
@@ -53,5 +60,14 @@ public class RedisProducer extends AbstractProducer {
 
   public static RedisProducer of(String topicName, @NotNull RedisConfig redisConfig, int maxTopicLength) {
     return new RedisProducer(topicName, redisConfig, maxTopicLength);
+  }
+
+  private void waitForRedisToComeUp() {
+    try {
+      TimeUnit.MILLISECONDS.sleep(500);
+    } catch (InterruptedException e) {
+      log.error("Polling to redis was interrupted, shutting down producer", e);
+      shutdown();
+    }
   }
 }

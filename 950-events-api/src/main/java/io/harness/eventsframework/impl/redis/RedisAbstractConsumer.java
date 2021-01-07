@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.RedissonShutdownException;
 import org.redisson.api.RStream;
 import org.redisson.api.RedissonClient;
+import org.redisson.api.StreamMessageId;
 import org.redisson.client.RedisException;
 
 @Slf4j
@@ -50,24 +51,46 @@ public abstract class RedisAbstractConsumer extends AbstractConsumer {
   }
 
   protected List<Message> getUndeliveredMessages(long maxWaitTime, TimeUnit unit) throws ConsumerShutdownException {
-    try {
-      return RedisUtils.getMessageObject(stream.readGroup(getGroupName(), getName(), 1, maxWaitTime, unit));
-    } catch (RedissonShutdownException e) {
-      throw new ConsumerShutdownException("Consumer " + getName() + "is shutdown.");
+    while (true) {
+      try {
+        Map<StreamMessageId, Map<String, String>> result =
+            stream.readGroup(getGroupName(), getName(), 1, maxWaitTime, unit);
+        return RedisUtils.getMessageObject(result);
+      } catch (RedissonShutdownException e) {
+        throw new ConsumerShutdownException("Consumer " + getName() + " is shutdown.");
+      } catch (RedisException e) {
+        log.warn("Consumer " + getName() + " failed getUndeliveredMessages", e);
+        waitForRedisToComeUp();
+      }
     }
   }
 
   @Override
   public void acknowledge(String messageId) throws ConsumerShutdownException {
-    try {
-      stream.ack(getGroupName(), RedisUtils.getStreamId(messageId));
-    } catch (RedissonShutdownException e) {
-      throw new ConsumerShutdownException("Consumer " + getName() + "is shutdown.");
+    while (true) {
+      try {
+        stream.ack(getGroupName(), RedisUtils.getStreamId(messageId));
+        return;
+      } catch (RedissonShutdownException e) {
+        throw new ConsumerShutdownException("Consumer " + getName() + " failed acknowledge - Consumer shutdown.");
+      } catch (RedisException e) {
+        log.warn("Redis is not up for acknowledge", e);
+        waitForRedisToComeUp();
+      }
     }
   }
 
   @Override
   public void shutdown() {
     redissonClient.shutdown();
+  }
+
+  protected void waitForRedisToComeUp() {
+    try {
+      TimeUnit.MILLISECONDS.sleep(500);
+    } catch (InterruptedException e) {
+      log.error("Polling to redis was interrupted, shutting down consumer", e);
+      shutdown();
+    }
   }
 }
