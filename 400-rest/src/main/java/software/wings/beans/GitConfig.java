@@ -1,7 +1,8 @@
 package software.wings.beans;
 
+import static io.harness.shell.AuthenticationScheme.HTTP_PASSWORD;
+
 import static software.wings.audit.ResourceType.SOURCE_REPO_PROVIDER;
-import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -10,9 +11,9 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.encryption.Encrypted;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.git.model.GitRepositoryType;
+import io.harness.shell.AuthenticationScheme;
 
 import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.HostConnectionAttributes.AuthenticationScheme;
 import software.wings.jersey.JsonViews;
 import software.wings.security.UsageRestrictions;
 import software.wings.settings.SettingValue;

@@ -79,6 +79,7 @@ import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
+import io.harness.shell.AccessType;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
@@ -87,7 +88,6 @@ import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
-import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;

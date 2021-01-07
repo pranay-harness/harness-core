@@ -23,6 +23,7 @@ import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+import io.harness.shell.AccessType;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
@@ -30,7 +31,6 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.HostConnectionAttributes;
-import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.HostConnectionAttributes.ConnectionType;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.Service;

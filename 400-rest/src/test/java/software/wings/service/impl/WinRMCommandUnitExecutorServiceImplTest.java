@@ -6,8 +6,8 @@ import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.SAHIL;
+import static io.harness.shell.AccessType.USER_PASSWORD;
 
-import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;

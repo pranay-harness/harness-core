@@ -13,6 +13,7 @@ import static io.harness.generator.constants.SettingsGeneratorConstants.PCF_END_
 import static io.harness.generator.constants.SettingsGeneratorConstants.PCF_KEY;
 import static io.harness.generator.constants.SettingsGeneratorConstants.PCF_USERNAME;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.shell.AccessType.KEY;
 import static io.harness.testframework.framework.utils.SettingUtils.createEcsFunctionalTestGitAccountSetting;
 import static io.harness.testframework.framework.utils.SettingUtils.createEcsFunctionalTestGitRepoSetting;
 import static io.harness.testframework.framework.utils.SettingUtils.createGitHubRepoSetting;
@@ -23,7 +24,6 @@ import static io.harness.testframework.framework.utils.SettingUtils.createTerraf
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -49,7 +49,6 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
-import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
@@ -854,7 +853,7 @@ public class SettingGenerator {
                            .repoUrl("https://github.com/wings-software/")
                            .urlType(GitConfig.UrlType.ACCOUNT)
                            .generateWebhookUrl(true)
-                           .authenticationScheme(HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD)
+                           .authenticationScheme(io.harness.shell.AuthenticationScheme.HTTP_PASSWORD)
                            .username(String.valueOf(
                                new ScmSecret().decryptToCharArray(new SecretName("git_automation_username"))))
                            .password(password.toCharArray())

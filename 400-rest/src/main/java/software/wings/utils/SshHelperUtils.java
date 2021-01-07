@@ -1,49 +1,28 @@
 package software.wings.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.CONNECTION_TIMEOUT;
-import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
-import static io.harness.eraro.ErrorCode.INVALID_KEY;
-import static io.harness.eraro.ErrorCode.INVALID_KEYPATH;
-import static io.harness.eraro.ErrorCode.SOCKET_CONNECTION_ERROR;
-import static io.harness.eraro.ErrorCode.SOCKET_CONNECTION_TIMEOUT;
-import static io.harness.eraro.ErrorCode.SSH_CONNECTION_ERROR;
-import static io.harness.eraro.ErrorCode.SSH_SESSION_TIMEOUT;
-import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
-import static io.harness.eraro.ErrorCode.UNKNOWN_HOST;
-import static io.harness.eraro.ErrorCode.UNREACHABLE_HOST;
+import static io.harness.shell.AccessType.KEY_SUDO_APP_USER;
+import static io.harness.shell.AccessType.KEY_SU_APP_USER;
+import static io.harness.shell.AccessType.USER_PASSWORD;
+import static io.harness.shell.AuthenticationScheme.KERBEROS;
+import static io.harness.shell.ExecutorType.BASTION_HOST;
+import static io.harness.shell.ExecutorType.KEY_AUTH;
+import static io.harness.shell.ExecutorType.PASSWORD_AUTH;
+import static io.harness.shell.SshSessionConfig.Builder.aSshSessionConfig;
 
-import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SUDO_APP_USER;
-import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SU_APP_USER;
-import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
-import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.KERBEROS;
-import static software.wings.core.ssh.executors.ExecutorType.BASTION_HOST;
-import static software.wings.core.ssh.executors.ExecutorType.KEY_AUTH;
-import static software.wings.core.ssh.executors.ExecutorType.PASSWORD_AUTH;
-import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
-
-import io.harness.eraro.ErrorCode;
+import io.harness.shell.AccessType;
+import io.harness.shell.AuthenticationScheme;
+import io.harness.shell.ExecutorType;
+import io.harness.shell.KerberosConfig;
+import io.harness.shell.SshSessionConfig;
+import io.harness.shell.SshSessionConfig.Builder;
 
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes;
-import software.wings.beans.HostConnectionAttributes.AccessType;
-import software.wings.beans.HostConnectionAttributes.AuthenticationScheme;
-import software.wings.beans.KerberosConfig;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionContext;
-import software.wings.core.ssh.executors.ExecutorType;
-import software.wings.core.ssh.executors.SshSessionConfig;
-import software.wings.core.ssh.executors.SshSessionConfig.Builder;
 
-import com.jcraft.jsch.JSchException;
-import com.sun.mail.iap.ConnectionException;
-import io.netty.channel.ConnectTimeoutException;
-import java.io.FileNotFoundException;
-import java.net.NoRouteToHostException;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -66,50 +45,6 @@ public class SshHelperUtils {
       }
     }
     return executorType;
-  }
-
-  /**
-   * Normalize error.
-   *
-   * @param jschexception the jschexception
-   * @return the string
-   */
-  public static ErrorCode normalizeError(JSchException jschexception) {
-    String message = jschexception.getMessage();
-    Throwable cause = jschexception.getCause();
-
-    ErrorCode errorConst = UNKNOWN_ERROR;
-
-    if (cause != null) { // TODO: Refactor use enums, maybe ?
-      if (cause instanceof NoRouteToHostException) {
-        errorConst = UNREACHABLE_HOST;
-      } else if (cause instanceof UnknownHostException) {
-        errorConst = UNKNOWN_HOST;
-      } else if (cause instanceof SocketTimeoutException) {
-        errorConst = SOCKET_CONNECTION_TIMEOUT;
-      } else if (cause instanceof ConnectTimeoutException) {
-        errorConst = CONNECTION_TIMEOUT;
-      } else if (cause instanceof ConnectionException) {
-        errorConst = SSH_CONNECTION_ERROR;
-      } else if (cause instanceof SocketException) {
-        errorConst = SOCKET_CONNECTION_ERROR;
-      } else if (cause instanceof FileNotFoundException) {
-        errorConst = INVALID_KEYPATH;
-      }
-    } else {
-      if (message.startsWith("invalid privatekey")) {
-        errorConst = INVALID_KEY;
-      } else if (message.contains("Auth fail") || message.contains("Auth cancel") || message.contains("USERAUTH fail")
-          || message.contains("authentication failure")) {
-        errorConst = INVALID_CREDENTIAL;
-      } else if (message.startsWith("timeout: socket is not established")
-          || message.contains("SocketTimeoutException")) {
-        errorConst = SOCKET_CONNECTION_TIMEOUT;
-      } else if (message.equals("session is down")) {
-        errorConst = SSH_SESSION_TIMEOUT;
-      }
-    }
-    return errorConst;
   }
 
   public static SshSessionConfig createSshSessionConfig(SettingAttribute settingAttribute, String hostName) {

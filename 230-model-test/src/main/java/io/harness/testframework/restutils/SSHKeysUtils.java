@@ -1,6 +1,7 @@
 package io.harness.testframework.restutils;
 
-import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
+import static io.harness.shell.AccessType.KEY;
+
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;

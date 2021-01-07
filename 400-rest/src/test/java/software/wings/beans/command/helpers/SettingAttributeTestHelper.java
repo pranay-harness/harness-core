@@ -19,8 +19,8 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 import static java.util.Collections.singletonList;
 
 import io.harness.k8s.model.ImageDetails;
+import io.harness.shell.AccessType;
 
-import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
@@ -65,7 +65,7 @@ public class SettingAttributeTestHelper {
         .withName("hostConnectionAttrs")
         .withAccountId(ACCOUNT_ID)
         .withValue(aHostConnectionAttributes()
-                       .withAccessType(HostConnectionAttributes.AccessType.USER_PASSWORD)
+                       .withAccessType(AccessType.USER_PASSWORD)
                        .withAccountId(WingsTestConstants.ACCOUNT_ID)
                        .build())
         .build();

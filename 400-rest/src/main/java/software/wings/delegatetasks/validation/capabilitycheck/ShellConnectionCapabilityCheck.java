@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.validation.capabilitycheck;
 
-import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
+import static io.harness.shell.SshSessionFactory.getSSHSession;
 
 import static java.time.Duration.ofSeconds;
 
@@ -9,10 +9,10 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.executioncapability.CapabilityCheck;
+import io.harness.logging.NoopExecutionCallback;
+import io.harness.shell.SshSessionConfig;
 
-import software.wings.beans.command.NoopExecutionCallback;
 import software.wings.beans.delegation.ShellScriptParameters;
-import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.core.winrm.executors.WinRmSession;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;

@@ -1,17 +1,20 @@
 package software.wings.utils;
 
 import static io.harness.govern.Switch.noop;
+import static io.harness.shell.SshHelperUtils.normalizeError;
 
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 import static software.wings.utils.SshHelperUtils.createSshSessionConfig;
-import static software.wings.utils.SshHelperUtils.normalizeError;
 import static software.wings.utils.WinRmHelperUtils.buildErrorDetailsFromWinRmClientException;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
+import io.harness.logging.NoopExecutionCallback;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.shell.SshSessionConfig;
+import io.harness.shell.SshSessionFactory;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.ExecutionCredential;
@@ -19,10 +22,7 @@ import software.wings.beans.HostValidationResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.command.CommandExecutionContext;
-import software.wings.beans.command.NoopExecutionCallback;
 import software.wings.beans.infrastructure.Host;
-import software.wings.core.ssh.executors.SshSessionConfig;
-import software.wings.core.ssh.executors.SshSessionFactory;
 import software.wings.core.winrm.executors.WinRmSession;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.service.intfc.security.EncryptionService;

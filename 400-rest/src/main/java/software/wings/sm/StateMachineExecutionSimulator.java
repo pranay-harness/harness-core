@@ -20,12 +20,12 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.serializer.KryoSerializer;
+import io.harness.shell.AccessType;
 
 import software.wings.api.ForkElement;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.EntityType;
 import software.wings.beans.HostConnectionAttributes;
-import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;

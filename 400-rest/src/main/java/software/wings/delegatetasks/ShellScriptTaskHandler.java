@@ -13,12 +13,12 @@ import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.exception.CommandExecutionException;
 import io.harness.shell.BaseScriptExecutor;
 import io.harness.shell.ScriptProcessExecutor;
+import io.harness.shell.SshSessionConfig;
+import io.harness.shell.SshSessionManager;
 
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.core.local.executors.ShellExecutorFactory;
 import software.wings.core.ssh.executors.SshExecutorFactory;
-import software.wings.core.ssh.executors.SshSessionConfig;
-import software.wings.core.ssh.executors.SshSessionManager;
 import software.wings.core.winrm.executors.WinRmExecutor;
 import software.wings.core.winrm.executors.WinRmExecutorFactory;
 import software.wings.core.winrm.executors.WinRmSessionConfig;

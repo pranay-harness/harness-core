@@ -22,6 +22,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.harness.shell.AuthenticationScheme;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.EntityType;
@@ -29,7 +30,6 @@ import software.wings.beans.GitCommit;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitDetail;
 import software.wings.beans.GitFileActivitySummary;
-import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
@@ -75,17 +75,16 @@ public class GitSyncServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setup() {
-    settingAttribute =
-        aSettingAttribute()
-            .withAccountId(accountId)
-            .withName(gitConnectorName)
-            .withValue(GitConfig.builder()
-                           .repoUrl(repoURL)
-                           .urlType(GitConfig.UrlType.REPO)
-                           .authenticationScheme(HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD)
-                           .branch("branchName")
-                           .build())
-            .build();
+    settingAttribute = aSettingAttribute()
+                           .withAccountId(accountId)
+                           .withName(gitConnectorName)
+                           .withValue(GitConfig.builder()
+                                          .repoUrl(repoURL)
+                                          .urlType(GitConfig.UrlType.REPO)
+                                          .authenticationScheme(AuthenticationScheme.HTTP_PASSWORD)
+                                          .branch("branchName")
+                                          .build())
+                           .build();
     gitConnectorId = wingsPersistence.save(settingAttribute);
   }
 

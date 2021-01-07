@@ -18,11 +18,11 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.rule.Owner;
+import io.harness.shell.AccessType;
+import io.harness.shell.SshSessionConfig;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.delegation.ShellScriptParameters;
-import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.WingsTestConstants;
@@ -46,19 +46,18 @@ public class ShellConnectionCapabilityCheckTest extends WingsBaseTest {
     doNothing().when(shellConnectionCapabilityCheck).performTest(any(SshSessionConfig.class));
     CapabilityResponse capabilityResponse = shellConnectionCapabilityCheck.performCapabilityCheck(
         ShellConnectionCapability.builder()
-            .shellScriptParameters(
-                ShellScriptParameters.builder()
-                    .accountId(ACCOUNT_ID)
-                    .appId(APP_ID)
-                    .activityId(ACTIVITY_ID)
-                    .executeOnDelegate(false)
-                    .connectionType(SSH)
-                    .scriptType(BASH)
-                    .hostConnectionAttributes(aHostConnectionAttributes()
-                                                  .withAccessType(HostConnectionAttributes.AccessType.USER_PASSWORD)
-                                                  .withAccountId(WingsTestConstants.ACCOUNT_ID)
-                                                  .build())
-                    .build())
+            .shellScriptParameters(ShellScriptParameters.builder()
+                                       .accountId(ACCOUNT_ID)
+                                       .appId(APP_ID)
+                                       .activityId(ACTIVITY_ID)
+                                       .executeOnDelegate(false)
+                                       .connectionType(SSH)
+                                       .scriptType(BASH)
+                                       .hostConnectionAttributes(aHostConnectionAttributes()
+                                                                     .withAccessType(AccessType.USER_PASSWORD)
+                                                                     .withAccountId(WingsTestConstants.ACCOUNT_ID)
+                                                                     .build())
+                                       .build())
             .build());
     assertThat(capabilityResponse).isNotNull();
     assertThat(capabilityResponse.isValidated()).isTrue();

@@ -1,4 +1,4 @@
-package software.wings.beans;
+package io.harness.shell;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;

@@ -199,7 +199,6 @@ import software.wings.beans.InstanceUnitType;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JenkinsSubTaskType;
 import software.wings.beans.JiraConfig;
-import software.wings.beans.KerberosConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.LambdaTestEvent;
 import software.wings.beans.LicenseInfo;
@@ -1033,8 +1032,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(GraphGroup.class, 5063);
     kryo.register(GraphLink.class, 5062);
     kryo.register(GraphNode.class, 5061);
-    kryo.register(HostConnectionAttributes.AccessType.class, 5072);
-    kryo.register(HostConnectionAttributes.AuthenticationScheme.class, 5550);
     kryo.register(HostConnectionAttributes.ConnectionType.class, 5071);
     kryo.register(HostConnectionAttributes.class, 5070);
     kryo.register(HostValidationResponse.class, 5167);
@@ -1047,7 +1044,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(JiraTaskParameters.class, 5579);
     kryo.register(JiraConfig.JiraSetupType.class, 5569);
     kryo.register(JiraConfig.class, 5581);
-    kryo.register(KerberosConfig.class, 5549);
     kryo.register(KubernetesClusterConfig.class, 5244);
 
     kryo.register(LambdaTestEvent.class, 5604);

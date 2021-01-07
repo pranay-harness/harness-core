@@ -13,8 +13,8 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.YOGESH;
+import static io.harness.shell.SshSessionConfig.Builder.aSshSessionConfig;
 
-import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.FILE_ID;
 
@@ -34,6 +34,9 @@ import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
 import io.harness.shell.BaseScriptExecutor;
+import io.harness.shell.ExecutorType;
+import io.harness.shell.ScriptSshExecutor;
+import io.harness.shell.SshSessionConfig;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;

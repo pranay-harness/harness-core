@@ -1,6 +1,8 @@
 package software.wings.core.ssh.executors;
 
 import io.harness.shell.BaseScriptExecutor;
+import io.harness.shell.ScriptSshExecutor;
+import io.harness.shell.SshSessionConfig;
 
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateFileManager;

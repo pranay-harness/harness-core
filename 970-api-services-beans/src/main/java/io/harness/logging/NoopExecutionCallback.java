@@ -1,8 +1,4 @@
-package software.wings.beans.command;
-
-import io.harness.logging.CommandExecutionStatus;
-import io.harness.logging.LogCallback;
-import io.harness.logging.LogLevel;
+package io.harness.logging;
 
 public class NoopExecutionCallback implements LogCallback {
   @Override
