@@ -24,6 +24,6 @@ public class NodeExecutionEventQueuePublisher {
     if (stepTypeLookupService == null) {
       return "_pms_";
     }
-    return stepTypeLookupService.findNodeExecutionServiceName(nodeExecution);
+    return nodeExecution.getNode().getServiceName();
   }
 }

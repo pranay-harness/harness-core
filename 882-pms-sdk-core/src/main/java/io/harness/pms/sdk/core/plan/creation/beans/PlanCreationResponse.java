@@ -120,30 +120,4 @@ public class PlanCreationResponse {
           String.format("Received different set of starting nodes: %s and %s", startingNodeId, otherStartingNodeId));
     }
   }
-
-  public PlanCreationBlobResponse toBlobResponse() {
-    PlanCreationBlobResponse.Builder finalBlobResponseBuilder = PlanCreationBlobResponse.newBuilder();
-    if (EmptyPredicate.isNotEmpty(nodes)) {
-      Map<String, PlanNodeProto> newNodes = new HashMap<>();
-      nodes.forEach((k, v) -> newNodes.put(k, PlanNodeProtoMapper.toPlanNodeProto(v)));
-      finalBlobResponseBuilder.putAllNodes(newNodes);
-    }
-    if (EmptyPredicate.isNotEmpty(dependencies)) {
-      for (Map.Entry<String, YamlField> dependency : dependencies.entrySet()) {
-        finalBlobResponseBuilder.putDependencies(dependency.getKey(), dependency.getValue().toFieldBlob());
-      }
-    }
-    if (EmptyPredicate.isNotEmpty(startingNodeId)) {
-      finalBlobResponseBuilder.setStartingNodeId(startingNodeId);
-    }
-    if (EmptyPredicate.isNotEmpty(contextMap)) {
-      for (Map.Entry<String, PlanCreationContextValue> dependency : contextMap.entrySet()) {
-        finalBlobResponseBuilder.putContext(dependency.getKey(), dependency.getValue());
-      }
-    }
-    if (graphLayoutResponse != null) {
-      finalBlobResponseBuilder.setGraphLayoutInfo(graphLayoutResponse.getLayoutNodeInfo());
-    }
-    return finalBlobResponseBuilder.build();
-  }
 }
