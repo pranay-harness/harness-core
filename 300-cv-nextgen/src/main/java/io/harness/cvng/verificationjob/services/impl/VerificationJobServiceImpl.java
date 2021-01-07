@@ -5,6 +5,7 @@ import static io.harness.cvng.verificationjob.beans.VerificationJobType.HEALTH;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.verificationjob.beans.HealthVerificationJobDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
@@ -12,6 +13,8 @@ import io.harness.cvng.verificationjob.entities.VerificationJob.RuntimeParameter
 import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
+import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.persistence.HPersistence;
 import io.harness.utils.PageUtils;
 
@@ -21,11 +24,13 @@ import com.mongodb.BasicDBObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class VerificationJobServiceImpl implements VerificationJobService {
   @Inject private HPersistence hPersistence;
+  @Inject private NextGenService nextGenService;
 
   @Override
   @Nullable
@@ -110,27 +115,47 @@ public class VerificationJobServiceImpl implements VerificationJobService {
   @Override
   public PageResponse<VerificationJobDTO> list(
       String accountId, String projectId, String orgIdentifier, Integer offset, Integer pageSize, String filter) {
-    List<VerificationJobDTO> verificationJobDTOList = verificationJobDTOList(accountId, projectId, orgIdentifier);
+    List<VerificationJob> verificationJobs = verificationJobList(accountId, projectId, orgIdentifier);
 
-    List<VerificationJobDTO> verificationJobDTOS =
-        verificationJobDTOList.stream()
-            .filter(verificationJob
-                -> isEmpty(filter) || verificationJob.getJobName().toLowerCase().contains(filter.trim().toLowerCase()))
-            .collect(Collectors.toList());
+    List<VerificationJobDTO> verificationJobList = new ArrayList<>();
 
-    return PageUtils.offsetAndLimit(verificationJobDTOS, offset, pageSize);
+    for (VerificationJob verificationJob : verificationJobs) {
+      EnvironmentResponseDTO environmentResponseDTO = null;
+      if (!verificationJob.getEnvIdentifierRuntimeParam().isRuntimeParam()) {
+        environmentResponseDTO =
+            nextGenService.getEnvironment(verificationJob.getEnvIdentifier(), accountId, orgIdentifier, projectId);
+
+        if (isEmpty(filter) || environmentResponseDTO.getName().toLowerCase().contains(filter.trim().toLowerCase())) {
+          verificationJobList.add(verificationJob.getVerificationJobDTO());
+          continue;
+        }
+      }
+
+      ServiceResponseDTO serviceResponseDTO = null;
+      if (!verificationJob.getServiceIdentifierRuntimeParam().isRuntimeParam()) {
+        serviceResponseDTO =
+            nextGenService.getService(verificationJob.getServiceIdentifier(), accountId, orgIdentifier, projectId);
+
+        if (isEmpty(filter) || serviceResponseDTO.getName().toLowerCase().contains(filter.trim().toLowerCase())) {
+          verificationJobList.add(verificationJob.getVerificationJobDTO());
+          continue;
+        }
+      }
+
+      if (isEmpty(filter) || verificationJob.getJobName().toLowerCase().contains(filter.trim().toLowerCase())) {
+        verificationJobList.add(verificationJob.getVerificationJobDTO());
+      }
+    }
+
+    return PageUtils.offsetAndLimit(verificationJobList, offset, pageSize);
   }
 
-  private List<VerificationJobDTO> verificationJobDTOList(
-      String accountId, String projectIdentifier, String orgIdentifier) {
+  private List<VerificationJob> verificationJobList(String accountId, String projectIdentifier, String orgIdentifier) {
     return hPersistence.createQuery(VerificationJob.class)
         .filter(VerificationJobKeys.accountId, accountId)
         .filter(VerificationJobKeys.orgIdentifier, orgIdentifier)
         .filter(VerificationJobKeys.projectIdentifier, projectIdentifier)
-        .asList()
-        .stream()
-        .map(verificationJob -> verificationJob.getVerificationJobDTO())
-        .collect(Collectors.toList());
+        .asList();
   }
 
   @Override

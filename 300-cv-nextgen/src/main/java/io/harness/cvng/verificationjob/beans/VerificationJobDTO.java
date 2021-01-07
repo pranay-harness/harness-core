@@ -25,6 +25,7 @@ public abstract class VerificationJobDTO {
   private String orgIdentifier;
   private String activitySourceIdentifier;
   private List<DataSourceType> dataSources;
+
   // TODO: make it Duration and write a custom serializer
   private String duration;
   private boolean isDefaultJob;
