@@ -68,8 +68,7 @@ public class ServiceResource {
   @Path("{serviceIdentifier}")
   @ApiOperation(value = "Gets a Service by identifier", nickname = "getService")
   public ResponseDTO<ServiceResponseDTO> get(@PathParam("serviceIdentifier") String serviceIdentifier,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @QueryParam("orgIdentifier") String orgIdentifier,
+      @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.DELETED_KEY) @DefaultValue("false") boolean deleted) {
     Optional<ServiceEntity> serviceEntity =
@@ -80,8 +79,8 @@ public class ServiceResource {
 
   @POST
   @ApiOperation(value = "Create a Service", nickname = "createService")
-  public ResponseDTO<ServiceResponseDTO> create(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
+  public ResponseDTO<ServiceResponseDTO> create(
+      @QueryParam("accountId") String accountId, @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
     ServiceEntity serviceEntity = ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO);
     ServiceEntity createdService = serviceEntityService.create(serviceEntity);
     return ResponseDTO.newResponse(
@@ -92,8 +91,7 @@ public class ServiceResource {
   @Path("/batch")
   @ApiOperation(value = "Create Services", nickname = "createServices")
   public ResponseDTO<PageResponse<ServiceResponseDTO>> createServices(
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @Valid List<ServiceRequestDTO> serviceRequestDTOs) {
+      @QueryParam("accountId") String accountId, @NotNull @Valid List<ServiceRequestDTO> serviceRequestDTOs) {
     List<ServiceEntity> serviceEntities =
         serviceRequestDTOs.stream()
             .map(serviceRequestDTO -> ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO))
@@ -106,8 +104,7 @@ public class ServiceResource {
   @Path("{serviceIdentifier}")
   @ApiOperation(value = "Delete a service by identifier", nickname = "deleteService")
   public ResponseDTO<Boolean> delete(@HeaderParam(IF_MATCH) String ifMatch,
-      @PathParam("serviceIdentifier") String serviceIdentifier,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @PathParam("serviceIdentifier") String serviceIdentifier, @QueryParam("accountId") String accountId,
       @QueryParam("orgIdentifier") String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     return ResponseDTO.newResponse(serviceEntityService.delete(accountId, orgIdentifier, projectIdentifier,
@@ -117,8 +114,7 @@ public class ServiceResource {
   @PUT
   @ApiOperation(value = "Update a service by identifier", nickname = "updateService")
   public ResponseDTO<ServiceResponseDTO> update(@HeaderParam(IF_MATCH) String ifMatch,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
+      @QueryParam("accountId") String accountId, @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
     ServiceEntity requestService = ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO);
     requestService.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
     ServiceEntity updatedService = serviceEntityService.update(requestService);
@@ -130,8 +126,7 @@ public class ServiceResource {
   @Path("upsert")
   @ApiOperation(value = "Upsert a service by identifier", nickname = "upsertService")
   public ResponseDTO<ServiceResponseDTO> upsert(@HeaderParam(IF_MATCH) String ifMatch,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
+      @QueryParam("accountId") String accountId, @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
     ServiceEntity requestService = ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO);
     requestService.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
     ServiceEntity upsertedService = serviceEntityService.upsert(requestService);
@@ -143,8 +138,7 @@ public class ServiceResource {
   @ApiOperation(value = "Gets Service list for a project", nickname = "getServiceListForProject")
   public ResponseDTO<PageResponse<ServiceResponseDTO>> listServicesForProject(
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("100") int size,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam("accountId") String accountId, @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam("sort") List<String> sort) {
     Criteria criteria =
