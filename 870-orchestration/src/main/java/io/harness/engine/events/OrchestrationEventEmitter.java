@@ -33,8 +33,7 @@ public class OrchestrationEventEmitter {
         orchestrationEventQueue.send(event);
       } else {
         orchestrationEventQueue.send(
-            Lists.newArrayList(stepTypeLookupService.findNodeExecutionServiceName(event.getNodeExecutionProto())),
-            event);
+            Lists.newArrayList(event.getNodeExecutionProto().getNode().getServiceName()), event);
         // For calling event handlers in PMS, create a one level clone of the event and then emit
         orchestrationEventQueue.send(OrchestrationEvent.builder()
                                          .ambiance(event.getAmbiance())

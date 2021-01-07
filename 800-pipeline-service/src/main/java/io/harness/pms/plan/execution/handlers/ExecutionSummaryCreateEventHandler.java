@@ -61,6 +61,10 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
     Map<String, GraphLayoutNodeDTO> layoutNodeDTOMap = new HashMap<>();
     for (Map.Entry<String, GraphLayoutNode> entry : layoutNodeMap.entrySet()) {
       GraphLayoutNodeDTO graphLayoutNodeDTO = GraphLayoutDtoMapper.toDto(entry.getValue());
+      if (entry.getValue().getNodeType().equals("parallel")) {
+        layoutNodeDTOMap.put(entry.getKey(), graphLayoutNodeDTO);
+        continue;
+      }
       String moduleName = nodeTypeLookupService.findNodeTypeServiceName(entry.getValue().getNodeType());
       graphLayoutNodeDTO.setModule(moduleName);
       Map<String, Document> moduleInfo = new HashMap<>();

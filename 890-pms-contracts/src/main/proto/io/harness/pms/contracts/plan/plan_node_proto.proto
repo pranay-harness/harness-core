@@ -23,4 +23,5 @@ message PlanNodeProto {
   bool skipExpressionChain = 10;
   io.harness.pms.contracts.steps.SkipType skipType = 11;
   string skipCondition = 12;
+  string serviceName = 13;
 }

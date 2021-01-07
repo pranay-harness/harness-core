@@ -7,6 +7,8 @@ import io.harness.pms.contracts.plan.*;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc.PlanCreationServiceImplBase;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.pipeline.filters.FilterCreatorService;
+import io.harness.pms.sdk.core.plan.PlanNode;
+import io.harness.pms.sdk.core.plan.creation.PlanCreationResponseBlobHelper;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.variables.VariableCreatorService;
@@ -36,13 +38,16 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
   private final FilterCreatorService filterCreatorService;
   private final VariableCreatorService variableCreatorService;
   private final List<PartialPlanCreator<?>> planCreators;
+  private final PlanCreationResponseBlobHelper planCreationResponseBlobHelper;
 
   @Inject
   public PlanCreatorService(@NotNull PipelineServiceInfoProvider pipelineServiceInfoProvider,
-      @NotNull FilterCreatorService filterCreatorService, VariableCreatorService variableCreatorService) {
+      @NotNull FilterCreatorService filterCreatorService, VariableCreatorService variableCreatorService,
+      PlanCreationResponseBlobHelper planCreationResponseBlobHelper) {
     this.planCreators = pipelineServiceInfoProvider.getPlanCreators();
     this.filterCreatorService = filterCreatorService;
     this.variableCreatorService = variableCreatorService;
+    this.planCreationResponseBlobHelper = planCreationResponseBlobHelper;
   }
 
   @Override
@@ -61,7 +66,7 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
 
     PlanCreationResponse finalResponse =
         createPlanForDependenciesRecursive(initialDependencies, request.getContextMap());
-    responseObserver.onNext(finalResponse.toBlobResponse());
+    responseObserver.onNext(planCreationResponseBlobHelper.toBlobResponse(finalResponse));
     responseObserver.onCompleted();
   }
 
