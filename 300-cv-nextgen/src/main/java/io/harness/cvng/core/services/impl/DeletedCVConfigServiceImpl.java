@@ -81,7 +81,13 @@ public class DeletedCVConfigServiceImpl implements DeletedCVConfigService {
     log.info("Deletion of DeletedCVConfig {} was successful", deletedCVConfig.getUuid());
     // TODO We need retry mechanism if things get failing and retry count exceeds max number we should alert it
 
+    sendScopedDeleteEvent(deletedCVConfig);
+  }
+
+  private void sendScopedDeleteEvent(DeletedCVConfig deletedCVConfig) {
     eventService.sendConnectorDeleteEvent(deletedCVConfig.getCvConfig());
+    eventService.sendServiceDeleteEvent(deletedCVConfig.getCvConfig());
+    eventService.sendEnvironmentDeleteEvent(deletedCVConfig.getCvConfig());
   }
 
   private void delete(String deletedCVConfigId) {
