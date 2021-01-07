@@ -38,6 +38,7 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 import io.harness.shell.ScriptType;
+import io.harness.shell.ShellExecutionData;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
@@ -56,7 +57,6 @@ import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.CommandUnit;
-import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.beans.delegation.ShellScriptParameters.ShellScriptParametersBuilder;
 import software.wings.beans.template.TemplateUtils;

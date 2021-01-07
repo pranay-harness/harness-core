@@ -20,9 +20,9 @@ import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 import io.harness.shell.ExecuteCommandResponse;
 import io.harness.shell.ExecuteCommandResponse.ExecuteCommandResponseBuilder;
+import io.harness.shell.ShellExecutionData;
+import io.harness.shell.ShellExecutionData.ShellExecutionDataBuilder;
 
-import software.wings.beans.command.ShellExecutionData;
-import software.wings.beans.command.ShellExecutionData.ShellExecutionDataBuilder;
 import software.wings.core.ssh.executors.WinRmExecutorHelper;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.utils.ExecutionLogWriter;

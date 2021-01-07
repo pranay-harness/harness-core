@@ -1,8 +1,8 @@
 package software.wings.delegatetasks.validation;
 
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.k8s.K8sConstants.HARNESS_KUBE_CONFIG_PATH;
 
-import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
 import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 
 import static java.time.Duration.ofSeconds;

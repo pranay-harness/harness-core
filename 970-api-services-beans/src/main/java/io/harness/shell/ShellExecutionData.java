@@ -1,6 +1,4 @@
-package software.wings.beans.command;
-
-import io.harness.shell.CommandExecutionData;
+package io.harness.shell;
 
 import java.util.Map;
 import lombok.Builder;

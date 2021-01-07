@@ -2,8 +2,8 @@ package software.wings.beans.delegation;
 
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 import static io.harness.expression.Expression.DISALLOW_SECRETS;
+import static io.harness.k8s.K8sConstants.HARNESS_KUBE_CONFIG_PATH;
 
-import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -15,6 +15,7 @@ import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.shell.ScriptType;
+import io.harness.shell.ShellExecutorConfig;
 
 import software.wings.beans.AzureConfig;
 import software.wings.beans.GcpConfig;
@@ -23,7 +24,6 @@ import software.wings.beans.KerberosConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
-import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;

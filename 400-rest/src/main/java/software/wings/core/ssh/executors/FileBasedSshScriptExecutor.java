@@ -15,6 +15,7 @@ import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.shell.AbstractScriptExecutor;
+import io.harness.shell.ScriptExecutionContext;
 
 import software.wings.delegatetasks.DelegateFileManager;
 

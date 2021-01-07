@@ -1,6 +1,7 @@
 package software.wings.core.ssh.executors;
 
 import io.harness.encryption.Encrypted;
+import io.harness.shell.ScriptExecutionContext;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.HostConnectionAttributes.AccessType;

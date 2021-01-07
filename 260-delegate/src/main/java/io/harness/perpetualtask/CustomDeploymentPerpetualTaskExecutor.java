@@ -11,12 +11,12 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.perpetualtask.instancesync.CustomDeploymentInstanceSyncTaskParams;
 import io.harness.shell.ExecuteCommandResponse;
+import io.harness.shell.ScriptProcessExecutor;
 import io.harness.shell.ScriptType;
+import io.harness.shell.ShellExecutorConfig;
 
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
-import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.core.local.executors.ShellExecutorFactory;
-import software.wings.core.ssh.executors.ScriptProcessExecutor;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;

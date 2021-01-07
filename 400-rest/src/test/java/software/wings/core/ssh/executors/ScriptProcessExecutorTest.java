@@ -19,11 +19,12 @@ import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 import io.harness.shell.AbstractScriptExecutor;
 import io.harness.shell.ExecuteCommandResponse;
+import io.harness.shell.ScriptProcessExecutor;
 import io.harness.shell.ScriptType;
+import io.harness.shell.ShellExecutionData;
+import io.harness.shell.ShellExecutorConfig;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.command.ShellExecutionData;
-import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.delegatetasks.DelegateFileManager;
 
 import com.google.common.io.CharStreams;

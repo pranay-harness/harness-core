@@ -21,11 +21,11 @@ import io.harness.logging.Misc;
 import io.harness.shell.AbstractScriptExecutor;
 import io.harness.shell.ExecuteCommandResponse;
 import io.harness.shell.ExecuteCommandResponse.ExecuteCommandResponseBuilder;
+import io.harness.shell.ScriptExecutionContext;
 import io.harness.shell.ScriptType;
+import io.harness.shell.ShellExecutionData;
+import io.harness.shell.ShellExecutionData.ShellExecutionDataBuilder;
 import io.harness.stream.BoundedInputStream;
-
-import software.wings.beans.command.ShellExecutionData;
-import software.wings.beans.command.ShellExecutionData.ShellExecutionDataBuilder;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;

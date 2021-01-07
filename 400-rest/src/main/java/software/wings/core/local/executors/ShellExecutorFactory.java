@@ -1,9 +1,11 @@
 package software.wings.core.local.executors;
 
+import io.harness.shell.ScriptProcessExecutor;
+import io.harness.shell.ShellExecutorConfig;
+
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.core.ssh.executors.FileBasedProcessScriptExecutor;
 import software.wings.core.ssh.executors.FileBasedScriptExecutor;
-import software.wings.core.ssh.executors.ScriptProcessExecutor;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 

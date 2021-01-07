@@ -7,6 +7,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionConfig;
+import io.harness.shell.ShellExecutionData;
 
 import software.wings.annotation.EncryptableSetting;
 
@@ -25,5 +26,7 @@ public class ApiServiceBeansMorphiaRegistrar implements MorphiaRegistrar {
     h.put("globalcontex.AuditGlobalContextData", AuditGlobalContextData.class);
     h.put("globalcontex.PurgeGlobalContextData", PurgeGlobalContextData.class);
     h.put("deployment.InstanceDetails", InstanceDetails.class);
+    h.put("shell", ShellExecutionData.class);
+    w.put("beans.command.ShellExecutionData", ShellExecutionData.class);
   }
 }

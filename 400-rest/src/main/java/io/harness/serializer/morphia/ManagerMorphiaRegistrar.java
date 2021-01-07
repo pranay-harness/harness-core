@@ -376,7 +376,6 @@ import software.wings.beans.command.ResizeCommandUnitExecutionData;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.command.SetupEnvCommandUnit;
-import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.command.SpotinstDummyCommandUnit;
 import software.wings.beans.commandlibrary.CommandEntity;
 import software.wings.beans.commandlibrary.CommandVersionEntity;
@@ -1284,7 +1283,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.command.ResizeCommandUnitExecutionData", ResizeCommandUnitExecutionData.class);
     w.put("beans.command.ScpCommandUnit", ScpCommandUnit.class);
     w.put("beans.command.SetupEnvCommandUnit", SetupEnvCommandUnit.class);
-    w.put("beans.command.ShellExecutionData", ShellExecutionData.class);
     w.put("beans.command.SpotinstDummyCommandUnit", SpotinstDummyCommandUnit.class);
     w.put("beans.command.AzureVMSSDummyCommandUnit", AzureVMSSDummyCommandUnit.class);
     w.put("beans.command.AzureWebAppCommandUnit", AzureWebAppCommandUnit.class);
