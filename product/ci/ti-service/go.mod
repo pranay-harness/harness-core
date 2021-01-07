@@ -7,6 +7,7 @@ require (
 	github.com/alecthomas/units v0.0.0-20201120081800-1786d5ef83d4 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.0
 	github.com/go-chi/chi v1.5.1
+	github.com/golang/mock v1.4.4 // indirect
 	github.com/hashicorp/go-multierror v1.1.0
 	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/jackc/pgx/v4 v4.10.0
