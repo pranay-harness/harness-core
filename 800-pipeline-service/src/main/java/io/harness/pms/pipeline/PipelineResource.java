@@ -99,6 +99,7 @@ public class PipelineResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
+      @PathParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId,
       @NotNull @ApiParam(hidden = true, type = "") String yaml) throws IOException {
     log.info("Creating variables for pipeline.");
 
