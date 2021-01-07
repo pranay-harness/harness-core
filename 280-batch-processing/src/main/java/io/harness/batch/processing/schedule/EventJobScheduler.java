@@ -22,6 +22,7 @@ import io.harness.batch.processing.service.intfc.BillingDataPipelineHealthStatus
 import io.harness.batch.processing.shard.AccountShardService;
 import io.harness.batch.processing.tasklet.support.HarnessServiceInfoFetcher;
 import io.harness.batch.processing.tasklet.support.K8sLabelServiceInfoFetcher;
+import io.harness.batch.processing.view.ViewCostUpdateService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 
@@ -63,6 +64,7 @@ public class EventJobScheduler {
   @Autowired private HarnessServiceInfoFetcher harnessServiceInfoFetcher;
   @Autowired private InstanceDataServiceImpl instanceDataService;
   @Autowired private K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher;
+  @Autowired private ViewCostUpdateService viewCostUpdateService;
   @Autowired private BatchMainConfig batchMainConfig;
   @PostConstruct
   public void orderJobs() {
@@ -182,6 +184,16 @@ public class EventJobScheduler {
       log.info("Scheduled reports generated and sent");
     } catch (Exception ex) {
       log.error("Exception while running runScheduledReportJob", ex);
+    }
+  }
+
+  @Scheduled(cron = "0 30 8 * * ?")
+  public void runViewUpdateCostJob() {
+    try {
+      viewCostUpdateService.updateTotalCost();
+      log.info("Updated view total cost");
+    } catch (Exception ex) {
+      log.error("Exception while running runViewUpdateCostJob", ex);
     }
   }
 
