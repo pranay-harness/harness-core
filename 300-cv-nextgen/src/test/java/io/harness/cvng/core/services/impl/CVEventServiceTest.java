@@ -2,6 +2,8 @@ package io.harness.cvng.core.services.impl;
 
 import static io.harness.EntityType.CONNECTORS;
 import static io.harness.EntityType.CV_CONFIG;
+import static io.harness.EntityType.ENVIRONMENT;
+import static io.harness.EntityType.SERVICE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.VUK;
 
@@ -28,6 +30,7 @@ import io.harness.rule.Owner;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 import io.harness.utils.IdentifierRefHelper;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.StringValue;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -44,7 +47,7 @@ public class CVEventServiceTest extends CvNextGenTest {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void shouldSendConnectorCreateEvent() {
+  public void shouldSendConnectorCreateEvent() throws ProducerShutdownException, InvalidProtocolBufferException {
     CVConfig cvConfig = createCVConfig();
 
     IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(cvConfig.getConnectorIdentifier(),
@@ -73,17 +76,12 @@ public class CVEventServiceTest extends CvNextGenTest {
     eventService.sendConnectorCreateEvent(cvConfig);
 
     ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
-    try {
-      verify(eventProducer, times(1)).send(argumentCaptor.capture());
-    } catch (ProducerShutdownException e) {
-      e.printStackTrace();
-    }
-    EntitySetupUsageCreateDTO entityReferenceDTO = null;
-    try {
-      entityReferenceDTO = EntitySetupUsageCreateDTO.parseFrom(argumentCaptor.getValue().getData());
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+
+    verify(eventProducer, times(1)).send(argumentCaptor.capture());
+
+    EntitySetupUsageCreateDTO entityReferenceDTO =
+        EntitySetupUsageCreateDTO.parseFrom(argumentCaptor.getValue().getData());
+
     assertThat(entityReferenceDTO).isNotNull();
     assertThat(entityReferenceDTO.getReferredEntity().getType().toString()).isEqualTo(CONNECTORS.name());
     assertThat(entityReferenceDTO.getReferredByEntity().getType().toString()).isEqualTo(CV_CONFIG.name());
@@ -93,23 +91,17 @@ public class CVEventServiceTest extends CvNextGenTest {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void shouldSendConnectorDeleteEvent() {
+  public void shouldSendConnectorDeleteEvent() throws ProducerShutdownException, InvalidProtocolBufferException {
     CVConfig cvConfig = createCVConfig();
 
     eventService.sendConnectorDeleteEvent(cvConfig);
 
     ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
-    try {
-      verify(eventProducer, times(1)).send(argumentCaptor.capture());
-    } catch (ProducerShutdownException e) {
-      e.printStackTrace();
-    }
-    DeleteSetupUsageDTO deleteSetupUsageDTO = null;
-    try {
-      deleteSetupUsageDTO = DeleteSetupUsageDTO.parseFrom(argumentCaptor.getValue().getData());
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+
+    verify(eventProducer, times(1)).send(argumentCaptor.capture());
+
+    DeleteSetupUsageDTO deleteSetupUsageDTO = DeleteSetupUsageDTO.parseFrom(argumentCaptor.getValue().getData());
+
     assertThat(deleteSetupUsageDTO).isNotNull();
     assertThat(deleteSetupUsageDTO.getAccountIdentifier()).isEqualTo(cvConfig.getAccountId());
     assertThat(deleteSetupUsageDTO.getReferredByEntityFQN())
@@ -118,6 +110,142 @@ public class CVEventServiceTest extends CvNextGenTest {
     assertThat(deleteSetupUsageDTO.getReferredEntityFQN())
         .isEqualTo(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(cvConfig.getAccountId(),
             cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier(), cvConfig.getConnectorIdentifier()));
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldSendServiceCreateEvent() throws ProducerShutdownException, InvalidProtocolBufferException {
+    CVConfig cvConfig = createCVConfig();
+
+    IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(cvConfig.getServiceIdentifier(),
+        cvConfig.getAccountId(), cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier());
+
+    String accountIdentifier = generateUuid();
+    String orgIdentifier = generateUuid();
+    String projectIdentifier = generateUuid();
+    String identifier = generateUuid();
+
+    IdentifierRefProtoDTO configReference = IdentifierRefProtoDTO.newBuilder()
+                                                .setAccountIdentifier(StringValue.of(accountIdentifier))
+                                                .setOrgIdentifier(StringValue.of(orgIdentifier))
+                                                .setProjectIdentifier(StringValue.of(projectIdentifier))
+                                                .setIdentifier(StringValue.of(identifier))
+                                                .build();
+
+    when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(cvConfig.getAccountId(), cvConfig.getOrgIdentifier(),
+             cvConfig.getProjectIdentifier(), cvConfig.getIdentifier()))
+        .thenReturn(configReference);
+
+    when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(identifierRef.getAccountIdentifier(),
+             identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier()))
+        .thenReturn(configReference);
+
+    eventService.sendServiceCreateEvent(cvConfig);
+
+    ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
+
+    verify(eventProducer, times(1)).send(argumentCaptor.capture());
+
+    EntitySetupUsageCreateDTO entityReferenceDTO =
+        EntitySetupUsageCreateDTO.parseFrom(argumentCaptor.getValue().getData());
+
+    assertThat(entityReferenceDTO).isNotNull();
+    assertThat(entityReferenceDTO.getReferredEntity().getType().toString()).isEqualTo(SERVICE.name());
+    assertThat(entityReferenceDTO.getReferredByEntity().getType().toString()).isEqualTo(CV_CONFIG.name());
+    assertThat(entityReferenceDTO.getAccountIdentifier()).isEqualTo(cvConfig.getAccountId());
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldSendServiceDeleteEvent() throws ProducerShutdownException, InvalidProtocolBufferException {
+    CVConfig cvConfig = createCVConfig();
+
+    eventService.sendServiceDeleteEvent(cvConfig);
+
+    ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
+
+    verify(eventProducer, times(1)).send(argumentCaptor.capture());
+
+    DeleteSetupUsageDTO deleteSetupUsageDTO = DeleteSetupUsageDTO.parseFrom(argumentCaptor.getValue().getData());
+
+    assertThat(deleteSetupUsageDTO).isNotNull();
+    assertThat(deleteSetupUsageDTO.getAccountIdentifier()).isEqualTo(cvConfig.getAccountId());
+    assertThat(deleteSetupUsageDTO.getReferredByEntityFQN())
+        .isEqualTo(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(cvConfig.getAccountId(),
+            cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier(), cvConfig.getIdentifier()));
+    assertThat(deleteSetupUsageDTO.getReferredEntityFQN())
+        .isEqualTo(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(cvConfig.getAccountId(),
+            cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier(), cvConfig.getServiceIdentifier()));
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldSendEnvironmentCreateEvent() throws ProducerShutdownException, InvalidProtocolBufferException {
+    CVConfig cvConfig = createCVConfig();
+
+    IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(cvConfig.getEnvIdentifier(),
+        cvConfig.getAccountId(), cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier());
+
+    String accountIdentifier = generateUuid();
+    String orgIdentifier = generateUuid();
+    String projectIdentifier = generateUuid();
+    String identifier = generateUuid();
+
+    IdentifierRefProtoDTO configReference = IdentifierRefProtoDTO.newBuilder()
+                                                .setAccountIdentifier(StringValue.of(accountIdentifier))
+                                                .setOrgIdentifier(StringValue.of(orgIdentifier))
+                                                .setProjectIdentifier(StringValue.of(projectIdentifier))
+                                                .setIdentifier(StringValue.of(identifier))
+                                                .build();
+
+    when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(cvConfig.getAccountId(), cvConfig.getOrgIdentifier(),
+             cvConfig.getProjectIdentifier(), cvConfig.getIdentifier()))
+        .thenReturn(configReference);
+
+    when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(identifierRef.getAccountIdentifier(),
+             identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier()))
+        .thenReturn(configReference);
+
+    eventService.sendEnvironmentCreateEvent(cvConfig);
+
+    ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
+
+    verify(eventProducer, times(1)).send(argumentCaptor.capture());
+
+    EntitySetupUsageCreateDTO entityReferenceDTO =
+        EntitySetupUsageCreateDTO.parseFrom(argumentCaptor.getValue().getData());
+
+    assertThat(entityReferenceDTO).isNotNull();
+    assertThat(entityReferenceDTO.getReferredEntity().getType().toString()).isEqualTo(ENVIRONMENT.name());
+    assertThat(entityReferenceDTO.getReferredByEntity().getType().toString()).isEqualTo(CV_CONFIG.name());
+    assertThat(entityReferenceDTO.getAccountIdentifier()).isEqualTo(cvConfig.getAccountId());
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldSendEnvironmentDeleteEvent() throws ProducerShutdownException, InvalidProtocolBufferException {
+    CVConfig cvConfig = createCVConfig();
+
+    eventService.sendEnvironmentDeleteEvent(cvConfig);
+
+    ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
+
+    verify(eventProducer, times(1)).send(argumentCaptor.capture());
+
+    DeleteSetupUsageDTO deleteSetupUsageDTO = DeleteSetupUsageDTO.parseFrom(argumentCaptor.getValue().getData());
+
+    assertThat(deleteSetupUsageDTO).isNotNull();
+    assertThat(deleteSetupUsageDTO.getAccountIdentifier()).isEqualTo(cvConfig.getAccountId());
+    assertThat(deleteSetupUsageDTO.getReferredByEntityFQN())
+        .isEqualTo(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(cvConfig.getAccountId(),
+            cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier(), cvConfig.getIdentifier()));
+    assertThat(deleteSetupUsageDTO.getReferredEntityFQN())
+        .isEqualTo(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(cvConfig.getAccountId(),
+            cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier(), cvConfig.getEnvIdentifier()));
   }
 
   private CVConfig createCVConfig() {
