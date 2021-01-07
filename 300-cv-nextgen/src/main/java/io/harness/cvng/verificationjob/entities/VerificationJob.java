@@ -170,6 +170,14 @@ public abstract class VerificationJob
     return envIdentifier.getValue();
   }
 
+  public RuntimeParameter getEnvIdentifierRuntimeParam() {
+    return envIdentifier;
+  }
+
+  public RuntimeParameter getServiceIdentifierRuntimeParam() {
+    return serviceIdentifier;
+  }
+
   public abstract void resolveJobParams(Map<String, String> runtimeParameters);
   public VerificationJob resolveAdditionsFields(VerificationJobInstanceService verificationJobInstanceService) {
     // no-op by default. Designed to override.

@@ -5,13 +5,16 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.verificationjob.beans.Sensitivity;
 import io.harness.cvng.verificationjob.beans.TestVerificationJobDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
@@ -19,24 +22,32 @@ import io.harness.cvng.verificationjob.beans.VerificationJobType;
 import io.harness.cvng.verificationjob.entities.HealthVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
+import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
+import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.List;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 public class VerificationJobServiceImplTest extends CvNextGenTest {
+  @Mock private NextGenService nextGenService;
   @Inject private VerificationJobService verificationJobService;
   private String identifier;
   private String accountId;
   @Before
-  public void setup() {
+  public void setup() throws IllegalAccessException {
+    MockitoAnnotations.initMocks(this);
     identifier = "test-verification-harness";
     accountId = generateUuid();
+    FieldUtils.writeField(verificationJobService, "nextGenService", nextGenService, true);
   }
 
   @Test
@@ -129,9 +140,12 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testList_notEmpty() {
+  public void testList_notEmpty_FilterByVerificationJobNameOnly() {
     VerificationJobDTO verificationJobDTO = createDTOWithRuntimeParams();
     verificationJobService.upsert(accountId, verificationJobDTO);
+
+    MockFilterByEnvAndServiceResponsesDTOs(verificationJobDTO);
+
     List<VerificationJobDTO> verificationJobDTOList = verificationJobService
                                                           .list(accountId, verificationJobDTO.getProjectIdentifier(),
                                                               verificationJobDTO.getOrgIdentifier(), 0, 10, "job-Name")
@@ -157,6 +171,78 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     assertThat(verificationJobDTOList.size()).isEqualTo(0);
   }
 
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testList_notEmpty_FilterByVerificationAndEnvAndServicesJobNames() {
+    VerificationJobDTO verificationJobDTO = createDTOWithoutRuntimeParams();
+    verificationJobService.upsert(accountId, verificationJobDTO);
+
+    MockFilterByEnvAndServiceResponsesDTOs(verificationJobDTO);
+
+    List<VerificationJobDTO> verificationJobDTOList = verificationJobService
+                                                          .list(accountId, verificationJobDTO.getProjectIdentifier(),
+                                                              verificationJobDTO.getOrgIdentifier(), 0, 10, "job-Name")
+                                                          .getContent();
+
+    assertThat(verificationJobDTOList).isNotNull();
+    assertThat(verificationJobDTOList.size()).isEqualTo(1);
+
+    assertThat(verificationJobDTOList.get(0).getIdentifier()).isEqualTo("test-verification-harness");
+    assertThat(verificationJobDTOList.get(0).getJobName()).isEqualTo("job-Name");
+
+    // With filter call
+    verificationJobDTOList = verificationJobService
+                                 .list(accountId, verificationJobDTO.getProjectIdentifier(),
+                                     verificationJobDTO.getOrgIdentifier(), 0, 10, "job-")
+                                 .getContent();
+    assertThat(verificationJobDTOList.size()).isEqualTo(1);
+
+    verificationJobDTOList = verificationJobService
+                                 .list(accountId, verificationJobDTO.getProjectIdentifier(),
+                                     verificationJobDTO.getOrgIdentifier(), 0, 10, "qwert")
+                                 .getContent();
+    assertThat(verificationJobDTOList.size()).isEqualTo(0);
+
+    // With filter call Environment name
+    verificationJobDTOList = verificationJobService
+                                 .list(accountId, verificationJobDTO.getProjectIdentifier(),
+                                     verificationJobDTO.getOrgIdentifier(), 0, 10, "testEnv")
+                                 .getContent();
+    assertThat(verificationJobDTOList.size()).isEqualTo(1);
+
+    // With filter call Service name
+    verificationJobDTOList = verificationJobService
+                                 .list(accountId, verificationJobDTO.getProjectIdentifier(),
+                                     verificationJobDTO.getOrgIdentifier(), 0, 10, "testSer")
+                                 .getContent();
+    assertThat(verificationJobDTOList.size()).isEqualTo(1);
+  }
+
+  private void MockFilterByEnvAndServiceResponsesDTOs(VerificationJobDTO verificationJobDTO) {
+    EnvironmentResponseDTO environmentResponseDTO = EnvironmentResponseDTO.builder()
+                                                        .accountId(accountId)
+                                                        .projectIdentifier(verificationJobDTO.getProjectIdentifier())
+                                                        .orgIdentifier(verificationJobDTO.getOrgIdentifier())
+                                                        .name(verificationJobDTO.getEnvIdentifier())
+                                                        .build();
+
+    ServiceResponseDTO serviceResponseDTO = ServiceResponseDTO.builder()
+                                                .accountId(accountId)
+                                                .projectIdentifier(verificationJobDTO.getProjectIdentifier())
+                                                .orgIdentifier(verificationJobDTO.getOrgIdentifier())
+                                                .name(verificationJobDTO.getServiceIdentifier())
+                                                .build();
+
+    when(nextGenService.getEnvironment(verificationJobDTO.getEnvIdentifier(), accountId,
+             verificationJobDTO.getOrgIdentifier(), verificationJobDTO.getProjectIdentifier()))
+        .thenReturn(environmentResponseDTO);
+
+    when(nextGenService.getService(verificationJobDTO.getServiceIdentifier(), accountId,
+             verificationJobDTO.getOrgIdentifier(), verificationJobDTO.getProjectIdentifier()))
+        .thenReturn(serviceResponseDTO);
+  }
+
   private VerificationJobDTO createDTO() {
     TestVerificationJobDTO testVerificationJobDTO = new TestVerificationJobDTO();
     testVerificationJobDTO.setIdentifier(identifier);
@@ -180,6 +266,15 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     testVerificationJobDTO.setJobName("job-Name");
     return testVerificationJobDTO;
   }
+
+  private VerificationJobDTO createDTOWithoutRuntimeParams() {
+    TestVerificationJobDTO testVerificationJobDTO = (TestVerificationJobDTO) createDTO();
+    testVerificationJobDTO.setEnvIdentifier("testEnv");
+    testVerificationJobDTO.setServiceIdentifier("testSer");
+    testVerificationJobDTO.setJobName("job-Name");
+    return testVerificationJobDTO;
+  }
+
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
