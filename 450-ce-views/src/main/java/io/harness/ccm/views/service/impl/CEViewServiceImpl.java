@@ -1,7 +1,7 @@
 package io.harness.ccm.views.service.impl;
-
 import io.harness.ccm.views.dao.CEReportScheduleDao;
 import io.harness.ccm.views.dao.CEViewDao;
+import io.harness.ccm.views.dto.ViewTimeRangeDto;
 import io.harness.ccm.views.entities.CEReportSchedule;
 import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.entities.ViewChartType;
@@ -16,11 +16,21 @@ import io.harness.ccm.views.entities.ViewTimeRange;
 import io.harness.ccm.views.entities.ViewTimeRangeType;
 import io.harness.ccm.views.entities.ViewVisualization;
 import io.harness.ccm.views.graphql.QLCEView;
+import io.harness.ccm.views.graphql.QLCEViewAggregateOperation;
+import io.harness.ccm.views.graphql.QLCEViewAggregation;
 import io.harness.ccm.views.graphql.QLCEViewField;
+import io.harness.ccm.views.graphql.QLCEViewFilterWrapper;
+import io.harness.ccm.views.graphql.QLCEViewMetadataFilter;
+import io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator;
+import io.harness.ccm.views.graphql.QLCEViewTrendInfo;
+import io.harness.ccm.views.helper.ViewFilterBuilderHelper;
+import io.harness.ccm.views.helper.ViewTimeRangeHelper;
 import io.harness.ccm.views.service.CEViewService;
 import io.harness.ccm.views.service.ViewCustomFieldService;
+import io.harness.ccm.views.service.ViewsBillingService;
 import io.harness.exception.InvalidRequestException;
 
+import com.google.cloud.bigquery.BigQuery;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
@@ -35,7 +45,10 @@ import lombok.extern.slf4j.Slf4j;
 public class CEViewServiceImpl implements CEViewService {
   @Inject private CEViewDao ceViewDao;
   @Inject private CEReportScheduleDao ceReportScheduleDao;
+  @Inject private ViewsBillingService viewsBillingService;
   @Inject private ViewCustomFieldService viewCustomFieldService;
+  @Inject private ViewTimeRangeHelper viewTimeRangeHelper;
+  @Inject private ViewFilterBuilderHelper viewFilterBuilderHelper;
 
   private static final String VIEW_NAME_DUPLICATE_EXCEPTION = "View with given name already exists";
   private static final String VIEW_LIMIT_REACHED_EXCEPTION = "Maximum allowed custom views limit(50) has been reached";
@@ -126,6 +139,29 @@ public class CEViewServiceImpl implements CEViewService {
   }
 
   @Override
+  public CEView updateTotalCost(CEView ceView, BigQuery bigQuery, String cloudProviderTableName) {
+    List<QLCEViewAggregation> totalCostAggregationFunction = Collections.singletonList(
+        QLCEViewAggregation.builder().columnName("cost").operationType(QLCEViewAggregateOperation.SUM).build());
+    List<QLCEViewFilterWrapper> filters = new ArrayList<>();
+    filters.add(
+        QLCEViewFilterWrapper.builder()
+            .viewMetadataFilter(QLCEViewMetadataFilter.builder().viewId(ceView.getUuid()).isPreview(false).build())
+            .build());
+    ViewTimeRange viewTimeRange = ceView.getViewTimeRange();
+    ViewTimeRangeDto startEndTime = viewTimeRangeHelper.getStartEndTime(viewTimeRange);
+    filters.add(
+        viewFilterBuilderHelper.getViewTimeFilter(startEndTime.getStartTime(), QLCEViewTimeFilterOperator.AFTER));
+    filters.add(
+        viewFilterBuilderHelper.getViewTimeFilter(startEndTime.getEndTime(), QLCEViewTimeFilterOperator.BEFORE));
+
+    QLCEViewTrendInfo trendData =
+        viewsBillingService.getTrendStatsData(bigQuery, filters, totalCostAggregationFunction, cloudProviderTableName);
+    double totalCost = trendData.getValue().doubleValue();
+    log.info("Total cost of view {}", totalCost);
+    return ceViewDao.updateTotalCost(ceView.getUuid(), ceView.getAccountId(), totalCost);
+  }
+
+  @Override
   public boolean delete(String uuid, String accountId) {
     return ceViewDao.delete(uuid, accountId);
   }
@@ -163,5 +199,10 @@ public class CEViewServiceImpl implements CEViewService {
                                  .build());
     }
     return graphQLViewObjList;
+  }
+
+  @Override
+  public List<CEView> getViewByState(String accountId, ViewState viewState) {
+    return ceViewDao.findByAccountIdAndState(accountId, viewState);
   }
 }
