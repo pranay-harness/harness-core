@@ -37,6 +37,7 @@ import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.shell.AccessType;
 import io.harness.shell.BaseScriptExecutor;
 import io.harness.shell.ScriptType;
 
@@ -44,7 +45,6 @@ import software.wings.WingsBaseTest;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
-import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.HostConnectionAttributes.Builder;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;

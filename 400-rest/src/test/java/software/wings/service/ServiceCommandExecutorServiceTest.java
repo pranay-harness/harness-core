@@ -3,8 +3,8 @@ package software.wings.service;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.SAHIL;
+import static io.harness.shell.AccessType.USER_PASSWORD;
 
-import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;

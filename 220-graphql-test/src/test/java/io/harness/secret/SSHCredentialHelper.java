@@ -8,11 +8,13 @@ import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
 import io.harness.generator.SecretGenerator;
 import io.harness.scm.SecretName;
+import io.harness.shell.AccessType;
+import io.harness.shell.AuthenticationScheme;
+import io.harness.shell.KerberosConfig;
 
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.HostConnectionAttributes;
-import software.wings.beans.KerberosConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingVariableTypes;
@@ -79,7 +81,7 @@ public class SSHCredentialHelper {
     final String secretId = secretGenerator.ensureStored(owners, SecretName.builder().value("pcf_password").build());
     HostConnectionAttributes settingValue =
         HostConnectionAttributes.Builder.aHostConnectionAttributes()
-            .withAccessType(HostConnectionAttributes.AccessType.KERBEROS)
+            .withAccessType(AccessType.KERBEROS)
             .withUserName("userName")
             .withSshPort(22)
             .withConnectionType(HostConnectionAttributes.ConnectionType.SSH)
@@ -90,7 +92,7 @@ public class SSHCredentialHelper {
             .withKeyPath("keyPath")
             .withKeyless(false)
             .withPassphrase(secretId.toCharArray())
-            .withAuthenticationScheme(HostConnectionAttributes.AuthenticationScheme.SSH_KEY)
+            .withAuthenticationScheme(AuthenticationScheme.SSH_KEY)
             .build();
     settingValue.setSettingType(SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES);
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()

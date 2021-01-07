@@ -17,9 +17,9 @@ import static org.mockito.Mockito.when;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
+import io.harness.shell.AuthenticationScheme;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.HostConnectionAttributes.AuthenticationScheme;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
 import software.wings.beans.trigger.WebhookSource.GitHubEventType;

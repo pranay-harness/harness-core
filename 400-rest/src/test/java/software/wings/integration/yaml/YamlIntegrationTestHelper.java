@@ -20,6 +20,7 @@ import io.harness.exception.GitConnectionDelegateException;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.shell.AccessType;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
@@ -29,7 +30,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
-import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.HostConnectionAttributes.ConnectionType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;

@@ -1,8 +1,8 @@
 package io.harness.cdng.secrets.tasks;
 
-import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.KERBEROS;
-import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.SSH_KEY;
-import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
+import static io.harness.shell.AuthenticationScheme.KERBEROS;
+import static io.harness.shell.AuthenticationScheme.SSH_KEY;
+import static io.harness.shell.SshSessionConfig.Builder.aSshSessionConfig;
 
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -22,12 +22,11 @@ import io.harness.ng.core.dto.secrets.SSHPasswordCredentialDTO;
 import io.harness.ng.core.dto.secrets.TGTKeyTabFilePathSpecDTO;
 import io.harness.ng.core.dto.secrets.TGTPasswordSpecDTO;
 import io.harness.security.encryption.SecretDecryptionService;
-
-import software.wings.beans.HostConnectionAttributes.AccessType;
-import software.wings.beans.KerberosConfig;
-import software.wings.beans.KerberosConfig.KerberosConfigBuilder;
-import software.wings.core.ssh.executors.SshSessionConfig;
-import software.wings.core.ssh.executors.SshSessionFactory;
+import io.harness.shell.AccessType;
+import io.harness.shell.KerberosConfig;
+import io.harness.shell.KerberosConfig.KerberosConfigBuilder;
+import io.harness.shell.SshSessionConfig;
+import io.harness.shell.SshSessionFactory;
 
 import com.google.inject.Inject;
 import com.jcraft.jsch.JSchException;

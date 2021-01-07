@@ -1,11 +1,11 @@
 package software.wings.service.impl;
 
 import static io.harness.exception.ExceptionUtils.getMessage;
+import static io.harness.shell.AuthenticationScheme.KERBEROS;
+import static io.harness.shell.SshSessionFactory.generateTGTUsingSshConfig;
+import static io.harness.shell.SshSessionFactory.getSSHSession;
 
-import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.KERBEROS;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
-import static software.wings.core.ssh.executors.SshSessionFactory.generateTGTUsingSshConfig;
-import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 import static software.wings.utils.SshHelperUtils.createSshSessionConfig;
 
 import io.harness.exception.InvalidRequestException;
@@ -21,13 +21,14 @@ import io.harness.git.model.GitBaseRequest.GitBaseRequestBuilder;
 import io.harness.git.model.GitFileChange;
 import io.harness.git.model.JgitSshAuthRequest;
 import io.harness.git.model.PushResultGit;
+import io.harness.logging.NoopExecutionCallback;
+import io.harness.shell.SshSessionConfig;
 
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.GitOperationContext;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.command.NoopExecutionCallback;
 import software.wings.beans.yaml.GitCommitAndPushResult;
 import software.wings.beans.yaml.GitCommitRequest;
 import software.wings.beans.yaml.GitCommitResult;
@@ -36,7 +37,6 @@ import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.GitFilesBetweenCommitsRequest;
 import software.wings.beans.yaml.GitPushResult;
 import software.wings.beans.yaml.GitPushResult.RefUpdate;
-import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.service.impl.yaml.GitClientImpl;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.yaml.GitClient;

@@ -1,7 +1,8 @@
 package software.wings.delegatetasks.validation.capabilitycheck;
 
-import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
-import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
+import static io.harness.shell.SshSessionConfig.Builder.aSshSessionConfig;
+import static io.harness.shell.SshSessionFactory.getSSHSession;
+
 import static software.wings.utils.SshHelperUtils.populateBuilderWithCredentials;
 
 import static java.time.Duration.ofSeconds;
@@ -13,12 +14,12 @@ import io.harness.delegate.beans.executioncapability.CapabilityResponse.Capabili
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.executioncapability.CapabilityCheck;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.shell.SshSessionConfig;
 
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.SettingAttribute;
-import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
 import software.wings.service.intfc.security.EncryptionService;
 

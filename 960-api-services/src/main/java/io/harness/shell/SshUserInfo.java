@@ -1,4 +1,4 @@
-package software.wings.core.ssh.executors;
+package io.harness.shell;
 
 import com.jcraft.jsch.UIKeyboardInteractive;
 import com.jcraft.jsch.UserInfo;

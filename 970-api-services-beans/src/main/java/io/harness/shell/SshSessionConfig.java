@@ -1,12 +1,8 @@
-package software.wings.core.ssh.executors;
+package io.harness.shell;
 
 import io.harness.encryption.Encrypted;
-import io.harness.shell.ScriptExecutionContext;
 
 import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.HostConnectionAttributes.AccessType;
-import software.wings.beans.HostConnectionAttributes.AuthenticationScheme;
-import software.wings.beans.KerberosConfig;
 import software.wings.settings.SettingVariableTypes;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

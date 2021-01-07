@@ -5,10 +5,10 @@ import static io.harness.generator.SettingGenerator.Settings.GITHUB_TEST_CONNECT
 import static io.harness.generator.SettingGenerator.Settings.TERRAFORM_CITY_GIT_REPO;
 import static io.harness.generator.SettingGenerator.Settings.TERRAFORM_MAIN_GIT_AC;
 import static io.harness.generator.SettingGenerator.Settings.TERRAFORM_MAIN_GIT_REPO;
+import static io.harness.shell.AccessType.KEY;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;

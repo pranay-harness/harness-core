@@ -31,6 +31,8 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.shell.AccessType;
+import io.harness.shell.AuthenticationScheme;
 import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.annotation.EncryptableSetting;
@@ -430,8 +432,7 @@ public class SettingValidationService {
 
   private void validateHostConnectionAttributes(HostConnectionAttributes hostConnectionAttributes) {
     if (hostConnectionAttributes.getAuthenticationScheme() != null
-        && hostConnectionAttributes.getAuthenticationScheme()
-            == HostConnectionAttributes.AuthenticationScheme.SSH_KEY) {
+        && hostConnectionAttributes.getAuthenticationScheme() == AuthenticationScheme.SSH_KEY) {
       if (isEmpty(hostConnectionAttributes.getUserName())) {
         throw new InvalidRequestException("Username field is mandatory in SSH Configuration", USER);
       }
@@ -441,7 +442,7 @@ public class SettingValidationService {
         }
       } else {
         if (hostConnectionAttributes.getAccessType() != null
-            && hostConnectionAttributes.getAccessType() == HostConnectionAttributes.AccessType.USER_PASSWORD) {
+            && hostConnectionAttributes.getAccessType() == AccessType.USER_PASSWORD) {
           if (isEmpty(hostConnectionAttributes.getSshPassword())) {
             throw new InvalidRequestException("Password field is mandatory in SSH Configuration", USER);
           }

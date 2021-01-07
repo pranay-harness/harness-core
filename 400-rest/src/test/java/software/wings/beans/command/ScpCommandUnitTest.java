@@ -38,6 +38,7 @@ import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.shell.AccessType;
 import io.harness.shell.BaseScriptExecutor;
 
 import software.wings.WingsBaseTest;
@@ -119,7 +120,7 @@ public class ScpCommandUnitTest extends WingsBaseTest {
   private SettingAttribute hostConnectionAttributes =
       aSettingAttribute()
           .withValue(HostConnectionAttributes.Builder.aHostConnectionAttributes()
-                         .withAccessType(HostConnectionAttributes.AccessType.USER_PASSWORD)
+                         .withAccessType(AccessType.USER_PASSWORD)
                          .withAccountId(WingsTestConstants.ACCOUNT_ID)
                          .build())
           .build();

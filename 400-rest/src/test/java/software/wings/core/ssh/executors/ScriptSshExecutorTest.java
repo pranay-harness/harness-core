@@ -9,6 +9,8 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
+import io.harness.shell.ScriptSshExecutor;
+import io.harness.shell.SshSessionConfig;
 
 import software.wings.delegatetasks.DelegateFileManager;
 

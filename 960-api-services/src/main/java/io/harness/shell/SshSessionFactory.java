@@ -1,14 +1,13 @@
-package software.wings.core.ssh.executors;
+package io.harness.shell;
 
-import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
-import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.KERBEROS;
-import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
+import static io.harness.shell.AccessType.USER_PASSWORD;
+import static io.harness.shell.AuthenticationScheme.KERBEROS;
+import static io.harness.shell.SshSessionConfig.Builder.aSshSessionConfig;
 
 import io.harness.logging.LogCallback;
+import io.harness.logging.NoopExecutionCallback;
 import io.harness.security.EncryptionUtils;
 import io.harness.ssh.SshHelperUtils;
-
-import software.wings.beans.command.NoopExecutionCallback;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -129,7 +128,7 @@ public class SshSessionFactory {
   }
 
   @VisibleForTesting
-  static char[] getCopyOfKey(SshSessionConfig config) {
+  public static char[] getCopyOfKey(SshSessionConfig config) {
     return Arrays.copyOf(config.getKey(), config.getKey().length);
   }
 
@@ -145,7 +144,7 @@ public class SshSessionFactory {
     }
   }
 
-  protected static String getKeyPath(SshSessionConfig config) {
+  public static String getKeyPath(SshSessionConfig config) {
     String userhome = System.getProperty("user.home");
     String keyPath = userhome + File.separator + ".ssh" + File.separator + "id_rsa";
     if (config.getKeyPath() != null) {

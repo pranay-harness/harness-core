@@ -5,13 +5,13 @@ import static io.harness.beans.SweepingOutputInstance.Scope.WORKFLOW;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.PRABU;
+import static io.harness.shell.AccessType.KEY;
 import static io.harness.shell.ScriptType.BASH;
 import static io.harness.shell.ScriptType.POWERSHELL;
 
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
-import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.command.Command.Builder.aCommand;

@@ -4,10 +4,10 @@ import static io.harness.git.model.ChangeType.RENAME;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.YOGESH;
+import static io.harness.shell.SshSessionConfig.Builder.aSshSessionConfig;
+import static io.harness.shell.SshSessionFactory.getSSHSession;
 
 import static software.wings.beans.yaml.GitFileChange.Builder.aGitFileChange;
-import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
-import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import static java.util.Arrays.asList;
@@ -29,6 +29,7 @@ import io.harness.filesystem.FileIo;
 import io.harness.git.model.ChangeType;
 import io.harness.git.model.GitRepositoryType;
 import io.harness.rule.Owner;
+import io.harness.shell.SshSessionConfig;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
@@ -37,7 +38,6 @@ import software.wings.beans.yaml.GitCommitRequest;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFetchFilesRequest;
 import software.wings.beans.yaml.GitFileChange;
-import software.wings.core.ssh.executors.SshSessionConfig;
 
 import com.google.inject.Inject;
 import com.jcraft.jsch.JSch;

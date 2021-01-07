@@ -5,8 +5,7 @@ import static io.harness.eraro.ErrorCode.ERROR_IN_GETTING_CHANNEL_STREAMS;
 import static io.harness.eraro.ErrorCode.INVALID_EXECUTION_ID;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
-
-import static software.wings.utils.SshHelperUtils.normalizeError;
+import static io.harness.shell.SshHelperUtils.normalizeError;
 
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -16,6 +15,8 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.shell.AbstractScriptExecutor;
 import io.harness.shell.ScriptExecutionContext;
+import io.harness.shell.SshSessionConfig;
+import io.harness.shell.SshSessionManager;
 
 import software.wings.delegatetasks.DelegateFileManager;
 

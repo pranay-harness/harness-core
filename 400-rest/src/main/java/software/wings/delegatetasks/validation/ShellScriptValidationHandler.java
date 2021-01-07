@@ -2,8 +2,7 @@ package software.wings.delegatetasks.validation;
 
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.K8sConstants.HARNESS_KUBE_CONFIG_PATH;
-
-import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
+import static io.harness.shell.SshSessionFactory.getSSHSession;
 
 import static java.time.Duration.ofSeconds;
 
@@ -13,15 +12,15 @@ import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
 import io.harness.delegate.task.executioncapability.ProcessExecutorCapabilityCheck;
+import io.harness.logging.NoopExecutionCallback;
 import io.harness.shell.ScriptType;
+import io.harness.shell.SshSessionConfig;
 
 import software.wings.beans.AzureConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.command.NoopExecutionCallback;
 import software.wings.beans.delegation.ShellScriptParameters;
-import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.core.winrm.executors.WinRmSession;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.service.impl.ContainerServiceParams;

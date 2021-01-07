@@ -41,8 +41,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.serializer.JsonUtils;
+import io.harness.shell.AuthenticationScheme;
 
-import software.wings.beans.HostConnectionAttributes.AuthenticationScheme;
 import software.wings.beans.trigger.PayloadSource.Type;
 import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookParameters;

@@ -4,8 +4,8 @@ import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.AR
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.shell.AccessType.USER_PASSWORD;
 
-import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;

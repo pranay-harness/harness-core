@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+import io.harness.shell.AuthenticationScheme;
 
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.BugsnagConfig;
@@ -15,7 +16,6 @@ import software.wings.beans.DatadogConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.GitConfig;
-import software.wings.beans.HostConnectionAttributes.AuthenticationScheme;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;

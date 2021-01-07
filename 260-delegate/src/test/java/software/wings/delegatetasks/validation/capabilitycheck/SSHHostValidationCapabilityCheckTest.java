@@ -16,6 +16,8 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.rule.Owner;
+import io.harness.shell.AccessType;
+import io.harness.shell.SshSessionConfig;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.BastionConnectionAttributes;
@@ -24,7 +26,6 @@ import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
-import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.delegatetasks.validation.capabilities.BasicValidationInfo;
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
 import software.wings.service.intfc.security.EncryptionService;
@@ -47,7 +48,7 @@ public class SSHHostValidationCapabilityCheckTest extends WingsBaseTest {
   private SettingAttribute hostConnectionAttributes =
       aSettingAttribute()
           .withValue(HostConnectionAttributes.Builder.aHostConnectionAttributes()
-                         .withAccessType(HostConnectionAttributes.AccessType.USER_PASSWORD)
+                         .withAccessType(AccessType.USER_PASSWORD)
                          .withAccountId(WingsTestConstants.ACCOUNT_ID)
                          .build())
           .build();
@@ -55,7 +56,7 @@ public class SSHHostValidationCapabilityCheckTest extends WingsBaseTest {
   private SettingAttribute bastionConnectionAttributes =
       aSettingAttribute()
           .withValue(BastionConnectionAttributes.Builder.aBastionConnectionAttributes()
-                         .withAccessType(HostConnectionAttributes.AccessType.USER_PASSWORD)
+                         .withAccessType(AccessType.USER_PASSWORD)
                          .withAccountId(WingsTestConstants.ACCOUNT_ID)
                          .build())
           .build();

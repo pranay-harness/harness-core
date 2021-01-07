@@ -1,11 +1,12 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.HostConnectionAttributes.AccessType;
-import static software.wings.beans.HostConnectionAttributes.AccessType.KERBEROS;
-import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
-import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
+import static io.harness.shell.AccessType.KERBEROS;
+import static io.harness.shell.AccessType.KEY;
+import static io.harness.shell.AccessType.USER_PASSWORD;
 
 import static java.util.stream.Collectors.groupingBy;
+
+import io.harness.shell.AccessType;
 
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;

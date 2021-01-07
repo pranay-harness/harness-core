@@ -1,13 +1,12 @@
-package software.wings.core.ssh.executors;
+package io.harness.shell;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_EXECUTION_ID;
 import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
+import static io.harness.shell.SshHelperUtils.normalizeError;
 import static io.harness.threading.Morpheus.sleep;
-
-import static software.wings.utils.SshHelperUtils.normalizeError;
 
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -18,12 +17,7 @@ import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.Misc;
-import io.harness.shell.AbstractScriptExecutor;
-import io.harness.shell.ExecuteCommandResponse;
 import io.harness.shell.ExecuteCommandResponse.ExecuteCommandResponseBuilder;
-import io.harness.shell.ScriptExecutionContext;
-import io.harness.shell.ScriptType;
-import io.harness.shell.ShellExecutionData;
 import io.harness.shell.ShellExecutionData.ShellExecutionDataBuilder;
 import io.harness.stream.BoundedInputStream;
 
@@ -356,7 +350,7 @@ public class ScriptSshExecutor extends AbstractScriptExecutor {
   }
 
   @VisibleForTesting
-  String resolveEnvVarsInPath(String directoryPath) {
+  public String resolveEnvVarsInPath(String directoryPath) {
     String regex = "(\\$[A-Za-z_-])\\w+";
     Pattern pattern = Pattern.compile(regex);
     Matcher matcher = pattern.matcher(directoryPath);

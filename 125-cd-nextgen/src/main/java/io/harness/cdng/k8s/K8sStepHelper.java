@@ -64,6 +64,7 @@ import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
+import io.harness.shell.AuthenticationScheme;
 import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
 import io.harness.utils.IdentifierRefHelper;
@@ -71,7 +72,6 @@ import io.harness.validation.Validator;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.GitConfig;
-import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.LogHelper;
 import software.wings.beans.SettingAttribute;
@@ -177,7 +177,7 @@ public class K8sStepHelper {
                 // previous required uuid, this has to be changed according to the framework
                 /* .encryptedPassword(SecretRefHelper.getSecretConfigString())*/
                 .branch(gitConfigDTO.getBranchName())
-                .authenticationScheme(HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD)
+                .authenticationScheme(AuthenticationScheme.HTTP_PASSWORD)
                 .build();
         builder.withValue(gitConfig);
         break;

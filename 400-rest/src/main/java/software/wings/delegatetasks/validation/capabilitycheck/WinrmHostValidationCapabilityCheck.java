@@ -9,10 +9,10 @@ import io.harness.delegate.beans.executioncapability.CapabilityResponse.Capabili
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.executioncapability.CapabilityCheck;
 import io.harness.logging.LogCallback;
+import io.harness.logging.NoopExecutionCallback;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.WinRmConnectionAttributes;
-import software.wings.beans.command.NoopExecutionCallback;
 import software.wings.core.winrm.executors.WinRmSession;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.delegatetasks.validation.capabilities.BasicValidationInfo;

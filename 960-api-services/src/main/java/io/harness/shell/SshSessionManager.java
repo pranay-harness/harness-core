@@ -1,18 +1,18 @@
-package software.wings.core.ssh.executors;
+package io.harness.shell;
 
 import static io.harness.eraro.ErrorCode.UNKNOWN_EXECUTOR_TYPE_ERROR;
-
-import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SUDO_APP_USER;
-import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SU_APP_USER;
-import static software.wings.core.ssh.executors.ExecutorType.BASTION_HOST;
-import static software.wings.core.ssh.executors.ExecutorType.KEY_AUTH;
-import static software.wings.core.ssh.executors.ExecutorType.PASSWORD_AUTH;
-import static software.wings.utils.SshHelperUtils.normalizeError;
+import static io.harness.shell.AccessType.KEY_SUDO_APP_USER;
+import static io.harness.shell.AccessType.KEY_SU_APP_USER;
+import static io.harness.shell.ExecutorType.BASTION_HOST;
+import static io.harness.shell.ExecutorType.KEY_AUTH;
+import static io.harness.shell.ExecutorType.PASSWORD_AUTH;
+import static io.harness.shell.SshHelperUtils.normalizeError;
 
 import io.harness.exception.WingsException;
 import io.harness.logging.LogCallback;
-
-import software.wings.beans.HostConnectionAttributes;
+import io.harness.shell.AccessType;
+import io.harness.shell.SshSessionConfig;
+import io.harness.shell.SshSessionFactory;
 
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSchException;
@@ -62,8 +62,8 @@ public class SshSessionManager {
       if (config.getBastionHostConfig() != null) {
         config.setExecutorType(BASTION_HOST);
       } else {
-        if (config.getAccessType() == HostConnectionAttributes.AccessType.KEY
-            || config.getAccessType() == KEY_SU_APP_USER || config.getAccessType() == KEY_SUDO_APP_USER) {
+        if (config.getAccessType() == AccessType.KEY || config.getAccessType() == KEY_SU_APP_USER
+            || config.getAccessType() == KEY_SUDO_APP_USER) {
           config.setExecutorType(KEY_AUTH);
         } else {
           config.setExecutorType(PASSWORD_AUTH);

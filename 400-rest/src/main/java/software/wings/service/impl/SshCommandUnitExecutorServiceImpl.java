@@ -19,6 +19,8 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.ExceptionLogger;
 import io.harness.shell.BaseScriptExecutor;
 import io.harness.shell.ShellExecutorConfig;
+import io.harness.shell.SshSessionConfig;
+import io.harness.shell.SshSessionManager;
 
 import software.wings.beans.Log.Builder;
 import software.wings.beans.command.CommandExecutionContext;
@@ -28,8 +30,6 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.core.local.executors.ShellExecutorFactory;
 import software.wings.core.ssh.executors.FileBasedScriptExecutor;
 import software.wings.core.ssh.executors.SshExecutorFactory;
-import software.wings.core.ssh.executors.SshSessionConfig;
-import software.wings.core.ssh.executors.SshSessionManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.utils.SshHelperUtils;
