@@ -29,13 +29,13 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.k8s.K8sGlobalConfigService;
+import io.harness.shell.ScriptProcessExecutor.StringBufferOutputStream;
 
 import software.wings.beans.AwsConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
-import software.wings.core.ssh.executors.ScriptProcessExecutor.StringBufferOutputStream;
 import software.wings.settings.SettingValue;
 
 import com.google.common.annotations.VisibleForTesting;

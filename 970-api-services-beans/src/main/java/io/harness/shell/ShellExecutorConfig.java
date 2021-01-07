@@ -1,8 +1,4 @@
-package software.wings.core.local.executors;
-
-import io.harness.shell.ScriptType;
-
-import software.wings.core.ssh.executors.ScriptExecutionContext;
+package io.harness.shell;
 
 import java.util.Map;
 import lombok.Builder;

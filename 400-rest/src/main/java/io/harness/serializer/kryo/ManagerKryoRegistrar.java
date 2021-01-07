@@ -287,7 +287,6 @@ import software.wings.beans.command.ResizeCommandUnitExecutionData;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.SetupEnvCommandUnit;
 import software.wings.beans.command.ShellCommandExecutionContext;
-import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.command.SshCommandUnit;
 import software.wings.beans.command.TailFilePatternEntry;
 import software.wings.beans.config.ArtifactoryConfig;
@@ -981,7 +980,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ScpCommandUnit.class, 5054);
     kryo.register(SetupEnvCommandUnit.class, 5056);
     kryo.register(ShellCommandExecutionContext.class, 5274);
-    kryo.register(ShellExecutionData.class, 5528);
     kryo.register(SshCommandUnit.class, 5058);
     kryo.register(TailFilePatternEntry.class, 5059);
     kryo.register(ArtifactoryConfig.class, 5018);

@@ -53,6 +53,7 @@ import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.shell.CommandExecutionData;
 import io.harness.shell.ScriptType;
+import io.harness.shell.ShellExecutionData;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 
@@ -154,7 +155,7 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(ImageDetails.class, 5151);
     kryo.register(ContainerInfo.Status.class, 5076);
     kryo.register(ContainerInfo.class, 5075);
-
+    kryo.register(ShellExecutionData.class, 5528);
     kryo.register(K8sPod.class, 7145);
     kryo.register(K8sContainer.class, 7146);
     kryo.register(AuditGlobalContextData.class, 7172);

@@ -6,8 +6,9 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.shell.AbstractScriptExecutor;
+import io.harness.shell.ScriptExecutionContext;
+import io.harness.shell.ShellExecutorConfig;
 
-import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.delegatetasks.DelegateFileManager;
 
 import com.google.inject.Inject;

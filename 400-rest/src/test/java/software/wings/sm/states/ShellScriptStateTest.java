@@ -54,6 +54,7 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
+import io.harness.shell.ShellExecutionData;
 
 import software.wings.WingsBaseTest;
 import software.wings.api.ScriptStateExecutionData;
@@ -64,7 +65,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.command.CommandType;
-import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.beans.template.TemplateUtils;
 import software.wings.common.TemplateExpressionProcessor;

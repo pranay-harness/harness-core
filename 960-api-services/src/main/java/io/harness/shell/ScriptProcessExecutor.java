@@ -1,17 +1,16 @@
-package software.wings.core.ssh.executors;
+package io.harness.shell;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.filesystem.FileIo.deleteFileIfExists;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.k8s.K8sConstants.HARNESS_KUBE_CONFIG_PATH;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
-
-import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
 
 import static com.google.common.collect.Sets.newHashSet;
 import static java.lang.String.format;
@@ -19,14 +18,8 @@ import static java.lang.String.format;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
-import io.harness.shell.AbstractScriptExecutor;
-import io.harness.shell.ExecuteCommandResponse;
 import io.harness.shell.ExecuteCommandResponse.ExecuteCommandResponseBuilder;
-import io.harness.shell.ScriptType;
-
-import software.wings.beans.command.ShellExecutionData;
-import software.wings.beans.command.ShellExecutionData.ShellExecutionDataBuilder;
-import software.wings.core.local.executors.ShellExecutorConfig;
+import io.harness.shell.ShellExecutionData.ShellExecutionDataBuilder;
 
 import com.google.inject.Inject;
 import java.io.BufferedReader;

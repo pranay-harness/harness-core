@@ -21,13 +21,13 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.shell.ExecuteCommandResponse;
+import io.harness.shell.ScriptProcessExecutor;
+import io.harness.shell.ShellExecutionData;
+import io.harness.shell.ShellExecutorConfig;
 
 import software.wings.api.ShellScriptApprovalExecutionData;
 import software.wings.beans.ApprovalDetails.Action;
-import software.wings.beans.command.ShellExecutionData;
-import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.core.local.executors.ShellExecutorFactory;
-import software.wings.core.ssh.executors.ScriptProcessExecutor;
 import software.wings.delegatetasks.DelegateLogService;
 
 import com.google.inject.Inject;

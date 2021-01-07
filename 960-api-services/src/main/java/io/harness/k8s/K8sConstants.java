@@ -88,4 +88,8 @@ public interface K8sConstants {
   String MANIFEST_FILES_DIR = "manifest-files";
 
   String KUBERNETES_CHANGE_CAUSE_ANNOTATION = "kubernetes.io/change-cause";
+  /**
+   * The cloudwatch metric url.
+   */
+  String HARNESS_KUBE_CONFIG_PATH = "HARNESS_KUBE_CONFIG_PATH";
 }
