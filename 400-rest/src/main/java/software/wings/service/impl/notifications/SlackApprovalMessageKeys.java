@@ -49,6 +49,13 @@ public class SlackApprovalMessageKeys {
   // slack-action-message.txt template placeholder keys
   public static final String ACTION = "action";
   public static final String SLACK_USER_ID = "slackUserId";
+  public static final String START_TS_SECS = "START_TS_SECS";
+  public static final String END_TS_SECS = "END_TS_SECS";
+  public static final String EXPIRES_TS_SECS = "EXPIRES_TS_SECS";
+  public static final String START_DATE = "START_DATE";
+  public static final String END_DATE = "END_DATE";
+  public static final String EXPIRES_DATE = "EXPIRES_DATE";
+  public static final String VERB = "VERB";
 
   // Paused Stage name Values
   public static final String PAUSED_STAGE_NAME_DEFAULT = " ";

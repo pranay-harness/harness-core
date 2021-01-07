@@ -33,4 +33,11 @@ public class SlackApprovalParams {
   private String slackUserId;
   private boolean approve;
   private boolean confirmation;
+  private String startTsSecs;
+  private String endTsSecs;
+  private String expiryTsSecs;
+  private String startDate;
+  private String endDate;
+  private String expiryDate;
+  private String verb;
 }

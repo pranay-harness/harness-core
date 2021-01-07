@@ -127,6 +127,13 @@ public class SlackApprovalUtils {
     templateFillers.put(SlackApprovalMessageKeys.ENVIRONMENTS, slackApprovalParams.getEnvironmentsInvolved());
     templateFillers.put(
         SlackApprovalMessageKeys.INFRASTRUCTURE_DEFINITIONS, slackApprovalParams.getInfraDefinitionsInvolved());
+    templateFillers.put(SlackApprovalMessageKeys.START_TS_SECS, slackApprovalParams.getStartTsSecs());
+    templateFillers.put(SlackApprovalMessageKeys.END_TS_SECS, slackApprovalParams.getEndTsSecs());
+    templateFillers.put(SlackApprovalMessageKeys.EXPIRES_TS_SECS, slackApprovalParams.getExpiryTsSecs());
+    templateFillers.put(SlackApprovalMessageKeys.START_DATE, slackApprovalParams.getStartDate());
+    templateFillers.put(SlackApprovalMessageKeys.END_DATE, slackApprovalParams.getEndDate());
+    templateFillers.put(SlackApprovalMessageKeys.EXPIRES_DATE, slackApprovalParams.getExpiryTsSecs());
+    templateFillers.put(SlackApprovalMessageKeys.VERB, slackApprovalParams.getVerb());
     templateFillers.put(SlackApprovalMessageKeys.ARTIFACTS, slackApprovalParams.getArtifactsInvolved());
 
     return createMessageFromTemplate(url, templateFillers);
