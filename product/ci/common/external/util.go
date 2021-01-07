@@ -117,7 +117,7 @@ func GetAccountId() (string, error) {
 func GetOrgId() (string, error) {
 	org, ok := os.LookupEnv(orgIDEnv)
 	if !ok {
-		return "", fmt.Errorf("project ID environment variable not set %s", orgIDEnv)
+		return "", fmt.Errorf("org ID environment variable not set %s", orgIDEnv)
 	}
 	return org, nil
 }

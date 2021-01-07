@@ -15,10 +15,15 @@ import (
 )
 
 const (
-	defaultOffset = "0"
-	defaultLimit  = "100"
-	asc           = "ASC"
-	desc          = "DESC"
+	defaultOffset  = "0"
+	defaultLimit   = "100"
+	asc            = "ASC"
+	desc           = "DESC"
+	writeBatchSize = 1000 // Write this many test cases at a time
+)
+
+var (
+	now = time.Now
 )
 
 // TimeScaleDb is a wrapper on top of a timescale DB connection.
@@ -56,10 +61,10 @@ func constructPsqlInsertStmt(low, high int) string {
 }
 
 // Write writes test cases to DB
-func (tdb *TimeScaleDb) Write(ctx context.Context, table, accountId, orgId, projectId, pipelineId, buildId, stageId, stepId, report string, tests ...*types.TestCase) error {
-	t := time.Now()
+func (tdb *TimeScaleDb) Write(ctx context.Context, table, accountId, orgId, projectId, pipelineId,
+	buildId, stageId, stepId, report string, tests ...*types.TestCase) error {
+	t := now()
 	entries := 19
-	batchSize := 1000 // Make DB call in batches
 	valueStrings := make([]string, 0, len(tests))
 	valueArgs := make([]interface{}, 0, len(tests)*entries)
 	i := 1
@@ -72,7 +77,7 @@ func (tdb *TimeScaleDb) Write(ctx context.Context, table, accountId, orgId, proj
 			test.SystemOut, test.SystemErr)
 		i = i + entries
 		cnt++
-		if cnt%batchSize == 0 {
+		if cnt%writeBatchSize == 0 {
 			stmt := fmt.Sprintf(
 				`
 					INSERT INTO %s
@@ -108,7 +113,8 @@ func (tdb *TimeScaleDb) Write(ctx context.Context, table, accountId, orgId, proj
 }
 
 // Summary provides test case summary by querying the DB
-func (tdb *TimeScaleDb) Summary(ctx context.Context, table, accountId, orgId, projectId, pipelineId, buildId, report string) (types.SummaryResponse, error) {
+func (tdb *TimeScaleDb) Summary(ctx context.Context, table, accountId, orgId, projectId, pipelineId,
+	buildId, report string) (types.SummaryResponse, error) {
 	query := fmt.Sprintf(`
 		SELECT duration_ms, status, name FROM %s WHERE account_id = $1
 		AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND report = $6;`, table)

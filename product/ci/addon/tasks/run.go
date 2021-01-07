@@ -32,6 +32,16 @@ const (
 	cmdExitWaitTime    time.Duration = time.Duration(0)
 )
 
+var (
+	getTIClient   = external.GetTiHTTPClient
+	getOrgId      = external.GetOrgId
+	getProjectId  = external.GetProjectId
+	getPipelineId = external.GetPipelineId
+	getBuildId    = external.GetBuildId
+	getStageId    = external.GetStageId
+	newJunit      = junit.New
+)
+
 // RunTask represents interface to execute a run step
 type RunTask interface {
 	Run(ctx context.Context) (map[string]string, int32, error)
@@ -93,8 +103,10 @@ func (e *runTask) Run(ctx context.Context) (map[string]string, int32, error) {
 			st := time.Now()
 			err = e.collectTestReports(ctx)
 			if err != nil {
+				// If there's an error in collecting reports, we won't retry but
+				// the step will be marked as an error
 				e.log.Errorw("unable to collect test reports", zap.Error(err))
-				continue // Retry if specified
+				break
 			}
 			if len(e.reports) > 0 {
 				e.log.Infow(fmt.Sprintf("collected test reports in %s time", time.Since(st)))
@@ -173,7 +185,7 @@ func (e *runTask) execute(ctx context.Context, retryCount int32) (map[string]str
 	}
 
 	e.log.Infow(
-		"Successfully executed step",
+		"Successfully executed run step",
 		"arguments", cmdToExecute,
 		"output", stepOutput,
 		"elapsed_time_ms", utils.TimeSince(start),
@@ -256,23 +268,23 @@ func (r *runTask) collectTestReports(ctx context.Context) error {
 		var rep testreports.TestReporter
 		var err error
 
-		org, err := external.GetOrgId()
+		org, err := getOrgId()
 		if err != nil {
 			return err
 		}
-		project, err := external.GetProjectId()
+		project, err := getProjectId()
 		if err != nil {
 			return err
 		}
-		pipeline, err := external.GetPipelineId()
+		pipeline, err := getPipelineId()
 		if err != nil {
 			return err
 		}
-		build, err := external.GetBuildId()
+		build, err := getBuildId()
 		if err != nil {
 			return err
 		}
-		stage, err := external.GetStageId()
+		stage, err := getStageId()
 		if err != nil {
 			return err
 		}
@@ -283,7 +295,7 @@ func (r *runTask) collectTestReports(ctx context.Context) error {
 		case pb.Report_UNKNOWN:
 			return errors.New("report type is unknown")
 		case pb.Report_JUNIT:
-			rep = junit.New(report.GetPaths(), r.log)
+			rep = newJunit(report.GetPaths(), r.log)
 			reportStr = "junit"
 		}
 
@@ -294,7 +306,7 @@ func (r *runTask) collectTestReports(ctx context.Context) error {
 		}
 
 		// Create TI service client
-		client, err := external.GetTiHTTPClient()
+		client, err := getTIClient()
 		if err != nil {
 			r.log.Errorw("could not create client to TI service", zap.Error(err))
 			return err
