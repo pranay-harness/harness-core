@@ -13,18 +13,20 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class NGExecutionEventHandlerRegistrar {
-  public Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> getEngineEventHandlers() {
+  public Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> getEngineEventHandlers(
+      boolean remote) {
     Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> engineEventHandlersMap =
         new HashMap<>();
-    engineEventHandlersMap.put(
-        OrchestrationEventType.ORCHESTRATION_START, Sets.newHashSet(PipelineExecutionStartEventHandler.class));
-    engineEventHandlersMap.put(OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE,
-        Sets.newHashSet(PipelineExecutionUpdateEventHandler.class));
-    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
-        engineEventHandlersMap, OrchestrationVisualizationModuleEventHandlerRegistrar.getEngineEventHandlers());
-    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
-        engineEventHandlersMap, OrchestrationStepsModuleEventHandlerRegistrar.getEngineEventHandlers());
-
+    if (!remote) {
+      engineEventHandlersMap.put(
+          OrchestrationEventType.ORCHESTRATION_START, Sets.newHashSet(PipelineExecutionStartEventHandler.class));
+      engineEventHandlersMap.put(OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE,
+          Sets.newHashSet(PipelineExecutionUpdateEventHandler.class));
+      OrchestrationModuleRegistrarHelper.mergeEventHandlers(
+          engineEventHandlersMap, OrchestrationVisualizationModuleEventHandlerRegistrar.getEngineEventHandlers());
+      OrchestrationModuleRegistrarHelper.mergeEventHandlers(
+          engineEventHandlersMap, OrchestrationStepsModuleEventHandlerRegistrar.getEngineEventHandlers());
+    }
     return engineEventHandlersMap;
   }
 }

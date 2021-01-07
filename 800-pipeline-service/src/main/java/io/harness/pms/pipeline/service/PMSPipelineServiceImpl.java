@@ -24,6 +24,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.client.result.UpdateResult;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -168,6 +169,10 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       throw new DuplicateFieldException(format(DUP_KEY_EXP_FORMAT_STRING, pipelineEntity.getIdentifier(),
                                             pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()),
           USER_SRE, ex);
+    } catch (IOException exception) {
+      throw new InvalidRequestException(String.format(
+          "Unknown exception occurred while updating pipeline with id: [%s]. Please contact Harness Support",
+          pipelineEntity.getIdentifier()));
     }
   }
 
@@ -180,19 +185,26 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
 
   @Override
   public PipelineEntity update(PipelineEntity pipelineEntity) {
-    validatePresenceOfRequiredFields(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),
-        pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier());
+    try {
+      validatePresenceOfRequiredFields(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),
+          pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier());
 
-    updatePipelineInfo(pipelineEntity);
-    Criteria criteria = getPipelineEqualityCriteria(pipelineEntity, pipelineEntity.getDeleted());
-    PipelineEntity updateResult = pmsPipelineRepository.update(criteria, pipelineEntity);
-    if (updateResult == null) {
-      throw new InvalidRequestException(format(
-          "Pipeline [%s] under Project[%s], Organization [%s] couldn't be updated or doesn't exist.",
-          pipelineEntity.getIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()));
+      updatePipelineInfo(pipelineEntity);
+
+      Criteria criteria = getPipelineEqualityCriteria(pipelineEntity, pipelineEntity.getDeleted());
+      PipelineEntity updateResult = pmsPipelineRepository.update(criteria, pipelineEntity);
+      if (updateResult == null) {
+        throw new InvalidRequestException(format(
+            "Pipeline [%s] under Project[%s], Organization [%s] couldn't be updated or doesn't exist.",
+            pipelineEntity.getIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()));
+      }
+
+      return updateResult;
+    } catch (IOException exception) {
+      throw new InvalidRequestException(String.format(
+          "Unknown exception occurred while updating pipeline with id: [%s]. Please contact Harness Support",
+          pipelineEntity.getIdentifier()));
     }
-
-    return updateResult;
   }
 
   private Criteria getPipelineEqualityCriteria(@Valid PipelineEntity requestPipeline, boolean deleted) {
@@ -244,18 +256,13 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     return pmsPipelineRepository.findAll(criteria, pageable);
   }
 
-  private void updatePipelineInfo(PipelineEntity pipelineEntity) {
-    try {
-      FilterCreatorMergeServiceResponse filtersAndStageCount =
-          filterCreatorMergeService.getPipelineInfo(pipelineEntity.getYaml());
-      pipelineEntity.setStageCount(filtersAndStageCount.getStageCount());
-      if (isNotEmpty(filtersAndStageCount.getFilters())) {
-        filtersAndStageCount.getFilters().forEach(
-            (key, value) -> pipelineEntity.getFilters().put(key, Document.parse(value)));
-      }
-    } catch (Exception ex) {
-      throw new InvalidRequestException(
-          format("Error happened while creating filters for pipeline: %s", ex.getMessage(), ex));
+  private void updatePipelineInfo(PipelineEntity pipelineEntity) throws IOException {
+    FilterCreatorMergeServiceResponse filtersAndStageCount =
+        filterCreatorMergeService.getPipelineInfo(pipelineEntity.getYaml());
+    pipelineEntity.setStageCount(filtersAndStageCount.getStageCount());
+    if (isNotEmpty(filtersAndStageCount.getFilters())) {
+      filtersAndStageCount.getFilters().forEach(
+          (key, value) -> pipelineEntity.getFilters().put(key, Document.parse(value)));
     }
   }
 

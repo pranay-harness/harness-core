@@ -40,6 +40,7 @@ public class PipelineExecutionSummaryDTO {
   Long endTs;
   Long createdAt;
 
+  int runSequence;
   long successfulStagesCount;
   long runningStagesCount;
   long failedStagesCount;

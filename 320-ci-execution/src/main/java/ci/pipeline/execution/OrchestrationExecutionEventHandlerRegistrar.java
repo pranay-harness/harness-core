@@ -15,17 +15,20 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class OrchestrationExecutionEventHandlerRegistrar {
-  public Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> getEngineEventHandlers() {
+  public Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> getEngineEventHandlers(
+      boolean withPms) {
     Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> engineEventHandlersMap =
         new HashMap<>();
     engineEventHandlersMap.put(OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE,
         Sets.newHashSet(PipelineExecutionUpdateEventHandler.class));
     OrchestrationModuleRegistrarHelper.mergeEventHandlers(
-        engineEventHandlersMap, OrchestrationVisualizationModuleEventHandlerRegistrar.getEngineEventHandlers());
-    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
         engineEventHandlersMap, OrchestrationStepsModuleEventHandlerRegistrar.getEngineEventHandlers());
-    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
-        engineEventHandlersMap, OrchestrationModuleEventHandlerRegistrar.getEngineEventHandlers());
+    if (!withPms) {
+      OrchestrationModuleRegistrarHelper.mergeEventHandlers(
+          engineEventHandlersMap, OrchestrationVisualizationModuleEventHandlerRegistrar.getEngineEventHandlers());
+      OrchestrationModuleRegistrarHelper.mergeEventHandlers(
+          engineEventHandlersMap, OrchestrationModuleEventHandlerRegistrar.getEngineEventHandlers());
+    }
     return engineEventHandlersMap;
   }
 }

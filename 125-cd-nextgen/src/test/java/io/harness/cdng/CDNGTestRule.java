@@ -171,7 +171,7 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
         .engineSteps(NgStepRegistrar.getEngineSteps())
         .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers())
         .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
-        .engineEventHandlersMap(NGExecutionEventHandlerRegistrar.getEngineEventHandlers())
+        .engineEventHandlersMap(NGExecutionEventHandlerRegistrar.getEngineEventHandlers(false))
         .build();
   }
 

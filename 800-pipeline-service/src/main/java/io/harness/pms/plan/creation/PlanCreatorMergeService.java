@@ -13,6 +13,7 @@ import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc.PlanCreationServiceBlockingStub;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
+import io.harness.pms.exception.PmsExceptionUtil;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.utils.CompletableFutures;
 import io.harness.pms.yaml.YamlField;
@@ -20,6 +21,7 @@ import io.harness.pms.yaml.YamlUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import io.grpc.StatusRuntimeException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -83,7 +85,7 @@ public class PlanCreatorMergeService {
   }
 
   private PlanCreationBlobResponse createPlanForDependenciesRecursive(Map<String, PlanCreatorServiceInfo> services,
-      Map<String, YamlFieldBlob> initialDependencies, ExecutionMetadata metadata) {
+      Map<String, YamlFieldBlob> initialDependencies, ExecutionMetadata metadata) throws IOException {
     PlanCreationBlobResponse.Builder finalResponseBuilder =
         PlanCreationBlobResponse.newBuilder().putAllDependencies(initialDependencies);
     if (EmptyPredicate.isEmpty(services) || EmptyPredicate.isEmpty(initialDependencies)) {
@@ -97,7 +99,8 @@ public class PlanCreatorMergeService {
           finalResponseBuilder, currIterationResponse.getStartingNodeId());
       PlanCreationBlobResponseUtils.mergeLayoutNodeInfo(finalResponseBuilder, currIterationResponse);
       if (EmptyPredicate.isNotEmpty(finalResponseBuilder.getDependenciesMap())) {
-        throw new InvalidRequestException("Some YAML nodes could not be parsed");
+        throw new InvalidRequestException(
+            PmsExceptionUtil.getUnresolvedDependencyErrorMessage(finalResponseBuilder.getDependenciesMap().values()));
       }
       PlanCreationBlobResponseUtils.mergeContext(finalResponseBuilder, currIterationResponse.getContextMap());
       PlanCreationBlobResponseUtils.addDependencies(finalResponseBuilder, currIterationResponse.getDependenciesMap());
@@ -137,8 +140,9 @@ public class PlanCreatorMergeService {
                   .putAllDependencies(filteredDependencies)
                   .putAllContext(responseBuilder.getContextMap())
                   .build());
-        } catch (Exception ex) {
-          log.error("Error fetching partial plan from service " + serviceEntry.getKey(), ex);
+        } catch (StatusRuntimeException ex) {
+          log.error(
+              String.format("Error connecting with service: [%s]. Is this service Running?", serviceEntry.getKey()));
           return null;
         }
       });

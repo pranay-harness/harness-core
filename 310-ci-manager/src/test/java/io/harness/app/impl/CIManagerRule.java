@@ -160,7 +160,7 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
         .engineSteps(ExecutionRegistrar.getEngineSteps())
         .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers())
         .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
-        .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers())
+        .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers(false))
         .build();
   }
 
