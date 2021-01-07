@@ -1,0 +1,19 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: mongo-cleanup
+  namespace: default
+spec:
+  schedule: "*/10 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: mongo-cleanup
+              image: us.gcr.io/platform-205701/harness/toolbox:latest
+              command:
+                - /bin/bash
+                - -c
+                - mongo jenkins-pr-mongo-1.jenkins:27017 --eval 'db.getMongo().getDBNames().forEach(function(i){if (i.startsWith("functional_test_")) { var now = new Date().getTime() / 1000; var t = i.substring(16); var hourAgo = now - 3600; if (t < hourAgo) { print("deleting " + i); db.getSiblingDB(i).dropDatabase(); } else { print("preserving " + i)  }}})'
