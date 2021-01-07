@@ -3,6 +3,7 @@ package io.harness.beans.converter;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.GraphVertex;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.sdk.core.data.Outcome;
@@ -37,7 +38,7 @@ public class GraphVertexConverter {
                 ? null
                 : JsonOrchestrationUtils.asMap(nodeExecution.getResolvedStepParameters().toJson()))
         .mode(nodeExecution.getMode())
-        .executableResponsesMetadata(getExecutableResponsesMetadata(nodeExecution))
+        .executableResponses(CollectionUtils.emptyIfNull(nodeExecution.getExecutableResponses()))
         .interruptHistories(nodeExecution.getInterruptHistories())
         .retryIds(nodeExecution.getRetryIds())
         .skipType(nodeExecution.getNode().getSkipType())
@@ -63,7 +64,7 @@ public class GraphVertexConverter {
                 ? null
                 : JsonOrchestrationUtils.asMap(nodeExecution.getResolvedStepParameters().toJson()))
         .mode(nodeExecution.getMode())
-        .executableResponsesMetadata(getExecutableResponsesMetadata(nodeExecution))
+        .executableResponses(CollectionUtils.emptyIfNull(nodeExecution.getExecutableResponses()))
         .interruptHistories(nodeExecution.getInterruptHistories())
         .retryIds(nodeExecution.getRetryIds())
         .skipType(nodeExecution.getNode().getSkipType())

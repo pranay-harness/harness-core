@@ -2,7 +2,6 @@ package software.wings.sm.status.handlers;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.POOJA;
-import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
