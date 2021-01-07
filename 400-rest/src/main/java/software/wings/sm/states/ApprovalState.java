@@ -869,6 +869,13 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
             .pipeline(isPipeline)
             .workflowUrl(workflowURL)
             .jwtToken(jwtToken)
+            .startTsSecs(placeHolderValues.get(SlackApprovalMessageKeys.START_TS_SECS))
+            .endTsSecs(placeHolderValues.get(SlackApprovalMessageKeys.END_TS_SECS))
+            .startDate(placeHolderValues.get(SlackApprovalMessageKeys.START_DATE))
+            .expiryTsSecs(placeHolderValues.get(SlackApprovalMessageKeys.EXPIRES_TS_SECS))
+            .endDate(placeHolderValues.get(SlackApprovalMessageKeys.END_DATE))
+            .expiryDate(placeHolderValues.get(SlackApprovalMessageKeys.EXPIRES_DATE))
+            .verb(placeHolderValues.get(SlackApprovalMessageKeys.VERB))
             .build();
     JSONObject customData = new JSONObject(slackApprovalParams);
 
