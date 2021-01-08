@@ -7,6 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
@@ -51,9 +52,24 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
   public PageResponse<TimeSeriesMetricDataDTO> getSortedMetricData(String accountId, String projectIdentifier,
       String orgIdentifier, String environmentIdentifier, String serviceIdentifier,
       CVMonitoringCategory monitoringCategory, Long startTimeMillis, Long endTimeMillis, Long analysisStartTimeMillis,
-      boolean anomalous, int page, int size, String filter) {
-    return getMetricData(accountId, projectIdentifier, orgIdentifier, environmentIdentifier, serviceIdentifier,
-        monitoringCategory, startTimeMillis, endTimeMillis, analysisStartTimeMillis, anomalous, page, size, filter);
+      boolean anomalous, int page, int size, String filter, DataSourceType dataSourceType) {
+    // TODO: Change this to a request body. This is too many query params.
+    Instant startTime = Instant.ofEpochMilli(startTimeMillis);
+    Instant endTime = Instant.ofEpochMilli(endTimeMillis);
+    Instant analysisStartTime = Instant.ofEpochMilli(analysisStartTimeMillis);
+
+    // get all the cvConfigs that belong to
+    List<CVConfig> cvConfigList = cvConfigService.getConfigsOfProductionEnvironments(
+        accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier, monitoringCategory);
+    if (dataSourceType != null) {
+      cvConfigList = cvConfigList.stream()
+                         .filter(cvConfig -> cvConfig.getType().equals(dataSourceType))
+                         .collect(Collectors.toList());
+    }
+    List<String> cvConfigIds = cvConfigList.stream().map(CVConfig::getUuid).collect(Collectors.toList());
+
+    return getMetricData(cvConfigIds, projectIdentifier, orgIdentifier, environmentIdentifier, serviceIdentifier,
+        monitoringCategory, startTime, endTime, analysisStartTime, anomalous, page, size, filter);
   }
 
   @Override
@@ -76,23 +92,6 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
     return getMetricData(cvConfigIds, projectIdentifier, orgIdentifier, environmentIdentifier, serviceIdentifier, null,
         Instant.ofEpochMilli(startTimeMillis), Instant.ofEpochMilli(endTimeMillis), activity.getActivityStartTime(),
         anomalousOnly, page, size, null);
-  }
-
-  private PageResponse<TimeSeriesMetricDataDTO> getMetricData(String accountId, String projectIdentifier,
-      String orgIdentifier, String environmentIdentifier, String serviceIdentifier,
-      CVMonitoringCategory monitoringCategory, Long startTimeMillis, Long endTimeMillis, Long analysisStartTimeMillis,
-      boolean anomalousOnly, int page, int size, String filter) {
-    Instant startTime = Instant.ofEpochMilli(startTimeMillis);
-    Instant endTime = Instant.ofEpochMilli(endTimeMillis);
-    Instant analysisStartTime = Instant.ofEpochMilli(analysisStartTimeMillis);
-
-    // get all the cvConfigs that belong to
-    List<CVConfig> cvConfigList = cvConfigService.getConfigsOfProductionEnvironments(
-        accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier, monitoringCategory);
-    List<String> cvConfigIds = cvConfigList.stream().map(CVConfig::getUuid).collect(Collectors.toList());
-
-    return getMetricData(cvConfigIds, projectIdentifier, orgIdentifier, environmentIdentifier, serviceIdentifier,
-        monitoringCategory, startTime, endTime, analysisStartTime, anomalousOnly, page, size, filter);
   }
 
   private PageResponse<TimeSeriesMetricDataDTO> getMetricData(List<String> cvConfigIds, String projectIdentifier,

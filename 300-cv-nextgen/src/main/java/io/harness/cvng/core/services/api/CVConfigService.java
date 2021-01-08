@@ -2,6 +2,7 @@ package io.harness.cvng.core.services.api;
 
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.core.beans.DatasourceTypeDTO;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
 import io.harness.encryption.Scope;
@@ -52,5 +53,7 @@ public interface CVConfigService extends DeleteEntityByProjectHandler<CVConfig> 
   void deleteConfigsForProject(String accountId, String orgIdentifier, String projectIdentifier);
   List<CVConfig> getExistingMappedConfigs(
       String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String identifier);
+  Set<DatasourceTypeDTO> getDataSourcetypes(String accountId, String projectIdentifier, String orgIdentifier,
+      String environmentIdentifier, String serviceIdentifier, CVMonitoringCategory monitoringCategory);
   List<String> cleanupPerpetualTasks(String accountId, List<String> cvConfigIds);
 }

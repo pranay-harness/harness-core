@@ -1,6 +1,8 @@
 package io.harness.cvng.core.resources;
 
 import io.harness.annotations.ExposeInternalException;
+import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.core.beans.DatasourceTypeDTO;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.rest.RestResponse;
@@ -12,7 +14,9 @@ import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import java.util.List;
+import java.util.Set;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -112,6 +116,21 @@ public class CVConfigResource {
   public RestResponse<List<String>> getProductNames(@QueryParam("accountId") @Valid final String accountId,
       @QueryParam("connectorIdentifier") String connectorIdentifier) {
     return new RestResponse<>(cvConfigService.getProductNames(accountId, connectorIdentifier));
+  }
+
+  @GET
+  @Path("/datasource-types")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "gets a list of datasource types for this filter", nickname = "getDataSourcetypes")
+  public RestResponse<Set<DatasourceTypeDTO>> getDataSourcetypes(@NotNull @QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @QueryParam("environmentIdentifier") String environmentIdentifier,
+      @QueryParam("serviceIdentifier") String serviceIdentifier,
+      @QueryParam("monitoringCategory") CVMonitoringCategory monitoringCategory) {
+    return new RestResponse<>(cvConfigService.getDataSourcetypes(
+        accountId, projectIdentifier, orgIdentifier, environmentIdentifier, serviceIdentifier, monitoringCategory));
   }
 
   @PUT

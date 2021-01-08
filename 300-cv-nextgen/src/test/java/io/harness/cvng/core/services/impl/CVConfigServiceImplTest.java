@@ -21,6 +21,7 @@ import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.AppDynamicsDSConfig;
 import io.harness.cvng.core.beans.AppDynamicsDSConfig.AppdynamicsAppConfig;
+import io.harness.cvng.core.beans.DatasourceTypeDTO;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.SplunkCVConfig;
@@ -29,6 +30,7 @@ import io.harness.cvng.core.services.api.DSConfigService;
 import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
 import io.harness.cvng.models.VerificationType;
 import io.harness.encryption.Scope;
+import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.rule.Owner;
@@ -88,6 +90,7 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
           .orgIdentifier((String) args[2])
           .projectIdentifier((String) args[3])
           .name((String) args[0])
+          .type(EnvironmentType.Production)
           .build();
     });
     when(nextGenService.getService(anyString(), anyString(), anyString(), anyString())).then(invocation -> {
@@ -665,6 +668,36 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     result =
         cvConfigService.findByConnectorIdentifier(accountId, orgIdentifier, projectIdentifier, "random", Scope.ACCOUNT);
     assertThat(result).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetDataSourcetypes() {
+    List<CVConfig> cvConfigs = new ArrayList<>();
+    SplunkCVConfig cvConfig = new SplunkCVConfig();
+    cvConfig.setServiceInstanceIdentifier("serviceInstance");
+    cvConfig.setQuery("12");
+    fillCommon(cvConfig);
+    cvConfig.setServiceIdentifier("harness-manager");
+    cvConfigs.add(cvConfig);
+
+    AppDynamicsDSConfig dataSourceCVConfig = createAppDynamicsDataSourceCVConfig("appd", "env");
+    dsConfigService.upsert(dataSourceCVConfig);
+
+    save(cvConfigs);
+
+    Set<DatasourceTypeDTO> dsTypes =
+        cvConfigService.getDataSourcetypes(accountId, projectIdentifier, orgIdentifier, "env", "harness-manager", null);
+
+    assertThat(dsTypes.size()).isEqualTo(2);
+
+    List<DataSourceType> types =
+        dsTypes.stream().map(DatasourceTypeDTO::getDataSourceType).collect(Collectors.toList());
+    List<VerificationType> verificationTypes =
+        dsTypes.stream().map(DatasourceTypeDTO::getVerificationType).collect(Collectors.toList());
+    assertThat(types).containsExactlyInAnyOrder(DataSourceType.SPLUNK, DataSourceType.APP_DYNAMICS);
+    assertThat(verificationTypes).containsExactlyInAnyOrder(VerificationType.TIME_SERIES, VerificationType.LOG);
   }
 
   @Test
