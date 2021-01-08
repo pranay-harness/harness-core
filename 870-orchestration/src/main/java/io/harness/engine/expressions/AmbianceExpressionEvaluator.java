@@ -79,6 +79,8 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
       addToContext("regex", new RegexFunctor());
       addToContext("json", new JsonFunctor());
       addToContext("xml", new XmlFunctor());
+      addToContext("secrets",
+          new SecretFunctor(Integer.parseInt(ambiance.getSetupAbstractionsMap().get("expressionFunctorToken"))));
     }
 
     if (entityTypes.contains(NodeExecutionEntityType.OUTCOME)) {

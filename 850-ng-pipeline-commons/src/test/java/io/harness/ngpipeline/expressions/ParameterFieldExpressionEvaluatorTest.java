@@ -127,7 +127,12 @@ public class ParameterFieldExpressionEvaluatorTest extends NGPipelineTestBase {
     Map<String, Object> contextMap;
 
     SampleEngineExpressionEvaluator(Map<String, Object> contextMap) {
-      super(null, Ambiance.newBuilder().setPlanExecutionId("PLAN_ID").build(), null, false);
+      super(null,
+          Ambiance.newBuilder()
+              .setPlanExecutionId("PLAN_ID")
+              .putSetupAbstractions("expressionFunctorToken", "1234")
+              .build(),
+          null, false);
       this.contextMap = contextMap;
     }
 
