@@ -37,10 +37,10 @@ import com.google.inject.Singleton;
 import io.dropwizard.configuration.YamlConfigurationFactory;
 import io.dropwizard.jackson.Jackson;
 import io.dropwizard.jersey.validation.Validators;
-import io.dropwizard.testing.ResourceHelpers;
 import java.io.Closeable;
 import java.io.File;
 import java.lang.annotation.Annotation;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -134,8 +134,7 @@ public class CvNextGenRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     final Validator validator = Validators.newValidator();
     final YamlConfigurationFactory<VerificationConfiguration> factory =
         new YamlConfigurationFactory<>(VerificationConfiguration.class, validator, objectMapper, "dw");
-
-    final File yaml = new File(ResourceHelpers.resourceFilePath("test-config.yml"));
+    final File yaml = Paths.get("cv-nextgen-config.yml").toAbsolutePath().toFile();
     return factory.build(yaml);
   }
 
