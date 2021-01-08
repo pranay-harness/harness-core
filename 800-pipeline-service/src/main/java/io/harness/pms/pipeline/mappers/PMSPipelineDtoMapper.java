@@ -2,6 +2,7 @@ package io.harness.pms.pipeline.mappers;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.mapper.TagMapper;
+import io.harness.pms.pipeline.ExecutionSummaryInfoDTO;
 import io.harness.pms.pipeline.PMSPipelineResponseDTO;
 import io.harness.pms.pipeline.PMSPipelineSummaryResponseDTO;
 import io.harness.pms.pipeline.PipelineEntity;
@@ -52,9 +53,17 @@ public class PMSPipelineDtoMapper {
         .name(pipelineEntity.getName())
         .tags(TagMapper.convertToMap(pipelineEntity.getTags()))
         .version(pipelineEntity.getVersion())
+        .numOfStages(pipelineEntity.getStageCount())
+        .executionSummaryInfo(getExecutionSummaryInfoDTO(pipelineEntity))
+        .lastUpdatedAt(pipelineEntity.getLastUpdatedAt())
+        .createdAt(pipelineEntity.getCreatedAt())
+        .build();
+  }
+
+  private ExecutionSummaryInfoDTO getExecutionSummaryInfoDTO(PipelineEntity pipelineEntity) {
+    return ExecutionSummaryInfoDTO.builder()
         .deployments(getNumberOfDeployments(pipelineEntity))
         .numOfErrors(getNumberOfErrorsLast10Days(pipelineEntity))
-        .numOfStages(pipelineEntity.getStageCount())
         .lastExecutionStatus(pipelineEntity.getExecutionSummaryInfo() != null
                 ? pipelineEntity.getExecutionSummaryInfo().getLastExecutionStatus()
                 : null)

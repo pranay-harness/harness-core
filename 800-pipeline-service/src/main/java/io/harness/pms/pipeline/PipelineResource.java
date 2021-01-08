@@ -180,7 +180,7 @@ public class PipelineResource {
         accountId, orgId, projectId, pmsPipelineFilterRequestDTO, module, searchTerm, false);
     Pageable pageRequest;
     if (EmptyPredicate.isEmpty(sort)) {
-      pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.createdAt));
+      pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.lastUpdatedAt));
     } else {
       pageRequest = PageUtils.getPageRequest(page, size, sort);
     }
