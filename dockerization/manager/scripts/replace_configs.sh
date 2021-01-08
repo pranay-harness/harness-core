@@ -98,6 +98,10 @@ else
   yq delete -i $CONFIG_FILE events-mongo
 fi
 
+if [[ "" != "$CF_CLIENT_API_KEY" ]]; then
+  yq write -i $CONFIG_FILE cfClientConfig.apiKey "$CF_CLIENT_API_KEY"
+fi
+
 if [[ "" != "$ELASTICSEARCH_URI" ]]; then
   yq write -i $CONFIG_FILE elasticsearch.uri "$ELASTICSEARCH_URI"
 fi
