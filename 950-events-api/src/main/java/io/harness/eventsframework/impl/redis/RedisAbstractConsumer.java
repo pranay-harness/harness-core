@@ -44,7 +44,7 @@ public abstract class RedisAbstractConsumer extends AbstractConsumer {
   private void createConsumerGroup() {
     String groupName = getGroupName();
     try {
-      stream.createGroup(groupName);
+      stream.createGroup(groupName, StreamMessageId.ALL);
     } catch (RedisException e) {
       log.info("Consumer group {} already exists, continuing with consumer operations...", groupName);
     }
