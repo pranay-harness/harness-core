@@ -57,7 +57,6 @@ import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.compare;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -100,6 +99,7 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.NoAvailableDelegatesException;
 import io.harness.delegate.beans.NoInstalledDelegatesException;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
+import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.beans.TaskSelectorMap;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -187,8 +187,10 @@ import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerPreExecutionExpressionEvaluator;
 import software.wings.expression.ManagerPreviewExpressionEvaluator;
+import software.wings.expression.NgSecretManagerFunctor;
 import software.wings.expression.SecretFunctor;
 import software.wings.expression.SecretManagerFunctor;
+import software.wings.expression.SecretManagerMode;
 import software.wings.features.DelegatesFeature;
 import software.wings.features.api.UsageLimitedFeature;
 import software.wings.helpers.ext.mail.EmailData;
@@ -214,6 +216,7 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
+import software.wings.service.intfc.security.NGSecretService;
 import software.wings.service.intfc.security.SecretManager;
 
 import com.github.zafarkhaja.semver.Version;
@@ -369,6 +372,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private DelegateTaskSelectorMapService taskSelectorMapService;
   @Inject private SettingsService settingsService;
   @Inject private LogStreamingServiceRestClient logStreamingServiceRestClient;
+  @Inject private NGSecretService ngSecretService;
 
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
   @Inject @Getter private Subject<DelegateObserver> subject = new Subject<>();
@@ -2223,7 +2227,6 @@ public class DelegateServiceImpl implements DelegateService {
     if (task.getWaitId() == null) {
       task.setWaitId(task.getUuid());
     }
-
     // For backward compatibility we base the queue task expiry on the execution timeout
     if (task.getExpiry() == 0) {
       task.setExpiry(currentTimeMillis() + task.getData().getTimeout());
@@ -2495,7 +2498,7 @@ public class DelegateServiceImpl implements DelegateService {
                 && assignDelegateService.isWhitelisted(delegateTask, delegateId))
             || assignDelegateService.shouldValidate(delegateTask, delegateId)) {
           setValidationStarted(delegateId, delegateTask);
-          return resolvePreAssignmentExpressions(delegateTask, SecretManagerFunctor.Mode.APPLY);
+          return resolvePreAssignmentExpressions(delegateTask, SecretManagerMode.APPLY);
         } else if (!featureFlagService.isEnabled(FeatureName.REVALIDATE_WHITELISTED_DELEGATE, accountId)
             && assignDelegateService.isWhitelisted(delegateTask, delegateId)) {
           // Directly assign task only when FF is off and task is already whitelisted.
@@ -2669,15 +2672,14 @@ public class DelegateServiceImpl implements DelegateService {
     return null;
   }
 
-  private DelegateTaskPackage resolvePreAssignmentExpressions(
-      DelegateTask delegateTask, SecretManagerFunctor.Mode mode) {
+  private DelegateTaskPackage resolvePreAssignmentExpressions(DelegateTask delegateTask, SecretManagerMode mode) {
     try {
       ManagerPreExecutionExpressionEvaluator managerPreExecutionExpressionEvaluator =
           new ManagerPreExecutionExpressionEvaluator(mode, serviceTemplateService, configService,
               delegateTask.getAppId(), delegateTask.getEnvId(), delegateTask.getServiceTemplateId(),
               artifactCollectionUtils, delegateTask.getArtifactStreamId(), featureFlagService, managerDecryptionService,
               secretManager, delegateTask.getAccountId(), delegateTask.getWorkflowExecutionId(),
-              delegateTask.getData().getExpressionFunctorToken());
+              delegateTask.getData().getExpressionFunctorToken(), ngSecretService, delegateTask.getSetupAbstractions());
 
       List<ExecutionCapability> executionCapabilityList = emptyList();
       if (isNotEmpty(delegateTask.getExecutionCapabilities())) {
@@ -2714,6 +2716,9 @@ public class DelegateServiceImpl implements DelegateService {
         return delegateTaskPackageBuilder.build();
       }
 
+      NgSecretManagerFunctor ngSecretManagerFunctor =
+          (NgSecretManagerFunctor) managerPreExecutionExpressionEvaluator.getNgSecretManagerFunctor();
+
       SecretManagerFunctor secretManagerFunctor =
           (SecretManagerFunctor) managerPreExecutionExpressionEvaluator.getSecretManagerFunctor();
 
@@ -2731,17 +2736,11 @@ public class DelegateServiceImpl implements DelegateService {
         //        return mode == CHECK_FOR_SECRETS ? value : substituted;
       });
 
-      if (secretManagerFunctor == null) {
+      if (secretManagerFunctor == null && ngSecretManagerFunctor == null) {
         return null;
       }
 
-      delegateTaskPackageBuilder.encryptionConfigs(secretManagerFunctor.getEncryptionConfigs())
-          .secretDetails(secretManagerFunctor.getSecretDetails());
-
-      if (isNotEmpty(secretManagerFunctor.getEvaluatedSecrets())) {
-        delegateTaskPackageBuilder.secrets(
-            secretManagerFunctor.getEvaluatedSecrets().values().stream().collect(toSet()));
-      }
+      addSecretManagerFunctorConfigs(delegateTaskPackageBuilder, secretManagerFunctor, ngSecretManagerFunctor);
 
       return delegateTaskPackageBuilder.build();
     } catch (CriticalExpressionEvaluationException exception) {
@@ -2760,10 +2759,37 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
+  private void addSecretManagerFunctorConfigs(DelegateTaskPackageBuilder delegateTaskPackageBuilder,
+      SecretManagerFunctor secretManagerFunctor, NgSecretManagerFunctor ngSecretManagerFunctor) {
+    Map<String, EncryptionConfig> encryptionConfigs = new HashMap<>();
+    Map<String, SecretDetail> secretDetails = new HashMap<>();
+    Set<String> secrets = new HashSet<>();
+
+    if (secretManagerFunctor != null) {
+      encryptionConfigs.putAll(secretManagerFunctor.getEncryptionConfigs());
+      secretDetails.putAll(secretManagerFunctor.getSecretDetails());
+      if (isNotEmpty(secretManagerFunctor.getEvaluatedSecrets())) {
+        secrets.addAll(secretManagerFunctor.getEvaluatedSecrets().values());
+      }
+    }
+
+    if (ngSecretManagerFunctor != null) {
+      encryptionConfigs.putAll(ngSecretManagerFunctor.getEncryptionConfigs());
+      secretDetails.putAll(ngSecretManagerFunctor.getSecretDetails());
+      if (isNotEmpty(ngSecretManagerFunctor.getEvaluatedSecrets())) {
+        secrets.addAll(ngSecretManagerFunctor.getEvaluatedSecrets().values());
+      }
+    }
+
+    delegateTaskPackageBuilder.encryptionConfigs(encryptionConfigs);
+    delegateTaskPackageBuilder.secretDetails(secretDetails);
+    delegateTaskPackageBuilder.secrets(secrets);
+  }
+
   private DelegateTaskPackage getDelegatePackageWithEncryptionConfig(DelegateTask delegateTask) {
     try {
       if (CapabilityHelper.isTaskParameterType(delegateTask.getData())) {
-        return resolvePreAssignmentExpressions(delegateTask, SecretManagerFunctor.Mode.DRY_RUN);
+        return resolvePreAssignmentExpressions(delegateTask, SecretManagerMode.DRY_RUN);
       } else {
         // TODO: Ideally we should not land here, as we should always be passing TaskParameter only for
         // TODO: delegate task. But for now, this is needed. (e.g. Tasks containing Jenkinsonfig, BambooConfig etc.)
@@ -2914,7 +2940,7 @@ public class DelegateServiceImpl implements DelegateService {
       delegateSelectionLogsService.logTaskAssigned(batch, task.getAccountId(), delegateId);
       delegateSelectionLogsService.save(batch);
 
-      return resolvePreAssignmentExpressions(task, SecretManagerFunctor.Mode.APPLY);
+      return resolvePreAssignmentExpressions(task, SecretManagerMode.APPLY);
     }
     task = wingsPersistence.createQuery(DelegateTask.class)
                .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
@@ -2930,7 +2956,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     task.getData().setParameters(delegateTask.getData().getParameters());
     log.info("Returning previously assigned task to delegate");
-    return resolvePreAssignmentExpressions(task, SecretManagerFunctor.Mode.APPLY);
+    return resolvePreAssignmentExpressions(task, SecretManagerMode.APPLY);
   }
 
   @Override

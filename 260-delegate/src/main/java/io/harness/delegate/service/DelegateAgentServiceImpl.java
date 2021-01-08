@@ -2353,6 +2353,17 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
   }
 
+  private void addToEncryptedConfigListMap(Map<EncryptionConfig, List<EncryptedRecord>> encryptionConfigListMap,
+      EncryptionConfig encryptionConfig, EncryptedRecord encryptedRecord) {
+    if (encryptionConfigListMap.containsKey(encryptionConfig)) {
+      encryptionConfigListMap.get(encryptionConfig).add(encryptedRecord);
+    } else {
+      List<EncryptedRecord> encryptedRecordList = new ArrayList<>();
+      encryptedRecordList.add(encryptedRecord);
+      encryptionConfigListMap.put(encryptionConfig, encryptedRecordList);
+    }
+  }
+
   @VisibleForTesting
   void applyDelegateSecretFunctor(DelegateTaskPackage delegateTaskPackage) {
     Map<String, EncryptionConfig> encryptionConfigs = delegateTaskPackage.getEncryptionConfigs();
@@ -2364,7 +2375,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     Map<EncryptionConfig, List<EncryptedRecord>> encryptionConfigListMap = new HashMap<>();
     secretDetails.forEach((key, secretDetail) -> {
       encryptedRecordList.add(secretDetail.getEncryptedRecord());
-      encryptionConfigListMap.put(encryptionConfigs.get(secretDetail.getConfigUuid()), encryptedRecordList);
+      // encryptionConfigListMap.put(encryptionConfigs.get(secretDetail.getConfigUuid()), encryptedRecordList);
+      addToEncryptedConfigListMap(encryptionConfigListMap, encryptionConfigs.get(secretDetail.getConfigUuid()),
+          secretDetail.getEncryptedRecord());
     });
 
     Map<String, char[]> decryptedRecords = delegateDecryptionService.decrypt(encryptionConfigListMap);

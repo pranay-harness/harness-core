@@ -125,7 +125,8 @@ public class StepUtils {
                             : kryoSerializer.asDeflatedBytes(taskParameters)))
                     .setExecutionTimeout(Duration.newBuilder().setSeconds(taskData.getTimeout() * 1000).build())
                     // TODO : Change this spmehow and obtain from ambiance
-                    .setExpressionFunctorToken(HashGenerator.generateIntegerHash())
+                    .setExpressionFunctorToken(
+                        Long.parseLong(ambiance.getSetupAbstractionsMap().get("expressionFunctorToken")))
                     .setMode(taskData.isAsync() ? TaskMode.ASYNC : TaskMode.SYNC)
                     .setParked(taskData.isParked())
                     .setType(TaskType.newBuilder().setType(taskData.getTaskType()).build())

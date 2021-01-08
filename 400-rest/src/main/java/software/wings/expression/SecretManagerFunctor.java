@@ -38,8 +38,7 @@ import lombok.Value;
 @Value
 @Builder
 public class SecretManagerFunctor implements ExpressionFunctor, SecretManagerFunctorInterface {
-  public enum Mode { APPLY, DRY_RUN, CHECK_FOR_SECRETS }
-  private Mode mode;
+  private SecretManagerMode mode;
   private FeatureFlagService featureFlagService;
   private ManagerDecryptionService managerDecryptionService;
   private SecretManager secretManager;
@@ -67,9 +66,9 @@ public class SecretManagerFunctor implements ExpressionFunctor, SecretManagerFun
   }
 
   private Object returnValue(String secretName, Object value) {
-    if (mode == Mode.DRY_RUN) {
+    if (mode == SecretManagerMode.DRY_RUN) {
       return "${secretManager.obtain(\"" + secretName + "\", " + expressionFunctorToken + ")}";
-    } else if (mode == Mode.CHECK_FOR_SECRETS) {
+    } else if (mode == SecretManagerMode.CHECK_FOR_SECRETS) {
       return format(SecretManagerPreviewFunctor.SECRET_NAME_FORMATTER, secretName);
     }
     return value;

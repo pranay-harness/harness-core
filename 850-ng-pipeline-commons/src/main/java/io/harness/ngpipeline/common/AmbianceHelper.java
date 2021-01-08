@@ -20,6 +20,10 @@ public class AmbianceHelper {
     return ambiance.getSetupAbstractionsMap().get("orgIdentifier");
   }
 
+  public static String getExpressionFunctorToken(Ambiance ambiance) {
+    return ambiance.getSetupAbstractionsMap().get("expressionFunctorToken");
+  }
+
   public NGAccess getNgAccess(Ambiance ambiance) {
     return BaseNGAccess.builder()
         .accountIdentifier(getAccountId(ambiance))
