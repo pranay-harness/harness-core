@@ -52,4 +52,5 @@ public interface CVConfigService extends DeleteEntityByProjectHandler<CVConfig> 
   void deleteConfigsForProject(String accountId, String orgIdentifier, String projectIdentifier);
   List<CVConfig> getExistingMappedConfigs(
       String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String identifier);
+  List<String> cleanupPerpetualTasks(String accountId, List<String> cvConfigIds);
 }
