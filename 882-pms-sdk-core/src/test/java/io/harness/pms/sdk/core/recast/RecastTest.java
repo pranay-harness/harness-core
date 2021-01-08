@@ -93,7 +93,6 @@ public class RecastTest extends PmsSdkCoreTestBase {
             .addExecutableResponses(
                 ExecutableResponse.newBuilder()
                     .setAsync(AsyncExecutableResponse.newBuilder().addCallbackIds("callbackId").build())
-                    .setMetadata("metadata")
                     .build())
             .build();
 
@@ -126,7 +125,6 @@ public class RecastTest extends PmsSdkCoreTestBase {
             .addExecutableResponses(
                 ExecutableResponse.newBuilder()
                     .setAsync(AsyncExecutableResponse.newBuilder().addCallbackIds("callbackId").build())
-                    .setMetadata("metadata")
                     .build())
             .build();
 

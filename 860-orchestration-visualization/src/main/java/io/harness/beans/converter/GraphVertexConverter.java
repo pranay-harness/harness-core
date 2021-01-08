@@ -72,16 +72,4 @@ public class GraphVertexConverter {
         .progressDataMap(nodeExecution.getProgressDataMap())
         .build();
   }
-
-  private List<Map<String, Object>> getExecutableResponsesMetadata(NodeExecution nodeExecution) {
-    if (EmptyPredicate.isEmpty(nodeExecution.getExecutableResponses())) {
-      return Collections.emptyList();
-    }
-    return nodeExecution.getExecutableResponses()
-        .stream()
-        .filter(response -> EmptyPredicate.isNotEmpty(response.getMetadata()))
-        .map(meta -> JsonUtils.asMap(meta.getMetadata()))
-        .filter(EmptyPredicate::isNotEmpty)
-        .collect(Collectors.toList());
-  }
 }

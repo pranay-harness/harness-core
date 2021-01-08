@@ -46,7 +46,6 @@ import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.executions.steps.LoggingMetadata;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
 import io.harness.k8s.K8sCommandUnitConstants;
@@ -73,7 +72,6 @@ import io.harness.validation.Validator;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.GitConfig;
 import software.wings.beans.KubernetesClusterConfig;
-import software.wings.beans.LogHelper;
 import software.wings.beans.SettingAttribute;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig.K8sClusterConfigBuilder;
@@ -332,13 +330,10 @@ public class K8sStepHelper {
             .build();
 
     LinkedHashMap<String, String> logAbstractions = StepUtils.generateLogAbstractions(ambiance);
-    String baseLoggingKey = LogHelper.generateLogBaseKey(logAbstractions);
 
     List<String> commandUnits =
         Arrays.asList(K8sCommandUnitConstants.FetchFiles, K8sCommandUnitConstants.Init, K8sCommandUnitConstants.Prepare,
             K8sCommandUnitConstants.Apply, K8sCommandUnitConstants.WaitForSteadyState, K8sCommandUnitConstants.WrapUp);
-    LoggingMetadata loggingMetadata =
-        LoggingMetadata.builder().baseLoggingKey(baseLoggingKey).commandUnits(commandUnits).build();
 
     final TaskRequest taskRequest = prepareTaskRequest(
         ambiance, taskData, kryoSerializer, logAbstractions, TaskCategory.DELEGATE_TASK_V2, commandUnits);
@@ -352,7 +347,6 @@ public class K8sStepHelper {
         .chainEnd(false)
         .taskRequest(taskRequest)
         .passThroughData(k8sStepPassThroughData)
-        .metadata(loggingMetadata)
         .build();
   }
 

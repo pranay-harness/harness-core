@@ -10,7 +10,6 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.TaskChainExecutableResponse;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.plan.PlanNodeProto;
-import io.harness.pms.sdk.core.data.Metadata;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.ExecuteStrategy;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
@@ -94,8 +93,6 @@ public class TaskChainStrategy implements ExecuteStrategy {
                                 .setPassThroughData(
                                     ByteString.copyFrom(kryoSerializer.asBytes(taskChainResponse.getPassThroughData())))
                                 .build())
-              .setMetadata(taskChainResponse.getMetadata() == null ? new Metadata() {}.toJson()
-                                                                   : taskChainResponse.getMetadata().toJson())
               .build(),
           Collections.emptyList());
       StepResponse stepResponse = taskChainExecutable.finalizeExecution(ambiance,
@@ -122,8 +119,6 @@ public class TaskChainStrategy implements ExecuteStrategy {
                     .addAllLogKeys(CollectionUtils.emptyIfNull(taskRequest.getDelegateTaskRequest().getLogKeysList()))
                     .addAllUnits(CollectionUtils.emptyIfNull(taskRequest.getDelegateTaskRequest().getUnitsList()))
                     .build())
-            .setMetadata(taskChainResponse.getMetadata() == null ? new Metadata() {}.toJson()
-                                                                 : taskChainResponse.getMetadata().toJson())
             .build(),
         Collections.emptyList());
   }

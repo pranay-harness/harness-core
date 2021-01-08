@@ -21,6 +21,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.DelegateTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
@@ -76,15 +77,19 @@ public class StepUtils {
   @Nonnull
   public static LinkedHashMap<String, String> generateLogAbstractions(Ambiance ambiance) {
     LinkedHashMap<String, String> logAbstractions = new LinkedHashMap<>();
-    logAbstractions.put("accountId", ambiance.getSetupAbstractionsMap().get("accountId"));
-    logAbstractions.put("orgId", ambiance.getSetupAbstractionsMap().get("orgIdentifier"));
-    logAbstractions.put("projectId", ambiance.getSetupAbstractionsMap().get("projectIdentifier"));
+    logAbstractions.put("accountId", ambiance.getSetupAbstractionsMap().getOrDefault("accountId", ""));
+    logAbstractions.put("orgId", ambiance.getSetupAbstractionsMap().getOrDefault("orgIdentifier", ""));
+    logAbstractions.put("projectId", ambiance.getSetupAbstractionsMap().getOrDefault("projectIdentifier", ""));
     logAbstractions.put("pipelineExecutionId", ambiance.getPlanExecutionId());
-    Level stageLevel = ambiance.getLevels(2);
-    logAbstractions.put("stageId", stageLevel.getIdentifier());
-    Level currentStepLevel = ambiance.getLevels(ambiance.getLevelsCount() - 1);
-    logAbstractions.put("stepRuntimeId", currentStepLevel.getRuntimeId());
-
+    ambiance.getLevelsList()
+        .stream()
+        .filter(level -> level.getGroup().equals("stage"))
+        .findFirst()
+        .ifPresent(stageLevel -> logAbstractions.put("stageId", stageLevel.getIdentifier()));
+    Level currentLevel = AmbianceUtils.obtainCurrentLevel(ambiance);
+    if (currentLevel != null) {
+      logAbstractions.put("stepRuntimeId", currentLevel.getRuntimeId());
+    }
     return logAbstractions;
   }
 
