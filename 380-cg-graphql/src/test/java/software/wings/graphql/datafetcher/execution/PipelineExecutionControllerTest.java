@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.PRABU;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.beans.EntityType.SERVICE;
+import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
@@ -61,6 +62,7 @@ import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.beans.deployment.WorkflowVariablesMetadata;
 import software.wings.graphql.datafetcher.MutationContext;
+import software.wings.graphql.datafetcher.user.UserController;
 import software.wings.graphql.schema.mutation.execution.input.QLArtifactIdInput;
 import software.wings.graphql.schema.mutation.execution.input.QLArtifactInputType;
 import software.wings.graphql.schema.mutation.execution.input.QLArtifactValueInput;
@@ -72,6 +74,8 @@ import software.wings.graphql.schema.mutation.execution.input.QLVariableInput;
 import software.wings.graphql.schema.mutation.execution.input.QLVariableValue;
 import software.wings.graphql.schema.mutation.execution.input.QLVariableValueType;
 import software.wings.graphql.schema.mutation.execution.payload.QLStartExecutionPayload;
+import software.wings.graphql.schema.type.QLExecuteOptions;
+import software.wings.graphql.schema.type.QLExecutedByUser;
 import software.wings.graphql.schema.type.QLExecutionStatus;
 import software.wings.graphql.schema.type.QLPipelineExecution;
 import software.wings.graphql.schema.type.QLPipelineExecution.QLPipelineExecutionBuilder;
@@ -92,6 +96,7 @@ import com.google.api.client.util.Lists;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import graphql.schema.DataFetchingEnvironment;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -851,6 +856,43 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
                                pipeline, variableInputs, null, new ArrayList<>(), "PIPELINE_STAGE_ELEMENT_ID", false))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Variable var can only take values [1, 2]");
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldNotSetPipelineExecutionDetailsIfMissing() {
+    long createdAt = Instant.now().getEpochSecond();
+    long startedAt = Instant.now().plusMillis(5000).getEpochSecond();
+    WorkflowExecution execution =
+        WorkflowExecution.builder()
+            .uuid("EXEC_ID")
+            .workflowId("WF_ID")
+            .appId(APP_ID)
+            .createdAt(createdAt)
+            .startTs(startedAt)
+            .status(ExecutionStatus.RUNNING)
+            .triggeredBy(EmbeddedUser.builder().uuid("uuid").name("username").email("example@acme.com").build())
+            .pipelineExecution(aPipelineExecution().build())
+            .build();
+    QLPipelineExecutionBuilder builder = QLPipelineExecution.builder();
+    pipelineExecutionController.populatePipelineExecution(execution, builder);
+    QLPipelineExecution actual = builder.build();
+    assertThat(actual.getId()).isEqualTo("EXEC_ID");
+    assertThat(actual.getPipelineId()).isEqualTo("WF_ID");
+    assertThat(actual.getAppId()).isEqualTo(APP_ID);
+    assertThat(actual.getCreatedAt()).isEqualTo(createdAt);
+    assertThat(actual.getStartedAt()).isEqualTo(startedAt);
+    assertThat(actual.getEndedAt()).isNull();
+    assertThat(actual.getStatus()).isEqualTo(QLExecutionStatus.RUNNING);
+    assertThat(actual.getCause())
+        .isEqualTo(QLExecutedByUser.builder()
+                       .user(UserController.populateUser(
+                           EmbeddedUser.builder().uuid("uuid").name("username").email("example@acme.com").build()))
+                       .using(QLExecuteOptions.WEB_UI)
+                       .build());
+    assertThat(actual.getNotes()).isNull();
+    assertThat(actual.getTags()).isEmpty();
   }
 
   private QLStartExecutionInput getStartExecutionInputWithoutManifest() {
