@@ -12,6 +12,7 @@ type Config struct {
 	Secrets struct {
 		LogSecret   string `envconfig:"TI_SERVICE_SECRET" default:"secret"`
 		GlobalToken string `envconfig:"TI_SERVICE_GLOBAL_TOKEN" default:"token"`
+		DisableAuth bool   `envconfig:"TI_SERVICE_DISABLE_AUTH"`
 	}
 
 	Server struct {
