@@ -241,6 +241,12 @@ public class DataFetcherUtils {
       case NOT_IN:
         field.notIn(Arrays.asList(idFilterValues));
         break;
+      case LIKE:
+        if (idFilterValues.length > 1) {
+          throw new WingsException("Only one value needs to be inputted for operator LIKE");
+        }
+        field.contains(idFilterValues[0]);
+        break;
       default:
         throw new WingsException("Unknown Id operator " + operator);
     }
