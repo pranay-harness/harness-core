@@ -8,6 +8,8 @@ import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.security.SimpleEncryption.CHARSET;
 
+import static software.wings.service.intfc.security.NGSecretManagerService.isReadOnlySecretManager;
+
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.encryptors.KmsEncryptorsRegistry;
@@ -123,6 +125,10 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
     // in case of file creation of YAML, we receive an empty stream, so we create an empty byte array to handle it
     byte[] inputBytes = new byte[0];
     if (secretManagerConfigOptional.isPresent()) {
+      if (isReadOnlySecretManager(secretManagerConfigOptional.get())) {
+        throw new SecretManagementException(
+            SECRET_MANAGEMENT_ERROR, "Cannot create a secret in read only secret manager", USER);
+      }
       if (inputStream != null) {
         try {
           inputBytes = ByteStreams.toByteArray(inputStream);
@@ -181,6 +187,10 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
               metadata.getProjectIdentifier(), metadata.getSecretManagerIdentifier());
 
       if (secretManagerConfigOptional.isPresent()) {
+        if (isReadOnlySecretManager(secretManagerConfigOptional.get())) {
+          throw new SecretManagementException(
+              SECRET_MANAGEMENT_ERROR, "Cannot update a secret in read only secret manager", USER);
+        }
         // If name has changed, delete the old file (we do not allow reference with files)
         if (!dto.getName().equals(encryptedData.getName())) {
           ngSecretService.deleteSecretInSecretManager(account, encryptedData, secretManagerConfigOptional.get());
