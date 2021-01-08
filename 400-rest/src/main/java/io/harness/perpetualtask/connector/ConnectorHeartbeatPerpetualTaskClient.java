@@ -9,11 +9,11 @@ import static io.harness.NGConstants.CONNECTOR_STRING;
 
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.DelegateTask;
-import io.harness.connector.apis.client.ConnectorResourceClient;
-import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.connector.ConnectorResourceClient;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.delegate.beans.connector.apis.dto.ConnectorDTO;
+import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.exception.UnexpectedException;
 import io.harness.ng.core.BaseNGAccess;

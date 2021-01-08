@@ -1,6 +1,5 @@
 package io.harness.cvng.analysis.services.impl;
 
-import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.TransactionMetricInfo;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
@@ -15,6 +14,7 @@ import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.utils.CVNGObjectUtils;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
+import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 

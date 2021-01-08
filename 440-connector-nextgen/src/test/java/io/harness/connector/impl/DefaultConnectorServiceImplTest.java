@@ -14,13 +14,13 @@ import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorsTestBase;
-import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorInfoDTO;
-import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.connector.validator.KubernetesConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.delegate.beans.connector.apis.dto.ConnectorDTO;
+import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.delegate.beans.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;

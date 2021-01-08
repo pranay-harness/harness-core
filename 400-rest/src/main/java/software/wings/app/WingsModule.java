@@ -48,7 +48,7 @@ import io.harness.cf.CfClientConfig;
 import io.harness.cf.client.api.CfClient;
 import io.harness.cf.client.api.CfClientException;
 import io.harness.config.PipelineConfig;
-import io.harness.connector.apis.client.ConnectorResourceClientModule;
+import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.cvng.CVNextGenCommonsServiceModule;
 import io.harness.cvng.client.CVNGService;
 import io.harness.cvng.client.CVNGServiceImpl;

@@ -12,11 +12,11 @@ import static org.mockito.Mockito.when;
 
 import io.harness.DelegateTest;
 import io.harness.category.element.UnitTests;
-import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.delegate.beans.connector.apis.dto.ConnectorDTO;
+import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.task.k8s.ConnectorValidationHandler;
 import io.harness.delegate.task.k8s.KubernetesTestConnectionDelegateTask;

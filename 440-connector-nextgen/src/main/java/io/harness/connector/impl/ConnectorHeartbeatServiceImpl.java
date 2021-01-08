@@ -10,10 +10,10 @@ import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.AccountId;
+import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.perpetualtask.PerpetualTaskClientContextDetails;
 import io.harness.perpetualtask.PerpetualTaskId;

@@ -6,11 +6,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorsTestBase;
-import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.utils.DockerConnectorTestHelper;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.delegate.beans.connector.apis.dto.ConnectorDTO;
+import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.encryption.Scope;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.rule.Owner;

@@ -1,4 +1,4 @@
-package io.harness.connector.apis.dto;
+package io.harness.delegate.beans.connector.apis.dto;
 
 import io.harness.EntityType;
 import io.harness.yaml.YamlSchemaRoot;

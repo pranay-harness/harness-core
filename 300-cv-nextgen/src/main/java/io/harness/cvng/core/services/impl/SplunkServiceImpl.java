@@ -1,6 +1,5 @@
 package io.harness.cvng.core.services.impl;
 
-import io.harness.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.cvng.beans.SplunkSavedSearch;
 import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.cvng.client.NextGenService;
@@ -9,6 +8,7 @@ import io.harness.cvng.client.VerificationManagerClient;
 import io.harness.cvng.core.beans.MonitoringSourceImportStatus;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.SplunkService;
+import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 
 import com.google.common.base.Preconditions;

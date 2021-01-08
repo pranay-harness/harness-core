@@ -1,9 +1,9 @@
 package io.harness.cvng.client;
 
 import io.harness.beans.IdentifierRef;
-import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorInfoDTO;
-import io.harness.connector.apis.dto.ConnectorResponseDTO;
+import io.harness.delegate.beans.connector.apis.dto.ConnectorDTO;
+import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.delegate.beans.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;

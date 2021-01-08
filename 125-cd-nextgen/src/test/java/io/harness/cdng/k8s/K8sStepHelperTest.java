@@ -12,9 +12,9 @@ import io.harness.cdng.common.beans.SetupAbstractionKeys;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
-import io.harness.connector.apis.dto.ConnectorInfoDTO;
-import io.harness.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
+import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.delegate.beans.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.rule.Owner;
 
