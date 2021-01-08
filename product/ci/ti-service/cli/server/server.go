@@ -37,6 +37,10 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 		return err
 	}
 
+	if config.Secrets.DisableAuth {
+		log.Warn("ti service is being started without auth, SHOULD NOT BE DONE FOR PROD ENVIRONMENTS")
+	}
+
 	var db db.Db
 	if config.TimeScaleDb.DbName != "" && config.TimeScaleDb.Host != "" {
 		// Create timescaledb connection

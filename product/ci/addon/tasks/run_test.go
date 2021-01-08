@@ -63,8 +63,6 @@ func TestExecuteSuccess_WithReports(t *testing.T) {
 	ctrl, ctx := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
-	fmt.Println("in test... ")
-
 	stepID := "step1"
 	paths := []string{"path1", "path2"}
 	report := &pb.Report{
@@ -162,8 +160,6 @@ func TestExecuteSuccess_WithReports(t *testing.T) {
 func TestExecuteFailure_WithReports(t *testing.T) {
 	ctrl, ctx := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
-
-	fmt.Println("in test... ")
 
 	stepID := "step1"
 	paths := []string{"path1", "path2"}

@@ -39,6 +39,10 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 	// init the system logging.
 	initLogging(config)
 
+	if config.Secrets.DisableAuth {
+		logrus.Warnln("log service is being started without auth, SHOULD NOT BE DONE FOR PROD ENVIRONMENTS")
+	}
+
 	var store store.Store
 	if config.S3.Bucket != "" {
 		// create the s3 store.
