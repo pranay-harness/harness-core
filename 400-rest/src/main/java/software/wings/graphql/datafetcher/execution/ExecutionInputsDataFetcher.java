@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(CDC)
 @Slf4j
@@ -100,7 +101,7 @@ public class ExecutionInputsDataFetcher
 
   private void validateAppBelongsToAccount(QLServiceInputsForExecutionParams params, String accountId) {
     String accountIdFromApp = appService.getAccountIdByAppId(params.getApplicationId());
-    if (!accountIdFromApp.equals(accountId)) {
+    if (StringUtils.isBlank(accountIdFromApp) || !accountIdFromApp.equals(accountId)) {
       throw new InvalidRequestException(APPLICATION_DOES_NOT_EXIST_MSG, WingsException.USER);
     }
   }
