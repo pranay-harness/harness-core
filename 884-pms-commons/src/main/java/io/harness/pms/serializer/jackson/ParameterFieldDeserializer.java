@@ -78,9 +78,18 @@ public class ParameterFieldDeserializer extends StdDeserializer<ParameterField<?
     String text = p.getText().trim();
     boolean isTypeString = this.referenceType.getRawClass().equals(String.class);
 
+    InputSetValidator inputSetValidator = getInputSetValidator(text);
+
     if (NGExpressionUtils.matchesInputSetPattern(text)) {
       return ParameterField.createExpressionField(
-          true, NGExpressionUtils.DEFAULT_INPUT_SET_EXPRESSION, getInputSetValidator(text), isTypeString);
+          true, NGExpressionUtils.DEFAULT_INPUT_SET_EXPRESSION, inputSetValidator, isTypeString);
+    }
+    if (inputSetValidator != null) {
+      String value = getLeftSideOfExpression(text);
+      if (matchesVariablePattern(value)) {
+        return ParameterField.createExpressionField(true, value, inputSetValidator, isTypeString);
+      }
+      return ParameterField.createValueFieldWithInputSetValidator(value, inputSetValidator, isTypeString);
     }
     if (matchesVariablePattern(text)) {
       return ParameterField.createExpressionField(true, text, null, isTypeString);
@@ -116,9 +125,15 @@ public class ParameterFieldDeserializer extends StdDeserializer<ParameterField<?
             validationParameters.substring(0, validationParameters.length() - 1));
       }
     }
-    // If the flow reaches here, then there is no validator, then value should match ${input}
-    if (!field.equals(NGExpressionUtils.DEFAULT_INPUT_SET_EXPRESSION)) {
-      throw new InvalidArgumentsException("Unsupported Input Set value");
+    return null;
+  }
+
+  private String getLeftSideOfExpression(String field) {
+    for (InputSetValidatorTypeWithPattern validatorTypeWithPattern : inputSetValidationPatternList) {
+      if (NGExpressionUtils.containsPattern(validatorTypeWithPattern.validatorPattern, field)) {
+        // This will get the content before the validation pattern
+        return validatorTypeWithPattern.validatorPattern.split(field)[0];
+      }
     }
     return null;
   }

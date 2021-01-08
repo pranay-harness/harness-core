@@ -1,6 +1,7 @@
 package io.harness.pms.ngpipeline.inputset.helpers;
 
 import static io.harness.pms.merger.helpers.MergeHelper.createTemplateFromPipeline;
+import static io.harness.pms.merger.helpers.MergeHelper.getPipelineComponent;
 import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSets;
 
 import io.harness.data.structure.EmptyPredicate;
@@ -37,9 +38,7 @@ public class ValidateAndMergeHelper {
     if (EmptyPredicate.isEmpty(identifier)) {
       throw new InvalidRequestException("Identifier cannot be empty");
     }
-    if (PMSInputSetElementMapper.isPipelineAbsent(yaml)) {
-      throw new InvalidRequestException("Input Set provides no values for any runtime input");
-    }
+    confirmPipelineIdentifier(yaml, pipelineIdentifier);
 
     Optional<PipelineEntity> pipelineEntity =
         pmsPipelineService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
@@ -114,9 +113,20 @@ public class ValidateAndMergeHelper {
       }
     });
     try {
-      return mergeInputSets(pipelineTemplate, inputSetYamlList);
+      return mergeInputSets(pipelineTemplate, inputSetYamlList, false);
     } catch (IOException e) {
       throw new InvalidRequestException("Could not merge input sets : " + e.getMessage());
+    }
+  }
+
+  private void confirmPipelineIdentifier(String inputSetYaml, String pipelineIdentifier) {
+    if (PMSInputSetElementMapper.isPipelineAbsent(inputSetYaml)) {
+      throw new InvalidRequestException("Input Set provides no values for any runtime input");
+    }
+    String pipelineComponent = getPipelineComponent(inputSetYaml);
+    String identifierInYaml = PMSInputSetElementMapper.getStringField(pipelineComponent, "identifier", "pipeline");
+    if (!pipelineIdentifier.equals(identifierInYaml)) {
+      throw new InvalidRequestException("Pipeline identifier in input set does not match");
     }
   }
 }

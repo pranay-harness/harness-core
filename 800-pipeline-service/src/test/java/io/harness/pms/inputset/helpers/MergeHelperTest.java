@@ -57,7 +57,7 @@ public class MergeHelperTest extends CategoryTest {
     String inputSetYaml =
         Resources.toString(Objects.requireNonNull(classLoader.getResource(inputSet)), StandardCharsets.UTF_8);
 
-    String res = mergeInputSetIntoPipeline(yaml, inputSetYaml);
+    String res = mergeInputSetIntoPipeline(yaml, inputSetYaml, false);
     String resYaml = res.replace("\"", "");
 
     String mergedYamlFile = "pipeline-extensive-merged.yml";
@@ -116,7 +116,7 @@ public class MergeHelperTest extends CategoryTest {
     String yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
     String templateYaml = createTemplateFromPipeline(yaml);
 
-    String mergedYaml = mergeInputSets(templateYaml, inputSetYamlList);
+    String mergedYaml = mergeInputSets(templateYaml, inputSetYamlList, false);
 
     String inputSetMerged = "input12-merged.yml";
     String inputSetYamlMerged =

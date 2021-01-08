@@ -37,7 +37,6 @@ public class NGExpressionUtils {
   }
 
   public String getInputSetValidatorPattern(String validatorName) {
-    return EngineExpressionEvaluator.EXPR_START_ESC + "input" + EngineExpressionEvaluator.EXPR_END_ESC + "\\."
-        + validatorName + "\\(";
+    return "\\." + validatorName + "\\(";
   }
 }

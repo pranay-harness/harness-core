@@ -82,6 +82,34 @@ public class ParameterFieldDeserializerTest extends CategoryTest implements Mult
         .isEqualTo("jexl(${env} == 'dev' ? (${team} == 'a' ? 'dev_a, dev_b':'dev_qa, dev_qb'):'prod, stage')");
   }
 
+  @Test
+  @Owner(developers = OwnerRule.NAMAN)
+  @Category(UnitTests.class)
+  public void testParameterFieldInputSetDeserialization2() throws IOException {
+    ClassLoader classLoader = this.getClass().getClassLoader();
+    final URL testFile = classLoader.getResource("pipeline.yml");
+    Pipeline readValue = objectMapper.readValue(testFile, Pipeline.class);
+    assertThat(readValue).isNotNull();
+    assertThat(readValue.infrastructure).isNotNull();
+    assertThat(readValue.infrastructure.isExpression()).isEqualTo(false);
+    assertThat(readValue.infrastructure.getValue()).isNotNull();
+
+    Infrastructure infrastructure = readValue.infrastructure.getValue();
+
+    assertThat(infrastructure.getInner9().isExpression()).isFalse();
+    assertThat(infrastructure.getInner9().getValue()).isEqualTo("valueFromInputSet");
+    assertThat(infrastructure.getInner9().getInputSetValidator().getValidatorType())
+        .isEqualTo(InputSetValidatorType.ALLOWED_VALUES);
+    assertThat(infrastructure.getInner9().getInputSetValidator().getParameters()).isEqualTo("dev, nondev, prod");
+
+    assertThat(infrastructure.getInner10().isExpression()).isTrue();
+    assertThat(infrastructure.getInner10().getExpressionValue()).isEqualTo("${dollar.expr.from.inputSet}");
+    assertThat(infrastructure.getInner10().getInputSetValidator().getValidatorType())
+        .isEqualTo(InputSetValidatorType.ALLOWED_VALUES);
+    assertThat(infrastructure.getInner10().getInputSetValidator().getParameters())
+        .isEqualTo("dev, ${env}, ${env2}, stage");
+  }
+
   @Data
   @Builder
   static class Pipeline {
@@ -100,5 +128,7 @@ public class ParameterFieldDeserializerTest extends CategoryTest implements Mult
     private ParameterField<String> inner6;
     private ParameterField<Double> inner7;
     private ParameterField<String> inner8;
+    private ParameterField<String> inner9;
+    private ParameterField<String> inner10;
   }
 }
