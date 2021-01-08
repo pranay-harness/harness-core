@@ -24,6 +24,7 @@ import io.harness.delegate.task.artifacts.response.ArtifactTaskExecutionResponse
 import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.tasks.DelegateTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
@@ -35,6 +36,7 @@ import io.harness.tasks.ResponseData;
 import software.wings.beans.TaskType;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
@@ -70,7 +72,10 @@ public class ArtifactStepTest extends CDNGBaseTest {
   public void testObtainingArtifactTaskForDocker() {
     Ambiance ambiance =
         Ambiance.newBuilder()
-            .putAllSetupAbstractions(ImmutableMap.of("accountId", "ACCOUNT_ID", "expressionFunctorToken", "1234"))
+            .putAllSetupAbstractions(ImmutableMap.of("accountId", "ACCOUNT_ID", "expressionFunctorToken", "1234",
+                "orgIdentifier", "ORG_ID", "projectIdentifier", "PROJECT_ID"))
+            .addAllLevels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build(),
+                Level.newBuilder().setRuntimeId("node2").build(), Level.newBuilder().setRuntimeId("node3").build()))
             .build();
     ArtifactStepParameters stepParameters = getStepParametersForDocker();
     when(artifactStepHelper.toSourceDelegateRequest(artifactStep.applyArtifactsOverlay(stepParameters), ambiance))

@@ -44,6 +44,11 @@ public class ParameterField<T> implements OrchestrationField, VisitorFieldWrappe
     return new ParameterField<>(value, false, null, null, value.getClass().equals(String.class));
   }
 
+  public static <T> ParameterField<T> createValueFieldWithInputSetValidator(
+      T value, InputSetValidator inputSetValidator, boolean isTypeString) {
+    return new ParameterField<>(value, false, null, inputSetValidator, isTypeString);
+  }
+
   public static <T> ParameterField<T> createJsonResponseField(String responseField) {
     return new ParameterField<>(true, responseField);
   }

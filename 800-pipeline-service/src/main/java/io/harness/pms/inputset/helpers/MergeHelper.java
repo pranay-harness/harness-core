@@ -2,7 +2,7 @@ package io.harness.pms.inputset.helpers;
 
 import static io.harness.pms.merger.helpers.MergeHelper.createTemplateFromPipeline;
 import static io.harness.pms.merger.helpers.MergeHelper.getInvalidFQNsInInputSet;
-import static io.harness.pms.merger.helpers.MergeHelper.getPipelineComp;
+import static io.harness.pms.merger.helpers.MergeHelper.getPipelineComponent;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
@@ -24,7 +24,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class MergeHelper {
   public InputSetErrorWrapperDTOPMS getErrorMap(String pipelineYaml, String inputSetYaml) throws IOException {
-    String pipelineComp = getPipelineComp(inputSetYaml);
+    String pipelineComp = getPipelineComponent(inputSetYaml);
     String templateYaml = createTemplateFromPipeline(pipelineYaml);
     Set<FQN> invalidFQNs = getInvalidFQNsInInputSet(templateYaml, pipelineComp);
     if (EmptyPredicate.isEmpty(invalidFQNs)) {
