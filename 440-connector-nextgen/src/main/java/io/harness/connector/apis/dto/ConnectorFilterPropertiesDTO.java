@@ -2,8 +2,8 @@ package io.harness.connector.apis.dto;
 
 import static io.harness.filter.FilterConstants.CONNECTOR_FILTER;
 
-import io.harness.connector.entities.ConnectivityStatus;
 import io.harness.connector.entities.ConnectorFilterProperties;
+import io.harness.delegate.beans.connector.ConnectivityStatus;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.filter.FilterType;
@@ -11,7 +11,6 @@ import io.harness.filter.dto.FilterPropertiesDTO;
 import io.harness.filter.entity.FilterProperties;
 import io.harness.ng.core.mapper.TagMapper;
 
-import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModel;

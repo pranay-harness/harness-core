@@ -1,6 +1,7 @@
 package io.harness.connector.entities;
 
 import io.harness.connector.apis.dto.ConnectorFilterPropertiesDTO;
+import io.harness.delegate.beans.connector.ConnectivityStatus;
 import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.filter.dto.FilterPropertiesDTO;

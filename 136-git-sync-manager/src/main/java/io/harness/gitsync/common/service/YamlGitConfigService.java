@@ -1,6 +1,6 @@
 package io.harness.gitsync.common.service;
 
-import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.validation.Create;
 import io.harness.validation.Update;

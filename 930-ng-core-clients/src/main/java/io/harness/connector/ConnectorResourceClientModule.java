@@ -1,4 +1,4 @@
-package io.harness.connector.apis.client;
+package io.harness.connector;
 
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;

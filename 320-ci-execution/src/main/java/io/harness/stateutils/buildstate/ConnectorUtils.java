@@ -9,11 +9,11 @@ import static java.lang.String.format;
 
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
-import io.harness.connector.apis.client.ConnectorResourceClient;
-import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.ConnectorResourceClient;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails.ConnectorDetailsBuilder;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.apis.dto.ConnectorDTO;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryAuthType;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConnectorDTO;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryUsernamePasswordAuthDTO;

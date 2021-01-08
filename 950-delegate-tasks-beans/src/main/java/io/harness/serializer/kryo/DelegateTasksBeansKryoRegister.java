@@ -12,9 +12,14 @@ import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
 import io.harness.delegate.beans.ci.k8s.PodStatus;
 import io.harness.delegate.beans.ci.pod.*;
 import io.harness.delegate.beans.ci.status.BuildStatusPushResponse;
+import io.harness.delegate.beans.connector.ConnectivityStatus;
+import io.harness.delegate.beans.connector.ConnectorConnectivityDetails;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.delegate.beans.connector.apis.dto.ConnectorDTO;
+import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.delegate.beans.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectionTaskParams;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectionTaskResponse;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
@@ -389,5 +394,10 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AwsCurAttributesDTO.class, 19455);
     kryo.register(CEAwsFeatures.class, 19456);
     kryo.register(DeploymentSlotData.class, 19457);
+    kryo.register(ConnectorDTO.class, 26001);
+    kryo.register(ConnectorInfoDTO.class, 26002);
+    kryo.register(ConnectivityStatus.class, 19460);
+    kryo.register(ConnectorConnectivityDetails.class, 19461);
+    kryo.register(ConnectorResponseDTO.class, 19462);
   }
 }

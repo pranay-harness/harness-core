@@ -1,4 +1,4 @@
-package io.harness.connector.apis.dto;
+package io.harness.delegate.beans.connector.apis.dto;
 
 import static io.harness.ConnectorConstants.CONNECTOR_TYPES;
 

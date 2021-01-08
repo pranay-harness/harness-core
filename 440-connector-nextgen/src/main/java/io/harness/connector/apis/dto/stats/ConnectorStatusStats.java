@@ -1,6 +1,6 @@
 package io.harness.connector.apis.dto.stats;
 
-import io.harness.connector.entities.ConnectivityStatus;
+import io.harness.delegate.beans.connector.ConnectivityStatus;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
@@ -8,7 +8,6 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 

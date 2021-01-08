@@ -4,7 +4,7 @@ import static org.mockito.Mockito.mock;
 
 import io.harness.ci.beans.entities.LogServiceConfig;
 import io.harness.ci.beans.entities.TIServiceConfig;
-import io.harness.connector.apis.client.ConnectorResourceClientModule;
+import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.logserviceclient.CILogServiceClientModule;
 import io.harness.morphia.MorphiaRegistrar;

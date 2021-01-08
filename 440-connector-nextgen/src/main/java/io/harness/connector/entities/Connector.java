@@ -1,11 +1,12 @@
 package io.harness.connector.entities;
 
 import io.harness.beans.EmbeddedUser;
-import io.harness.connector.entities.ConnectorConnectivityDetails.ConnectorConnectivityDetailsKeys;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.connector.ConnectorCategory;
+import io.harness.delegate.beans.connector.ConnectorConnectivityDetails;
+import io.harness.delegate.beans.connector.ConnectorConnectivityDetails.ConnectorConnectivityDetailsKeys;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;

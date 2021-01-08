@@ -8,7 +8,7 @@ import io.harness.app.intfc.YAMLToObject;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
-import io.harness.connector.apis.client.ConnectorResourceClientModule;
+import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.core.ci.services.BuildNumberService;
 import io.harness.core.ci.services.BuildNumberServiceImpl;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;

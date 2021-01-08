@@ -1,7 +1,7 @@
 package io.harness.connector.services;
 
-import io.harness.connector.apis.dto.ConnectorDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.delegate.beans.connector.apis.dto.ConnectorDTO;
 
 public interface ConnectorValidationService {
   ConnectorValidationResult validate(ConnectorDTO connector, String accountIdentifier);

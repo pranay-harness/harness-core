@@ -6,8 +6,8 @@ import static io.harness.delegate.beans.connector.ConnectorType.GCP_KMS;
 import static io.harness.delegate.beans.connector.ConnectorType.LOCAL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.delegate.beans.connector.apis.dto.ConnectorDTO;
+import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.eraro.ErrorCode;
