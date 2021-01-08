@@ -38,7 +38,7 @@ public class AnomalyDetectionTimeScaleWriter implements ItemWriter<Anomaly>, Ste
 
   @Override
   public ExitStatus afterStep(StepExecution stepExecution) {
-    log.debug("Anomaly Writer ended.");
+    log.info("Anomaly Writer ended.");
     return ExitStatus.COMPLETED;
   }
 }

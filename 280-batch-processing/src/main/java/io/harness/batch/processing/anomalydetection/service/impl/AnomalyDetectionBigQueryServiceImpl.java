@@ -4,6 +4,7 @@ import io.harness.batch.processing.anomalydetection.AnomalyDetectionTimeSeries;
 import io.harness.batch.processing.anomalydetection.TimeSeriesMetaData;
 import io.harness.batch.processing.anomalydetection.helpers.AnomalyDetectionHelper;
 import io.harness.batch.processing.anomalydetection.helpers.TimeSeriesUtils;
+import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
 import io.harness.ccm.billing.graphql.CloudEntityGroupBy;
@@ -12,10 +13,11 @@ import io.harness.exception.InvalidArgumentsException;
 
 import software.wings.graphql.datafetcher.billing.CloudBillingHelper;
 
-import com.google.cloud.bigquery.Dataset;
-import com.google.cloud.bigquery.DatasetId;
+import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.FieldValueList;
 import com.google.cloud.bigquery.QueryJobConfiguration;
+import com.google.cloud.bigquery.Table;
+import com.google.cloud.bigquery.TableId;
 import com.google.cloud.bigquery.TableResult;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -32,33 +34,30 @@ import org.springframework.stereotype.Service;
 @Singleton
 @Slf4j
 public class AnomalyDetectionBigQueryServiceImpl {
+  private static final String preAggregated = "preAggregated";
+  private BatchMainConfig config;
   private BigQueryService bigQueryService;
   private CloudBillingHelper cloudBillingHelper;
 
   @Autowired
   @Inject
-  public AnomalyDetectionBigQueryServiceImpl(BigQueryService bigQueryService, CloudBillingHelper cloudBillingHelper) {
+  public AnomalyDetectionBigQueryServiceImpl(
+      BatchMainConfig config, BigQueryService bigQueryService, CloudBillingHelper cloudBillingHelper) {
+    this.config = config;
     this.cloudBillingHelper = cloudBillingHelper;
     this.bigQueryService = bigQueryService;
   }
 
-  private boolean isDatasetExists(String accountId) {
-    String datasetName = cloudBillingHelper.getDataSetId(accountId);
-    Dataset dataset = bigQueryService.get().getDataset(DatasetId.of(datasetName));
-    return dataset.exists();
-  }
-
   public List<String> getBatchMetaData(TimeSeriesMetaData timeSeriesMetaData) {
     List<String> hashCodes = new ArrayList<>();
-
-    if (!isDatasetExists(timeSeriesMetaData.getAccountId())) {
-      log.info("Skipping account {} since gcp/aws connector doesn't exist ", timeSeriesMetaData.getAccountId());
+    if (!isTableExists(timeSeriesMetaData.getAccountId())) {
       return hashCodes;
     }
 
     String queryStatement = timeSeriesMetaData.getCloudQueryMetaData().getMetaDataQuery();
     queryStatement = queryStatement.replace("<Project>.<DataSet>.<TableName>",
-        cloudBillingHelper.getCloudProviderTableName(timeSeriesMetaData.getAccountId()));
+        cloudBillingHelper.getCloudProviderTableName(
+            config.getBillingDataPipelineConfig().getGcpProjectId(), timeSeriesMetaData.getAccountId(), preAggregated));
     log.info("Step 1 : query statement prepared for meta data : {}", queryStatement);
 
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(queryStatement).build();
@@ -70,6 +69,22 @@ public class AnomalyDetectionBigQueryServiceImpl {
           timeSeriesMetaData.getAccountId(), queryStatement, e);
     }
     return hashCodes;
+  }
+
+  private boolean isTableExists(String accountId) {
+    try {
+      String datasetName = cloudBillingHelper.getDataSetId(accountId);
+      Table table = bigQueryService.get().getTable(TableId.of(datasetName, preAggregated));
+      if (table == null) {
+        return false;
+      }
+      if (table.exists()) {
+        return true;
+      }
+    } catch (BigQueryException e) {
+      log.info("Skipping account {} since gcp/aws connector doesn't exist", accountId);
+    }
+    return false;
   }
 
   public List<String> extractHashCodes(TableResult result) {
@@ -91,7 +106,8 @@ public class AnomalyDetectionBigQueryServiceImpl {
 
     String queryStatement = timeSeriesMetaData.getCloudQueryMetaData().getQuery(batchHashCodes);
     queryStatement = queryStatement.replace("<Project>.<DataSet>.<TableName>",
-        cloudBillingHelper.getCloudProviderTableName(timeSeriesMetaData.getAccountId()));
+        cloudBillingHelper.getCloudProviderTableName(
+            config.getBillingDataPipelineConfig().getGcpProjectId(), timeSeriesMetaData.getAccountId(), preAggregated));
     log.info("STEP 2 : query statement prepared for reading batch data : {}", queryStatement);
 
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(queryStatement).build();

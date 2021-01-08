@@ -15,7 +15,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AnomalyDetectionTimeSeries extends AnomalyDetectionInfo {
   public static AnomalyDetectionTimeSeries initialiseNewTimeSeries(TimeSeriesMetaData timeSeriesMetaData) {
-    AnomalyDetectionTimeSeries timeSeries = AnomalyDetectionTimeSeries.builder().build();
+    AnomalyDetectionTimeSeries timeSeries = AnomalyDetectionTimeSeries.builder()
+                                                .accountId(timeSeriesMetaData.getAccountId())
+                                                .timeGranularity(timeSeriesMetaData.getTimeGranularity())
+                                                .entityType(timeSeriesMetaData.getEntityType())
+                                                .build();
     timeSeries.initialiseTrainData(
         timeSeriesMetaData.getTrainStart(), timeSeriesMetaData.getTrainEnd(), ChronoUnit.DAYS);
     timeSeries.initialiseTestData(timeSeriesMetaData.getTestStart(), timeSeriesMetaData.getTestEnd(), ChronoUnit.DAYS);
