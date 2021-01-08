@@ -11,6 +11,7 @@ import static java.util.stream.Collectors.toList;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.NextGenService;
+import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.DeletedCVConfig;
@@ -40,15 +41,18 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
+@Slf4j
 public class CVConfigServiceImpl implements CVConfigService {
   @Inject private HPersistence hPersistence;
   @Inject private AnomalyService anomalyService;
   @Inject private DeletedCVConfigService deletedCVConfigService;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private NextGenService nextGenService;
+  @Inject private VerificationManagerService verificationManagerService;
   @Inject private CVEventService eventService;
 
   @Override
@@ -409,5 +413,24 @@ public class CVConfigServiceImpl implements CVConfigService {
         .field(CVConfigKeys.identifier)
         .notEqual(identifier)
         .asList();
+  }
+
+  @Override
+  public List<String> cleanupPerpetualTasks(String accountId, List<String> cvConfigIds) {
+    if (isNotEmpty(cvConfigIds)) {
+      List<CVConfig> cvConfigs = hPersistence.createQuery(CVConfig.class)
+                                     .filter(CVConfigKeys.accountId, accountId)
+                                     .field(CVConfigKeys.uuid)
+                                     .in(cvConfigIds)
+                                     .asList();
+      List<String> perpetualTaskIds = cvConfigs.stream().map(CVConfig::getPerpetualTaskId).collect(toList());
+      verificationManagerService.deletePerpetualTasks(accountId, perpetualTaskIds);
+      Query<CVConfig> cvConfigQuery = hPersistence.createQuery(CVConfig.class).field(CVConfigKeys.uuid).in(cvConfigIds);
+      UpdateOperations<CVConfig> cvConfigUpdateOperations =
+          hPersistence.createUpdateOperations(CVConfig.class).unset(CVConfigKeys.perpetualTaskId);
+      hPersistence.update(cvConfigQuery, cvConfigUpdateOperations);
+      log.info("Cleaned up perpetual tasks for the following cvConfigs : " + cvConfigIds);
+    }
+    return cvConfigIds;
   }
 }

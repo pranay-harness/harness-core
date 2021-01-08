@@ -18,6 +18,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.NextGenService;
+import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.AppDynamicsDSConfig;
 import io.harness.cvng.core.beans.AppDynamicsDSConfig.AppdynamicsAppConfig;
 import io.harness.cvng.core.entities.CVConfig;
@@ -54,6 +55,9 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
   @Inject private CVConfigService cvConfigService;
   @Inject private DSConfigService dsConfigService;
   @Mock private NextGenService nextGenService;
+
+  @Mock private VerificationManagerService verificationManagerService;
+
   @Mock private CVEventServiceImpl eventService;
   private String accountId;
   private String connectorIdentifier;
@@ -97,6 +101,9 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
           .build();
     });
     FieldUtils.writeField(cvConfigService, "nextGenService", nextGenService, true);
+
+    FieldUtils.writeField(cvConfigService, "verificationManagerService", verificationManagerService, true);
+
     FieldUtils.writeField(cvConfigService, "eventService", eventService, true);
   }
 
@@ -658,5 +665,21 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     result =
         cvConfigService.findByConnectorIdentifier(accountId, orgIdentifier, projectIdentifier, "random", Scope.ACCOUNT);
     assertThat(result).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testCleanupPerpetualTasks() {
+    List<CVConfig> cvConfigs = createCVConfigs(5);
+    List<String> cvConfigIds = new ArrayList<>();
+    for (int i = 0; i < 5; i++) {
+      cvConfigs.get(i).setPerpetualTaskId("perpetualTask" + i);
+    }
+    List<CVConfig> configList = save(cvConfigs);
+    cvConfigIds = configList.stream().map(CVConfig::getUuid).collect(Collectors.toList());
+    cvConfigService.cleanupPerpetualTasks(accountId, cvConfigIds);
+
+    cvConfigIds.forEach(cvConfigId -> { assertThat(cvConfigService.get(cvConfigId).getPerpetualTaskId()).isNull(); });
   }
 }

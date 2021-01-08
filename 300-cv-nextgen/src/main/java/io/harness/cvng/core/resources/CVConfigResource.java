@@ -113,4 +113,14 @@ public class CVConfigResource {
       @QueryParam("connectorIdentifier") String connectorIdentifier) {
     return new RestResponse<>(cvConfigService.getProductNames(accountId, connectorIdentifier));
   }
+
+  @PUT
+  @Path("/cleanup-perpetual-task")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "deletes perpetual tasks for the cvConfigs", nickname = "deletePerpetualTasksForCVConfigs")
+  public RestResponse<List<String>> deletePerpetualTasks(
+      @QueryParam("accountId") @Valid final String accountId, @Body List<String> cvConfigIds) {
+    return new RestResponse<>(cvConfigService.cleanupPerpetualTasks(accountId, cvConfigIds));
+  }
 }
