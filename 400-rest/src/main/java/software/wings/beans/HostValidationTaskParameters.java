@@ -5,10 +5,10 @@ import static java.util.stream.Collectors.toList;
 import io.harness.delegate.beans.executioncapability.ConnectivityCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
-import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.settings.SettingValue;
 
 import java.util.Collection;
@@ -27,7 +27,8 @@ public class HostValidationTaskParameters implements ExecutionCapabilityDemander
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     if (connectionSetting == null) {
-      return CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(encryptionDetails, maskingEvaluator);
+      return EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
+          encryptionDetails, maskingEvaluator);
     }
     SettingValue settingValue = connectionSetting.getValue();
     int port = 22;

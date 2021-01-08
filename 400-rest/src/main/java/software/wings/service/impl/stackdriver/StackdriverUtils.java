@@ -3,11 +3,10 @@ package software.wings.service.impl.stackdriver;
 import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.HttpCapabilityDetailsLevel.QUERY;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
-
-import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,8 +26,8 @@ public class StackdriverUtils {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
     executionCapabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
         STACKDRIVER_VALIDATION_URL, QUERY, maskingEvaluator));
-    executionCapabilities.addAll(
-        CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails, maskingEvaluator));
+    executionCapabilities.addAll(EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
+        encryptedDataDetails, maskingEvaluator));
     return executionCapabilities;
   }
 
@@ -37,8 +36,8 @@ public class StackdriverUtils {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
     executionCapabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
         STACKDRIVER_LOGGING_VALIDATION_URL, QUERY, maskingEvaluator));
-    executionCapabilities.addAll(
-        CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails, maskingEvaluator));
+    executionCapabilities.addAll(EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
+        encryptedDataDetails, maskingEvaluator));
     return executionCapabilities;
   }
 }

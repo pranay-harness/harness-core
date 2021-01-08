@@ -1,6 +1,6 @@
 package software.wings.helpers.ext.pcf.request;
 
-import static software.wings.delegatetasks.delegatecapability.CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails;
+import static io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;

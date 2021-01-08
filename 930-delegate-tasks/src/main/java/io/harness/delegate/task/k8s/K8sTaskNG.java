@@ -98,8 +98,8 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
                 .ocPath(k8sGlobalConfigService.getOcPath())
                 .kustomizeBinaryPath(k8sGlobalConfigService.getKustomizePath())
                 .build();
-
-        logK8sVersion(k8sDeployRequest, k8SDelegateTaskParams);
+        // TODO: @anshul/vaibhav , fix this
+        // logK8sVersion(k8sDeployRequest, k8SDelegateTaskParams);
 
         return k8sTaskTypeToRequestHandler.get(k8sDeployRequest.getTaskType().name())
             .executeTask(k8sDeployRequest, k8SDelegateTaskParams, getLogStreamingTaskClient());

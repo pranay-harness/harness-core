@@ -5,13 +5,12 @@ import static io.harness.expression.Expression.ALLOW_SECRETS;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
-
-import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,8 +45,9 @@ public class ShellScriptProvisionParameters implements TaskParameters, ActivityA
 
     if (isNotEmpty(encryptedVariables)) {
       for (EncryptedDataDetail encryptedDataDetail : encryptedVariables.values()) {
-        executionCapabilities.addAll(CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
-            Arrays.asList(encryptedDataDetail), maskingEvaluator));
+        executionCapabilities.addAll(
+            EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
+                Arrays.asList(encryptedDataDetail), maskingEvaluator));
       }
     }
 

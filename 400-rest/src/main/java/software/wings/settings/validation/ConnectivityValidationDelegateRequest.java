@@ -4,6 +4,7 @@ import io.harness.delegate.beans.executioncapability.AlwaysFalseValidationCapabi
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.SmtpCapability;
+import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.delegate.task.mixin.SocketConnectivityCapabilityGenerator;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -11,7 +12,6 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
-import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.settings.SettingValue;
 
@@ -28,7 +28,8 @@ public class ConnectivityValidationDelegateRequest implements ExecutionCapabilit
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilities =
-        CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails, maskingEvaluator);
+        EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
+            encryptedDataDetails, maskingEvaluator);
     if (settingAttribute == null) {
       return executionCapabilities;
     }

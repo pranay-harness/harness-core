@@ -14,6 +14,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
@@ -159,7 +160,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
   public void testGetHttpCapabilityForDecryption_VaultConfig() throws Exception {
     EncryptionConfig encryptionConfig = VaultConfig.builder().vaultUrl(HTTP_VAUTL_URL).build();
     List<ExecutionCapability> capability =
-        CapabilityHelper.fetchExecutionCapabilityForSecretManager(encryptionConfig, null);
+        EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilityForSecretManager(encryptionConfig, null);
     assertThat(HTTP_VAUTL_URL).isEqualTo(capability.get(0).fetchCapabilityBasis());
   }
 
@@ -169,7 +170,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
   public void testGetHttpCapabilityForDecryption_KmsConfig() throws Exception {
     EncryptionConfig encryptionConfig = KmsConfig.builder().region(US_EAST_2).build();
     List<ExecutionCapability> capability =
-        CapabilityHelper.fetchExecutionCapabilityForSecretManager(encryptionConfig, null);
+        EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilityForSecretManager(encryptionConfig, null);
     assertThat(AWS_KMS_URL).isEqualTo(capability.get(0).fetchCapabilityBasis());
   }
 
@@ -179,7 +180,7 @@ public class CapabilityHelperTest extends WingsBaseTest {
   public void testGetHttpCapabilityForDecryption_secretconfig() throws Exception {
     EncryptionConfig encryptionConfig = CyberArkConfig.builder().cyberArkUrl("https://harness.cyberark.com").build();
     List<ExecutionCapability> capability =
-        CapabilityHelper.fetchExecutionCapabilityForSecretManager(encryptionConfig, null);
+        EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilityForSecretManager(encryptionConfig, null);
     assertThat("https://harness.cyberark.com").isEqualTo(capability.get(0).fetchCapabilityBasis());
   }
 
