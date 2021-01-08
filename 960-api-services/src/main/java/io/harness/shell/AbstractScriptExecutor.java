@@ -64,8 +64,6 @@ public abstract class AbstractScriptExecutor implements BaseScriptExecutor {
 
   public abstract String getCommandUnitName();
 
-  public abstract String getAppId();
-
   public abstract String getExecutionId();
 
   public abstract String getHost();

@@ -278,7 +278,8 @@ public enum TaskType {
   NOTIFY_PAGERDUTY(TaskGroup.NOTIFICATION),
   NOTIFY_MAIL(TaskGroup.NOTIFICATION),
   NOTIFY_MICROSOFTTEAMS(TaskGroup.NOTIFICATION),
-  HTTP_TASK_NG(TaskGroup.HTTP_NG);
+  HTTP_TASK_NG(TaskGroup.HTTP_NG),
+  SHELL_SCRIPT_TASK_NG(TaskGroup.SHELL_SCRIPT_NG);
 
   private final TaskGroup taskGroup;
 
