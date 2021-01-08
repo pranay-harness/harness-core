@@ -185,6 +185,11 @@ public class SecretManagerImpl implements SecretManager {
     SecretManagerConfig encryptionConfig = secretManagerConfigService.getSecretManager(
         accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
 
+    if (encryptionConfig == null) {
+      log.error("No secret manager found with id {}", encryptedData.getKmsId());
+      return Optional.empty();
+    }
+
     if (encryptionConfig.isTemplatized() && isNotEmpty(workflowExecutionId)) {
       encryptionConfig = updateRuntimeParametersAndGetConfig(workflowExecutionId, encryptionConfig);
     }
