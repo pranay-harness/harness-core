@@ -296,12 +296,6 @@ public class YamlHelper {
       return AppManifestKind.AZURE_CONN_STRINGS_OVERRIDE;
     }
 
-    kind = extractParentEntityName(
-        YamlType.APPLICATION_MANIFEST_APP_SERVICE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
-    if (isNotBlank(kind)) {
-      return AppManifestKind.AZURE_APP_SERVICE_MANIFEST;
-    }
-
     return AppManifestKind.K8S_MANIFEST;
   }
 
