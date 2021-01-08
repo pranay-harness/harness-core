@@ -316,6 +316,9 @@ gcpMarketplaceConfig:
   enabled: false
   subscriptionName: gcp-marketplace-topic-subscriber
 
+cfClientConfig:
+  apiKey: ""
+
 featuresEnabled: ""
 
 sampleTargetEnv: ""
