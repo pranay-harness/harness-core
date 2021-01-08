@@ -535,7 +535,7 @@ eventsFramework:
   redis:
     sentinel: false
     masterName: "mymaster"
-    redisUrl: redis://localhost:6379
+    redisUrl: "dummyRedisUrl"
     sentinelUrls:
       - redis://localhost:26379
     envNamespace: ""
