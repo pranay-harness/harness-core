@@ -21,7 +21,7 @@ import lombok.Value;
 public class HttpTaskParametersNg implements TaskParameters, ExecutionCapabilityDemander {
   String method;
   @Expression(ALLOW_SECRETS) String url;
-  Map<String, String> requestHeader;
+  @Expression(ALLOW_SECRETS) Map<String, String> requestHeader;
   @Expression(ALLOW_SECRETS) String body;
   int socketTimeoutMillis;
   boolean useProxy;
