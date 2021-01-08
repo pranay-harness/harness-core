@@ -123,7 +123,7 @@ public class NGTriggerElementMapper {
         .targetIdentifier(ngTriggerEntity.getTargetIdentifier())
         .version(ngTriggerEntity.getVersion())
         .yaml(ngTriggerEntity.getYaml())
-        .enabled(ngTriggerEntity.getEnabled())
+        .enabled(ngTriggerEntity.getEnabled() == null || ngTriggerEntity.getEnabled())
         .build();
   }
 
