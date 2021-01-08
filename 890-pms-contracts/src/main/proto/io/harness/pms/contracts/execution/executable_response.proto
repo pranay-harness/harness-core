@@ -15,7 +15,6 @@ message ExecutableResponse {
     TaskExecutableResponse task = 5;
     TaskChainExecutableResponse taskChain = 6;
   }
-  string metadata = 7;
 }
 
 message AsyncExecutableResponse {

@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
-import io.harness.pms.sdk.core.data.Metadata;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 
 import lombok.Builder;
@@ -18,7 +17,6 @@ public class TaskChainResponse {
   boolean chainEnd;
   PassThroughData passThroughData;
   TaskRequest taskRequest;
-  Metadata metadata;
 
   public static class TaskChainResponseBuilder {
     public TaskChainResponse build() {
