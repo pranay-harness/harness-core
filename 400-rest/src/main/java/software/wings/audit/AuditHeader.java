@@ -5,13 +5,11 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 
-import software.wings.audit.AuditHeader.AuditHeaderKeys;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.Environment;
@@ -21,6 +19,7 @@ import software.wings.beans.User;
 import software.wings.jersey.JsonViews;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,38 +36,44 @@ import org.mongodb.morphia.annotations.Entity;
 @OwnedBy(PL)
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "AuditHeaderKeys")
-
-@CdIndex(name = "entityRecordIndex_1",
-    fields =
-    {
-      @Field(AuditHeaderKeys.accountId)
-      , @Field(AuditHeaderKeys.appIdEntityRecord), @Field(AuditHeaderKeys.affectedResourceType),
-          @Field(AuditHeaderKeys.affectedResourceOp), @Field(value = AuditHeaderKeys.createdAt, type = IndexType.DESC),
-    })
-@CdIndex(name = "entityRecordIndex_2",
-    fields =
-    {
-      @Field(AuditHeaderKeys.accountId)
-      , @Field(AuditHeaderKeys.appIdEntityRecord), @Field(AuditHeaderKeys.affectedResourceId),
-          @Field(AuditHeaderKeys.affectedResourceOp), @Field(value = AuditHeaderKeys.createdAt, type = IndexType.DESC),
-    })
-@CdIndex(name = "entityRecordIndex_3",
-    fields =
-    {
-      @Field(AuditHeaderKeys.accountId)
-      , @Field(AuditHeaderKeys.affectedResourceType), @Field(AuditHeaderKeys.affectedResourceOp),
-          @Field(value = AuditHeaderKeys.createdAt, type = IndexType.DESC),
-    })
-@CdIndex(name = "entityRecordIndex_4",
-    fields =
-    {
-      @Field(AuditHeaderKeys.accountId)
-      , @Field(AuditHeaderKeys.appIdEntityRecord), @Field(value = AuditHeaderKeys.createdAt, type = IndexType.DESC),
-    })
 @Entity(value = "audits", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 
 public class AuditHeader extends Base implements AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(SortCompoundMongoIndex.builder()
+                 .name("entityRecordIndex_1")
+                 .field(AuditHeaderKeys.accountId)
+                 .field(AuditHeaderKeys.appIdEntityRecord)
+                 .field(AuditHeaderKeys.affectedResourceType)
+                 .field(AuditHeaderKeys.affectedResourceOp)
+                 .descSortField(AuditHeaderKeys.createdAt)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("entityRecordIndex_2")
+                 .field(AuditHeaderKeys.accountId)
+                 .field(AuditHeaderKeys.appIdEntityRecord)
+                 .field(AuditHeaderKeys.affectedResourceId)
+                 .field(AuditHeaderKeys.affectedResourceOp)
+                 .descSortField(AuditHeaderKeys.createdAt)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("entityRecordIndex_3")
+                 .field(AuditHeaderKeys.accountId)
+                 .field(AuditHeaderKeys.affectedResourceType)
+                 .field(AuditHeaderKeys.affectedResourceOp)
+                 .descSortField(AuditHeaderKeys.createdAt)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("entityRecordIndex_4")
+                 .field(AuditHeaderKeys.accountId)
+                 .field(AuditHeaderKeys.appIdEntityRecord)
+                 .descSortField(AuditHeaderKeys.createdAt)
+                 .build())
+        .build();
+  }
+
   /**
    * The Remote user.
    */
