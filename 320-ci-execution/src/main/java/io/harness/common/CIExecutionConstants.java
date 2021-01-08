@@ -42,7 +42,7 @@ public class CIExecutionConstants {
   // Container constants for setting up addon binary
   public static final String SETUP_ADDON_CONTAINER_NAME = "setup-addon";
   public static final String SETUP_ADDON_ARGS =
-      "mkdir -p ${HARNESS_WORKSPACE}; mkdir -p /step-exec/.harness/bin; mkdir -p /step-exec/.harness/logs; mkdir -p /step-exec/.harness/tmp; cp /usr/local/bin/ci-addon-linux-amd64 /step-exec/.harness/bin/ci-addon; chmod +x /step-exec/.harness/bin/ci-addon;";
+      "mkdir -p ${HARNESS_WORKSPACE}; mkdir -p /step-exec/.harness/bin; mkdir -p /step-exec/.harness/logs; mkdir -p /step-exec/.harness/tmp; cp /usr/local/bin/ci-addon-linux-amd64 /step-exec/.harness/bin/ci-addon; chmod +x /step-exec/.harness/bin/ci-addon; cp /usr/local/bin/java-agent.jar /step-exec/.harness/bin/java-agent.jar";
 
   // Lite engine container constants
   public static final String LITE_ENGINE_CONTAINER_NAME = "lite-engine";
