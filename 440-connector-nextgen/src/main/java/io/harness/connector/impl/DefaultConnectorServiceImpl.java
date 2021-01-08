@@ -2,6 +2,7 @@ package io.harness.connector.impl;
 
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.connector.ConnectivityStatus.FAILURE;
 import static io.harness.delegate.beans.connector.ConnectivityStatus.SUCCESS;
 import static io.harness.delegate.beans.connector.ConnectorType.GIT;
@@ -38,16 +39,22 @@ import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.ng.beans.PageRequest;
+import io.harness.ng.core.entities.Organization;
+import io.harness.ng.core.entities.Project;
+import io.harness.ng.core.services.OrganizationService;
+import io.harness.ng.core.services.ProjectService;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 import io.harness.utils.PageUtils;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import javax.ws.rs.NotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
@@ -66,6 +73,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   private final ConnectorFilterService filterService;
   private Map<String, ConnectionValidator> connectionValidatorMap;
   private final CatalogueHelper catalogueHelper;
+  private final ProjectService projectService;
+  private final OrganizationService organizationService;
   EntitySetupUsageClient entitySetupUsageClient;
   ConnectorStatisticsHelper connectorStatisticsHelper;
 
@@ -127,8 +136,28 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     return connectors.map(connector -> connectorMapper.writeDTO(connector));
   }
 
+  @VisibleForTesting
+  void assurePredefined(ConnectorDTO connectorDTO, String accountIdentifier) {
+    String orgIdentifier = connectorDTO.getConnectorInfo().getOrgIdentifier();
+    String projectIdentifier = connectorDTO.getConnectorInfo().getProjectIdentifier();
+
+    if (isNotEmpty(orgIdentifier)) {
+      final Optional<Organization> organization = organizationService.get(accountIdentifier, orgIdentifier);
+      if (!organization.isPresent()) {
+        throw new NotFoundException(String.format("org [%s] not found.", orgIdentifier));
+      }
+    }
+    if (isNotEmpty(orgIdentifier) && isNotEmpty(projectIdentifier)) {
+      final Optional<Project> project = projectService.get(accountIdentifier, orgIdentifier, projectIdentifier);
+      if (!project.isPresent()) {
+        throw new NotFoundException(String.format("project [%s] not found.", projectIdentifier));
+      }
+    }
+  }
+
   @Override
   public ConnectorResponseDTO create(ConnectorDTO connectorRequestDTO, String accountIdentifier) {
+    assurePredefined(connectorRequestDTO, accountIdentifier);
     Connector connectorEntity = connectorMapper.toConnector(connectorRequestDTO, accountIdentifier);
     Connector savedConnectorEntity = null;
     try {
@@ -141,6 +170,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
 
   @Override
   public ConnectorResponseDTO update(ConnectorDTO connectorRequest, String accountIdentifier) {
+    assurePredefined(connectorRequest, accountIdentifier);
+
     ConnectorInfoDTO connector = connectorRequest.getConnectorInfo();
     Objects.requireNonNull(connector.getIdentifier());
     String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(

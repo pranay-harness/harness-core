@@ -16,6 +16,8 @@ import static io.harness.encryption.Scope.ACCOUNT;
 import static io.harness.encryption.SecretRefData.SECRET_DOT_DELIMINITER;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
 
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorsTestBase;
@@ -53,6 +55,8 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetails
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.service.FilterService;
+import io.harness.ng.core.services.OrganizationService;
+import io.harness.ng.core.services.ProjectService;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -62,13 +66,20 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.springframework.data.domain.Page;
 
 @Slf4j
 public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
-  @Inject DefaultConnectorServiceImpl connectorService;
+  @Mock OrganizationService organizationService;
+  @Mock ProjectService projectService;
+  @Inject @InjectMocks @Spy DefaultConnectorServiceImpl connectorService;
   @Inject ConnectorRepository connectorRepository;
   @Inject FilterService filterService;
   String accountIdentifier = "accountIdentifier";
@@ -79,6 +90,11 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
   String description = "description";
   ConnectorType connectorType = ConnectorType.DOCKER;
 
+  @Before
+  public void setup() {
+    MockitoAnnotations.initMocks(this);
+    doNothing().when(connectorService).assurePredefined(any(), any());
+  }
   private ConnectorInfoDTO getConnector(String name, String identifier, String description) {
     return ConnectorInfoDTO.builder()
         .name(name)
