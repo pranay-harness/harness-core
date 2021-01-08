@@ -1,14 +1,10 @@
 package io.harness.stateutils.buildstate.providers;
 
 import static io.harness.common.CIExecutionConstants.ADDON_IMAGE_NAME;
-import static io.harness.common.CIExecutionConstants.BUCKET_MINIO_VARIABLE;
-import static io.harness.common.CIExecutionConstants.BUCKET_MINIO_VARIABLE_VALUE;
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ID_VARIABLE_VALUE;
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_TOKEN_VARIABLE;
-import static io.harness.common.CIExecutionConstants.ENDPOINT_MINIO_VARIABLE;
-import static io.harness.common.CIExecutionConstants.ENDPOINT_MINIO_VARIABLE_VALUE;
 import static io.harness.common.CIExecutionConstants.GRPC_SERVICE_PORT_PREFIX;
 import static io.harness.common.CIExecutionConstants.HARNESS_ACCOUNT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_BUILD_ID_VARIABLE;
@@ -140,8 +136,6 @@ public class InternalContainerParamsProvider {
 
     // Add environment variables that need to be used inside the lite engine container
     envVars.put(HARNESS_WORKSPACE, workDirPath);
-    envVars.put(ENDPOINT_MINIO_VARIABLE, ENDPOINT_MINIO_VARIABLE_VALUE);
-    envVars.put(BUCKET_MINIO_VARIABLE, BUCKET_MINIO_VARIABLE_VALUE);
     envVars.put(DELEGATE_SERVICE_TOKEN_VARIABLE, serviceToken);
     envVars.put(DELEGATE_SERVICE_ENDPOINT_VARIABLE, ciExecutionServiceConfig.getDelegateServiceEndpointVariableValue());
     envVars.put(DELEGATE_SERVICE_ID_VARIABLE, DELEGATE_SERVICE_ID_VARIABLE_VALUE);
