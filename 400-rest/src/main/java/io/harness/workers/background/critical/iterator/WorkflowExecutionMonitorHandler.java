@@ -59,7 +59,7 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
   @Inject private FeatureFlagService featureFlagService;
   @Inject private MorphiaPersistenceProvider<WorkflowExecution> persistenceProvider;
 
-  private static final Duration INACTIVITY_TIMEOUT = Duration.ofSeconds(50);
+  private static final Duration INACTIVITY_TIMEOUT = Duration.ofMinutes(3);
   private static final Duration EXPIRE_THRESHOLD = Duration.ofMinutes(10);
 
   public void registerIterators() {
@@ -178,7 +178,8 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
           boolean expired = entity.getCreatedAt() < System.currentTimeMillis() - WorkflowExecution.EXPIRY.toMillis();
           // We lost the eventual exception, but its better than doing nothing
           ExecutionStatus finalStatus = expired ? EXPIRED : ERROR;
-          log.info("[WorkflowStateUpdate] Executing StateCallBack with status: {}", finalStatus);
+          log.info("[WorkflowStateUpdate] Executing StateCallBack with status: {}. StateExecutionId in context is {}",
+              finalStatus, stateExecutionInstance.getUuid());
           stateMachineExecutor.executeCallback(executionContext, stateExecutionInstance, finalStatus, null);
         }
       }
