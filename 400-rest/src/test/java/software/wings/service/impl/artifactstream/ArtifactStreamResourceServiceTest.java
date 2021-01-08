@@ -10,6 +10,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
@@ -17,12 +18,15 @@ import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 
 import com.google.common.collect.Lists;
@@ -54,6 +58,7 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
   @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private YamlDirectoryService yamlDirectoryService;
   @Mock private ServiceResourceService serviceResourceService;
+  @Mock private SettingsService settingsService;
 
   @InjectMocks @Inject private ArtifactStreamService artifactStreamService;
 
@@ -62,6 +67,8 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
    */
   @Before
   public void setUp() {
+    when(settingsService.get(eq("JENKINS_SETTING_ID")))
+        .thenReturn(SettingAttribute.Builder.aSettingAttribute().withValue(new JenkinsConfig()).build());
     persistence.save(anApplication().uuid(APP_ID).accountId(ACCOUNT_ID).build());
     persistence.save(Service.builder().uuid(SERVICE_ID).appId(APP_ID).build());
   }

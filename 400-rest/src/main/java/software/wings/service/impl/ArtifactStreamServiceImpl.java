@@ -35,6 +35,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
@@ -102,6 +103,7 @@ import software.wings.service.intfc.ownership.OwnedByArtifactStream;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingValue;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.stencils.DataProvider;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryFormat;
@@ -446,6 +448,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       artifactStream.setArtifactStreamParameterized(true);
     }
 
+    validateArtifactStream(artifactStream);
     if (validate && artifactStream.getTemplateUuid() == null && !streamParameterized) {
       validateArtifactSourceData(artifactStream);
     }
@@ -694,6 +697,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
     artifactStream.setArtifactStreamParameterized(streamParameterized);
 
+    validateArtifactStream(artifactStream);
     if (validate && !streamParameterized) {
       validateArtifactSourceData(artifactStream);
     }
@@ -922,6 +926,27 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       return oldArtifactStream.artifactServerChanged(oldArtifactStream);
     }
     return false;
+  }
+
+  private void validateArtifactStream(ArtifactStream artifactStream) {
+    String artifactStreamType = artifactStream.getArtifactStreamType();
+    String settingId = artifactStream.getSettingId();
+    if (isNotBlank(settingId) && isNotBlank(artifactStreamType)) {
+      SettingAttribute settingAttribute = settingsService.get(settingId);
+      notNullCheck("Artifact server was not found", settingAttribute, USER);
+      SettingValue settingValue = settingAttribute.getValue();
+      ArtifactStreamType type = ArtifactStreamType.valueOf(artifactStreamType);
+      // Only check for AZURE_MACHINE_IMAGE as we are not sure if the mapping covers all cases
+      if (!AZURE_MACHINE_IMAGE.equals(type)) {
+        return;
+      }
+      if (ArtifactStreamType.supportedSettingVariableTypes.containsKey(type)
+          && !ArtifactStreamType.supportedSettingVariableTypes.get(type).contains(
+              SettingVariableTypes.valueOf(settingValue.getType()))) {
+        throw new InvalidRequestException(String.format(
+            "Invalid setting type %s for artifact stream type %s", settingValue.getType(), artifactStreamType));
+      }
+    }
   }
 
   private void validateArtifactSourceData(ArtifactStream artifactStream) {
