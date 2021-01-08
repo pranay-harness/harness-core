@@ -9,6 +9,7 @@ import static software.wings.beans.PhaseStepType.AMI_SWITCH_AUTOSCALING_GROUP_RO
 import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
+import static software.wings.beans.PhaseStepType.CUSTOM_DEPLOYMENT_PHASE_STEP;
 import static software.wings.beans.PhaseStepType.DEPLOY_AWSCODEDEPLOY;
 import static software.wings.beans.PhaseStepType.DEPLOY_AWS_LAMBDA;
 import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
@@ -370,8 +371,8 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Generic APM verification state type.
    */
-  APM_VERIFICATION(APMVerificationState.class, VERIFICATIONS, 16, "APM Verification", asList(K8S_PHASE_STEP),
-      ORCHESTRATION_STENCILS),
+  APM_VERIFICATION(APMVerificationState.class, VERIFICATIONS, 16, "APM Verification",
+      asList(K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
 
