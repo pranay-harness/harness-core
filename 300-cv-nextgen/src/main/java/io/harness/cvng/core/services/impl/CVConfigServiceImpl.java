@@ -12,6 +12,7 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerService;
+import io.harness.cvng.core.beans.DatasourceTypeDTO;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.DeletedCVConfig;
@@ -413,6 +414,25 @@ public class CVConfigServiceImpl implements CVConfigService {
         .field(CVConfigKeys.identifier)
         .notEqual(identifier)
         .asList();
+  }
+
+  @Override
+  public Set<DatasourceTypeDTO> getDataSourcetypes(String accountId, String projectIdentifier, String orgIdentifier,
+      String environmentIdentifier, String serviceIdentifier, CVMonitoringCategory monitoringCategory) {
+    List<CVConfig> cvConfigs = getConfigsOfProductionEnvironments(
+        accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier, monitoringCategory);
+
+    if (isEmpty(cvConfigs)) {
+      return Collections.emptySet();
+    }
+
+    return cvConfigs.stream()
+        .map(config
+            -> DatasourceTypeDTO.builder()
+                   .dataSourceType(config.getType())
+                   .verificationType(config.getVerificationType())
+                   .build())
+        .collect(Collectors.toSet());
   }
 
   @Override

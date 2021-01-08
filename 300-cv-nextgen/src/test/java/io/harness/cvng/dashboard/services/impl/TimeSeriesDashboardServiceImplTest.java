@@ -100,7 +100,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
 
     PageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getSortedMetricData(accountId,
         projectIdentifier, orgIdentifier, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE,
-        start.toEpochMilli(), end.toEpochMilli(), start.toEpochMilli(), false, 0, 10, null);
+        start.toEpochMilli(), end.toEpochMilli(), start.toEpochMilli(), false, 0, 10, null, null);
 
     verify(cvConfigService)
         .getConfigsOfProductionEnvironments(accountId, orgIdentifier, projectIdentifier, envIdentifier,
@@ -161,7 +161,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
 
     PageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getSortedMetricData(accountId,
         projectIdentifier, orgIdentifier, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE,
-        start.toEpochMilli(), end.toEpochMilli(), start.toEpochMilli(), false, 0, 10, null);
+        start.toEpochMilli(), end.toEpochMilli(), start.toEpochMilli(), false, 0, 10, null, null);
     List<TimeSeriesMetricDataDTO> timeSeriesMetricDTOs = response.getContent();
     assertThat(timeSeriesMetricDTOs.size()).isEqualTo(4);
     TimeSeriesMetricDataDTO timeSeriesMetricDataDTO = timeSeriesMetricDTOs.get(0);
@@ -245,7 +245,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
 
     PageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getSortedMetricData(accountId,
         projectIdentifier, orgIdentifier, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE,
-        start.toEpochMilli(), end.toEpochMilli(), start.toEpochMilli(), false, 0, 10, "m1");
+        start.toEpochMilli(), end.toEpochMilli(), start.toEpochMilli(), false, 0, 10, "m1", null);
     List<TimeSeriesMetricDataDTO> timeSeriesMetricDTOs = response.getContent();
     assertThat(timeSeriesMetricDTOs.size()).isEqualTo(2);
     TimeSeriesMetricDataDTO timeSeriesMetricDataDTO = timeSeriesMetricDTOs.get(0);
@@ -315,7 +315,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
 
     PageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getSortedMetricData(accountId,
         projectIdentifier, orgIdentifier, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE,
-        start.toEpochMilli(), end.toEpochMilli(), start.toEpochMilli(), false, 0, 10, "g1");
+        start.toEpochMilli(), end.toEpochMilli(), start.toEpochMilli(), false, 0, 10, "g1", null);
     List<TimeSeriesMetricDataDTO> timeSeriesMetricDTOs = response.getContent();
     assertThat(timeSeriesMetricDTOs.size()).isEqualTo(2);
     TimeSeriesMetricDataDTO timeSeriesMetricDataDTO = timeSeriesMetricDTOs.get(0);
@@ -351,7 +351,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
 
     PageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getSortedMetricData(accountId,
         projectIdentifier, orgIdentifier, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE,
-        start.toEpochMilli(), end.toEpochMilli(), start.toEpochMilli(), true, 0, 10, null);
+        start.toEpochMilli(), end.toEpochMilli(), start.toEpochMilli(), true, 0, 10, null, null);
     verify(cvConfigService)
         .getConfigsOfProductionEnvironments(accountId, orgIdentifier, projectIdentifier, envIdentifier,
             serviceIdentifier, CVMonitoringCategory.PERFORMANCE);
@@ -384,7 +384,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
 
     PageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getSortedMetricData(accountId,
         projectIdentifier, orgIdentifier, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE,
-        start.toEpochMilli(), end.toEpochMilli(), start.toEpochMilli(), true, 0, 10, null);
+        start.toEpochMilli(), end.toEpochMilli(), start.toEpochMilli(), true, 0, 10, null, null);
     verify(cvConfigService)
         .getConfigsOfProductionEnvironments(accountId, orgIdentifier, projectIdentifier, envIdentifier,
             serviceIdentifier, CVMonitoringCategory.PERFORMANCE);
@@ -408,9 +408,9 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
              accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier, null))
         .thenReturn(Arrays.asList(cvConfig));
 
-    PageResponse<TimeSeriesMetricDataDTO> response =
-        timeSeriesDashboardService.getSortedMetricData(accountId, projectIdentifier, orgIdentifier, envIdentifier,
-            serviceIdentifier, null, start.toEpochMilli(), end.toEpochMilli(), start.toEpochMilli(), true, 0, 10, null);
+    PageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getSortedMetricData(accountId,
+        projectIdentifier, orgIdentifier, envIdentifier, serviceIdentifier, null, start.toEpochMilli(),
+        end.toEpochMilli(), start.toEpochMilli(), true, 0, 10, null, null);
 
     assertThat(response).isNotNull();
     assertThat(response.getContent()).isNotEmpty();
@@ -443,7 +443,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
 
     PageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getSortedMetricData(accountId,
         projectIdentifier, orgIdentifier, envIdentifier, serviceIdentifier, CVMonitoringCategory.PERFORMANCE,
-        start.toEpochMilli(), end.toEpochMilli(), start.toEpochMilli(), true, 0, 3, null);
+        start.toEpochMilli(), end.toEpochMilli(), start.toEpochMilli(), true, 0, 3, null, null);
 
     assertThat(response).isNotNull();
     assertThat(response.getContent()).isNotEmpty();

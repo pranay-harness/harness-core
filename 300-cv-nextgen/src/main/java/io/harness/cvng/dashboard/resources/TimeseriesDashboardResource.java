@@ -2,6 +2,7 @@ package io.harness.cvng.dashboard.resources;
 
 import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO;
 import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
 import io.harness.ng.beans.PageResponse;
@@ -44,11 +45,13 @@ public class TimeseriesDashboardResource {
       @QueryParam("monitoringCategory") String monitoringCategory,
       @NotNull @QueryParam("startTime") Long startTimeMillis, @NotNull @QueryParam("endTime") Long endTimeMillis,
       @NotNull @QueryParam("analysisStartTime") Long analysisStartTime, @QueryParam("page") @DefaultValue("0") int page,
-      @QueryParam("size") @DefaultValue("10") int size, @QueryParam("filter") String filter) {
+      @QueryParam("size") @DefaultValue("10") int size, @QueryParam("filter") String filter,
+      @QueryParam("datasourceType") DataSourceType datasourceType) {
+    // TODO: Change this to a request body. THis is too many query params.
     return new RestResponse<>(timeSeriesDashboardService.getSortedMetricData(accountId, projectIdentifier,
         orgIdentifier, environmentIdentifier, serviceIdentifier,
         monitoringCategory != null ? CVMonitoringCategory.valueOf(monitoringCategory) : null, startTimeMillis,
-        endTimeMillis, analysisStartTime, true, page, size, filter));
+        endTimeMillis, analysisStartTime, true, page, size, filter, datasourceType));
   }
 
   @GET
@@ -65,11 +68,13 @@ public class TimeseriesDashboardResource {
       @QueryParam("monitoringCategory") String monitoringCategory,
       @NotNull @QueryParam("startTime") Long startTimeMillis, @NotNull @QueryParam("endTime") Long endTimeMillis,
       @NotNull @QueryParam("analysisStartTime") Long analysisStartTime, @QueryParam("page") @DefaultValue("0") int page,
-      @QueryParam("size") @DefaultValue("10") int size, @QueryParam("filter") String filter) {
+      @QueryParam("size") @DefaultValue("10") int size, @QueryParam("filter") String filter,
+      @QueryParam("datasourceType") DataSourceType datasourceType) {
+    // TODO: Change this to a request body. This is too many query params.
     return new RestResponse<>(timeSeriesDashboardService.getSortedMetricData(accountId, projectIdentifier,
         orgIdentifier, environmentIdentifier, serviceIdentifier,
         monitoringCategory != null ? CVMonitoringCategory.valueOf(monitoringCategory) : null, startTimeMillis,
-        endTimeMillis, analysisStartTime, false, page, size, filter));
+        endTimeMillis, analysisStartTime, false, page, size, filter, datasourceType));
   }
 
   @GET
