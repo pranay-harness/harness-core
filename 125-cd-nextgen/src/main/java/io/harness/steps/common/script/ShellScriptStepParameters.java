@@ -7,6 +7,7 @@ import io.harness.yaml.core.variables.NGVariable;
 
 import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,7 +20,7 @@ import org.springframework.data.annotation.TypeAlias;
 @AllArgsConstructor
 @TypeAlias("shellScriptStepParameters")
 public class ShellScriptStepParameters implements StepParameters {
-  ShellType shell;
+  @NotNull ShellType shell;
   ShellScriptSourceWrapper source;
   List<NGVariable> environmentVariables;
   List<NGVariable> outputVariables;

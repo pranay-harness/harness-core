@@ -68,5 +68,6 @@ public enum TaskGroup {
   CVNG,
   NOTIFICATION,
   HTTP_NG,
+  SHELL_SCRIPT_NG,
   BATCH_CAPABILITY_CHECK
 }

@@ -325,11 +325,6 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
   }
 
   @Override
-  public String getAppId() {
-    return config.getAppId();
-  }
-
-  @Override
   public String getExecutionId() {
     return config.getExecutionId();
   }
