@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
@@ -37,6 +37,7 @@ import org.junit.runners.MethodSorters;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
 @Slf4j
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -44,7 +45,8 @@ public class AppDynamicsConnectorTest extends CategoryTest {
   @Mock ConnectorMapper connectorMapper;
   @Mock ConnectorRepository connectorRepository;
   @Mock private Map<String, ConnectionValidator> connectionValidatorMap;
-  @InjectMocks DefaultConnectorServiceImpl connectorService;
+
+  @InjectMocks @Spy DefaultConnectorServiceImpl connectorService;
 
   String userName = "userName";
   String password = "password";
@@ -62,7 +64,6 @@ public class AppDynamicsConnectorTest extends CategoryTest {
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
-
     appDynamicsConfig = AppDynamicsConnector.builder()
                             .username(userName)
                             .accountId(accountIdentifier)
@@ -94,6 +95,7 @@ public class AppDynamicsConnectorTest extends CategoryTest {
     when(connectorRepository.save(appDynamicsConfig)).thenReturn(appDynamicsConfig);
     when(connectorMapper.writeDTO(appDynamicsConfig)).thenReturn(connectorResponse);
     when(connectorMapper.toConnector(connectorRequest, accountIdentifier)).thenReturn(appDynamicsConfig);
+    doNothing().when(connectorService).assurePredefined(any(), any());
   }
 
   private ConnectorResponseDTO createConnector() {

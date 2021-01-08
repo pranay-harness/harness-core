@@ -16,6 +16,7 @@ java_library(
         "//910-delegate-service-driver:module",
         "//930-ng-core-clients:module",
         "//950-ng-core:module",
+        "//950-ng-project-n-orgs:module",
         "//955-filters-sdk:module",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
