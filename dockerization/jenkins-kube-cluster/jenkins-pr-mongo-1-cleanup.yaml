@@ -1,7 +1,7 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: mongo-cleanup
+  name: mongo-cleanup-1
   namespace: default
 spec:
   schedule: "*/10 * * * *"
@@ -11,7 +11,7 @@ spec:
         spec:
           restartPolicy: Never
           containers:
-            - name: mongo-cleanup
+            - name: mongo-cleanup-1
               image: us.gcr.io/platform-205701/harness/toolbox:latest
               command:
                 - /bin/bash
