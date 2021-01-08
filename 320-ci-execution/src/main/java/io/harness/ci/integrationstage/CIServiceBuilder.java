@@ -66,10 +66,10 @@ public class CIServiceBuilder {
         .commands(ServiceContainerUtils.getCommand())
         .args(ServiceContainerUtils.getArguments(
             service.getIdentifier(), service.getImage(), service.getEntrypoint(), service.getArgs(), port))
-        .envVars(service.getEnvironment())
+        .envVars(service.getEnvVariables())
         .containerImageDetails(ContainerImageDetails.builder()
                                    .imageDetails(getImageInfo(service.getImage()))
-                                   .connectorIdentifier(service.getConnector())
+                                   .connectorIdentifier(service.getConnectorRef())
                                    .build())
         .containerResourceParams(
             getServiceContainerResource(service.getResources(), ciExecutionServiceConfig, service.getIdentifier()))

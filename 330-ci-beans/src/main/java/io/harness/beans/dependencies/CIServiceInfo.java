@@ -30,12 +30,12 @@ public class CIServiceInfo implements DependencySpecType {
   @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore private String name;
 
   @JsonIgnore private Integer grpcPort;
-  private Map<String, String> environment;
+  private Map<String, String> envVariables;
   private List<String> entrypoint;
   private List<String> args;
 
   private String image;
-  private String connector;
+  private String connectorRef;
   private ContainerResource resources;
 
   public CIDependencyType getType() {

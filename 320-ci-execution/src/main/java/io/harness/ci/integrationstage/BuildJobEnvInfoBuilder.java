@@ -211,7 +211,7 @@ public class BuildJobEnvInfoBuilder {
             IntegrationStageUtils.getParallelStepElementConfig(executionWrapper);
         if (isNotEmpty(parallelStepElementConfig.getSections())) {
           for (ExecutionWrapperConfig executionWrapperInParallel : parallelStepElementConfig.getSections()) {
-            if (!(executionWrapperInParallel.getStep().isNull())) {
+            if (executionWrapperInParallel.getStep().isNull()) {
               continue;
             }
 
