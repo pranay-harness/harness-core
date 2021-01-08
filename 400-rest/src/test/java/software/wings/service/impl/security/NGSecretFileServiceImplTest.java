@@ -87,6 +87,7 @@ public class NGSecretFileServiceImplTest extends WingsBaseTest {
     SecretFileDTO secretFileDTO = getSecretFileDTO();
     SecretManagerConfig secretManagerConfig = random(VaultConfig.class);
     secretManagerConfig.setEncryptionType(VAULT);
+    ((VaultConfig) secretManagerConfig).setReadOnly(false);
     EncryptedData encryptedData = random(EncryptedData.class);
 
     when(ngSecretService.get(any(), any(), any(), any())).thenReturn(Optional.empty());
@@ -137,6 +138,7 @@ public class NGSecretFileServiceImplTest extends WingsBaseTest {
     EncryptedData encryptedData = random(EncryptedData.class);
     SecretManagerConfig secretManagerConfig = random(VaultConfig.class);
     secretManagerConfig.setEncryptionType(VAULT);
+    ((VaultConfig) secretManagerConfig).setReadOnly(false);
     SecretFileUpdateDTO secretFileUpdateDTO = SecretFileUpdateDTO.builder()
                                                   .name(encryptedData.getName())
                                                   .description("random")
@@ -163,6 +165,7 @@ public class NGSecretFileServiceImplTest extends WingsBaseTest {
     EncryptedData encryptedData = random(EncryptedData.class);
     SecretManagerConfig secretManagerConfig = random(VaultConfig.class);
     secretManagerConfig.setEncryptionType(VAULT);
+    ((VaultConfig) secretManagerConfig).setReadOnly(false);
     SecretFileUpdateDTO secretFileUpdateDTO =
         SecretFileUpdateDTO.builder().name(random(String.class)).description("random").tags(new ArrayList<>()).build();
     when(ngSecretService.get(any(), any(), any(), any())).thenReturn(Optional.ofNullable(encryptedData));

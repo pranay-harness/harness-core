@@ -72,6 +72,7 @@ public class NGSecretServiceImplTest extends WingsBaseTest {
     SecretTextDTO secretTextDTO = random(SecretTextDTO.class);
     secretTextDTO.setPath(null);
     SecretManagerConfig secretManagerConfig = random(VaultConfig.class);
+    ((VaultConfig) secretManagerConfig).setReadOnly(false);
     EncryptedData encryptedData = random(EncryptedData.class);
     encryptedData.setEncryptionType(VAULT);
 
@@ -97,6 +98,7 @@ public class NGSecretServiceImplTest extends WingsBaseTest {
     encryptedData.setEncryptionType(VAULT);
     SecretManagerConfig secretManagerConfig = random(VaultConfig.class);
     secretManagerConfig.setEncryptionType(VAULT);
+    ((VaultConfig) secretManagerConfig).setReadOnly(false);
 
     doReturn(Optional.of(encryptedData)).when(ngSecretService).get(any(), any(), any(), any());
     when(ngSecretManagerService.getSecretManager(any(), any(), any(), any()))
