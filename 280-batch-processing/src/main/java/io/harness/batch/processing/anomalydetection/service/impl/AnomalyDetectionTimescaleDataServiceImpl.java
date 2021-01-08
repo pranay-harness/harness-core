@@ -113,11 +113,7 @@ public class AnomalyDetectionTimescaleDataServiceImpl {
 
   private void fillMetaInfoToTimeSeries(AnomalyDetectionTimeSeries currentTimeSeries,
       TimeSeriesMetaData timeSeriesMetaData, ResultSet resultSet) throws SQLException {
-    currentTimeSeries.setAccountId(timeSeriesMetaData.getAccountId());
     List<QLCCMEntityGroupBy> groupByList = timeSeriesMetaData.getK8sQueryMetaData().getGroupByList();
-
-    currentTimeSeries.setEntityType(timeSeriesMetaData.getEntityType());
-
     if (groupByList.contains(QLCCMEntityGroupBy.Cluster)) {
       currentTimeSeries.setClusterId(resultSet.getString(tableSchema.getClusterId().getColumnNameSQL()));
       currentTimeSeries.setClusterName(resultSet.getString(tableSchema.getClusterName().getColumnNameSQL()));
