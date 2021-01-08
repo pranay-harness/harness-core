@@ -2,9 +2,11 @@ package software.wings.graphql.datafetcher.execution;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.PRABU;
+import static io.harness.rule.OwnerRule.VIKAS_S;
 
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.graphql.datafetcher.execution.ExecutionInputsDataFetcher.APPLICATION_DOES_NOT_EXIST_MSG;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
@@ -13,12 +15,14 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.when;
 
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
 import software.wings.beans.Pipeline;
@@ -100,6 +104,38 @@ public class ExecutionInputsDataFetcherTest extends AbstractDataFetcherTestBase 
     QLExecutionInputs executionInputs = executionInputsDataFetcher.fetch(params, ACCOUNT_ID);
     assertThat(executionInputs).isNotNull();
     assertThat(executionInputs.getServiceInputs()).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = VIKAS_S)
+  @Category(UnitTests.class)
+  public void shouldProvideMeaningfulErrorMessagesForInvalidApplicationId() {
+    // Case when application doesn't belong to provided account.
+    String applicationId = "app1";
+    String providedAccountId = "account1";
+    String actualAccountIdForProvidedApp = "account2";
+    QLServiceInputsForExecutionParams params = QLServiceInputsForExecutionParams.builder()
+                                                   .executionType(QLExecutionType.WORKFLOW)
+                                                   .applicationId(applicationId)
+                                                   .entityId(WORKFLOW_ID)
+                                                   .build();
+    when(appService.getAccountIdByAppId(applicationId)).thenReturn(actualAccountIdForProvidedApp);
+    assertThatThrownBy(() -> executionInputsDataFetcher.fetch(params, providedAccountId))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(APPLICATION_DOES_NOT_EXIST_MSG);
+
+    // Case when application doesn't exist at all.
+    String nonExistentApplicationId = "nonExistentApp";
+    QLServiceInputsForExecutionParams paramsForNonExistentApp = QLServiceInputsForExecutionParams.builder()
+                                                                    .executionType(QLExecutionType.WORKFLOW)
+                                                                    .applicationId(nonExistentApplicationId)
+                                                                    .entityId(WORKFLOW_ID)
+                                                                    .build();
+    when(appService.getAccountIdByAppId(nonExistentApplicationId)).thenReturn(null);
+    when(appService.getAccountIdByAppId(applicationId)).thenReturn(actualAccountIdForProvidedApp);
+    assertThatThrownBy(() -> executionInputsDataFetcher.fetch(paramsForNonExistentApp, providedAccountId))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(APPLICATION_DOES_NOT_EXIST_MSG);
   }
 
   @Test
