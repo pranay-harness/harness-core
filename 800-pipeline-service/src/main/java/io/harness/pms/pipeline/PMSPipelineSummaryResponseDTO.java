@@ -1,9 +1,11 @@
 package io.harness.pms.pipeline;
 
+import io.harness.mongo.index.FdIndex;
 import io.harness.pms.execution.ExecutionStatus;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.sun.istack.internal.NotNull;
 import io.swagger.annotations.ApiModel;
 import java.util.List;
 import java.util.Map;
@@ -23,8 +25,7 @@ public class PMSPipelineSummaryResponseDTO {
   Map<String, String> tags;
   @Version Long version;
   int numOfStages;
-  int numOfErrors; // total number of errors in the last ten days
-  List<Integer> deployments; // no of deployments for each of the last 10 days, most recent first
-  Long lastExecutionTs;
-  ExecutionStatus lastExecutionStatus;
+  long createdAt;
+  long lastUpdatedAt;
+  ExecutionSummaryInfoDTO executionSummaryInfo;
 }
