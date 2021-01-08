@@ -740,3 +740,8 @@ if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
     INDEX=$(expr $INDEX + 1)
   done
 fi
+
+if [[ "" != "$NG_MANAGER_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE ngManagerServiceHttpClientConfig.baseUrl "$NG_MANAGER_BASE_URL"
+fi
+
