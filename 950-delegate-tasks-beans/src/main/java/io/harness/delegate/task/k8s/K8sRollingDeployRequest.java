@@ -1,6 +1,7 @@
 package io.harness.delegate.task.k8s;
 
 import static io.harness.expression.Expression.ALLOW_SECRETS;
+import static io.harness.expression.Expression.DISALLOW_SECRETS;
 
 import io.harness.expression.Expression;
 
@@ -12,7 +13,7 @@ import lombok.Value;
 @Builder
 public class K8sRollingDeployRequest implements K8sDeployRequest {
   boolean skipDryRun;
-  String releaseName;
+  @Expression(DISALLOW_SECRETS) String releaseName;
   String commandName;
   K8sTaskType taskType;
   Integer timeoutIntervalInMin;
