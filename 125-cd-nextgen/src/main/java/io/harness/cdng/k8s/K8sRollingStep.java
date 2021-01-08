@@ -5,6 +5,7 @@ import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
+import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sRollingDeployRequest;
 import io.harness.delegate.task.k8s.K8sRollingDeployResponse;
@@ -79,7 +80,16 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
   @Override
   public StepResponse finalizeExecution(Ambiance ambiance, K8sRollingStepParameters k8sRollingStepParameters,
       PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
-    K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataMap.values().iterator().next();
+    ResponseData responseData = responseDataMap.values().iterator().next();
+    if (responseData instanceof ErrorNotifyResponseData) {
+      return StepResponse.builder()
+          .status(Status.FAILED)
+          .failureInfo(FailureInfo.newBuilder()
+                           .setErrorMessage(((ErrorNotifyResponseData) responseData).getErrorMessage())
+                           .build())
+          .build();
+    }
+    K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseData;
 
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
       InfrastructureOutcome infrastructure = (InfrastructureOutcome) passThroughData;

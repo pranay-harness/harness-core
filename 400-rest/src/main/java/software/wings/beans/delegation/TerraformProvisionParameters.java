@@ -5,6 +5,7 @@ import static io.harness.expression.Expression.ALLOW_SECRETS;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.Expression;
@@ -96,7 +97,8 @@ public class TerraformProvisionParameters implements TaskParameters, ActivityAcc
                            .build());
     }
     if (secretManagerConfig != null) {
-      capabilities.addAll(CapabilityHelper.fetchExecutionCapabilityForSecretManager(secretManagerConfig, null));
+      capabilities.addAll(
+          EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilityForSecretManager(secretManagerConfig, null));
     }
     return capabilities;
   }
