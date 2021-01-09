@@ -2,6 +2,14 @@ package io.harness.yaml.schema;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.yaml.schema.beans.SchemaConstants.ALL_OF_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.ARRAY_TYPE_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.NUMBER_TYPE_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.OBJECT_TYPE_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.ONE_OF_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.PROPERTIES_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.STRING_TYPE_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.TYPE_NODE;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.reflection.CodeUtils;
@@ -9,6 +17,7 @@ import io.harness.yaml.schema.beans.FieldSubtypeData;
 import io.harness.yaml.schema.beans.OneOfMapping;
 import io.harness.yaml.schema.beans.SchemaConstants;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
+import io.harness.yaml.schema.beans.SupportedPossibleFieldTypes;
 import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
 import io.harness.yaml.schema.beans.YamlSchemaConfiguration;
 import io.harness.yaml.utils.YamlConstants;
@@ -56,7 +65,7 @@ public class YamlSchemaGenerator {
    */
   public void generateYamlSchemaFiles(YamlSchemaConfiguration yamlSchemaConfiguration) {
     final Set<Class<?>> rootSchemaClasses = getClassesForYamlSchemaGeneration(yamlSchemaConfiguration);
-    SwaggerGenerator swaggerGenerator = new SwaggerGenerator();
+    SwaggerGenerator swaggerGenerator = new io.harness.yaml.schema.SwaggerGenerator();
 
     for (Class<?> rootSchemaClass : rootSchemaClasses) {
       generateJsonSchemaForRootClass(yamlSchemaConfiguration, swaggerGenerator, rootSchemaClass);
@@ -189,6 +198,11 @@ public class YamlSchemaGenerator {
       if (!isEmpty(swaggerDefinitionsMetaInfo.getOneOfMappings())) {
         addExtraRequiredNodes(mapper, swaggerDefinitionsMetaInfo, allOfNodeContents);
       }
+      // field multiple property
+      if (!isEmpty(swaggerDefinitionsMetaInfo.getFieldPossibleTypes())) {
+        addPossibleValuesInFields(mapper, value, swaggerDefinitionsMetaInfo);
+      }
+
       if (isNotEmpty(allOfNodeContents)) {
         if (value.has(SchemaConstants.ALL_OF_NODE)) {
           final ArrayNode allOfNode = (ArrayNode) value.findValue(SchemaConstants.ALL_OF_NODE);
@@ -200,6 +214,72 @@ public class YamlSchemaGenerator {
     }
 
     removeUnwantedNodes(value, "originalRef");
+  }
+
+  private void addPossibleValuesInFields(
+      ObjectMapper mapper, ObjectNode value, SwaggerDefinitionsMetaInfo swaggerDefinitionsMetaInfo) {
+    ObjectNode propertiesNode;
+    // In case of child classes they contain parent node information in 0 index of all of.
+    // assuming index 1 to have properties node.
+    // later if we find a corner case we will have to iterate over all the nodes to find properties node and see if it
+    // works.
+    if (value.get(ALL_OF_NODE) != null) {
+      propertiesNode = (ObjectNode) value.get(ALL_OF_NODE).get(1).get(PROPERTIES_NODE);
+    } else {
+      propertiesNode = (ObjectNode) value.get(PROPERTIES_NODE);
+    }
+    swaggerDefinitionsMetaInfo.getFieldPossibleTypes().forEach(fieldPossibleTypes -> {
+      final String fieldName = fieldPossibleTypes.getFieldName();
+      final SupportedPossibleFieldTypes defaultFieldType = fieldPossibleTypes.getDefaultFieldType();
+      final ObjectNode fieldNode = (ObjectNode) propertiesNode.get(fieldName);
+      List<ObjectNode> fieldOneOfNodes = new ArrayList<>();
+      if (fieldNode != null) {
+        final ObjectNode currentFieldNodeValue = fieldNode.deepCopy();
+
+        fieldPossibleTypes.getFieldTypes().forEach(type -> {
+          final ObjectNode nodeFromType = getNodeFromType(type, mapper);
+          if (nodeFromType == null) {
+            return;
+          }
+          if (type.equals(defaultFieldType)) {
+            fieldOneOfNodes.add(0, nodeFromType);
+          } else {
+            fieldOneOfNodes.add(nodeFromType);
+          }
+        });
+
+        if (defaultFieldType == SupportedPossibleFieldTypes.none) {
+          fieldOneOfNodes.add(0, currentFieldNodeValue);
+        } else {
+          fieldOneOfNodes.add(currentFieldNodeValue);
+        }
+        fieldNode.removeAll();
+        fieldNode.putArray(ONE_OF_NODE).addAll(fieldOneOfNodes);
+      }
+    });
+  }
+
+  private ObjectNode getNodeFromType(SupportedPossibleFieldTypes type, ObjectMapper mapper) {
+    ObjectNode objectNode = mapper.createObjectNode();
+    switch (type) {
+      case string:
+        objectNode.put(TYPE_NODE, STRING_TYPE_NODE);
+        return objectNode;
+      case number:
+        objectNode.put(TYPE_NODE, NUMBER_TYPE_NODE);
+        return objectNode;
+      case map:
+        objectNode.put(TYPE_NODE, OBJECT_TYPE_NODE);
+        objectNode.putObject(SchemaConstants.ADDITIONAL_PROPERTIES_NODE).put(TYPE_NODE, STRING_TYPE_NODE);
+        return objectNode;
+      case list:
+        objectNode.put(TYPE_NODE, ARRAY_TYPE_NODE);
+        return objectNode;
+      case none:
+        return null;
+      default:
+        throw new InvalidRequestException("Unknown type for generating object node for a type");
+    }
   }
 
   private void addExtraRequiredNodes(
@@ -243,7 +323,7 @@ public class YamlSchemaGenerator {
 
   private void removeFieldWithRefFromSchema(ObjectNode value, FieldSubtypeData fieldSubtypeData) {
     final String fieldName = fieldSubtypeData.getFieldName();
-    ObjectNode propertiesNode = (ObjectNode) value.findValue(SchemaConstants.PROPERTIES_NODE);
+    ObjectNode propertiesNode = (ObjectNode) value.findValue(PROPERTIES_NODE);
     propertiesNode.remove(fieldName);
   }
 
@@ -285,11 +365,11 @@ public class YamlSchemaGenerator {
     for (SubtypeClassMap subtypeClassMap : fieldSubtypeData.getSubtypesMapping()) {
       ObjectNode ifElseBlock = mapper.createObjectNode();
       ifElseBlock.with(SchemaConstants.IF_NODE)
-          .with(SchemaConstants.PROPERTIES_NODE)
+          .with(PROPERTIES_NODE)
           .with(fieldSubtypeData.getDiscriminatorName())
           .put(SchemaConstants.CONST_NODE, subtypeClassMap.getSubtypeEnum());
       ifElseBlock.with(SchemaConstants.THEN_NODE)
-          .with(SchemaConstants.PROPERTIES_NODE)
+          .with(PROPERTIES_NODE)
           .with(fieldSubtypeData.getFieldName())
           .put(SchemaConstants.REF_NODE,
               SchemaConstants.DEFINITIONS_STRING_PREFIX + subtypeClassMap.getSubTypeDefinitionKey());

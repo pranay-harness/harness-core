@@ -12,4 +12,5 @@ import lombok.experimental.FieldDefaults;
 public class SwaggerDefinitionsMetaInfo {
   Set<FieldSubtypeData> subtypeClassMap;
   Set<OneOfMapping> oneOfMappings;
+  Set<PossibleFieldTypes> fieldPossibleTypes;
 }

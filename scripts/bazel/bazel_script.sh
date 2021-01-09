@@ -74,7 +74,7 @@ BAZEL_MODULES="\
   //940-notification-client:module \
   //940-notification-client:module_deploy.jar \
   //940-secret-manager-client:module \
-    //945-connector-beans:module \
+  //945-connector-beans:module \
   //950-command-library-common:module \
   //950-common-entities:module \
   //950-delegate-tasks-beans/src/main/proto:all \
@@ -96,7 +96,7 @@ BAZEL_MODULES="\
   //960-notification-beans:module \
   //960-persistence:module \
   //960-persistence:supporter-test \
-    //960-yaml-sdk:module \
+  //960-yaml-sdk:module \
   //970-api-services-beans:module \
   //970-grpc:module \
   //970-ng-commons:module \
