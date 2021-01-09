@@ -186,6 +186,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       throw new InvalidRequestException(
           format("No connector exists with the  Identifier %s", connector.getIdentifier()));
     }
+    validateTheUpdateRequestIsValid(existingConnector.get(), connectorRequest.getConnectorInfo(), accountIdentifier);
     Connector newConnector = connectorMapper.toConnector(connectorRequest, accountIdentifier);
     newConnector.setId(existingConnector.get().getId());
     newConnector.setVersion(existingConnector.get().getVersion());
@@ -194,6 +195,24 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     newConnector.setTimeWhenConnectorIsLastUpdated(System.currentTimeMillis());
     Connector updatedConnector = connectorRepository.save(newConnector);
     return connectorMapper.writeDTO(updatedConnector);
+  }
+
+  private void validateTheUpdateRequestIsValid(
+      Connector existingConnector, ConnectorInfoDTO connectorInfo, String accountIdentifier) {
+    validateTheConnectorTypeIsNotChanged(existingConnector.getType(), connectorInfo.getConnectorType(),
+        accountIdentifier, connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(),
+        connectorInfo.getIdentifier());
+  }
+
+  private void validateTheConnectorTypeIsNotChanged(ConnectorType existingConnectorType,
+      ConnectorType typeInTheUpdateRequest, String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String connectorIdentifier) {
+    if (existingConnectorType != typeInTheUpdateRequest) {
+      String noConnectorExistsWithTypeMessage = String.format("%s with type %s",
+          createConnectorNotFoundMessage(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier),
+          typeInTheUpdateRequest);
+      throw new InvalidRequestException(noConnectorExistsWithTypeMessage);
+    }
   }
 
   @Override
@@ -352,6 +371,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   private void setAndSaveNewConnectivityStatusInConnector(Connector connector,
       ConnectorValidationResult connectorValidationResult, long connectivityTestedAt,
       ConnectorConnectivityDetails lastStatus) {
+    setLastUpdatedTimeIfNotPresent(connector);
     if (connectorValidationResult != null) {
       ConnectorConnectivityDetailsBuilder connectorConnectivityDetailsBuilder =
           ConnectorConnectivityDetails.builder()
@@ -364,6 +384,12 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       }
       connector.setConnectivityDetails(connectorConnectivityDetailsBuilder.build());
       connectorRepository.save(connector);
+    }
+  }
+
+  private void setLastUpdatedTimeIfNotPresent(Connector connector) {
+    if (connector.getTimeWhenConnectorIsLastUpdated() == null) {
+      connector.setTimeWhenConnectorIsLastUpdated(connector.getCreatedAt());
     }
   }
 
