@@ -49,7 +49,7 @@ public class FilterServiceImpl implements FilterService {
     try {
       return filterMapper.writeDTO(filterRepository.save(filterEntity));
     } catch (DuplicateKeyException ex) {
-      throw new DuplicateFieldException(format("A filter already exists with identifier %s in %s",
+      throw new DuplicateFieldException(format("A filter already exists with identifier/name %s in %s",
           filterEntity.getIdentifier(), getFilterScopeMessage(accountId, filterDTO)));
     }
   }
@@ -147,7 +147,7 @@ public class FilterServiceImpl implements FilterService {
                            .pageIndex(page)
                            .pageSize(size)
                            .sortOrders(Collections.singletonList(
-                               SortOrder.Builder.aSortOrder().withField(FilterKeys.createdAt, OrderType.DESC).build()))
+                               SortOrder.Builder.aSortOrder().withField(FilterKeys.name, OrderType.ASC).build()))
                            .build());
     Criteria criteria = new Criteria();
     if (isNotEmpty(filterIds)) {

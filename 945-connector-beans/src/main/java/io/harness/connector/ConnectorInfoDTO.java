@@ -2,6 +2,7 @@ package io.harness.connector;
 
 import static io.harness.ConnectorConstants.CONNECTOR_TYPES;
 
+import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ExecutionCapabilityDemanderWithScope;
@@ -28,7 +29,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ConnectorInfoDTO {
   @NotNull String name;
-  @NotNull String identifier;
+  @NotNull @EntityIdentifier String identifier;
   String description;
   String orgIdentifier;
   String projectIdentifier;

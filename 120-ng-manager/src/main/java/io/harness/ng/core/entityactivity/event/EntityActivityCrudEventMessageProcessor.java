@@ -1,10 +1,13 @@
 package io.harness.ng.core.entityactivity.event;
 
+import static io.harness.ng.core.activityhistory.NGActivityType.CONNECTIVITY_CHECK;
+
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.schemas.entityactivity.EntityActivityCreateDTO;
 import io.harness.ng.core.activityhistory.dto.NGActivityDTO;
 import io.harness.ng.core.activityhistory.service.NGActivityService;
+import io.harness.ng.core.entityactivity.connector.ConnectorHeartbeatConsumer;
 import io.harness.ng.core.entityactivity.mapper.EntityActivityProtoToRestDTOMapper;
 import io.harness.ng.core.event.MessageProcessor;
 
@@ -19,12 +22,15 @@ import lombok.extern.slf4j.Slf4j;
 public class EntityActivityCrudEventMessageProcessor implements MessageProcessor {
   NGActivityService ngActivityService;
   EntityActivityProtoToRestDTOMapper entityActivityProtoToRestDTOMapper;
+  ConnectorHeartbeatConsumer connectorHeartbeatConsumer;
 
   @Inject
-  public EntityActivityCrudEventMessageProcessor(
-      NGActivityService ngActivityService, EntityActivityProtoToRestDTOMapper entityActivityProtoToRestDTOMapper) {
+  public EntityActivityCrudEventMessageProcessor(NGActivityService ngActivityService,
+      EntityActivityProtoToRestDTOMapper entityActivityProtoToRestDTOMapper,
+      ConnectorHeartbeatConsumer connectorHeartbeatConsumer) {
     this.ngActivityService = ngActivityService;
     this.entityActivityProtoToRestDTOMapper = entityActivityProtoToRestDTOMapper;
+    this.connectorHeartbeatConsumer = connectorHeartbeatConsumer;
   }
 
   @Override
@@ -36,7 +42,9 @@ public class EntityActivityCrudEventMessageProcessor implements MessageProcessor
       switch (metadataMap.get(EventsFrameworkMetadataConstants.ACTION)) {
         case EventsFrameworkMetadataConstants.CREATE_ACTION:
           EntityActivityCreateDTO entityActivityProtoDTO = getEntityActivityCreateDTO(message);
-          processCreateAction(entityActivityProtoDTO);
+          NGActivityDTO ngActivityDTO = entityActivityProtoToRestDTOMapper.toRestDTO(entityActivityProtoDTO);
+          processCreateAction(ngActivityDTO);
+          saveConnectivityCheckResultInConnectorRecords(ngActivityDTO);
           return;
         default:
           log.info("Invalid action type: {}", metadataMap.get(EventsFrameworkMetadataConstants.ACTION));
@@ -44,8 +52,13 @@ public class EntityActivityCrudEventMessageProcessor implements MessageProcessor
     }
   }
 
-  private void processCreateAction(EntityActivityCreateDTO entityActivityProtoDTO) {
-    NGActivityDTO ngActivityDTO = entityActivityProtoToRestDTOMapper.toRestDTO(entityActivityProtoDTO);
+  private void saveConnectivityCheckResultInConnectorRecords(NGActivityDTO ngActivityDTO) {
+    if (ngActivityDTO.getType() == CONNECTIVITY_CHECK) {
+      connectorHeartbeatConsumer.saveTheConnectivityStatus(ngActivityDTO);
+    }
+  }
+
+  private void processCreateAction(NGActivityDTO ngActivityDTO) {
     ngActivityService.save(ngActivityDTO);
   }
 

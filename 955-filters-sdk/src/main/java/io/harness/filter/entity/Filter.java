@@ -10,6 +10,7 @@ import io.harness.persistence.PersistentEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
+import java.util.Arrays;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -71,6 +72,12 @@ public class Filter implements PersistentEntity {
                  .unique(true)
                  .field(FilterKeys.fullyQualifiedIdentifier)
                  .field(FilterKeys.filterType)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_orgId_projectId_name_type_Index")
+                 .unique(true)
+                 .fields(Arrays.asList(FilterKeys.accountIdentifier, FilterKeys.orgIdentifier,
+                     FilterKeys.projectIdentifier, FilterKeys.name, FilterKeys.filterType))
                  .build())
         .add(CompoundMongoIndex.builder().name("accountIdIndex").field(FilterKeys.accountIdentifier).build())
         .build();

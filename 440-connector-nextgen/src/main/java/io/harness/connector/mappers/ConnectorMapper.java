@@ -88,9 +88,19 @@ public class ConnectorMapper {
         .connector(connectorInfo)
         .status(connector.getConnectivityDetails())
         .createdAt(connector.getCreatedAt())
-        .lastModifiedAt(connector.getLastModifiedAt())
+        .lastModifiedAt(getTimeWhenTheConnectorWasUpdated(
+            connector.getTimeWhenConnectorIsLastUpdated(), connector.getLastModifiedAt()))
         .harnessManaged(isHarnessManaged(connector))
         .build();
+  }
+
+  private Long getTimeWhenTheConnectorWasUpdated(Long timeWhenConnectorIsLastUpdated, Long lastModifiedAt) {
+    // todo @deepak: Remove this logic later, currently it handles the old records too where the new field
+    // timeWhenConnectorIsLastUpdated is not present
+    if (timeWhenConnectorIsLastUpdated == null) {
+      return lastModifiedAt;
+    }
+    return timeWhenConnectorIsLastUpdated;
   }
 
   private boolean isHarnessManaged(Connector connector) {

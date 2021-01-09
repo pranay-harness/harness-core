@@ -80,18 +80,21 @@ public class ConnectorHearbeatPublisher {
         && heartbeatDelegateResponse.getConnectorValidationResult().getStatus() == ConnectivityStatus.SUCCESS) {
       activityStatus = NGActivityStatus.SUCCESS;
     }
-    String errorMessage = "";
+    String errorMessage = null;
     if (heartbeatDelegateResponse.getConnectorValidationResult() != null) {
       errorMessage = heartbeatDelegateResponse.getConnectorValidationResult().getErrorSummary();
     }
-    return EntityActivityCreateDTO.newBuilder()
-        .setType(NGActivityType.CONNECTIVITY_CHECK.toString())
-        .setStatus(activityStatus.toString())
-        .setActivityTime(heartbeatDelegateResponse.getConnectorValidationResult().getTestedAt())
-        .setAccountIdentifier(heartbeatDelegateResponse.getAccountIdentifier())
-        .setErrorMessage(errorMessage)
-        .setDescription(CONNECTIVITY_CHECK_DESCRIPTION)
-        .setReferredEntity(referredEntity)
-        .build();
+    EntityActivityCreateDTO.Builder builder =
+        EntityActivityCreateDTO.newBuilder()
+            .setType(NGActivityType.CONNECTIVITY_CHECK.toString())
+            .setStatus(activityStatus.toString())
+            .setActivityTime(heartbeatDelegateResponse.getConnectorValidationResult().getTestedAt())
+            .setAccountIdentifier(heartbeatDelegateResponse.getAccountIdentifier())
+            .setDescription(CONNECTIVITY_CHECK_DESCRIPTION)
+            .setReferredEntity(referredEntity);
+    if (errorMessage != null) {
+      builder.setErrorMessage(errorMessage);
+    }
+    return builder.build();
   }
 }

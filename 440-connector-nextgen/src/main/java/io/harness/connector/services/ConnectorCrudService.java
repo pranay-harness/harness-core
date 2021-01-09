@@ -7,6 +7,7 @@ import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.apis.dto.ConnectorCatalogueResponseDTO;
 import io.harness.connector.apis.dto.ConnectorFilterPropertiesDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.ConnectorValidationResult;
 
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -31,4 +32,7 @@ public interface ConnectorCrudService {
   ConnectorCatalogueResponseDTO getConnectorCatalogue();
 
   void updateConnectorEntityWithPerpetualtaskId(String accountIdentifier, ConnectorInfoDTO connector, String id);
+
+  void updateConnectivityDetailOfTheConnector(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String identifier, ConnectorValidationResult connectorValidationResult);
 }

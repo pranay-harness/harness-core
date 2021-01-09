@@ -40,34 +40,34 @@ public class ConnectorStatisticsHelperTest extends ConnectorsTestBase {
   public void getStats() {
     for (int i = 0; i < 5; i++) {
       Connector connector = KubernetesConnectorTestHelper.createK8sConnector(
-          accountIdentifier, orgIdentifier, projectIdentifier, identifier, Scope.ACCOUNT);
+          accountIdentifier, orgIdentifier, projectIdentifier, identifier, Scope.PROJECT);
       setStatus(connector, ConnectivityStatus.SUCCESS);
       connectorRepository.save(connector);
     }
 
     for (int i = 0; i < 3; i++) {
       Connector connector = AWSConnectorTestHelper.createAWSConnector(
-          accountIdentifier, orgIdentifier, projectIdentifier, identifier, Scope.ACCOUNT);
+          accountIdentifier, orgIdentifier, projectIdentifier, identifier, Scope.PROJECT);
       setStatus(connector, ConnectivityStatus.FAILURE);
       connectorRepository.save(connector);
     }
 
     for (int i = 0; i < 4; i++) {
       Connector connector = DockerConnectorTestHelper.createDockerConnector(
-          accountIdentifier, orgIdentifier, projectIdentifier, identifier, Scope.ACCOUNT);
+          accountIdentifier, orgIdentifier, projectIdentifier, identifier, Scope.PROJECT);
       setStatus(connector, ConnectivityStatus.FAILURE);
       connectorRepository.save(connector);
     }
 
     for (int i = 0; i < 6; i++) {
       Connector connector = DockerConnectorTestHelper.createDockerConnector(
-          accountIdentifier, orgIdentifier, projectIdentifier, identifier, Scope.ACCOUNT);
+          accountIdentifier, orgIdentifier, projectIdentifier, identifier, Scope.PROJECT);
       setStatus(connector, ConnectivityStatus.SUCCESS);
       connectorRepository.save(connector);
     }
 
     ConnectorStatistics connectorStatistics =
-        connectorStatisticsHelper.getStats(accountIdentifier, orgIdentifier, projectIdentifier, Scope.ACCOUNT);
+        connectorStatisticsHelper.getStats(accountIdentifier, orgIdentifier, projectIdentifier);
     assertThat(connectorStatistics).isNotNull();
     List<ConnectorTypeStats> connectorTypeStatsList = connectorStatistics.getTypeStats();
     assertThat(connectorTypeStatsList.size()).isEqualTo(3);

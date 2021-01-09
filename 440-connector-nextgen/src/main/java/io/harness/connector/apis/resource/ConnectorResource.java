@@ -16,7 +16,6 @@ import io.harness.connector.services.ConnectorService;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
-import io.harness.encryption.Scope;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.OrgIdentifier;
@@ -220,10 +219,9 @@ public class ConnectorResource {
   @ApiOperation(value = "Get Connectors statistics", nickname = "getConnectorStatistics")
   public ResponseDTO<ConnectorStatistics> getConnectorStats(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @QueryParam(NGResourceFilterConstants.SCOPE) Scope scope) {
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     return ResponseDTO.newResponse(
-        connectorService.getConnectorStatistics(accountIdentifier, orgIdentifier, projectIdentifier, scope));
+        connectorService.getConnectorStatistics(accountIdentifier, orgIdentifier, projectIdentifier));
   }
 }
