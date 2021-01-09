@@ -1,5 +1,8 @@
 package io.harness.connector.validator;
 
+import static io.harness.delegate.beans.connector.ConnectivityStatus.FAILURE;
+import static io.harness.delegate.beans.connector.ConnectivityStatus.SUCCESS;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
@@ -55,7 +58,7 @@ public class JiraConnectorValidatorTest {
     ConnectorValidationResult result =
         connectorValidator.validate(jiraConnectorDTO, ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER);
 
-    assertThat(result.isValid()).isTrue();
+    assertThat(result.getStatus()).isEqualTo(SUCCESS);
     verify(delegateGrpcClientWrapper).executeSyncTask(any());
   }
 
@@ -76,7 +79,7 @@ public class JiraConnectorValidatorTest {
     ConnectorValidationResult result =
         connectorValidator.validate(jiraConnectorDTO, ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER);
 
-    assertThat(result.isValid()).isFalse();
+    assertThat(result.getStatus()).isEqualTo(FAILURE);
     verify(delegateGrpcClientWrapper).executeSyncTask(any());
   }
 }

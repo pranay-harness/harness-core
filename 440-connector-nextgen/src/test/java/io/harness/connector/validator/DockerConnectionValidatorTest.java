@@ -1,5 +1,6 @@
 package io.harness.connector.validator;
 
+import static io.harness.delegate.beans.connector.ConnectivityStatus.SUCCESS;
 import static io.harness.delegate.beans.connector.docker.DockerAuthType.USER_PASSWORD;
 
 import static org.mockito.Matchers.any;
@@ -9,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerTestConnectionTaskResponse;
@@ -58,7 +60,9 @@ public class DockerConnectionValidatorTest extends CategoryTest {
         DockerConnectorDTO.builder().dockerRegistryUrl(dockerRegistryUrl).auth(dockerAuthenticationDTO).build();
     when(ngSecretService.getEncryptionDetails(any(), any())).thenReturn(null);
     when(delegateGrpcClientWrapper.executeSyncTask(any()))
-        .thenReturn(DockerTestConnectionTaskResponse.builder().connectionSuccessFul(true).build());
+        .thenReturn(DockerTestConnectionTaskResponse.builder()
+                        .connectorValidationResult(ConnectorValidationResult.builder().status(SUCCESS).build())
+                        .build());
     dockerConnectionValidator.validate(dockerConnectorDTO, "accountIdentifier", "orgIdentifier", "projectIdentifier");
     verify(delegateGrpcClientWrapper, times(1)).executeSyncTask(any());
   }

@@ -1,5 +1,7 @@
 package io.harness.connector.impl;
 
+import static io.harness.delegate.beans.connector.ConnectivityStatus.FAILURE;
+import static io.harness.delegate.beans.connector.ConnectivityStatus.SUCCESS;
 import static io.harness.encryption.Scope.ACCOUNT;
 import static io.harness.rule.OwnerRule.ABHINAV;
 
@@ -20,6 +22,7 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatus;
+import io.harness.errorhandling.NGErrorHelper;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.service.DelegateGrpcClientWrapper;
@@ -35,6 +38,7 @@ public class GitConnectorValidatorTest extends CategoryTest {
   public static final String ACCOUNT_ID = "ACCOUNT_ID";
   @Mock DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   @Mock SecretManagerClientService secretManagerClientService;
+  @Mock NGErrorHelper ngErrorHelper;
   @InjectMocks GitConnectorValidator gitConnectorValidator;
 
   @Before
@@ -56,12 +60,14 @@ public class GitConnectorValidatorTest extends CategoryTest {
                                  .url("url")
                                  .gitAuthType(GitAuthType.HTTP)
                                  .build();
+    GitCommandExecutionResponse gitResponse =
+        GitCommandExecutionResponse.builder().gitCommandStatus(GitCommandStatus.FAILURE).build();
+    doReturn(gitResponse).when(delegateGrpcClientWrapper).executeSyncTask(any());
     doReturn(null).when(secretManagerClientService).getEncryptionDetails(any());
     ConnectorValidationResult connectorValidationResult =
         gitConnectorValidator.validate(gitConfig, ACCOUNT_ID, null, null);
     verify(delegateGrpcClientWrapper, times(1)).executeSyncTask(any());
-    assertThat(connectorValidationResult.isValid()).isFalse();
-    assertThat(connectorValidationResult.getErrorMessage()).isNotBlank();
+    assertThat(connectorValidationResult.getStatus()).isEqualTo(FAILURE);
   }
 
   @Test
@@ -86,6 +92,6 @@ public class GitConnectorValidatorTest extends CategoryTest {
     ConnectorValidationResult connectorValidationResult =
         gitConnectorValidator.validate(gitConfig, ACCOUNT_ID, null, null);
     verify(delegateGrpcClientWrapper, times(1)).executeSyncTask(any());
-    assertThat(connectorValidationResult.isValid()).isTrue();
+    assertThat(connectorValidationResult.getStatus()).isEqualTo(SUCCESS);
   }
 }

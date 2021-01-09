@@ -3,6 +3,7 @@ package io.harness.delegate.task.docker;
 import io.harness.artifacts.docker.service.DockerRegistryService;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.connector.ConnectivityStatus;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
@@ -17,10 +18,12 @@ import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskHelper;
 import io.harness.delegate.task.artifacts.request.ArtifactTaskParameters;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
 import io.harness.delegate.task.k8s.ConnectorValidationHandler;
+import io.harness.errorhandling.NGErrorHelper;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 
 import com.google.inject.Inject;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -47,9 +50,9 @@ public class DockerTestConnectionDelegateTask extends AbstractDelegateRunnableTa
     DockerConnectorDTO dockerConnectorDTO = dockerConnectionTaskResponse.getDockerConnector();
     ConnectorValidationResult dockerConnectorValidationResult = dockerValidationHandler.validate(
         dockerConnectorDTO, getAccountId(), ((DockerTestConnectionTaskParams) parameters).getEncryptionDetails());
+    dockerConnectorValidationResult.setDelegateId(getDelegateId());
     return DockerTestConnectionTaskResponse.builder()
-        .connectionSuccessFul(dockerConnectorValidationResult.isValid())
-        .errorMessage(dockerConnectorValidationResult.getErrorMessage())
+        .connectorValidationResult(dockerConnectorValidationResult)
         .build();
   }
 
@@ -60,6 +63,7 @@ public class DockerTestConnectionDelegateTask extends AbstractDelegateRunnableTa
 
   public static class DockerValidationHandler extends ConnectorValidationHandler {
     @Inject private DockerArtifactTaskHelper dockerArtifactTaskHelper;
+    @Inject private NGErrorHelper ngErrorHelper;
 
     @Override
     public ConnectorValidationResult validate(
@@ -76,13 +80,19 @@ public class DockerTestConnectionDelegateTask extends AbstractDelegateRunnableTa
       ArtifactTaskResponse validationResponse =
           dockerArtifactTaskHelper.getArtifactCollectResponse(artifactTaskParameters);
       boolean isDockerCredentialsValid = false;
+      ConnectorValidationResult.ConnectorValidationResultBuilder validationResultBuilder =
+          ConnectorValidationResult.builder();
       if (validationResponse.getArtifactTaskExecutionResponse() != null) {
         isDockerCredentialsValid = validationResponse.getArtifactTaskExecutionResponse().isArtifactServerValid();
       }
-      return ConnectorValidationResult.builder()
-          .errorMessage(validationResponse.getErrorMessage())
-          .valid(isDockerCredentialsValid)
-          .build();
+      validationResultBuilder.status(
+          isDockerCredentialsValid ? ConnectivityStatus.SUCCESS : ConnectivityStatus.FAILURE);
+      if (!isDockerCredentialsValid) {
+        String errorMessage = validationResponse.getErrorMessage();
+        validationResultBuilder.errorSummary(ngErrorHelper.getErrorSummary(errorMessage))
+            .errors(Collections.singletonList(ngErrorHelper.createErrorDetail(errorMessage)));
+      }
+      return validationResultBuilder.build();
     }
   }
 }

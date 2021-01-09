@@ -20,10 +20,7 @@ public class DockerConnectionValidator
       DockerConnectorDTO dockerConnector, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     DockerTestConnectionTaskResponse responseData = (DockerTestConnectionTaskResponse) super.validateConnector(
         dockerConnector, accountIdentifier, orgIdentifier, projectIdentifier);
-    return ConnectorValidationResult.builder()
-        .valid(responseData.getConnectionSuccessFul())
-        .errorMessage(responseData.getErrorMessage())
-        .build();
+    return responseData.getConnectorValidationResult();
   }
 
   @Override

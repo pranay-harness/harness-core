@@ -1,0 +1,137 @@
+package io.harness.errorhandling;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
+import io.harness.exception.UnexpectedException;
+import io.harness.ng.core.dto.ErrorDetail;
+import io.harness.ng.core.dto.ErrorMessageInfo;
+
+import com.google.inject.Singleton;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.regex.Pattern;
+import lombok.extern.slf4j.Slf4j;
+
+@Singleton
+@Slf4j
+public class NGErrorHelper {
+  public static int DEFAULT_ERROR_CODE = 450;
+  public static String DEFAULT_ERROR_SUMMARY = "Unexcpected Error";
+  public static String DEFAULT_ERROR_MESSAGE = "Oops, something went wrong on our end. Please contact Harness Support.";
+  public static String DEFAULT_REASON = "Could Not Find the Reason";
+  private static Map<Integer, ErrorMessageInfo> errorCodeToErrorMap = new HashMap<>();
+  private static Map<String, ErrorMessageInfo> errorMessageToErrorMap = new HashMap<>();
+  private static boolean isInitialized;
+  public static final String ERROR_MESSAGE_FILE = "/error_messages.properties";
+
+  public static void intializeErrorMessageMap() {
+    if (!isInitialized) {
+      readErrorsAndPopulateTheErrorMaps();
+      isInitialized = true;
+    }
+  }
+
+  private static void readErrorsAndPopulateTheErrorMaps() {
+    try {
+      Properties errors = new Properties();
+      InputStream inputStream = NGErrorHelper.class.getResourceAsStream(ERROR_MESSAGE_FILE);
+      errors.load(inputStream);
+      errors.forEach(NGErrorHelper::populateErrorInMap);
+    } catch (Exception ex) {
+      throw new UnexpectedException("Could not read the error file");
+    }
+  }
+
+  private static void populateErrorInMap(Object key, Object value) {
+    try {
+      Integer errorCode = Integer.valueOf((String) key);
+      String errorDetailString = (String) value;
+
+      // Splitting the error details to separate out the error message and reason
+      String[] errorDetailsList = errorDetailString.split(",");
+      String errorMessage = errorDetailsList[0];
+      String errorReason = errorDetailsList[1];
+      String errorCategory = errorDetailsList[2];
+      ErrorMessageInfo errorDetail = ErrorMessageInfo.builder()
+                                         .code(errorCode)
+                                         .messageRegex(errorMessage)
+                                         .reason(errorReason)
+                                         .errorCategory(errorCategory)
+                                         .build();
+      errorCodeToErrorMap.put(errorCode, errorDetail);
+      errorMessageToErrorMap.put(errorMessage, errorDetail);
+    } catch (Exception ex) {
+      log.info("Exception encountered while processing the error with the error code [{}]", key);
+    }
+  }
+
+  public ErrorDetail createErrorDetail(String errorMessage) {
+    intializeErrorMessageMap();
+    if (isNotBlank(errorMessage)) {
+      for (String errorRegex : errorMessageToErrorMap.keySet()) {
+        Pattern errorPattern = getPattern(errorRegex);
+        if (errorPattern.matcher(errorMessage).matches()) {
+          ErrorMessageInfo savedErrorDetail = errorMessageToErrorMap.get(errorRegex);
+          return ErrorDetail.builder()
+              .reason(savedErrorDetail.getReason())
+              .message(errorMessage)
+              .code(savedErrorDetail.getCode())
+              .build();
+        }
+      }
+    }
+    return ErrorDetail.builder().reason(DEFAULT_REASON).code(DEFAULT_ERROR_CODE).message(errorMessage).build();
+  }
+
+  private Pattern getPattern(String regex) {
+    return Pattern.compile(regex, Pattern.DOTALL);
+  }
+
+  public int getCode(String errorMessage) {
+    intializeErrorMessageMap();
+    if (isNotBlank(errorMessage)) {
+      for (String errorRegex : errorMessageToErrorMap.keySet()) {
+        Pattern errorPattern = getPattern(errorRegex);
+        if (errorPattern.matcher(errorMessage).matches()) {
+          ErrorMessageInfo savedErrorDetail = errorMessageToErrorMap.get(errorRegex);
+          return savedErrorDetail.getCode();
+        }
+      }
+    }
+    return DEFAULT_ERROR_CODE;
+  }
+
+  public String getReason(String errorMessage) {
+    intializeErrorMessageMap();
+    if (isNotBlank(errorMessage)) {
+      for (String errorRegex : errorMessageToErrorMap.keySet()) {
+        Pattern errorPattern = getPattern(errorRegex);
+        if (errorPattern.matcher(errorMessage).matches()) {
+          ErrorMessageInfo savedErrorDetail = errorMessageToErrorMap.get(errorRegex);
+          return savedErrorDetail.getReason();
+        }
+      }
+    }
+    return DEFAULT_REASON;
+  }
+
+  public String getErrorSummary(String errorMessage) {
+    intializeErrorMessageMap();
+    if (isNotBlank(errorMessage)) {
+      for (String errorRegex : errorMessageToErrorMap.keySet()) {
+        Pattern errorPattern = getPattern(errorRegex);
+        if (errorPattern.matcher(errorMessage).matches()) {
+          ErrorMessageInfo savedErrorDetail = errorMessageToErrorMap.get(errorRegex);
+          return String.format("%s (%s)", savedErrorDetail.getErrorCategory(), errorMessage);
+        }
+      }
+    }
+    return String.format("%s (%s)", "Error Encountered", errorMessage);
+  }
+
+  public String createErrorSummary(String errorCategory, String errorMessage) {
+    return String.format("%s (%s)", errorCategory, errorMessage);
+  }
+}

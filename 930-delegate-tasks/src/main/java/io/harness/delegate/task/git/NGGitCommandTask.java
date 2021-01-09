@@ -5,6 +5,7 @@ import static io.harness.eraro.ErrorCode.GIT_DIFF_COMMIT_NOT_IN_ORDER;
 import static io.harness.eraro.ErrorCode.GIT_UNSEEN_REMOTE_HEAD_COMMIT;
 import static io.harness.git.Constants.GIT_YAML_LOG_PREFIX;
 
+import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -63,7 +64,10 @@ public class NGGitCommandTask extends AbstractDelegateRunnableTask {
     try {
       switch (gitCommandType) {
         case VALIDATE:
-          return gitCommandTaskHandler.handleValidateTask(gitConfig, getAccountId());
+          GitCommandExecutionResponse delegateResponseData =
+              (GitCommandExecutionResponse) gitCommandTaskHandler.handleValidateTask(gitConfig, getAccountId());
+          delegateResponseData.setDelegateMetaInfo(DelegateMetaInfo.builder().id(getDelegateId()).build());
+          return delegateResponseData;
         case COMMIT_AND_PUSH:
           return handleCommitAndPush(gitCommandParams, gitConfig);
         default:

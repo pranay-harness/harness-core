@@ -6,6 +6,7 @@ import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.CONN
 
 import static software.wings.utils.Utils.emptyIfNull;
 
+import io.harness.delegate.beans.connector.ConnectivityStatus;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
@@ -76,16 +77,20 @@ public class ConnectorHearbeatPublisher {
                                               .build();
     NGActivityStatus activityStatus = NGActivityStatus.FAILED;
     if (heartbeatDelegateResponse.getConnectorValidationResult() != null
-        && heartbeatDelegateResponse.getConnectorValidationResult().isValid()) {
+        && heartbeatDelegateResponse.getConnectorValidationResult().getStatus() == ConnectivityStatus.SUCCESS) {
       activityStatus = NGActivityStatus.SUCCESS;
+    }
+    String errorMessage = "";
+    if (heartbeatDelegateResponse.getConnectorValidationResult() != null) {
+      errorMessage = heartbeatDelegateResponse.getConnectorValidationResult().getErrorSummary();
     }
     return EntityActivityCreateDTO.newBuilder()
         .setType(NGActivityType.CONNECTIVITY_CHECK.toString())
         .setStatus(activityStatus.toString())
         .setActivityTime(heartbeatDelegateResponse.getConnectorValidationResult().getTestedAt())
         .setAccountIdentifier(heartbeatDelegateResponse.getAccountIdentifier())
+        .setErrorMessage(errorMessage)
         .setDescription(CONNECTIVITY_CHECK_DESCRIPTION)
-        .setErrorMessage(emptyIfNull(heartbeatDelegateResponse.getConnectorValidationResult().getErrorMessage()))
         .setReferredEntity(referredEntity)
         .build();
   }

@@ -1,5 +1,6 @@
 package io.harness.connector.impl;
 
+import static io.harness.delegate.beans.connector.ConnectivityStatus.SUCCESS;
 import static io.harness.delegate.beans.connector.ConnectorType.KUBERNETES_CLUSTER;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
 import static io.harness.rule.OwnerRule.DEEPAK;
@@ -311,7 +312,7 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
     createConnector(identifier);
     when(connectionValidatorMap.get(any())).thenReturn(kubernetesConnectionValidator);
     when(kubernetesConnectionValidator.validate(any(), anyString(), anyString(), anyString()))
-        .thenReturn(ConnectorValidationResult.builder().valid(true).build());
+        .thenReturn(ConnectorValidationResult.builder().status(SUCCESS).build());
     connectorService.testConnection(accountIdentifier, null, null, identifier);
     verify(kubernetesConnectionValidator, times(1)).validate(any(), anyString(), anyString(), anyString());
   }

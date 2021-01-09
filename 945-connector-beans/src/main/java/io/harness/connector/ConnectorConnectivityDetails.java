@@ -1,5 +1,7 @@
 package io.harness.connector;
 
+import io.harness.delegate.beans.connector.ConnectivityStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

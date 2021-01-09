@@ -4,6 +4,7 @@ import io.harness.beans.DecryptableEntity;
 import io.harness.cvng.beans.ConnectorValidationInfo;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.entity.RuntimeParameters;
+import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -68,6 +69,7 @@ public class CVNGConnectorValidationDelegateTask extends AbstractDelegateRunnabl
     return CVConnectorTaskResponse.builder()
         .valid(validCredentials)
         .errorMessage(exceptionInProcessing != null ? exceptionInProcessing.getMessage() : null)
+        .delegateMetaInfo(DelegateMetaInfo.builder().id(getDelegateId()).build())
         .build();
   }
 }

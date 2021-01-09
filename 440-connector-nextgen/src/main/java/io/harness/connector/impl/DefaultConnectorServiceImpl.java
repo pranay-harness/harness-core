@@ -2,9 +2,9 @@ package io.harness.connector.impl;
 
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
-import static io.harness.connector.ConnectivityStatus.FAILURE;
-import static io.harness.connector.ConnectivityStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.connector.ConnectivityStatus.FAILURE;
+import static io.harness.delegate.beans.connector.ConnectivityStatus.SUCCESS;
 import static io.harness.delegate.beans.connector.ConnectorType.GIT;
 import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 
@@ -35,10 +35,12 @@ import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.encryption.Scope;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
+import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.ng.beans.PageRequest;
+import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.services.OrganizationService;
@@ -51,6 +53,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -77,6 +80,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   private final OrganizationService organizationService;
   EntitySetupUsageClient entitySetupUsageClient;
   ConnectorStatisticsHelper connectorStatisticsHelper;
+  private NGErrorHelper ngErrorHelper;
 
   @Override
   public Optional<ConnectorResponseDTO> get(
@@ -268,7 +272,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     if (connector.getType() != GIT) {
       log.info("Test Connection failed for connector with identifier[{}] in account[{}] with error [{}]",
           connector.getIdentifier(), accountIdentifier, "Non git connector is provided for repo verification");
-      validationResult = ConnectorValidationResult.builder().valid(false).build();
+      validationResult = ConnectorValidationResult.builder().status(FAILURE).build();
       return validationResult;
     }
 
@@ -320,7 +324,16 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     } catch (Exception ex) {
       log.info("Test Connection failed for connector with identifier[{}] in account[{}] with error [{}]",
           connectorInfo.getIdentifier(), accountIdentifier, ex.getMessage());
-      validationResult = ConnectorValidationResult.builder().valid(false).build();
+      ConnectorValidationResult.ConnectorValidationResultBuilder validationFailureBuilder =
+          ConnectorValidationResult.builder();
+      validationFailureBuilder.status(FAILURE).testedAt(System.currentTimeMillis());
+      String errorMessage = ex.getMessage();
+      if (isNotEmpty(errorMessage)) {
+        String errorSummary = ngErrorHelper.getErrorSummary(errorMessage);
+        List<ErrorDetail> errorDetail = Collections.singletonList(ngErrorHelper.createErrorDetail(errorMessage));
+        validationFailureBuilder.errorSummary(errorSummary).errors(errorDetail);
+      }
+      return validationFailureBuilder.build();
     }
     return validationResult;
   }
@@ -331,10 +344,9 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     if (connectorValidationResult != null) {
       ConnectorConnectivityDetailsBuilder connectorConnectivityDetailsBuilder =
           ConnectorConnectivityDetails.builder()
-              .status(connectorValidationResult.isValid() ? SUCCESS : FAILURE)
-              .errorMessage(connectorValidationResult.getErrorMessage())
+              .status(connectorValidationResult.getStatus())
               .lastTestedAt(connectivityTestedAt);
-      if (connectorValidationResult.isValid()) {
+      if (connectorValidationResult.getStatus() == SUCCESS) {
         connectorConnectivityDetailsBuilder.lastConnectedAt(connectivityTestedAt);
       } else {
         connectorConnectivityDetailsBuilder.lastConnectedAt(lastStatus == null ? 0 : lastStatus.getLastConnectedAt());

@@ -1,7 +1,6 @@
 package io.harness.connector.validator;
 
 import io.harness.delegate.beans.DelegateResponseData;
-import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
@@ -25,16 +24,8 @@ public class KubernetesConnectionValidator
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     DelegateResponseData responseData =
         super.validateConnector(kubernetesClusterConfig, accountIdentifier, orgIdentifier, projectIdentifier);
-    if (responseData instanceof ErrorNotifyResponseData) {
-      ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) responseData;
-      log.info("Error in validation task for connector : [{}] with failure types [{}]",
-          errorNotifyResponseData.getErrorMessage(), errorNotifyResponseData.getFailureTypes());
-    }
     KubernetesConnectionTaskResponse taskResponse = (KubernetesConnectionTaskResponse) responseData;
-    return ConnectorValidationResult.builder()
-        .valid(taskResponse.getConnectionSuccessFul())
-        .errorMessage(taskResponse.getErrorMessage())
-        .build();
+    return taskResponse.getConnectorValidationResult();
   }
 
   private KubernetesAuthCredentialDTO getKubernetesAuthCredential(

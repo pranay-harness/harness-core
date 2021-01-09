@@ -1,5 +1,6 @@
 package software.wings.service.impl.gcp;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.USER;
 
@@ -13,11 +14,14 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.connector.ConnectivityStatus;
+import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.task.gcp.request.GcpRequest;
 import io.harness.delegate.task.gcp.request.GcpValidationRequest;
 import io.harness.delegate.task.gcp.response.GcpResponse;
+import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
 import io.harness.exception.InvalidRequestException;
-import io.harness.logging.CommandExecutionStatus;
+import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
 
@@ -45,12 +49,22 @@ public class GcpHelperServiceManager {
       validateDelegateSelector(gcpConfig);
       final GcpResponse gcpResponse = executeSyncTask(gcpConfig.getAccountId(),
           GcpValidationRequest.builder().delegateSelector(gcpConfig.getDelegateSelector()).build());
-      if (gcpResponse.getExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-        throw new InvalidRequestException(gcpResponse.getErrorMessage(), USER);
+      ConnectorValidationResult validationResult =
+          ((GcpValidationTaskResponse) gcpResponse).getConnectorValidationResult();
+      if (validationResult.getStatus() != ConnectivityStatus.SUCCESS) {
+        String errorMessage = getErrorMessage(validationResult.getErrors());
+        throw new InvalidRequestException(errorMessage, USER);
       }
     } else {
       gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails, false);
     }
+  }
+
+  private String getErrorMessage(List<ErrorDetail> errors) {
+    if (isNotEmpty(errors) && errors.size() == 1) {
+      return errors.get(0).getMessage();
+    }
+    return "Invalid Credentials";
   }
 
   private void validateDelegateSelector(GcpConfig gcpConfig) {

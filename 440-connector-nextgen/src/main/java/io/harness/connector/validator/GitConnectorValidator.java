@@ -1,7 +1,9 @@
 package io.harness.connector.validator;
 
+import io.harness.delegate.beans.connector.ConnectivityStatus;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.delegate.beans.connector.ConnectorValidationResult.ConnectorValidationResultBuilder;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
@@ -10,18 +12,21 @@ import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatu
 import io.harness.delegate.beans.git.GitCommandParams;
 import io.harness.delegate.beans.git.GitCommandType;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnknownEnumTypeException;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Collections;
 import java.util.Objects;
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
 public class GitConnectorValidator extends AbstractConnectorValidator implements ConnectionValidator<GitConfigDTO> {
+  @Inject NGErrorHelper ngErrorHelper;
   public ConnectorValidationResult validate(
       GitConfigDTO gitConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     validateFieldsPresent(gitConfig);
@@ -47,17 +52,24 @@ public class GitConnectorValidator extends AbstractConnectorValidator implements
 
   private ConnectorValidationResult buildConnectorValidationResult(
       GitCommandExecutionResponse gitCommandExecutionResponse) {
+    String delegateId = null;
+    if (gitCommandExecutionResponse.getDelegateMetaInfo() != null) {
+      delegateId = gitCommandExecutionResponse.getDelegateMetaInfo().getId();
+    }
+    ConnectorValidationResultBuilder validationResultBuilder =
+        ConnectorValidationResult.builder().delegateId(delegateId).testedAt(System.currentTimeMillis());
     if (gitCommandExecutionResponse != null
         && GitCommandStatus.SUCCESS == gitCommandExecutionResponse.getGitCommandStatus()) {
-      return ConnectorValidationResult.builder().valid(true).build();
+      validationResultBuilder.status(ConnectivityStatus.SUCCESS);
     } else {
+      String errorMessage = gitCommandExecutionResponse.getErrorMessage();
       return ConnectorValidationResult.builder()
-          .valid(false)
-          .errorMessage(Optional.ofNullable(gitCommandExecutionResponse)
-                            .map(GitCommandExecutionResponse::getErrorMessage)
-                            .orElse("Error in making connection."))
+          .status(ConnectivityStatus.FAILURE)
+          .errorSummary(ngErrorHelper.getErrorSummary(errorMessage))
+          .errors(Collections.singletonList(ngErrorHelper.createErrorDetail(errorMessage)))
           .build();
     }
+    return validationResultBuilder.build();
   }
 
   private void validateRequiredFieldsPresent(Object... fields) {

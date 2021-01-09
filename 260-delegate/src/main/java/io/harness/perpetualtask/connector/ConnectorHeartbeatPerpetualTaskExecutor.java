@@ -2,15 +2,18 @@ package io.harness.perpetualtask.connector;
 
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.network.SafeHttpCall.execute;
 
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
+import io.harness.delegate.beans.connector.ConnectivityStatus;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.task.k8s.ConnectorValidationHandler;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.managerclient.DelegateAgentManagerClient;
+import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
@@ -92,10 +95,17 @@ public class ConnectorHeartbeatPerpetualTaskExecutor implements PerpetualTaskExe
     String message = "success";
     if (connectorValidationResult == null) {
       message = "Got Null connector validation result";
-    } else if (!connectorValidationResult.isValid()) {
-      message = connectorValidationResult.getErrorMessage();
+    } else if (connectorValidationResult.getStatus() != ConnectivityStatus.SUCCESS) {
+      message = connectorValidationResult.getErrorSummary();
     }
     return PerpetualTaskResponse.builder().responseCode(Response.SC_OK).responseMessage(message).build();
+  }
+
+  private String getErrorMessage(List<ErrorDetail> errors) {
+    if (isNotEmpty(errors) && errors.size() == 1) {
+      return errors.get(0).getMessage();
+    }
+    return "Invalid Credentials";
   }
 
   @Override

@@ -14,10 +14,11 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.connector.ConnectivityStatus;
+import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.task.gcp.request.GcpValidationRequest;
 import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
 import io.harness.exception.InvalidRequestException;
-import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
@@ -52,7 +53,10 @@ public class GcpHelperServiceManagerTest extends WingsBaseTest {
   @Owner(developers = OwnerRule.YOGESH)
   @Category(UnitTests.class)
   public void validateCredentialDelegateSelector() throws InterruptedException {
-    doReturn(GcpValidationTaskResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).build())
+    doReturn(
+        GcpValidationTaskResponse.builder()
+            .connectorValidationResult(ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build())
+            .build())
         .when(delegateService)
         .executeTask(any(DelegateTask.class));
 
@@ -100,6 +104,8 @@ public class GcpHelperServiceManagerTest extends WingsBaseTest {
         .withMessage("Unknown response from delegate: [AwsEc2ListInstancesResponse]");
 
     gcpHelperServiceManager.validateDelegateSuccessForSyncTask(
-        GcpValidationTaskResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).build());
+        GcpValidationTaskResponse.builder()
+            .connectorValidationResult(ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build())
+            .build());
   }
 }

@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.connector.ConnectivityStatus;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.eventsframework.api.Producer;
@@ -55,8 +56,11 @@ public class ConnectorHearbeatPublisherTest extends CategoryTest {
     final String connectorName = "connectorName";
     final String errorMessage = "errorMessage";
     final long testedAtTime = System.currentTimeMillis();
-    ConnectorValidationResult connectorValidationResult =
-        ConnectorValidationResult.builder().errorMessage(errorMessage).valid(true).testedAt(testedAtTime).build();
+    ConnectorValidationResult connectorValidationResult = ConnectorValidationResult.builder()
+                                                              .status(ConnectivityStatus.SUCCESS)
+                                                              .errorSummary(errorMessage)
+                                                              .testedAt(testedAtTime)
+                                                              .build();
     ConnectorHeartbeatDelegateResponse connectorHeartbeatDelegateResponse =
         ConnectorHeartbeatDelegateResponse.builder()
             .accountIdentifier(accountId)
@@ -83,8 +87,8 @@ public class ConnectorHearbeatPublisherTest extends CategoryTest {
     assertThat(ngActivityDTO.getType()).isEqualTo(CONNECTIVITY_CHECK.toString());
     assertThat(ngActivityDTO.getAccountIdentifier()).isEqualTo(accountId);
     assertThat(ngActivityDTO.getStatus()).isEqualTo(SUCCESS.toString());
-    assertThat(ngActivityDTO.getActivityTime()).isEqualTo(testedAtTime);
     assertThat(ngActivityDTO.getErrorMessage()).isEqualTo(errorMessage);
+    assertThat(ngActivityDTO.getActivityTime()).isEqualTo(testedAtTime);
     assertThat(ngActivityDTO.getReferredEntity().getType().toString()).isEqualTo("CONNECTORS");
     assertThat(ngActivityDTO.getReferredEntity().getName()).isEqualTo("connectorName");
     IdentifierRefProtoDTO entityReference = ngActivityDTO.getReferredEntity().getIdentifierRef();

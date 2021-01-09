@@ -11,7 +11,6 @@ import io.harness.delegate.task.gcp.request.GcpValidationRequest;
 import io.harness.delegate.task.gcp.request.GcpValidationRequest.GcpValidationRequestBuilder;
 import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
 import io.harness.exception.InvalidRequestException;
-import io.harness.logging.CommandExecutionStatus;
 
 public class GcpConnectorValidator extends AbstractConnectorValidator implements ConnectionValidator {
   @Override
@@ -45,10 +44,6 @@ public class GcpConnectorValidator extends AbstractConnectorValidator implements
       ConnectorConfigDTO connectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     final GcpValidationTaskResponse gcpValidationTaskResponse = (GcpValidationTaskResponse) super.validateConnector(
         connectorDTO, accountIdentifier, orgIdentifier, projectIdentifier);
-    final CommandExecutionStatus executionStatus = gcpValidationTaskResponse.getExecutionStatus();
-    return ConnectorValidationResult.builder()
-        .valid(executionStatus == CommandExecutionStatus.SUCCESS)
-        .errorMessage(gcpValidationTaskResponse.getErrorMessage())
-        .build();
+    return gcpValidationTaskResponse.getConnectorValidationResult();
   }
 }

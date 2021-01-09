@@ -3,16 +3,19 @@ package io.harness.delegate.task.gcp.taskHandlers;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCause;
 
+import io.harness.delegate.beans.connector.ConnectivityStatus;
+import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.delegate.task.gcp.request.GcpRequest;
 import io.harness.delegate.task.gcp.response.GcpResponse;
 import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
+import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gcp.client.GcpClient;
-import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.SecretDecryptionService;
 
 import com.google.inject.Inject;
+import java.util.Collections;
 import java.util.Optional;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,13 +26,18 @@ import org.apache.commons.lang3.StringUtils;
 public class GcpValidationTaskHandler implements TaskHandler {
   @Inject private GcpClient gcpClient;
   @Inject private SecretDecryptionService secretDecryptionService;
+  @Inject private NGErrorHelper ngErrorHelper;
 
   @Override
   public GcpResponse executeRequest(GcpRequest gcpRequest) {
     try {
       if (isNotBlank(gcpRequest.getDelegateSelector())) {
         gcpClient.validateDefaultCredentials();
-        return GcpValidationTaskResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).build();
+        ConnectorValidationResult connectorValidationResult = ConnectorValidationResult.builder()
+                                                                  .status(ConnectivityStatus.SUCCESS)
+                                                                  .testedAt(System.currentTimeMillis())
+                                                                  .build();
+        return GcpValidationTaskResponse.builder().connectorValidationResult(connectorValidationResult).build();
       } else {
         return validateGcpServiceAccountKeyCredential(gcpRequest);
       }
@@ -46,14 +54,22 @@ public class GcpValidationTaskHandler implements TaskHandler {
     }
     secretDecryptionService.decrypt(gcpManualDetailsDTO, gcpRequest.getEncryptionDetails());
     gcpClient.getGkeContainerService(gcpManualDetailsDTO.getSecretKeyRef().getDecryptedValue());
-    return GcpValidationTaskResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).build();
+    ConnectorValidationResult connectorValidationResult = ConnectorValidationResult.builder()
+                                                              .status(ConnectivityStatus.SUCCESS)
+                                                              .testedAt(System.currentTimeMillis())
+                                                              .build();
+    return GcpValidationTaskResponse.builder().connectorValidationResult(connectorValidationResult).build();
   }
 
   private GcpValidationTaskResponse getFailedGcpResponse(Exception ex) {
-    return GcpValidationTaskResponse.builder()
-        .executionStatus(CommandExecutionStatus.FAILURE)
-        .errorMessage(ex.getMessage() + "." + getRootCauseMessage(ex))
-        .build();
+    ConnectorValidationResult connectorValidationResult =
+        ConnectorValidationResult.builder()
+            .status(ConnectivityStatus.FAILURE)
+            .testedAt(System.currentTimeMillis())
+            .errors(Collections.singletonList(ngErrorHelper.createErrorDetail(ex.getMessage())))
+            .errorSummary(ngErrorHelper.getErrorSummary(ex.getMessage()))
+            .build();
+    return GcpValidationTaskResponse.builder().connectorValidationResult(connectorValidationResult).build();
   }
 
   private String getRootCauseMessage(Throwable t) {
