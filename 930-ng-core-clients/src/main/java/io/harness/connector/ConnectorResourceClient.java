@@ -1,6 +1,5 @@
 package io.harness.connector;
 
-import io.harness.delegate.beans.connector.apis.dto.ConnectorDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 
 import java.util.Optional;

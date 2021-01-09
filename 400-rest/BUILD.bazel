@@ -46,6 +46,7 @@ java_library(
         "//940-feature-flag:module",
         "//940-notification-client:module",
         "//940-secret-manager-client:module",
+        "//945-connector-beans:module",
         "//950-command-library-common:module",
         "//950-common-entities:module",
         "//950-delegate-tasks-beans:module",

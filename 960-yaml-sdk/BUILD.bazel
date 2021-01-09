@@ -1,0 +1,78 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//:macros.bzl", "sources")
+load("//:macros.bzl", "sonarqube_test")
+load("//tools/bazel/pmd:defs.bzl", "pmd")
+
+sources()
+
+java_library(
+    name = "maven_deps",
+    visibility = ["//visibility:public"],
+    exports = [
+        "//970-ng-commons:module",
+        "//980-commons:module",
+        "@maven//:com_fasterxml_jackson_dataformat_jackson_dataformat_xml",
+        "@maven//:com_fasterxml_jackson_dataformat_jackson_dataformat_yaml",
+        "@maven//:com_networknt_json_schema_validator",
+        "@maven//:io_swagger_swagger_annotations",
+        "@maven//:io_swagger_swagger_core",
+        "@maven//:io_swagger_swagger_jaxrs",
+        "@maven//:io_swagger_swagger_jersey2_jaxrs",
+        "@maven//:io_swagger_swagger_models",
+    ],
+)
+
+java_library(
+    name = "module",
+    srcs = glob([
+        "src/main/**/*.java",
+    ]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "maven_deps",
+        "//:lombok",
+    ],
+)
+
+java_library(
+    name = "test_deps",
+    exports = [
+        "//990-commons-test:module",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_powermock_powermock_api_mockito",
+    ],
+)
+
+java_library(
+    name = "tests",
+    srcs = glob(["src/test/**/*.java"]),
+    resources = [
+        "//960-yaml-sdk/src/test/resources:resource",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "maven_deps",
+        "module",
+        "test_deps",
+        "//:lombok",
+    ],
+)
+
+run_tests()
+
+checkstyle()
+
+sonarqube_test(
+    name = "sq_mycomponent",
+    srcs = ["sources"],
+    targets = [
+        ":maven_deps",
+        ":module",
+    ],
+)
+
+pmd()

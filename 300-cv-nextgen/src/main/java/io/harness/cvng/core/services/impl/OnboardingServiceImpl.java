@@ -1,11 +1,11 @@
 package io.harness.cvng.core.services.impl;
 
+import io.harness.connector.ConnectorInfoDTO;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.OnboardingRequestDTO;
 import io.harness.cvng.core.beans.OnboardingResponseDTO;
 import io.harness.cvng.core.services.api.OnboardingService;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.serializer.JsonUtils;
 
 import com.google.common.base.Preconditions;

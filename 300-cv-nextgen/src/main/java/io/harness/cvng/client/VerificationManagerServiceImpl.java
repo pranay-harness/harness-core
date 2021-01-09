@@ -2,10 +2,10 @@ package io.harness.cvng.client;
 
 import static io.harness.cvng.beans.DataCollectionType.KUBERNETES;
 
+import io.harness.connector.ConnectorInfoDTO;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;

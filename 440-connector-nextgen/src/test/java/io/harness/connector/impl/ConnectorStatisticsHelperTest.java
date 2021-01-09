@@ -3,6 +3,8 @@ package io.harness.connector.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.connector.ConnectivityStatus;
+import io.harness.connector.ConnectorConnectivityDetails;
 import io.harness.connector.ConnectorsTestBase;
 import io.harness.connector.apis.dto.stats.ConnectorStatistics;
 import io.harness.connector.apis.dto.stats.ConnectorStatusStats;
@@ -11,8 +13,6 @@ import io.harness.connector.entities.Connector;
 import io.harness.connector.utils.AWSConnectorTestHelper;
 import io.harness.connector.utils.DockerConnectorTestHelper;
 import io.harness.connector.utils.KubernetesConnectorTestHelper;
-import io.harness.delegate.beans.connector.ConnectivityStatus;
-import io.harness.delegate.beans.connector.ConnectorConnectivityDetails;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.encryption.Scope;
 import io.harness.repositories.ConnectorRepository;
