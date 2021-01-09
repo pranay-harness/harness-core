@@ -9,6 +9,7 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.steps.StepOutcomeGroup;
@@ -54,7 +55,7 @@ public class ExecutionPMSPlanCreator extends ChildrenPlanCreator<ExecutionElemen
         NGSectionStepParameters.builder().childNodeId(childrenNodeIds.get(0)).logMessage("Execution Element").build();
     return PlanNode.builder()
         .uuid(ctx.getCurrentField().getNode().getUuid())
-        .identifier(PlanCreationConstants.EXECUTION_NODE_IDENTIFIER)
+        .identifier(PlanCreationConstants.EXECUTION_NODE_IDENTIFIER + "." + YAMLFieldNameConstants.STEPS)
         .stepType(NGSectionStep.STEP_TYPE)
         .group(StepOutcomeGroup.EXECUTION.name())
         .name(PlanCreationConstants.EXECUTION_NODE_NAME)

@@ -13,25 +13,26 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class ArtifactResponseToOutcomeMapper {
   public ArtifactOutcome toArtifactOutcome(
-      ArtifactConfig artifactConfig, ArtifactDelegateResponse artifactDelegateResponse) {
+      ArtifactConfig artifactConfig, ArtifactDelegateResponse artifactDelegateResponse, boolean useDelegateResponse) {
     switch (artifactConfig.getSourceType()) {
       case DOCKER_HUB:
         DockerHubArtifactConfig dockerConfig = (DockerHubArtifactConfig) artifactConfig;
         DockerArtifactDelegateResponse dockerDelegateResponse =
             (DockerArtifactDelegateResponse) artifactDelegateResponse;
-        return getDockerArtifactOutcome(dockerConfig, dockerDelegateResponse);
+        return getDockerArtifactOutcome(dockerConfig, dockerDelegateResponse, useDelegateResponse);
       default:
         throw new UnsupportedOperationException(
             String.format("Unknown Artifact Config type: [%s]", artifactConfig.getSourceType()));
     }
   }
 
-  private DockerArtifactOutcome getDockerArtifactOutcome(
-      DockerHubArtifactConfig dockerConfig, DockerArtifactDelegateResponse dockerDelegateResponse) {
+  private DockerArtifactOutcome getDockerArtifactOutcome(DockerHubArtifactConfig dockerConfig,
+      DockerArtifactDelegateResponse dockerDelegateResponse, boolean useDelegateResponse) {
     return DockerArtifactOutcome.builder()
         .connectorRef(dockerConfig.getConnectorRef().getValue())
         .imagePath(dockerConfig.getImagePath().getValue())
-        .tag(dockerDelegateResponse.getTag())
+        .tag(useDelegateResponse ? dockerDelegateResponse.getTag()
+                                 : (dockerConfig.getTag() != null ? dockerConfig.getTag().getValue() : null))
         .tagRegex(dockerConfig.getTagRegex() != null ? dockerConfig.getTagRegex().getValue() : null)
         .identifier(dockerConfig.getIdentifier())
         .artifactType(ArtifactSourceType.DOCKER_HUB.getDisplayName())

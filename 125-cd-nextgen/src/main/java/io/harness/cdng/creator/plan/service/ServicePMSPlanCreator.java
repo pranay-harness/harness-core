@@ -5,6 +5,7 @@ import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceUseFromStage;
 import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.cdng.service.steps.ServiceStepParameters;
+import io.harness.cdng.visitor.YamlTypes;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -53,7 +54,7 @@ public class ServicePMSPlanCreator {
         .uuid(serviceNode.getUuid())
         .stepType(ServiceStep.STEP_TYPE)
         .name(PlanCreatorConstants.SERVICE_NODE_NAME)
-        .identifier(PlanCreatorConstants.SERVICE_NODE_IDENTIFIER)
+        .identifier(YamlTypes.SERVICE_CONFIG + serviceNode.getUuid())
         .stepParameters(stepParameters)
         .facilitatorObtainment(
             FacilitatorObtainment.newBuilder().setType(TaskChainFacilitator.FACILITATOR_TYPE).build())

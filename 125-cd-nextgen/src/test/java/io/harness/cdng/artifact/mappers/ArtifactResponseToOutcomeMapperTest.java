@@ -30,7 +30,7 @@ public class ArtifactResponseToOutcomeMapperTest extends CategoryTest {
     ArtifactDelegateResponse artifactDelegateResponse = DockerArtifactDelegateResponse.builder().build();
 
     ArtifactOutcome artifactOutcome =
-        ArtifactResponseToOutcomeMapper.toArtifactOutcome(artifactConfig, artifactDelegateResponse);
+        ArtifactResponseToOutcomeMapper.toArtifactOutcome(artifactConfig, artifactDelegateResponse, true);
 
     assertThat(artifactOutcome).isNotNull();
     assertThat(artifactOutcome).isInstanceOf(DockerArtifactOutcome.class);

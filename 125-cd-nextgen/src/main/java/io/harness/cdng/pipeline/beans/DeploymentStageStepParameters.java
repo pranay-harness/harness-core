@@ -1,7 +1,5 @@
 package io.harness.cdng.pipeline.beans;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
 import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
@@ -9,9 +7,7 @@ import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.variables.NGVariable;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
 import org.springframework.data.annotation.TypeAlias;
@@ -25,7 +21,7 @@ public class DeploymentStageStepParameters implements StepParameters {
   ParameterField<String> description;
   List<FailureStrategyConfig> failureStrategies;
   String type;
-  Map<String, Object> variables;
+  List<NGVariable> originalVariables;
   ParameterField<String> skipCondition;
 
   String childNodeID;
@@ -35,12 +31,7 @@ public class DeploymentStageStepParameters implements StepParameters {
       return DeploymentStageStepParameters.builder().childNodeID(childNodeID).build();
     }
     DeploymentStageConfig stageType = (DeploymentStageConfig) config.getStageType();
-    Map<String, Object> variablesMap = new HashMap<>();
-    if (isNotEmpty(stageType.getVariables())) {
-      for (NGVariable variable : stageType.getVariables()) {
-        variablesMap.put(variable.getName(), variable.getValue());
-      }
-    }
+
     return DeploymentStageStepParameters.builder()
         .identifier(config.getIdentifier())
         .name(config.getName())
@@ -48,7 +39,7 @@ public class DeploymentStageStepParameters implements StepParameters {
         .failureStrategies(config.getFailureStrategies())
         .type(config.getType())
         .skipCondition(stageType.getSkipCondition())
-        .variables(variablesMap)
+        .originalVariables(stageType.getVariables())
         .childNodeID(childNodeID)
         .build();
   }
