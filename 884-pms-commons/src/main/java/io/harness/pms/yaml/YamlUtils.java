@@ -285,9 +285,16 @@ public class YamlUtils {
     if (parentNode == null) {
       return null;
     }
-    if (!parentNode.toString().contains(currentNode.getUuid())) {
-      return null;
+    if (currentNode.getCurrJsonNode().isArray()) {
+      if (!parentNode.toString().contains(currentNode.toString())) {
+        return null;
+      }
+    } else {
+      if (!parentNode.toString().contains(currentNode.getUuid())) {
+        return null;
+      }
     }
+
     return parentNode;
   }
 

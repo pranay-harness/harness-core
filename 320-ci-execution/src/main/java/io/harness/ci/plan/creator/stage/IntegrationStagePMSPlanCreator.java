@@ -132,7 +132,7 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
   private List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlField currentField) {
     List<AdviserObtainment> adviserObtainments = new ArrayList<>();
     if (currentField != null && currentField.getNode() != null) {
-      if (checkIfParentIsParallel(currentField)) {
+      if (currentField.checkIfParentIsParallel(STAGES)) {
         return adviserObtainments;
       }
       YamlField siblingField =
@@ -157,14 +157,6 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
   @Override
   public Map<String, Set<String>> getSupportedTypes() {
     return Collections.singletonMap(STAGE, Collections.singleton(STAGE_NAME));
-  }
-
-  private boolean checkIfParentIsParallel(YamlField currentField) {
-    YamlNode parallelNode = YamlUtils.findParentNode(currentField.getNode(), PARALLEL);
-    if (parallelNode != null) {
-      return YamlUtils.findParentNode(parallelNode, STAGES) != null;
-    }
-    return false;
   }
 
   private String generatePodName(String identifier) {

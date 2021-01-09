@@ -1,6 +1,5 @@
 package io.harness.cdng.creator.plan.stage;
 
-import static io.harness.pms.yaml.YAMLFieldNameConstants.PARALLEL;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STAGES;
 
 import io.harness.cdng.creator.plan.infrastructure.InfrastructurePmsPlanCreator;
@@ -22,7 +21,6 @@ import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.pms.yaml.YamlUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepOutcomeGroup;
 
@@ -108,7 +106,7 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
   private List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlField currentField) {
     List<AdviserObtainment> adviserObtainments = new ArrayList<>();
     if (currentField != null && currentField.getNode() != null) {
-      if (checkIfParentIsParallel(currentField)) {
+      if (currentField.checkIfParentIsParallel(STAGES)) {
         return adviserObtainments;
       }
       YamlField siblingField =
@@ -133,13 +131,5 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
   @Override
   public Map<String, Set<String>> getSupportedTypes() {
     return Collections.singletonMap(YAMLFieldNameConstants.STAGE, Collections.singleton("Deployment"));
-  }
-
-  private boolean checkIfParentIsParallel(YamlField currentField) {
-    YamlNode parallelNode = YamlUtils.findParentNode(currentField.getNode(), PARALLEL);
-    if (parallelNode != null) {
-      return YamlUtils.findParentNode(parallelNode, STAGES) != null;
-    }
-    return false;
   }
 }
