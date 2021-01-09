@@ -8,14 +8,16 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.persistence.PersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.collect.ImmutableList;
+import java.util.Arrays;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -36,7 +38,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Data
 @FieldNameConstants(innerTypeName = "ConnectorKeys")
 @Entity(value = "connectors", noClassnameStored = true)
-@NgUniqueIndex(name = "unique_fullyQualifiedIdentifier", fields = { @Field("fullyQualifiedIdentifier") })
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Document("connectors")
 public abstract class Connector implements PersistentEntity, NGAccountAccess {
@@ -58,6 +59,7 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
   @Version Long version;
+  Long timeWhenConnectorIsLastUpdated;
   ConnectorConnectivityDetails connectivityDetails;
   Boolean deleted = Boolean.FALSE;
   String heartbeatPerpetualTaskId;
@@ -75,5 +77,24 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
         ConnectorKeys.connectivityDetails + "." + ConnectorConnectivityDetailsKeys.status;
     public static final String tagKey = ConnectorKeys.tags + "." + NGTagKeys.key;
     public static final String tagValue = ConnectorKeys.tags + "." + NGTagKeys.value;
+  }
+
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("unique_fullyQualifiedIdentifier")
+                 .unique(true)
+                 .field(ConnectorKeys.fullyQualifiedIdentifier)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_orgId_projectId_Index")
+                 .fields(Arrays.asList(
+                     ConnectorKeys.accountIdentifier, ConnectorKeys.orgIdentifier, ConnectorKeys.projectIdentifier))
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("fullyQualifiedIdentifier_deleted_Index")
+                 .fields(Arrays.asList(ConnectorKeys.fullyQualifiedIdentifier, ConnectorKeys.deleted))
+                 .build())
+        .build();
   }
 }

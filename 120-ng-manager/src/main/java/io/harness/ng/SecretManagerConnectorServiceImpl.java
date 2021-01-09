@@ -22,7 +22,6 @@ import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
-import io.harness.encryption.Scope;
 import io.harness.eraro.ErrorCode;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.SecretManagementException;
@@ -212,6 +211,13 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
+  public void updateConnectivityDetailOfTheConnector(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String identifier, ConnectorValidationResult connectorValidationResult) {
+    defaultConnectorService.updateConnectivityDetailOfTheConnector(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier, connectorValidationResult);
+  }
+
+  @Override
   public ConnectorValidationResult testGitRepoConnection(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String connectorIdentifier, String gitRepoURL) {
     return defaultConnectorService.testGitRepoConnection(
@@ -220,8 +226,8 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
 
   @Override
   public ConnectorStatistics getConnectorStatistics(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, Scope scope) {
-    return defaultConnectorService.getConnectorStatistics(accountIdentifier, orgIdentifier, projectIdentifier, scope);
+      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    return defaultConnectorService.getConnectorStatistics(accountIdentifier, orgIdentifier, projectIdentifier);
   }
 
   @Override

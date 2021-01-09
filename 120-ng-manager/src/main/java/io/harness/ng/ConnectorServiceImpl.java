@@ -22,7 +22,6 @@ import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
-import io.harness.encryption.Scope;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.Producer;
@@ -218,6 +217,13 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
+  public void updateConnectivityDetailOfTheConnector(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String identifier, ConnectorValidationResult connectorValidationResult) {
+    defaultConnectorService.updateConnectivityDetailOfTheConnector(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier, connectorValidationResult);
+  }
+
+  @Override
   public ConnectorCatalogueResponseDTO getConnectorCatalogue() {
     return defaultConnectorService.getConnectorCatalogue();
   }
@@ -231,8 +237,8 @@ public class ConnectorServiceImpl implements ConnectorService {
 
   @Override
   public ConnectorStatistics getConnectorStatistics(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, Scope scope) {
-    return defaultConnectorService.getConnectorStatistics(accountIdentifier, orgIdentifier, projectIdentifier, scope);
+      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    return defaultConnectorService.getConnectorStatistics(accountIdentifier, orgIdentifier, projectIdentifier);
   }
 
   @Override

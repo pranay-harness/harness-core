@@ -33,7 +33,6 @@ import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.encryption.Scope;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.DuplicateFieldException;
@@ -163,6 +162,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   public ConnectorResponseDTO create(ConnectorDTO connectorRequestDTO, String accountIdentifier) {
     assurePredefined(connectorRequestDTO, accountIdentifier);
     Connector connectorEntity = connectorMapper.toConnector(connectorRequestDTO, accountIdentifier);
+    connectorEntity.setTimeWhenConnectorIsLastUpdated(System.currentTimeMillis());
     Connector savedConnectorEntity = null;
     try {
       savedConnectorEntity = connectorRepository.save(connectorEntity);
@@ -191,6 +191,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     newConnector.setVersion(existingConnector.get().getVersion());
     newConnector.setConnectivityDetails(existingConnector.get().getConnectivityDetails());
     newConnector.setCreatedAt(existingConnector.get().getCreatedAt());
+    newConnector.setTimeWhenConnectorIsLastUpdated(System.currentTimeMillis());
     Connector updatedConnector = connectorRepository.save(newConnector);
     return connectorMapper.writeDTO(updatedConnector);
   }
@@ -293,8 +294,18 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     validationResult = validateSafely(connectorInfo, accountIdentifier, orgIdentifier, projectIdentifier);
     long connectivityTestedAt = System.currentTimeMillis();
     validationResult.setTestedAt(connectivityTestedAt);
-    updateConnectivityStatusOfConnector(connector, validationResult, connectivityTestedAt, connectorDTO.getStatus());
+    setAndSaveNewConnectivityStatusInConnector(
+        connector, validationResult, connectivityTestedAt, connectorDTO.getStatus());
     return validationResult;
+  }
+
+  public void updateConnectivityDetailOfTheConnector(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String identifier, ConnectorValidationResult connectorValidationResult) {
+    long testingTime = connectorValidationResult.getTestedAt() != 0L ? connectorValidationResult.getTestedAt()
+                                                                     : System.currentTimeMillis();
+    Connector connector = getConnectorWithIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    setAndSaveNewConnectivityStatusInConnector(
+        connector, connectorValidationResult, testingTime, connector.getConnectivityDetails());
   }
 
   private Connector getConnectorWithIdentifier(
@@ -338,7 +349,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     return validationResult;
   }
 
-  private void updateConnectivityStatusOfConnector(Connector connector,
+  private void setAndSaveNewConnectivityStatusInConnector(Connector connector,
       ConnectorValidationResult connectorValidationResult, long connectivityTestedAt,
       ConnectorConnectivityDetails lastStatus) {
     if (connectorValidationResult != null) {
@@ -384,7 +395,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
 
   @Override
   public ConnectorStatistics getConnectorStatistics(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, Scope scope) {
-    return connectorStatisticsHelper.getStats(accountIdentifier, orgIdentifier, projectIdentifier, scope);
+      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    return connectorStatisticsHelper.getStats(accountIdentifier, orgIdentifier, projectIdentifier);
   }
 }

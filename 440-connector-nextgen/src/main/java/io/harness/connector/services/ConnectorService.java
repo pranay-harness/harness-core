@@ -7,6 +7,5 @@ public interface ConnectorService extends ConnectorCrudService, ConnectorValidat
   boolean validateTheIdentifierIsUnique(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier);
 
-  ConnectorStatistics getConnectorStatistics(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, Scope scope);
+  ConnectorStatistics getConnectorStatistics(String accountIdentifier, String orgIdentifier, String projectIdentifier);
 }
