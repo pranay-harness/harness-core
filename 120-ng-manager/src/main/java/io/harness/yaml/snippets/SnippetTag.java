@@ -9,5 +9,10 @@ public enum SnippetTag implements YamlSnippetTags {
   secret,
   secretText,
   secretFile,
-  sshKey
+  sshKey,
+  service,
+  infra,
+  steps,
+  pipeline,
+  http
 }

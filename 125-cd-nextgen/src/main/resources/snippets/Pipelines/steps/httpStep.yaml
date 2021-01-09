@@ -1,0 +1,8 @@
+step:
+  name: http step 1
+  identifier: httpStep1
+  type: Http
+  spec:
+    socketTimeoutMillis: 1000
+    method: GET
+    url: https://www.google.com/

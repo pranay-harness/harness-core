@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<YamlSnippets>
+    <yamlSnippetMetaDataList>
+        <YamlSnippetMetaData>
+            <name>Docker Artifact</name>
+            <version>0.1</version>
+            <description>Docker Artifact</description>
+            <tags>
+                <tag>pipeline</tag>
+                <tag>service</tag>
+                <tag>docker</tag>
+            </tags>
+            <iconTag>docker</iconTag>
+            <schemaEntityType>Pipelines</schemaEntityType>
+            <resourcePath>snippets/Pipelines/services/artifact.yaml</resourcePath>
+        </YamlSnippetMetaData>
+
+        <YamlSnippetMetaData>
+            <name>K8s Manifest</name>
+            <version>0.1</version>
+            <description>K8s Manifest</description>
+            <tags>
+                <tag>pipeline</tag>
+                <tag>service</tag>
+                <tag>git</tag>
+            </tags>
+            <iconTag>git</iconTag>
+            <schemaEntityType>Pipelines</schemaEntityType>
+            <resourcePath>snippets/Pipelines/services/K8sManifest.yaml</resourcePath>
+        </YamlSnippetMetaData>
+
+        <YamlSnippetMetaData>
+            <name>Values Manifest</name>
+            <version>0.1</version>
+            <description>Values Manifest</description>
+            <tags>
+                <tag>pipeline</tag>
+                <tag>service</tag>
+                <tag>git</tag>
+            </tags>
+            <iconTag>git</iconTag>
+            <schemaEntityType>Pipelines</schemaEntityType>
+            <resourcePath>snippets/Pipelines/services/valuesManifest.yaml</resourcePath>
+        </YamlSnippetMetaData>
+
+        <YamlSnippetMetaData>
+            <name>Infrastructure Definition for Kubernetes Direct</name>
+            <version>0.1</version>
+            <description>Infrastructure Definition for Kubernetes Direct</description>
+            <tags>
+                <tag>pipeline</tag>
+                <tag>infra</tag>
+                <tag>k8s</tag>
+            </tags>
+            <iconTag>k8s</iconTag>
+            <schemaEntityType>Pipelines</schemaEntityType>
+            <resourcePath>snippets/Pipelines/infra/kubernetesDirect.yaml</resourcePath>
+        </YamlSnippetMetaData>
+
+        <YamlSnippetMetaData>
+            <name>Http Step</name>
+            <version>0.1</version>
+            <description>Http Step</description>
+            <tags>
+                <tag>pipeline</tag>
+                <tag>steps</tag>
+                <tag>http</tag>
+            </tags>
+            <iconTag>http</iconTag>
+            <schemaEntityType>Pipelines</schemaEntityType>
+            <resourcePath>snippets/Pipelines/steps/httpStep.yaml</resourcePath>
+        </YamlSnippetMetaData>
+
+        <YamlSnippetMetaData>
+            <name>K8sRolling Deployment Step</name>
+            <version>0.1</version>
+            <description>K8sRolling Deployment Step</description>
+            <tags>
+                <tag>pipeline</tag>
+                <tag>steps</tag>
+                <tag>k8s</tag>
+            </tags>
+            <iconTag>k8s</iconTag>
+            <schemaEntityType>Pipelines</schemaEntityType>
+            <resourcePath>snippets/Pipelines/steps/k8sRollingDeploy.yaml</resourcePath>
+        </YamlSnippetMetaData>
+
+    </yamlSnippetMetaDataList>
+</YamlSnippets>
