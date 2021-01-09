@@ -17,7 +17,7 @@ public class CiBeansRegistrars {
           .addAll(ProjectAndOrgRegistrars.kryoRegistrars)
           .addAll(NGCoreBeansRegistrars.kryoRegistrars)
           .addAll(SecretManagerClientRegistrars.kryoRegistrars)
-          .addAll(ConnectorRegistrars.kryoRegistrars)
+          .addAll(ConnectorBeansRegistrars.kryoRegistrars)
           .addAll(OrchestrationVisualizationModuleRegistrars.kryoRegistrars)
           .add(CIBeansKryoRegistrar.class)
           .build();

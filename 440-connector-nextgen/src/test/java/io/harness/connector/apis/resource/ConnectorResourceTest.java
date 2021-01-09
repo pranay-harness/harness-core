@@ -198,8 +198,7 @@ public class ConnectorResourceTest extends CategoryTest {
     assertThat(catalogue.size()).isEqualTo(ConnectorCategory.values().length);
     final int totalConnectorsWithinAllCategories =
         catalogue.stream().map(item -> item.getConnectors().size()).mapToInt(Integer::intValue).sum();
-    // Handling it specially for git.
-    assertThat(totalConnectorsWithinAllCategories).isEqualTo(ConnectorType.values().length - 1);
+    assertThat(totalConnectorsWithinAllCategories).isEqualTo(ConnectorType.values().length);
     Mockito.verify(connectorService, times(1)).getConnectorCatalogue();
   }
 }
