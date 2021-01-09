@@ -83,7 +83,7 @@ public class ActivityVerificationState extends AnalysisState {
 
   @Override
   public AnalysisState handleSuccess() {
-    this.setStatus(AnalysisStatus.SUCCESS);
+    this.setStatus(AnalysisStatus.COMPLETED);
     healthVerificationService.updateProgress(
         getInputs().getVerificationTaskId(), analysisCompletedUntil, getStatus(), true);
     return this;

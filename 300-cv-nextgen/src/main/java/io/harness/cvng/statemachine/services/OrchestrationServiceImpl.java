@@ -76,6 +76,12 @@ public class OrchestrationServiceImpl implements OrchestrationService {
     orchestrateAtRunningState(orchestrator);
   }
 
+  @Override
+  public void orchestrate(AnalysisOrchestrator orchestrator) {
+    Preconditions.checkNotNull(orchestrator, "orchestrator cannot be null when trying to orchestrate");
+    orchestrateAtRunningState(orchestrator);
+  }
+
   private void orchestrateAtRunningState(AnalysisOrchestrator orchestrator) {
     if (orchestrator == null) {
       String errMsg = "No orchestrator available to execute currently.";
@@ -113,6 +119,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
         break;
       case COMPLETED:
         log.info("Analysis for the entire duration is done. Time to close down");
+        orchestrator.setStatus(AnalysisStatus.COMPLETED);
         break;
       default:
         log.info("Unknown analysis status of the state machine under execution");

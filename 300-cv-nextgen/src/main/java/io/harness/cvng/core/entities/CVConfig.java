@@ -89,10 +89,7 @@ public abstract class CVConfig
       this.dataCollectionTaskIteration = nextIteration;
       return;
     }
-    if (fieldName.equals(CVConfigKeys.analysisOrchestrationIteration)) {
-      this.analysisOrchestrationIteration = nextIteration;
-      return;
-    }
+
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
@@ -101,9 +98,7 @@ public abstract class CVConfig
     if (CVConfigKeys.dataCollectionTaskIteration.equals(fieldName)) {
       return this.dataCollectionTaskIteration;
     }
-    if (fieldName.equals(CVConfigKeys.analysisOrchestrationIteration)) {
-      return analysisOrchestrationIteration;
-    }
+
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 

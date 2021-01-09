@@ -118,10 +118,7 @@ public class VerificationJobInstance
       this.dataCollectionTaskIteration = nextIteration;
       return;
     }
-    if (VerificationJobInstanceKeys.analysisOrchestrationIteration.equals(fieldName)) {
-      this.analysisOrchestrationIteration = nextIteration;
-      return;
-    }
+
     if (VerificationJobInstanceKeys.deletePerpetualTaskIteration.equals(fieldName)) {
       this.deletePerpetualTaskIteration = nextIteration;
       return;
@@ -134,9 +131,7 @@ public class VerificationJobInstance
     if (VerificationJobInstanceKeys.dataCollectionTaskIteration.equals(fieldName)) {
       return this.dataCollectionTaskIteration;
     }
-    if (VerificationJobInstanceKeys.analysisOrchestrationIteration.equals(fieldName)) {
-      return this.analysisOrchestrationIteration;
-    }
+
     if (VerificationJobInstanceKeys.deletePerpetualTaskIteration.equals(fieldName)) {
       return this.deletePerpetualTaskIteration;
     }
