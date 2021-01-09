@@ -1,0 +1,13 @@
+manifest:
+  identifier: manifestIdentifier
+  type: K8sManifest
+  spec:
+    store:
+      type: Git
+      spec:
+        connectorRef: account.GitConnector
+        gitFetchType: Branch
+        branch: master
+        commitId: ""
+        paths:
+          - test/spec/
