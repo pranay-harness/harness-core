@@ -1,5 +1,7 @@
 package io.harness.plancreator.steps;
 
+import static io.harness.pms.yaml.YAMLFieldNameConstants.STEP_GROUP;
+
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
@@ -12,6 +14,7 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
@@ -81,7 +84,7 @@ public class StepGroupPMSPlanCreator extends ChildrenPlanCreator<StepGroupElemen
   private List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlField currentField) {
     List<AdviserObtainment> adviserObtainments = new ArrayList<>();
     if (currentField != null && currentField.getNode() != null) {
-      if (checkIfParentIsParallel(currentField)) {
+      if (currentField.checkIfParentIsParallel(STEP_GROUP)) {
         return adviserObtainments;
       }
       YamlField siblingField = currentField.getNode().nextSiblingFromParentArray(
@@ -116,9 +119,5 @@ public class StepGroupPMSPlanCreator extends ChildrenPlanCreator<StepGroupElemen
       }
     });
     return childYamlFields;
-  }
-
-  private boolean checkIfParentIsParallel(YamlField currentField) {
-    return YamlUtils.getGivenYamlNodeFromParentPath(currentField.getNode(), "parallel") != null;
   }
 }

@@ -19,6 +19,7 @@ import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.execution.utils.SkipInfoUtils;
+import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.adviser.abort.OnAbortAdviser;
 import io.harness.pms.sdk.core.adviser.abort.OnAbortAdviserParameters;
@@ -219,7 +220,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
 
   private AdviserObtainment getOnSuccessAdviserObtainment(YamlField currentField) {
     if (currentField != null && currentField.getNode() != null) {
-      if (checkIfParentIsParallel(currentField)) {
+      if (currentField.checkIfParentIsParallel(STEPS)) {
         return null;
       }
       YamlField siblingField = currentField.getNode().nextSiblingFromParentArray(
@@ -294,13 +295,5 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
       throw new InvalidRequestException("Invalid yaml", e);
     }
     return failureStrategyConfigs;
-  }
-
-  private boolean checkIfParentIsParallel(YamlField currentField) {
-    YamlNode parallelNode = YamlUtils.findParentNode(currentField.getNode(), PARALLEL);
-    if (parallelNode != null) {
-      return YamlUtils.findParentNode(parallelNode, STEPS) != null;
-    }
-    return false;
   }
 }
