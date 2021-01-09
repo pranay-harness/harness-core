@@ -1,0 +1,60 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//:macros.bzl", "sonarqube_test")
+load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "sources")
+
+sources()
+
+java_library(
+    name = "maven_deps",
+    visibility = ["//visibility:public"],
+    exports = [
+        "//950-delegate-tasks-beans:module",
+        "//960-yaml-sdk:module",
+        "@maven//:com_fasterxml_jackson_core_jackson_databind",
+        "@maven//:com_fasterxml_jackson_datatype_jackson_datatype_guava",
+        "@maven//:com_fasterxml_jackson_datatype_jackson_datatype_jdk8",
+        "@maven//:com_fasterxml_jackson_datatype_jackson_datatype_jsr310",
+        "@maven//:com_google_code_findbugs_annotations",
+        "@maven//:com_google_inject_guice",
+        "@maven//:com_squareup_okhttp3_okhttp",
+        "@maven//:com_squareup_retrofit2_converter_jackson",
+        "@maven//:com_squareup_retrofit2_retrofit",
+        "@maven//:io_github_resilience4j_resilience4j_circuitbreaker",
+        "@maven//:io_github_resilience4j_resilience4j_retrofit",
+        "@maven//:javax_annotation_javax_annotation_api",
+        "@maven//:javax_validation_validation_api",
+        "@maven//:javax_ws_rs_javax_ws_rs_api",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_hibernate_hibernate_validator",
+        "@maven//:org_springframework_data_spring_data_commons",
+    ],
+)
+
+java_library(
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    resources = [
+        "//945-connector-beans/src/main/resources:resource",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "maven_deps",
+        "//:lombok",
+    ],
+)
+
+checkstyle()
+
+sonarqube_test(
+    name = "sq_mycomponent",
+    srcs = ["sources"],
+    targets = [
+        ":maven_deps",
+        ":module",
+    ],
+)
+
+pmd()

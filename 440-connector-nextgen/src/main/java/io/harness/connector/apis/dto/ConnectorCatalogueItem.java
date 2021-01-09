@@ -1,6 +1,6 @@
 package io.harness.connector.apis.dto;
 
-import io.harness.delegate.beans.connector.ConnectorCategory;
+import io.harness.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

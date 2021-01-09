@@ -3,10 +3,10 @@ package io.harness.ng;
 import static io.harness.ng.GcpKmsConfigDTOMapper.getGcpKmsConfigUpdateDTO;
 import static io.harness.ng.VaultConfigDTOMapper.getVaultConfigUpdateDTO;
 
+import io.harness.connector.ConnectorDTO;
+import io.harness.connector.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorDTO;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import io.harness.exception.InvalidRequestException;

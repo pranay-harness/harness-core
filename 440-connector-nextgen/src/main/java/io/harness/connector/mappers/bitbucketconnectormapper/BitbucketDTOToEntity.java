@@ -1,5 +1,6 @@
 package io.harness.connector.mappers.bitbucketconnectormapper;
 
+import io.harness.connector.ConnectorCategory;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketAuthentication;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketConnector;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketHttpAuth;
@@ -9,7 +10,6 @@ import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketUserna
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketUsernamePasswordApiAccess;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.connector.mappers.SecretRefHelper;
-import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketApiAccessSpecDTO;

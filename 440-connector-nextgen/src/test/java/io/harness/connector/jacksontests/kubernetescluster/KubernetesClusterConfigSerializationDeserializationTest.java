@@ -7,8 +7,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorDTO;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.connector.ConnectorDTO;
+import io.harness.connector.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;

@@ -1,6 +1,6 @@
 package io.harness.connector.services;
 
-import io.harness.delegate.beans.connector.ConnectorCategory;
+import io.harness.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.filter.dto.FilterPropertiesDTO;
 

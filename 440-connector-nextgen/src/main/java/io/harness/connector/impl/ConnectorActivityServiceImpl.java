@@ -2,8 +2,8 @@ package io.harness.connector.impl;
 
 import io.harness.EntityType;
 import io.harness.beans.IdentifierRef;
+import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.services.ConnectorActivityService;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.activityhistory.NGActivityStatus;
 import io.harness.ng.core.activityhistory.NGActivityType;

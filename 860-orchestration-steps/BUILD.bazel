@@ -14,7 +14,7 @@ java_library(
         "//870-orchestration:module",
         "//870-yaml-beans:module",
         "//882-pms-sdk-core:module",
-        "//900-yaml-sdk:module",
+        "//960-yaml-sdk:module",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_github_reinert_jjschema",

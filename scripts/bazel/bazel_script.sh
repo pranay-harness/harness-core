@@ -58,7 +58,6 @@ BAZEL_MODULES="\
   //890-pms-contracts/src/main/proto:all \
   //890-pms-contracts:module \
   //890-sm-core:module \
-  //900-yaml-sdk:module \
   //910-delegate-service-driver:module \
   //910-delegate-task-grpc-service/src/main/proto:all \
   //910-delegate-task-grpc-service:module \
@@ -75,6 +74,7 @@ BAZEL_MODULES="\
   //940-notification-client:module \
   //940-notification-client:module_deploy.jar \
   //940-secret-manager-client:module \
+    //945-connector-beans:module \
   //950-command-library-common:module \
   //950-common-entities:module \
   //950-delegate-tasks-beans/src/main/proto:all \
@@ -96,6 +96,7 @@ BAZEL_MODULES="\
   //960-notification-beans:module \
   //960-persistence:module \
   //960-persistence:supporter-test \
+    //960-yaml-sdk:module \
   //970-api-services-beans:module \
   //970-grpc:module \
   //970-ng-commons:module \
@@ -255,7 +256,6 @@ build_bazel_module 882-pms-sdk-core
 build_bazel_module 884-pms-commons
 build_bazel_module 890-pms-contracts
 build_bazel_module 890-sm-core
-build_bazel_module 900-yaml-sdk
 build_bazel_module 910-delegate-service-driver
 build_bazel_module 910-delegate-task-grpc-service
 build_bazel_module 915-pms-delegate-service-driver
@@ -266,6 +266,7 @@ build_bazel_module 930-ng-core-clients
 build_bazel_module 940-delegate-beans
 build_bazel_module 940-feature-flag
 build_bazel_module 940-secret-manager-client
+build_bazel_module 945-connector-beans
 build_bazel_module 950-command-library-common
 build_bazel_module 950-common-entities
 build_bazel_module 950-delegate-tasks-beans
@@ -282,6 +283,7 @@ build_bazel_module 960-expression-service
 build_bazel_module 960-ng-core-beans
 build_bazel_module 960-notification-beans
 build_bazel_module 960-persistence
+build_bazel_module 960-yaml-sdk
 build_bazel_module 970-api-services-beans
 build_bazel_module 970-grpc
 build_bazel_module 970-ng-commons

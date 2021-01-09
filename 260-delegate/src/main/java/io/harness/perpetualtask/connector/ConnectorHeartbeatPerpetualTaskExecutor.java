@@ -4,10 +4,10 @@ import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
 import static io.harness.network.SafeHttpCall.execute;
 
+import io.harness.connector.ConnectorDTO;
+import io.harness.connector.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorDTO;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.delegate.task.k8s.ConnectorValidationHandler;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.managerclient.DelegateAgentManagerClient;

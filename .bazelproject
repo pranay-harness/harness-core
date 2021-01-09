@@ -23,7 +23,6 @@ directories:
   884-pms-commons
   890-pms-contracts
   890-sm-core
-  900-yaml-sdk
   910-delegate-service-driver
   910-delegate-task-grpc-service
   915-pms-delegate-service-driver
@@ -37,6 +36,7 @@ directories:
   940-feature-flag
   940-notification-client
   940-secret-manager-client
+  945-connector-beans
   950-command-library-common
   950-common-entities
   950-delegate-tasks-beans
@@ -54,6 +54,7 @@ directories:
   960-notification-beans
   960-persistence
   960-recaster
+  960-yaml-sdk
   970-api-services-beans
   970-grpc
   970-ng-commons

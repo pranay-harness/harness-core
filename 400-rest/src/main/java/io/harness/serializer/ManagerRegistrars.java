@@ -33,6 +33,7 @@ public class ManagerRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(CvNextGenCommonsRegistrars.kryoRegistrars)
+          .addAll(ConnectorRegistrars.kryoRegistrars)
           .addAll(DelegateTasksBeansRegistrars.kryoRegistrars)
           .addAll(OrchestrationRegistrars.kryoRegistrars)
           .add(OrchestrationStepsKryoRegistrar.class)

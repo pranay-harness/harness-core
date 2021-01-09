@@ -14,6 +14,7 @@ import org.springframework.core.convert.converter.Converter;
 public class ConnectorNextGenRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+          .addAll(ConnectorRegistrars.kryoRegistrars)
           .addAll(NGCoreRegistrars.kryoRegistrars)
           .addAll(DelegateServiceDriverRegistrars.kryoRegistrars)
           .addAll(NGCoreClientRegistrars.kryoRegistrars)

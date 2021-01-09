@@ -2,6 +2,8 @@ package io.harness.connector.utils;
 
 import static io.harness.delegate.beans.connector.ConnectorType.CE_AWS;
 
+import io.harness.connector.ConnectorDTO;
+import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.embedded.awsconnector.AwsConfig;
 import io.harness.connector.entities.embedded.awsconnector.AwsIamCredential;
@@ -9,8 +11,6 @@ import io.harness.connector.entities.embedded.ceawsconnector.CEAwsConfig;
 import io.harness.connector.entities.embedded.ceawsconnector.CURAttributes;
 import io.harness.connector.entities.embedded.ceawsconnector.S3BucketDetails;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorDTO;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.AwsCurAttributesDTO;

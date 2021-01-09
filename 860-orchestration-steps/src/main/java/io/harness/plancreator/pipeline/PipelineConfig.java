@@ -1,7 +1,7 @@
 package io.harness.plancreator.pipeline;
 
 import io.harness.EntityType;
-import io.harness.yaml.YamlSchemaRoot;
+import io.harness.yaml.schema.YamlSchemaRoot;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;

@@ -6,8 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.connector.ConnectorDTO;
 import io.harness.connector.utils.AWSConnectorTestHelper;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorDTO;
 import io.harness.remote.NGObjectMapperHelper;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;

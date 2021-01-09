@@ -1,7 +1,7 @@
 package io.harness.ng.core.dto.secrets;
 
 import io.harness.EntityType;
-import io.harness.yaml.YamlSchemaRoot;
+import io.harness.yaml.schema.YamlSchemaRoot;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;

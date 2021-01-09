@@ -2,13 +2,17 @@ package io.harness.ng;
 
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
+import static io.harness.connector.ConnectorCategory.SECRET_MANAGER;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
-import static io.harness.delegate.beans.connector.ConnectorCategory.SECRET_MANAGER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.ng.NextGenModule.SECRET_MANAGER_CONNECTOR_SERVICE;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.connector.ConnectorCategory;
+import io.harness.connector.ConnectorDTO;
+import io.harness.connector.ConnectorInfoDTO;
+import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.apis.dto.ConnectorCatalogueResponseDTO;
 import io.harness.connector.apis.dto.ConnectorFilterPropertiesDTO;
 import io.harness.connector.apis.dto.stats.ConnectorStatistics;
@@ -16,12 +20,8 @@ import io.harness.connector.entities.Connector;
 import io.harness.connector.services.ConnectorActivityService;
 import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
-import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorDTO;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.encryption.Scope;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;

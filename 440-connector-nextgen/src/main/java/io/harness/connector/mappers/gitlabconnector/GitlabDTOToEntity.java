@@ -1,5 +1,6 @@
 package io.harness.connector.mappers.gitlabconnector;
 
+import io.harness.connector.ConnectorCategory;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabAuthentication;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabConnector;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabHttpAuth;
@@ -11,7 +12,6 @@ import io.harness.connector.entities.embedded.gitlabconnector.GitlabUsernamePass
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabUsernameToken;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.connector.mappers.SecretRefHelper;
-import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessSpecDTO;

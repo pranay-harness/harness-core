@@ -1,12 +1,12 @@
 package io.harness.connector.mappers.gitconnectormapper;
 
+import io.harness.connector.ConnectorCategory;
 import io.harness.connector.entities.embedded.gitconnector.GitAuthentication;
 import io.harness.connector.entities.embedded.gitconnector.GitConfig;
 import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
 import io.harness.connector.entities.embedded.gitconnector.GitUserNamePasswordAuthentication;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.connector.mappers.SecretRefHelper;
-import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.CustomCommitAttributes;

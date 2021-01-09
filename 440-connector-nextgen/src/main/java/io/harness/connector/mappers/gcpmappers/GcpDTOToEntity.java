@@ -1,11 +1,11 @@
 package io.harness.connector.mappers.gcpmappers;
 
+import io.harness.connector.ConnectorCategory;
 import io.harness.connector.entities.embedded.gcpconnector.GcpConfig;
 import io.harness.connector.entities.embedded.gcpconnector.GcpDelegateDetails;
 import io.harness.connector.entities.embedded.gcpconnector.GcpServiceAccountKey;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.connector.mappers.SecretRefHelper;
-import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;

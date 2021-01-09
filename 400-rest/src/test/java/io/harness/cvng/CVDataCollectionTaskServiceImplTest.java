@@ -9,10 +9,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.category.element.UnitTests;
+import io.harness.connector.ConnectorInfoDTO;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.perpetualtask.CVDataCollectionTaskService;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;

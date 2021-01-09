@@ -23,7 +23,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>900-yaml-sdk</artifactId>
+            <artifactId>960-yaml-sdk</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

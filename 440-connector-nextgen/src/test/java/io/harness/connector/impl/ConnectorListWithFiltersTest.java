@@ -1,11 +1,11 @@
 package io.harness.connector.impl;
 
+import static io.harness.connector.ConnectivityStatus.FAILURE;
+import static io.harness.connector.ConnectivityStatus.SUCCESS;
+import static io.harness.connector.ConnectorCategory.ARTIFACTORY;
+import static io.harness.connector.ConnectorCategory.CLOUD_PROVIDER;
 import static io.harness.connector.impl.ConnectorFilterServiceImpl.CREDENTIAL_TYPE_KEY;
 import static io.harness.connector.impl.ConnectorFilterServiceImpl.INHERIT_FROM_DELEGATE_STRING;
-import static io.harness.delegate.beans.connector.ConnectivityStatus.FAILURE;
-import static io.harness.delegate.beans.connector.ConnectivityStatus.SUCCESS;
-import static io.harness.delegate.beans.connector.ConnectorCategory.ARTIFACTORY;
-import static io.harness.delegate.beans.connector.ConnectorCategory.CLOUD_PROVIDER;
 import static io.harness.delegate.beans.connector.ConnectorType.AWS;
 import static io.harness.delegate.beans.connector.ConnectorType.DOCKER;
 import static io.harness.delegate.beans.connector.ConnectorType.GCP;
@@ -20,6 +20,11 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 
 import io.harness.category.element.UnitTests;
+import io.harness.connector.ConnectivityStatus;
+import io.harness.connector.ConnectorConnectivityDetails;
+import io.harness.connector.ConnectorDTO;
+import io.harness.connector.ConnectorInfoDTO;
+import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorsTestBase;
 import io.harness.connector.apis.dto.ConnectorFilterPropertiesDTO;
 import io.harness.connector.entities.embedded.awsconnector.AwsConfig.AwsConfigKeys;
@@ -28,13 +33,8 @@ import io.harness.connector.entities.embedded.kubernetescluster.K8sUserNamePassw
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig.KubernetesClusterConfigKeys;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterDetails;
-import io.harness.delegate.beans.connector.ConnectivityStatus;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
-import io.harness.delegate.beans.connector.ConnectorConnectivityDetails;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorDTO;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorInfoDTO;
-import io.harness.delegate.beans.connector.apis.dto.ConnectorResponseDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;

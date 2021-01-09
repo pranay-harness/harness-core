@@ -12,6 +12,7 @@ java_library(
     visibility = ["//visibility:public"],
     exports = [
         "//940-secret-manager-client:module",
+        "//945-connector-beans:module",
         "//960-ng-core-beans:module",
         "//960-persistence:module",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
