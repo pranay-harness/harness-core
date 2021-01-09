@@ -1,8 +1,10 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -359,6 +361,43 @@ public class CloudFormationStateTest extends WingsBaseTest {
     cloudFormationCreateStackState.setRegion(Regions.US_EAST_1.name());
     cloudFormationCreateStackState.setTimeoutMillis(1000);
     verifyCreateStackRequest();
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testExecute_createStackInBuildWorkflowWithNoEnvId() {
+    when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(null);
+    StateExecutionInstance stateExecutionInstance = aStateExecutionInstance()
+                                                        .displayName(STATE_NAME)
+                                                        .addContextElement(workflowStandardParams)
+                                                        .addContextElement(phaseElement)
+                                                        .addContextElement(ContainerServiceElement.builder()
+                                                                               .uuid(serviceElement.getUuid())
+                                                                               .maxInstances(10)
+                                                                               .name(PCF_SERVICE_NAME)
+                                                                               .resizeStrategy(RESIZE_NEW_FIRST)
+                                                                               .infraMappingId(INFRA_MAPPING_ID)
+                                                                               .deploymentType(DeploymentType.PCF)
+                                                                               .build())
+                                                        .addStateExecutionData(aCommandStateExecutionData().build())
+                                                        .orchestrationWorkflowType(BUILD)
+                                                        .build();
+
+    cloudFormationCreateStackState.setRegion(Regions.US_EAST_1.name());
+    cloudFormationCreateStackState.setTimeoutMillis(1000);
+
+    ExecutionContext context = new ExecutionContextImpl(stateExecutionInstance);
+    on(context).set("variableProcessor", variableProcessor);
+    on(context).set("evaluator", evaluator);
+    on(context).set("infrastructureMappingService", infrastructureMappingService);
+    on(context).set("infrastructureDefinitionService", infrastructureDefinitionService);
+    on(context).set("serviceResourceService", serviceResourceService);
+    on(context).set("sweepingOutputService", sweepingOutputService);
+    on(context).set("featureFlagService", featureFlagService);
+    on(context).set("settingsService", settingsService);
+    ExecutionResponse executionResponse = cloudFormationCreateStackState.execute(context);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
   @Test
