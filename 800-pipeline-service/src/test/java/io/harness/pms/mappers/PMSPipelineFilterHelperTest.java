@@ -39,6 +39,7 @@ public class PMSPipelineFilterHelperTest extends PipelineServiceTestBase {
     update.set(PipelineEntity.PipelineEntityKeys.tags, pipelineEntity.getTags());
     update.set(PipelineEntity.PipelineEntityKeys.deleted, false);
     update.set(PipelineEntity.PipelineEntityKeys.description, pipelineEntity.getDescription());
+    update.set(PipelineEntity.PipelineEntityKeys.stageCount, pipelineEntity.getStageCount());
 
     assertThat(update).isEqualTo(PMSPipelineFilterHelper.getUpdateOperations(pipelineEntity));
   }

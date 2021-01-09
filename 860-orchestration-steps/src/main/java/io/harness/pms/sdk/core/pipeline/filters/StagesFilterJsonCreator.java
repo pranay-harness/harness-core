@@ -1,5 +1,7 @@
 package io.harness.pms.sdk.core.pipeline.filters;
 
+import static io.harness.pms.yaml.YAMLFieldNameConstants.PARALLEL;
+
 import io.harness.pms.contracts.plan.EdgeLayoutList;
 import io.harness.pms.contracts.plan.GraphLayoutNode;
 import io.harness.pms.yaml.YamlField;
@@ -25,6 +27,10 @@ public class StagesFilterJsonCreator {
 
   public String getStartingNodeId(YamlField stagesYamlField) {
     return getStageYamlFields(stagesYamlField).get(0).getNode().getUuid();
+  }
+
+  public int getStagesCount(Collection<YamlField> stagesYamlField) {
+    return (int) stagesYamlField.stream().filter(yamlField -> !yamlField.getName().equals(PARALLEL)).count();
   }
 
   private List<YamlField> getStageYamlFields(YamlField stagesYamlField) {

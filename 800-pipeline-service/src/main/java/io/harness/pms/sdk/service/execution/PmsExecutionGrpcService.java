@@ -58,9 +58,6 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
         for (Object value : values) {
           update.addToSet(String.format(PIPELINE_MODULE_INFO_UPDATE_KEY, moduleName, entry.getKey()), value);
         }
-        if (values.isEmpty()) {
-          update.addToSet(String.format(PIPELINE_MODULE_INFO_UPDATE_KEY, moduleName, entry.getKey()), "");
-        }
       } else {
         if (entry.getValue() instanceof String) {
           update.set(
@@ -103,9 +100,6 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
         Collection<Object> values = (Collection<Object>) entry.getValue();
         for (Object value : values) {
           update.addToSet(String.format(STAGE_MODULE_INFO_UPDATE_KEY, stageUuid, moduleName, entry.getKey()), value);
-        }
-        if (values.isEmpty()) {
-          update.addToSet(String.format(STAGE_MODULE_INFO_UPDATE_KEY, stageUuid, moduleName, entry.getKey()), "");
         }
       } else {
         if (entry.getValue() instanceof String) {
