@@ -246,7 +246,6 @@ public abstract class CloudFormationState extends State {
     notNullCheck("workflowStandardParams", workflowStandardParams, USER);
     notNullCheck("currentUser", workflowStandardParams.getCurrentUser(), USER);
     Preconditions.checkNotNull(app, "No app found from executionContext");
-    Preconditions.checkNotNull(env, "No env found from executionContext");
     ActivityBuilder activityBuilder =
         Activity.builder()
             .applicationName(app.getName())
@@ -283,6 +282,10 @@ public abstract class CloudFormationState extends State {
   }
 
   protected String getStackNameSuffix(ExecutionContextImpl executionContext, String provisionerId) {
+    if (executionContext.getOrchestrationWorkflowType() != null
+        && executionContext.getOrchestrationWorkflowType() == BUILD) {
+      return getNormalizedId(provisionerId);
+    }
     WorkflowStandardParams workflowStandardParams = executionContext.fetchWorkflowStandardParamsFromContext();
     Environment env = workflowStandardParams.fetchRequiredEnv();
     return getNormalizedId(env.getUuid()) + getNormalizedId(provisionerId);
