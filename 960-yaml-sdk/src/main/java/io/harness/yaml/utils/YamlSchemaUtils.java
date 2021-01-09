@@ -41,7 +41,7 @@ public class YamlSchemaUtils {
     } else {
       reflections = new Reflections(HarnessPackages.IO_HARNESS, HarnessPackages.SOFTWARE_WINGS);
     }
-    return reflections.getTypesAnnotatedWith(annotationClass);
+    return reflections.getTypesAnnotatedWith(annotationClass, true);
   }
 
   public Set<Class<?>> getClasses(Class annotationClass) {

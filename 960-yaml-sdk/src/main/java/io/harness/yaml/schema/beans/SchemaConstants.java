@@ -14,4 +14,10 @@ public class SchemaConstants {
   public static final String JSON_SCHEMA_7 = "http://json-schema.org/draft-07/schema#";
   public static final String ENUM_NODE = "enum";
   public static final String REQUIRED_NODE = "required";
+  public static final String ADDITIONAL_PROPERTIES_NODE = "additionalProperties";
+  public static final String TYPE_NODE = "type";
+  public static final String STRING_TYPE_NODE = "string";
+  public static final String NUMBER_TYPE_NODE = "number";
+  public static final String OBJECT_TYPE_NODE = "object";
+  public static final String ARRAY_TYPE_NODE = "array";
 }

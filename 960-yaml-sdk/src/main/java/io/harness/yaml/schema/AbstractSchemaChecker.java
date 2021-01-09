@@ -35,7 +35,7 @@ public interface AbstractSchemaChecker {
   }
 
   default void ensureSchemaUpdated(Reflections reflections, Logger log) {
-    final Set<Class<?>> schemaRoots = reflections.getTypesAnnotatedWith(YamlSchemaRoot.class);
+    final Set<Class<?>> schemaRoots = reflections.getTypesAnnotatedWith(YamlSchemaRoot.class, true);
     if (isEmpty(schemaRoots)) {
       return;
     }

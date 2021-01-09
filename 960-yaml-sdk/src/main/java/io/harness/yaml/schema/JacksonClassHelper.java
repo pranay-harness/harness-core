@@ -4,9 +4,12 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.validation.OneOfField;
 import io.harness.validation.OneOfFields;
+import io.harness.yaml.YamlSchemaTypes;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
 import io.harness.yaml.schema.beans.OneOfMapping;
+import io.harness.yaml.schema.beans.PossibleFieldTypes;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
+import io.harness.yaml.schema.beans.SupportedPossibleFieldTypes;
 import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
@@ -34,29 +37,49 @@ public class JacksonClassHelper {
       return;
     }
     Set<FieldSubtypeData> fieldSubtypeDataList = new HashSet<>();
+    Set<PossibleFieldTypes> possibleFieldTypesSet = new HashSet<>();
     // Instantiating so that we don't get into infinite loop.
     swaggerDefinitionsMetaInfoMap.put(YamlSchemaUtils.getSwaggerName(clazz), null);
     for (Field declaredField : clazz.getDeclaredFields()) {
       if (checkIfClassShouldBeTraveresed(declaredField)) {
         getRequiredMappings(declaredField.getType(), swaggerDefinitionsMetaInfoMap);
       }
-      final Set<SubtypeClassMap> mapOfSubtypes = getMapOfSubtypes(declaredField);
-      if (!isEmpty(mapOfSubtypes)) {
-        for (JsonSubTypes.Type subtype : Objects.requireNonNull(getJsonSubTypes(declaredField)).value()) {
-          getRequiredMappings(subtype.value(), swaggerDefinitionsMetaInfoMap);
-        }
-        // Subtype mappings.
-        FieldSubtypeData fieldSubtypeData = getFieldSubtypeData(declaredField, mapOfSubtypes);
-        fieldSubtypeDataList.add(fieldSubtypeData);
-      }
+      // Field types
+      processFieldTypeSet(possibleFieldTypesSet, declaredField);
+      // subtype mappings
+      processSubtypeMappings(swaggerDefinitionsMetaInfoMap, fieldSubtypeDataList, declaredField);
     }
     // One of mappings
     final Set<OneOfMapping> oneOfMappingForClasses = getOneOfMappingsForClass(clazz);
     final SwaggerDefinitionsMetaInfo definitionsMetaInfo = SwaggerDefinitionsMetaInfo.builder()
                                                                .oneOfMappings(oneOfMappingForClasses)
                                                                .subtypeClassMap(fieldSubtypeDataList)
+                                                               .fieldPossibleTypes(possibleFieldTypesSet)
                                                                .build();
     swaggerDefinitionsMetaInfoMap.put(YamlSchemaUtils.getSwaggerName(clazz), definitionsMetaInfo);
+  }
+
+  private void processFieldTypeSet(Set<PossibleFieldTypes> possibleFieldTypesSet, Field declaredField) {
+    if (declaredField.getAnnotation(YamlSchemaTypes.class) != null) {
+      YamlSchemaTypes fieldTypes = declaredField.getAnnotation(YamlSchemaTypes.class);
+      Set<SupportedPossibleFieldTypes> value = Arrays.stream(fieldTypes.value()).collect(Collectors.toSet());
+      final SupportedPossibleFieldTypes defaultType = fieldTypes.defaultType();
+      final String fieldName = YamlSchemaUtils.getFieldName(declaredField);
+      possibleFieldTypesSet.add(
+          PossibleFieldTypes.builder().fieldName(fieldName).defaultFieldType(defaultType).fieldTypes(value).build());
+    }
+  }
+
+  private void processSubtypeMappings(Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap,
+      Set<FieldSubtypeData> fieldSubtypeDataList, Field declaredField) {
+    final Set<SubtypeClassMap> mapOfSubtypes = getMapOfSubtypes(declaredField);
+    if (!isEmpty(mapOfSubtypes)) {
+      for (JsonSubTypes.Type subtype : Objects.requireNonNull(getJsonSubTypes(declaredField)).value()) {
+        getRequiredMappings(subtype.value(), swaggerDefinitionsMetaInfoMap);
+      }
+      FieldSubtypeData fieldSubtypeData = getFieldSubtypeData(declaredField, mapOfSubtypes);
+      fieldSubtypeDataList.add(fieldSubtypeData);
+    }
   }
 
   @VisibleForTesting

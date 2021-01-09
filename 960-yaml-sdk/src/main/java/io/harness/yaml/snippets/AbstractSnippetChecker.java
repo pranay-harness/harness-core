@@ -60,7 +60,7 @@ public interface AbstractSnippetChecker {
   }
 
   default List<Pair<String, ClassLoader>> getIndexResourceFileContent(Logger log, Reflections reflections) {
-    final Set<Class<?>> classes = reflections.getTypesAnnotatedWith(YamlSchemaRoot.class);
+    final Set<Class<?>> classes = reflections.getTypesAnnotatedWith(YamlSchemaRoot.class, true);
     if (isEmpty(classes)) {
       return Collections.emptyList();
     }
