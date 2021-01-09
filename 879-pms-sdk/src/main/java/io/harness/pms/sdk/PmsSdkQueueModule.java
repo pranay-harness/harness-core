@@ -37,7 +37,7 @@ public class PmsSdkQueueModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    if (config.getDeploymentMode().equals(DeployMode.REMOTE)) {
+    if (config.getDeploymentMode() == DeployMode.REMOTE) {
       bind(new TypeLiteral<QueueListener<OrchestrationEvent>>() {}).to(SdkOrchestrationEventListener.class);
     }
   }
@@ -46,9 +46,8 @@ public class PmsSdkQueueModule extends AbstractModule {
   @Singleton
   public QueueConsumer<NodeExecutionEvent> nodeExecutionEventQueueConsumer(
       Injector injector, PublisherConfiguration publisherConfiguration) {
-    if (this.config.getDeploymentMode().equals(DeployMode.REMOTE)) {
-      MongoTemplate sdkTemplate =
-          injector.getInstance(Key.get(MongoTemplate.class, Names.named("pmsSdkMongoTemplate")));
+    if (this.config.getDeploymentMode().isNonLocal()) {
+      MongoTemplate sdkTemplate = getMongoTemplate(injector);
       List<List<String>> topicExpressions = singletonList(singletonList(config.getServiceName()));
       return QueueFactory.createNgQueueConsumer(
           injector, NodeExecutionEvent.class, ofSeconds(5), topicExpressions, publisherConfiguration, sdkTemplate);
@@ -63,9 +62,8 @@ public class PmsSdkQueueModule extends AbstractModule {
   @Singleton
   public QueueConsumer<OrchestrationEvent> orchestrationEventQueueConsumer(
       Injector injector, PublisherConfiguration publisherConfiguration) {
-    if (this.config.getDeploymentMode().equals(DeployMode.REMOTE)) {
-      MongoTemplate sdkTemplate =
-          injector.getInstance(Key.get(MongoTemplate.class, Names.named("pmsSdkMongoTemplate")));
+    if (this.config.getDeploymentMode().isNonLocal()) {
+      MongoTemplate sdkTemplate = getMongoTemplate(injector);
       List<List<String>> topicExpressions = singletonList(singletonList(config.getServiceName()));
       return QueueFactory.createNgQueueConsumer(
           injector, OrchestrationEvent.class, ofSeconds(5), topicExpressions, publisherConfiguration, sdkTemplate);
@@ -73,5 +71,13 @@ public class PmsSdkQueueModule extends AbstractModule {
     MongoTemplate mongoTemplate = injector.getInstance(MongoTemplate.class);
     return QueueFactory.createNgQueueConsumer(
         injector, OrchestrationEvent.class, ofSeconds(5), emptyList(), publisherConfiguration, mongoTemplate);
+  }
+
+  private MongoTemplate getMongoTemplate(Injector injector) {
+    if (config.getDeploymentMode() == DeployMode.REMOTE_IN_PROCESS) {
+      return injector.getInstance(MongoTemplate.class);
+    } else {
+      return injector.getInstance(Key.get(MongoTemplate.class, Names.named("pmsSdkMongoTemplate")));
+    }
   }
 }

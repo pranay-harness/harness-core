@@ -10,6 +10,7 @@ import io.harness.pms.plan.execution.data.service.outcome.OutcomeServiceGrpcServ
 import io.harness.pms.plan.execution.data.service.outputs.SweepingOutputServiceImpl;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.sdk.service.execution.PmsExecutionGrpcService;
+import io.harness.pms.utils.PmsConstants;
 
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
@@ -22,6 +23,7 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.grpc.BindableService;
 import io.grpc.Channel;
+import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.internal.GrpcUtil;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
@@ -52,6 +54,7 @@ public class PipelineServiceGrpcModule extends AbstractModule {
   protected void configure() {
     Multibinder<Service> serviceBinder = Multibinder.newSetBinder(binder(), Service.class);
     serviceBinder.addBinding().to(Key.get(Service.class, Names.named("pms-grpc-service")));
+    serviceBinder.addBinding().to(Key.get(Service.class, Names.named("pms-grpc-internal-service")));
   }
 
   @Provides
@@ -65,6 +68,8 @@ public class PipelineServiceGrpcModule extends AbstractModule {
   public Map<String, PlanCreationServiceBlockingStub> grpcClients(PipelineServiceConfiguration configuration)
       throws SSLException {
     Map<String, PlanCreationServiceBlockingStub> map = new HashMap<>();
+    map.put(PmsConstants.INTERNAL_SERVICE_NAME,
+        PlanCreationServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName("pmsSdkInternal").build()));
     for (Map.Entry<String, GrpcClientConfig> entry : configuration.getGrpcClientConfigs().entrySet()) {
       map.put(entry.getKey(), PlanCreationServiceGrpc.newBlockingStub(getChannel(entry.getValue())));
     }
@@ -105,6 +110,21 @@ public class PipelineServiceGrpcModule extends AbstractModule {
   @Singleton
   @Named("pms-grpc-service")
   public Service pmsGrpcService(PipelineServiceConfiguration configuration, HealthStatusManager healthStatusManager,
+      Set<BindableService> services) {
+    return new GrpcServer(configuration.getGrpcServerConfig().getConnectors().get(0), services, Collections.emptySet(),
+        healthStatusManager);
+  }
+
+  @Provides
+  @Singleton
+  @Named("pms-grpc-internal-service")
+  public Service pmsGrpcInternalService(HealthStatusManager healthStatusManager, Set<BindableService> services) {
+    return new GrpcInProcessServer(
+        PmsConstants.INTERNAL_SERVICE_NAME, services, Collections.emptySet(), healthStatusManager);
+  }
+
+  @Provides
+  private Set<BindableService> bindableServices(HealthStatusManager healthStatusManager,
       PmsSdkInstanceService pmsSdkInstanceService, PmsNodeExecutionGrpcSevice pmsNodeExecutionGrpcSevice,
       PmsExecutionGrpcService pmsExecutionGrpcService, SweepingOutputServiceImpl sweepingOutputService,
       OutcomeServiceGrpcServerImpl outcomeServiceGrpcServer,
@@ -117,7 +137,6 @@ public class PipelineServiceGrpcModule extends AbstractModule {
     services.add(sweepingOutputService);
     services.add(outcomeServiceGrpcServer);
     services.add(engineExpressionGrpcService);
-    return new GrpcServer(configuration.getGrpcServerConfig().getConnectors().get(0), services, Collections.emptySet(),
-        healthStatusManager);
+    return services;
   }
 }

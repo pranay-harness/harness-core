@@ -8,13 +8,13 @@ import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationSubject;
 import io.harness.pms.sdk.core.registries.OrchestrationEventHandlerRegistry;
+import io.harness.pms.utils.PmsConstants;
 import io.harness.queue.QueuePublisher;
 
 import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.util.Lists;
 
 @OwnedBy(HarnessTeam.CDC)
 @Slf4j
@@ -32,14 +32,17 @@ public class OrchestrationEventEmitter {
       if (stepTypeLookupService == null || event.getNodeExecutionProto() == null) {
         orchestrationEventQueue.send(event);
       } else {
-        orchestrationEventQueue.send(
-            Lists.newArrayList(event.getNodeExecutionProto().getNode().getServiceName()), event);
+        String serviceName = event.getNodeExecutionProto().getNode().getServiceName();
+        orchestrationEventQueue.send(Collections.singletonList(serviceName), event);
         // For calling event handlers in PMS, create a one level clone of the event and then emit
-        orchestrationEventQueue.send(OrchestrationEvent.builder()
-                                         .ambiance(event.getAmbiance())
-                                         .nodeExecutionProto(event.getNodeExecutionProto())
-                                         .eventType(event.getEventType())
-                                         .build());
+        if (!serviceName.equals(PmsConstants.INTERNAL_SERVICE_NAME)) {
+          orchestrationEventQueue.send(Collections.singletonList(PmsConstants.INTERNAL_SERVICE_NAME),
+              OrchestrationEvent.builder()
+                  .ambiance(event.getAmbiance())
+                  .nodeExecutionProto(event.getNodeExecutionProto())
+                  .eventType(event.getEventType())
+                  .build());
+        }
       }
     } catch (Exception ex) {
       log.error("Failed to create orchestration event", ex);

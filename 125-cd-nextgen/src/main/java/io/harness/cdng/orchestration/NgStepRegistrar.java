@@ -17,7 +17,7 @@ import io.harness.cdng.pipeline.steps.RollbackOptionalChildrenStep;
 import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.Step;
-import io.harness.registrars.OrchestrationStepsModuleStepRegistrar;
+import io.harness.registrars.OrchestrationStepsModuleSdkStepRegistrar;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -43,7 +43,7 @@ public class NgStepRegistrar {
     engineSteps.put(HttpStep.STEP_TYPE, HttpStep.class);
     engineSteps.put(K8sBlueGreenStep.STEP_TYPE, K8sBlueGreenStep.class);
 
-    engineSteps.putAll(OrchestrationStepsModuleStepRegistrar.getEngineSteps());
+    engineSteps.putAll(OrchestrationStepsModuleSdkStepRegistrar.getEngineSteps());
     return engineSteps;
   }
 }

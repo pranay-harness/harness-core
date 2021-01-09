@@ -8,20 +8,29 @@ import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 
 import io.harness.engine.events.OrchestrationEventListener;
+import io.harness.exception.GeneralException;
 import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.pms.exception.WingsExceptionMapper;
+import io.harness.pms.plan.creation.PipelineServiceFilterCreationResponseMerger;
+import io.harness.pms.plan.creation.PipelineServiceInternalInfoProvider;
 import io.harness.pms.plan.execution.PmsExecutionServiceInfoProvider;
 import io.harness.pms.plan.execution.registrar.PmsOrchestrationEventRegistrar;
 import io.harness.pms.sdk.PmsSdkConfiguration;
+import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
+import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
+import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.pms.triggers.webhook.scm.SCMGrpcClientModule;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
+import io.harness.pms.utils.PmsConstants;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
+import io.harness.registrars.PipelineServiceStepRegistrar;
 import io.harness.service.impl.PmsDelegateAsyncServiceImpl;
 import io.harness.service.impl.PmsDelegateProgressServiceImpl;
 import io.harness.service.impl.PmsDelegateSyncServiceImpl;
@@ -112,8 +121,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     modules.add(PipelineServiceModule.getInstance(appConfig));
     modules.add(new SCMGrpcClientModule(appConfig.getScmConnectionConfig()));
     modules.add(new MetricRegistryModule(metricRegistry));
-
-    getPmsSDKModules(modules);
+    modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(appConfig)));
     Injector injector = Guice.createInjector(modules);
     registerEventListeners(injector);
     registerWaitEnginePublishers(injector);
@@ -131,22 +139,39 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     serviceManager.awaitHealthy();
     Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
 
+    registerPmsSdk(appConfig, injector);
+
     MaintenanceController.forceMaintenance(false);
   }
 
-  private void getPmsSDKModules(List<Module> modules) {
-    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
-                                        .serviceName("pms")
-                                        .engineEventHandlersMap(PmsOrchestrationEventRegistrar.getEngineEventHandlers())
-                                        .executionSummaryModuleInfoProviderClass(PmsExecutionServiceInfoProvider.class)
-                                        .build();
-    modules.add(PmsSdkModule.getInstance(sdkConfig));
+  private void registerPmsSdk(PipelineServiceConfiguration config, Injector injector) {
+    PmsSdkConfiguration sdkConfig = getPmsSdkConfiguration(config);
+    try {
+      PmsSdkInitHelper.initializeSDKInstance(injector, sdkConfig);
+    } catch (Exception ex) {
+      throw new GeneralException("Fail to start pipeline service because pms sdk registration failed", ex);
+    }
+  }
+
+  private PmsSdkConfiguration getPmsSdkConfiguration(PipelineServiceConfiguration config) {
+    return PmsSdkConfiguration.builder()
+        .deploymentMode(DeployMode.REMOTE_IN_PROCESS)
+        .serviceName(PmsConstants.INTERNAL_SERVICE_NAME)
+        .mongoConfig(config.getMongoConfig())
+        .pipelineServiceInfoProviderClass(PipelineServiceInternalInfoProvider.class)
+        .filterCreationResponseMerger(new PipelineServiceFilterCreationResponseMerger())
+        .engineSteps(PipelineServiceStepRegistrar.getEngineSteps())
+        .engineEventHandlersMap(PmsOrchestrationEventRegistrar.getEngineEventHandlers())
+        .executionSummaryModuleInfoProviderClass(PmsExecutionServiceInfoProvider.class)
+        .build();
   }
 
   private void registerEventListeners(Injector injector) {
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class), 5);
     queueListenerController.register(injector.getInstance(OrchestrationEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 1);
   }
 
   private void registerWaitEnginePublishers(Injector injector) {

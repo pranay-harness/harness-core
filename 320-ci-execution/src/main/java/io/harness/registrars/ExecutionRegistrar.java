@@ -58,7 +58,7 @@ public class ExecutionRegistrar {
     engineSteps.put(RestoreCacheGCSStep.STEP_TYPE, RestoreCacheGCSStep.class);
     engineSteps.put(TestIntelligenceStep.STEP_TYPE, TestIntelligenceStep.class);
     engineSteps.put(IntegrationStageStepPMS.STEP_TYPE, IntegrationStageStepPMS.class);
-    engineSteps.putAll(OrchestrationStepsModuleStepRegistrar.getEngineSteps());
+    engineSteps.putAll(OrchestrationStepsModuleSdkStepRegistrar.getEngineSteps());
     return engineSteps;
   }
 }

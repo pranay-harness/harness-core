@@ -193,6 +193,7 @@
 870-orchestration/src/main/java/io/harness/state/StateInspectionUtils.java
 860-orchestration-steps/src/main/java/io/harness/registrars/OrchestrationStepsModuleEventHandlerRegistrar.java
 860-orchestration-steps/src/main/java/io/harness/registrars/OrchestrationStepsModuleFacilitatorRegistrar.java
+860-orchestration-steps/src/main/java/io/harness/registrars/OrchestrationStepsModuleSdkStepRegistrar.java
 860-orchestration-steps/src/main/java/io/harness/registrars/OrchestrationStepsModuleStepRegistrar.java
 860-orchestration-steps/src/main/java/io/harness/serializer/kryo/OrchestrationStepsKryoRegistrar.java
 860-orchestration-steps/src/main/java/io/harness/serializer/morphia/OrchestrationStepsMorphiaRegistrar.java

@@ -51,6 +51,13 @@ public class GraphLayoutResponse {
   }
 
   public GraphLayoutInfo getLayoutNodeInfo() {
-    return GraphLayoutInfo.newBuilder().setStartingNodeId(startingNodeId).putAllLayoutNodes(layoutNodes).build();
+    GraphLayoutInfo.Builder builder = GraphLayoutInfo.newBuilder();
+    if (startingNodeId != null) {
+      builder.setStartingNodeId(startingNodeId);
+    }
+    if (layoutNodes != null) {
+      builder.putAllLayoutNodes(layoutNodes);
+    }
+    return builder.build();
   }
 }
