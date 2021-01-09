@@ -25,6 +25,11 @@ public class ParallelFilterJsonCreator extends ChildrenFilterJsonCreator<YamlFie
   }
 
   @Override
+  int getStageCount(FilterCreationContext filterCreationContext, Collection<YamlField> children) {
+    return children.size();
+  }
+
+  @Override
   public Class<YamlField> getFieldClass() {
     return YamlField.class;
   }

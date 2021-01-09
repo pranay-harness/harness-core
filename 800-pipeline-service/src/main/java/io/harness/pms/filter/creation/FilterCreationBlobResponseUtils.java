@@ -23,7 +23,7 @@ public class FilterCreationBlobResponseUtils {
 
   public void updateStageCount(
       FilterCreationBlobResponse.Builder builder, FilterCreationBlobResponse filterCreationBlobResponse) {
-    builder.setStageCount(filterCreationBlobResponse.getStageCount());
+    builder.setStageCount(builder.getStageCount() + filterCreationBlobResponse.getStageCount());
   }
 
   public void mergeFilters(FilterCreationResponseWrapper response, Map<String, String> filters) {

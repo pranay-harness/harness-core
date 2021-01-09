@@ -41,7 +41,7 @@ public class FilterCreatorMergeService {
   private Map<String, PlanCreationServiceBlockingStub> planCreatorServices;
   private final PmsSdkInstanceService pmsSdkInstanceService;
 
-  public static final int MAX_DEPTH = 1;
+  public static final int MAX_DEPTH = 10;
   private final Executor executor = Executors.newFixedThreadPool(5);
 
   @Inject

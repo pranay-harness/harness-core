@@ -5,6 +5,8 @@ import io.harness.plancreator.stages.StagesPlanCreator;
 import io.harness.plancreator.stages.parallel.ParallelPlanCreator;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
+import io.harness.pms.sdk.core.pipeline.filters.ParallelFilterJsonCreator;
+import io.harness.pms.sdk.core.pipeline.filters.PipelineFilterJsonCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.core.variables.VariableCreator;
@@ -33,6 +35,8 @@ public class PipelineServiceInternalInfoProvider implements PipelineServiceInfoP
   @Override
   public List<FilterJsonCreator> getFilterJsonCreators() {
     List<FilterJsonCreator> filterJsonCreators = new ArrayList<>();
+    filterJsonCreators.add(new PipelineFilterJsonCreator());
+    filterJsonCreators.add(new ParallelFilterJsonCreator());
     injectorUtils.injectMembers(filterJsonCreators);
     return filterJsonCreators;
   }
