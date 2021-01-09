@@ -57,7 +57,7 @@ public class PmsSdkInitHelper {
 
   private static void initialize(Injector injector, PmsSdkConfiguration config) {
     String serviceName = config.getServiceName();
-    if (config.getDeploymentMode().equals(PmsSdkConfiguration.DeployMode.REMOTE)) {
+    if (config.getDeploymentMode().isNonLocal()) {
       ServiceManager serviceManager =
           injector.getInstance(Key.get(ServiceManager.class, Names.named("pmsSDKServiceManager"))).startAsync();
       serviceManager.awaitHealthy();

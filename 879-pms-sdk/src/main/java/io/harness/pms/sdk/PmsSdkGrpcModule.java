@@ -1,6 +1,7 @@
 package io.harness.pms.sdk;
 
 import io.harness.grpc.client.GrpcClientConfig;
+import io.harness.grpc.server.GrpcInProcessServer;
 import io.harness.grpc.server.GrpcServer;
 import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc;
 import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc.NodeExecutionProtoServiceBlockingStub;
@@ -14,7 +15,9 @@ import io.harness.pms.contracts.service.PmsExecutionServiceGrpc;
 import io.harness.pms.contracts.service.PmsExecutionServiceGrpc.PmsExecutionServiceBlockingStub;
 import io.harness.pms.contracts.service.SweepingOutputServiceGrpc;
 import io.harness.pms.contracts.service.SweepingOutputServiceGrpc.SweepingOutputServiceBlockingStub;
+import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.core.plan.creation.creators.PlanCreatorService;
+import io.harness.pms.utils.PmsConstants;
 import io.harness.version.VersionInfo;
 
 import com.google.common.util.concurrent.Service;
@@ -28,6 +31,7 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.grpc.BindableService;
 import io.grpc.Channel;
+import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.internal.GrpcUtil;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
@@ -70,6 +74,9 @@ public class PmsSdkGrpcModule extends AbstractModule {
     Set<BindableService> cdServices = new HashSet<>();
     cdServices.add(healthStatusManager.getHealthService());
     cdServices.add(planCreatorService);
+    if (config.getDeploymentMode() == DeployMode.REMOTE_IN_PROCESS) {
+      return new GrpcInProcessServer("pmsSdkInternal", cdServices, Collections.emptySet(), healthStatusManager);
+    }
     return new GrpcServer(
         config.getGrpcServerConfig().getConnectors().get(0), cdServices, Collections.emptySet(), healthStatusManager);
   }
@@ -107,7 +114,12 @@ public class PmsSdkGrpcModule extends AbstractModule {
     return true;
   }
 
-  private Channel getChannel(GrpcClientConfig clientConfig) throws SSLException {
+  private Channel getChannel() throws SSLException {
+    if (config.getDeploymentMode() == DeployMode.REMOTE_IN_PROCESS) {
+      return InProcessChannelBuilder.forName(PmsConstants.INTERNAL_SERVICE_NAME).build();
+    }
+
+    GrpcClientConfig clientConfig = config.getPmsGrpcClientConfig();
     String authorityToUse = clientConfig.getAuthority();
     Channel channel;
 
@@ -130,43 +142,37 @@ public class PmsSdkGrpcModule extends AbstractModule {
   @Provides
   @Singleton
   public PmsServiceBlockingStub pmsGrpcClient() throws SSLException {
-    GrpcClientConfig clientConfig = config.getPmsGrpcClientConfig();
-    return PmsServiceGrpc.newBlockingStub(getChannel(clientConfig));
+    return PmsServiceGrpc.newBlockingStub(getChannel());
   }
 
   @Provides
   @Singleton
   public SweepingOutputServiceBlockingStub sweepingOutputGrpcClient() throws SSLException {
-    GrpcClientConfig clientConfig = config.getPmsGrpcClientConfig();
-    return SweepingOutputServiceGrpc.newBlockingStub(getChannel(clientConfig));
+    return SweepingOutputServiceGrpc.newBlockingStub(getChannel());
   }
 
   @Provides
   @Singleton
   public NodeExecutionProtoServiceBlockingStub nodeExecutionProtoGrpcClient() throws SSLException {
-    GrpcClientConfig clientConfig = config.getPmsGrpcClientConfig();
-    return NodeExecutionProtoServiceGrpc.newBlockingStub(getChannel(clientConfig));
+    return NodeExecutionProtoServiceGrpc.newBlockingStub(getChannel());
   }
 
   @Provides
   @Singleton
   public OutcomeProtoServiceBlockingStub outcomeGrpcClient() throws SSLException {
-    GrpcClientConfig clientConfig = config.getPmsGrpcClientConfig();
-    return OutcomeProtoServiceGrpc.newBlockingStub(getChannel(clientConfig));
+    return OutcomeProtoServiceGrpc.newBlockingStub(getChannel());
   }
 
   @Provides
   @Singleton
   public PmsExecutionServiceBlockingStub executionServiceGrpcClient() throws SSLException {
-    GrpcClientConfig clientConfig = config.getPmsGrpcClientConfig();
-    return PmsExecutionServiceGrpc.newBlockingStub(getChannel(clientConfig));
+    return PmsExecutionServiceGrpc.newBlockingStub(getChannel());
   }
 
   @Provides
   @Singleton
   public EngineExpressionProtoServiceBlockingStub engineExpressionGrpcClient() throws SSLException {
-    GrpcClientConfig clientConfig = config.getPmsGrpcClientConfig();
-    return EngineExpressionProtoServiceGrpc.newBlockingStub(getChannel(clientConfig));
+    return EngineExpressionProtoServiceGrpc.newBlockingStub(getChannel());
   }
 
   @Provides

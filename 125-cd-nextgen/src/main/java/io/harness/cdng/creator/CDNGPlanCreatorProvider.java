@@ -8,9 +8,6 @@ import io.harness.cdng.creator.variables.DeploymentStageVariableCreator;
 import io.harness.cdng.creator.variables.K8sStepVariableCreator;
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.plancreator.execution.ExecutionPMSPlanCreator;
-import io.harness.plancreator.pipeline.NGPipelinePlanCreator;
-import io.harness.plancreator.stages.StagesPlanCreator;
-import io.harness.plancreator.stages.parallel.ParallelPlanCreator;
 import io.harness.plancreator.steps.StepGroupPMSPlanCreator;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepMetaData;
@@ -37,9 +34,6 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
   @Override
   public List<PartialPlanCreator<?>> getPlanCreators() {
     List<PartialPlanCreator<?>> planCreators = new LinkedList<>();
-    planCreators.add(new NGPipelinePlanCreator());
-    planCreators.add(new StagesPlanCreator());
-    planCreators.add(new ParallelPlanCreator());
     planCreators.add(new DeploymentStagePMSPlanCreator());
     planCreators.add(new ExecutionPMSPlanCreator());
     planCreators.add(new StepGroupPMSPlanCreator());

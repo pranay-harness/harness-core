@@ -38,6 +38,11 @@ public class PmsSdkConfiguration {
 
   public enum DeployMode {
     LOCAL,
-    REMOTE;
+    REMOTE,
+    REMOTE_IN_PROCESS;
+
+    public boolean isNonLocal() {
+      return this != LOCAL;
+    }
   }
 }

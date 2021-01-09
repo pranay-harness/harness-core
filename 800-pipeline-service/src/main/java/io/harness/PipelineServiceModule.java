@@ -87,6 +87,7 @@ public class PipelineServiceModule extends AbstractModule {
                                                 .withPMS(false)
                                                 .isPipelineService(true)
                                                 .build()));
+    install(OrchestrationStepsModule.getInstance());
     install(OrchestrationVisualizationModule.getInstance());
     install(new AbstractModule() {
       @Override
