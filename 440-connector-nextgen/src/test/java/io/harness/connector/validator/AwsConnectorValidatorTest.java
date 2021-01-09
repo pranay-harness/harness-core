@@ -7,6 +7,8 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.connector.ConnectivityStatus;
+import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
@@ -16,7 +18,6 @@ import io.harness.delegate.beans.connector.awsconnector.AwsValidateTaskResponse;
 import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
-import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
@@ -55,7 +56,10 @@ public class AwsConnectorValidatorTest extends CategoryTest {
             .build();
     when(ngSecretService.getEncryptionDetails(any(), any())).thenReturn(null);
     when(delegateGrpcClientWrapper.executeSyncTask(any()))
-        .thenReturn(AwsValidateTaskResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).build());
+        .thenReturn(AwsValidateTaskResponse.builder()
+                        .connectorValidationResult(
+                            ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build())
+                        .build());
     awsConnectorValidator.validate(awsConnectorDTO, "accountIdentifier", "orgIdentifier", "projectIdentifier");
     verify(delegateGrpcClientWrapper, times(1)).executeSyncTask(any());
   }
@@ -78,7 +82,10 @@ public class AwsConnectorValidatorTest extends CategoryTest {
             .build();
     when(ngSecretService.getEncryptionDetails(any(), any())).thenReturn(null);
     when(delegateGrpcClientWrapper.executeSyncTask(any()))
-        .thenReturn(AwsValidateTaskResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).build());
+        .thenReturn(AwsValidateTaskResponse.builder()
+                        .connectorValidationResult(
+                            ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build())
+                        .build());
     awsConnectorValidator.validate(awsConnectorDTO, "accountIdentifier", "orgIdentifier", "projectIdentifier");
     verify(delegateGrpcClientWrapper, times(1)).executeSyncTask(any());
   }

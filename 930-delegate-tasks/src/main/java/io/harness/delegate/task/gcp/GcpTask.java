@@ -3,11 +3,14 @@ package io.harness.delegate.task.gcp;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.gcp.request.GcpRequest;
 import io.harness.delegate.task.gcp.request.GcpRequest.RequestType;
+import io.harness.delegate.task.gcp.response.GcpResponse;
+import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
 import io.harness.delegate.task.gcp.taskHandlers.TaskHandler;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -40,7 +43,11 @@ public class GcpTask extends AbstractDelegateRunnableTask {
 
     switch (requestType) {
       case VALIDATE:
-        return gcpTaskTypeToTaskHandlerMap.get(requestType).executeRequest(gcpRequest);
+        GcpResponse gcpResponse = gcpTaskTypeToTaskHandlerMap.get(requestType).executeRequest(gcpRequest);
+        ConnectorValidationResult connectorValidationResult =
+            ((GcpValidationTaskResponse) gcpResponse).getConnectorValidationResult();
+        connectorValidationResult.setDelegateId(getDelegateId());
+        return gcpResponse;
       default:
         throw new InvalidRequestException(
             "Invalid request type [" + gcpRequest.getRequestType() + "]", WingsException.USER);

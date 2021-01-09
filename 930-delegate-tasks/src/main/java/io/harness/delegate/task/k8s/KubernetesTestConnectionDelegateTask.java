@@ -38,10 +38,8 @@ public class KubernetesTestConnectionDelegateTask extends AbstractDelegateRunnab
     KubernetesClusterConfigDTO kubernetesClusterConfig = kubernetesConnectionTaskParams.getKubernetesClusterConfig();
     ConnectorValidationResult connectorValidationResult = kubernetesValidationHandler.validate(
         kubernetesClusterConfig, getAccountId(), ((KubernetesConnectionTaskParams) parameters).getEncryptionDetails());
-    return KubernetesConnectionTaskResponse.builder()
-        .connectionSuccessFul(connectorValidationResult.isValid())
-        .errorMessage(connectorValidationResult.getErrorMessage())
-        .build();
+    connectorValidationResult.setDelegateId(getDelegateId());
+    return KubernetesConnectionTaskResponse.builder().connectorValidationResult(connectorValidationResult).build();
   }
 
   @Override

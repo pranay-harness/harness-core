@@ -1,7 +1,5 @@
 package io.harness.connector.impl;
 
-import static io.harness.connector.ConnectivityStatus.FAILURE;
-import static io.harness.connector.ConnectivityStatus.SUCCESS;
 import static io.harness.connector.ConnectorCategory.ARTIFACTORY;
 import static io.harness.connector.ConnectorCategory.CLOUD_PROVIDER;
 import static io.harness.connector.impl.ConnectorFilterServiceImpl.CREDENTIAL_TYPE_KEY;
@@ -20,7 +18,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 
 import io.harness.category.element.UnitTests;
-import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorConnectivityDetails;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
@@ -33,6 +30,7 @@ import io.harness.connector.entities.embedded.kubernetescluster.K8sUserNamePassw
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig.KubernetesClusterConfigKeys;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterDetails;
+import io.harness.delegate.beans.connector.ConnectivityStatus;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
@@ -320,20 +318,22 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testListConnectivityStatus() {
-    createConnectorsWithStatus(4, SUCCESS);
-    createConnectorsWithStatus(6, FAILURE);
+    createConnectorsWithStatus(4, ConnectivityStatus.SUCCESS);
+    createConnectorsWithStatus(6, ConnectivityStatus.FAILURE);
     ConnectorFilterPropertiesDTO connectorFilterPropertiesDTO =
-        ConnectorFilterPropertiesDTO.builder().connectivityStatuses(Arrays.asList(SUCCESS)).build();
+        ConnectorFilterPropertiesDTO.builder().connectivityStatuses(Arrays.asList(ConnectivityStatus.SUCCESS)).build();
     Page<ConnectorResponseDTO> connectorWithSuccessStatus = connectorService.list(
         0, 100, accountIdentifier, connectorFilterPropertiesDTO, orgIdentifier, projectIdentifier, "", "", false);
     assertThat(connectorWithSuccessStatus.getTotalElements()).isEqualTo(4);
     connectorFilterPropertiesDTO =
-        ConnectorFilterPropertiesDTO.builder().connectivityStatuses(Arrays.asList(FAILURE)).build();
+        ConnectorFilterPropertiesDTO.builder().connectivityStatuses(Arrays.asList(ConnectivityStatus.FAILURE)).build();
     Page<ConnectorResponseDTO> connectorWithFailedStatus = connectorService.list(
         0, 100, accountIdentifier, connectorFilterPropertiesDTO, orgIdentifier, projectIdentifier, "", "", false);
     assertThat(connectorWithFailedStatus.getTotalElements()).isEqualTo(6);
     connectorFilterPropertiesDTO =
-        ConnectorFilterPropertiesDTO.builder().connectivityStatuses(Arrays.asList(SUCCESS, FAILURE)).build();
+        ConnectorFilterPropertiesDTO.builder()
+            .connectivityStatuses(Arrays.asList(ConnectivityStatus.SUCCESS, ConnectivityStatus.FAILURE))
+            .build();
     Page<ConnectorResponseDTO> allConnectors = connectorService.list(
         0, 100, accountIdentifier, connectorFilterPropertiesDTO, orgIdentifier, projectIdentifier, "", "", false);
     assertThat(allConnectors.getTotalElements()).isEqualTo(10);

@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatus.SUCCESS;
 
 import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.delegate.beans.connector.ConnectivityStatus;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
@@ -29,8 +30,8 @@ public class GitCommandTaskHandler {
     GitCommandExecutionResponse delegateResponseData =
         (GitCommandExecutionResponse) handleValidateTask(gitConnector, accountIdentifier);
     return ConnectorValidationResult.builder()
-        .valid(SUCCESS.equals(delegateResponseData.getGitCommandStatus()))
-        .errorMessage(delegateResponseData.getErrorMessage())
+        .status(delegateResponseData.getGitCommandStatus() == SUCCESS ? ConnectivityStatus.SUCCESS
+                                                                      : ConnectivityStatus.FAILURE)
         .build();
   }
 

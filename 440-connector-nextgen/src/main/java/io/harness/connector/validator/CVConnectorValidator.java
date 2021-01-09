@@ -1,17 +1,25 @@
 package io.harness.connector.validator;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static java.time.Duration.ofMinutes;
 
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
+import io.harness.delegate.beans.RemoteMethodReturnValueData;
+import io.harness.delegate.beans.connector.ConnectivityStatus;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.delegate.beans.connector.ConnectorValidationResult.ConnectorValidationResultBuilder;
 import io.harness.delegate.beans.connector.cvconnector.CVConnectorTaskParams;
 import io.harness.delegate.beans.connector.cvconnector.CVConnectorTaskResponse;
+import io.harness.errorhandling.NGErrorHelper;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
+import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.service.DelegateGrpcClientWrapper;
@@ -19,6 +27,7 @@ import io.harness.service.DelegateGrpcClientWrapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -29,6 +38,8 @@ import lombok.extern.slf4j.Slf4j;
 public class CVConnectorValidator<T extends ConnectorConfigDTO> implements ConnectionValidator<T> {
   @Inject private final SecretManagerClientService ngSecretService;
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
+  @Inject private NGErrorHelper ngErrorHelper;
+
   @Override
   public ConnectorValidationResult validate(
       T connectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
@@ -58,16 +69,38 @@ public class CVConnectorValidator<T extends ConnectorConfigDTO> implements Conne
     DelegateResponseData delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
     if (delegateResponseData instanceof ErrorNotifyResponseData) {
       ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) delegateResponseData;
-      return ConnectorValidationResult.builder()
-          .valid(false)
-          .errorMessage(errorNotifyResponseData.getErrorMessage())
-          .build();
+      String errorMessage = errorNotifyResponseData.getErrorMessage();
+      String errorSummary = ngErrorHelper.createErrorSummary("Invalid Credentials", errorMessage);
+      List<ErrorDetail> errorDetail = getErrorDetail(errorMessage);
+      ConnectorValidationResultBuilder connectorValidationResult =
+          ConnectorValidationResult.builder()
+              .status(ConnectivityStatus.FAILURE)
+              .testedAt(System.currentTimeMillis())
+              .delegateId(getDelegateId((ErrorNotifyResponseData) delegateResponseData));
+      if (isNotEmpty(errorMessage)) {
+        connectorValidationResult.errorSummary(errorSummary).errors(errorDetail);
+      }
+      return connectorValidationResult.build();
+    } else if (delegateResponseData instanceof RemoteMethodReturnValueData) {
+      return ConnectorValidationResult.builder().status(ConnectivityStatus.FAILURE).build();
     }
 
     CVConnectorTaskResponse cvConnectorTaskResponse = (CVConnectorTaskResponse) delegateResponseData;
     return ConnectorValidationResult.builder()
-        .valid(cvConnectorTaskResponse.isValid())
-        .errorMessage(cvConnectorTaskResponse.getErrorMessage())
+        .status(cvConnectorTaskResponse.isValid() ? ConnectivityStatus.SUCCESS : ConnectivityStatus.FAILURE)
+        .delegateId(getDelegateId(cvConnectorTaskResponse))
         .build();
+  }
+
+  private String getDelegateId(DelegateTaskNotifyResponseData cvConnectorTaskResponse) {
+    if (cvConnectorTaskResponse == null || cvConnectorTaskResponse.getDelegateMetaInfo() == null) {
+      return null;
+    }
+    return cvConnectorTaskResponse.getDelegateMetaInfo().getId();
+  }
+
+  private List<ErrorDetail> getErrorDetail(String errorMessage) {
+    return Collections.singletonList(
+        ErrorDetail.builder().message(errorMessage).code(450).reason("Invalid Credentials").build());
   }
 }

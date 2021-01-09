@@ -1,5 +1,6 @@
 package io.harness.connector.validator;
 
+import io.harness.delegate.beans.connector.ConnectivityStatus;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.nexusconnector.NexusConnectorDTO;
@@ -25,6 +26,6 @@ public class NexusConnectorValidator
   public ConnectorValidationResult validate(
       NexusConnectorDTO connectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     // making always true.
-    return ConnectorValidationResult.builder().valid(true).build();
+    return ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build();
   }
 }

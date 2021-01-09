@@ -97,6 +97,7 @@ java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
     resources = [
+        "//970-ng-commons/src/main/resources:resource",
     ],
     visibility = ["//visibility:public"],
     deps = [

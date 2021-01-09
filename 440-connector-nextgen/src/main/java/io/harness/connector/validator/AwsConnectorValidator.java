@@ -9,7 +9,6 @@ import io.harness.delegate.beans.connector.awsconnector.AwsTaskParams;
 import io.harness.delegate.beans.connector.awsconnector.AwsTaskType;
 import io.harness.delegate.beans.connector.awsconnector.AwsValidateTaskResponse;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.logging.CommandExecutionStatus;
 
 public class AwsConnectorValidator extends AbstractConnectorValidator implements ConnectionValidator<AwsConnectorDTO> {
   @Override
@@ -38,10 +37,6 @@ public class AwsConnectorValidator extends AbstractConnectorValidator implements
       AwsConnectorDTO connectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     AwsValidateTaskResponse responseData = (AwsValidateTaskResponse) super.validateConnector(
         connectorDTO, accountIdentifier, orgIdentifier, projectIdentifier);
-    final CommandExecutionStatus executionStatus = responseData.getExecutionStatus();
-    return ConnectorValidationResult.builder()
-        .valid(executionStatus == CommandExecutionStatus.SUCCESS)
-        .errorMessage(responseData.getErrorMessage())
-        .build();
+    return responseData.getConnectorValidationResult();
   }
 }

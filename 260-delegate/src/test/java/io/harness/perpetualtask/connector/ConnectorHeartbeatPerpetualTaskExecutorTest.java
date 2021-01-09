@@ -14,6 +14,7 @@ import io.harness.DelegateTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
+import io.harness.delegate.beans.connector.ConnectivityStatus;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
@@ -72,7 +73,7 @@ public class ConnectorHeartbeatPerpetualTaskExecutorTest extends DelegateTest {
   public void runOnce() {
     PerpetualTaskId perpetualTaskId = PerpetualTaskId.newBuilder().setId(generateUuid()).build();
     when(KubernetesValidationHandler.validate(Matchers.any(), anyString(), anyList()))
-        .thenReturn(ConnectorValidationResult.builder().valid(true).build());
+        .thenReturn(ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build());
     connectorHeartbeatPerpetualTaskExecutor.runOnce(perpetualTaskId, getPerpetualTaskParams(), Instant.EPOCH);
     verify(delegateAgentManagerClient, times(1)).publishConnectorHeartbeatResult(anyString(), anyString(), any());
   }

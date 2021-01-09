@@ -1,5 +1,6 @@
 package io.harness.connector.validator;
 
+import io.harness.delegate.beans.connector.ConnectivityStatus;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.jira.JiraConnectionTaskParams;
@@ -20,8 +21,7 @@ public class JiraConnectorValidator
     JiraTestConnectionTaskNGResponse delegateResponseData = (JiraTestConnectionTaskNGResponse) super.validateConnector(
         jiraConnectorDTO, accountIdentifier, orgIdentifier, projectIdentifier);
     return ConnectorValidationResult.builder()
-        .valid(delegateResponseData.getCanConnect())
-        .errorMessage(delegateResponseData.getErrorMessage())
+        .status(delegateResponseData.getCanConnect() ? ConnectivityStatus.SUCCESS : ConnectivityStatus.FAILURE)
         .build();
   }
 

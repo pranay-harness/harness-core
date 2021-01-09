@@ -19,6 +19,7 @@ import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
+import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
 import io.harness.ng.core.api.NGSecretManagerService;
@@ -38,14 +39,16 @@ public class SecretManagerConnectorServiceImplTest extends CategoryTest {
   private ConnectorService defaultConnectorService;
   private SecretManagerConnectorServiceImpl secretManagerConnectorService;
   private ConnectorRepository connectorRepository;
+  private NGErrorHelper ngErrorHelper;
 
   @Before
   public void setup() {
     ngSecretManagerService = mock(NGSecretManagerService.class);
     defaultConnectorService = mock(ConnectorService.class);
     connectorRepository = mock(ConnectorRepository.class);
-    secretManagerConnectorService =
-        new SecretManagerConnectorServiceImpl(defaultConnectorService, ngSecretManagerService, connectorRepository);
+    ngErrorHelper = mock(NGErrorHelper.class);
+    secretManagerConnectorService = new SecretManagerConnectorServiceImpl(
+        defaultConnectorService, ngSecretManagerService, connectorRepository, ngErrorHelper);
   }
 
   private InvalidRequestException getInvalidRequestException() {

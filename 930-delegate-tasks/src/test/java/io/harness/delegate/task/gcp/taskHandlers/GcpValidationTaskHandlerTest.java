@@ -1,15 +1,20 @@
 package io.harness.delegate.task.gcp.taskHandlers;
 
+import static io.harness.delegate.beans.connector.ConnectivityStatus.FAILURE;
+import static io.harness.delegate.beans.connector.ConnectivityStatus.SUCCESS;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.delegate.task.gcp.request.GcpValidationRequest;
-import io.harness.delegate.task.gcp.response.GcpResponse;
+import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
 import io.harness.encryption.SecretRefData;
+import io.harness.errorhandling.NGErrorHelper;
 import io.harness.gcp.client.GcpClient;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
@@ -26,6 +31,7 @@ import org.mockito.MockitoAnnotations;
 public class GcpValidationTaskHandlerTest extends CategoryTest {
   @Mock private GcpClient gcpClient;
   @Mock private SecretDecryptionService secretDecryptionService;
+  @Mock private NGErrorHelper ngErrorHelper;
   @InjectMocks private GcpValidationTaskHandler taskHandler;
 
   @Before
@@ -37,9 +43,10 @@ public class GcpValidationTaskHandlerTest extends CategoryTest {
   @Owner(developers = OwnerRule.YOGESH)
   @Category(UnitTests.class)
   public void executeRequestSuccess() {
-    final GcpResponse response = taskHandler.executeRequest(buildGcpValidationRequest());
-    assertThat(response.getExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
-    assertThat(response.getErrorMessage()).isNullOrEmpty();
+    final GcpValidationTaskResponse response =
+        (GcpValidationTaskResponse) taskHandler.executeRequest(buildGcpValidationRequest());
+    ConnectorValidationResult connectorValidationResult = response.getConnectorValidationResult();
+    assertThat(connectorValidationResult.getStatus()).isEqualTo(SUCCESS);
   }
 
   @Test
@@ -47,11 +54,10 @@ public class GcpValidationTaskHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void executeRequestFailure() {
     doThrow(new RuntimeException("No Default Credentials found")).when(gcpClient).validateDefaultCredentials();
-
-    final GcpResponse gcpResponse = taskHandler.executeRequest(buildGcpValidationRequest());
-
-    assertThat(gcpResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
-    assertThat(gcpResponse.getErrorMessage()).isEqualTo("No Default Credentials found.");
+    final GcpValidationTaskResponse response =
+        (GcpValidationTaskResponse) taskHandler.executeRequest(buildGcpValidationRequest());
+    ConnectorValidationResult connectorValidationResult = response.getConnectorValidationResult();
+    assertThat(connectorValidationResult.getStatus()).isEqualTo(FAILURE);
   }
 
   private GcpValidationRequest buildGcpValidationRequest() {
@@ -62,9 +68,10 @@ public class GcpValidationTaskHandlerTest extends CategoryTest {
   @Owner(developers = OwnerRule.ABHINAV)
   @Category(UnitTests.class)
   public void executeRequestSuccessForSecretKey() {
-    final GcpResponse response = taskHandler.executeRequest(buildGcpValidationRequestWithSecretKey());
-    assertThat(response.getExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
-    assertThat(response.getErrorMessage()).isNullOrEmpty();
+    final GcpValidationTaskResponse response =
+        (GcpValidationTaskResponse) taskHandler.executeRequest(buildGcpValidationRequestWithSecretKey());
+    ConnectorValidationResult connectorValidationResult = response.getConnectorValidationResult();
+    assertThat(connectorValidationResult.getStatus()).isEqualTo(SUCCESS);
   }
 
   @Test
@@ -72,8 +79,10 @@ public class GcpValidationTaskHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void executeRequestFailureForSecretKey() {
     doThrow(new RuntimeException("No Credentials found")).when(gcpClient).getGkeContainerService(any());
-    final GcpResponse gcpResponse = taskHandler.executeRequest(buildGcpValidationRequestWithSecretKey());
-    assertThat(gcpResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
+    final GcpValidationTaskResponse gcpResponse =
+        (GcpValidationTaskResponse) taskHandler.executeRequest(buildGcpValidationRequestWithSecretKey());
+    ConnectorValidationResult connectorValidationResult = gcpResponse.getConnectorValidationResult();
+    assertThat(connectorValidationResult.getStatus()).isEqualTo(FAILURE);
   }
 
   private GcpValidationRequest buildGcpValidationRequestWithSecretKey() {

@@ -8,6 +8,8 @@ import io.harness.aws.AwsConfig;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.connector.ConnectivityStatus;
+import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
@@ -17,13 +19,14 @@ import io.harness.delegate.beans.connector.awsconnector.AwsValidateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.InvalidRequestException;
-import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
 import com.google.inject.Inject;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -34,6 +37,7 @@ import org.apache.commons.lang3.NotImplementedException;
 public class AwsDelegateTask extends AbstractDelegateRunnableTask {
   @Inject private AwsClient awsClient;
   @Inject private AwsNgConfigMapper awsNgConfigMapper;
+  @Inject private NGErrorHelper ngErrorHelper;
 
   public AwsDelegateTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
       Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
@@ -59,10 +63,16 @@ public class AwsDelegateTask extends AbstractDelegateRunnableTask {
           throw new InvalidRequestException("Task type not identified");
       }
     } catch (Exception e) {
-      return AwsValidateTaskResponse.builder()
-          .executionStatus(CommandExecutionStatus.FAILURE)
-          .errorMessage(e.getMessage())
-          .build();
+      String errorMessage = e.getMessage();
+      ConnectorValidationResult connectorValidationResult =
+          ConnectorValidationResult.builder()
+              .status(ConnectivityStatus.FAILURE)
+              .errors(Collections.singletonList(ngErrorHelper.createErrorDetail(errorMessage)))
+              .errorSummary(ngErrorHelper.getErrorSummary(errorMessage))
+              .testedAt(System.currentTimeMillis())
+              .delegateId(getDelegateId())
+              .build();
+      return AwsValidateTaskResponse.builder().connectorValidationResult(connectorValidationResult).build();
     }
   }
 
@@ -75,7 +85,12 @@ public class AwsDelegateTask extends AbstractDelegateRunnableTask {
         awsNgConfigMapper.mapAwsConfigWithDecryption(credential, awsCredentialType, encryptionDetails);
     try {
       awsClient.validateAwsAccountCredential(awsConfig);
-      return AwsValidateTaskResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).build();
+      ConnectorValidationResult connectorValidationResult = ConnectorValidationResult.builder()
+                                                                .status(ConnectivityStatus.SUCCESS)
+                                                                .delegateId(getDelegateId())
+                                                                .testedAt(System.currentTimeMillis())
+                                                                .build();
+      return AwsValidateTaskResponse.builder().connectorValidationResult(connectorValidationResult).build();
     } catch (AmazonEC2Exception amazonEC2Exception) {
       handleAmazonServiceException(amazonEC2Exception);
     } catch (AmazonClientException amazonClientException) {

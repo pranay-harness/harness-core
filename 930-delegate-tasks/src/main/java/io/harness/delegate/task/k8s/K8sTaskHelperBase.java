@@ -36,7 +36,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
-import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -45,6 +44,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.FileData;
 import io.harness.container.ContainerInfo;
+import io.harness.delegate.beans.connector.ConnectivityStatus;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
@@ -58,6 +58,7 @@ import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
+import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -96,6 +97,7 @@ import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
+import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.serializer.YamlUtils;
@@ -171,6 +173,7 @@ public class K8sTaskHelperBase {
   @Inject private NGGitService ngGitService;
   @Inject private SecretDecryptionService secretDecryptionService;
   @Inject private K8sYamlToDelegateDTOMapper k8sYamlToDelegateDTOMapper;
+  @Inject private NGErrorHelper ngErrorHelper;
 
   private DelegateExpressionEvaluator delegateExpressionEvaluator = new DelegateExpressionEvaluator();
 
@@ -1913,19 +1916,27 @@ public class K8sTaskHelperBase {
       secretDecryptionService.decrypt(kubernetesCredentialAuth, encryptionDetailList);
     }
     Exception exceptionInProcessing = null;
-    boolean isCredentialsValid = false;
+    ConnectivityStatus connectivityStatus = ConnectivityStatus.FAILURE;
     KubernetesConfig kubernetesConfig =
         k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(kubernetesClusterConfig);
     try {
       kubernetesContainerService.validate(kubernetesConfig);
-      isCredentialsValid = true;
+      connectivityStatus = ConnectivityStatus.SUCCESS;
     } catch (Exception ex) {
       log.info("Exception while validating kubernetes credentials", ex);
-      exceptionInProcessing = ex;
+      return createConnectivityFailureValidationResult(ex);
     }
+    return ConnectorValidationResult.builder().status(connectivityStatus).build();
+  }
+
+  private ConnectorValidationResult createConnectivityFailureValidationResult(Exception ex) {
+    String errorMessage = ex.getMessage();
+    ErrorDetail errorDetail = ngErrorHelper.createErrorDetail(errorMessage);
+    String errorSummary = ngErrorHelper.getErrorSummary(errorMessage);
     return ConnectorValidationResult.builder()
-        .errorMessage(isNull(exceptionInProcessing) ? null : exceptionInProcessing.getMessage())
-        .valid(isCredentialsValid)
+        .status(ConnectivityStatus.FAILURE)
+        .errors(Collections.singletonList(errorDetail))
+        .errorSummary(errorSummary)
         .build();
   }
 
