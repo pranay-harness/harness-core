@@ -44,6 +44,10 @@ import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceDefinition;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome;
+import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsWrapperOutcome;
+import io.harness.cdng.service.beans.ServiceOutcome.ManifestsWrapperOutcome;
+import io.harness.cdng.service.beans.ServiceOutcome.StageOverridesOutcome;
+import io.harness.cdng.service.beans.ServiceOutcome.VariablesWrapperOutcome;
 import io.harness.cdng.service.beans.ServiceUseFromStage;
 import io.harness.cdng.service.beans.ServiceUseFromStage.Overrides;
 import io.harness.cdng.service.beans.StageOverridesConfig;
@@ -117,5 +121,9 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(HttpOutcome.class, 12501);
     kryo.register(K8sManifestOutcome.class, 12502);
     kryo.register(ValuesManifestOutcome.class, 12503);
+    kryo.register(StageOverridesOutcome.class, 12504);
+    kryo.register(ArtifactsWrapperOutcome.class, 12505);
+    kryo.register(ManifestsWrapperOutcome.class, 12506);
+    kryo.register(VariablesWrapperOutcome.class, 12507);
   }
 }

@@ -33,12 +33,12 @@ public class CDNGModuleInfoProvider implements ExecutionSummaryModuleInfoProvide
     ServiceExecutionSummary.ArtifactsSummary.ArtifactsSummaryBuilder artifactsSummaryBuilder =
         ServiceExecutionSummary.ArtifactsSummary.builder();
 
-    if (serviceOutcome.getArtifacts().getPrimary() != null) {
-      artifactsSummaryBuilder.primary(serviceOutcome.getArtifacts().getPrimary().getArtifactSummary());
+    if (serviceOutcome.getArtifactsResult().getPrimary() != null) {
+      artifactsSummaryBuilder.primary(serviceOutcome.getArtifactsResult().getPrimary().getArtifactSummary());
     }
 
-    if (EmptyPredicate.isNotEmpty(serviceOutcome.getArtifacts().getSidecars())) {
-      artifactsSummaryBuilder.sidecars(serviceOutcome.getArtifacts()
+    if (EmptyPredicate.isNotEmpty(serviceOutcome.getArtifactsResult().getSidecars())) {
+      artifactsSummaryBuilder.sidecars(serviceOutcome.getArtifactsResult()
                                            .getSidecars()
                                            .values()
                                            .stream()
@@ -88,7 +88,7 @@ public class CDNGModuleInfoProvider implements ExecutionSummaryModuleInfoProvide
     if (isServiceNodeAndCompleted(nodeExecutionProto.getNode(), nodeExecutionProto.getStatus())) {
       Optional<ServiceOutcome> serviceOutcome = getServiceOutcome(nodeExecutionProto);
       serviceOutcome.ifPresent(outcome
-          -> cdPipelineModuleInfoBuilder.serviceDefinitionType(outcome.getDeploymentType())
+          -> cdPipelineModuleInfoBuilder.serviceDefinitionType(outcome.getType())
                  .serviceIdentifier(outcome.getIdentifier()));
     }
     if (isInfrastructureNodeAndCompleted(nodeExecutionProto.getNode(), nodeExecutionProto.getStatus())) {
@@ -108,8 +108,8 @@ public class CDNGModuleInfoProvider implements ExecutionSummaryModuleInfoProvide
       serviceOutcome.ifPresent(outcome
           -> cdStageModuleInfoBuilder.serviceInfoList(ServiceExecutionSummary.builder()
                                                           .identifier(outcome.getIdentifier())
-                                                          .displayName(outcome.getDisplayName())
-                                                          .deploymentType(outcome.getDeploymentType())
+                                                          .displayName(outcome.getName())
+                                                          .deploymentType(outcome.getType())
                                                           .artifacts(mapArtifactsOutcomeToSummary(outcome))
                                                           .build()));
     }

@@ -94,7 +94,7 @@ public class ArtifactStep {
 
   public StepOutcome getStepOutcome(ArtifactTaskResponse taskResponse, ArtifactStepParameters stepParameters) {
     ArtifactOutcome artifact = ArtifactResponseToOutcomeMapper.toArtifactOutcome(applyArtifactsOverlay(stepParameters),
-        taskResponse.getArtifactTaskExecutionResponse().getArtifactDelegateResponses().get(0));
+        taskResponse.getArtifactTaskExecutionResponse().getArtifactDelegateResponses().get(0), true);
     String outcomeKey =
         OutcomeExpressionConstants.ARTIFACTS + ArtifactUtils.SIDECAR_ARTIFACT + "." + artifact.getIdentifier();
     if (artifact.isPrimaryArtifact()) {
@@ -106,12 +106,15 @@ public class ArtifactStep {
   @VisibleForTesting
   ArtifactConfig applyArtifactsOverlay(ArtifactStepParameters stepParameters) {
     List<ArtifactConfig> artifactList = new LinkedList<>();
+    // 1. Original artifacts
     if (stepParameters.getArtifact() != null) {
       artifactList.add(stepParameters.getArtifact());
     }
+    // 2. Override sets
     if (stepParameters.getArtifactOverrideSet() != null) {
       artifactList.add(stepParameters.getArtifactOverrideSet());
     }
+    // 3. Stage Overrides
     if (stepParameters.getArtifactStageOverride() != null) {
       artifactList.add(stepParameters.getArtifactStageOverride());
     }

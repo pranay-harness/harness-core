@@ -4,13 +4,18 @@ import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
 
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
 import io.harness.executions.steps.ExecutionNodeType;
+import io.harness.ngpipeline.common.AmbianceHelper;
+import io.harness.plancreator.beans.VariablesOutcome;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.tasks.ResponseData;
+import io.harness.yaml.utils.NGVariablesUtils;
 
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +44,15 @@ public class DeploymentStageStep implements ChildExecutable<DeploymentStageStepP
       Ambiance ambiance, DeploymentStageStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     log.info("executed deployment stage =[{}]", stepParameters);
 
-    return createStepResponseFromChildResponse(responseDataMap);
+    StepResponse childResponse = createStepResponseFromChildResponse(responseDataMap);
+
+    VariablesOutcome variablesOutcome = new VariablesOutcome();
+    variablesOutcome.putAll(NGVariablesUtils.getMapOfVariables(
+        stepParameters.getOriginalVariables(), Integer.parseInt(AmbianceHelper.getExpressionFunctorToken(ambiance))));
+    return StepResponse.builder()
+        .status(childResponse.getStatus())
+        .failureInfo(childResponse.getFailureInfo())
+        .stepOutcome(StepOutcome.builder().name(YAMLFieldNameConstants.VARIABLES).outcome(variablesOutcome).build())
+        .build();
   }
 }

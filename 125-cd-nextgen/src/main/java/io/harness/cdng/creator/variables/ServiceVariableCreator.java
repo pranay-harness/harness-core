@@ -185,6 +185,10 @@ public class ServiceVariableCreator {
     if (tagField != null) {
       addFieldToPropertiesMapUnderService(tagField, yamlPropertiesMap);
     }
+    YamlField tagRegexField = artifactSpecNode.getNode().getField(YamlTypes.TAG_REGEX);
+    if (tagRegexField != null) {
+      addFieldToPropertiesMapUnderService(tagRegexField, yamlPropertiesMap);
+    }
   }
 
   private void addFieldToPropertiesMapUnderService(YamlField fieldNode, Map<String, YamlProperties> yamlPropertiesMap) {

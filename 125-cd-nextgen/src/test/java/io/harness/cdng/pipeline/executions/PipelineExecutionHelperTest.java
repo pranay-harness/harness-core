@@ -16,6 +16,7 @@ import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceDefinition;
 import io.harness.cdng.service.beans.ServiceOutcome;
+import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.execution.NodeExecution;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.ngpipeline.pipeline.executions.beans.CDStageExecutionSummary;
@@ -252,7 +253,12 @@ public class PipelineExecutionHelperTest extends CDNGBaseTest {
   public void testMapArtifactsOutcomeToSummary() {
     ServiceOutcome.ArtifactsOutcome artifactsOutcome =
         ServiceOutcome.ArtifactsOutcome.builder()
-            .primary(DockerArtifactOutcome.builder().primaryArtifact(true).imagePath("image").tag("tag").build())
+            .primary(DockerArtifactOutcome.builder()
+                         .primaryArtifact(true)
+                         .imagePath("image")
+                         .tag("tag")
+                         .artifactType(ArtifactSourceType.DOCKER_HUB.getDisplayName())
+                         .build())
             .sidecars(Maps.of("sidecar1", DockerArtifactOutcome.builder().imagePath("image1").tag("tag1").build()))
             .build();
     ServiceExecutionSummary.ArtifactsSummary artifactsSummary =
@@ -262,7 +268,7 @@ public class PipelineExecutionHelperTest extends CDNGBaseTest {
             .build();
 
     ServiceExecutionSummary.ArtifactsSummary result = pipelineExecutionHelper.mapArtifactsOutcomeToSummary(
-        ServiceOutcome.builder().artifacts(artifactsOutcome).build());
+        ServiceOutcome.builder().artifactsResult(artifactsOutcome).build());
     assertThat(result).isEqualTo(artifactsSummary);
   }
 

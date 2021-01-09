@@ -14,5 +14,4 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 })
 public interface ManifestOutcome extends Outcome, WithIdentifier {
   String getType();
-  StoreConfigWrapper getStore();
 }

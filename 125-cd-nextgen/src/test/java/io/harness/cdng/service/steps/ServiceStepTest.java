@@ -21,6 +21,7 @@ import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import org.junit.Rule;
@@ -38,7 +39,7 @@ public class ServiceStepTest extends CategoryTest {
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testCreateServiceOutcome() {
+  public void testCreateServiceOutcome() throws IOException {
     K8sManifest k8Manifest =
         K8sManifest.builder()
             .identifier("m1")
@@ -55,7 +56,7 @@ public class ServiceStepTest extends CategoryTest {
 
     K8sManifestOutcome k8sManifestOutcome = K8sManifestOutcome.builder()
                                                 .identifier(k8Manifest.getIdentifier())
-                                                .store(k8Manifest.getStoreConfigWrapper())
+                                                .storeConfig(k8Manifest.getStoreConfig())
                                                 .build();
 
     K8sManifest k8Manifest1 =
@@ -74,7 +75,7 @@ public class ServiceStepTest extends CategoryTest {
 
     K8sManifestOutcome k8sManifestOutcome1 = K8sManifestOutcome.builder()
                                                  .identifier(k8Manifest1.getIdentifier())
-                                                 .store(k8Manifest1.getStoreConfigWrapper())
+                                                 .storeConfig(k8Manifest1.getStoreConfig())
                                                  .build();
 
     ManifestsOutcome manifestsOutcome =
@@ -87,11 +88,11 @@ public class ServiceStepTest extends CategoryTest {
             .name(ParameterField.createValueField("s1"))
             .serviceDefinition(ServiceDefinition.builder().serviceSpec(KubernetesServiceSpec.builder().build()).build())
             .build(),
-        Collections.singletonList(stepOutcome));
+        Collections.singletonList(stepOutcome), 123);
 
-    assertThat(serviceOutcome.getManifests()).isNotEmpty();
-    assertThat(serviceOutcome.getManifests().keySet().size()).isEqualTo(2);
-    assertThat(serviceOutcome.getManifests().get(k8Manifest.getIdentifier())).isEqualTo(k8sManifestOutcome);
-    assertThat(serviceOutcome.getManifests().get(k8Manifest1.getIdentifier())).isEqualTo(k8sManifestOutcome1);
+    assertThat(serviceOutcome.getManifestResults()).isNotEmpty();
+    assertThat(serviceOutcome.getManifestResults().keySet().size()).isEqualTo(2);
+    assertThat(serviceOutcome.getManifestResults().get(k8Manifest.getIdentifier())).isEqualTo(k8sManifestOutcome);
+    assertThat(serviceOutcome.getManifestResults().get(k8Manifest1.getIdentifier())).isEqualTo(k8sManifestOutcome1);
   }
 }

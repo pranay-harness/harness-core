@@ -39,7 +39,7 @@ public class ManifestOutcomeMapper {
     K8sManifest k8sManifest = (K8sManifest) manifestAttributes;
     return K8sManifestOutcome.builder()
         .identifier(k8sManifest.getIdentifier())
-        .store(k8sManifest.getStoreConfigWrapper())
+        .storeConfig(k8sManifest.getStoreConfig())
         .build();
   }
 
@@ -47,7 +47,7 @@ public class ManifestOutcomeMapper {
     ValuesManifest attributes = (ValuesManifest) manifestAttributes;
     return ValuesManifestOutcome.builder()
         .identifier(attributes.getIdentifier())
-        .store(attributes.getStoreConfigWrapper())
+        .storeConfig(attributes.getStoreConfig())
         .build();
   }
 }

@@ -141,12 +141,12 @@ public class PipelineExecutionHelper {
     ServiceExecutionSummary.ArtifactsSummary.ArtifactsSummaryBuilder artifactsSummaryBuilder =
         ServiceExecutionSummary.ArtifactsSummary.builder();
 
-    if (serviceOutcome.getArtifacts().getPrimary() != null) {
-      artifactsSummaryBuilder.primary(serviceOutcome.getArtifacts().getPrimary().getArtifactSummary());
+    if (serviceOutcome.getArtifactsResult().getPrimary() != null) {
+      artifactsSummaryBuilder.primary(serviceOutcome.getArtifactsResult().getPrimary().getArtifactSummary());
     }
 
-    if (EmptyPredicate.isNotEmpty(serviceOutcome.getArtifacts().getSidecars())) {
-      artifactsSummaryBuilder.sidecars(serviceOutcome.getArtifacts()
+    if (EmptyPredicate.isNotEmpty(serviceOutcome.getArtifactsResult().getSidecars())) {
+      artifactsSummaryBuilder.sidecars(serviceOutcome.getArtifactsResult()
                                            .getSidecars()
                                            .values()
                                            .stream()

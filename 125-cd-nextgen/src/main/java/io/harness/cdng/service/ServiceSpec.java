@@ -7,7 +7,9 @@ import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSets;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
 import io.harness.cdng.manifest.yaml.ManifestOverrideSets;
+import io.harness.cdng.variables.beans.NGVariableOverrideSets;
 import io.harness.yaml.core.intfc.WithType;
+import io.harness.yaml.core.variables.NGVariable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -19,5 +21,7 @@ public interface ServiceSpec extends WithType {
   List<ManifestConfigWrapper> getManifests();
   List<ManifestOverrideSets> getManifestOverrideSets();
   List<ArtifactOverrideSets> getArtifactOverrideSets();
+  List<NGVariableOverrideSets> getVariableOverrideSets();
+  List<NGVariable> getVariables();
   @Override @JsonIgnore String getType();
 }

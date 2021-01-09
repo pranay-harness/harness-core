@@ -18,7 +18,7 @@ public class ArtifactConfigToDelegateReqMapper {
     String tagRegex = artifactConfig.getTagRegex() != null ? artifactConfig.getTagRegex().getValue() : "";
     String tag = artifactConfig.getTag() != null ? artifactConfig.getTag().getValue() : "";
     if (EmptyPredicate.isEmpty(tag) && EmptyPredicate.isEmpty(tagRegex)) {
-      tagRegex = "*";
+      tagRegex = "\\*";
     }
     return DockerArtifactDelegateRequest.builder()
         .imagePath(artifactConfig.getImagePath().getValue())

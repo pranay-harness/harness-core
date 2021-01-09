@@ -47,4 +47,5 @@ public interface YamlTypes {
   String STORE_CONFIG_WRAPPER = "store";
 
   String SKIP_DRY_RUN = "skipDryRun";
+  String OUTPUT = "output";
 }
