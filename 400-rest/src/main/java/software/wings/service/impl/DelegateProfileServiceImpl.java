@@ -6,6 +6,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HPersistence.returnNewOptions;
 
+import static com.google.common.cache.CacheLoader.InvalidCacheLoadException;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -27,14 +28,20 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.account.AccountCrudObserver;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -53,6 +60,20 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
   @Getter private Subject<DelegateProfileObserver> delegateProfileSubject = new Subject<>();
 
+  private LoadingCache<ImmutablePair<String, String>, DelegateProfile> delegateProfilesCache =
+      CacheBuilder.newBuilder()
+          .maximumSize(10000)
+          .expireAfterWrite(5, TimeUnit.SECONDS)
+          .build(new CacheLoader<ImmutablePair<String, String>, DelegateProfile>() {
+            @Override
+            public DelegateProfile load(ImmutablePair<String, String> delegateProfileKey) {
+              return wingsPersistence.createQuery(DelegateProfile.class)
+                  .filter(DelegateProfileKeys.accountId, delegateProfileKey.getLeft())
+                  .filter(DelegateProfileKeys.uuid, delegateProfileKey.getRight())
+                  .get();
+            }
+          });
+
   @Override
   public PageResponse<DelegateProfile> list(PageRequest<DelegateProfile> pageRequest) {
     return wingsPersistence.query(DelegateProfile.class, pageRequest);
@@ -64,10 +85,11 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
       return null;
     }
 
-    return wingsPersistence.createQuery(DelegateProfile.class)
-        .filter(DelegateProfileKeys.uuid, delegateProfileId)
-        .filter(DelegateProfileKeys.accountId, accountId)
-        .get();
+    try {
+      return delegateProfilesCache.get(ImmutablePair.of(accountId, delegateProfileId));
+    } catch (ExecutionException | InvalidCacheLoadException e) {
+      return null;
+    }
   }
 
   @Override
@@ -96,7 +118,11 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     Query<DelegateProfile> query = wingsPersistence.createQuery(DelegateProfile.class)
                                        .filter(DelegateProfileKeys.accountId, delegateProfile.getAccountId())
                                        .filter(ID_KEY, delegateProfile.getUuid());
+
+    // Update and invalidate cache
     wingsPersistence.update(query, updateOperations);
+    delegateProfilesCache.invalidate(ImmutablePair.of(delegateProfile.getAccountId(), delegateProfile.getUuid()));
+
     DelegateProfile updatedDelegateProfile = get(delegateProfile.getAccountId(), delegateProfile.getUuid());
     log.info("Updated delegate profile: {}", updatedDelegateProfile.getUuid());
 
@@ -119,8 +145,10 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
     setUnset(updateOperations, DelegateProfileKeys.selectors, selectors);
 
+    // Update and invalidate cache
     DelegateProfile delegateProfileSelectorsUpdated =
         wingsPersistence.findAndModify(delegateProfileQuery, updateOperations, returnNewOptions);
+    delegateProfilesCache.invalidate(ImmutablePair.of(accountId, delegateProfileId));
     log.info("Updated delegate profile selectors: {}", delegateProfileSelectorsUpdated.getSelectors());
     return delegateProfileSelectorsUpdated;
   }
@@ -133,7 +161,9 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     Query<DelegateProfile> query = wingsPersistence.createQuery(DelegateProfile.class)
                                        .filter(DelegateProfileKeys.accountId, accountId)
                                        .filter(DelegateProfileKeys.uuid, delegateProfileId);
+    // Update and invalidate cache
     DelegateProfile updatedDelegateProfile = wingsPersistence.findAndModify(query, updateOperations, returnNewOptions);
+    delegateProfilesCache.invalidate(ImmutablePair.of(accountId, delegateProfileId));
     log.info("Updated profile scoping rules for accountId={}", accountId);
     return updatedDelegateProfile;
   }
@@ -157,7 +187,10 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     if (delegateProfile != null) {
       ensureProfileSafeToDelete(accountId, delegateProfile);
       log.info("Deleting delegate profile: {}", delegateProfileId);
+      // Delete and invalidate cache
       wingsPersistence.delete(delegateProfile);
+      delegateProfilesCache.invalidate(ImmutablePair.of(accountId, delegateProfileId));
+
       auditServiceHelper.reportDeleteForAuditingUsingAccountId(delegateProfile.getAccountId(), delegateProfile);
       log.info("Auditing deleting of Delegate Profile for accountId={}", delegateProfile.getAccountId());
     }
