@@ -158,8 +158,13 @@ public class TriggerWebhookExecutionHelper {
       } else {
         String pipelineYamlBeforeMerge = pipelineEntityToExecute.get().getYaml();
         String sanitizedRuntimeInputYaml = MergeHelper.sanitizeRuntimeInput(pipelineYamlBeforeMerge, runtimeInputYaml);
-        executionMetaDataBuilder.setInputSetYaml(sanitizedRuntimeInputYaml);
-        pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineYamlBeforeMerge, sanitizedRuntimeInputYaml, true);
+        if (EmptyPredicate.isEmpty(sanitizedRuntimeInputYaml)) {
+          pipelineYaml = pipelineYamlBeforeMerge;
+        } else {
+          executionMetaDataBuilder.setInputSetYaml(sanitizedRuntimeInputYaml);
+          pipelineYaml =
+              MergeHelper.mergeInputSetIntoPipeline(pipelineYamlBeforeMerge, sanitizedRuntimeInputYaml, true);
+        }
       }
 
       return pipelineExecuteHelper.startExecution(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),

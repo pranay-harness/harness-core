@@ -3,6 +3,7 @@ package io.harness.pms.merger.helpers;
 import static java.util.stream.Collectors.toMap;
 
 import io.harness.common.NGExpressionUtils;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.merger.PipelineYamlConfig;
 import io.harness.pms.merger.fqn.FQN;
@@ -127,6 +128,9 @@ public class MergeHelper {
     }
 
     String filteredInputSetYaml = MergeHelper.removeRuntimeInputFromYaml(runtimeInput);
+    if (EmptyPredicate.isEmpty(filteredInputSetYaml)) {
+      return "";
+    }
     PipelineYamlConfig inputSetConfig = new PipelineYamlConfig(filteredInputSetYaml);
 
     Set<FQN> invalidFQNsInInputSet = getInvalidFQNsInInputSet(templateYaml, filteredInputSetYaml);
