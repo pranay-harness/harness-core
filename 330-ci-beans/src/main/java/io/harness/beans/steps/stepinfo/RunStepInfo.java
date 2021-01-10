@@ -39,8 +39,8 @@ public class RunStepInfo implements CIStepInfo {
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
 
   @NotNull private ParameterField<String> command;
-  private ParameterField<List<String>> output;
-  private ParameterField<Map<String, String>> environment;
+  private ParameterField<List<String>> outputVariables;
+  private ParameterField<Map<String, String>> envVariables;
   private List<UnitTestReport> reports;
 
   @NotNull private ParameterField<String> image;
@@ -48,20 +48,20 @@ public class RunStepInfo implements CIStepInfo {
   private ContainerResource resources;
 
   @Builder
-  @ConstructorProperties({"identifier", "name", "retry", "command", "output", "reports", "environment", "image",
-      "connectorRef", "resources"})
+  @ConstructorProperties({"identifier", "name", "retry", "command", "outputVariables", "reports", "envVariables",
+      "image", "connectorRef", "resources"})
   public RunStepInfo(String identifier, String name, Integer retry, ParameterField<String> command,
-      ParameterField<List<String>> output, List<UnitTestReport> reports,
-      ParameterField<Map<String, String>> environment, ParameterField<String> image,
+      ParameterField<List<String>> outputVariables, List<UnitTestReport> reports,
+      ParameterField<Map<String, String>> envVariables, ParameterField<String> image,
       ParameterField<String> connectorRef, ContainerResource resources) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
 
     this.command = command;
-    this.environment = environment;
+    this.envVariables = envVariables;
     this.reports = reports;
-    this.output = output;
+    this.outputVariables = outputVariables;
     this.image = image;
     this.connectorRef = connectorRef;
     this.resources = resources;

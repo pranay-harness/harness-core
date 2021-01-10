@@ -207,7 +207,7 @@ public class CILiteEngineStepGroupUtils {
         PluginStepInfo.builder()
             .identifier(GIT_CLONE_STEP_ID)
             .image(ParameterField.createValueField(GIT_CLONE_IMAGE))
-            .connector(ParameterField.createValueField(ciExecutionServiceConfig.getDefaultInternalImageConnector()))
+            .connectorRef(ParameterField.createValueField(ciExecutionServiceConfig.getDefaultInternalImageConnector()))
             .name(GIT_CLONE_STEP_NAME)
             .settings(ParameterField.createValueField(settings))
             .build();

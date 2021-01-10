@@ -38,20 +38,20 @@ public class PluginStepInfo implements CIStepInfo {
 
   private ParameterField<Map<String, String>> settings;
   @NotNull private ParameterField<String> image;
-  private ParameterField<String> connector;
+  private ParameterField<String> connectorRef;
   private ContainerResource resources;
 
   @Builder
-  @ConstructorProperties({"identifier", "name", "retry", "settings", "image", "connector", "resources"})
+  @ConstructorProperties({"identifier", "name", "retry", "settings", "image", "connectorRef", "resources"})
   public PluginStepInfo(String identifier, String name, Integer retry, ParameterField<Map<String, String>> settings,
-      ParameterField<String> image, ParameterField<String> connector, ContainerResource resources) {
+      ParameterField<String> image, ParameterField<String> connectorRef, ContainerResource resources) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
 
     this.settings = settings;
     this.image = image;
-    this.connector = connector;
+    this.connectorRef = connectorRef;
     this.resources = resources;
   }
 

@@ -300,7 +300,7 @@ public class BuildJobEnvInfoBuilder {
     stepEnvVars.putAll(getEnvVariables(integrationStage));
     stepEnvVars.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
     Map<String, String> envvars =
-        resolveMapParameter("envVariables", "Run", identifier, runStepInfo.getEnvironment(), false);
+        resolveMapParameter("envVariables", "Run", identifier, runStepInfo.getEnvVariables(), false);
     if (!isEmpty(envvars)) {
       stepEnvVars.putAll(envvars);
     }
@@ -378,7 +378,7 @@ public class BuildJobEnvInfoBuilder {
                                    .imageDetails(getImageInfo(resolveStringParameter(
                                        "Image", "Plugin", identifier, pluginStepInfo.getImage(), true)))
                                    .connectorIdentifier(resolveStringParameter(
-                                       "connectorRef", "Plugin", identifier, pluginStepInfo.getConnector(), true))
+                                       "connectorRef", "Plugin", identifier, pluginStepInfo.getConnectorRef(), true))
                                    .build())
         .containerResourceParams(getStepContainerResource(pluginStepInfo.getResources(), "Plugin", identifier))
         .ports(Collections.singletonList(port))
@@ -534,10 +534,10 @@ public class BuildJobEnvInfoBuilder {
     } else if (stepElement.getStepSpecType() instanceof PluginCompatibleStep) {
       PluginCompatibleStep step = (PluginCompatibleStep) stepElement.getStepSpecType();
       switch (stepElement.getType()) {
-        case "buildAndPushECR":
-        case "restoreCacheS3":
-        case "saveCacheS3":
-        case "uploadToS3":
+        case "BuildAndPushECR":
+        case "RestoreCacheS3":
+        case "SaveCacheS3":
+        case "S3Upload":
           map.put(stepElement.getIdentifier(),
               ConnectorConversionInfo.builder()
                   .connectorRef(resolveStringParameter(
@@ -546,10 +546,10 @@ public class BuildJobEnvInfoBuilder {
                   .envToSecretEntry(EnvVariableEnum.AWS_SECRET_KEY, PLUGIN_SECRET_KEY)
                   .build());
           break;
-        case "buildAndPushGCR":
-        case "uploadToGCS":
-        case "saveCacheGCS":
-        case "restoreCacheGCS":
+        case "BuildAndPushGCR":
+        case "GCSUpload":
+        case "SaveCacheGCS":
+        case "RestoreCacheGCS":
           map.put(stepElement.getIdentifier(),
               ConnectorConversionInfo.builder()
                   .connectorRef(resolveStringParameter(
@@ -558,7 +558,7 @@ public class BuildJobEnvInfoBuilder {
                   .build());
 
           break;
-        case "buildAndPushDockerHub":
+        case "BuildAndPushDockerHub":
           map.put(stepElement.getIdentifier(),
               ConnectorConversionInfo.builder()
                   .connectorRef(resolveStringParameter(
