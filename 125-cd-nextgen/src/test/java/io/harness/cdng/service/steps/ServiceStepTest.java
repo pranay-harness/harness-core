@@ -16,6 +16,7 @@ import io.harness.cdng.service.beans.KubernetesServiceSpec;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceDefinition;
 import io.harness.cdng.service.beans.ServiceOutcome;
+import io.harness.cdng.service.beans.ServiceYaml;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.yaml.ParameterField;
@@ -82,10 +83,10 @@ public class ServiceStepTest extends CategoryTest {
         ManifestsOutcome.builder().manifestOutcomeList(Arrays.asList(k8sManifestOutcome, k8sManifestOutcome1)).build();
     StepOutcome stepOutcome = StepOutcome.builder().outcome(manifestsOutcome).name(ManifestConstants.MANIFESTS).build();
 
+    ServiceYaml entity = ServiceYaml.builder().identifier("s1").name("s1").build();
     ServiceOutcome serviceOutcome = serviceStep.createServiceOutcome(
         ServiceConfig.builder()
-            .identifier(ParameterField.createValueField("s1"))
-            .name(ParameterField.createValueField("s1"))
+            .service(entity)
             .serviceDefinition(ServiceDefinition.builder().serviceSpec(KubernetesServiceSpec.builder().build()).build())
             .build(),
         Collections.singletonList(stepOutcome), 123);

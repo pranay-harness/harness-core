@@ -43,7 +43,7 @@ public class ArtifactYamlTest extends CategoryTest {
     assertThat(((StageElement) stageWrapper).getStageType()).isInstanceOf(DeploymentStage.class);
     DeploymentStage deploymentStage = (DeploymentStage) ((StageElement) stageWrapper).getStageType();
     KubernetesServiceSpec serviceSpec =
-        (KubernetesServiceSpec) deploymentStage.getService().getServiceDefinition().getServiceSpec();
+        (KubernetesServiceSpec) deploymentStage.getServiceConfig().getServiceDefinition().getServiceSpec();
     assertThat(serviceSpec).isNotNull();
 
     assertThat(serviceSpec.getArtifacts().getPrimary()).isNotNull();

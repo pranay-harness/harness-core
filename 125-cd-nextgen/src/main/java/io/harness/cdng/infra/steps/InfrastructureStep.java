@@ -1,7 +1,6 @@
 package io.harness.cdng.infra.steps;
 
 import static io.harness.ng.core.mapper.TagMapper.convertToList;
-import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
 
 import io.harness.cdng.environment.EnvironmentMapper;
 import io.harness.cdng.environment.EnvironmentOutcome;
@@ -89,16 +88,13 @@ public class InfrastructureStep implements SyncExecutable<InfraStepParameters> {
     if (pipelineInfrastructure.getUseFromStage() != null
         && pipelineInfrastructure.getUseFromStage().getOverrides() != null) {
       environmentOverrides = pipelineInfrastructure.getUseFromStage().getOverrides().getEnvironment();
-      if (!environmentOverrides.getName().isExpression()
-          && EmptyPredicate.isEmpty(environmentOverrides.getName().getValue())) {
+      if (EmptyPredicate.isEmpty(environmentOverrides.getName())) {
         environmentOverrides.setName(environmentOverrides.getIdentifier());
       }
     }
 
     EnvironmentYaml environment = pipelineInfrastructure.getEnvironment();
-    if (environment.getName() == null
-        || (!environment.getName().isExpression()
-            && EmptyPredicate.isEmpty(getParameterFieldValue(environment.getName())))) {
+    if (EmptyPredicate.isEmpty(environment.getName())) {
       environment.setName(environment.getIdentifier());
     }
 
@@ -120,10 +116,10 @@ public class InfrastructureStep implements SyncExecutable<InfraStepParameters> {
     String orgIdentifier = AmbianceHelper.getOrgIdentifier(ambiance);
 
     return Environment.builder()
-        .name(getParameterFieldValue(environmentYaml.getName()))
+        .name(environmentYaml.getName())
         .accountId(accountId)
         .type(environmentYaml.getType())
-        .identifier(getParameterFieldValue(environmentYaml.getIdentifier()))
+        .identifier(environmentYaml.getIdentifier())
         .orgIdentifier(orgIdentifier)
         .projectIdentifier(projectIdentifier)
         .tags(convertToList(environmentYaml.getTags()))

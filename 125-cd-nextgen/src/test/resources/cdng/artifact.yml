@@ -7,9 +7,10 @@ pipeline:
         name: deployment-stage-1
         type: Deployment
         spec:
-          service:
-            name: manager
-            identifier: manager
+          serviceConfig:
+            service:
+              name: manager
+              identifier: manager
             serviceDefinition:
               type: "Kubernetes"
               spec:
@@ -51,9 +52,10 @@ pipeline:
         name: deployment-stage-2
         type: Deployment
         spec:
-          service:
-            name: delegate
-            identifier: delegate
+          serviceConfig:
+            service:
+              name: delegate
+              identifier: delegate
             serviceDefinition:
               type: Kubernetes
               spec:

@@ -35,7 +35,7 @@ public class DeploymentStage implements CDStage, Visitable {
   @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore String identifier;
   @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore String name;
   List<NGVariable> variables;
-  ServiceConfig service;
+  ServiceConfig serviceConfig;
   PipelineInfrastructure infrastructure;
   ExecutionElement execution;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
@@ -50,7 +50,7 @@ public class DeploymentStage implements CDStage, Visitable {
     if (EmptyPredicate.isNotEmpty(variables)) {
       variables.forEach(ngVariable -> children.add("variables", ngVariable));
     }
-    children.add("service", service);
+    children.add("serviceConfig", serviceConfig);
     children.add("infrastructure", infrastructure);
     children.add("execution", execution);
     return children;

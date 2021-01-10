@@ -129,13 +129,13 @@ public class InputSetMergeHelperTest extends CDNGBaseTest {
     Map<String, VisitorErrorResponseWrapper> uuidToErrorResponseMap = mergeInputSetResponse.getUuidToErrorResponseMap();
     assertThat(uuidToErrorResponseMap.keySet().size()).isEqualTo(5);
 
-    String key = "myPipeline1.stages.qa.spec.service.serviceDefinition.spec.artifacts.primary.spec.tag";
+    String key = "myPipeline1.stages.qa.spec.serviceConfig.serviceDefinition.spec.artifacts.primary.spec.tag";
     String expectedIdentifier = "wrongInput1";
     String expectedFieldName = "tag";
     String expectedMessage = "Input Set field cannot have value if not marked as runtime in original pipeline.";
     validateAssertOnErrorResponse(uuidToErrorResponseMap, key, expectedIdentifier, expectedFieldName, expectedMessage);
 
-    key = "myPipeline1.stages.qa.spec.service.serviceDefinition.spec.artifacts.sidecars.sidecar.spec.imagePath";
+    key = "myPipeline1.stages.qa.spec.serviceConfig.serviceDefinition.spec.artifacts.sidecars.sidecar.spec.imagePath";
     expectedFieldName = "imagePath";
     expectedMessage = "Value inside input set cannot be another runtime expression.";
     validateAssertOnErrorResponse(uuidToErrorResponseMap, key, expectedIdentifier, expectedFieldName, expectedMessage);
@@ -144,12 +144,13 @@ public class InputSetMergeHelperTest extends CDNGBaseTest {
     expectedFieldName = "connectorRef";
     validateAssertOnErrorResponse(uuidToErrorResponseMap, key, expectedIdentifier, expectedFieldName, expectedMessage);
 
-    key = "myPipeline1.stages.prod.spec.service.stageOverrides.manifests.prodOverride.spec.store.spec.connectorRef";
+    key =
+        "myPipeline1.stages.prod.spec.serviceConfig.stageOverrides.manifests.prodOverride.spec.store.spec.connectorRef";
     expectedIdentifier = "wrongInput2";
     expectedFieldName = "connectorRef";
     validateAssertOnErrorResponse(uuidToErrorResponseMap, key, expectedIdentifier, expectedFieldName, expectedMessage);
 
-    key = "myPipeline1.stages.prod.spec.service.stageOverrides.manifests.prodOverride.spec.store.spec.metadata";
+    key = "myPipeline1.stages.prod.spec.serviceConfig.stageOverrides.manifests.prodOverride.spec.store.spec.metadata";
     expectedFieldName = "gitFetchType";
     expectedMessage = "Input Set field cannot have value if not marked as runtime in original pipeline.";
     validateAssertOnErrorResponse(uuidToErrorResponseMap, key, expectedIdentifier, expectedFieldName, expectedMessage);

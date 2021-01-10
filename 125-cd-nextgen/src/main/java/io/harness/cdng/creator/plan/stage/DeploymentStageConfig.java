@@ -24,7 +24,7 @@ import org.springframework.data.annotation.TypeAlias;
 public class DeploymentStageConfig implements StageInfoConfig {
   String uuid;
   List<NGVariable> variables;
-  ServiceConfig service;
+  ServiceConfig serviceConfig;
   PipelineInfrastructure infrastructure;
   ExecutionElementConfig execution;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;

@@ -180,9 +180,11 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
       ServiceConfig serviceConfig, List<StepOutcome> stepOutcomes, int expressionFunctorToken) throws IOException {
     ServiceOutcomeBuilder outcomeBuilder =
         ServiceOutcome.builder()
-            .name(serviceConfig.getName().getValue())
-            .identifier(serviceConfig.getIdentifier().getValue())
-            .description(serviceConfig.getDescription() != null ? serviceConfig.getDescription().getValue() : "")
+            .name(serviceConfig.getService().getName())
+            .identifier(serviceConfig.getService().getIdentifier())
+            .description(serviceConfig.getService().getDescription() != null
+                    ? serviceConfig.getService().getDescription().getValue()
+                    : "")
             .type(serviceConfig.getServiceDefinition().getServiceSpec().getType())
             .tags(serviceConfig.getTags())
             .variables(NGVariablesUtils.getMapOfVariables(
@@ -426,9 +428,9 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
     String orgIdentifier = AmbianceHelper.getOrgIdentifier(ambiance);
 
     return ServiceEntity.builder()
-        .identifier(getParameterFieldValue(serviceConfig.getIdentifier()))
-        .name(getParameterFieldValue(serviceConfig.getName()))
-        .description(getParameterFieldValue(serviceConfig.getDescription()))
+        .identifier(serviceConfig.getService().getIdentifier())
+        .name(serviceConfig.getService().getName())
+        .description(getParameterFieldValue(serviceConfig.getService().getDescription()))
         .projectIdentifier(projectIdentifier)
         .orgIdentifier(orgIdentifier)
         .accountId(accountId)

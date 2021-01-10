@@ -117,7 +117,7 @@ public class PipelineYamlTest extends CategoryTest {
     assertThat(numberNGVariable.getValue().getValue()).isEqualTo(12);
 
     // Service
-    ServiceConfig service = deploymentStage.getService();
+    ServiceConfig service = deploymentStage.getServiceConfig();
 
     // Test Service Tags
     List<NGTag> tags = convertToList(service.getTags());
@@ -127,9 +127,7 @@ public class PipelineYamlTest extends CategoryTest {
 
     KubernetesServiceSpec serviceSpec = (KubernetesServiceSpec) service.getServiceDefinition().getServiceSpec();
     assertThat(serviceSpec).isNotNull();
-    assertThat(service.getIdentifier()).isInstanceOf(ParameterField.class);
-    assertThat(service.getIdentifier().isExpression()).isTrue();
-    assertThat(service.getIdentifier().getExpressionValue()).isEqualTo("<+input>");
+    assertThat(service.getService().getIdentifier()).isEqualTo("service1");
 
     // Service Variables
     assertThat(serviceSpec.getVariables().size()).isEqualTo(2);
@@ -195,12 +193,8 @@ public class PipelineYamlTest extends CategoryTest {
     // Infrastructure & environment
     PipelineInfrastructure infrastructure = deploymentStage.getInfrastructure();
     EnvironmentYaml environment = infrastructure.getEnvironment();
-    assertThat(environment.getIdentifier()).isInstanceOf(ParameterField.class);
-    assertThat(environment.getIdentifier().isExpression()).isTrue();
-    assertThat(environment.getIdentifier().getExpressionValue()).isEqualTo("<+input>");
-    assertThat(environment.getName()).isInstanceOf(ParameterField.class);
-    assertThat(environment.getName().isExpression()).isTrue();
-    assertThat(environment.getName().getExpressionValue()).isEqualTo("<+input>");
+    assertThat(environment.getIdentifier()).isEqualTo("env1");
+    assertThat(environment.getName()).isEqualTo("env1");
 
     // Assert Env Tags
     assertThat(environment.getTags().size()).isEqualTo(2);
@@ -278,7 +272,7 @@ public class PipelineYamlTest extends CategoryTest {
     deploymentStage = (DeploymentStage) stageElement.getStageType();
 
     // Service
-    service = deploymentStage.getService();
+    service = deploymentStage.getServiceConfig();
     assertThat(service.getUseFromStage()).isNotNull();
     assertThat(service.getUseFromStage().getStage()).isInstanceOf(ParameterField.class);
     assertThat(service.getUseFromStage().getStage().isExpression()).isTrue();

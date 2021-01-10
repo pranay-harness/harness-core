@@ -16,6 +16,7 @@ import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceDefinition;
 import io.harness.cdng.service.beans.ServiceOutcome;
+import io.harness.cdng.service.beans.ServiceYaml;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.execution.NodeExecution;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
@@ -32,7 +33,6 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ParallelStageElement;
 import io.harness.yaml.core.StageElement;
@@ -56,19 +56,18 @@ public class PipelineExecutionHelperTest extends CDNGBaseTest {
   @Category(UnitTests.class)
   public void testAddStageSpecificDetailsToPipelineExecution_StageElement() throws IOException {
     StageElement stageElement = StageElement.builder().identifier("testIdentifier").build();
+    ServiceYaml entity = ServiceYaml.builder().identifier("serviceIdentifier").name("serviceName").build();
     DeploymentStage deploymentStage =
         DeploymentStage.builder()
             .identifier("testIdentifier")
-            .service(ServiceConfig.builder()
-                         .identifier(ParameterField.createValueField("serviceIdentifier"))
-                         .serviceDefinition(ServiceDefinition.builder().type("Kubernetes").build())
-                         .build())
-            .infrastructure(PipelineInfrastructure.builder()
-                                .environment(EnvironmentYaml.builder()
-                                                 .identifier(ParameterField.createValueField("envIdentifier"))
-                                                 .name(ParameterField.createValueField("stageName"))
-                                                 .build())
-                                .build())
+            .serviceConfig(ServiceConfig.builder()
+                               .service(entity)
+                               .serviceDefinition(ServiceDefinition.builder().type("Kubernetes").build())
+                               .build())
+            .infrastructure(
+                PipelineInfrastructure.builder()
+                    .environment(EnvironmentYaml.builder().identifier("envIdentifier").name("stageName").build())
+                    .build())
             .build();
     stageElement.setStageType(deploymentStage);
     PipelineExecutionSummary pipelineExecutionSummary = PipelineExecutionSummary.builder().build();
@@ -94,19 +93,18 @@ public class PipelineExecutionHelperTest extends CDNGBaseTest {
   @Category(UnitTests.class)
   public void testAddStageSpecificDetailsToPipelineExecution_ParallelStageElement() throws IOException {
     StageElement stageElement = StageElement.builder().identifier("testIdentifier").build();
+    ServiceYaml entity = ServiceYaml.builder().identifier("serviceIdentifier").name("serviceName").build();
     DeploymentStage deploymentStage =
         DeploymentStage.builder()
             .identifier("testIdentifier")
-            .service(ServiceConfig.builder()
-                         .identifier(ParameterField.createValueField("serviceIdentifier"))
-                         .serviceDefinition(ServiceDefinition.builder().type("Kubernetes").build())
-                         .build())
-            .infrastructure(PipelineInfrastructure.builder()
-                                .environment(EnvironmentYaml.builder()
-                                                 .identifier(ParameterField.createValueField("envIdentifier"))
-                                                 .name(ParameterField.createValueField("stageName"))
-                                                 .build())
-                                .build())
+            .serviceConfig(ServiceConfig.builder()
+                               .service(entity)
+                               .serviceDefinition(ServiceDefinition.builder().type("Kubernetes").build())
+                               .build())
+            .infrastructure(
+                PipelineInfrastructure.builder()
+                    .environment(EnvironmentYaml.builder().identifier("envIdentifier").name("stageName").build())
+                    .build())
             .build();
     stageElement.setStageType(deploymentStage);
     ParallelStageElement parallelStageElement =

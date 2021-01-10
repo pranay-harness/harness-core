@@ -4,8 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
-import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceDefinition;
+import io.harness.cdng.service.beans.ServiceYaml;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.cdng.sample.cd.creator.filters.CdFilter;
 import io.harness.pms.cdng.sample.cd.creator.filters.CdFilter.CdFilterBuilder;
@@ -39,20 +39,20 @@ public class DeploymentStageFilterJsonCreator implements FilterJsonCreator<Stage
       return creationResponse.build();
     }
 
-    ServiceConfig service = deploymentStageConfig.getService();
-    if (service != null && isNotEmpty(service.getName().getValue())) {
-      cdFilter.serviceName(service.getName().getValue());
+    ServiceYaml service = deploymentStageConfig.getServiceConfig().getService();
+    if (service != null && isNotEmpty(service.getName())) {
+      cdFilter.serviceName(service.getName());
     }
 
-    ServiceDefinition serviceDefinition = service.getServiceDefinition();
+    ServiceDefinition serviceDefinition = deploymentStageConfig.getServiceConfig().getServiceDefinition();
     if (serviceDefinition != null && serviceDefinition.getType() != null) {
       cdFilter.deploymentType(serviceDefinition.getType());
     }
 
     PipelineInfrastructure infrastructure = deploymentStageConfig.getInfrastructure();
     if (infrastructure != null && infrastructure.getEnvironment() != null
-        && isNotEmpty(infrastructure.getEnvironment().getName().getValue())) {
-      cdFilter.environmentName(infrastructure.getEnvironment().getName().getValue());
+        && isNotEmpty(infrastructure.getEnvironment().getName())) {
+      cdFilter.environmentName(infrastructure.getEnvironment().getName());
     }
 
     creationResponse.pipelineFilter(cdFilter.build());

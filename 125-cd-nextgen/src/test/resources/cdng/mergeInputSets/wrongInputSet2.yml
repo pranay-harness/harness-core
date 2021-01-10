@@ -8,7 +8,7 @@ inputSet:
           identifier: prod
           type: Deployment
           spec:
-            service:
+            serviceConfig:
               useFromStage:
                 stage: new-qa
               stageOverrides:

@@ -8,11 +8,6 @@ inputSet:
           identifier: prod
           type: Deployment
           spec:
-            service:
+            serviceConfig:
               useFromStage:
                 stage: qa
-            infrastructure:
-              useFromStage:
-                overrides:
-                  environment:
-                    identifier: new-env

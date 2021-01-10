@@ -8,8 +8,7 @@ inputSet:
           identifier: qa
           type: Deployment
           spec:
-            service:
-              identifier: service1 #adding comments to check
+            serviceConfig:
               serviceDefinition:
                 type: Kubernetes # Can it be type to make it consistent with other types
                 spec:
@@ -53,9 +52,6 @@ inputSet:
                                     connectorRef: my-git-connector
                                     branch: masterOverride1
             infrastructure:
-              environment:
-                name: env
-                identifier: env1
               infrastructureDefinition:
                 type: KubernetesDirect
                 spec:
