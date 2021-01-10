@@ -3,6 +3,7 @@ package io.harness.cdng.creator.plan.service;
 import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceUseFromStage;
+import io.harness.cdng.service.beans.ServiceYaml;
 import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.cdng.visitor.YamlTypes;
@@ -36,16 +37,17 @@ public class ServicePMSPlanCreator {
       YamlField serviceField, ServiceConfig serviceConfig, KryoSerializer kryoSerializer) {
     YamlNode serviceNode = serviceField.getNode();
     ServiceConfig actualServiceConfig = getActualServiceConfig(serviceConfig, serviceField);
-    if (!actualServiceConfig.getName().isExpression()
-        && EmptyPredicate.isEmpty(actualServiceConfig.getName().getValue())) {
-      actualServiceConfig.setName(actualServiceConfig.getIdentifier());
+    ServiceYaml actualServiceYaml = actualServiceConfig.getService();
+    if (EmptyPredicate.isEmpty(actualServiceYaml.getName())) {
+      actualServiceYaml.setName(actualServiceYaml.getIdentifier());
     }
     ServiceConfig serviceOverrides = null;
     if (actualServiceConfig.getUseFromStage() != null) {
       ServiceUseFromStage.Overrides overrides = actualServiceConfig.getUseFromStage().getOverrides();
       if (overrides != null) {
-        serviceOverrides =
-            ServiceConfig.builder().name(overrides.getName()).description(overrides.getDescription()).build();
+        ServiceYaml overriddenEntity =
+            ServiceYaml.builder().name(overrides.getName().getValue()).description(overrides.getDescription()).build();
+        serviceOverrides = ServiceConfig.builder().service(overriddenEntity).build();
       }
     }
     StepParameters stepParameters =
@@ -77,7 +79,7 @@ public class ServicePMSPlanCreator {
                 .toString(),
             DeploymentStageConfig.class);
         if (deploymentStage != null) {
-          return serviceConfig.applyUseFromStage(deploymentStage.getService());
+          return serviceConfig.applyUseFromStage(deploymentStage.getServiceConfig());
         } else {
           throw new InvalidArgumentsException("Stage identifier given in useFromStage doesn't exist.");
         }

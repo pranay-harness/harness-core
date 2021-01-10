@@ -10,8 +10,9 @@ inputSet:
           identifier: qa
           type: Deployment
           spec:
-            service:
-              identifier: <+input>
+            serviceConfig:
+              service:
+                identifier: <+input>
               serviceDefinition:
                 type: Kubernetes
                 spec:

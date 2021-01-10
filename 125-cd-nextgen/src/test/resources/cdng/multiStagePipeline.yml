@@ -7,8 +7,9 @@ pipeline:
         name: "qa stage"
         type: Deployment
         spec:
-          service:
-            identifier: manager
+          serviceConfig:
+            service:
+              identifier: manager
             serviceDefinition:
               type: "Kubernetes"
               spec:
@@ -102,7 +103,7 @@ pipeline:
         name: "prod stage"
         type: Deployment
         spec:
-          service:
+          serviceConfig:
             useFromStage:
               stage: qaStage
             stageOverrides:

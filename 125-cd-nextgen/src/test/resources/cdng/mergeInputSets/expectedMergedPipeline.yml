@@ -8,9 +8,10 @@ pipeline:
       name: qa
       type: Deployment
       spec:
-        service:
-          identifier: service2
-          name: service1
+        serviceConfig:
+          service:
+            identifier: service1
+            name: service1
           serviceDefinition:
             type: Kubernetes
             spec:
@@ -66,8 +67,8 @@ pipeline:
               connectorRef: <+input>
               namespace: prod2
           environment:
-            name: env
-            identifier: env2
+            name: env1
+            identifier: env1
             type: PreProduction
         execution:
           steps:
@@ -116,7 +117,7 @@ pipeline:
       name: Prod stage
       type: Deployment
       spec:
-        service:
+        serviceConfig:
           useFromStage:
             stage: new-qa
           stageOverrides:
@@ -146,7 +147,7 @@ pipeline:
             stage: qaStage
             overrides:
               environment:
-                identifier: new-env
+                identifier: env1
               infrastructureDefinition:
                 type: KubernetesDirect
                 spec:

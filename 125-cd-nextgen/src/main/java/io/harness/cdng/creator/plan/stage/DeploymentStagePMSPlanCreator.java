@@ -49,7 +49,7 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
 
     if (serviceField != null) {
       PlanNode servicePlanNode = ServicePMSPlanCreator.createPlanForServiceNode(
-          serviceField, ((DeploymentStageConfig) field.getStageType()).getService(), kryoSerializer);
+          serviceField, ((DeploymentStageConfig) field.getStageType()).getServiceConfig(), kryoSerializer);
       planCreationResponseMap.put(serviceField.getNode().getUuid(),
           PlanCreationResponse.builder().node(serviceField.getNode().getUuid(), servicePlanNode).build());
     }

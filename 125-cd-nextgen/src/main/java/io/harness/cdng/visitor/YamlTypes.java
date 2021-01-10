@@ -28,7 +28,8 @@ public interface YamlTypes {
   String PIPELINE_INFRASTRUCTURE = "infrastructure";
   String HTTP_STEP = StepSpecTypeConstants.HTTP;
   String SHELL_SCRIPT_STEP = StepSpecTypeConstants.SHELL_SCRIPT;
-  String SERVICE_CONFIG = "service";
+  String SERVICE_CONFIG = "serviceConfig";
+  String SERVICE_ENTITY = "service";
   String SERVICE_DEFINITION = "serviceDefinition";
   String SERVICE_SPEC = "spec";
   String SERVICE_USE_FROM_STAGE = "useFromStage";

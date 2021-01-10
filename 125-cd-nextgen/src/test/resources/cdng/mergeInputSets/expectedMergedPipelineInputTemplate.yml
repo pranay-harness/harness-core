@@ -5,8 +5,7 @@ pipeline:
       identifier: qa
       type: Deployment
       spec:
-        service:
-          identifier: service2
+        serviceConfig:
           serviceDefinition:
             type: Kubernetes
             spec:
@@ -53,9 +52,6 @@ pipeline:
             spec:
               connectorRef: <+input>
               namespace: prod2
-          environment:
-            name: env
-            identifier: env2
         execution:
           steps:
           - parallel:
@@ -75,7 +71,7 @@ pipeline:
       identifier: prod
       type: Deployment
       spec:
-        service:
+        serviceConfig:
           useFromStage:
             stage: new-qa
           stageOverrides:
@@ -89,8 +85,3 @@ pipeline:
                     spec:
                       connectorRef: my-connector
                       branch: <+input>
-        infrastructure:
-          useFromStage:
-            overrides:
-              environment:
-                identifier: new-env

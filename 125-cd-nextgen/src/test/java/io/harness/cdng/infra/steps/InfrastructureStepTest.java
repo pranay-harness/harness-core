@@ -72,8 +72,8 @@ public class InfrastructureStepTest extends CategoryTest {
     Ambiance ambiance = Ambiance.newBuilder().putAllSetupAbstractions(setupAbstractions).build();
 
     EnvironmentYaml environmentYaml = EnvironmentYaml.builder()
-                                          .identifier(ParameterField.createValueField("test-id"))
-                                          .name(ParameterField.createValueField("test-id"))
+                                          .identifier("test-id")
+                                          .name("test-id")
                                           .type(EnvironmentType.PreProduction)
                                           .tags(Collections.emptyMap())
                                           .build();

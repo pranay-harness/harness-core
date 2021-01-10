@@ -7,9 +7,10 @@ pipeline:
         name: manager deployment stage
         type: Deployment
         spec:
-          service:
-            name: ManagerService
-            identifier: ManagerService
+          serviceConfig:
+            service:
+              name: ManagerService
+              identifier: ManagerService
             serviceDefinition:
               type: Kubernetes
               spec:
@@ -84,7 +85,7 @@ pipeline:
         name: UI deployment stage
         type: Deployment
         spec:
-          service:
+          serviceConfig:
             useFromStage:
               stage: managerDeploymentStage
           infrastructure:

@@ -51,9 +51,10 @@ pipeline:
             - name: stageN2
               type: Number
               value: 12
-          service:
-            name: service1
-            identifier: <+input>
+          serviceConfig:
+            service:
+              name: service1
+              identifier: service1
             tags:
               k1: v1
               k2: v2
@@ -120,8 +121,8 @@ pipeline:
                           value: 14
           infrastructure:
             environment:
-              name: <+input>
-              identifier: <+input>
+              name: env1
+              identifier: env1
               type: PreProduction
               tags:
                 envType: prod
@@ -203,7 +204,7 @@ pipeline:
         name: Prod stage
         type: Deployment
         spec:
-          service:
+          serviceConfig:
             useFromStage:
               stage: <+input>.regex(^prod*)
             stageOverrides:
@@ -235,7 +236,8 @@ pipeline:
               stage: qaStage
               overrides:
                 environment:
-                  identifier: <+input>
+                  name: envSomeNumber
+                  identifier: envSomeNumber
                 infrastructureDefinition:
                   type: KubernetesDirect
                   spec:
