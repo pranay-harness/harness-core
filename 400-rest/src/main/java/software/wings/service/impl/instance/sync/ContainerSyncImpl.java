@@ -3,6 +3,8 @@ package software.wings.service.impl.instance.sync;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.validation.Validator.notNullCheck;
 
+import static software.wings.sm.states.k8s.K8sStateHelper.fetchTagsFromK8sCloudProvider;
+
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -27,7 +29,6 @@ import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.sm.states.k8s.K8sStateHelper;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -47,7 +48,6 @@ public class ContainerSyncImpl implements ContainerSync {
   @Inject private InfrastructureMappingService infraMappingService;
   @Inject private SecretManager secretManager;
   @Inject private DelegateProxyFactory delegateProxyFactory;
-  @Inject private K8sStateHelper k8sStateHelper;
 
   @Override
   public ContainerSyncResponse getInstances(ContainerSyncRequest syncRequest) {
@@ -147,7 +147,7 @@ public class ContainerSyncImpl implements ContainerSync {
                 containerMetadata.getNamespace(), containerMetadata.getReleaseName());
 
         List<String> tags = new ArrayList<>();
-        tags.addAll(k8sStateHelper.fetchTagsFromK8sCloudProvider(containerServiceParams));
+        tags.addAll(fetchTagsFromK8sCloudProvider(containerServiceParams));
 
         Application app = appService.get(containerInfraMapping.getAppId());
         SyncTaskContext syncTaskContext =

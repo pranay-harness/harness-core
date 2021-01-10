@@ -1,7 +1,6 @@
 package software.wings.sm.states.k8s;
 
 import static software.wings.sm.StateType.K8S_APPLY;
-import static software.wings.sm.states.k8s.K8sStateHelper.getSafeTimeoutInMillis;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -28,7 +27,6 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.State;
 import software.wings.sm.states.utils.StateTimeoutUtils;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.ApplicationManifestUtils;
@@ -44,8 +42,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class K8sApplyState extends State implements K8sStateExecutor {
-  @Inject private K8sStateHelper k8sStateHelper;
+public class K8sApplyState extends AbstractK8sState {
   @Inject private AppService appService;
   @Inject private ActivityService activityService;
   @Inject private ApplicationManifestUtils applicationManifestUtils;
@@ -102,37 +99,36 @@ public class K8sApplyState extends State implements K8sStateExecutor {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    return k8sStateHelper.executeWrapperWithManifest(this, context, getSafeTimeoutInMillis(getTimeoutMillis()));
+    return executeWrapperWithManifest(this, context, K8sStateHelper.fetchSafeTimeoutInMillis(getTimeoutMillis()));
   }
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    return k8sStateHelper.handleAsyncResponseWrapper(this, context, response);
+    return handleAsyncResponseWrapper(this, context, response);
   }
 
   @Override
   public ExecutionResponse executeK8sTask(ExecutionContext context, String activityId) {
-    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = k8sStateHelper.getApplicationManifests(context);
-    ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
-    k8sStateHelper.storePreviousHelmDeploymentInfo(context, appManifestMap.get(K8sValuesLocation.Service));
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = fetchApplicationManifests(context);
+    ContainerInfrastructureMapping infraMapping = k8sStateHelper.fetchContainerInfrastructureMapping(context);
+    storePreviousHelmDeploymentInfo(context, appManifestMap.get(K8sValuesLocation.Service));
 
     renderStateVariables(context);
 
-    K8sTaskParameters k8sTaskParameters =
-        K8sApplyTaskParameters.builder()
-            .activityId(activityId)
-            .releaseName(k8sStateHelper.getReleaseName(context, infraMapping))
-            .commandName(K8S_APPLY_STATE)
-            .k8sTaskType(K8sTaskType.APPLY)
-            .timeoutIntervalInMin(Integer.parseInt(stateTimeoutInMinutes))
-            .filePaths(filePaths)
-            .k8sDelegateManifestConfig(
-                k8sStateHelper.createDelegateManifestConfig(context, appManifestMap.get(K8sValuesLocation.Service)))
-            .valuesYamlList(k8sStateHelper.getRenderedValuesFiles(appManifestMap, context))
-            .skipDryRun(skipDryRun)
-            .build();
+    K8sTaskParameters k8sTaskParameters = K8sApplyTaskParameters.builder()
+                                              .activityId(activityId)
+                                              .releaseName(fetchReleaseName(context, infraMapping))
+                                              .commandName(K8S_APPLY_STATE)
+                                              .k8sTaskType(K8sTaskType.APPLY)
+                                              .timeoutIntervalInMin(Integer.parseInt(stateTimeoutInMinutes))
+                                              .filePaths(filePaths)
+                                              .k8sDelegateManifestConfig(createDelegateManifestConfig(
+                                                  context, appManifestMap.get(K8sValuesLocation.Service)))
+                                              .valuesYamlList(fetchRenderedValuesFiles(appManifestMap, context))
+                                              .skipDryRun(skipDryRun)
+                                              .build();
 
-    return k8sStateHelper.queueK8sDelegateTask(context, k8sTaskParameters);
+    return queueK8sDelegateTask(context, k8sTaskParameters);
   }
 
   @Override
@@ -144,7 +140,7 @@ public class K8sApplyState extends State implements K8sStateExecutor {
         ? ExecutionStatus.SUCCESS
         : ExecutionStatus.FAILED;
 
-    activityService.updateStatus(k8sStateHelper.getActivityId(context), app.getUuid(), executionStatus);
+    activityService.updateStatus(fetchActivityId(context), app.getUuid(), executionStatus);
 
     K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
     stateExecutionData.setStatus(executionStatus);

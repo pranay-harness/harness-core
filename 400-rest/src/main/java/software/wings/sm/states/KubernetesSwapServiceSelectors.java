@@ -12,6 +12,7 @@ import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.PRIMARY_SERVICE_NAME_EXPRESSION;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.STAGE_SERVICE_NAME_EXPRESSION;
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
+import static software.wings.sm.states.k8s.K8sStateHelper.fetchTagsFromK8sCloudProvider;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -227,7 +228,7 @@ public class KubernetesSwapServiceSelectors extends State {
     }
 
     // this is needed to have ${k8s) in context
-    k8sStateHelper.getK8sElement(context);
+    k8sStateHelper.fetchK8sElement(context);
 
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -265,7 +266,7 @@ public class KubernetesSwapServiceSelectors extends State {
     ContainerServiceParams containerServiceParams =
         containerDeploymentManagerHelper.getContainerServiceParams(containerInfraMapping, "", context);
 
-    List<String> taskTags = k8sStateHelper.fetchTagsFromK8sCloudProvider(containerServiceParams);
+    List<String> taskTags = fetchTagsFromK8sCloudProvider(containerServiceParams);
     if (containerMasterUrlHelper.masterUrlRequired(containerInfraMapping)) {
       boolean masterUrlPresent =
           containerMasterUrlHelper.fetchMasterUrlAndUpdateInfraMapping(containerInfraMapping, containerServiceParams,

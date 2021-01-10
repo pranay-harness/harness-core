@@ -8,6 +8,7 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ENV_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -31,6 +32,7 @@ import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
@@ -43,7 +45,6 @@ import software.wings.service.impl.instance.InstanceSyncTestConstants;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.sm.states.k8s.K8sStateHelper;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -71,7 +72,6 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
   @Mock InfrastructureMappingService infraMappingService;
   @Mock ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
   @Mock AwsCommandHelper awsCommandHelper;
-  @Mock K8sStateHelper k8sStateHelper;
   @Mock SecretManager secretManager;
   @Mock SettingsService settingsService;
 
@@ -144,7 +144,12 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
   @Category(UnitTests.class)
   public void getK8sValidationTask() {
     K8sClusterConfig k8sClusterConfig =
-        K8sClusterConfig.builder().cloudProviderName("Direct").clusterName("cluster").namespace("namespace").build();
+        K8sClusterConfig.builder()
+            .cloudProviderName("Direct")
+            .clusterName("cluster")
+            .namespace("namespace")
+            .cloudProvider(KubernetesClusterConfig.builder().delegateName("tag1").useKubernetesDelegate(true).build())
+            .build();
     prepareK8sTaskData(k8sClusterConfig);
     assertThat(client.getValidationTask(getClientContext(true), ACCOUNT_ID))
         .isEqualTo(DelegateTask.builder()
@@ -180,7 +185,7 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
             DelegateTask.builder()
                 .accountId(ACCOUNT_ID)
                 .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
-                .tags(singletonList("tag"))
+                .tags(emptyList())
                 .data(TaskData.builder()
                           .async(false)
                           .taskType(TaskType.CONTAINER_VALIDATION.name())
@@ -215,7 +220,7 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
         .isEqualTo(DelegateTask.builder()
                        .accountId(ACCOUNT_ID)
                        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
-                       .tags(singletonList("tag"))
+                       .tags(emptyList())
                        .data(TaskData.builder()
                                  .async(false)
                                  .taskType(TaskType.CONTAINER_VALIDATION.name())
@@ -255,7 +260,6 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
         .when(settingsService)
         .get(InstanceSyncTestConstants.COMPUTE_PROVIDER_SETTING_ID);
     doReturn(new ArrayList<>()).when(secretManager).getEncryptionDetails(any(AwsConfig.class));
-    doReturn(singletonList("tag")).when(k8sStateHelper).fetchTagsFromK8sCloudProvider(Mockito.any());
   }
   private void prepareAzureTaskData(AzureConfig azureConfig) {
     AzureKubernetesInfrastructureMapping infraMapping = new AzureKubernetesInfrastructureMapping();
@@ -274,7 +278,6 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
         .when(settingsService)
         .get(InstanceSyncTestConstants.COMPUTE_PROVIDER_SETTING_ID);
     doReturn(new ArrayList<>()).when(secretManager).getEncryptionDetails(any(AzureConfig.class));
-    doReturn(singletonList("tag")).when(k8sStateHelper).fetchTagsFromK8sCloudProvider(Mockito.any());
   }
   private void prepareK8sTaskData(K8sClusterConfig k8sClusterConfig) {
     ContainerInfrastructureMapping infraMapping = new DirectKubernetesInfrastructureMapping();
@@ -287,7 +290,6 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
 
     doReturn(infraMapping).when(infraMappingService).get(APP_ID, INFRA_MAPPING_ID);
     doReturn(k8sClusterConfig).when(containerDeploymentManagerHelper).getK8sClusterConfig(infraMapping, null);
-    doReturn(singletonList("tag1")).when(k8sStateHelper).fetchTagsFromK8sTaskParams(Mockito.any());
     doReturn(singletonList("tag2")).when(awsCommandHelper).getAwsConfigTagsFromK8sConfig(Mockito.any());
     mockStatic(UUIDGenerator.class);
     when(UUIDGenerator.generateUuid()).thenReturn("12345");

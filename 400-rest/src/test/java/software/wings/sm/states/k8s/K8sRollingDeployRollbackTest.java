@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.YOGESH;
 
+import static software.wings.common.WorkflowConstants.K8S_DEPLOYMENT_ROLLING_ROLLBACK;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
@@ -18,7 +19,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
@@ -57,9 +57,12 @@ import org.mockito.Mock;
 public class K8sRollingDeployRollbackTest extends WingsBaseTest {
   @Mock private K8sStateHelper k8sStateHelper;
   @Mock private ActivityService activityService;
-  @InjectMocks K8sRollingDeployRollback k8sRollingDeployRollback;
+  @InjectMocks
+  K8sRollingDeployRollback k8sRollingDeployRollback =
+      spy(new K8sRollingDeployRollback(K8S_DEPLOYMENT_ROLLING_ROLLBACK));
 
-  @InjectMocks K8sRollingDeployRollback k8sRollingState;
+  @InjectMocks
+  K8sRollingDeployRollback k8sRollingState = spy(new K8sRollingDeployRollback(K8S_DEPLOYMENT_ROLLING_ROLLBACK));
 
   private final StateExecutionInstance stateExecutionInstance =
       aStateExecutionInstance().displayName(STATE_NAME).build();
@@ -83,9 +86,8 @@ public class K8sRollingDeployRollbackTest extends WingsBaseTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testHandleAbortEvent() {
-    K8sRollingDeployRollback k8sRollingDeployRollbackSpy = spy(k8sRollingDeployRollback);
-    k8sRollingDeployRollbackSpy.handleAbortEvent(context);
-    verify(k8sRollingDeployRollbackSpy, times(1)).handleAbortEvent(any(ExecutionContext.class));
+    k8sRollingDeployRollback.handleAbortEvent(context);
+    verify(k8sRollingDeployRollback, times(1)).handleAbortEvent(any(ExecutionContext.class));
   }
 
   @Test
@@ -100,15 +102,17 @@ public class K8sRollingDeployRollbackTest extends WingsBaseTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testExecute() {
-    when(k8sStateHelper.createK8sActivity(
-             any(ExecutionContext.class), anyString(), anyString(), any(ActivityService.class), anyList()))
-        .thenReturn(new Activity());
     stateExecutionInstance.setContextElements(new LinkedList<>(Arrays.asList(K8sContextElement.builder().build())));
-    ExecutionResponse response = k8sRollingDeployRollback.execute(context);
-    verify(k8sStateHelper, times(1))
+    doReturn(new Activity())
+        .when(k8sRollingState)
         .createK8sActivity(
             any(ExecutionContext.class), anyString(), anyString(), any(ActivityService.class), anyList());
-    verify(k8sStateHelper, times(1)).queueK8sDelegateTask(any(ExecutionContext.class), any(K8sTaskParameters.class));
+    doReturn(ExecutionResponse.builder().build()).when(k8sRollingState).queueK8sDelegateTask(any(), any());
+    ExecutionResponse response = k8sRollingState.execute(context);
+    verify(k8sRollingState, times(1))
+        .createK8sActivity(
+            any(ExecutionContext.class), anyString(), anyString(), any(ActivityService.class), anyList());
+    verify(k8sRollingState, times(1)).queueK8sDelegateTask(any(ExecutionContext.class), any(K8sTaskParameters.class));
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -134,6 +138,9 @@ public class K8sRollingDeployRollbackTest extends WingsBaseTest {
     Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
     stateExecutionMap.put(STATE_NAME, new K8sStateExecutionData());
     stateExecutionInstance.setStateExecutionMap(stateExecutionMap);
+    doReturn(K8sHelmDeploymentElement.builder().build())
+        .when(k8sRollingDeployRollback)
+        .fetchK8sHelmDeploymentElement(any());
 
     ExecutionResponse executionResponse = k8sRollingDeployRollback.handleAsyncResponse(context, response);
 
@@ -173,8 +180,8 @@ public class K8sRollingDeployRollbackTest extends WingsBaseTest {
     K8sStateExecutionData stateExecutionData = K8sStateExecutionData.builder().build();
     HelmChartInfo helmChartInfo = HelmChartInfo.builder().name("name").version("1.2.3").build();
     doReturn(K8sHelmDeploymentElement.builder().previousDeployedHelmChart(helmChartInfo).build())
-        .when(k8sStateHelper)
-        .getK8sHelmDeploymentElement(context);
+        .when(k8sRollingState)
+        .fetchK8sHelmDeploymentElement(context);
     doReturn(stateExecutionData).when(context).getStateExecutionData();
     k8sRollingState.handleAsyncResponse(context, response);
 
@@ -183,7 +190,7 @@ public class K8sRollingDeployRollbackTest extends WingsBaseTest {
 
   private void testK8sHelmElementDoesntExists(ExecutionContextImpl context, Map<String, ResponseData> response) {
     K8sStateExecutionData stateExecutionData = K8sStateExecutionData.builder().build();
-    doReturn(null).when(k8sStateHelper).getK8sHelmDeploymentElement(context);
+    doReturn(null).when(k8sRollingState).fetchK8sHelmDeploymentElement(context);
     k8sRollingState.handleAsyncResponse(context, response);
 
     assertThat(stateExecutionData.getHelmChartInfo()).isNull();

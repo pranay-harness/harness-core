@@ -775,7 +775,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
 
-    when(k8sStateHelper.getPodList(any(GcpKubernetesInfrastructureMapping.class), anyString(), anyString()))
+    when(k8sStateHelper.fetchPodList(any(GcpKubernetesInfrastructureMapping.class), anyString(), anyString()))
         .thenReturn(asList(K8sPod.builder()
                                .name("podName")
                                .namespace("default")
@@ -818,7 +818,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     assertThat(instance.getLastArtifactSourceName()).isEqualTo("image1");
     assertThat(instance.getLastArtifactBuildNum()).isEqualTo("version1");
 
-    when(k8sStateHelper.getPodList(any(GcpKubernetesInfrastructureMapping.class), anyString(), anyString()))
+    when(k8sStateHelper.fetchPodList(any(GcpKubernetesInfrastructureMapping.class), anyString(), anyString()))
         .thenReturn(asList(K8sPod.builder()
                                .name("podName")
                                .namespace("default")
@@ -851,7 +851,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     assertThat(instance.getLastArtifactBuildNum()).isEqualTo("version1");
 
     wingsPersistence.delete(Artifact.class, ARTIFACT_ID);
-    when(k8sStateHelper.getPodList(any(GcpKubernetesInfrastructureMapping.class), anyString(), anyString()))
+    when(k8sStateHelper.fetchPodList(any(GcpKubernetesInfrastructureMapping.class), anyString(), anyString()))
         .thenReturn(asList(K8sPod.builder()
                                .name("podName")
                                .namespace("default")
@@ -944,7 +944,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                         .containerList(asList(K8sContainer.builder().image("nginx:1.1").build()))
                         .build()))
         .when(k8sStateHelper)
-        .getPodList(any(), anyString(), anyString());
+        .fetchPodList(any(), anyString(), anyString());
 
     containerInstanceHandler.handleNewDeployment(
         Arrays.asList(
@@ -980,7 +980,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                         .containerList(asList(K8sContainer.builder().image("nginx:1.1").build()))
                         .build()))
         .when(k8sStateHelper)
-        .getPodList(any(), anyString(), anyString());
+        .fetchPodList(any(), anyString(), anyString());
 
     containerInstanceHandler.handleNewDeployment(
         Arrays.asList(
@@ -1018,7 +1018,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                             K8sContainer.builder().image("sidecar").build()))
                         .build()))
         .when(k8sStateHelper)
-        .getPodList(any(), anyString(), anyString());
+        .fetchPodList(any(), anyString(), anyString());
 
     containerInstanceHandler.handleNewDeployment(
         Arrays.asList(
@@ -1053,7 +1053,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                         .containerList(asList(K8sContainer.builder().image("nginx:1.1").build()))
                         .build()))
         .when(k8sStateHelper)
-        .getPodList(any(), anyString(), anyString());
+        .fetchPodList(any(), anyString(), anyString());
 
     containerInstanceHandler.handleNewDeployment(
         Arrays.asList(
@@ -1088,7 +1088,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                         .containerList(asList(K8sContainer.builder().image("nginx:0.1").build()))
                         .build()))
         .when(k8sStateHelper)
-        .getPodList(any(), anyString(), anyString());
+        .fetchPodList(any(), anyString(), anyString());
 
     containerInstanceHandler.handleNewDeployment(
         Arrays.asList(
@@ -1243,7 +1243,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                         .containerList(asList(K8sContainer.builder().image("nginx:0.1").build()))
                         .build()))
         .when(k8sStateHelper)
-        .getPodList(any(), anyString(), anyString());
+        .fetchPodList(any(), anyString(), anyString());
 
     containerInstanceHandler.handleNewDeployment(
         asList(getDeploymentSummaryWithHelmChartInfo(
@@ -1295,7 +1295,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                      .containerList(singletonList(K8sContainer.builder().image("nginx:0.1").build()))
                      .build()))
         .when(k8sStateHelper)
-        .getPodList(any(), anyString(), anyString());
+        .fetchPodList(any(), anyString(), anyString());
 
     containerInstanceHandler.handleNewDeployment(
         singletonList(getDeploymentSummaryWithHelmChartInfo(helmChartInfoWithVersion("1.1.0"))), false,
@@ -1328,7 +1328,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                                .containerList(singletonList(K8sContainer.builder().image("helm-image:1.0").build()))
                                .build()))
         .when(k8sStateHelper)
-        .getPodList(any(ContainerInfrastructureMapping.class), anyString(), anyString());
+        .fetchPodList(any(ContainerInfrastructureMapping.class), anyString(), anyString());
 
     containerInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID, InstanceSyncFlow.ITERATOR);
 
@@ -1490,7 +1490,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
     doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
-    doReturn(pods).when(k8sStateHelper).getPodList(any(), anyString(), anyString());
+    doReturn(pods).when(k8sStateHelper).fetchPodList(any(), anyString(), anyString());
 
     containerInstanceHandler.handleNewDeployment(
         singletonList(deploymentSummary), false, OnDemandRollbackInfo.builder().onDemandRollback(false).build());
@@ -1561,7 +1561,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
     doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
-    doReturn(pods).when(k8sStateHelper).getPodList(any(), anyString(), anyString());
+    doReturn(pods).when(k8sStateHelper).fetchPodList(any(), anyString(), anyString());
 
     containerInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID, InstanceSyncFlow.ITERATOR);
 

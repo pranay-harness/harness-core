@@ -12,6 +12,7 @@ import static software.wings.sm.states.k8s.K8sApplyState.K8S_APPLY_STATE;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -19,6 +20,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -42,6 +45,7 @@ import software.wings.helpers.ext.k8s.request.K8sApplyTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
+import software.wings.helpers.ext.openshift.OpenShiftManagerService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.sm.ExecutionContext;
@@ -51,7 +55,6 @@ import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.utils.ApplicationManifestUtils;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,11 +71,12 @@ public class K8sApplyStateTest extends WingsBaseTest {
 
   @Mock private K8sStateHelper k8sStateHelper;
   @Mock private ApplicationManifestUtils applicationManifestUtils;
+  @Mock private OpenShiftManagerService openShiftManagerService;
   @Mock private VariableProcessor variableProcessor;
   @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private AppService appService;
   @Mock private ActivityService activityService;
-  @InjectMocks K8sApplyState k8sApplyState;
+  @InjectMocks K8sApplyState k8sApplyState = spy(new K8sApplyState(K8S_APPLY.name()));
 
   private StateExecutionInstance stateExecutionInstance = aStateExecutionInstance().displayName(STATE_NAME).build();
 
@@ -98,19 +102,21 @@ public class K8sApplyStateTest extends WingsBaseTest {
     on(context).set("evaluator", evaluator);
 
     when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(new HashMap<>());
-    when(k8sStateHelper.getContainerInfrastructureMapping(context))
+    when(k8sStateHelper.fetchContainerInfrastructureMapping(context))
         .thenReturn(aGcpKubernetesInfrastructureMapping().build());
-    when(k8sStateHelper.getReleaseName(any(), any())).thenReturn(RELEASE_NAME);
-    when(k8sStateHelper.createDelegateManifestConfig(any(), any()))
-        .thenReturn(K8sDelegateManifestConfig.builder().build());
-    when(k8sStateHelper.getRenderedValuesFiles(any(), any())).thenReturn(Collections.emptyList());
-    when(k8sStateHelper.queueK8sDelegateTask(any(), any())).thenReturn(ExecutionResponse.builder().build());
+    doReturn(RELEASE_NAME).when(k8sApplyState).fetchReleaseName(any(), any());
+    doReturn(K8sDelegateManifestConfig.builder().build())
+        .when(k8sApplyState)
+        .createDelegateManifestConfig(any(), any());
+    doReturn(emptyList()).when(k8sApplyState).fetchRenderedValuesFiles(any(), any());
+    doReturn(ExecutionResponse.builder().build()).when(k8sApplyState).queueK8sDelegateTask(any(), any());
+    doNothing().when(k8sApplyState).storePreviousHelmDeploymentInfo(any(), any());
 
     k8sApplyState.executeK8sTask(context, ACTIVITY_ID);
 
     ArgumentCaptor<K8sTaskParameters> k8sApplyTaskParamsArgumentCaptor =
         ArgumentCaptor.forClass(K8sTaskParameters.class);
-    verify(k8sStateHelper, times(1)).queueK8sDelegateTask(any(), k8sApplyTaskParamsArgumentCaptor.capture());
+    verify(k8sApplyState, times(1)).queueK8sDelegateTask(any(), k8sApplyTaskParamsArgumentCaptor.capture());
     K8sApplyTaskParameters taskParams = (K8sApplyTaskParameters) k8sApplyTaskParamsArgumentCaptor.getValue();
 
     assertThat(taskParams.getReleaseName()).isEqualTo(RELEASE_NAME);
@@ -167,8 +173,11 @@ public class K8sApplyStateTest extends WingsBaseTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testExec() {
+    doReturn(ExecutionResponse.builder().build())
+        .when(k8sApplyState)
+        .executeWrapperWithManifest(any(K8sStateExecutor.class), any(ExecutionContext.class), anyLong());
     k8sApplyState.execute(context);
-    verify(k8sStateHelper, times(1))
+    verify(k8sApplyState, times(1))
         .executeWrapperWithManifest(any(K8sStateExecutor.class), any(ExecutionContext.class), anyLong());
   }
 
@@ -176,8 +185,11 @@ public class K8sApplyStateTest extends WingsBaseTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testHandleAsyncResponse() {
+    doReturn(ExecutionResponse.builder().build())
+        .when(k8sApplyState)
+        .handleAsyncResponseWrapper(any(K8sStateExecutor.class), any(ExecutionContext.class), anyMap());
     k8sApplyState.handleAsyncResponse(context, new HashMap<>());
-    verify(k8sStateHelper, times(1))
+    verify(k8sApplyState, times(1))
         .handleAsyncResponseWrapper(any(K8sStateExecutor.class), any(ExecutionContext.class), anyMap());
   }
 
@@ -214,17 +226,15 @@ public class K8sApplyStateTest extends WingsBaseTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testValidateParameters() {
-    K8sApplyState k8sApplyStateSpy = spy(k8sApplyState);
-    k8sApplyStateSpy.validateParameters(context);
-    verify(k8sApplyStateSpy, times(1)).validateParameters(any(ExecutionContext.class));
+    k8sApplyState.validateParameters(context);
+    verify(k8sApplyState, times(1)).validateParameters(any(ExecutionContext.class));
   }
 
   @Test
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testHandleAbortEvent() {
-    K8sApplyState k8sApplyStateSpy = spy(k8sApplyState);
-    k8sApplyStateSpy.handleAbortEvent(context);
-    verify(k8sApplyStateSpy, times(1)).handleAbortEvent(any(ExecutionContext.class));
+    k8sApplyState.handleAbortEvent(context);
+    verify(k8sApplyState, times(1)).handleAbortEvent(any(ExecutionContext.class));
   }
 }

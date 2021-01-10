@@ -3,7 +3,6 @@ package software.wings.sm.states.k8s;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.sm.StateType.K8S_DELETE;
-import static software.wings.sm.states.k8s.K8sStateHelper.getSafeTimeoutInMillis;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -42,7 +41,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.utils.StateTimeoutUtils;
 import software.wings.stencils.DefaultValue;
@@ -61,7 +59,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Slf4j
-public class K8sDelete extends State implements K8sStateExecutor {
+public class K8sDelete extends AbstractK8sState {
   @Inject private transient ConfigService configService;
   @Inject private transient ServiceTemplateService serviceTemplateService;
   @Inject private transient ActivityService activityService;
@@ -71,7 +69,6 @@ public class K8sDelete extends State implements K8sStateExecutor {
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
   @Inject private transient DelegateService delegateService;
   @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
-  @Inject private transient K8sStateHelper k8sStateHelper;
   @Inject private transient ApplicationManifestService applicationManifestService;
   @Inject private transient AwsCommandHelper awsCommandHelper;
 
@@ -106,18 +103,18 @@ public class K8sDelete extends State implements K8sStateExecutor {
   }
 
   private ExecutionResponse executeWithManifest(ExecutionContext context) {
-    return k8sStateHelper.executeWrapperWithManifest(this, context, getSafeTimeoutInMillis(getTimeoutMillis()));
+    return executeWrapperWithManifest(this, context, K8sStateHelper.fetchSafeTimeoutInMillis(getTimeoutMillis()));
   }
 
   private ExecutionResponse executeWithoutManifest(ExecutionContext context) {
     try {
-      ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
+      ContainerInfrastructureMapping infraMapping = k8sStateHelper.fetchContainerInfrastructureMapping(context);
 
       Activity activity = createActivity(context);
 
       K8sTaskParameters k8sTaskParameters = K8sDeleteTaskParameters.builder()
                                                 .activityId(activity.getUuid())
-                                                .releaseName(k8sStateHelper.getReleaseName(context, infraMapping))
+                                                .releaseName(fetchReleaseName(context, infraMapping))
                                                 .commandName(K8S_DELETE_COMMAND_NAME)
                                                 .k8sTaskType(K8sTaskType.DELETE)
                                                 .resources(context.renderExpression(this.resources))
@@ -125,7 +122,7 @@ public class K8sDelete extends State implements K8sStateExecutor {
                                                 .timeoutIntervalInMin(10)
                                                 .build();
 
-      return k8sStateHelper.queueK8sDelegateTask(context, k8sTaskParameters);
+      return queueK8sDelegateTask(context, k8sTaskParameters);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -135,7 +132,7 @@ public class K8sDelete extends State implements K8sStateExecutor {
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    return k8sStateHelper.handleAsyncResponseWrapper(this, context, response);
+    return handleAsyncResponseWrapper(this, context, response);
   }
 
   @Override
@@ -180,25 +177,25 @@ public class K8sDelete extends State implements K8sStateExecutor {
 
   @Override
   public ExecutionResponse executeK8sTask(ExecutionContext context, String activityId) {
-    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = k8sStateHelper.getApplicationManifests(context);
-    ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = fetchApplicationManifests(context);
+    ContainerInfrastructureMapping infraMapping = k8sStateHelper.fetchContainerInfrastructureMapping(context);
 
     renderStateVariables(context);
     K8sTaskParameters k8sTaskParameters;
     k8sTaskParameters = K8sDeleteTaskParameters.builder()
                             .activityId(activityId)
-                            .releaseName(k8sStateHelper.getReleaseName(context, infraMapping))
+                            .releaseName(fetchReleaseName(context, infraMapping))
                             .commandName(K8S_DELETE_COMMAND_NAME)
                             .k8sTaskType(K8sTaskType.DELETE)
                             .resources(resources)
                             .deleteNamespacesForRelease(deleteNamespacesForRelease)
                             .filePaths(filePaths)
                             .timeoutIntervalInMin(stateTimeoutInMinutes)
-                            .k8sDelegateManifestConfig(k8sStateHelper.createDelegateManifestConfig(
-                                context, appManifestMap.get(K8sValuesLocation.Service)))
-                            .valuesYamlList(k8sStateHelper.getRenderedValuesFiles(appManifestMap, context))
+                            .k8sDelegateManifestConfig(
+                                createDelegateManifestConfig(context, appManifestMap.get(K8sValuesLocation.Service)))
+                            .valuesYamlList(fetchRenderedValuesFiles(appManifestMap, context))
                             .build();
-    return k8sStateHelper.queueK8sDelegateTask(context, k8sTaskParameters);
+    return queueK8sDelegateTask(context, k8sTaskParameters);
   }
 
   @Override
@@ -212,7 +209,7 @@ public class K8sDelete extends State implements K8sStateExecutor {
           ? ExecutionStatus.SUCCESS
           : ExecutionStatus.FAILED;
 
-      activityService.updateStatus(k8sStateHelper.getActivityId(context), appId, executionStatus);
+      activityService.updateStatus(fetchActivityId(context), appId, executionStatus);
 
       K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
       stateExecutionData.setStatus(executionStatus);
@@ -242,7 +239,7 @@ public class K8sDelete extends State implements K8sStateExecutor {
   }
 
   private Activity createActivity(ExecutionContext context) {
-    return k8sStateHelper.createK8sActivity(context, K8S_DELETE_COMMAND_NAME, getStateType(), activityService,
+    return createK8sActivity(context, K8S_DELETE_COMMAND_NAME, getStateType(), activityService,
         ImmutableList.of(new K8sDummyCommandUnit(K8sCommandUnitConstants.Init),
             new K8sDummyCommandUnit(K8sCommandUnitConstants.Delete)));
   }

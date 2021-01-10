@@ -17,11 +17,15 @@ import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -48,13 +52,13 @@ import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.helpers.ext.k8s.response.K8sBlueGreenDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.intfc.ActivityService;
+import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.utils.ApplicationManifestUtils;
 
 import com.google.common.collect.ImmutableMap;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,7 +77,8 @@ public class K8sBlueGreenDeployTest extends WingsBaseTest {
   @Mock private VariableProcessor variableProcessor;
   @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private ActivityService activityService;
-  @InjectMocks private K8sBlueGreenDeploy k8sBlueGreenDeploy;
+  @InjectMocks
+  private K8sBlueGreenDeploy k8sBlueGreenDeploy = spy(new K8sBlueGreenDeploy(K8S_BLUE_GREEN_DEPLOY.name()));
 
   private StateExecutionInstance stateExecutionInstance = aStateExecutionInstance().displayName(STATE_NAME).build();
 
@@ -94,24 +99,25 @@ public class K8sBlueGreenDeployTest extends WingsBaseTest {
     on(context).set("evaluator", evaluator);
 
     when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(new HashMap<>());
-    when(k8sStateHelper.getContainerInfrastructureMapping(context))
+    when(k8sStateHelper.fetchContainerInfrastructureMapping(context))
         .thenReturn(aGcpKubernetesInfrastructureMapping().build());
-    when(k8sStateHelper.getReleaseName(any(), any())).thenReturn(RELEASE_NAME);
-    when(k8sStateHelper.createDelegateManifestConfig(any(), any()))
-        .thenReturn(K8sDelegateManifestConfig.builder().build());
-    when(k8sStateHelper.getRenderedValuesFiles(any(), any())).thenReturn(Collections.emptyList());
-    when(k8sStateHelper.queueK8sDelegateTask(any(), any())).thenReturn(ExecutionResponse.builder().build());
+    doReturn(RELEASE_NAME).when(k8sBlueGreenDeploy).fetchReleaseName(any(), any());
+    doReturn(K8sDelegateManifestConfig.builder().build())
+        .when(k8sBlueGreenDeploy)
+        .createDelegateManifestConfig(any(), any());
+    doReturn(emptyList()).when(k8sBlueGreenDeploy).fetchRenderedValuesFiles(any(), any());
+    doReturn(ExecutionResponse.builder().build()).when(k8sBlueGreenDeploy).queueK8sDelegateTask(any(), any());
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().skipVersioningForAllK8sObjects(true).storeType(Local).build();
     Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap = new HashMap<>();
     applicationManifestMap.put(K8sValuesLocation.Service, applicationManifest);
-    when(k8sStateHelper.getApplicationManifests(any())).thenReturn(applicationManifestMap);
+    doReturn(applicationManifestMap).when(k8sBlueGreenDeploy).fetchApplicationManifests(any());
 
     k8sBlueGreenDeploy.executeK8sTask(context, ACTIVITY_ID);
 
     ArgumentCaptor<K8sTaskParameters> k8sApplyTaskParamsArgumentCaptor =
         ArgumentCaptor.forClass(K8sTaskParameters.class);
-    verify(k8sStateHelper, times(1)).queueK8sDelegateTask(any(), k8sApplyTaskParamsArgumentCaptor.capture());
+    verify(k8sBlueGreenDeploy, times(1)).queueK8sDelegateTask(any(), k8sApplyTaskParamsArgumentCaptor.capture());
     K8sBlueGreenDeployTaskParameters taskParams =
         (K8sBlueGreenDeployTaskParameters) k8sApplyTaskParamsArgumentCaptor.getValue();
 
@@ -147,8 +153,12 @@ public class K8sBlueGreenDeployTest extends WingsBaseTest {
             .build();
 
     doReturn(InstanceElementListParam.builder().build())
-        .when(k8sStateHelper)
-        .getInstanceElementListParam(anyListOf(K8sPod.class));
+        .when(k8sBlueGreenDeploy)
+        .fetchInstanceElementListParam(anyListOf(K8sPod.class));
+    doReturn(emptyList()).when(k8sBlueGreenDeploy).fetchInstanceStatusSummaries(any(), any());
+    doNothing().when(k8sBlueGreenDeploy).saveK8sElement(any(), any());
+    doNothing().when(k8sBlueGreenDeploy).saveInstanceInfoToSweepingOutput(any(), any(), any());
+    doReturn(APP_ID).when(k8sBlueGreenDeploy).fetchAppId(context);
     ExecutionResponse executionResponse =
         k8sBlueGreenDeploy.handleAsyncResponseForK8sTask(context, ImmutableMap.of("response", taskExecutionResponse));
     K8sStateExecutionData executionData = (K8sStateExecutionData) executionResponse.getStateExecutionData();
@@ -188,10 +198,15 @@ public class K8sBlueGreenDeployTest extends WingsBaseTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testDelegateExecuteToK8sStateHelper() {
+    doReturn(ExecutionResponse.builder().build())
+        .when(k8sBlueGreenDeploy)
+        .executeWrapperWithManifest(any(K8sStateExecutor.class), any(ExecutionContext.class), anyLong());
+
     k8sBlueGreenDeploy.execute(context);
-    verify(k8sStateHelper, times(1))
-        .executeWrapperWithManifest(
-            k8sBlueGreenDeploy, context, K8sStateHelper.getSafeTimeoutInMillis(k8sBlueGreenDeploy.getTimeoutMillis()));
+
+    verify(k8sBlueGreenDeploy, times(1))
+        .executeWrapperWithManifest(k8sBlueGreenDeploy, context,
+            K8sStateHelper.fetchSafeTimeoutInMillis(k8sBlueGreenDeploy.getTimeoutMillis()));
   }
 
   @Test
@@ -204,8 +219,8 @@ public class K8sBlueGreenDeployTest extends WingsBaseTest {
 
     stateExecutionInstance.setStateExecutionMap(
         ImmutableMap.of(stateExecutionInstance.getDisplayName(), stateExecutionData));
-    doReturn(ACTIVITY_ID).when(k8sStateHelper).getActivityId(context);
-    doReturn(APP_ID).when(k8sStateHelper).getAppId(context);
+    doReturn(ACTIVITY_ID).when(k8sBlueGreenDeploy).fetchActivityId(context);
+    doReturn(APP_ID).when(k8sBlueGreenDeploy).fetchAppId(context);
 
     ExecutionResponse executionResponse =
         k8sBlueGreenDeploy.handleAsyncResponseForK8sTask(context, ImmutableMap.of(ACTIVITY_ID, taskExecutionResponse));

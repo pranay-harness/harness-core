@@ -1,7 +1,6 @@
 package software.wings.sm.states.k8s;
 
 import static software.wings.sm.StateType.K8S_CANARY_DEPLOY;
-import static software.wings.sm.states.k8s.K8sStateHelper.getSafeTimeoutInMillis;
 
 import static java.lang.Integer.parseInt;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -39,7 +38,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.utils.StateTimeoutUtils;
 import software.wings.stencils.DefaultValue;
@@ -55,7 +53,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class K8sCanaryDeploy extends State implements K8sStateExecutor {
+public class K8sCanaryDeploy extends AbstractK8sState {
   @Inject private transient ActivityService activityService;
   @Inject private transient SecretManager secretManager;
   @Inject private transient SettingsService settingsService;
@@ -63,7 +61,6 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
   @Inject private transient DelegateService delegateService;
   @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
-  @Inject private transient K8sStateHelper k8sStateHelper;
   @Inject private transient ApplicationManifestService applicationManifestService;
   @Inject private transient AwsCommandHelper awsCommandHelper;
   @Inject private ApplicationManifestUtils applicationManifestUtils;
@@ -98,43 +95,43 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
   @Override
   public void validateParameters(ExecutionContext context) {
     parseInt(context.renderExpression(this.instances));
-    k8sStateHelper.validateK8sV2TypeServiceUsed(context);
+    validateK8sV2TypeServiceUsed(context);
   }
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    return k8sStateHelper.executeWrapperWithManifest(this, context, getSafeTimeoutInMillis(getTimeoutMillis()));
+    return executeWrapperWithManifest(this, context, K8sStateHelper.fetchSafeTimeoutInMillis(getTimeoutMillis()));
   }
 
   @Override
   public ExecutionResponse executeK8sTask(ExecutionContext context, String activityId) {
-    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = k8sStateHelper.getApplicationManifests(context);
-    ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
-    k8sStateHelper.storePreviousHelmDeploymentInfo(context, appManifestMap.get(K8sValuesLocation.Service));
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = fetchApplicationManifests(context);
+    ContainerInfrastructureMapping infraMapping = k8sStateHelper.fetchContainerInfrastructureMapping(context);
+    storePreviousHelmDeploymentInfo(context, appManifestMap.get(K8sValuesLocation.Service));
 
     K8sTaskParameters k8sTaskParameters =
         K8sCanaryDeployTaskParameters.builder()
             .activityId(activityId)
-            .releaseName(k8sStateHelper.getReleaseName(context, infraMapping))
+            .releaseName(fetchReleaseName(context, infraMapping))
             .commandName(K8S_CANARY_DEPLOY_COMMAND_NAME)
             .k8sTaskType(K8sTaskType.CANARY_DEPLOY)
             .instances(Integer.valueOf(context.renderExpression(this.instances)))
             .instanceUnitType(this.instanceUnitType)
             .timeoutIntervalInMin(stateTimeoutInMinutes)
             .k8sDelegateManifestConfig(
-                k8sStateHelper.createDelegateManifestConfig(context, appManifestMap.get(K8sValuesLocation.Service)))
-            .valuesYamlList(k8sStateHelper.getRenderedValuesFiles(appManifestMap, context))
+                createDelegateManifestConfig(context, appManifestMap.get(K8sValuesLocation.Service)))
+            .valuesYamlList(fetchRenderedValuesFiles(appManifestMap, context))
             .skipDryRun(skipDryRun)
             .skipVersioningForAllK8sObjects(
                 appManifestMap.get(K8sValuesLocation.Service).getSkipVersioningForAllK8sObjects())
             .build();
 
-    return k8sStateHelper.queueK8sDelegateTask(context, k8sTaskParameters);
+    return queueK8sDelegateTask(context, k8sTaskParameters);
   }
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    return k8sStateHelper.handleAsyncResponseWrapper(this, context, response);
+    return handleAsyncResponseWrapper(this, context, response);
   }
 
   @Override
@@ -160,7 +157,7 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
             (K8sCanaryDeployResponse) executionResponse.getK8sTaskResponse();
 
         if (isNotBlank(k8sCanaryDeployResponse.getCanaryWorkload())) {
-          k8sStateHelper.saveK8sElement(
+          saveK8sElement(
               context, K8sElement.builder().canaryWorkload(k8sCanaryDeployResponse.getCanaryWorkload()).build());
         }
       }
@@ -182,13 +179,13 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
     stateExecutionData.setTargetInstances(targetInstances);
     stateExecutionData.setHelmChartInfo(k8sCanaryDeployResponse.getHelmChartInfo());
 
-    final List<K8sPod> newPods = k8sStateHelper.getNewPods(k8sCanaryDeployResponse.getK8sPodList());
-    InstanceElementListParam instanceElementListParam = k8sStateHelper.getInstanceElementListParam(newPods);
+    final List<K8sPod> newPods = fetchNewPods(k8sCanaryDeployResponse.getK8sPodList());
+    InstanceElementListParam instanceElementListParam = fetchInstanceElementListParam(newPods);
 
     stateExecutionData.setNewInstanceStatusSummaries(
-        k8sStateHelper.getInstanceStatusSummaries(instanceElementListParam.getInstanceElements(), executionStatus));
+        fetchInstanceStatusSummaries(instanceElementListParam.getInstanceElements(), executionStatus));
 
-    k8sStateHelper.saveK8sElement(context,
+    saveK8sElement(context,
         K8sElement.builder()
             .releaseName(stateExecutionData.getReleaseName())
             .releaseNumber(k8sCanaryDeployResponse.getReleaseNumber())
@@ -197,9 +194,8 @@ public class K8sCanaryDeploy extends State implements K8sStateExecutor {
             .canaryWorkload(k8sCanaryDeployResponse.getCanaryWorkload())
             .build());
 
-    k8sStateHelper.saveInstanceInfoToSweepingOutput(context,
-        k8sStateHelper.getInstanceElementList(k8sCanaryDeployResponse.getK8sPodList(), false),
-        k8sStateHelper.getInstanceDetails(k8sCanaryDeployResponse.getK8sPodList(), false));
+    saveInstanceInfoToSweepingOutput(context, fetchInstanceElementList(k8sCanaryDeployResponse.getK8sPodList(), false),
+        fetchInstanceDetails(k8sCanaryDeployResponse.getK8sPodList(), false));
 
     return ExecutionResponse.builder()
         .executionStatus(executionStatus)
