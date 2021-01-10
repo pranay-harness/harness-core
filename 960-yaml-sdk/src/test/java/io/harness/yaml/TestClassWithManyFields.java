@@ -22,7 +22,7 @@ public class TestClassWithManyFields {
   @NoArgsConstructor
   @AllArgsConstructor
   @FieldDefaults(level = AccessLevel.PUBLIC)
-  public static class ClassWithoutApiModelOverride extends TestAbstractClass {
+  public static class ClassWithoutApiModelOverride1 extends TestAbstractClass {
     String testString;
     @YamlSchemaTypes(value = {list, map}, defaultType = list) TestRandomClass1 testRandomClass1;
   }
@@ -32,8 +32,8 @@ public class TestClassWithManyFields {
   @NoArgsConstructor
   @AllArgsConstructor
   @FieldDefaults(level = AccessLevel.PUBLIC)
-  public static class ClassWhichContainsInterface {
-    @NotNull Types type;
+  public static class ClassWhichContainsInterface1 {
+    @NotNull Types1 type;
     @JsonProperty("spec")
     @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
@@ -45,7 +45,7 @@ public class TestClassWithManyFields {
   @AllArgsConstructor
   @FieldDefaults(level = AccessLevel.PUBLIC)
   @JsonSubTypes(
-      { @JsonSubTypes.Type(value = ClassWithoutApiModelOverride.class, name = "ClassWithoutApiModelOverride") })
+      { @JsonSubTypes.Type(value = ClassWithoutApiModelOverride1.class, name = "ClassWithoutApiModelOverride1") })
   public static class TestAbstractClass {
     @YamlSchemaTypes({string, number}) TestRandomClass2 abstractClass1;
   }
@@ -69,5 +69,5 @@ public class TestClassWithManyFields {
     TestRandomClass1 testRandomClass1;
   }
 
-  public enum Types { ClassWithoutApiModelOverride }
+  public enum Types1 { ClassWithoutApiModelOverride1 }
 }
