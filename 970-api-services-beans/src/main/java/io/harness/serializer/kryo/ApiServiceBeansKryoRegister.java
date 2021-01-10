@@ -51,12 +51,7 @@ import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.shell.AccessType;
-import io.harness.shell.AuthenticationScheme;
-import io.harness.shell.CommandExecutionData;
-import io.harness.shell.KerberosConfig;
-import io.harness.shell.ScriptType;
-import io.harness.shell.ShellExecutionData;
+import io.harness.shell.*;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 
@@ -233,5 +228,6 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(TfVarSource.class, 1434);
     kryo.register(TfVarSourceType.class, 1435);
     kryo.register(InstanceDetails.AZURE_WEBAPP.class, 1437);
+    kryo.register(ExecuteCommandResponse.class, 1438);
   }
 }

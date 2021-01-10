@@ -238,6 +238,8 @@ import io.harness.delegate.task.k8s.K8sRollingDeployResponse;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
+import io.harness.delegate.task.shell.ShellScriptTaskParametersNG;
+import io.harness.delegate.task.shell.ShellScriptTaskResponseNG;
 import io.harness.delegate.task.spotinst.request.SpotInstDeployTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstGetElastigroupJsonParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstListElastigroupInstancesParameters;
@@ -551,5 +553,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(CEAwsFeatures.class, 19456);
     kryo.register(DeploymentSlotData.class, 19457);
     kryo.register(ConnectivityStatus.class, 19458);
+    kryo.register(ShellScriptTaskParametersNG.class, 19463);
+    kryo.register(ShellScriptTaskResponseNG.class, 19464);
   }
 }

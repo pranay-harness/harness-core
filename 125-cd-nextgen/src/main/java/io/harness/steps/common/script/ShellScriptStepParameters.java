@@ -21,10 +21,10 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("shellScriptStepParameters")
 public class ShellScriptStepParameters implements StepParameters {
   @NotNull ShellType shell;
-  ShellScriptSourceWrapper source;
+  @NotNull ShellScriptSourceWrapper source;
   List<NGVariable> environmentVariables;
   List<NGVariable> outputVariables;
   ExecutionTarget executionTarget;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
-  @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) ParameterField<Boolean> onDelegate;
+  @NotNull @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) ParameterField<Boolean> onDelegate;
 }

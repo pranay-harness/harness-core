@@ -2,6 +2,7 @@ package io.harness.cdng.pipeline;
 
 import static io.harness.ng.core.mapper.TagMapper.convertToList;
 import static io.harness.rule.OwnerRule.ARCHIT;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,6 +29,9 @@ import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.validation.InputSetValidatorType;
 import io.harness.rule.Owner;
+import io.harness.steps.common.script.ShellScriptInlineSource;
+import io.harness.steps.common.script.ShellScriptStepParameters;
+import io.harness.steps.common.script.ShellType;
 import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StageElement;
 import io.harness.yaml.core.StepElement;
@@ -292,5 +296,20 @@ public class PipelineYamlTest extends CategoryTest {
     List<String> variablesUseList = stageOverrides.getUseVariableOverrideSets().getValue();
     assertThat(variablesUseList.size()).isEqualTo(1);
     assertThat(variablesUseList.get(0)).isEqualTo("VariableoverrideSet");
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void testShellScriptStepSerialization() throws IOException {
+    ClassLoader classLoader = this.getClass().getClassLoader();
+    final URL testFile = classLoader.getResource("cdng/shellScriptStep.yml");
+    ShellScriptStepParameters shellScriptStepParameters =
+        YamlPipelineUtils.read(testFile, ShellScriptStepParameters.class);
+    assertThat(shellScriptStepParameters.getOnDelegate().getValue()).isEqualTo(true);
+    assertThat(shellScriptStepParameters.getShell()).isEqualTo(ShellType.Bash);
+    assertThat(shellScriptStepParameters.getSource().getType()).isEqualTo("Inline");
+    assertThat(((ShellScriptInlineSource) shellScriptStepParameters.getSource().getSpec()).getScript().getValue())
+        .isEqualTo("echo hi");
   }
 }
