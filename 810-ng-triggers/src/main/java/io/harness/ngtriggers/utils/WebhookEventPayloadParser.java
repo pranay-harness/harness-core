@@ -58,7 +58,7 @@ public class WebhookEventPayloadParser {
                                                               .build());
       log.info("Finished parsing webhook payload");
     } catch (StatusRuntimeException e) {
-      log.error("Failed to parse webhook payload {}", triggerWebhookEvent.getPayload());
+      log.error("Failed to parse webhook payload");
       throw e;
     }
     return parseWebhookResponse;

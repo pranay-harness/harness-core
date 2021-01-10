@@ -104,7 +104,6 @@ public class GitWebhookEventToTriggerMapper implements WebhookEventToTriggerMapp
       WebhookPayloadData webhookPayloadData = webhookEventPayloadParser.parseEvent(triggerWebhookEvent);
       builder.webhookPayloadData(webhookPayloadData).build();
     } catch (Exception e) {
-      log.error("Exception while invoking SCM service for webhook trigger payload parsing", e);
       builder.exceptionOccured(true)
           .exception(e)
           .webhookPayloadData(WebhookPayloadData.builder().originalEvent(triggerWebhookEvent).build())

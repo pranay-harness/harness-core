@@ -52,7 +52,7 @@ public class TriggerWebhookExecutionServiceImpl
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("WebhookEventProcessor")
             .poolSize(2)
-            .interval(ofSeconds(10))
+            .interval(ofSeconds(5))
             .build(),
         TriggerWebhookExecutionService.class,
         MongoPersistenceIterator.<TriggerWebhookEvent, SpringFilterExpander>builder()
@@ -106,7 +106,8 @@ public class TriggerWebhookExecutionServiceImpl
       return true;
     }
     if (responseList.size() == 1 && responseList.get(0).getFinalStatus() == INVALID_PAYLOAD) {
-      log.info("Unknown/Unsupported Webhook Event encountered for accountId: %s", responseList.get(0).getAccountId());
+      log.info("Unknown/Unsupported Webhook Event encountered for accountId: {}. Exception received: {}",
+          responseList.get(0).getAccountId(), responseList.get(0).getMessage());
       return true;
     }
     return false;
@@ -116,6 +117,7 @@ public class TriggerWebhookExecutionServiceImpl
     if (isScmConnectivityFailed(result) && event.getAttemptCount() < 2) {
       event.setAttemptCount(event.getAttemptCount() + 1);
       updateTriggerEventProcessingStatus(event, false);
+      log.error("SCM service is unreachable. Please verify the service is running.");
     } else {
       triggerEventHistoryRepository.save(WebhookEventResponseHelper.toEntity(result.getResponses().get(0)));
       ngTriggerService.deleteTriggerWebhookEvent(event);

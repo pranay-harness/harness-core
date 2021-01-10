@@ -7,17 +7,18 @@ import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.BT_PULL_R
 
 import static java.util.stream.Collectors.toSet;
 
-import io.harness.expression.ExpressionEvaluator;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.beans.source.webhook.WebhookAction;
 import io.harness.ngtriggers.beans.source.webhook.WebhookEvent;
 import io.harness.ngtriggers.beans.source.webhook.WebhookPayloadCondition;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
 import io.harness.ngtriggers.conditionchecker.ConditionEvaluator;
-import io.harness.ngtriggers.functor.PayloadFunctor;
+import io.harness.ngtriggers.expressions.TriggerExpressionEvaluator;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
+import io.harness.pms.contracts.triggers.TriggerPayload;
 
 import com.google.common.annotations.VisibleForTesting;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -92,6 +93,7 @@ public class WebhookTriggerFilterUtil {
     String standard;
     String operator;
     Map<String, Object> context = null;
+    TriggerExpressionEvaluator triggerExpressionEvaluator = null;
     boolean allConditionsMatched = true;
     for (WebhookPayloadCondition webhookPayloadCondition : payloadConditions) {
       standard = webhookPayloadCondition.getValue();
@@ -102,10 +104,11 @@ public class WebhookTriggerFilterUtil {
       } else if (webhookPayloadCondition.getKey().equals("targetBranch")) {
         input = webhookPayloadData.getWebhookEvent().getBaseAttributes().getTarget();
       } else {
-        if (context == null) {
-          context = generateContext(webhookPayloadData.getOriginalEvent().getPayload());
+        if (triggerExpressionEvaluator == null) {
+          triggerExpressionEvaluator =
+              generatorPMSExpressionEvaluator(webhookPayloadData.getOriginalEvent().getPayload());
         }
-        input = readFromPayload(webhookPayloadCondition.getKey(), context);
+        input = readFromPayload(webhookPayloadCondition.getKey(), triggerExpressionEvaluator);
       }
 
       allConditionsMatched = allConditionsMatched && ConditionEvaluator.evaluate(input, standard, operator);
@@ -118,17 +121,11 @@ public class WebhookTriggerFilterUtil {
   }
 
   @VisibleForTesting
-  String readFromPayload(String key, Map<String, Object> context) {
-    ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
-    return expressionEvaluator.substitute(key, context);
+  String readFromPayload(String key, TriggerExpressionEvaluator triggerExpressionEvaluator) {
+    return triggerExpressionEvaluator.renderExpression(key);
   }
 
-  @VisibleForTesting
-  Map<String, Object> generateContext(String payload) {
-    PayloadFunctor payloadFunctor = new PayloadFunctor(payload);
-
-    Map<String, Object> context = new HashMap<>();
-    context.put("eventPayload", payloadFunctor);
-    return context;
+  TriggerExpressionEvaluator generatorPMSExpressionEvaluator(String payload) {
+    return new TriggerExpressionEvaluator(payload);
   }
 }
