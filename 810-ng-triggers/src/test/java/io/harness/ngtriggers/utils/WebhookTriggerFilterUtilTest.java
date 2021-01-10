@@ -22,6 +22,7 @@ import io.harness.ngtriggers.beans.scm.WebhookPayloadData.WebhookPayloadDataBuil
 import io.harness.ngtriggers.beans.source.webhook.WebhookAction;
 import io.harness.ngtriggers.beans.source.webhook.WebhookPayloadCondition;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
+import io.harness.ngtriggers.expressions.TriggerExpressionEvaluator;
 import io.harness.rule.Owner;
 
 import java.util.ArrayList;
@@ -48,18 +49,19 @@ public class WebhookTriggerFilterUtilTest extends CategoryTest {
   @Category(UnitTests.class)
   public void parseEventTest() {
     int i = 0;
-    Map<String, Object> context = WebhookTriggerFilterUtil.generateContext(payload);
-    assertThat(WebhookTriggerFilterUtil.readFromPayload("${eventPayload.event_type}", context))
+    TriggerExpressionEvaluator triggerExpressionEvaluator =
+        WebhookTriggerFilterUtil.generatorPMSExpressionEvaluator(payload);
+    assertThat(WebhookTriggerFilterUtil.readFromPayload("<+eventPayload.event_type>", triggerExpressionEvaluator))
         .isEqualTo("merge_request");
-    assertThat(WebhookTriggerFilterUtil.readFromPayload("${eventPayload.object_kind}", context))
+    assertThat(WebhookTriggerFilterUtil.readFromPayload("<+eventPayload.object_kind>", triggerExpressionEvaluator))
         .isEqualTo("merge_request");
-    assertThat(WebhookTriggerFilterUtil.readFromPayload("${eventPayload.user.name}", context))
+    assertThat(WebhookTriggerFilterUtil.readFromPayload("<+eventPayload.user.name>", triggerExpressionEvaluator))
         .isEqualTo("charles grant");
-    assertThat(WebhookTriggerFilterUtil.readFromPayload("${eventPayload.user.username}", context))
+    assertThat(WebhookTriggerFilterUtil.readFromPayload("<+eventPayload.user.username>", triggerExpressionEvaluator))
         .isEqualTo("charles.grant");
-    assertThat(WebhookTriggerFilterUtil.readFromPayload("${eventPayload.user.avatar_url}", context))
+    assertThat(WebhookTriggerFilterUtil.readFromPayload("<+eventPayload.user.avatar_url>", triggerExpressionEvaluator))
         .isEqualTo("https://secure.gravatar.com/avatar/8e");
-    assertThat(WebhookTriggerFilterUtil.readFromPayload("${eventPayload.user.email}", context))
+    assertThat(WebhookTriggerFilterUtil.readFromPayload("<+eventPayload.user.email>", triggerExpressionEvaluator))
         .isEqualTo("cgrant@gmail.com");
   }
 
@@ -106,27 +108,27 @@ public class WebhookTriggerFilterUtilTest extends CategoryTest {
                 WebhookPayloadCondition.builder().key("sourceBranch").operator("not equals").value("qa").build(),
                 WebhookPayloadCondition.builder().key("targetBranch").operator("regex").value("^master$").build(),
                 WebhookPayloadCondition.builder()
-                    .key("${eventPayload.event_type}")
+                    .key("<+eventPayload.event_type>")
                     .operator("in")
                     .value("pull_request, merge_request")
                     .build(),
                 WebhookPayloadCondition.builder()
-                    .key("${eventPayload.object_kind}")
+                    .key("<+eventPayload.object_kind>")
                     .operator("not in")
                     .value("push, package")
                     .build(),
                 WebhookPayloadCondition.builder()
-                    .key("${eventPayload.user.name}")
+                    .key("<+eventPayload.user.name>")
                     .operator("starts with")
                     .value("charles")
                     .build(),
                 WebhookPayloadCondition.builder()
-                    .key("${eventPayload.user.username}")
+                    .key("<+eventPayload.user.username>")
                     .operator("ends with")
                     .value("grant")
                     .build(),
                 WebhookPayloadCondition.builder()
-                    .key("${eventPayload.user.avatar_url}")
+                    .key("<+eventPayload.user.avatar_url>")
                     .operator("contains")
                     .value("secure.gravatar.com")
                     .build()))
