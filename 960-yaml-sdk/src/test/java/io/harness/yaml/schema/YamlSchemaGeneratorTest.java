@@ -16,7 +16,10 @@ import io.harness.rule.Owner;
 import io.harness.yaml.TestClassWithManyFields;
 import io.harness.yaml.schema.beans.YamlSchemaConfiguration;
 
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
@@ -67,7 +70,7 @@ public class YamlSchemaGeneratorTest extends CategoryTest {
     JacksonClassHelper jacksonClassHelper = new JacksonClassHelper();
     yamlSchemaGenerator = Mockito.spy(new YamlSchemaGenerator(jacksonClassHelper, swaggerGenerator));
     Set<Class<?>> schemaClasses = new HashSet<>();
-    schemaClasses.add(TestClassWithManyFields.ClassWhichContainsInterface.class);
+    schemaClasses.add(TestClassWithManyFields.ClassWhichContainsInterface1.class);
     final YamlSchemaConfiguration yamlSchemaConfiguration =
         YamlSchemaConfiguration.builder().generatedPathRoot("testBasePath").build();
     doReturn(schemaClasses).when(yamlSchemaGenerator).getClassesForYamlSchemaGeneration(yamlSchemaConfiguration);
@@ -84,10 +87,9 @@ public class YamlSchemaGeneratorTest extends CategoryTest {
     final String expectedOutput = IOUtils.resourceToString(
         "testSchema/testOutputSchemaWithManyFields.json", StandardCharsets.UTF_8, this.getClass().getClassLoader());
     ObjectMapper mapper = new ObjectMapper();
-    boolean testResult = false;
-    for (Object allValue : contentArgumentCaptor.getAllValues()) {
-      testResult = testResult || mapper.readTree(allValue.toString()).equals(mapper.readTree(expectedOutput));
-    }
-    assertThat(testResult).isEqualTo(true);
+    DefaultPrettyPrinter defaultPrettyPrinter = new SchemaGeneratorUtils.SchemaPrinter();
+    ObjectWriter jsonWriter = mapper.writer(defaultPrettyPrinter);
+    final String s = jsonWriter.writeValueAsString(contentArgumentCaptor.getAllValues().get(2));
+    assertThat(s).isEqualTo(expectedOutput);
   }
 }
