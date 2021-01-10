@@ -95,6 +95,11 @@ public class PipelineExecuteHelper {
             .put(SetupAbstractionKeys.projectIdentifier, projectIdentifier)
             .put("expressionFunctorToken", Integer.toString(HashGenerator.generateIntegerHash()));
 
+    if (executionMetadata.hasTriggerPayload()) {
+      abstractionsBuilder.put(
+          SetupAbstractionKeys.eventPayload, executionMetadata.getTriggerPayload().getJsonPayload());
+    }
+
     return orchestrationService.startExecution(plan, abstractionsBuilder.build(), executionMetadata);
   }
 }

@@ -9,7 +9,6 @@ import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.engine.StepTypeLookupService;
-import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.grpc.server.PipelineServiceGrpcModule;
@@ -21,6 +20,7 @@ import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.expressions.PMSExpressionEvaluatorProvider;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetServiceImpl;
 import io.harness.pms.pipeline.service.PMSPipelineService;
@@ -83,7 +83,7 @@ public class PipelineServiceModule extends AbstractModule {
     install(PmsDelegateServiceDriverModule.getInstance());
     install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
                                                 .serviceName("PIPELINE")
-                                                .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
+                                                .expressionEvaluatorProvider(new PMSExpressionEvaluatorProvider())
                                                 .withPMS(false)
                                                 .isPipelineService(true)
                                                 .build()));

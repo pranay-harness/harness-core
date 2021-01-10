@@ -3,6 +3,7 @@ package io.harness.pms.triggers.webhook.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
+import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.INVALID_PAYLOAD;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.SCM_SERVICE_CONNECTION_FAILED;
 
 import static java.time.Duration.ofMinutes;
@@ -84,7 +85,7 @@ public class TriggerWebhookExecutionServiceImpl
         responseList.stream().filter(response -> response != null).collect(Collectors.toList());
       }
 
-      if (isEmpty(responseList)) {
+      if (discardEmptyOrInvalidPayloadEvents(responseList)) {
         ngTriggerService.deleteTriggerWebhookEvent(event);
       } else if (!result.isMappedToTriggers()) {
         handleTriggerNotFoundCase(event, result);
@@ -98,6 +99,17 @@ public class TriggerWebhookExecutionServiceImpl
       ngTriggerService.updateTriggerWebhookEvent(event);
       log.error("Exception while handling webhook event. Please check", e);
     }
+  }
+
+  private boolean discardEmptyOrInvalidPayloadEvents(List<WebhookEventResponse> responseList) {
+    if (isEmpty(responseList)) {
+      return true;
+    }
+    if (responseList.size() == 1 && responseList.get(0).getFinalStatus() == INVALID_PAYLOAD) {
+      log.info("Unknown/Unsupported Webhook Event encountered for accountId: %s", responseList.get(0).getAccountId());
+      return true;
+    }
+    return false;
   }
 
   private void handleTriggerNotFoundCase(TriggerWebhookEvent event, WebhookEventProcessingResult result) {
