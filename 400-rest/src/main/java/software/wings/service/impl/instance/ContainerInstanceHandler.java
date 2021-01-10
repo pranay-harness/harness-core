@@ -411,7 +411,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
   private List<K8sPod> getK8sPodsFromDelegate(
       ContainerInfrastructureMapping containerInfraMapping, ContainerMetadata containerMetadata) {
     try {
-      return k8sStateHelper.getPodList(
+      return k8sStateHelper.fetchPodList(
           containerInfraMapping, containerMetadata.getNamespace(), containerMetadata.getReleaseName());
     } catch (Exception e) {
       throw new K8sPodSyncException(format("Exception in fetching podList for release %s, namespace %s",

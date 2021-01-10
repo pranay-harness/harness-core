@@ -118,7 +118,6 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.sm.states.k8s.K8sStateHelper;
 
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
@@ -164,7 +163,6 @@ public class KubernetesDeployTest extends WingsBaseTest {
   @Mock private AwsCommandHelper mockAwsCommandHelper;
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
-  @Mock private K8sStateHelper mockK8sStateHelper;
   @Mock private ContainerMasterUrlHelper containerMasterUrlHelper;
   @Mock private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
 
@@ -301,7 +299,6 @@ public class KubernetesDeployTest extends WingsBaseTest {
         .thenAnswer(i -> i.getArguments()[0]);
     when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
     doReturn(null).when(mockAwsCommandHelper).getAwsConfigTagsFromContext(any());
-    doReturn(null).when(mockK8sStateHelper).getDelegateNameAsTagFromK8sCloudProvider(anyString(), any());
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("baseUrl");
 
     kubernetesDeployRollback.setCommandName(COMMAND_NAME);

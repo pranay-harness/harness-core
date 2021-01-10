@@ -22,6 +22,7 @@ import io.harness.tasks.ResponseData;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.ContainerInfrastructureMapping;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTrafficSplitTaskParameters;
@@ -29,7 +30,6 @@ import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.intfc.ActivityService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 
 import com.github.reinert.jjschema.Attributes;
@@ -44,8 +44,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class K8sTrafficSplitState extends State {
-  @Inject private K8sStateHelper k8sStateHelper;
+public class K8sTrafficSplitState extends AbstractK8sState {
   @Inject private ActivityService activityService;
 
   public static final String K8S_TRAFFIC_SPLIT_STATE_NAME = "Traffic Split";
@@ -66,7 +65,7 @@ public class K8sTrafficSplitState extends State {
       log.info("Executing K8sTrafficSplitState");
       sanitizeStateParameters();
 
-      ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
+      ContainerInfrastructureMapping infraMapping = k8sStateHelper.fetchContainerInfrastructureMapping(context);
       Activity activity = createActivity(context);
 
       renderStateVariables(context);
@@ -74,13 +73,13 @@ public class K8sTrafficSplitState extends State {
       K8sTaskParameters k8sTaskParameters = K8sTrafficSplitTaskParameters.builder()
                                                 .activityId(activity.getUuid())
                                                 .commandName(K8S_TRAFFIC_SPLIT_STATE_NAME)
-                                                .releaseName(k8sStateHelper.getReleaseName(context, infraMapping))
+                                                .releaseName(fetchReleaseName(context, infraMapping))
                                                 .k8sTaskType(K8sTaskType.TRAFFIC_SPLIT)
                                                 .timeoutIntervalInMin(10)
                                                 .virtualServiceName(virtualServiceName)
                                                 .istioDestinationWeights(istioDestinationWeights)
                                                 .build();
-      return k8sStateHelper.queueK8sDelegateTask(context, k8sTaskParameters);
+      return queueK8sDelegateTask(context, k8sTaskParameters);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -102,7 +101,7 @@ public class K8sTrafficSplitState extends State {
           ? ExecutionStatus.SUCCESS
           : ExecutionStatus.FAILED;
 
-      activityService.updateStatus(k8sStateHelper.getActivityId(context), appId, executionStatus);
+      activityService.updateStatus(fetchActivityId(context), appId, executionStatus);
       K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
       stateExecutionData.setStatus(executionStatus);
 
@@ -118,7 +117,7 @@ public class K8sTrafficSplitState extends State {
   }
 
   private Activity createActivity(ExecutionContext context) {
-    return k8sStateHelper.createK8sActivity(context, K8S_TRAFFIC_SPLIT_STATE_NAME, getStateType(), activityService,
+    return createK8sActivity(context, K8S_TRAFFIC_SPLIT_STATE_NAME, getStateType(), activityService,
         ImmutableList.of(new K8sDummyCommandUnit(K8sCommandUnitConstants.Init),
             new K8sDummyCommandUnit(K8sCommandUnitConstants.TrafficSplit)));
   }
@@ -177,5 +176,33 @@ public class K8sTrafficSplitState extends State {
     }
 
     return invalidFields;
+  }
+
+  @Override
+  public void validateParameters(ExecutionContext context) {}
+
+  @Override
+  public String commandName() {
+    return K8S_TRAFFIC_SPLIT_STATE_NAME;
+  }
+
+  @Override
+  public String stateType() {
+    return getStateType();
+  }
+
+  @Override
+  public List<CommandUnit> commandUnitList(boolean remoteStoreType) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public ExecutionResponse executeK8sTask(ExecutionContext context, String activityId) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public ExecutionResponse handleAsyncResponseForK8sTask(ExecutionContext context, Map<String, ResponseData> response) {
+    throw new UnsupportedOperationException();
   }
 }

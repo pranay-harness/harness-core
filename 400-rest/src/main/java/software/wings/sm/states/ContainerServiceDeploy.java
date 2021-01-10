@@ -104,7 +104,6 @@ public abstract class ContainerServiceDeploy extends State {
   @Inject protected FeatureFlagService featureFlagService;
   @Inject private AwsCommandHelper awsCommandHelper;
   @Inject private SweepingOutputService sweepingOutputService;
-  @Inject private K8sStateHelper k8sStateHelper;
   @Inject private ContainerMasterUrlHelper containerMasterUrlHelper;
   @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
 
@@ -211,8 +210,8 @@ public abstract class ContainerServiceDeploy extends State {
                                                             .build();
 
       List<String> allTaskTags = new ArrayList<>();
-      List<String> cloudProviderTags = k8sStateHelper.getDelegateNameAsTagFromK8sCloudProvider(
-          contextData.settingAttribute.getAccountId(), contextData.settingAttribute.getValue());
+      List<String> cloudProviderTags =
+          K8sStateHelper.fetchDelegateNameAsTagFromK8sCloudProvider(contextData.settingAttribute.getValue());
       if (isNotEmpty(cloudProviderTags)) {
         allTaskTags.addAll(cloudProviderTags);
       }

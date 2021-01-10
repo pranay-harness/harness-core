@@ -19,6 +19,7 @@ import software.wings.api.k8s.K8sContextElement;
 import software.wings.api.k8s.K8sHelmDeploymentElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Activity;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
@@ -36,7 +37,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.utils.StateTimeoutUtils;
 import software.wings.stencils.DefaultValue;
@@ -45,12 +45,13 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import java.util.List;
 import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class K8sRollingDeployRollback extends State {
+public class K8sRollingDeployRollback extends AbstractK8sState {
   @Inject private transient ConfigService configService;
   @Inject private transient ServiceTemplateService serviceTemplateService;
   @Inject private transient ActivityService activityService;
@@ -60,7 +61,6 @@ public class K8sRollingDeployRollback extends State {
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
   @Inject private transient DelegateService delegateService;
   @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
-  @Inject private transient K8sStateHelper k8sStateHelper;
   @Inject private transient ApplicationManifestService applicationManifestService;
   @Inject private transient AwsCommandHelper awsCommandHelper;
 
@@ -89,11 +89,11 @@ public class K8sRollingDeployRollback extends State {
             .build();
       }
 
-      Activity activity = k8sStateHelper.createK8sActivity(context, K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME,
-          getStateType(), activityService,
-          ImmutableList.of(new K8sDummyCommandUnit(K8sCommandUnitConstants.Init),
-              new K8sDummyCommandUnit(K8sCommandUnitConstants.Rollback),
-              new K8sDummyCommandUnit(K8sCommandUnitConstants.WaitForSteadyState)));
+      Activity activity =
+          createK8sActivity(context, K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME, getStateType(), activityService,
+              ImmutableList.of(new K8sDummyCommandUnit(K8sCommandUnitConstants.Init),
+                  new K8sDummyCommandUnit(K8sCommandUnitConstants.Rollback),
+                  new K8sDummyCommandUnit(K8sCommandUnitConstants.WaitForSteadyState)));
 
       K8sTaskParameters k8sTaskParameters = K8sRollingDeployRollbackTaskParameters.builder()
                                                 .activityId(activity.getUuid())
@@ -104,7 +104,7 @@ public class K8sRollingDeployRollback extends State {
                                                 .timeoutIntervalInMin(stateTimeoutInMinutes)
                                                 .build();
 
-      return k8sStateHelper.queueK8sDelegateTask(context, k8sTaskParameters);
+      return queueK8sDelegateTask(context, k8sTaskParameters);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -123,9 +123,9 @@ public class K8sRollingDeployRollback extends State {
           ? ExecutionStatus.SUCCESS
           : ExecutionStatus.FAILED;
 
-      activityService.updateStatus(k8sStateHelper.getActivityId(context), appId, executionStatus);
+      activityService.updateStatus(fetchActivityId(context), appId, executionStatus);
 
-      K8sHelmDeploymentElement k8SHelmDeploymentElement = k8sStateHelper.getK8sHelmDeploymentElement(context);
+      K8sHelmDeploymentElement k8SHelmDeploymentElement = fetchK8sHelmDeploymentElement(context);
       K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
       stateExecutionData.setStatus(executionStatus);
       if (k8SHelmDeploymentElement != null) {
@@ -145,4 +145,32 @@ public class K8sRollingDeployRollback extends State {
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
+
+  @Override
+  public void validateParameters(ExecutionContext context) {}
+
+  @Override
+  public String commandName() {
+    return K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME;
+  }
+
+  @Override
+  public String stateType() {
+    return getStateType();
+  }
+
+  @Override
+  public List<CommandUnit> commandUnitList(boolean remoteStoreType) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public ExecutionResponse executeK8sTask(ExecutionContext context, String activityId) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public ExecutionResponse handleAsyncResponseForK8sTask(ExecutionContext context, Map<String, ResponseData> response) {
+    throw new UnsupportedOperationException();
+  }
 }

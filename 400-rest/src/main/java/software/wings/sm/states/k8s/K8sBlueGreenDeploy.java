@@ -1,7 +1,6 @@
 package software.wings.sm.states.k8s;
 
 import static software.wings.sm.StateType.K8S_BLUE_GREEN_DEPLOY;
-import static software.wings.sm.states.k8s.K8sStateHelper.getSafeTimeoutInMillis;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.k8s.K8sTaskType;
@@ -33,7 +32,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.State;
 import software.wings.sm.states.utils.StateTimeoutUtils;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.ApplicationManifestUtils;
@@ -48,7 +46,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
+public class K8sBlueGreenDeploy extends AbstractK8sState {
   @Inject private transient ActivityService activityService;
   @Inject private transient SecretManager secretManager;
   @Inject private transient SettingsService settingsService;
@@ -56,7 +54,6 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
   @Inject private transient DelegateService delegateService;
   @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
-  @Inject private transient K8sStateHelper k8sStateHelper;
   @Inject private transient ApplicationManifestService applicationManifestService;
   @Inject private transient AwsCommandHelper awsCommandHelper;
   @Inject private ApplicationManifestUtils applicationManifestUtils;
@@ -90,36 +87,36 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    return k8sStateHelper.executeWrapperWithManifest(this, context, getSafeTimeoutInMillis(getTimeoutMillis()));
+    return executeWrapperWithManifest(this, context, K8sStateHelper.fetchSafeTimeoutInMillis(getTimeoutMillis()));
   }
 
   @Override
   public ExecutionResponse executeK8sTask(ExecutionContext context, String activityId) {
-    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = k8sStateHelper.getApplicationManifests(context);
-    ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
-    k8sStateHelper.storePreviousHelmDeploymentInfo(context, appManifestMap.get(K8sValuesLocation.Service));
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = fetchApplicationManifests(context);
+    ContainerInfrastructureMapping infraMapping = k8sStateHelper.fetchContainerInfrastructureMapping(context);
+    storePreviousHelmDeploymentInfo(context, appManifestMap.get(K8sValuesLocation.Service));
 
     K8sTaskParameters k8sTaskParameters =
         K8sBlueGreenDeployTaskParameters.builder()
             .activityId(activityId)
-            .releaseName(k8sStateHelper.getReleaseName(context, infraMapping))
+            .releaseName(fetchReleaseName(context, infraMapping))
             .commandName(K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME)
             .k8sTaskType(K8sTaskType.BLUE_GREEN_DEPLOY)
             .timeoutIntervalInMin(stateTimeoutInMinutes)
             .k8sDelegateManifestConfig(
-                k8sStateHelper.createDelegateManifestConfig(context, appManifestMap.get(K8sValuesLocation.Service)))
-            .valuesYamlList(k8sStateHelper.getRenderedValuesFiles(appManifestMap, context))
+                createDelegateManifestConfig(context, appManifestMap.get(K8sValuesLocation.Service)))
+            .valuesYamlList(fetchRenderedValuesFiles(appManifestMap, context))
             .skipDryRun(skipDryRun)
             .skipVersioningForAllK8sObjects(
                 appManifestMap.get(K8sValuesLocation.Service).getSkipVersioningForAllK8sObjects())
             .build();
 
-    return k8sStateHelper.queueK8sDelegateTask(context, k8sTaskParameters);
+    return queueK8sDelegateTask(context, k8sTaskParameters);
   }
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    return k8sStateHelper.handleAsyncResponseWrapper(this, context, response);
+    return handleAsyncResponseWrapper(this, context, response);
   }
 
   @Override
@@ -130,8 +127,7 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
         ? ExecutionStatus.SUCCESS
         : ExecutionStatus.FAILED;
 
-    activityService.updateStatus(
-        k8sStateHelper.getActivityId(context), k8sStateHelper.getAppId(context), executionStatus);
+    activityService.updateStatus(fetchActivityId(context), fetchAppId(context), executionStatus);
 
     K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
     stateExecutionData.setStatus(executionStatus);
@@ -151,13 +147,13 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
     stateExecutionData.setHelmChartInfo(k8sBlueGreenDeployResponse.getHelmChartInfo());
     stateExecutionData.setBlueGreenStageColor(k8sBlueGreenDeployResponse.getStageColor());
 
-    final List<K8sPod> newPods = k8sStateHelper.getNewPods(k8sBlueGreenDeployResponse.getK8sPodList());
-    InstanceElementListParam instanceElementListParam = k8sStateHelper.getInstanceElementListParam(newPods);
+    final List<K8sPod> newPods = fetchNewPods(k8sBlueGreenDeployResponse.getK8sPodList());
+    InstanceElementListParam instanceElementListParam = fetchInstanceElementListParam(newPods);
 
     stateExecutionData.setNewInstanceStatusSummaries(
-        k8sStateHelper.getInstanceStatusSummaries(instanceElementListParam.getInstanceElements(), executionStatus));
+        fetchInstanceStatusSummaries(instanceElementListParam.getInstanceElements(), executionStatus));
 
-    k8sStateHelper.saveK8sElement(context,
+    saveK8sElement(context,
         K8sElement.builder()
             .releaseName(stateExecutionData.getReleaseName())
             .releaseNumber(k8sBlueGreenDeployResponse.getReleaseNumber())
@@ -165,9 +161,9 @@ public class K8sBlueGreenDeploy extends State implements K8sStateExecutor {
             .stageServiceName(k8sBlueGreenDeployResponse.getStageServiceName())
             .build());
 
-    k8sStateHelper.saveInstanceInfoToSweepingOutput(context,
-        k8sStateHelper.getInstanceElementList(k8sBlueGreenDeployResponse.getK8sPodList(), false),
-        k8sStateHelper.getInstanceDetails(k8sBlueGreenDeployResponse.getK8sPodList(), false));
+    saveInstanceInfoToSweepingOutput(context,
+        fetchInstanceElementList(k8sBlueGreenDeployResponse.getK8sPodList(), false),
+        fetchInstanceDetails(k8sBlueGreenDeployResponse.getK8sPodList(), false));
 
     return ExecutionResponse.builder()
         .executionStatus(executionStatus)

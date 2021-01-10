@@ -110,7 +110,6 @@ public abstract class ContainerServiceSetup extends State {
   @Inject protected DelegateService delegateService;
   @Inject private AwsCommandHelper awsCommandHelper;
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
-  @Inject private K8sStateHelper k8sStateHelper;
   @Inject private ContainerMasterUrlHelper containerMasterUrlHelper;
   @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
 
@@ -169,8 +168,8 @@ public abstract class ContainerServiceSetup extends State {
       }
 
       List<String> allTaskTags = new ArrayList<>();
-      List<String> cloudProviderTags = k8sStateHelper.getDelegateNameAsTagFromK8sCloudProvider(
-          settingAttribute.getAccountId(), settingAttribute.getValue());
+      List<String> cloudProviderTags =
+          K8sStateHelper.fetchDelegateNameAsTagFromK8sCloudProvider(settingAttribute.getValue());
       if (isNotEmpty(cloudProviderTags)) {
         allTaskTags.addAll(cloudProviderTags);
       }

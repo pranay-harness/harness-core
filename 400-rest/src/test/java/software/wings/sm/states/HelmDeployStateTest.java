@@ -352,6 +352,15 @@ public class HelmDeployStateTest extends WingsBaseTest {
   private Application app = anApplication().uuid(APP_ID).name(APP_NAME).build();
   private Environment env = anEnvironment().appId(APP_ID).uuid(ENV_ID).name(ENV_NAME).build();
   private Service service = Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build();
+  private ContainerServiceParams containerServiceParams =
+      ContainerServiceParams.builder()
+          .settingAttribute(SettingAttribute.Builder.aSettingAttribute()
+                                .withValue(KubernetesClusterConfig.builder()
+                                               .delegateName("delegateName")
+                                               .useKubernetesDelegate(true)
+                                               .build())
+                                .build())
+          .build();
   private ExecutionContextImpl context;
 
   @Before
@@ -386,8 +395,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
         .thenReturn(emptyList());
     when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean()))
         .thenReturn(WorkflowExecution.builder().build());
-    when(containerDeploymentHelper.getContainerServiceParams(any(), any(), any()))
-        .thenReturn(ContainerServiceParams.builder().build());
+    when(containerDeploymentHelper.getContainerServiceParams(any(), any(), any())).thenReturn(containerServiceParams);
     when(artifactCollectionUtils.fetchContainerImageDetails(any(), any())).thenReturn(ImageDetails.builder().build());
 
     when(delegateService.executeTask(any()))
@@ -416,9 +424,6 @@ public class HelmDeployStateTest extends WingsBaseTest {
     on(workflowStandardParams).set("subdomainUrlHelper", subdomainUrlHelper);
     when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("baseUrl");
-    doReturn(anEnvironment().uuid(ENV_ID).environmentType(EnvironmentType.NON_PROD).build())
-        .when(k8sStateHelper)
-        .getEnvFromExecutionContext(context);
   }
 
   @Test
@@ -740,7 +745,6 @@ public class HelmDeployStateTest extends WingsBaseTest {
                         .chartVersion(CHART_VERSION)
                         .build());
     when(serviceTemplateHelper.fetchServiceTemplateId(any())).thenReturn(SERVICE_TEMPLATE_ID);
-    when(k8sStateHelper.fetchTagsFromK8sCloudProvider(any())).thenReturn(Arrays.asList("delegateName"));
     ExecutionResponse executionResponse = helmDeployState.execute(context);
     HelmDeployStateExecutionData helmDeployStateExecutionData =
         (HelmDeployStateExecutionData) executionResponse.getStateExecutionData();
@@ -969,7 +973,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
         HelmChartSpecification.builder().chartName(CHART_NAME).chartUrl(CHART_URL).chartVersion(CHART_VERSION).build())
         .when(serviceResourceService)
         .getHelmChartSpecification(APP_ID, SERVICE_ID);
-    when(k8sStateHelper.getContainerInfrastructureMapping(context))
+    when(k8sStateHelper.fetchContainerInfrastructureMapping(context))
         .thenReturn(DirectKubernetesInfrastructureMapping.builder().build());
 
     testHandleAsyncResponseForHelmFetchTaskWithValuesInGit();
@@ -1193,9 +1197,11 @@ public class HelmDeployStateTest extends WingsBaseTest {
     when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(appManifestMap);
     when(applicationManifestUtils.isValuesInGit(appManifestMap)).thenReturn(true);
     when(applicationManifestUtils.createGitFetchFilesTaskParams(context, app, appManifestMap))
-        .thenReturn(GitFetchFilesTaskParams.builder().isBindTaskFeatureSet(true).build());
-    when(k8sStateHelper.fetchTagsFromK8sCloudProvider(any())).thenReturn(Arrays.asList("delegateName"));
-    when(k8sStateHelper.getContainerInfrastructureMapping(context))
+        .thenReturn(GitFetchFilesTaskParams.builder()
+                        .containerServiceParams(containerServiceParams)
+                        .isBindTaskFeatureSet(true)
+                        .build());
+    when(k8sStateHelper.fetchContainerInfrastructureMapping(context))
         .thenReturn(DirectKubernetesInfrastructureMapping.builder().build());
 
     ExecutionResponse executionResponse = helmDeployState.execute(context);
@@ -1220,7 +1226,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
     when(applicationManifestUtils.isValuesInGit(appManifestMap)).thenReturn(true);
     when(applicationManifestUtils.createGitFetchFilesTaskParams(context, app, appManifestMap))
         .thenReturn(GitFetchFilesTaskParams.builder().isBindTaskFeatureSet(true).build());
-    when(k8sStateHelper.getContainerInfrastructureMapping(context))
+    when(k8sStateHelper.fetchContainerInfrastructureMapping(context))
         .thenReturn(DirectKubernetesInfrastructureMapping.builder().build());
 
     ExecutionResponse executionResponse = helmDeployState.execute(context);
@@ -1265,7 +1271,6 @@ public class HelmDeployStateTest extends WingsBaseTest {
 
     when(featureFlagService.isEnabled(FeatureName.BIND_FETCH_FILES_TASK_TO_DELEGATE, context.getAccountId()))
         .thenReturn(true);
-    when(k8sStateHelper.fetchTagsFromK8sCloudProvider(any())).thenReturn(Arrays.asList("delegateName"));
     when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(appManifestMap);
     when(applicationManifestUtils.isValuesInHelmChartRepo(context)).thenReturn(true);
 
@@ -1725,7 +1730,6 @@ public class HelmDeployStateTest extends WingsBaseTest {
                         .chartVersion(CHART_VERSION)
                         .build());
     when(serviceTemplateHelper.fetchServiceTemplateId(any())).thenReturn(SERVICE_TEMPLATE_ID);
-    when(k8sStateHelper.fetchTagsFromK8sCloudProvider(any())).thenReturn(Arrays.asList("delegateName"));
     when(applicationManifestService.getAppManifest(any(), any(), any(), any()))
         .thenReturn(ApplicationManifest.builder()
                         .helmCommandFlag(HELM_COMMAND_FLAG)

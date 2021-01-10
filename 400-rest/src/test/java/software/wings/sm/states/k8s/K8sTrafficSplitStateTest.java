@@ -3,11 +3,14 @@ package software.wings.sm.states.k8s;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.BOJANA;
 
+import static software.wings.sm.StateType.K8S_TRAFFIC_SPLIT;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -46,9 +49,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 public class K8sTrafficSplitStateTest extends WingsBaseTest {
+  private static final String RELEASE_NAME = "releaseName";
+
   @Mock private K8sStateHelper k8sStateHelper;
   @Mock private ActivityService activityService;
-  @InjectMocks K8sTrafficSplitState k8sTrafficSplitState;
+  @InjectMocks K8sTrafficSplitState k8sTrafficSplitState = spy(new K8sTrafficSplitState(K8S_TRAFFIC_SPLIT.name()));
 
   @Mock private ExecutionContextImpl context;
 
@@ -63,9 +68,8 @@ public class K8sTrafficSplitStateTest extends WingsBaseTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testHandleAbortEvent() {
-    K8sTrafficSplitState k8sTrafficSplitStateSpy = spy(k8sTrafficSplitState);
-    k8sTrafficSplitStateSpy.handleAbortEvent(context);
-    verify(k8sTrafficSplitStateSpy, times(1)).handleAbortEvent(any(ExecutionContext.class));
+    k8sTrafficSplitState.handleAbortEvent(context);
+    verify(k8sTrafficSplitState, times(1)).handleAbortEvent(any(ExecutionContext.class));
   }
 
   @Test
@@ -87,12 +91,16 @@ public class K8sTrafficSplitStateTest extends WingsBaseTest {
     k8sTrafficSplitState.setIstioDestinationWeights(
         Arrays.asList(IstioDestinationWeight.builder().destination("destination").weight("weight").build()));
     when(context.renderExpression(anyString())).thenReturn("virtualServiceName");
-    when(k8sStateHelper.createK8sActivity(
-             any(ExecutionContext.class), anyString(), anyString(), any(ActivityService.class), anyList()))
-        .thenReturn(new Activity());
+    doReturn(new Activity())
+        .when(k8sTrafficSplitState)
+        .createK8sActivity(
+            any(ExecutionContext.class), anyString(), anyString(), any(ActivityService.class), anyList());
+    doReturn(ExecutionResponse.builder().build()).when(k8sTrafficSplitState).queueK8sDelegateTask(any(), any());
+    doReturn(RELEASE_NAME).when(k8sTrafficSplitState).fetchReleaseName(any(), any());
     k8sTrafficSplitState.execute(context);
-    verify(k8sStateHelper, times(1)).getContainerInfrastructureMapping(any(ExecutionContext.class));
-    verify(k8sStateHelper, times(1)).queueK8sDelegateTask(any(ExecutionContext.class), any(K8sTaskParameters.class));
+    verify(k8sStateHelper, times(1)).fetchContainerInfrastructureMapping(any(ExecutionContext.class));
+    verify(k8sTrafficSplitState, times(1))
+        .queueK8sDelegateTask(any(ExecutionContext.class), any(K8sTaskParameters.class));
   }
 
   @Test
@@ -100,8 +108,7 @@ public class K8sTrafficSplitStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExecuteWingsException() {
     InvalidArgumentsException exceptionToBeThrown = new InvalidArgumentsException(Pair.of("arg", "missing"));
-
-    doThrow(exceptionToBeThrown).when(k8sStateHelper).getContainerInfrastructureMapping(context);
+    doThrow(exceptionToBeThrown).when(k8sStateHelper).fetchContainerInfrastructureMapping(context);
 
     assertThatThrownBy(() -> k8sTrafficSplitState.execute(context)).isSameAs(exceptionToBeThrown);
   }
@@ -111,8 +118,7 @@ public class K8sTrafficSplitStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExecuteAnyException() {
     IllegalStateException exceptionToBeThrown = new IllegalStateException();
-
-    doThrow(exceptionToBeThrown).when(k8sStateHelper).getContainerInfrastructureMapping(context);
+    doThrow(exceptionToBeThrown).when(k8sStateHelper).fetchContainerInfrastructureMapping(context);
 
     assertThatThrownBy(() -> k8sTrafficSplitState.execute(context)).isInstanceOf(InvalidRequestException.class);
   }

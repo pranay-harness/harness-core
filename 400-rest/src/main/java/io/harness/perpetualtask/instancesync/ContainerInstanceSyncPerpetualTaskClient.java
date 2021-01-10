@@ -7,6 +7,8 @@ import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPIN
 import static software.wings.service.InstanceSyncConstants.NAMESPACE;
 import static software.wings.service.InstanceSyncConstants.RELEASE_NAME;
 import static software.wings.service.InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES;
+import static software.wings.sm.states.k8s.K8sStateHelper.fetchTagsFromK8sCloudProvider;
+import static software.wings.sm.states.k8s.K8sStateHelper.fetchTagsFromK8sTaskParams;
 import static software.wings.utils.Utils.emptyIfNull;
 
 import static java.util.Objects.nonNull;
@@ -36,7 +38,6 @@ import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.sm.states.k8s.K8sStateHelper;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
@@ -57,7 +58,6 @@ public class ContainerInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
   @Inject InfrastructureMappingService infraMappingService;
   @Inject ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
   @Inject transient AwsCommandHelper awsCommandHelper;
-  @Inject transient K8sStateHelper k8sStateHelper;
   @Inject SecretManager secretManager;
   @Inject SettingsService settingsService;
   @Inject KryoSerializer kryoSerializer;
@@ -141,7 +141,7 @@ public class ContainerInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
         .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, taskData.getAppId())
         .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, taskData.getEnvId())
         .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, clientParams.get(INFRASTRUCTURE_MAPPING_ID))
-        .tags(k8sStateHelper.fetchTagsFromK8sCloudProvider(delegateTaskParams))
+        .tags(fetchTagsFromK8sCloudProvider(delegateTaskParams))
         .build();
   }
 
@@ -161,7 +161,7 @@ public class ContainerInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
         .accountId(taskData.getAccountId())
         .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, taskData.getAppId())
         .waitId(UUIDGenerator.generateUuid())
-        .tags(ListUtils.union(k8sStateHelper.fetchTagsFromK8sTaskParams(delegateTaskParams),
+        .tags(ListUtils.union(fetchTagsFromK8sTaskParams(delegateTaskParams),
             awsCommandHelper.getAwsConfigTagsFromK8sConfig(delegateTaskParams)))
         .data(TaskData.builder()
                   .async(false)

@@ -20,7 +20,9 @@ import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TAS
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
 import static software.wings.sm.StateType.HELM_DEPLOY;
 import static software.wings.sm.StateType.HELM_ROLLBACK;
-import static software.wings.sm.states.k8s.K8sStateHelper.getSafeTimeoutInMillis;
+import static software.wings.sm.states.k8s.K8sStateHelper.fetchEnvFromExecutionContext;
+import static software.wings.sm.states.k8s.K8sStateHelper.fetchSafeTimeoutInMillis;
+import static software.wings.sm.states.k8s.K8sStateHelper.fetchTagsFromK8sCloudProvider;
 
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
@@ -333,7 +335,7 @@ public class HelmDeployState extends State {
             .namespace(containerServiceParams.getNamespace())
             .containerServiceParams(containerServiceParams)
             .variableOverridesYamlFiles(helmValueOverridesYamlFilesEvaluated)
-            .timeoutInMillis(getSafeTimeoutInMillis(getTimeoutMillis()))
+            .timeoutInMillis(fetchSafeTimeoutInMillis(getTimeoutMillis()))
             .repoName(repoName)
             .gitConfig(gitConfig)
             .encryptedDataDetails(encryptedDataDetails)
@@ -392,7 +394,7 @@ public class HelmDeployState extends State {
         (ContainerInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
 
     List<String> tags = new ArrayList<>();
-    tags.addAll(k8sStateHelper.fetchTagsFromK8sCloudProvider(containerServiceParams));
+    tags.addAll(fetchTagsFromK8sCloudProvider(containerServiceParams));
     StateExecutionContext stateExecutionContext = StateExecutionContext.builder()
                                                       .stateExecutionData(stateExecutionDataBuilder.build())
                                                       .adoptDelegateDecryption(true)
@@ -901,7 +903,7 @@ public class HelmDeployState extends State {
         featureFlagService.isEnabled(FeatureName.HELM_STEADY_STATE_CHECK_1_16, context.getAccountId()));
 
     List<String> tags = new ArrayList<>();
-    tags.addAll(k8sStateHelper.fetchTagsFromK8sCloudProvider(containerServiceParams));
+    tags.addAll(fetchTagsFromK8sCloudProvider(containerServiceParams));
 
     StateExecutionContext stateExecutionContext =
         buildStateExecutionContext(stateExecutionDataBuilder, expressionFunctorToken);
@@ -926,7 +928,7 @@ public class HelmDeployState extends State {
                       .async(true)
                       .taskType(HELM_COMMAND_TASK.name())
                       .parameters(new Object[] {commandRequest})
-                      .timeout(getSafeTimeoutInMillis(getTimeoutMillis()))
+                      .timeout(fetchSafeTimeoutInMillis(getTimeoutMillis()))
                       .expressionFunctorToken(expressionFunctorToken)
                       .build())
             .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
@@ -1005,7 +1007,7 @@ public class HelmDeployState extends State {
 
     List<String> tags = new ArrayList<>();
     if (fetchFilesTaskParams.isBindTaskFeatureSet()) {
-      tags.addAll(k8sStateHelper.fetchTagsFromK8sCloudProvider(fetchFilesTaskParams.getContainerServiceParams()));
+      tags.addAll(fetchTagsFromK8sCloudProvider(fetchFilesTaskParams.getContainerServiceParams()));
     }
     final int expressionFunctorToken = HashGenerator.generateIntegerHash();
 
@@ -1018,10 +1020,10 @@ public class HelmDeployState extends State {
     StateExecutionContext stateExecutionContext =
         buildStateExecutionContext(helmDeployStateExecutionDataBuilder, expressionFunctorToken);
 
-    ContainerInfrastructureMapping containerInfraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
+    ContainerInfrastructureMapping containerInfraMapping = k8sStateHelper.fetchContainerInfrastructureMapping(context);
 
     String waitId = generateUuid();
-    Environment env = k8sStateHelper.getEnvFromExecutionContext(context);
+    Environment env = fetchEnvFromExecutionContext(context);
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(app.getAccountId())
@@ -1247,8 +1249,7 @@ public class HelmDeployState extends State {
 
     List<String> tags = new ArrayList<>();
     if (helmValuesFetchTaskParameters.isBindTaskFeatureSet()) {
-      tags.addAll(
-          k8sStateHelper.fetchTagsFromK8sCloudProvider(helmValuesFetchTaskParameters.getContainerServiceParams()));
+      tags.addAll(fetchTagsFromK8sCloudProvider(helmValuesFetchTaskParameters.getContainerServiceParams()));
     }
 
     String waitId = generateUuid();
@@ -1266,7 +1267,7 @@ public class HelmDeployState extends State {
     ContainerInfrastructureMapping containerInfraMapping =
         (ContainerInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
 
-    Environment env = k8sStateHelper.getEnvFromExecutionContext(context);
+    Environment env = fetchEnvFromExecutionContext(context);
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(app.getAccountId())
@@ -1275,7 +1276,7 @@ public class HelmDeployState extends State {
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD,
-                k8sStateHelper.getContainerInfrastructureMappingId(context))
+                k8sStateHelper.fetchContainerInfrastructureMappingId(context))
             .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD,
                 serviceTemplateHelper.fetchServiceTemplateId(containerInfraMapping))
             .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, containerInfraMapping.getServiceId())
@@ -1333,7 +1334,7 @@ public class HelmDeployState extends State {
             .containerServiceParams(containerServiceParams)
             .workflowExecutionId(context.getWorkflowExecutionId())
             .isBindTaskFeatureSet(isBindTaskFeatureSet)
-            .timeoutInMillis(getSafeTimeoutInMillis(getTimeoutMillis()))
+            .timeoutInMillis(fetchSafeTimeoutInMillis(getTimeoutMillis()))
             .build();
 
     ApplicationManifest applicationManifest = applicationManifestUtils.getApplicationManifestForService(context);
