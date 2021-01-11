@@ -325,7 +325,7 @@ public class PluginSettingUtils {
     setMandatoryEnvironmentVariable(
         map, PLUGIN_TARGET, resolveStringParameter("target", "S3Upload", identifier, stepInfo.getTarget(), true));
 
-    String endpoint = resolveStringParameter("endpoint", "S3Upload", identifier, stepInfo.getEndpoint(), true);
+    String endpoint = resolveStringParameter("endpoint", "S3Upload", identifier, stepInfo.getEndpoint(), false);
     if (endpoint != null && !endpoint.equals(UNRESOLVED_PARAMETER)) {
       setOptionalEnvironmentVariable(map, PLUGIN_ENDPOINT, endpoint);
     }

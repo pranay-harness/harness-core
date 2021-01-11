@@ -66,6 +66,9 @@ public class SaveCacheGCSStepInfo implements PluginCompatibleStep {
     this.connectorRef = connectorRef;
     this.containerImage = Optional.ofNullable(containerImage)
                               .orElse(ParameterField.createValueField("homerovalle/drone-gcs-cache:latest"));
+    if (containerImage != null && containerImage.fetchFinalValue() == null) {
+      this.containerImage = ParameterField.createValueField("homerovalle/drone-gcs-cache:latest");
+    }
     this.resources = resources;
     this.key = key;
     this.bucket = bucket;

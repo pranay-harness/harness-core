@@ -9,7 +9,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.harness.beans.yaml.extended.CustomSecretVariable;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ci.pod.SecretVariableDTO;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
@@ -23,11 +22,13 @@ import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.secrets.remote.SecretNGManagerClient;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.yaml.core.variables.SecretNGVariable;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -54,20 +55,22 @@ public class SecretVariableUtilsTest extends CIExecutionTest {
   private static final String TEXT_SECRET = "textSecretName";
   private static final String FILE_SECRET = "fileSecretName";
 
-  private CustomSecretVariable secretVariableText;
-  private CustomSecretVariable secretVariableFile;
+  private SecretNGVariable secretVariableText;
+  private SecretNGVariable secretVariableFile;
 
   @Before
   public void setUp() {
     ngAccess =
         BaseNGAccess.builder().projectIdentifier(PROJ_ID).orgIdentifier(ORG_ID).accountIdentifier(ACCOUNT_ID).build();
-    secretVariableText = CustomSecretVariable.builder()
+    secretVariableText = SecretNGVariable.builder()
                              .name(TEXT_SECRET)
-                             .value(SecretRefData.builder().identifier(TEXT_SECRET_ID).scope(Scope.ACCOUNT).build())
+                             .value(ParameterField.createValueField(
+                                 SecretRefData.builder().identifier(TEXT_SECRET_ID).scope(Scope.ACCOUNT).build()))
                              .build();
-    secretVariableFile = CustomSecretVariable.builder()
+    secretVariableFile = SecretNGVariable.builder()
                              .name(FILE_SECRET)
-                             .value(SecretRefData.builder().identifier(FILE_SECRET_ID).scope(Scope.ORG).build())
+                             .value(ParameterField.createValueField(
+                                 SecretRefData.builder().identifier(FILE_SECRET_ID).scope(Scope.ORG).build()))
                              .build();
   }
 

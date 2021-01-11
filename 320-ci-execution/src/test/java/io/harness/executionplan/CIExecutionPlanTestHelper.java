@@ -113,6 +113,7 @@ import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.intfc.Connector;
+import io.harness.yaml.core.variables.SecretNGVariable;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 
 import com.google.inject.Singleton;
@@ -925,15 +926,17 @@ public class CIExecutionPlanTestHelper {
     return envVars;
   }
 
-  public List<CustomSecretVariable> getCustomSecretVariable() {
-    List<CustomSecretVariable> secretVariables = new ArrayList<>();
-    secretVariables.add(CustomSecretVariable.builder()
+  public List<SecretNGVariable> getCustomSecretVariable() {
+    List<SecretNGVariable> secretVariables = new ArrayList<>();
+    secretVariables.add(SecretNGVariable.builder()
                             .name("VAR1")
-                            .value(SecretRefData.builder().identifier("VAR1_secret").scope(Scope.ACCOUNT).build())
+                            .value(ParameterField.createValueField(
+                                SecretRefData.builder().identifier("VAR1_secret").scope(Scope.ACCOUNT).build()))
                             .build());
-    secretVariables.add(CustomSecretVariable.builder()
+    secretVariables.add(SecretNGVariable.builder()
                             .name("VAR2")
-                            .value(SecretRefData.builder().identifier("VAR2_secret").scope(Scope.ACCOUNT).build())
+                            .value(ParameterField.createValueField(
+                                SecretRefData.builder().identifier("VAR2_secret").scope(Scope.ACCOUNT).build()))
                             .build());
     return secretVariables;
   }

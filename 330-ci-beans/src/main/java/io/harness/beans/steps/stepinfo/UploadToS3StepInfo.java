@@ -51,7 +51,7 @@ public class UploadToS3StepInfo implements PluginCompatibleStep {
   private ParameterField<String> region;
   @NotNull private ParameterField<String> bucket;
   @NotNull private ParameterField<String> sourcePath;
-  @NotNull private ParameterField<String> target;
+  private ParameterField<String> target;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "containerImage", "resources", "endpoint",
@@ -67,6 +67,9 @@ public class UploadToS3StepInfo implements PluginCompatibleStep {
     this.connectorRef = connectorRef;
     this.containerImage =
         Optional.ofNullable(containerImage).orElse(ParameterField.createValueField("plugins/s3:latest"));
+    if (containerImage != null && containerImage.fetchFinalValue() == null) {
+      this.containerImage = ParameterField.createValueField("plugins/s3:latest");
+    }
     this.resources = resources;
     this.endpoint = endpoint;
     this.region = region;

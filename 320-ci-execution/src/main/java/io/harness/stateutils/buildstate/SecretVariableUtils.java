@@ -1,11 +1,11 @@
 package io.harness.stateutils.buildstate;
 
+import static io.harness.beans.serializer.RunTimeInputHandler.resolveSecretRefWithDefaultValue;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.lang.String.format;
 
 import io.harness.beans.IdentifierRef;
-import io.harness.beans.yaml.extended.CustomSecretVariable;
 import io.harness.delegate.beans.ci.pod.SecretVariableDTO;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.encryption.SecretRefData;
@@ -22,6 +22,7 @@ import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.secrets.remote.SecretNGManagerClient;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.utils.IdentifierRefHelper;
+import io.harness.yaml.core.variables.SecretNGVariable;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -42,20 +43,31 @@ public class SecretVariableUtils {
     this.secretManagerClientService = secretManagerClientService;
   }
 
-  public SecretVariableDetails getSecretVariableDetails(NGAccess ngAccess, CustomSecretVariable secretVariable) {
-    log.info("Getting secret variable details for secret ref [{}]", secretVariable.getValue().toSecretRefStringValue());
-    SecretRefData secretRefData = secretVariable.getValue();
+  public SecretVariableDetails getSecretVariableDetails(NGAccess ngAccess, SecretNGVariable secretVariable) {
+    SecretRefData secretRefData =
+        resolveSecretRefWithDefaultValue("Variables", "stage", "stageIdentifier", secretVariable.getValue(), false);
+    String secretIdentifier = null;
+    if (secretRefData != null) {
+      secretIdentifier = secretRefData.getIdentifier();
+    }
+
+    if (secretRefData == null && secretVariable.getDefaultValue() != null) {
+      secretIdentifier = secretVariable.getDefaultValue();
+    }
+
+    if (secretIdentifier == null || secretRefData == null) {
+      log.warn("Failed to resolve secret variable " + secretVariable.getName());
+      return null;
+    }
+
+    log.info("Getting secret variable details for secret ref [{}]", secretIdentifier);
     IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(secretRefData.toSecretRefStringValue(),
         ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
 
     SecretVariableDTO.Type secretType = getSecretType(getSecret(identifierRef).getType());
-    SecretVariableDTO secret = SecretVariableDTO.builder()
-                                   .name(secretVariable.getName())
-                                   .secret(secretVariable.getValue())
-                                   .type(secretType)
-                                   .build();
-    log.info("Getting secret variable encryption details for secret type:[{}] ref:[{}]", secretType,
-        secretVariable.getValue().toSecretRefStringValue());
+    SecretVariableDTO secret =
+        SecretVariableDTO.builder().name(secretVariable.getName()).secret(secretRefData).type(secretType).build();
+    log.info("Getting secret variable encryption details for secret type:[{}] ref:[{}]", secretType, secretIdentifier);
     List<EncryptedDataDetail> encryptionDetails = secretManagerClientService.getEncryptionDetails(ngAccess, secret);
     if (isEmpty(encryptionDetails)) {
       throw new InvalidArgumentsException("Secret encrypted details can't be empty or null", WingsException.USER);

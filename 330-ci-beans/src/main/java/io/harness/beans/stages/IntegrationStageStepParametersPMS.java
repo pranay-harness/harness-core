@@ -5,13 +5,13 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toMap;
 
 import io.harness.beans.dependencies.DependencyElement;
-import io.harness.beans.yaml.extended.CustomTextVariable;
-import io.harness.beans.yaml.extended.CustomVariable;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.yaml.core.variables.NGVariableType;
+import io.harness.yaml.core.variables.StringNGVariable;
 
 import java.util.HashMap;
 import java.util.List;
@@ -45,11 +45,11 @@ public class IntegrationStageStepParametersPMS implements StepParameters {
     IntegrationStageConfig integrationStageConfig = (IntegrationStageConfig) stageElementConfig.getStageType();
     Map<String, Object> variablesMap = new HashMap<>();
     if (isNotEmpty(integrationStageConfig.getVariables())) {
-      integrationStageConfig.getVariables()
-          .stream()
-          .filter(customVariables -> customVariables.getType().equals(CustomVariable.Type.TEXT))
-          .map(customVariable -> (CustomTextVariable) customVariable)
-          .collect(toMap(CustomTextVariable::getName, CustomTextVariable::getValue));
+      variablesMap = integrationStageConfig.getVariables()
+                         .stream()
+                         .filter(customVariables -> customVariables.getType() == NGVariableType.STRING)
+                         .map(customVariable -> (StringNGVariable) customVariable)
+                         .collect(toMap(StringNGVariable::getName, StringNGVariable::getValue));
     }
 
     return IntegrationStageStepParametersPMS.builder()

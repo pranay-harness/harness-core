@@ -29,7 +29,7 @@ pipeline:
               type: Secret
               value: REPLACE_USERNAME_HERE
             - name: param1
-              type: Text
+              type: String
               value: value1
 
           serviceDependencies:
@@ -284,5 +284,5 @@ pipeline:
               type: Secret
               value: REPLACE_USERNAME_HERE
             - name: param1
-              type: Text
+              type: String
               value: value1

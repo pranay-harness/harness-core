@@ -1,9 +1,11 @@
 package io.harness.beans.serializer;
 
 import static io.harness.common.NGExpressionUtils.matchesInputSetPattern;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.lang.String.format;
 
+import io.harness.encryption.SecretRefData;
 import io.harness.exception.ngexception.CIStageExecutionUserException;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.extended.ci.codebase.Build;
@@ -68,6 +70,49 @@ public class RunTimeInputHandler {
         log.warn(format("Failed to resolve optional field %s in step type %s with identifier %s", fieldName, stepType,
             stepIdentifier));
         return UNRESOLVED_PARAMETER;
+      }
+    }
+
+    return parameterField.getValue();
+  }
+
+  public SecretRefData resolveSecretRefWithDefaultValue(String fieldName, String stepType, String stepIdentifier,
+      ParameterField<SecretRefData> parameterField, boolean isMandatory) {
+    if (parameterField == null || parameterField.getValue() == null) {
+      if (isMandatory) {
+        throw new CIStageExecutionUserException(
+            format("Failed to resolve mandatory field %s in step type %s with identifier %s", fieldName, stepType,
+                stepIdentifier));
+      } else {
+        return null;
+      }
+    }
+
+    return parameterField.getValue();
+  }
+
+  public String resolveStringParameterWithDefaultValue(String fieldName, String stepType, String stepIdentifier,
+      ParameterField<String> parameterField, boolean isMandatory, String defaultValue) {
+    if (parameterField == null || parameterField.getValue() == null) {
+      if (isMandatory && isEmpty(defaultValue)) {
+        throw new CIStageExecutionUserException(
+            format("Failed to resolve mandatory field %s in step type %s with identifier %s", fieldName, stepType,
+                stepIdentifier));
+      } else {
+        return defaultValue;
+      }
+    }
+
+    // It only checks input set pattern. Variable can be resolved on lite engine.
+    if (matchesInputSetPattern(parameterField.getValue())) {
+      if (isMandatory && isEmpty(defaultValue)) {
+        throw new CIStageExecutionUserException(
+            format("Failed to resolve mandatory field %s in step type %s with identifier %s", fieldName, stepType,
+                stepIdentifier));
+      } else {
+        log.warn(format("Failed to resolve optional field %s in step type %s with identifier %s", fieldName, stepType,
+            stepIdentifier));
+        return defaultValue;
       }
     }
 

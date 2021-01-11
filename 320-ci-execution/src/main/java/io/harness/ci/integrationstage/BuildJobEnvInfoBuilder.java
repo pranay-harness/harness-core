@@ -2,6 +2,7 @@ package io.harness.ci.integrationstage;
 
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveMapParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameter;
+import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameterWithDefaultValue;
 import static io.harness.common.CICommonPodConstants.MOUNT_PATH;
 import static io.harness.common.CICommonPodConstants.STEP_EXEC;
 import static io.harness.common.CIExecutionConstants.IMAGE_PATH_SPLIT_REGEX;
@@ -14,8 +15,6 @@ import static io.harness.common.CIExecutionConstants.STEP_REQUEST_MEMORY_MIB;
 import static io.harness.common.CIExecutionConstants.STEP_REQUEST_MILLI_CPU;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
-import static java.util.stream.Collectors.toMap;
 
 import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
@@ -32,9 +31,6 @@ import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.TestIntelligenceStepInfo;
 import io.harness.beans.steps.stepinfo.publish.artifact.Artifact;
-import io.harness.beans.yaml.extended.CustomSecretVariable;
-import io.harness.beans.yaml.extended.CustomTextVariable;
-import io.harness.beans.yaml.extended.CustomVariable;
 import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.beans.yaml.extended.container.quantity.unit.BinaryQuantityUnit;
 import io.harness.beans.yaml.extended.container.quantity.unit.DecimalQuantityUnit;
@@ -59,6 +55,9 @@ import io.harness.stateutils.buildstate.providers.StepContainerUtils;
 import io.harness.util.ExceptionUtility;
 import io.harness.util.PortFinder;
 import io.harness.utils.IdentifierRefHelper;
+import io.harness.yaml.core.variables.NGVariableType;
+import io.harness.yaml.core.variables.SecretNGVariable;
+import io.harness.yaml.core.variables.StringNGVariable;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -396,7 +395,7 @@ public class BuildJobEnvInfoBuilder {
         .build();
   }
 
-  private List<CustomSecretVariable> getSecretVariables(StageElementConfig stageElementConfig) {
+  private List<SecretNGVariable> getSecretVariables(StageElementConfig stageElementConfig) {
     IntegrationStageConfig integrationStageConfig = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
     if (isEmpty(integrationStageConfig.getVariables())) {
       return Collections.emptyList();
@@ -404,8 +403,8 @@ public class BuildJobEnvInfoBuilder {
 
     return integrationStageConfig.getVariables()
         .stream()
-        .filter(variable -> variable.getType().equals(CustomVariable.Type.SECRET))
-        .map(customVariable -> (CustomSecretVariable) customVariable)
+        .filter(variable -> variable.getType() == NGVariableType.SECRET)
+        .map(customVariable -> (SecretNGVariable) customVariable)
         .collect(Collectors.toList());
   }
 
@@ -584,9 +583,13 @@ public class BuildJobEnvInfoBuilder {
 
     return integrationStageConfig.getVariables()
         .stream()
-        .filter(customVariables -> customVariables.getType().equals(CustomVariable.Type.TEXT))
-        .map(customVariable -> (CustomTextVariable) customVariable)
-        .collect(toMap(CustomTextVariable::getName, CustomTextVariable::getValue));
+        .filter(customVariables -> customVariables.getType() == NGVariableType.STRING)
+        .map(customVariable -> (StringNGVariable) customVariable)
+        .collect(Collectors.toMap(ngVariable
+            -> ngVariable.getName(),
+            ngVariable
+            -> resolveStringParameterWithDefaultValue("variableValue", "stage", stageElementConfig.getIdentifier(),
+                ngVariable.getValue(), false, ngVariable.getDefaultValue())));
   }
 
   private ImageDetails getImageInfo(String image) {
