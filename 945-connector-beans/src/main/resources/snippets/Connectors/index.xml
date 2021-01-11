@@ -11,7 +11,6 @@
                 <tag>connector</tag>
             </tags>
             <iconTag>k8s</iconTag>
-            <schemaEntityType>Connectors</schemaEntityType>
             <resourcePath>snippets/Connectors/k8s/clientKey.yaml</resourcePath>
         </YamlSnippetMetaData>
         <!--/Repeating unit-->
@@ -26,7 +25,6 @@
                 <tag>connector</tag>
             </tags>
             <iconTag>k8s</iconTag>
-            <schemaEntityType>Connectors</schemaEntityType>
             <resourcePath>snippets/Connectors/k8s/usernamePass.yaml</resourcePath>
         </YamlSnippetMetaData>
         <!--/Repeating unit-->
@@ -41,7 +39,6 @@
                 <tag>connector</tag>
             </tags>
             <iconTag>k8s</iconTag>
-            <schemaEntityType>Connectors</schemaEntityType>
             <resourcePath>snippets/Connectors/k8s/openIdConnect.yaml</resourcePath>
         </YamlSnippetMetaData>
         <!--/Repeating unit-->
@@ -56,7 +53,6 @@
                 <tag>connector</tag>
             </tags>
             <iconTag>k8s</iconTag>
-            <schemaEntityType>Connectors</schemaEntityType>
             <resourcePath>snippets/Connectors/k8s/inheritFromDelegate.yaml</resourcePath>
         </YamlSnippetMetaData>
         <!--/Repeating unit-->
@@ -71,7 +67,6 @@
                 <tag>connector</tag>
             </tags>
             <iconTag>k8s</iconTag>
-            <schemaEntityType>Connectors</schemaEntityType>
             <resourcePath>snippets/Connectors/k8s/serviceAccountKey.yaml</resourcePath>
         </YamlSnippetMetaData>
         <!--/Repeating unit-->
@@ -101,7 +96,6 @@
                 <tag>connector</tag>
             </tags>
             <iconTag>git</iconTag>
-            <schemaEntityType>Connectors</schemaEntityType>
             <resourcePath>snippets/Connectors/git/http.yaml</resourcePath>
         </YamlSnippetMetaData>
         <!--/Repeating unit-->
@@ -116,8 +110,20 @@
                 <tag>connector</tag>
             </tags>
             <iconTag>git</iconTag>
-            <schemaEntityType>Connectors</schemaEntityType>
             <resourcePath>snippets/Connectors/git/ssh.yaml</resourcePath>
+        </YamlSnippetMetaData>
+        <!--/Repeating unit-->
+        <!--Repeating unit-->
+        <YamlSnippetMetaData>
+            <name>Hashicorp Vault Secret Manager</name>
+            <version>0.1</version>
+            <description>Hashicorp Vault Secret Manager</description>
+            <tags>
+                <tag>secretmanager</tag>
+                <tag>connector</tag>
+            </tags>
+            <iconTag>secretmanager</iconTag>
+            <resourcePath>snippets/Connectors/secretManager/hashicorp.yaml</resourcePath>
         </YamlSnippetMetaData>
         <!--/Repeating unit-->
     </yamlSnippetMetaDataList>

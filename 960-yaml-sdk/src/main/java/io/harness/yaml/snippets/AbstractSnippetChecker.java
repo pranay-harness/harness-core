@@ -10,6 +10,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.yaml.YamlSdkConfiguration;
 import io.harness.yaml.schema.YamlSchemaRoot;
 import io.harness.yaml.snippets.bean.YamlSnippetMetaData;
+import io.harness.yaml.snippets.bean.YamlSnippetTags;
 import io.harness.yaml.snippets.bean.YamlSnippets;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
@@ -38,12 +39,12 @@ import org.slf4j.Logger;
 public interface AbstractSnippetChecker {
   default void snippetTests(Logger log) throws IOException {
     Reflections reflections = new Reflections(IO_HARNESS, SOFTWARE_WINGS);
-    List<Pair<String, ClassLoader>> snippetsIndex = getIndexResourceFileContent(log, reflections);
+    List<Pair<String, Pair<EntityType, ClassLoader>>> snippetsIndex = getIndexResourceFileContent(log, reflections);
     final Class tagsEnum = getTagsEnum(reflections);
-    for (Pair<String, ClassLoader> snippet : snippetsIndex) {
+    for (Pair<String, Pair<EntityType, ClassLoader>> snippet : snippetsIndex) {
       testIconTagsAreInTags(snippet.getLeft());
-      testSnippetHasCorrectResourceFileSpecified(snippet.getLeft(), snippet.getRight());
-      testSnippetsMatchSchema(log, snippet.getLeft(), snippet.getRight());
+      testSnippetHasCorrectResourceFileSpecified(snippet.getLeft(), snippet.getRight().getRight());
+      testSnippetsMatchSchema(log, snippet.getLeft(), snippet.getRight().getLeft(), snippet.getRight().getRight());
       testTagsEnumAndXmlInSync(snippet.getLeft(), tagsEnum);
     }
   }
@@ -59,7 +60,8 @@ public interface AbstractSnippetChecker {
     }
   }
 
-  default List<Pair<String, ClassLoader>> getIndexResourceFileContent(Logger log, Reflections reflections) {
+  default List<Pair<String, Pair<EntityType, ClassLoader>>> getIndexResourceFileContent(
+      Logger log, Reflections reflections) {
     final Set<Class<?>> classes = reflections.getTypesAnnotatedWith(YamlSchemaRoot.class, true);
     if (isEmpty(classes)) {
       return Collections.emptyList();
@@ -69,13 +71,13 @@ public interface AbstractSnippetChecker {
           try {
             final String snippetIndexPathForEntityType = YamlSchemaUtils.getSnippetIndexPathForEntityType(
                 clazz, YamlSdkConfiguration.snippetBasePath, YamlSdkConfiguration.snippetIndexFile);
+            final EntityType value = clazz.getAnnotation(YamlSchemaRoot.class).value();
             String snippetMetaData =
                 IOUtils.resourceToString(snippetIndexPathForEntityType, StandardCharsets.UTF_8, clazz.getClassLoader());
-            if (snippetMetaData == null) {
-              log.info("No Yaml Snippets found for {}", clazz.getCanonicalName());
-            }
-            return Pair.of(snippetMetaData, clazz.getClassLoader());
+            return Pair.of(snippetMetaData, Pair.of(value, clazz.getClassLoader()));
+
           } catch (IOException e) {
+            log.info("No Yaml Snippets found for {}", clazz.getCanonicalName());
             e.printStackTrace();
           }
           return null;
@@ -85,7 +87,8 @@ public interface AbstractSnippetChecker {
   }
 
   default Class getTagsEnum(Reflections reflections) {
-    final Set<Class<? extends YamlSnippetTags>> tagsEnum = reflections.getSubTypesOf(YamlSnippetTags.class);
+    final Set<Class<? extends io.harness.yaml.snippets.bean.YamlSnippetTags>> tagsEnum =
+        reflections.getSubTypesOf(YamlSnippetTags.class);
     if (tagsEnum.size() != 1) {
       throw new InvalidRequestException("Tags enum incorrect");
     }
@@ -133,14 +136,13 @@ public interface AbstractSnippetChecker {
     }
   }
 
-  default void testSnippetsMatchSchema(Logger log, String indexResource, ClassLoader classLoader) throws IOException {
+  default void testSnippetsMatchSchema(
+      Logger log, String indexResource, EntityType entityFromYamlType, ClassLoader classLoader) throws IOException {
     YamlSnippets yamlSnippets = getYamlSnippets(indexResource);
     Set<String> errorSnippets = new HashSet<>();
     for (YamlSnippetMetaData yamlSnippetMetaData : yamlSnippets.getYamlSnippetMetaDataList()) {
       final String snippet =
           IOUtils.resourceToString(yamlSnippetMetaData.getResourcePath(), StandardCharsets.UTF_8, classLoader);
-      final String schemaEntityType = yamlSnippetMetaData.getSchemaEntityType();
-      final EntityType entityFromYamlType = EntityType.getEntityFromYamlType(schemaEntityType);
       final String schemaBasePath = getSchemaBasePath();
       final String schemaPathForEntityType =
           YamlSchemaUtils.getSchemaPathForEntityType(entityFromYamlType, schemaBasePath);

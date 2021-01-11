@@ -13,6 +13,7 @@ import static org.mockito.Mockito.verify;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.harness.yaml.TestClass;
 import io.harness.yaml.TestClassWithManyFields;
 import io.harness.yaml.schema.beans.YamlSchemaConfiguration;
 

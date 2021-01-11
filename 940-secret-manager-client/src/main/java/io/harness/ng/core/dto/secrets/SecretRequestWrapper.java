@@ -10,7 +10,7 @@ import lombok.Data;
 
 @Data
 @Builder
-@YamlSchemaRoot(EntityType.SECRETS)
+@YamlSchemaRoot(value = EntityType.SECRETS, availableAtAccountLevel = true, availableAtOrgLevel = true)
 public class SecretRequestWrapper {
   @Valid @NotNull private SecretDTOV2 secret;
 }

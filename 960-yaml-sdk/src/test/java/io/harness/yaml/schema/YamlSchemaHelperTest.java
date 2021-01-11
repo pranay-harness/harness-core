@@ -11,9 +11,13 @@ import io.harness.CategoryTest;
 import io.harness.EntityType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.harness.yaml.TestClass;
 import io.harness.yaml.YamlSdkConfiguration;
+import io.harness.yaml.schema.beans.YamlSchemaWithDetails;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
@@ -42,11 +46,14 @@ public class YamlSchemaHelperTest extends CategoryTest {
     classes.add(TestClass.ClassWhichContainsInterface.class);
     when(YamlSchemaUtils.getClasses(any())).thenReturn(classes);
     when(IOUtils.resourceToString(any(), any(), any())).thenReturn(schema);
+    ObjectMapper objectMapper = new ObjectMapper();
+    final JsonNode jsonNode = objectMapper.readTree(schema);
 
     yamlSchemaHelper.initializeSchemaMaps(YamlSdkConfiguration.schemaBasePath, classes);
-    final String schemaForEntityType = yamlSchemaHelper.getSchemaForEntityType(EntityType.CONNECTORS);
+    final YamlSchemaWithDetails schemaForEntityType =
+        yamlSchemaHelper.getSchemaDetailsForEntityType(EntityType.CONNECTORS);
     assertThat(schemaForEntityType).isNotNull();
-    assertThat(schemaForEntityType).isEqualTo(schema);
+    assertThat(schemaForEntityType.getSchema()).isEqualTo(jsonNode);
   }
 
   private String getResource(String resource) throws IOException {

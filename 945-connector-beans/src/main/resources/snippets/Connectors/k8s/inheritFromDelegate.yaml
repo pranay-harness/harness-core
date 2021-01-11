@@ -6,7 +6,7 @@ connector:
   # Org ID
   orgIdentifier: "Devops"
   # Project ID
-  projectIdentifer: "Harness Sample App"
+  projectIdentifier: "Harness Sample App"
   type: K8sCluster
   spec:
     credential:

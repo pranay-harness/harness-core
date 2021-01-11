@@ -5,7 +5,7 @@ connector:
   # Org ID
   orgIdentifier: "Devops"
   # Project ID
-  projectIdentifer: "Harness_Sample_App"
+  projectIdentifier: "Harness_Sample_App"
 
   type: Vault
   spec:

@@ -12,8 +12,8 @@ import io.harness.CategoryTest;
 import io.harness.EntityType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.harness.yaml.TestClass;
 import io.harness.yaml.YamlSdkConfiguration;
-import io.harness.yaml.schema.TestClass;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
 import java.io.IOException;

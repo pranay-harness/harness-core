@@ -45,7 +45,7 @@ public interface AbstractSchemaChecker {
       final String schemaBasePath = YamlSdkConfiguration.schemaBasePath;
       final String schemaPathForEntityType = YamlSchemaUtils.getSchemaPathForEntityType(entityType, schemaBasePath);
       String moduleBasePath = getModulePath(schemaRoot);
-      executeCommand("git diff --exit-code -- " + moduleBasePath + schemaPathForEntityType);
+      executeCommand("git diff --exit-code -- ../" + moduleBasePath + schemaPathForEntityType);
     }
   }
 

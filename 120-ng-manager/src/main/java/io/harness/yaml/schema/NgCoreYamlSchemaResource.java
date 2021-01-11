@@ -1,16 +1,18 @@
 package io.harness.yaml.schema;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.ConnectorConstants.CONNECTOR_TYPES;
+import static io.harness.yaml.schema.beans.SchemaConstants.ENUM_NODE;
 
 import io.harness.EntityType;
+import io.harness.NGCommonEntityConstants;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.encryption.Scope;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -20,6 +22,7 @@ import java.io.IOException;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -36,20 +39,30 @@ import lombok.AllArgsConstructor;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
-public class YamlSchemaResource {
-  YamlSchemaHelper yamlSchemaHelper;
-  YamlSchemaSubtypeHelper yamlSchemaSubtypeHelper;
+public class NgCoreYamlSchemaResource implements YamlSchemaResource {
+  YamlSchemaProvider yamlSchemaProvider;
 
   @GET
   @ApiOperation(value = "Get Yaml Schema", nickname = "getYamlSchema")
-  public ResponseDTO<JsonNode> getYamlSchema(@QueryParam("entityType") @NotNull EntityType entityType)
-      throws IOException {
-    final String schemaForEntityType = yamlSchemaHelper.getSchemaForEntityType(entityType);
-    if (isEmpty(schemaForEntityType)) {
-      throw new InvalidRequestException(String.format("No schema found for entity type %s ", entityType.getYamlName()));
+  public ResponseDTO<JsonNode> getYamlSchema(@QueryParam("entityType") @NotNull EntityType entityType,
+      @QueryParam("subtype") ConnectorType entitySubtype,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @QueryParam("scope") Scope scope) {
+    JsonNode schema = null;
+    if (entitySubtype == null) {
+      schema = yamlSchemaProvider.getYamlSchema(entityType, orgIdentifier, projectIdentifier, scope);
+      if (schema == null) {
+        throw new NotFoundException(String.format("No schema found for entity type %s ", entityType.getYamlName()));
+      }
+    } else {
+      if (entityType == EntityType.CONNECTORS) {
+        schema = yamlSchemaProvider.getYamlSchemaWithArrayFieldUpdatedAtSecondLevel(entityType, orgIdentifier,
+            projectIdentifier, scope, CONNECTOR_TYPES, ENUM_NODE, entitySubtype.getDisplayName());
+      } else {
+        throw new InvalidRequestException("Subtypes are only supported for connectors");
+      }
     }
-    ObjectMapper mapper = new ObjectMapper();
-    return ResponseDTO.newResponse(mapper.readTree(schemaForEntityType));
+    return ResponseDTO.newResponse(schema);
   }
 
   // todo(abhinav): Currently handled only for connector subtype, handle it generically for all subtypes.
@@ -58,13 +71,7 @@ public class YamlSchemaResource {
   @ApiOperation(value = "Get Yaml Schema for subtype", nickname = "getYamlSchemaForSubtype")
   public ResponseDTO<JsonNode> getYamlSchemaForSubtype(@PathParam("entityType") @NotNull EntityType entityType,
       @QueryParam("subtype") @NotNull ConnectorType entitySubtype) throws IOException {
-    final String schemaForEntityType = yamlSchemaHelper.getSchemaForEntityType(entityType);
-    if (isEmpty(schemaForEntityType)) {
-      throw new InvalidRequestException(String.format("No schema found for entity type %s ", entityType.getYamlName()));
-    }
-    final String schemaForSubtype =
-        yamlSchemaSubtypeHelper.getSchemaForSubtype(entityType, entitySubtype, schemaForEntityType);
-    ObjectMapper mapper = new ObjectMapper();
-    return ResponseDTO.newResponse(mapper.readTree(schemaForSubtype));
+    // todo(abhinav):  remove this and subtype helper class once UI services are updated.
+    return null;
   }
 }

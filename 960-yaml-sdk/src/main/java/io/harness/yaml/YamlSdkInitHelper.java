@@ -47,7 +47,7 @@ public class YamlSdkInitHelper {
               clazz, YamlSdkConfiguration.snippetBasePath, YamlSdkConfiguration.snippetIndexFile);
           String snippetMetaData =
               IOUtils.resourceToString(snippetIndexPathForEntityType, StandardCharsets.UTF_8, clazz.getClassLoader());
-          yamlSnippetHelper.preComputeTagsAndNameMap(snippetMetaData);
+          yamlSnippetHelper.preComputeTagsAndNameMap(snippetMetaData, clazz);
         } catch (IOException e) {
           log.info("No Yaml Snippets found for {}", clazz.getCanonicalName());
         }

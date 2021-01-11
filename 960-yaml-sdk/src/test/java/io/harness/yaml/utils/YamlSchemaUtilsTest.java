@@ -9,7 +9,7 @@ import io.harness.CategoryTest;
 import io.harness.EntityType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import io.harness.yaml.schema.TestClass;
+import io.harness.yaml.TestClass;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;

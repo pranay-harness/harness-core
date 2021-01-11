@@ -1,26 +1,39 @@
 package io.harness.yaml.snippets.impl;
 
+import static io.harness.NGCommonEntityConstants.ORG_KEY;
+import static io.harness.NGCommonEntityConstants.PROJECT_KEY;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.encryption.Scope;
 import io.harness.exception.InvalidRequestException;
+import io.harness.jackson.JsonNodeUtils;
+import io.harness.yaml.snippets.YamlSnippetException;
 import io.harness.yaml.snippets.bean.YamlSnippetMetaData;
 import io.harness.yaml.snippets.dto.YamlSnippetMetaDataDTO;
 import io.harness.yaml.snippets.dto.YamlSnippetsDTO;
 import io.harness.yaml.snippets.helper.YamlSnippetHelper;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 
 @Singleton
+@Slf4j
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class YamlSnippetProvider {
   YamlSnippetHelper yamlSnippetHelper;
@@ -67,20 +80,84 @@ public class YamlSnippetProvider {
   }
 
   /**
-   * @param identifier {@link YamlSnippetMetaDataDTO}
-   * @return Snippet as plain string reading resource file given in XML config.
+   * @param snippetIdentifier {@link YamlSnippetMetaDataDTO}
    */
-  public String getYamlSnippet(String identifier) {
+  private YamlSnippetMetaData getYamlSnippetMetaData(String snippetIdentifier) {
     final Map<String, YamlSnippetMetaData> identifierSnippetMap = yamlSnippetHelper.getIdentifierSnippetMap();
-    final YamlSnippetMetaData yamlSnippetMetaData = identifierSnippetMap.getOrDefault(identifier, null);
+    final YamlSnippetMetaData yamlSnippetMetaData = identifierSnippetMap.get(snippetIdentifier);
     if (yamlSnippetMetaData == null) {
-      throw new InvalidRequestException("Yaml snippet not found for given identifier");
+      throwNoYamlSnippetFoundException(null);
     }
+    return yamlSnippetMetaData;
+  }
+
+  /**
+   * @param snippetIdentifier
+   * @param orgIdentifier
+   * @param projectIdentifier
+   * @param scope
+   * @return snippet if no scope given, else updates or removes properties.
+   */
+  public JsonNode getYamlSnippet(
+      String snippetIdentifier, String orgIdentifier, String projectIdentifier, Scope scope) {
+    YamlSnippetMetaData yamlSnippetMetaData = getYamlSnippetMetaData(snippetIdentifier);
+    ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+    JsonNode genericSnippetNode = null;
     try {
-      return IOUtils.resourceToString(yamlSnippetMetaData.getResourcePath(), StandardCharsets.UTF_8,
+      String snippet = IOUtils.resourceToString(yamlSnippetMetaData.getResourcePath(), StandardCharsets.UTF_8,
           yamlSnippetMetaData.getClass().getClassLoader());
+      genericSnippetNode = objectMapper.readTree(snippet);
     } catch (Exception e) {
-      throw new InvalidRequestException("Couldn't find snippet for given identifier.", e);
+      throwNoYamlSnippetFoundException(e);
     }
+
+    ObjectNode yamlWithoutWrapper;
+    try {
+      yamlWithoutWrapper = getObjectNodeRemovingWrapper(genericSnippetNode);
+
+      if (scope == Scope.ACCOUNT && yamlSnippetMetaData.isAvailableAtAccountLevel()) {
+        JsonNodeUtils.deletePropertiesInJsonNode(yamlWithoutWrapper, PROJECT_KEY, ORG_KEY);
+      } else if (scope == Scope.ORG && yamlSnippetMetaData.isAvailableAtOrgLevel()) {
+        JsonNodeUtils.deletePropertiesInJsonNode(yamlWithoutWrapper, PROJECT_KEY);
+        if (isNotEmpty(orgIdentifier)) {
+          Map<String, String> propertiesToBeModified = new HashMap<>();
+          propertiesToBeModified.put(ORG_KEY, orgIdentifier);
+          JsonNodeUtils.updatePropertiesInJsonNode(yamlWithoutWrapper, propertiesToBeModified);
+        }
+      } else if (scope == Scope.PROJECT && yamlSnippetMetaData.isAvailableAtProjectLevel()) {
+        Map<String, String> propertiesToBeModified = new HashMap<>();
+        if (isNotEmpty(orgIdentifier)) {
+          propertiesToBeModified.put(ORG_KEY, orgIdentifier);
+        }
+        if (isNotEmpty(projectIdentifier)) {
+          propertiesToBeModified.put(PROJECT_KEY, projectIdentifier);
+        }
+        JsonNodeUtils.updatePropertiesInJsonNode(yamlWithoutWrapper, propertiesToBeModified);
+      }
+    } catch (Exception e) {
+      log.error("Encountered error while modifying snippet", e);
+    }
+    // returning original snippet even in worst case.
+    return genericSnippetNode;
+  }
+
+  private void throwNoYamlSnippetFoundException(Exception e) {
+    throw new InvalidRequestException("Couldn't find snippet for given identifier.", e);
+  }
+
+  ObjectNode getObjectNodeRemovingWrapper(JsonNode genericSnippetNode) throws YamlSnippetException {
+    // Assumption is top level will have just one node. (like connector:, pipeline: etc)
+    // In case we have some other kind of node at root or first level it should be handled here and we can avoid
+    // throwing exception.
+    if (!genericSnippetNode.isObject()) {
+      throw new YamlSnippetException("Snippet isn't expected to have non object node at root level.");
+    }
+
+    ObjectNode snippetNode = ((ObjectNode) genericSnippetNode);
+
+    if (!snippetNode.fields().next().getValue().isObject()) {
+      throw new YamlSnippetException("Snippet isn't expected to have non object node at first level.");
+    }
+    return (ObjectNode) snippetNode.fields().next().getValue();
   }
 }

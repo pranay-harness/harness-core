@@ -23,5 +23,18 @@
             <resourcePath>testsnippets/git/test.yaml</resourcePath>
         </YamlSnippetMetaData>
 
+
+        <YamlSnippetMetaData>
+            <name>random</name>
+            <version>1.0</version>
+            <description>git desc</description>
+            <tags>
+                <tag>random</tag>
+                <tag>connector</tag>
+            </tags>
+            <resourcePath>testsnippets/randomSnippet.yaml</resourcePath>
+        </YamlSnippetMetaData>
+
+
     </yamlSnippetMetaDataList>
 </YamlSnippets>

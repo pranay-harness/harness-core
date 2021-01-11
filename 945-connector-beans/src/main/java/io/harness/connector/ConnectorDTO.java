@@ -17,7 +17,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 @ApiModel("Connector")
-@YamlSchemaRoot(EntityType.CONNECTORS)
+@YamlSchemaRoot(value = EntityType.CONNECTORS, availableAtOrgLevel = true, availableAtAccountLevel = true)
 public class ConnectorDTO {
   @JsonProperty("connector") @Valid ConnectorInfoDTO connectorInfo;
 }
