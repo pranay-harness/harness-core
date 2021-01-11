@@ -4,6 +4,7 @@ import static io.harness.cvng.beans.DataCollectionExecutionStatus.FAILED;
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.SUCCESS;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import io.harness.cvng.CVNGRequestExecutor;
 import io.harness.cvng.beans.CVDataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionTaskDTO;
@@ -52,6 +53,7 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
   @Inject private KryoSerializer kryoSerializer;
 
   @Inject private DataCollectionDSLService dataCollectionDSLService;
+  @Inject private CVNGRequestExecutor cvngRequestExecutor;
   @Inject @Named("verificationDataCollectorExecutor") protected ExecutorService dataCollectionService;
 
   @Override
@@ -92,12 +94,10 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
     return PerpetualTaskResponse.builder().responseCode(200).responseMessage("success").build();
   }
 
-  private DataCollectionTaskDTO getNextDataCollectionTask(DataCollectionPerpetualTaskParams taskParams)
-      throws IOException {
-    return cvNextGenServiceClient
-        .getNextDataCollectionTask(taskParams.getAccountId(), taskParams.getDataCollectionWorkerId())
-        .execute()
-        .body()
+  private DataCollectionTaskDTO getNextDataCollectionTask(DataCollectionPerpetualTaskParams taskParams) {
+    return cvngRequestExecutor
+        .executeWithRetry(cvNextGenServiceClient.getNextDataCollectionTask(
+            taskParams.getAccountId(), taskParams.getDataCollectionWorkerId()))
         .getResource();
   }
 
@@ -147,7 +147,7 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
       }
       DataCollectionTaskResult result =
           DataCollectionTaskResult.builder().dataCollectionTaskId(dataCollectionTask.getUuid()).status(SUCCESS).build();
-      cvNextGenServiceClient.updateTaskStatus(taskParams.getAccountId(), result).execute();
+      cvngRequestExecutor.execute(cvNextGenServiceClient.updateTaskStatus(taskParams.getAccountId(), result));
       log.info("Updated task status to success.");
 
     } catch (Exception e) {
@@ -158,7 +158,7 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
                                             .exception(ExceptionUtils.getMessage(e))
                                             .stacktrace(ExceptionUtils.getStackTrace(e))
                                             .build();
-      cvNextGenServiceClient.updateTaskStatus(taskParams.getAccountId(), result).execute();
+      cvngRequestExecutor.execute(cvNextGenServiceClient.updateTaskStatus(taskParams.getAccountId(), result));
     }
   }
 
