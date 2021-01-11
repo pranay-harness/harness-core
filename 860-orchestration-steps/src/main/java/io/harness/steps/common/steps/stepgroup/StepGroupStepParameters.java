@@ -7,11 +7,13 @@ import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 
 import java.util.List;
 import lombok.Builder;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Value;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.TypeAlias;
 
-@Value
+@Data
+@NoArgsConstructor
 @TypeAlias("stepGroupStepParameters")
 @EqualsAndHashCode(callSuper = true)
 public class StepGroupStepParameters extends StepGroupElementConfig implements StepParameters {

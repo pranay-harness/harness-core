@@ -166,26 +166,26 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
     serviceEntityService.upsert(getServiceEntity(serviceConfig, ambiance));
 
     return StepResponse.builder()
-        .stepOutcome(StepResponse.StepOutcome.builder()
-                         .name(OutcomeExpressionConstants.SERVICE)
-                         .outcome(createServiceOutcome(serviceConfig, serviceStepPassThroughData.getStepOutcomes(),
-                             Integer.parseInt(AmbianceHelper.getExpressionFunctorToken(ambiance))))
-                         .group(StepOutcomeGroup.STAGE.name())
-                         .build())
+        .stepOutcome(
+            StepResponse.StepOutcome.builder()
+                .name(OutcomeExpressionConstants.SERVICE)
+                .outcome(createServiceOutcome(ambiance, serviceConfig, serviceStepPassThroughData.getStepOutcomes(),
+                    Integer.parseInt(AmbianceHelper.getExpressionFunctorToken(ambiance))))
+                .group(StepOutcomeGroup.STAGE.name())
+                .build())
         .status(Status.SUCCEEDED)
         .build();
   }
 
   @VisibleForTesting
-  ServiceOutcome createServiceOutcome(
-      ServiceConfig serviceConfig, List<StepOutcome> stepOutcomes, int expressionFunctorToken) throws IOException {
+  ServiceOutcome createServiceOutcome(Ambiance ambiance, ServiceConfig serviceConfig, List<StepOutcome> stepOutcomes,
+      int expressionFunctorToken) throws IOException {
+    ServiceEntity serviceEntity = getServiceEntity(serviceConfig, ambiance);
     ServiceOutcomeBuilder outcomeBuilder =
         ServiceOutcome.builder()
-            .name(serviceConfig.getService().getName())
-            .identifier(serviceConfig.getService().getIdentifier())
-            .description(serviceConfig.getService().getDescription() != null
-                    ? serviceConfig.getService().getDescription().getValue()
-                    : "")
+            .name(serviceEntity.getName())
+            .identifier(serviceEntity.getIdentifier())
+            .description(serviceEntity.getDescription() != null ? serviceEntity.getDescription() : "")
             .type(serviceConfig.getServiceDefinition().getServiceSpec().getType())
             .tags(serviceConfig.getTags())
             .variables(NGVariablesUtils.getMapOfVariables(
@@ -425,6 +425,17 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
     String accountId = AmbianceHelper.getAccountId(ambiance);
     String projectIdentifier = AmbianceHelper.getProjectIdentifier(ambiance);
     String orgIdentifier = AmbianceHelper.getOrgIdentifier(ambiance);
+
+    if (serviceConfig.getServiceRef() != null) {
+      String serviceIdentifier = serviceConfig.getServiceRef().getValue();
+      Optional<ServiceEntity> serviceEntity =
+          serviceEntityService.get(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, false);
+      if (serviceEntity.isPresent()) {
+        return serviceEntity.get();
+      } else {
+        throw new InvalidRequestException("Service with identifier " + serviceIdentifier + " does not exist");
+      }
+    }
 
     return ServiceEntity.builder()
         .identifier(serviceConfig.getService().getIdentifier())

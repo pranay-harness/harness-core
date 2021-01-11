@@ -10,13 +10,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -106,12 +100,22 @@ public class FQNUtils {
 
   private void generateFQNMapFromListOfMultipleKeyMaps(ArrayNode list, FQN baseFQN, Map<FQN, Object> res) {
     list.forEach(element -> {
-      FQN currFQN = FQN.duplicateAndAddNode(baseFQN,
-          FQNNode.builder()
-              .nodeType(FQNNode.NodeType.UUID)
-              .uuidKey("name")
-              .uuidValue(element.get("name").asText())
-              .build());
+      FQN currFQN;
+      if (element.has("name")) {
+        currFQN = FQN.duplicateAndAddNode(baseFQN,
+            FQNNode.builder()
+                .nodeType(FQNNode.NodeType.UUID)
+                .uuidKey("name")
+                .uuidValue(element.get("name").asText())
+                .build());
+      } else {
+        currFQN = FQN.duplicateAndAddNode(baseFQN,
+            FQNNode.builder()
+                .nodeType(FQNNode.NodeType.UUID)
+                .uuidKey("key")
+                .uuidValue(element.get("key").asText())
+                .build());
+      }
 
       Set<String> fieldNames = new LinkedHashSet<>();
       element.fieldNames().forEachRemaining(fieldNames::add);
@@ -227,12 +231,22 @@ public class FQNUtils {
     List<Object> topKeyList = new ArrayList<>();
     list.forEach(element -> {
       Map<String, Object> tempMap = new LinkedHashMap<>();
-      FQN currFQN = FQN.duplicateAndAddNode(baseFQN,
-          FQNNode.builder()
-              .nodeType(FQNNode.NodeType.UUID)
-              .uuidKey("name")
-              .uuidValue(element.get("name").asText())
-              .build());
+      FQN currFQN;
+      if (element.has("name")) {
+        currFQN = FQN.duplicateAndAddNode(baseFQN,
+            FQNNode.builder()
+                .nodeType(FQNNode.NodeType.UUID)
+                .uuidKey("name")
+                .uuidValue(element.get("name").asText())
+                .build());
+      } else {
+        currFQN = FQN.duplicateAndAddNode(baseFQN,
+            FQNNode.builder()
+                .nodeType(FQNNode.NodeType.UUID)
+                .uuidKey("key")
+                .uuidValue(element.get("key").asText())
+                .build());
+      }
 
       Set<String> fieldNames = new LinkedHashSet<>();
       element.fieldNames().forEachRemaining(fieldNames::add);
