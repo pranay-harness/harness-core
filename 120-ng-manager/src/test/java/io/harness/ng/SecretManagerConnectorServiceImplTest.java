@@ -6,7 +6,6 @@ import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -104,30 +103,6 @@ public class SecretManagerConnectorServiceImplTest extends CategoryTest {
     } catch (InvalidRequestException exception) {
       // do nothing
     }
-  }
-
-  @Test
-  @Owner(developers = PHOENIKX)
-  @Category(UnitTests.class)
-  public void testCreateSecretManagerShouldFail_exceptionWhileSavingConnector() throws IOException {
-    SecretManagerConfigDTO secretManagerConfigDTO = random(VaultConfigDTO.class);
-    when(ngSecretManagerService.createSecretManager(any())).thenReturn(secretManagerConfigDTO);
-    when(defaultConnectorService.create(any(), any())).thenThrow(new InvalidRequestException("error"));
-    when(ngSecretManagerService.deleteSecretManager(any(), any(), any(), any())).thenReturn(true);
-    when(connectorRepository.updateMultiple(any(), any())).thenReturn(null);
-    try {
-      secretManagerConnectorService.create(getRequestDTO(), ACCOUNT);
-      fail("Should fail if execution reaches here");
-    } catch (SecretManagementException exception) {
-      // do nothing
-    }
-
-    /* if you are figuring out why this verification contains atLeastOnce(),
-     with RETURNS_DEEP_STUBS, verify call will read how long your chain is
-     For example: if you have mocked this call -> when(x.get().something()).thenReturn(blah_blah)
-     when you call verify(x).get(), it will fail and say that x.get() was called 2 times
-     */
-    verify(ngSecretManagerService, atLeastOnce()).deleteSecretManager(any(), any(), any(), any());
   }
 
   @Test

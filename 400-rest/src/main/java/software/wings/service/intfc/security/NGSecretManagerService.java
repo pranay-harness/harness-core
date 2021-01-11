@@ -37,7 +37,7 @@ public interface NGSecretManagerService {
   SecretManagerConfig getGlobalSecretManager(String accountIdentifier);
 
   boolean deleteSecretManager(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, boolean softDelete);
 
   SecretManagerMetadataDTO getMetadata(String accountIdentifier, SecretManagerMetadataRequestDTO requestDTO);
 }

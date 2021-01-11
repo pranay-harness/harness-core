@@ -5,7 +5,6 @@ import static io.harness.delegate.beans.connector.ConnectivityStatus.FAILURE;
 import static io.harness.delegate.beans.connector.ConnectivityStatus.SUCCESS;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
-import static io.harness.exception.WingsException.USER;
 
 import io.harness.connector.ConnectorCategory;
 import io.harness.connector.ConnectorDTO;
@@ -80,22 +79,14 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
         SecretManagerConfigDTOMapper.fromConnectorDTO(accountIdentifier, connector, connectorInfo.getConnectorConfig());
     SecretManagerConfigDTO createdSecretManager = ngSecretManagerService.createSecretManager(secretManagerConfigDTO);
     if (Optional.ofNullable(createdSecretManager).isPresent()) {
-      try {
-        if (isDefaultSecretManager(connector.getConnectorInfo())) {
-          setDefaultFlagFalseOfSecretManagers(accountIdentifier, connector.getConnectorInfo().getOrgIdentifier(),
-              connector.getConnectorInfo().getProjectIdentifier());
-        }
-        return defaultConnectorService.create(connector, accountIdentifier);
-      } catch (Exception ex) {
-        log.error("Error occurred while creating secret manager in 120 ng, trying to delete in 71 rest", ex);
-        ngSecretManagerService.deleteSecretManager(accountIdentifier, connectorInfo.getOrgIdentifier(),
-            connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
-        throw new SecretManagementException(
-            SECRET_MANAGEMENT_ERROR, "Exception occurred while saving secret manager", USER);
+      if (isDefaultSecretManager(connector.getConnectorInfo())) {
+        clearDefaultFlagOfSecretManagers(accountIdentifier, connector.getConnectorInfo().getOrgIdentifier(),
+            connector.getConnectorInfo().getProjectIdentifier());
       }
+      return defaultConnectorService.create(connector, accountIdentifier);
     }
     throw new SecretManagementException(
-        SECRET_MANAGEMENT_ERROR, "Error occurred while saving secret manager in 71 rest.", SRE);
+        SECRET_MANAGEMENT_ERROR, "Error occurred while saving secret manager remotely.", SRE);
   }
 
   private boolean isDefaultSecretManager(ConnectorInfoDTO connector) {
@@ -112,7 +103,7 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
     }
   }
 
-  private void setDefaultFlagFalseOfSecretManagers(
+  private void clearDefaultFlagOfSecretManagers(
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     Criteria criteria = Criteria.where(ConnectorKeys.accountIdentifier)
                             .is(accountIdentifier)
@@ -141,7 +132,7 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
         connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier(), dto);
     if (Optional.ofNullable(updatedSecretManagerConfig).isPresent()) {
       if (isDefaultSecretManager(connector.getConnectorInfo())) {
-        setDefaultFlagFalseOfSecretManagers(accountIdentifier, connector.getConnectorInfo().getOrgIdentifier(),
+        clearDefaultFlagOfSecretManagers(accountIdentifier, connector.getConnectorInfo().getOrgIdentifier(),
             connector.getConnectorInfo().getProjectIdentifier());
       }
       return defaultConnectorService.update(connector, accountIdentifier);

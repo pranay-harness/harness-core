@@ -63,6 +63,9 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
 
   private static final String IDENTIFIER_KEY = SecretManagerConfigKeys.ngMetadata + "." + NGMetadataKeys.identifier;
 
+  private static final String DELETED_KEY =
+      SecretManagerConfigKeys.ngMetadata + "." + NGSecretManagerMetadataKeys.deleted;
+
   @Override
   public SecretManagerConfig createSecretManager(SecretManagerConfig secretManagerConfig) {
     NGSecretManagerMetadata ngMetadata = secretManagerConfig.getNgMetadata();
@@ -144,7 +147,9 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
         .field(ORG_IDENTIFIER_KEY)
         .equal(orgIdentifier)
         .field(PROJECT_IDENTIFIER_KEY)
-        .equal(projectIdentifier);
+        .equal(projectIdentifier)
+        .field(DELETED_KEY)
+        .notEqual(Boolean.TRUE);
   }
 
   @Override
@@ -198,11 +203,18 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
 
   @Override
   public boolean deleteSecretManager(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, boolean softDelete) {
     Optional<SecretManagerConfig> secretManagerConfigOptional =
         getSecretManager(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    if (secretManagerConfigOptional.isPresent()) {
-      SecretManagerConfig secretManagerConfig = secretManagerConfigOptional.get();
+    if (!secretManagerConfigOptional.isPresent()) {
+      return false;
+    }
+    SecretManagerConfig secretManagerConfig = secretManagerConfigOptional.get();
+    if (softDelete) {
+      secretManagerConfig.getNgMetadata().setDeleted(true);
+      wingsPersistence.save(secretManagerConfig);
+      return true;
+    } else {
       switch (secretManagerConfig.getEncryptionType()) {
         case VAULT:
           VaultConfig vaultConfig = (VaultConfig) secretManagerConfig;
@@ -218,7 +230,6 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
           throw new UnsupportedOperationException("Secret manager not supported");
       }
     }
-    return false;
   }
 
   private VaultSecretEngineDTO fromSecretEngineSummary(SecretEngineSummary secretEngineSummary) {
