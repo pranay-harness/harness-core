@@ -171,8 +171,6 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
       Double idleCost = null;
       Double unallocatedCost = null;
       Double systemCost = null;
-      Double maxCpuUtilization = null;
-      Double maxMemoryUtilization = null;
       Double avgCpuUtilization = null;
       Double avgMemoryUtilization = null;
       Double cpuRequest = null;
@@ -213,16 +211,16 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
             break;
           case SUM:
           case TOTALCOST:
-            totalCost = resultSet.getDouble(field.getFieldName());
+            totalCost = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
             break;
           case IDLECOST:
-            idleCost = resultSet.getDouble(field.getFieldName());
+            idleCost = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
             break;
           case UNALLOCATEDCOST:
-            unallocatedCost = resultSet.getDouble(field.getFieldName());
+            unallocatedCost = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
             break;
           case SYSTEMCOST:
-            systemCost = resultSet.getDouble(field.getFieldName());
+            systemCost = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
             break;
           case REGION:
             region = resultSet.getString(field.getFieldName());
@@ -254,36 +252,30 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
           case INSTANCETYPE:
             instanceType = resultSet.getString(field.getFieldName());
             break;
-          case MAXCPUUTILIZATION:
-            maxCpuUtilization = resultSet.getDouble(field.getFieldName());
-            break;
-          case MAXMEMORYUTILIZATION:
-            maxMemoryUtilization = resultSet.getDouble(field.getFieldName());
-            break;
-          case AVGCPUUTILIZATION:
-            avgCpuUtilization = resultSet.getDouble(field.getFieldName());
-            break;
-          case AVGMEMORYUTILIZATION:
-            avgMemoryUtilization = resultSet.getDouble(field.getFieldName());
-            break;
-          case CPUREQUEST:
-            cpuRequest = resultSet.getDouble(field.getFieldName());
-            break;
-          case CPULIMIT:
-            cpuLimit = resultSet.getDouble(field.getFieldName());
-            break;
-          case MEMORYREQUEST:
-            memoryRequest = resultSet.getDouble(field.getFieldName());
-            break;
-          case MEMORYLIMIT:
-            memoryLimit = resultSet.getDouble(field.getFieldName());
-            break;
           case STARTTIME:
           case TIME_SERIES:
             startTime = resultSet.getTimestamp(field.getFieldName(), utils.getDefaultCalendar()).getTime();
             break;
           case INSTANCENAME:
             instanceName = resultSet.getString(field.getFieldName());
+            break;
+          case AGGREGATEDCPULIMIT:
+            cpuLimit = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
+            break;
+          case AGGREGATEDCPUREQUEST:
+            cpuRequest = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
+            break;
+          case AGGREGATEDCPUUTILIZATIONVALUE:
+            avgCpuUtilization = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
+            break;
+          case AGGREGATEDMEMORYLIMIT:
+            memoryLimit = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
+            break;
+          case AGGREGATEDMEMORYREQUEST:
+            memoryRequest = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
+            break;
+          case AGGREGATEDMEMORYUTILIZATIONVALUE:
+            avgMemoryUtilization = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
             break;
           default:
             break;
@@ -301,8 +293,6 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
           .idleCost(idleCost)
           .unallocatedCost(unallocatedCost)
           .systemCost(systemCost)
-          .maxCpuUtilization(maxCpuUtilization)
-          .maxMemoryUtilization(maxMemoryUtilization)
           .avgCpuUtilization(avgCpuUtilization)
           .avgMemoryUtilization(avgMemoryUtilization)
           .cpuLimit(cpuLimit)
@@ -433,6 +423,10 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
           break;
       }
     }
+  }
+
+  private double getRoundedDoubleValue(double value) {
+    return Math.round(value * 100D) / 100D;
   }
 
   @Override

@@ -1391,10 +1391,17 @@ public class BillingDataQueryBuilder {
   protected boolean showUnallocatedCost(List<QLCCMEntityGroupBy> groupBy, List<QLBillingDataFilter> filters) {
     boolean isClusterDrillDown = isClusterDrilldown(groupBy);
     boolean showUnallocated = false;
+    boolean filterPresent = false;
     List<String> values = new ArrayList<>();
     for (QLBillingDataFilter filter : filters) {
       if (filter.getWorkloadName() != null) {
         values.addAll(Arrays.asList(filter.getWorkloadName().getValues()));
+        // For workload drill-down
+        if ((filter.getWorkloadName().getOperator() == QLIdOperator.IN
+                || filter.getWorkloadName().getOperator() == QLIdOperator.EQUALS)
+            && filter.getWorkloadName().getValues().length != 0) {
+          filterPresent = true;
+        }
       }
       if (filter.getNamespace() != null) {
         values.addAll(Arrays.asList(filter.getNamespace().getValues()));
@@ -1410,7 +1417,7 @@ public class BillingDataQueryBuilder {
       }
     }
     showUnallocated = !values.contains(UNALLOCATED);
-    return isClusterDrillDown && showUnallocated;
+    return isClusterDrillDown && showUnallocated && !filterPresent;
   }
 
   protected List<QLCCMEntityGroupBy> getGroupByOrderedByDrillDown(List<QLCCMEntityGroupBy> groupByEntityList) {

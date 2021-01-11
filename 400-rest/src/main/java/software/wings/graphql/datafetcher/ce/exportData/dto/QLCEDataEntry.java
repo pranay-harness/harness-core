@@ -20,8 +20,6 @@ public class QLCEDataEntry implements QLData {
   Double idleCost;
   Double unallocatedCost;
   Double systemCost;
-  Double maxCpuUtilization;
-  Double maxMemoryUtilization;
   Double avgCpuUtilization;
   Double avgMemoryUtilization;
   Double cpuRequest;

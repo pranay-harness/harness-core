@@ -334,7 +334,9 @@ public class BillingStatsFilterValuesDataFetcher
         }
       } else {
         HarnessTag tag = harnessTagService.get(accountId, tagFilter.getTagName());
-        tags.add(QLTags.builder().name(tag.getKey()).values(tag.getAllowedValues().toArray(new String[0])).build());
+        if (tag.getAllowedValues() != null) {
+          tags.add(QLTags.builder().name(tag.getKey()).values(tag.getAllowedValues().toArray(new String[0])).build());
+        }
       }
     }
 
