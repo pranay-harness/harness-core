@@ -28,12 +28,4 @@ import org.modelmapper.ModelMapper;
 public class PipelineExecutionFilterProperties extends FilterProperties {
   private ExecutionStatus status;
   private String pipelineName;
-
-  @Override
-  public FilterPropertiesDTO writeDTO() {
-    ModelMapper modelMapper = new ModelMapper();
-    FilterPropertiesDTO filterPropertiesDTO = modelMapper.map(this, PipelineExecutionFilterPropertiesDTO.class);
-    filterPropertiesDTO.setTags(TagMapper.convertToMap(getTags()));
-    return filterPropertiesDTO;
-  }
 }
