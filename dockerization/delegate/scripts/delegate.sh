@@ -155,6 +155,10 @@ if [ ! -z "$HELM_PATH" ] && ! `grep helmPath config-delegate.yml > /dev/null` ; 
   echo "helmPath: $HELM_PATH" >> config-delegate.yml
 fi
 
+if [ ! -z "$LOG_STREAMING_SERVICE_BASE_URL" ] && ! `grep logStreamingServiceBaseUrl config-delegate.yml > /dev/null` ; then
+  echo "logStreamingServiceBaseUrl: $LOG_STREAMING_SERVICE_BASE_URL" >> config-delegate.yml
+fi
+
 if [ ! -z "$GRPC_SERVICE_ENABLED" ] && ! `grep grpcServiceEnabled config-delegate.yml > /dev/null` ; then
   echo "grpcServiceEnabled: $GRPC_SERVICE_ENABLED" >> config-delegate.yml
 fi
