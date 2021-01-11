@@ -2,12 +2,10 @@ package io.harness.connector.validator;
 
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.DelegateTaskRequest;
-import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.BaseNGAccess;
@@ -44,7 +42,9 @@ public abstract class AbstractConnectorValidator {
       throw new InvalidRequestException(errorNotifyResponseData.getErrorMessage());
     } else if (responseData instanceof RemoteMethodReturnValueData
         && (((RemoteMethodReturnValueData) responseData).getException() instanceof InvalidRequestException)) {
-      throw(InvalidRequestException)((RemoteMethodReturnValueData) responseData).getException();
+      String errorMessage =
+          ((InvalidRequestException) ((RemoteMethodReturnValueData) responseData).getException()).getMessage();
+      throw new InvalidRequestException(errorMessage);
     }
     return responseData;
   }
