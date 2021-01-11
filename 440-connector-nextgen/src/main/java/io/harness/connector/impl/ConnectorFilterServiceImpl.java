@@ -15,7 +15,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.connector.ConnectorCategory;
-import io.harness.connector.apis.dto.ConnectorFilterPropertiesDTO;
+import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.entities.Connector.ConnectorKeys;
 import io.harness.connector.services.ConnectorFilterService;
 import io.harness.delegate.beans.connector.ConnectorType;

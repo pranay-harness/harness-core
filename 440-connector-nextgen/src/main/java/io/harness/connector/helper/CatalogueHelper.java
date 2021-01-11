@@ -1,7 +1,7 @@
 package io.harness.connector.helper;
 
+import io.harness.connector.ConnectorCatalogueItem;
 import io.harness.connector.ConnectorCategory;
-import io.harness.connector.apis.dto.ConnectorCatalogueItem;
 
 import java.util.Arrays;
 import java.util.List;

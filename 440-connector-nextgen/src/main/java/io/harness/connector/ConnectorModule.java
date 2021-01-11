@@ -18,6 +18,7 @@ import io.harness.connector.mappers.ceawsmapper.CEAwsDTOToEntity;
 import io.harness.connector.mappers.ceawsmapper.CEAwsEntityToDTO;
 import io.harness.connector.mappers.docker.DockerDTOToEntity;
 import io.harness.connector.mappers.docker.DockerEntityToDTO;
+import io.harness.connector.mappers.filter.ConnectorFilterPropertiesMapper;
 import io.harness.connector.mappers.gcpmappers.GcpDTOToEntity;
 import io.harness.connector.mappers.gcpmappers.GcpEntityToDTO;
 import io.harness.connector.mappers.gitconnectormapper.GitDTOToEntity;
@@ -59,7 +60,9 @@ import io.harness.connector.validator.JiraConnectorValidator;
 import io.harness.connector.validator.KubernetesConnectionValidator;
 import io.harness.connector.validator.NexusConnectorValidator;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.filter.FilterType;
 import io.harness.filter.FiltersModule;
+import io.harness.filter.mapper.FilterPropertiesMapper;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.AbstractModule;
@@ -143,6 +146,10 @@ public class ConnectorModule extends AbstractModule {
     bind(ConnectorActivityService.class).to(ConnectorActivityServiceImpl.class);
     bind(ConnectorFilterService.class).to(ConnectorFilterServiceImpl.class);
     bind(ConnectorHeartbeatService.class).to(ConnectorHeartbeatServiceImpl.class);
+
+    MapBinder<String, FilterPropertiesMapper> filterPropertiesMapper =
+        MapBinder.newMapBinder(binder(), String.class, FilterPropertiesMapper.class);
+    filterPropertiesMapper.addBinding(FilterType.CONNECTOR.toString()).to(ConnectorFilterPropertiesMapper.class);
   }
 
   private void registerRequiredBindings() {
