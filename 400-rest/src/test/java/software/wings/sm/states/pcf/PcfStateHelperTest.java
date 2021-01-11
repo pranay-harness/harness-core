@@ -1097,6 +1097,18 @@ public class PcfStateHelperTest extends WingsBaseTest {
   @Test
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
+  public void testRemoveCommentedLinesFromScript() {
+    String scriptWithCommentedLines = "#line 1\n#line 2 \n line 3";
+    String scriptWithoutCommentedLines = pcfStateHelper.removeCommentedLineFromScript(scriptWithCommentedLines);
+
+    assertThat(scriptWithoutCommentedLines).doesNotContain("line 1");
+    assertThat(scriptWithoutCommentedLines).doesNotContain("line 2");
+    assertThat(scriptWithoutCommentedLines).contains("line 3");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
   public void testUpdateInfoVariables() {
     PcfRouteUpdateStateExecutionData stateExecutionData =
         PcfRouteUpdateStateExecutionData.builder()

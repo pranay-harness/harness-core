@@ -1,5 +1,6 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.beans.FeatureName.CF_CUSTOM_EXTRACTION;
 import static io.harness.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
 import static io.harness.beans.FeatureName.LIMIT_PCF_THREADS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -67,7 +68,6 @@ import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
@@ -162,6 +162,8 @@ public class PcfSetupState extends State {
   @Getter @Setter private String[] finalRouteMap;
   @Getter @Setter private boolean useAppAutoscalar;
   @Getter @Setter private boolean enforceSslValidation;
+  @Getter @Setter private boolean useArtifactProcessingScript;
+  @Getter @Setter private String artifactProcessingScript;
 
   public PcfSetupState(String name) {
     super(name, StateType.PCF_SETUP.name());
@@ -280,7 +282,7 @@ public class PcfSetupState extends State {
     artifactStreamAttributes.getMetadata().put(
         ArtifactMetadataKeys.artifactPath, artifactPathForSource(artifact, artifactStreamAttributes));
 
-    PcfCommandRequest commandRequest =
+    PcfCommandSetupRequest pcfCommandSetupRequest =
         PcfCommandSetupRequest.builder()
             .activityId(activity.getUuid())
             .appId(app.getUuid())
@@ -313,6 +315,15 @@ public class PcfSetupState extends State {
                 featureFlagService.isEnabled(IGNORE_PCF_CONNECTION_CONTEXT_CACHE, pcfConfig.getAccountId()))
             .build();
 
+    if (featureFlagService.isEnabled(CF_CUSTOM_EXTRACTION, pcfConfig.getAccountId()) && useArtifactProcessingScript
+        && isNotEmpty(artifactProcessingScript)) {
+      if (pcfCommandSetupRequest.getArtifactStreamAttributes().isDockerBasedDeployment()) {
+        throw new InvalidRequestException("Docker based deployment shouldn't contain an artifact processing script");
+      }
+      String rawScript = pcfStateHelper.removeCommentedLineFromScript(artifactProcessingScript);
+      pcfCommandSetupRequest.setArtifactProcessingScript(context.renderExpression(rawScript));
+    }
+
     PcfSetupStateExecutionData stateExecutionData =
         PcfSetupStateExecutionData.builder()
             .activityId(activity.getUuid())
@@ -320,7 +331,7 @@ public class PcfSetupState extends State {
             .appId(app.getUuid())
             .envId(env.getUuid())
             .infraMappingId(pcfInfrastructureMapping.getUuid())
-            .pcfCommandRequest(commandRequest)
+            .pcfCommandRequest(pcfCommandSetupRequest)
             .commandName(PCF_SETUP_COMMAND)
             .maxInstanceCount(maxCount)
             .useCurrentRunningInstanceCount(useCurrentRunningCount)
@@ -338,6 +349,8 @@ public class PcfSetupState extends State {
             .enforceSslValidation(enforceSslValidation)
             .resizeStrategy(resizeStrategy)
             .pcfManifestsPackage(pcfManifestsPackage)
+            .useArtifactProcessingScript(useArtifactProcessingScript)
+            .artifactProcessingScript(artifactProcessingScript)
             .build();
 
     String waitId = generateUuid();
@@ -351,8 +364,8 @@ public class PcfSetupState extends State {
             .envId(env.getUuid())
             .environmentType(env.getEnvironmentType())
             .infrastructureMappingId(pcfInfrastructureMapping.getUuid())
+            .parameters(new Object[] {pcfCommandSetupRequest, encryptedDataDetails})
             .serviceId(pcfInfrastructureMapping.getServiceId())
-            .parameters(new Object[] {commandRequest, encryptedDataDetails})
             .timeout(timeoutIntervalInMinutes == null ? DEFAULT_PCF_TASK_TIMEOUT_MIN : timeoutIntervalInMinutes)
             .build());
 
@@ -382,6 +395,8 @@ public class PcfSetupState extends State {
     resizeStrategy = pcfSetupStateExecutionData.getResizeStrategy();
     tempRouteMap = pcfSetupStateExecutionData.getTempRoutesOnSetupState();
     finalRouteMap = pcfSetupStateExecutionData.getFinalRoutesOnSetupState();
+    useArtifactProcessingScript = pcfSetupStateExecutionData.isUseArtifactProcessingScript();
+    artifactProcessingScript = pcfSetupStateExecutionData.getArtifactProcessingScript();
   }
 
   @VisibleForTesting

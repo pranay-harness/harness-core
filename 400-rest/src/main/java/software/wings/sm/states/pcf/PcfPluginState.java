@@ -80,7 +80,6 @@ import software.wings.utils.ApplicationManifestUtils;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
@@ -122,7 +121,6 @@ public class PcfPluginState extends State {
   public static final String FILE_START_REPO_ROOT_REGEX = PcfConstants.FILE_START_REPO_ROOT_REGEX;
   public static final String FILE_START_SERVICE_MANIFEST_REGEX = PcfConstants.FILE_START_SERVICE_MANIFEST_REGEX;
   public static final String FILE_END_REGEX = "(\\s|,|;|'|\"|:|$)";
-  private static final Splitter lineSplitter = Splitter.onPattern("\\r?\\n").trimResults().omitEmptyStrings();
 
   public static final Pattern PATH_REGEX_REPO_ROOT_PATTERN =
       Pattern.compile(FILE_START_REPO_ROOT_REGEX + ".*?" + FILE_END_REGEX);
@@ -167,7 +165,7 @@ public class PcfPluginState extends State {
         templateUtils.processTemplateVariables(context, getTemplateVariables()));
 
     // render script
-    String rawScript = removeCommentedLineFromScript(scriptString);
+    String rawScript = pcfStateHelper.removeCommentedLineFromScript(scriptString);
     final String renderedScript = renderedScript(
         rawScript, context, StateExecutionContext.builder().stateExecutionData(pcfPluginStateExecutionData).build());
     // find out the paths from the script
@@ -192,14 +190,6 @@ public class PcfPluginState extends State {
   private String getRepoRoot(ApplicationManifest serviceManifest) {
     final GitFileConfig gitFileConfig = serviceManifest.getGitFileConfig();
     return "/" + toRelativePath(defaultIfEmpty(gitFileConfig.getFilePath(), "/").trim());
-  }
-
-  private String removeCommentedLineFromScript(String scriptString) {
-    return lineSplitter.splitToList(scriptString)
-        .stream()
-        .filter(line -> !line.isEmpty())
-        .filter(line -> line.charAt(0) != '#')
-        .collect(Collectors.joining("\n"));
   }
 
   private String renderedScript(

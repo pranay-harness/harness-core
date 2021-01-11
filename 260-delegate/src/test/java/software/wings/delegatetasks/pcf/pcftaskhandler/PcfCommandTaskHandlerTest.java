@@ -215,7 +215,7 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
         .resizeApplication(any());
     File f1 = new File("./test1");
     File f2 = new File("./test2");
-    doReturn(f1).when(pcfCommandTaskHelper).downloadArtifact(any(), any(), any());
+    doReturn(f1).when(pcfCommandTaskHelper).downloadArtifactFromManager(any(), any(), any());
     doReturn(f2).when(pcfCommandTaskHelper).createManifestYamlFileLocally(any());
     doNothing().when(pcfCommandTaskHelper).deleteCreatedFile(anyList());
 

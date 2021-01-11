@@ -283,11 +283,12 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
     if (pcfCommandSetupRequest.getArtifactStreamAttributes().isMetadataOnly()) {
       executionLogCallback.saveExecutionLog(
           color("--------- artifact will be downloaded for only-meta feature", White));
-      artifactFile = pcfCommandTaskHelper.downloadArtifact(pcfCommandSetupRequest, workingDirectory);
+      artifactFile =
+          pcfCommandTaskHelper.downloadArtifact(pcfCommandSetupRequest, workingDirectory, executionLogCallback);
     } else {
       // Download artifact on delegate from manager
-      artifactFile = pcfCommandTaskHelper.downloadArtifact(
-          pcfCommandSetupRequest.getArtifactFiles(), pcfCommandSetupRequest.getAccountId(), workingDirectory);
+      artifactFile = pcfCommandTaskHelper.downloadArtifactFromManager(
+          executionLogCallback, pcfCommandSetupRequest, workingDirectory);
     }
 
     return artifactFile;

@@ -5,6 +5,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_INFRA_STATE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.filesystem.FileIo.checkIfFileExist;
+import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.pcf.model.PcfConstants.APPLICATION_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.BUILDPACKS_MANIFEST_YML_ELEMENT;
@@ -40,10 +43,13 @@ import static io.harness.pcf.model.PcfConstants.TIMEOUT_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.USERNAME_MANIFEST_YML_ELEMENT;
 
 import static software.wings.beans.LogColor.Gray;
+import static software.wings.beans.LogColor.Green;
+import static software.wings.beans.LogColor.Red;
 import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 import static software.wings.common.TemplateConstants.PATH_DELIMITER;
+import static software.wings.helpers.ext.pcf.PcfClientImpl.BIN_BASH;
 
 import static com.google.common.base.Charsets.UTF_8;
 import static java.lang.String.format;
@@ -63,7 +69,6 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
-import io.harness.filesystem.FileIo;
 
 import software.wings.api.PcfInstanceElement;
 import software.wings.api.pcf.PcfServiceData;
@@ -112,26 +117,36 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.applications.InstanceDetail;
 import org.jetbrains.annotations.NotNull;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.stream.LogOutputStream;
 
 /**
  * Stateles helper class
  */
 @Singleton
+@Slf4j
 @TargetModule(Module._930_DELEGATE_TASKS)
 public class PcfCommandTaskHelper {
   private static final Yaml yaml;
   public static final String CURRENT_INSTANCE_COUNT = "CURRENT-INSTANCE-COUNT: ";
   public static final String DESIRED_INSTANCE_COUNT = "DESIRED-INSTANCE-COUNT: ";
   public static final String APPLICATION = "APPLICATION: ";
+  public static final String DOWNLOADED_ARTIFACT_PLACEHOLDER = "\\$\\{downloadedArtifact}";
+  public static final String PROCESSED_ARTIFACT_DIRECTORY = "\\$\\{processedArtifactDir}";
 
   static {
     DumperOptions options = new DumperOptions();
@@ -345,8 +360,8 @@ public class PcfCommandTaskHelper {
   }
 
   @VisibleForTesting
-  public File downloadArtifact(PcfCommandSetupRequest pcfCommandSetupRequest, File workingDirectory)
-      throws IOException, ExecutionException {
+  public File downloadArtifact(PcfCommandSetupRequest pcfCommandSetupRequest, File workingDirectory,
+      ExecutionLogCallback executionLogCallback) throws IOException, ExecutionException {
     InputStream artifactFileStream =
         delegateFileManager.downloadArtifactAtRuntime(pcfCommandSetupRequest.getArtifactStreamAttributes(),
             pcfCommandSetupRequest.getAccountId(), pcfCommandSetupRequest.getAppId(),
@@ -354,6 +369,11 @@ public class PcfCommandTaskHelper {
             pcfCommandSetupRequest.getArtifactStreamAttributes().getRegistryHostName());
     String fileName =
         System.currentTimeMillis() + pcfCommandSetupRequest.getArtifactStreamAttributes().getArtifactName();
+
+    if (isNotEmpty(pcfCommandSetupRequest.getArtifactProcessingScript())) {
+      return processArtifact(pcfCommandSetupRequest, workingDirectory, executionLogCallback, artifactFileStream,
+          FilenameUtils.getName(fileName));
+    }
 
     File artifactFile = new File(workingDirectory.getAbsolutePath() + PATH_DELIMITER + FilenameUtils.getName(fileName));
 
@@ -366,11 +386,104 @@ public class PcfCommandTaskHelper {
     return artifactFile;
   }
 
-  public File downloadArtifact(List<ArtifactFile> artifactFiles, String accountId, File workingDirecotry)
-      throws IOException, ExecutionException {
+  private File processArtifact(PcfCommandSetupRequest pcfCommandSetupRequest, File workingDirectory,
+      ExecutionLogCallback executionLogCallback, InputStream artifactFileStream, String fileName) throws IOException {
+    String tempWorkingDirectoryPath = generateFilepath(workingDirectory.getAbsolutePath());
+    createDirectoryIfDoesNotExist(tempWorkingDirectoryPath);
+    File tempWorkingDirectory = new File(tempWorkingDirectoryPath);
+
+    String finalArtifactTempDirectoryPath = generateFilepath(tempWorkingDirectoryPath);
+    createDirectoryIfDoesNotExist(finalArtifactTempDirectoryPath);
+
+    File downloadedArtifactFile = new File(tempWorkingDirectoryPath + PATH_DELIMITER + fileName);
+
+    if (!downloadedArtifactFile.createNewFile()) {
+      throw new FileCreationException("Failed to create file " + downloadedArtifactFile.getCanonicalPath(), null,
+          ErrorCode.FILE_CREATE_ERROR, Level.ERROR, USER, null);
+    }
+
+    IOUtils.copy(artifactFileStream, new FileOutputStream(downloadedArtifactFile));
+    replaceScriptPlaceholders(pcfCommandSetupRequest, finalArtifactTempDirectoryPath, downloadedArtifactFile);
+
+    try {
+      executeArtifactProcessingScript(pcfCommandSetupRequest, executionLogCallback, tempWorkingDirectory);
+    } catch (Exception e) {
+      throw new InvalidArgumentsException("Failed to execute artifact processing script");
+    }
+
+    File[] files = new File(finalArtifactTempDirectoryPath).listFiles();
+
+    if (files != null && files.length > 0 && files[0].exists()) {
+      File tempArtifactFile = files[0];
+
+      File artifactFile;
+
+      if (tempArtifactFile.isDirectory()) {
+        FileUtils.moveToDirectory(tempArtifactFile, workingDirectory, false);
+        artifactFile = FileUtils.getFile(workingDirectory, tempArtifactFile.getName());
+      } else {
+        artifactFile = new File(
+            workingDirectory.getAbsolutePath() + PATH_DELIMITER + FilenameUtils.getName(tempArtifactFile.getName()));
+        FileUtils.moveFile(tempArtifactFile, artifactFile);
+      }
+
+      FileUtils.deleteDirectory(tempWorkingDirectory);
+      return artifactFile;
+    } else {
+      throw new InvalidArgumentsException(
+          String.format("Final artifact was not copied to %s", PROCESSED_ARTIFACT_DIRECTORY));
+    }
+  }
+
+  private String generateFilepath(String path) throws IOException {
+    String generatedPath = RandomStringUtils.randomAlphanumeric(5);
+    while (checkIfFileExist(path + PATH_DELIMITER + generatedPath)) {
+      generatedPath = RandomStringUtils.randomAlphanumeric(5);
+    }
+    return path + PATH_DELIMITER + generatedPath;
+  }
+
+  private void replaceScriptPlaceholders(PcfCommandSetupRequest pcfCommandSetupRequest,
+      String finalArtifactTempDirectoryPath, File downloadedArtifactFile) {
+    pcfCommandSetupRequest.setArtifactProcessingScript(pcfCommandSetupRequest.getArtifactProcessingScript().replaceAll(
+        DOWNLOADED_ARTIFACT_PLACEHOLDER, downloadedArtifactFile.getAbsolutePath()));
+    pcfCommandSetupRequest.setArtifactProcessingScript(pcfCommandSetupRequest.getArtifactProcessingScript().replaceAll(
+        PROCESSED_ARTIFACT_DIRECTORY, finalArtifactTempDirectoryPath));
+  }
+
+  private void executeArtifactProcessingScript(
+      PcfCommandSetupRequest pcfCommandSetupRequest, ExecutionLogCallback executionLogCallback, File directory)
+      throws IOException, TimeoutException, InterruptedException {
+    executionLogCallback.saveExecutionLog(color("# Executing artifact processing script: ", White, Bold));
+
+    ProcessExecutor processExecutor = new ProcessExecutor()
+                                          .timeout(pcfCommandSetupRequest.getTimeoutIntervalInMin(), TimeUnit.MINUTES)
+                                          .command(BIN_BASH, "-c", pcfCommandSetupRequest.getArtifactProcessingScript())
+                                          .directory(directory)
+                                          .readOutput(true)
+                                          .redirectOutput(new LogOutputStream() {
+                                            @Override
+                                            protected void processLine(String line) {
+                                              executionLogCallback.saveExecutionLog(line);
+                                            }
+                                          });
+    ProcessResult processResult = processExecutor.execute();
+
+    int exitCode = processResult.getExitValue();
+    if (exitCode == 0) {
+      executionLogCallback.saveExecutionLog(format(String.valueOf(SUCCESS), Bold, Green));
+    } else {
+      executionLogCallback.saveExecutionLog(format(processResult.outputUTF8(), Bold, Red), ERROR);
+    }
+  }
+
+  public File downloadArtifactFromManager(ExecutionLogCallback executionLogCallback,
+      PcfCommandSetupRequest pcfCommandSetupRequest, File workingDirectory) throws IOException, ExecutionException {
+    List<ArtifactFile> artifactFiles = pcfCommandSetupRequest.getArtifactFiles();
+    String accountId = pcfCommandSetupRequest.getAccountId();
     List<Pair<String, String>> fileIds = Lists.newArrayList();
 
-    if (isEmpty(artifactFiles)) {
+    if (isEmpty(pcfCommandSetupRequest.getArtifactFiles())) {
       throw new InvalidArgumentsException(Pair.of("Artifact", "is not available"));
     }
 
@@ -378,7 +491,12 @@ public class PcfCommandTaskHelper {
     try (InputStream inputStream =
              delegateFileManager.downloadArtifactByFileId(FileBucket.ARTIFACTS, fileIds.get(0).getKey(), accountId)) {
       String fileName = System.currentTimeMillis() + artifactFiles.get(0).getName();
-      File artifactFile = new File(workingDirecotry.getAbsolutePath() + "/" + fileName);
+
+      if (isNotEmpty(pcfCommandSetupRequest.getArtifactProcessingScript())) {
+        return processArtifact(pcfCommandSetupRequest, workingDirectory, executionLogCallback, inputStream, fileName);
+      }
+
+      File artifactFile = new File(workingDirectory.getAbsolutePath() + PATH_DELIMITER + fileName);
 
       if (!artifactFile.createNewFile()) {
         throw new WingsException(ErrorCode.GENERAL_ERROR)
@@ -707,10 +825,10 @@ public class PcfCommandTaskHelper {
 
   public File generateWorkingDirectoryForDeployment() throws IOException {
     String workingDirecotry = UUIDGenerator.generateUuid();
-    FileIo.createDirectoryIfDoesNotExist(REPOSITORY_DIR_PATH);
-    FileIo.createDirectoryIfDoesNotExist(PCF_ARTIFACT_DOWNLOAD_DIR_PATH);
+    createDirectoryIfDoesNotExist(REPOSITORY_DIR_PATH);
+    createDirectoryIfDoesNotExist(PCF_ARTIFACT_DOWNLOAD_DIR_PATH);
     String workingDir = PCF_ARTIFACT_DOWNLOAD_DIR_PATH + "/" + workingDirecotry;
-    FileIo.createDirectoryIfDoesNotExist(workingDir);
+    createDirectoryIfDoesNotExist(workingDir);
     return new File(workingDir);
   }
 
