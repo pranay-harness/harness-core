@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.harness.yaml.TestClass;
 import io.harness.yaml.snippets.bean.YamlSnippetMetaData;
 import io.harness.yaml.snippets.helper.YamlSnippetHelper;
 
@@ -27,7 +28,7 @@ public class YamlSnippetHelperTest extends CategoryTest {
     final InputStream inputStream = getClass().getClassLoader().getResourceAsStream("testIndex.xml");
     String snippetMetaData = IOUtils.toString(inputStream, StandardCharsets.UTF_8.name());
     yamlSnippetHelper = new YamlSnippetHelper();
-    yamlSnippetHelper.preComputeTagsAndNameMap(snippetMetaData);
+    yamlSnippetHelper.preComputeTagsAndNameMap(snippetMetaData, TestClass.ClassWhichContainsInterface.class);
   }
 
   @Test
@@ -36,8 +37,8 @@ public class YamlSnippetHelperTest extends CategoryTest {
   public void testPreComputation() {
     assertThat(yamlSnippetHelper.getTagSnippetMap()).isNotEmpty();
     assertThat(yamlSnippetHelper.getIdentifierSnippetMap()).isNotEmpty();
-    assertThat(yamlSnippetHelper.getTagSnippetMap().size()).isEqualTo(3);
-    assertThat(yamlSnippetHelper.getIdentifierSnippetMap().size()).isEqualTo(2);
+    assertThat(yamlSnippetHelper.getTagSnippetMap().size()).isEqualTo(4);
+    assertThat(yamlSnippetHelper.getIdentifierSnippetMap().size()).isEqualTo(3);
   }
 
   @Test

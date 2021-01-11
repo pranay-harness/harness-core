@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.harness.yaml.TestClass;
 import io.harness.yaml.schema.beans.OneOfMapping;
 import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
 
@@ -26,7 +27,8 @@ public class JacksonClassHelperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetSubtypeMapping() {
     Map<String, SwaggerDefinitionsMetaInfo> stringModelSet = new HashMap<>();
-    jacksonSubtypeHelper.getRequiredMappings(TestClass.ClassWhichContainsInterface.class, stringModelSet);
+    jacksonSubtypeHelper.getRequiredMappings(
+        io.harness.yaml.TestClass.ClassWhichContainsInterface.class, stringModelSet);
     assertThat(stringModelSet).isNotEmpty();
     assertThat(stringModelSet.size()).isEqualTo(4);
     assertThat(stringModelSet.get("ClassWhichContainsInterface").getSubtypeClassMap().size()).isEqualTo(1);
@@ -38,7 +40,7 @@ public class JacksonClassHelperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetOneOfMappingsForClass() {
     final Set<OneOfMapping> oneOfMappingsForClass =
-        jacksonSubtypeHelper.getOneOfMappingsForClass(TestClass.ClassWithApiModelOverride.class);
+        jacksonSubtypeHelper.getOneOfMappingsForClass(io.harness.yaml.TestClass.ClassWithApiModelOverride.class);
     final OneOfMapping oneOfMapping_1 =
         OneOfMapping.builder().oneOfFieldNames(new HashSet<>(Arrays.asList("a", "b"))).nullable(false).build();
     final OneOfMapping oneOfMapping_2 =

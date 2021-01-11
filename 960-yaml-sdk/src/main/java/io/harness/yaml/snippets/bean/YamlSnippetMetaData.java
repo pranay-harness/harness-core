@@ -41,4 +41,19 @@ public class YamlSnippetMetaData {
    * The entity Type for which the schema is.
    */
   String schemaEntityType;
+
+  /**
+   * True if entity available at org level.
+   */
+  boolean availableAtOrgLevel;
+
+  /**
+   * True if entity available at account level.
+   */
+  boolean availableAtAccountLevel;
+
+  /**
+   * True if entity available at project level.
+   */
+  boolean availableAtProjectLevel;
 }

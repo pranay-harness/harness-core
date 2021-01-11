@@ -2138,6 +2138,9 @@
         },
         {
           "type": "object",
+          "required": [
+            "credential"
+          ],
           "properties": {
             "credential": {
               "$ref": "#/definitions/KubernetesCredentialDTO"

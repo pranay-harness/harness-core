@@ -3,6 +3,7 @@ package io.harness.yaml.snippets.helper;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.exception.InvalidRequestException;
+import io.harness.yaml.schema.YamlSchemaRoot;
 import io.harness.yaml.snippets.bean.YamlSnippetMetaData;
 import io.harness.yaml.snippets.bean.YamlSnippets;
 import io.harness.yaml.snippets.dto.YamlSnippetMetaDataDTO;
@@ -33,17 +34,28 @@ public class YamlSnippetHelper {
   private static Map<String, YamlSnippetMetaData> identifierSnippetMap = new HashMap<>();
 
   /**
-   * @param snippetMetadata       is the String representation of index.xml {@link YamlSnippetMetaData}
-   *
+   * @param snippetMetadata is the String representation of index.xml {@link YamlSnippetMetaData}
+   * @param clazz
    */
-  public void preComputeTagsAndNameMap(String snippetMetadata) {
+  public void preComputeTagsAndNameMap(String snippetMetadata, Class clazz) {
     YamlSnippets yamlSnippets = getYamlSnippets(snippetMetadata);
     if (yamlSnippets == null || isEmpty(yamlSnippets.getYamlSnippetMetaDataList())) {
       log.info("No Yaml Snippet found while initialising.");
       return;
     }
+    populateSchemaMetaDataInSnippet(yamlSnippets, clazz);
     preComputeTagMap(yamlSnippets);
     preComputeNameSnippetMap(yamlSnippets);
+  }
+
+  private void populateSchemaMetaDataInSnippet(YamlSnippets yamlSnippets, Class clazz) {
+    final YamlSchemaRoot annotation = (YamlSchemaRoot) clazz.getAnnotation(YamlSchemaRoot.class);
+    yamlSnippets.getYamlSnippetMetaDataList().forEach(yamlSnippetMetaData -> {
+      yamlSnippetMetaData.setAvailableAtAccountLevel(annotation.availableAtAccountLevel());
+      yamlSnippetMetaData.setAvailableAtOrgLevel(annotation.availableAtOrgLevel());
+      yamlSnippetMetaData.setAvailableAtProjectLevel(annotation.availableAtProjectLevel());
+      yamlSnippetMetaData.setSchemaEntityType(annotation.value().getYamlName());
+    });
   }
 
   private void preComputeNameSnippetMap(YamlSnippets yamlSnippets) {
