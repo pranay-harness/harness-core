@@ -151,11 +151,11 @@ public class SecretCrudServiceImpl implements SecretCrudService {
                             .and(SecretKeys.projectIdentifier)
                             .is(projectIdentifier);
     if (secretType != null) {
-      criteria.and(SecretKeys.type).is(secretType);
+      criteria = criteria.and(SecretKeys.type).is(secretType);
     }
     if (!StringUtils.isEmpty(searchTerm)) {
-      // TODO{phoenikx-secret} Add search for tags here using or operator
-      criteria.and(SecretKeys.name).regex(searchTerm, "i");
+      criteria = criteria.orOperator(Criteria.where(SecretKeys.name).regex(searchTerm, "i"),
+          Criteria.where(SecretKeys.identifier).regex(searchTerm, "i"));
     }
     Page<Secret> secrets = ngSecretService.list(criteria, page, size);
     return PageUtils.getNGPageResponse(
