@@ -29,16 +29,6 @@ import org.modelmapper.ModelMapper;
 public class PipelineExecutionFilterPropertiesDTO extends FilterPropertiesDTO {
   private ExecutionStatus status;
   private String pipelineName;
-
-  @Override
-  public FilterProperties toEntity() {
-    ModelMapper modelMapper = new ModelMapper();
-    PipelineExecutionFilterProperties filterProperties = modelMapper.map(this, PipelineExecutionFilterProperties.class);
-    filterProperties.setType(getFilterType());
-    filterProperties.setTags(TagMapper.convertToList(getTags()));
-    return filterProperties;
-  }
-
   @Override
   public FilterType getFilterType() {
     return FilterType.PIPELINE;
