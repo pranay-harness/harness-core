@@ -3,12 +3,9 @@ package io.harness.filter.impl;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.filter.dto.FilterVisibility.EVERYONE;
 import static io.harness.filter.dto.FilterVisibility.ONLY_CREATOR;
-import static io.harness.utils.PageUtils.getPageRequest;
 
 import static java.lang.String.format;
 
-import io.harness.beans.SortOrder;
-import io.harness.beans.SortOrder.OrderType;
 import io.harness.encryption.ScopeHelper;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
@@ -19,7 +16,6 @@ import io.harness.filter.entity.Filter;
 import io.harness.filter.entity.Filter.FilterKeys;
 import io.harness.filter.mapper.FilterMapper;
 import io.harness.filter.service.FilterService;
-import io.harness.ng.beans.PageRequest;
 import io.harness.repositories.FilterRepository;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.PrincipalType;
@@ -28,13 +24,15 @@ import io.harness.utils.FullyQualifiedIdentifierHelper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @Singleton
@@ -49,7 +47,7 @@ public class FilterServiceImpl implements FilterService {
     try {
       return filterMapper.writeDTO(filterRepository.save(filterEntity));
     } catch (DuplicateKeyException ex) {
-      throw new DuplicateFieldException(format("A filter already exists with identifier/name %s in %s",
+      throw new DuplicateFieldException(format("A filter already exists with name %s in %s",
           filterEntity.getIdentifier(), getFilterScopeMessage(accountId, filterDTO)));
     }
   }
@@ -64,11 +62,33 @@ public class FilterServiceImpl implements FilterService {
       throw new InvalidRequestException(format("No filter exists with the Identifier %s in %s",
           filterDTO.getIdentifier(), getFilterScopeMessage(accountId, filterDTO)));
     }
+    validateTheUpdateRequestIsValid(existingFilter.get(), filterDTO, accountId);
     Filter filterEntity = filterMapper.toEntity(filterDTO, accountId);
     filterEntity.setId(existingFilter.get().getId());
     filterEntity.setVersion(existingFilter.get().getVersion());
     Filter updatedFilter = filterRepository.save(filterEntity);
     return filterMapper.writeDTO(updatedFilter);
+  }
+
+  private void validateTheUpdateRequestIsValid(Filter existingFilter, FilterDTO newFilter, String accountIdentifier) {
+    validateTheNameIsNotChanged(accountIdentifier, existingFilter, newFilter);
+    validateTheTypeIsNotChanged(existingFilter, newFilter);
+  }
+
+  private void validateTheTypeIsNotChanged(Filter existingFilter, FilterDTO newFilter) {
+    if (existingFilter.getFilterType() != newFilter.getFilterProperties().getFilterType()) {
+      throw new InvalidRequestException("The filter type cannot be updated");
+    }
+  }
+
+  private void validateTheNameIsNotChanged(String accountIdentifier, Filter existingFilter, FilterDTO newFilter) {
+    Optional<Filter> filterWithGivenName =
+        filterRepository.findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndName(
+            accountIdentifier, newFilter.getOrgIdentifier(), newFilter.getProjectIdentifier(), newFilter.getName());
+    if (filterWithGivenName.isPresent()
+        && !filterWithGivenName.get().getIdentifier().equals(existingFilter.getIdentifier())) {
+      throw new InvalidRequestException("A filter already exists with the name " + newFilter.getName());
+    }
   }
 
   private FilterType getType(FilterDTO filterDTO) {
@@ -142,13 +162,6 @@ public class FilterServiceImpl implements FilterService {
   @Override
   public Page<FilterDTO> list(int page, int size, String accountId, String orgIdentifier, String projectIdentifier,
       List<String> filterIds, FilterType type) {
-    Pageable pageable =
-        getPageRequest(PageRequest.builder()
-                           .pageIndex(page)
-                           .pageSize(size)
-                           .sortOrders(Collections.singletonList(
-                               SortOrder.Builder.aSortOrder().withField(FilterKeys.name, OrderType.ASC).build()))
-                           .build());
     Criteria criteria = new Criteria();
     if (isNotEmpty(filterIds)) {
       criteria.and(FilterKeys.identifier).in(filterIds);
@@ -159,6 +172,8 @@ public class FilterServiceImpl implements FilterService {
     Criteria orOperator = new Criteria().orOperator(Criteria.where(FilterKeys.filterVisibility).is(EVERYONE),
         Criteria.where(FilterKeys.filterVisibility).is(ONLY_CREATOR).and(FilterKeys.userId).is(getUserId()));
     criteria.andOperator(orOperator);
-    return filterRepository.findAll(criteria, pageable).map(filterMapper::writeDTO);
+    Order sortOrder = Sort.Order.asc(FilterKeys.name);
+    Pageable pageRequest = PageRequest.of(page, size, Sort.by(sortOrder));
+    return filterRepository.findAll(criteria, pageRequest).map(filterMapper::writeDTO);
   }
 }

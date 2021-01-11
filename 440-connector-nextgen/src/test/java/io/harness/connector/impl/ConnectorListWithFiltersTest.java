@@ -469,16 +469,16 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
   public void testListForWhenAFilterIsGiven() {
     String filterIdentifier = "filterIdentifier";
     List<String> names =
-        Arrays.asList("docker test", "docker qa", "docker prod", "docker dev", "test docker", "docker qb", "dockerHub");
+        Arrays.asList("docker test", "docker qa", "docker prod", "k8s dev", "test k8s", "k8s qb", "k8s");
     List<String> identifiers =
-        Arrays.asList("dockerTest", "dockerQa", "dockerProd", "dockerDev", "testDocker", "dockerQb", "dockerHub");
+        Arrays.asList("dockerTest", "dockerQa", "dockerProd", "k8sDev", " k8s Docker", "k8s qb", "k8sHub");
     List<String> descriptions =
-        Arrays.asList("Docker Test", "Docker qa", "Docker prod", "Docker dev", "Test docker", "Docker qb", "DockerHub");
+        Arrays.asList("Docker Test", "Docker qa", "Docker prod", "k8s dev", "Test k8s", "k8s qb", "k8sHub");
     createConnectorsWithGivenValues(names, identifiers, descriptions);
 
     ConnectorFilterPropertiesDTO connectorFilter =
         ConnectorFilterPropertiesDTO.builder()
-            .connectorNames(Arrays.asList("docker qa", "docker prod"))
+            .connectorNames(Arrays.asList("docker"))
             .connectorIdentifiers(Arrays.asList("dockerQa", "dockerProd", "dockerDev"))
             .description("Docker")
             .build();
