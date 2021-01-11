@@ -1,7 +1,7 @@
 package io.harness.yaml.schema;
 
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.yaml.YamlSdkConfiguration;
+import io.harness.yaml.YamlSdkInitConstants;
 import io.harness.yaml.schema.beans.YamlSchemaConfiguration;
 
 import java.io.File;
@@ -26,7 +26,7 @@ public class YamlSchemaMojo extends AbstractMojo {
   /**
    * The base path where the schema will be stored in resources.
    */
-  public String generationFolder = YamlSdkConfiguration.schemaBasePath;
+  public String generationFolder = YamlSdkInitConstants.schemaBasePath;
 
   /**
    * The Maven project.

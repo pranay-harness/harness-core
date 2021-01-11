@@ -12,7 +12,7 @@ import io.harness.EntityType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.yaml.TestClass;
-import io.harness.yaml.YamlSdkConfiguration;
+import io.harness.yaml.YamlSdkInitConstants;
 import io.harness.yaml.schema.beans.YamlSchemaWithDetails;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
@@ -49,7 +49,7 @@ public class YamlSchemaHelperTest extends CategoryTest {
     ObjectMapper objectMapper = new ObjectMapper();
     final JsonNode jsonNode = objectMapper.readTree(schema);
 
-    yamlSchemaHelper.initializeSchemaMaps(YamlSdkConfiguration.schemaBasePath, classes);
+    yamlSchemaHelper.initializeSchemaMaps(YamlSdkInitConstants.schemaBasePath, classes);
     final YamlSchemaWithDetails schemaForEntityType =
         yamlSchemaHelper.getSchemaDetailsForEntityType(EntityType.CONNECTORS);
     assertThat(schemaForEntityType).isNotNull();

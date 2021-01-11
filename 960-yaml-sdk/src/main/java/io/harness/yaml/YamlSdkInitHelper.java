@@ -19,7 +19,7 @@ import org.apache.commons.io.IOUtils;
 
 @Slf4j
 public class YamlSdkInitHelper {
-  public static void initialize(Injector injector) {
+  public static void initialize(Injector injector, YamlSdkConfiguration yamlSdkConfiguration) {
     YamlSnippetHelper yamlSnippetHelper = injector.getInstance(YamlSnippetHelper.class);
     YamlSchemaValidator yamlSchemaValidator = injector.getInstance(YamlSchemaValidator.class);
     YamlSchemaHelper yamlSchemaHelper = injector.getInstance(YamlSchemaHelper.class);
@@ -27,9 +27,15 @@ public class YamlSdkInitHelper {
     if (isEmpty(classes)) {
       return;
     }
-    initializeSnippets(yamlSnippetHelper, classes);
-    initializeValidatorWithSchema(yamlSchemaValidator, classes);
-    initializeSchemas(yamlSchemaHelper, classes);
+    if (yamlSdkConfiguration.isRequireSnippetInit()) {
+      initializeSnippets(yamlSnippetHelper, classes);
+    }
+    if (yamlSdkConfiguration.isRequireValidatorInit()) {
+      initializeValidatorWithSchema(yamlSchemaValidator, classes);
+    }
+    if (yamlSdkConfiguration.isRequireSchemaInit()) {
+      initializeSchemas(yamlSchemaHelper, classes);
+    }
   }
 
   /**
@@ -44,7 +50,7 @@ public class YamlSdkInitHelper {
       classes.forEach(clazz -> {
         try {
           final String snippetIndexPathForEntityType = YamlSchemaUtils.getSnippetIndexPathForEntityType(
-              clazz, YamlSdkConfiguration.snippetBasePath, YamlSdkConfiguration.snippetIndexFile);
+              clazz, YamlSdkInitConstants.snippetBasePath, YamlSdkInitConstants.snippetIndexFile);
           String snippetMetaData =
               IOUtils.resourceToString(snippetIndexPathForEntityType, StandardCharsets.UTF_8, clazz.getClassLoader());
           yamlSnippetHelper.preComputeTagsAndNameMap(snippetMetaData, clazz);
@@ -64,7 +70,7 @@ public class YamlSdkInitHelper {
    * @param yamlSchemaValidator
    */
   private static void initializeValidatorWithSchema(YamlSchemaValidator yamlSchemaValidator, Set<Class<?>> classes) {
-    yamlSchemaValidator.populateSchemaInStaticMap(YamlSdkConfiguration.schemaBasePath, classes);
+    yamlSchemaValidator.populateSchemaInStaticMap(YamlSdkInitConstants.schemaBasePath, classes);
   }
 
   /**
@@ -74,6 +80,6 @@ public class YamlSdkInitHelper {
    * @param classes
    */
   private static void initializeSchemas(YamlSchemaHelper yamlSchemaHelper, Set<Class<?>> classes) {
-    yamlSchemaHelper.initializeSchemaMaps(YamlSdkConfiguration.schemaBasePath, classes);
+    yamlSchemaHelper.initializeSchemaMaps(YamlSdkInitConstants.schemaBasePath, classes);
   }
 }

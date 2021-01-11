@@ -7,7 +7,7 @@ import static io.harness.packages.HarnessPackages.SOFTWARE_WINGS;
 
 import io.harness.EntityType;
 import io.harness.exception.InvalidRequestException;
-import io.harness.yaml.YamlSdkConfiguration;
+import io.harness.yaml.YamlSdkInitConstants;
 import io.harness.yaml.schema.YamlSchemaRoot;
 import io.harness.yaml.snippets.bean.YamlSnippetMetaData;
 import io.harness.yaml.snippets.bean.YamlSnippetTags;
@@ -70,7 +70,7 @@ public interface AbstractSnippetChecker {
         .map(clazz -> {
           try {
             final String snippetIndexPathForEntityType = YamlSchemaUtils.getSnippetIndexPathForEntityType(
-                clazz, YamlSdkConfiguration.snippetBasePath, YamlSdkConfiguration.snippetIndexFile);
+                clazz, YamlSdkInitConstants.snippetBasePath, YamlSdkInitConstants.snippetIndexFile);
             final EntityType value = clazz.getAnnotation(YamlSchemaRoot.class).value();
             String snippetMetaData =
                 IOUtils.resourceToString(snippetIndexPathForEntityType, StandardCharsets.UTF_8, clazz.getClassLoader());
@@ -96,7 +96,7 @@ public interface AbstractSnippetChecker {
   }
 
   default String getSchemaBasePath() {
-    return YamlSdkConfiguration.schemaBasePath;
+    return YamlSdkInitConstants.schemaBasePath;
   }
 
   default void testSnippetHasCorrectResourceFileSpecified(String snippetIndex, ClassLoader classloader)

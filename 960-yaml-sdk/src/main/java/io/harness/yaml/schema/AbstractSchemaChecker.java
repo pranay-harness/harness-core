@@ -9,7 +9,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.reflection.CodeUtils;
 import io.harness.validation.OneOfField;
 import io.harness.validation.OneOfFields;
-import io.harness.yaml.YamlSdkConfiguration;
+import io.harness.yaml.YamlSdkInitConstants;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
 import com.google.common.base.Preconditions;
@@ -42,7 +42,7 @@ public interface AbstractSchemaChecker {
     for (Class<?> schemaRoot : schemaRoots) {
       log.info("Running schema check for {}", schemaRoot.getCanonicalName());
       final EntityType entityType = schemaRoot.getDeclaredAnnotation(YamlSchemaRoot.class).value();
-      final String schemaBasePath = YamlSdkConfiguration.schemaBasePath;
+      final String schemaBasePath = YamlSdkInitConstants.schemaBasePath;
       final String schemaPathForEntityType = YamlSchemaUtils.getSchemaPathForEntityType(entityType, schemaBasePath);
       String moduleBasePath = getModulePath(schemaRoot);
       executeCommand("git diff --exit-code -- ../" + moduleBasePath + schemaPathForEntityType);

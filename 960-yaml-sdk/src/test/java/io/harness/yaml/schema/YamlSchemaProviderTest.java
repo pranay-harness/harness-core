@@ -18,7 +18,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.encryption.Scope;
 import io.harness.rule.Owner;
 import io.harness.yaml.TestClass;
-import io.harness.yaml.YamlSdkConfiguration;
+import io.harness.yaml.YamlSdkInitConstants;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -139,7 +139,7 @@ public class YamlSchemaProviderTest extends CategoryTest {
     classes.add(TestClass.ClassWhichContainsInterface.class);
     when(YamlSchemaUtils.getClasses(any())).thenReturn(classes);
     when(IOUtils.resourceToString(any(), any(), any())).thenReturn(schema);
-    yamlSchemaHelper.initializeSchemaMaps(YamlSdkConfiguration.schemaBasePath, classes);
+    yamlSchemaHelper.initializeSchemaMaps(YamlSdkInitConstants.schemaBasePath, classes);
   }
 
   private String getResource(String resource) throws IOException {
