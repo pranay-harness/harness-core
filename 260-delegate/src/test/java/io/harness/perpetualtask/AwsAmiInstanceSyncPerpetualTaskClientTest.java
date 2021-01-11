@@ -33,7 +33,6 @@ import software.wings.service.intfc.security.SecretManager;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.junit.Test;
@@ -78,7 +77,8 @@ public class AwsAmiInstanceSyncPerpetualTaskClientTest extends WingsBaseTest {
   public void getValidationTask() {
     AwsConfig awsConfig = AwsConfig.builder().accountId(ACCOUNT_ID).tag("tag").build();
     prepareTaskData(awsConfig);
-    assertThat(client.getValidationTask(getClientContext(), ACCOUNT_ID))
+    DelegateTask validationTask = client.getValidationTask(getClientContext(), ACCOUNT_ID);
+    assertThat(validationTask)
         .isEqualTo(DelegateTask.builder()
                        .accountId(ACCOUNT_ID)
                        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
@@ -92,9 +92,12 @@ public class AwsAmiInstanceSyncPerpetualTaskClientTest extends WingsBaseTest {
                                                                .region("us-east-1")
                                                                .autoScalingGroupName("asg")
                                                                .build()})
-                                 .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
+                                 .timeout(validationTask.getData().getTimeout())
                                  .build())
                        .build());
+    assertThat(validationTask.getData().getTimeout())
+        .isLessThanOrEqualTo(System.currentTimeMillis() + TaskData.DELEGATE_QUEUE_TIMEOUT);
+    assertThat(validationTask.getData().getTimeout()).isGreaterThanOrEqualTo(System.currentTimeMillis());
   }
 
   private void prepareTaskData(AwsConfig awsConfig) {

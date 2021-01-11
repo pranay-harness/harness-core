@@ -35,7 +35,6 @@ import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -83,7 +82,7 @@ public class AwsSshPerpetualTaskServiceClient implements PerpetualTaskServiceCli
                                                 .region(taskData.getRegion())
                                                 .filters(taskData.getFilters())
                                                 .build()})
-                  .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
+                  .timeout(System.currentTimeMillis() + TaskData.DELEGATE_QUEUE_TIMEOUT)
                   .build())
         .build();
   }

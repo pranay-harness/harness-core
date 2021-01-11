@@ -13,6 +13,7 @@ import static org.mockito.Mockito.doReturn;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.TaskData;
 import io.harness.ff.FeatureFlagService;
 import io.harness.perpetualtask.instancesync.CustomDeploymentInstanceSyncTaskParams;
 import io.harness.rule.Owner;
@@ -31,7 +32,6 @@ import software.wings.sm.states.customdeployment.InstanceFetchState;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -94,9 +94,10 @@ public class CustomDeploymentInstanceSyncClientTest extends WingsBaseTest {
         instanceSyncClient.getValidationTask(buildPerpetualTaskClientContext(), ACCOUNT_ID);
 
     assertThat(validationTask.getData().getParameters()[0]).isInstanceOf(ShellScriptProvisionParameters.class);
-    assertThat(validationTask.getData().getTimeout())
-        .isEqualTo(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES));
     assertThat(validationTask.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(validationTask.getData().getTimeout())
+        .isLessThanOrEqualTo(System.currentTimeMillis() + TaskData.DELEGATE_QUEUE_TIMEOUT);
+    assertThat(validationTask.getData().getTimeout()).isGreaterThanOrEqualTo(System.currentTimeMillis());
   }
 
   private PerpetualTaskClientContext buildPerpetualTaskClientContext() {

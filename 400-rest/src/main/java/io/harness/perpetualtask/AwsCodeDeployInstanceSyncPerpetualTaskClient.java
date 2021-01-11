@@ -38,7 +38,6 @@ import com.google.protobuf.util.Durations;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import lombok.Builder;
 import lombok.Data;
 
@@ -103,7 +102,7 @@ public class AwsCodeDeployInstanceSyncPerpetualTaskClient
                   .async(false)
                   .taskType(AWS_EC2_TASK.name())
                   .parameters(new Object[] {request})
-                  .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
+                  .timeout(System.currentTimeMillis() + TaskData.DELEGATE_QUEUE_TIMEOUT)
                   .build())
         .build();
   }
