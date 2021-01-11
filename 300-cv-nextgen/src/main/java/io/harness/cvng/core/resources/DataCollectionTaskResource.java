@@ -2,6 +2,7 @@ package io.harness.cvng.core.resources;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.DELEGATE_DATA_COLLECTION_TASK;
 
+import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
@@ -24,6 +25,7 @@ import javax.ws.rs.QueryParam;
 @Api(DELEGATE_DATA_COLLECTION_TASK)
 @Path(DELEGATE_DATA_COLLECTION_TASK)
 @Produces("application/json")
+@ExposeInternalException
 public class DataCollectionTaskResource {
   @Inject private DataCollectionTaskService dataCollectionTaskService;
 

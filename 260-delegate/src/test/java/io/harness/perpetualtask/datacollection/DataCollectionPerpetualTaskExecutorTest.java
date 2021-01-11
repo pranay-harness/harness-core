@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.DelegateTest;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.CVNGRequestExecutor;
 import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
 import io.harness.cvng.beans.CVDataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionTaskDTO;
@@ -45,6 +46,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -65,6 +67,7 @@ public class DataCollectionPerpetualTaskExecutorTest extends DelegateTest {
   @Mock private SecretDecryptionService secretDecryptionService;
   @Mock private DataCollectionDSLService dataCollectionDSLService;
   @Mock private CVNextGenServiceClient cvNextGenServiceClient;
+  private CVNGRequestExecutor cvngRequestExecutor;
   private AppDynamicsConnectorDTO appDynamicsConnectorDTO;
   private String accountId;
   private DataCollectionTaskDTO dataCollectionTaskDTO;
@@ -77,6 +80,9 @@ public class DataCollectionPerpetualTaskExecutorTest extends DelegateTest {
   @Before
   public void setup() throws IllegalAccessException, IOException {
     on(dataCollector).set("kryoSerializer", kryoSerializer);
+    cvngRequestExecutor = new CVNGRequestExecutor();
+    FieldUtils.writeField(dataCollector, "cvngRequestExecutor", cvngRequestExecutor, true);
+    FieldUtils.writeField(cvngRequestExecutor, "executorService", Executors.newFixedThreadPool(1), true);
     accountId = generateUuid();
     SecretRefData secretRefData = SecretRefData.builder()
                                       .scope(Scope.ACCOUNT)
@@ -105,7 +111,8 @@ public class DataCollectionPerpetualTaskExecutorTest extends DelegateTest {
                                 .build();
     Call<RestResponse<DataCollectionTaskDTO>> nextTaskCall = mock(Call.class);
     Call<RestResponse<DataCollectionTaskDTO>> nullCall = mock(Call.class);
-
+    when(nextTaskCall.clone()).thenReturn(nextTaskCall);
+    when(nullCall.clone()).thenReturn(nullCall);
     when(nextTaskCall.execute()).thenReturn(Response.success(new RestResponse<>(dataCollectionTaskDTO)));
     when(nullCall.execute()).thenReturn(Response.success(new RestResponse<>(null)));
 
@@ -113,6 +120,8 @@ public class DataCollectionPerpetualTaskExecutorTest extends DelegateTest {
         .thenReturn(nextTaskCall)
         .thenReturn(nullCall);
     Call<RestResponse<Void>> taskUpdateResult = mock(Call.class);
+    when(taskUpdateResult.clone()).thenReturn(taskUpdateResult);
+    when(taskUpdateResult.execute()).thenReturn(Response.success(new RestResponse<>(null)));
     when(cvNextGenServiceClient.updateTaskStatus(anyString(), any())).thenReturn(taskUpdateResult);
   }
 
@@ -154,6 +163,7 @@ public class DataCollectionPerpetualTaskExecutorTest extends DelegateTest {
   @Category({UnitTests.class})
   public void testDataCollection_IfTaskReturnedIsNull() throws IOException {
     Call<RestResponse<DataCollectionTaskDTO>> nextTaskCall = mock(Call.class);
+    when(nextTaskCall.clone()).thenReturn(nextTaskCall);
     when(nextTaskCall.execute()).thenReturn(Response.success(new RestResponse<>(null)));
     when(cvNextGenServiceClient.getNextDataCollectionTask(anyString(), anyString())).thenReturn(nextTaskCall);
     createTaskParams(CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER, "dsl");

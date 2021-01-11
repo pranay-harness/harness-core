@@ -13,6 +13,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Provider;
+import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
@@ -25,6 +26,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 public class CVNextGenServiceClientFactory implements Provider<CVNextGenServiceClient> {
   public static final ImmutableList<TrustManager> TRUST_ALL_CERTS =
       ImmutableList.of(new DelegateAgentManagerClientX509TrustManager());
+  private static final ConnectionPool CONNECTION_POOL = new ConnectionPool(0, 10, TimeUnit.MINUTES);
 
   private String baseUrl;
   private TokenGenerator tokenGenerator;
@@ -58,10 +60,13 @@ public class CVNextGenServiceClientFactory implements Provider<CVNextGenServiceC
       sslContext.init(null, TRUST_ALL_CERTS.toArray(new TrustManager[1]), new java.security.SecureRandom());
       // Create an ssl socket factory with our all-trusting manager
       final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
-
+      // https://www.baeldung.com/okhttp-timeouts
       return Http.getOkHttpClientWithProxyAuthSetup()
-          .connectionPool(new ConnectionPool())
-          .retryOnConnectionFailure(true)
+          .connectionPool(CONNECTION_POOL)
+          .connectTimeout(10, TimeUnit.SECONDS)
+          .readTimeout(10, TimeUnit.SECONDS)
+          .writeTimeout(10, TimeUnit.SECONDS) //.callTimeout(60, TimeUnit.SECONDS) // Call timeout is available in 3.12
+          .retryOnConnectionFailure(false)
           .addInterceptor(new DelegateAuthInterceptor(tokenGenerator))
           .sslSocketFactory(sslSocketFactory, (X509TrustManager) TRUST_ALL_CERTS.get(0))
           .hostnameVerifier((hostname, session) -> true)
