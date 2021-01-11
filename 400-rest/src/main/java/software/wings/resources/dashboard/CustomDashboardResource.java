@@ -117,9 +117,13 @@ public class CustomDashboardResource {
       if (!featureFlagService.isEnabled(FeatureName.CUSTOM_DASHBOARD, settings.getAccountId())) {
         throw new InvalidRequestException("User not authorized", USER);
       }
-
       DashboardSettings existingDashboardSetting = dashboardSettingsService.get(accountId, settings.getUuid());
-      dashboardAuthHandler.authorize(existingDashboardSetting, accountId, Action.UPDATE);
+      if (!dashboardSettingsService.flattenPermissions(settings.getPermissions())
+               .equals(dashboardSettingsService.flattenPermissions(existingDashboardSetting.getPermissions()))) {
+        dashboardAuthHandler.authorize(existingDashboardSetting, accountId, Action.MANAGE);
+      } else {
+        dashboardAuthHandler.authorize(existingDashboardSetting, accountId, Action.UPDATE);
+      }
       settings.setAccountId(accountId);
       return new RestResponse<>(dashboardSettingsService.updateDashboardSettings(accountId, settings));
     }
