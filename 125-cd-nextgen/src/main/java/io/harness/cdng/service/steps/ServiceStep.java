@@ -72,6 +72,7 @@ import lombok.Data;
 import lombok.Singular;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.groovy.util.Maps;
 
 @Slf4j
 public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
@@ -344,8 +345,7 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
 
         Map<String, Object> valueMap = new HashMap<>();
         valueMap.put(YamlTypes.OUTPUT, JsonPipelineUtils.read(artifactOutcome.toJson(), Map.class));
-        outcomeBuilder.artifact(
-            YamlTypes.SIDECARS_ARTIFACT_CONFIG + YamlTypes.PATH_CONNECTOR + artifactOutcome.getIdentifier(), valueMap);
+        outcomeBuilder.artifact(YamlTypes.SIDECARS_ARTIFACT_CONFIG, Maps.of(artifactOutcome.getIdentifier(), valueMap));
       }
     }
     outcomeBuilder.artifactsResult(artifactsBuilder.build());
@@ -360,9 +360,8 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
           outcomeBuilder.artifact(
               YamlTypes.PRIMARY_ARTIFACT, JsonPipelineUtils.read(artifactOutcome.toJson(), Map.class));
         } else {
-          outcomeBuilder.artifact(
-              YamlTypes.SIDECARS_ARTIFACT_CONFIG + YamlTypes.PATH_CONNECTOR + artifactOutcome.getIdentifier(),
-              JsonPipelineUtils.read(artifactOutcome.toJson(), Map.class));
+          outcomeBuilder.artifact(YamlTypes.SIDECARS_ARTIFACT_CONFIG,
+              Maps.of(artifactOutcome.getIdentifier(), JsonPipelineUtils.read(artifactOutcome.toJson(), Map.class)));
         }
       }
     }
