@@ -30,6 +30,5 @@ sudo docker run -d --restart unless-stopped --hostname=$(hostname -f) \
 -e JRE_VERSION=${jreVersion} \
 -e HELM3_PATH= \
 -e HELM_PATH= \
--e LOG_STREAMING_SERVICE_BASE_URL= \
 -e MANAGER_SERVICE_SECRET=${managerServiceSecret} \
 ${delegateDockerImage}
