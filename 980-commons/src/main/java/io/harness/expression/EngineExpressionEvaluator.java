@@ -276,6 +276,14 @@ public class EngineExpressionEvaluator {
     return new EngineJexlContext(this, clonedContext);
   }
 
+  public static boolean matchesVariablePattern(String str) {
+    if (EmptyPredicate.isEmpty(str)) {
+      return false;
+    }
+
+    return variablePattern.matcher(str).matches();
+  }
+
   public static boolean hasVariables(String str) {
     if (EmptyPredicate.isEmpty(str)) {
       return false;

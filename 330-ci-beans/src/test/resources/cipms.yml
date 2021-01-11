@@ -7,7 +7,7 @@ pipeline:
       codebase:
         repoName: mycode.git # accept w/o git at the end
         connectorRef: account.gitconnector
-        build: ${input} # build: type branch|tag spec: branch: <name>
+        build: <+input> # build: type branch|tag spec: branch: <name>
   stages:
     - stage:
         identifier: stage1
@@ -38,7 +38,7 @@ pipeline:
               type: Service
               spec:
                 envVariables: #Optional - A set of environment variables for the container, on top of what was provided in the custom vars
-                  kube_context: myContext ${mySecret}
+                  kube_context: myContext <+mySecret>
                 entrypoint:  # (optional)
                   - "mysqld"
                 args:  # (optional) - marks the flags for the entry point
