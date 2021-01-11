@@ -88,8 +88,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 import org.jetbrains.annotations.NotNull;
@@ -298,7 +300,7 @@ public class K8BuildSetupUtils {
       containerDefinitionInfo.getSecretVariables().forEach(secretVariable
           -> secretVariableDetails.add(secretVariableUtils.getSecretVariableDetails(ngAccess, secretVariable)));
     }
-    return secretVariableDetails;
+    return secretVariableDetails.stream().filter(Objects::nonNull).collect(Collectors.toList());
   }
 
   @NotNull

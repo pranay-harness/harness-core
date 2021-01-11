@@ -62,6 +62,9 @@ public class UploadToGCSStepInfo implements PluginCompatibleStep {
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
     this.connectorRef = connectorRef;
     this.containerImage = Optional.ofNullable(containerImage).orElse(ParameterField.createValueField("plugins/gcs"));
+    if (containerImage != null && containerImage.fetchFinalValue() == null) {
+      this.containerImage = ParameterField.createValueField("plugins/gcs");
+    }
     this.resources = resources;
     this.bucket = bucket;
     this.sourcePath = sourcePath;

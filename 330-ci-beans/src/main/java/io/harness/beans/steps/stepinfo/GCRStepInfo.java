@@ -71,6 +71,10 @@ public class GCRStepInfo implements PluginCompatibleStep {
     this.connectorRef = connectorRef;
     this.containerImage =
         Optional.ofNullable(containerImage).orElse(ParameterField.createValueField("plugins/kaniko-gcr:latest"));
+
+    if (containerImage != null && containerImage.fetchFinalValue() == null) {
+      this.containerImage = ParameterField.createValueField("plugins/kaniko-gcr:latest");
+    }
     this.resources = resources;
     this.host = host;
     this.projectID = projectID;

@@ -32,6 +32,7 @@ import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.ci.CIBuildPushParameters.CIBuildPushTaskType;
 import io.harness.exception.ngexception.CIStageExecutionException;
+import io.harness.git.GitClientHelper;
 import io.harness.security.encryption.SecretDecryptionService;
 
 import com.google.inject.Inject;
@@ -117,7 +118,7 @@ public class CIBuildStatusPushTask extends AbstractDelegateRunnableTask {
             .installationId(githubAppSpecDTO.getInstallationId())
             .appId(githubAppSpecDTO.getApplicationId())
             .privateKey(new String(githubAppSpecDTO.getPrivateKeyRef().getDecryptedValue()))
-            .githubUrl(GITHUB_API_URL)
+            .githubUrl(getGitApiURL(gitConfigDTO.getUrl()))
             .build();
 
     String token = githubService.getToken(githubAppConfig, null);
@@ -135,6 +136,15 @@ public class CIBuildStatusPushTask extends AbstractDelegateRunnableTask {
           githubAppSpecDTO.getApplicationId(), githubAppSpecDTO.getInstallationId(),
           ciBuildStatusPushParameters.getSha());
       return false;
+    }
+  }
+
+  private String getGitApiURL(String url) {
+    if (GitClientHelper.isGithubSAAS(url)) {
+      return GITHUB_API_URL;
+    } else {
+      String domain = GitClientHelper.getGitSCM(url);
+      return "https://" + domain + "/api/v3/";
     }
   }
 

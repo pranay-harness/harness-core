@@ -70,6 +70,10 @@ public class DockerStepInfo implements PluginCompatibleStep {
     this.connectorRef = connectorRef;
     this.containerImage =
         Optional.ofNullable(containerImage).orElse(ParameterField.createValueField("plugins/kaniko:latest"));
+    if (containerImage != null && containerImage.fetchFinalValue() == null) {
+      this.containerImage = ParameterField.createValueField("plugins/kaniko:latest");
+    }
+
     this.resources = resources;
     this.repo = repo;
     this.tags = tags;

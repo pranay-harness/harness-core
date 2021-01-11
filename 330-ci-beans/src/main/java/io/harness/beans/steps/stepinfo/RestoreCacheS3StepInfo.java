@@ -67,6 +67,11 @@ public class RestoreCacheS3StepInfo implements PluginCompatibleStep {
     this.connectorRef = connectorRef;
     this.containerImage =
         Optional.ofNullable(containerImage).orElse(ParameterField.createValueField("plugins/s3-cache:latest"));
+
+    if (containerImage != null && containerImage.fetchFinalValue() == null) {
+      this.containerImage = ParameterField.createValueField("plugins/s3-cache:latest");
+    }
+
     this.resources = resources;
     this.endpoint = endpoint;
     this.key = key;
