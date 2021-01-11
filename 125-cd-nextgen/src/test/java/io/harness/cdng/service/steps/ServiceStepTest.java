@@ -18,13 +18,17 @@ import io.harness.cdng.service.beans.ServiceDefinition;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.beans.ServiceYaml;
 import io.harness.delegate.beans.storeconfig.FetchType;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
+import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
+import org.apache.groovy.util.Maps;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -85,6 +89,11 @@ public class ServiceStepTest extends CategoryTest {
 
     ServiceYaml entity = ServiceYaml.builder().identifier("s1").name("s1").build();
     ServiceOutcome serviceOutcome = serviceStep.createServiceOutcome(
+        Ambiance.newBuilder()
+            .putAllSetupAbstractions(Maps.of(
+                "accountId", "accountId", "projectIdentifier", "projectIdentifier", "orgIdentifier", "orgIdentifier"))
+            .addAllLevels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build()))
+            .build(),
         ServiceConfig.builder()
             .service(entity)
             .serviceDefinition(ServiceDefinition.builder().serviceSpec(KubernetesServiceSpec.builder().build()).build())

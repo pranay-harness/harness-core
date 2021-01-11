@@ -38,7 +38,7 @@ public class ServicePMSPlanCreator {
     YamlNode serviceNode = serviceField.getNode();
     ServiceConfig actualServiceConfig = getActualServiceConfig(serviceConfig, serviceField);
     ServiceYaml actualServiceYaml = actualServiceConfig.getService();
-    if (EmptyPredicate.isEmpty(actualServiceYaml.getName())) {
+    if (actualServiceYaml != null && EmptyPredicate.isEmpty(actualServiceYaml.getName())) {
       actualServiceYaml.setName(actualServiceYaml.getIdentifier());
     }
     ServiceConfig serviceOverrides = null;

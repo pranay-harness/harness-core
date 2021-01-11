@@ -12,9 +12,11 @@ import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.services.EnvironmentService;
+import io.harness.ng.core.mapper.TagMapper;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
@@ -24,10 +26,12 @@ import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.StepOutcomeGroup;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import java.util.Optional;
 
 public class InfrastructureStep implements SyncExecutable<InfraStepParameters> {
   public static final StepType STEP_TYPE =
@@ -92,17 +96,18 @@ public class InfrastructureStep implements SyncExecutable<InfraStepParameters> {
         environmentOverrides.setName(environmentOverrides.getIdentifier());
       }
     }
-
-    EnvironmentYaml environment = pipelineInfrastructure.getEnvironment();
-    if (EmptyPredicate.isEmpty(environment.getName())) {
-      environment.setName(environment.getIdentifier());
-    }
-
-    return processEnvironment(environment, environmentOverrides, ambiance);
+    return processEnvironment(pipelineInfrastructure, environmentOverrides, ambiance);
   }
 
   private EnvironmentOutcome processEnvironment(
-      EnvironmentYaml environmentYaml, EnvironmentYaml environmentOverrides, Ambiance ambiance) {
+      PipelineInfrastructure pipelineInfrastructure, EnvironmentYaml environmentOverrides, Ambiance ambiance) {
+    EnvironmentYaml environmentYaml = pipelineInfrastructure.getEnvironment();
+    if (environmentYaml == null) {
+      environmentYaml = createEnvYamlFromEnvRef(pipelineInfrastructure, ambiance);
+    }
+    if (EmptyPredicate.isEmpty(environmentYaml.getName())) {
+      environmentYaml.setName(environmentYaml.getIdentifier());
+    }
     EnvironmentYaml finalEnvironmentYaml =
         environmentOverrides != null ? environmentYaml.applyOverrides(environmentOverrides) : environmentYaml;
     Environment environment = getEnvironmentObject(finalEnvironmentYaml, ambiance);
@@ -124,5 +129,26 @@ public class InfrastructureStep implements SyncExecutable<InfraStepParameters> {
         .projectIdentifier(projectIdentifier)
         .tags(convertToList(environmentYaml.getTags()))
         .build();
+  }
+
+  private EnvironmentYaml createEnvYamlFromEnvRef(PipelineInfrastructure pipelineInfrastructure, Ambiance ambiance) {
+    String accountId = AmbianceHelper.getAccountId(ambiance);
+    String projectIdentifier = AmbianceHelper.getProjectIdentifier(ambiance);
+    String orgIdentifier = AmbianceHelper.getOrgIdentifier(ambiance);
+    String envIdentifier = pipelineInfrastructure.getEnvironmentRef().getValue();
+
+    Optional<Environment> optionalEnvironment =
+        environmentService.get(accountId, orgIdentifier, projectIdentifier, envIdentifier, false);
+    if (optionalEnvironment.isPresent()) {
+      Environment env = optionalEnvironment.get();
+      return EnvironmentYaml.builder()
+          .identifier(envIdentifier)
+          .name(env.getName())
+          .description(env.getDescription() == null ? null : ParameterField.createValueField(env.getDescription()))
+          .type(env.getType())
+          .tags(TagMapper.convertToMap(env.getTags()))
+          .build();
+    }
+    throw new InvalidRequestException("Env with identifier " + envIdentifier + " does not exist");
   }
 }
