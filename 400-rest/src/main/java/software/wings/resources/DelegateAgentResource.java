@@ -19,7 +19,6 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
-import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.task.TaskLogContext;
@@ -63,7 +62,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -222,21 +220,6 @@ public class DelegateAgentResource {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       delegate.setAccountId(accountId);
       return new RestResponse<>(delegateService.add(delegate));
-    }
-  }
-
-  @DelegateAuth
-  @POST
-  @Path("{delegateId}/tasks/{taskId}")
-  @Consumes("application/x-kryo")
-  @Timed
-  @ExceptionMetered
-  public void updateTaskResponse(@PathParam("delegateId") String delegateId, @PathParam("taskId") String taskId,
-      @QueryParam("accountId") @NotEmpty String accountId, DelegateTaskResponse delegateTaskResponse) {
-    try (AutoLogContext ignore1 = new TaskLogContext(taskId, OVERRIDE_ERROR);
-         AutoLogContext ignore2 = new AccountLogContext(accountId, OVERRIDE_ERROR);
-         AutoLogContext ignore3 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      delegateService.processDelegateResponse(accountId, delegateId, taskId, delegateTaskResponse);
     }
   }
 

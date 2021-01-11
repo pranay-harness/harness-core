@@ -2546,7 +2546,7 @@ public class DelegateServiceImpl implements DelegateService {
         response =
             RemoteMethodReturnValueData.builder().exception(new InvalidRequestException(errorMessage, USER)).build();
       }
-      processDelegateResponse(accountId, null, taskId,
+      delegateTaskService.processDelegateResponse(accountId, null, taskId,
           DelegateTaskResponse.builder().accountId(accountId).response(response).responseCode(ResponseCode.OK).build());
     }
   }
@@ -2754,7 +2754,7 @@ public class DelegateServiceImpl implements DelegateService {
               .responseCode(ResponseCode.FAILED)
               .accountId(delegateTask.getAccountId())
               .build();
-      handleResponse(delegateTask, taskQuery, response);
+      delegateTaskService.handleResponse(delegateTask, taskQuery, response);
       return null;
     }
   }
@@ -2815,37 +2815,8 @@ public class DelegateServiceImpl implements DelegateService {
               .responseCode(ResponseCode.FAILED)
               .accountId(delegateTask.getAccountId())
               .build();
-      handleResponse(delegateTask, taskQuery, response);
+      delegateTaskService.handleResponse(delegateTask, taskQuery, response);
       return null;
-    }
-  }
-
-  private void handleInprocResponse(DelegateTask delegateTask, DelegateTaskResponse response) {
-    if (delegateTask.getData().isAsync()) {
-      String waitId = delegateTask.getWaitId();
-      if (waitId != null) {
-        waitNotifyEngine.doneWith(waitId, response.getResponse());
-      } else {
-        log.error("Async task has no wait ID");
-      }
-    } else {
-      wingsPersistence.save(DelegateSyncTaskResponse.builder()
-                                .uuid(delegateTask.getUuid())
-                                .responseData(kryoSerializer.asDeflatedBytes(response.getResponse()))
-                                .build());
-    }
-  }
-
-  @Override
-  public void handleResponse(DelegateTask delegateTask, Query<DelegateTask> taskQuery, DelegateTaskResponse response) {
-    if (delegateTask.getDriverId() == null) {
-      handleInprocResponse(delegateTask, response);
-    } else {
-      handleDriverResponse(delegateTask, response);
-    }
-
-    if (taskQuery != null) {
-      wingsPersistence.deleteOnServer(taskQuery);
     }
   }
 
@@ -2962,66 +2933,6 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public void clearCache(String accountId, String delegateId) {
     assignDelegateService.clearConnectionResults(accountId, delegateId);
-  }
-
-  @Override
-  public void processDelegateResponse(
-      String accountId, String delegateId, String taskId, DelegateTaskResponse response) {
-    if (response == null) {
-      throw new InvalidArgumentsException(Pair.of("args", "response cannot be null"));
-    }
-
-    log.info("Response received for task with responseCode [{}]", response.getResponseCode());
-
-    Query<DelegateTask> taskQuery = wingsPersistence.createQuery(DelegateTask.class)
-                                        .filter(DelegateTaskKeys.accountId, response.getAccountId())
-                                        .filter(DelegateTaskKeys.uuid, taskId);
-
-    DelegateTask delegateTask = taskQuery.get();
-
-    if (delegateTask != null) {
-      try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
-               TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
-        if (!StringUtils.equals(delegateTask.getVersion(), getVersion())) {
-          log.warn("Version mismatch for task. [managerVersion {}, taskVersion {}]", getVersion(),
-              delegateTask.getVersion());
-        }
-
-        if (response.getResponseCode() == ResponseCode.RETRY_ON_OTHER_DELEGATE) {
-          log.info("Delegate returned retryable error for task");
-
-          Set<String> alreadyTriedDelegates = delegateTask.getAlreadyTriedDelegates();
-          List<String> remainingConnectedDelegates =
-              assignDelegateService.connectedWhitelistedDelegates(delegateTask)
-                  .stream()
-                  .filter(item -> !delegateId.equals(item))
-                  .filter(item -> isEmpty(alreadyTriedDelegates) || !alreadyTriedDelegates.contains(item))
-                  .collect(toList());
-
-          if (!remainingConnectedDelegates.isEmpty()) {
-            log.info("Requeueing task");
-
-            wingsPersistence.update(taskQuery,
-                wingsPersistence.createUpdateOperations(DelegateTask.class)
-                    .unset(DelegateTaskKeys.delegateId)
-                    .unset(DelegateTaskKeys.validationStartedAt)
-                    .unset(DelegateTaskKeys.lastBroadcastAt)
-                    .unset(DelegateTaskKeys.validatingDelegateIds)
-                    .unset(DelegateTaskKeys.validationCompleteDelegateIds)
-                    .set(DelegateTaskKeys.broadcastCount, 1)
-                    .set(DelegateTaskKeys.status, QUEUED)
-                    .addToSet(DelegateTaskKeys.alreadyTriedDelegates, delegateId));
-            return;
-          } else {
-            log.info("Task has been tried on all the connected delegates. Proceeding with error.");
-          }
-        }
-        handleResponse(delegateTask, taskQuery, response);
-        assignDelegateService.refreshWhitelist(delegateTask, delegateId);
-      }
-    } else {
-      log.warn("No delegate task found");
-    }
   }
 
   @Override

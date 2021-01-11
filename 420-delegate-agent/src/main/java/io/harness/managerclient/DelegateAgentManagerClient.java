@@ -45,7 +45,7 @@ public interface DelegateAgentManagerClient {
 
   @Headers({"Content-Type: application/x-kryo"})
   @KryoRequest
-  @POST("agent/delegates/{delegateId}/tasks/{taskId}")
+  @POST("agent/tasks/{taskId}/delegates/{delegateId}")
   Call<ResponseBody> sendTaskStatus(@Path("delegateId") String delegateId, @Path("taskId") String taskId,
       @Query("accountId") String accountId, @Body DelegateTaskResponse delegateTaskResponse);
 

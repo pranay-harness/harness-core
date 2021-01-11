@@ -7,6 +7,7 @@ import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGe
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.LUCAS;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.PUNEET;
@@ -62,6 +63,7 @@ import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.rule.Owner;
 import io.harness.selection.log.BatchDelegateSelectionLog;
+import io.harness.service.dto.RetryDelegate;
 import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.WingsBaseTest;
@@ -112,6 +114,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mongodb.morphia.query.Query;
 
 public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
@@ -128,6 +131,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Inject private Clock clock;
 
   private static final String WRONG_INFRA_MAPPING_ID = "WRONG_INFRA_MAPPING_ID";
+
+  private static final String VERSION = "1.0.0";
 
   @Before
   public void setUp() throws IllegalAccessException, ExecutionException {
@@ -1858,5 +1863,59 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
         Optional.of(DelegateConnectionResult.builder().validated(false).lastUpdatedAt(10).build());
     assertThat(AssignDelegateServiceImpl.shouldValidateCriteria(falseResult, BLACKLIST_TTL)).isFalse();
     assertThat(AssignDelegateServiceImpl.shouldValidateCriteria(falseResult, BLACKLIST_TTL + 20)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = LUCAS)
+  @Category(UnitTests.class)
+  public void onPossibleRetryTest() throws ExecutionException {
+    Set<String> selectors = Stream.of("a", "b").collect(Collectors.toSet());
+    HttpConnectionExecutionCapability connectionExecutionCapability =
+        HttpConnectionExecutionCapability.builder().url("localhost").build();
+    SelectorCapability selectorCapability = SelectorCapability.builder().selectors(selectors).build();
+    List<ExecutionCapability> executionCapabilityList = asList(selectorCapability, connectionExecutionCapability);
+    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId("TASK_ID_1").build();
+
+    TaskData taskData = TaskData.builder().taskType(TaskType.HTTP.name()).build();
+    Set<String> alreadyTriedDelegates = new HashSet<>();
+    alreadyTriedDelegates.add("DELEGATE_ID_2");
+
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .accountId(ACCOUNT_ID)
+                                    .data(taskData)
+                                    .executionCapabilities(executionCapabilityList)
+                                    .mustExecuteOnDelegateId(DELEGATE_ID)
+                                    .alreadyTriedDelegates(alreadyTriedDelegates)
+                                    .build();
+
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .uuid(DELEGATE_ID)
+                            .status(ENABLED)
+                            .lastHeartBeat(clock.millis())
+                            .build();
+
+    Optional<DelegateConnectionResult> trueResult =
+        Optional.of(DelegateConnectionResult.builder().validated(true).lastUpdatedAt(10).build());
+
+    when(accountDelegatesCache.get(ACCOUNT_ID)).thenReturn(asList(delegate));
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+    when(delegateSelectionLogsService.createBatch(delegateTask)).thenReturn(batch);
+    when(delegateConnectionResultCache.get(ImmutablePair.of(DELEGATE_ID, any()))).thenReturn(trueResult);
+
+    Query<DelegateTask> taskQuery =
+        wingsPersistence.createQuery(DelegateTask.class).filter("accountId", ACCOUNT_ID).filter("uuid", "TASK_ID_1");
+
+    RetryDelegate retryDelegate = RetryDelegate.builder()
+                                      .delegateId("DELEGATE_ID_2")
+                                      .taskQuery(taskQuery)
+                                      .delegateTask(delegateTask)
+                                      .retryPossible(true)
+                                      .build();
+
+    retryDelegate = assignDelegateService.onPossibleRetry(retryDelegate);
+
+    assertThat(retryDelegate).isNotNull();
+    assertThat(retryDelegate.isRetryPossible()).isEqualTo(true);
   }
 }
