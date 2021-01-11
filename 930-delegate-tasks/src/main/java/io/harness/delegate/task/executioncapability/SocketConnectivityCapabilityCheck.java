@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-public class SocketConnectivityCapabilityCheck implements CapabilityCheck {
+public class SocketConnectivityCapabilityCheck implements CapabilityCheck, ProtoCapabilityCheck {
   @Override
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
     SocketConnectivityExecutionCapability socketConnCapability =
@@ -36,6 +36,7 @@ public class SocketConnectivityCapabilityCheck implements CapabilityCheck {
     }
   }
 
+  @Override
   public CapabilitySubjectPermission performCapabilityCheckWithProto(CapabilityParameters parameters) {
     CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
     if (parameters.getCapabilityCase() != CapabilityParameters.CapabilityCase.SOCKET_CONNECTIVITY_PARAMETERS) {

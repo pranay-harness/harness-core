@@ -20,7 +20,7 @@ import io.harness.k8s.model.HelmVersion;
 import com.google.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 
-public class HelmInstallationCapabilityCheck implements CapabilityCheck {
+public class HelmInstallationCapabilityCheck implements CapabilityCheck, ProtoCapabilityCheck {
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
 
   @Override
@@ -41,6 +41,7 @@ public class HelmInstallationCapabilityCheck implements CapabilityCheck {
         .build();
   }
 
+  @Override
   public CapabilitySubjectPermission performCapabilityCheckWithProto(CapabilityParameters parameters) {
     CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
     if (parameters.getCapabilityCase() != CapabilityParameters.CapabilityCase.HELM_INSTALLATION_PARAMETERS) {

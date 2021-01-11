@@ -15,7 +15,7 @@ import java.io.File;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class AwsRegionCapabilityCheck implements CapabilityCheck {
+public class AwsRegionCapabilityCheck implements CapabilityCheck, ProtoCapabilityCheck {
   @Override
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
     AwsRegionCapability awsRegionCapability = (AwsRegionCapability) delegateCapability;
@@ -24,6 +24,7 @@ public class AwsRegionCapabilityCheck implements CapabilityCheck {
     return CapabilityResponse.builder().delegateCapability(awsRegionCapability).validated(valid).build();
   }
 
+  @Override
   public CapabilitySubjectPermission performCapabilityCheckWithProto(CapabilityParameters parameters) {
     CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
     if (parameters.getCapabilityCase() != CapabilityParameters.CapabilityCase.AWS_REGION_PARAMETERS) {
