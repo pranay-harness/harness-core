@@ -6,12 +6,16 @@ import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.algorithm.IdentifierName;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.CriticalExpressionEvaluationException;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -128,6 +132,8 @@ public class ExpressionEvaluatorUtils {
         if (!hasExpressions.apply(result)) {
           return result;
         }
+        List<String> matches = findExpressions(result);
+        log.info("Expressions left to be evaluated when script size is greater than limit: " + matches);
         throw new CriticalExpressionEvaluationException("Exponentially growing interpretation", expression);
       }
     }
@@ -319,11 +325,29 @@ public class ExpressionEvaluatorUtils {
         if (!hasExpressions.apply(result)) {
           return result;
         }
+        List<String> matches = findExpressions(result);
+        log.info("Expressions left to be evaluated when script size is greater than limit: " + matches);
         throw new CriticalExpressionEvaluationException("Exponentially growing interpretation", expression);
       }
     }
 
     throw new CriticalExpressionEvaluationException(
         "Infinite loop or too deep indirection in property interpretation", expression);
+  }
+
+  private List<String> findExpressions(String str) {
+    if (EmptyPredicate.isEmpty(str)) {
+      return Collections.emptyList();
+    }
+
+    List<String> matches = new ArrayList<>();
+    Matcher matcher = ExpressionEvaluator.wingsVariablePattern.matcher(str);
+    while (matcher.find()) {
+      matches.add(matcher.group(0));
+      if (matches.size() >= 3) {
+        return matches;
+      }
+    }
+    return matches;
   }
 }
