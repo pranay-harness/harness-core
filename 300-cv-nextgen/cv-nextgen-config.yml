@@ -80,12 +80,12 @@ notificationClient:
 eventsFramework:
   redis:
     sentinel: false
-    masterName: "mymaster"
-    redisUrl: redis://localhost:6379
+    masterName: "test"
+    redisUrl: "redis://localhost:6379"
     sentinelUrls:
-      - "redis://localhost:26379"
-      - "redis://localhost:26380"
-      - "redis://localhost:26381"
+      - "redis://redis1:26379"
+      - "redis://redis2:26379"
+      - "redis://redis3:26379"
     envNamespace: ""
     readMode: MASTER
     nettyThreads: 16
