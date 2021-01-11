@@ -20,7 +20,7 @@ import net.schmizz.sshj.common.DisconnectReason;
 import net.schmizz.sshj.transport.TransportException;
 
 @Slf4j
-public class SftpCapabilityCheck implements CapabilityCheck {
+public class SftpCapabilityCheck implements CapabilityCheck, ProtoCapabilityCheck {
   @Override
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
     SftpCapability sftpCapability = (SftpCapability) delegateCapability;
@@ -31,6 +31,7 @@ public class SftpCapabilityCheck implements CapabilityCheck {
         .build();
   }
 
+  @Override
   public CapabilitySubjectPermission performCapabilityCheckWithProto(CapabilityParameters parameters) {
     CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
     if (parameters.getCapabilityCase() != CapabilityParameters.CapabilityCase.SFTP_CAPABILITY_PARAMETERS) {

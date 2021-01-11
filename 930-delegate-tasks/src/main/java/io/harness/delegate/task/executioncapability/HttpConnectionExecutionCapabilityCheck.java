@@ -8,7 +8,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.network.Http;
 
-public class HttpConnectionExecutionCapabilityCheck implements CapabilityCheck {
+public class HttpConnectionExecutionCapabilityCheck implements CapabilityCheck, ProtoCapabilityCheck {
   @Override
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
     HttpConnectionExecutionCapability httpConnectionExecutionCapability =
@@ -17,6 +17,7 @@ public class HttpConnectionExecutionCapabilityCheck implements CapabilityCheck {
     return CapabilityResponse.builder().delegateCapability(httpConnectionExecutionCapability).validated(valid).build();
   }
 
+  @Override
   public CapabilitySubjectPermission performCapabilityCheckWithProto(CapabilityParameters parameters) {
     CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
     if (parameters.getCapabilityCase() != CapabilityParameters.CapabilityCase.HTTP_CONNECTION_PARAMETERS) {

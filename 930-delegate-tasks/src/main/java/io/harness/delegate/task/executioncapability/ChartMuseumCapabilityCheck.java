@@ -17,7 +17,7 @@ import io.harness.expression.ExpressionEvaluator;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ChartMuseumCapabilityCheck implements CapabilityCheck {
+public class ChartMuseumCapabilityCheck implements CapabilityCheck, ProtoCapabilityCheck {
   @Override
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
     ChartMuseumCapability capability = (ChartMuseumCapability) delegateCapability;
@@ -33,6 +33,7 @@ public class ChartMuseumCapabilityCheck implements CapabilityCheck {
         .build();
   }
 
+  @Override
   public CapabilitySubjectPermission performCapabilityCheckWithProto(CapabilityParameters parameters) {
     CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
     if (parameters.getCapabilityCase() != CapabilityParameters.CapabilityCase.CHART_MUSEUM_PARAMETERS) {

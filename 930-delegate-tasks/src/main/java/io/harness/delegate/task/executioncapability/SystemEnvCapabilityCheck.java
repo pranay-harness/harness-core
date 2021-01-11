@@ -12,7 +12,7 @@ import io.harness.expression.ExpressionEvaluator;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SystemEnvCapabilityCheck implements CapabilityCheck {
+public class SystemEnvCapabilityCheck implements CapabilityCheck, ProtoCapabilityCheck {
   @Override
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
     SystemEnvCheckerCapability systemEnvCheckerCapability = (SystemEnvCheckerCapability) delegateCapability;
@@ -21,6 +21,7 @@ public class SystemEnvCapabilityCheck implements CapabilityCheck {
     return CapabilityResponse.builder().delegateCapability(systemEnvCheckerCapability).validated(valid).build();
   }
 
+  @Override
   public CapabilitySubjectPermission performCapabilityCheckWithProto(CapabilityParameters parameters) {
     CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
     if (parameters.getCapabilityCase() != CapabilityParameters.CapabilityCase.SYSTEM_ENV_PARAMETERS) {

@@ -15,7 +15,7 @@ import org.zeroturnaround.exec.ProcessResult;
 
 @Singleton
 @Slf4j
-public class ProcessExecutorCapabilityCheck implements CapabilityCheck {
+public class ProcessExecutorCapabilityCheck implements CapabilityCheck, ProtoCapabilityCheck {
   @Override
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
     ProcessExecutorCapability processExecutorCapability = (ProcessExecutorCapability) delegateCapability;
@@ -35,6 +35,7 @@ public class ProcessExecutorCapabilityCheck implements CapabilityCheck {
     return CapabilityResponse.builder().delegateCapability(processExecutorCapability).validated(valid).build();
   }
 
+  @Override
   public CapabilitySubjectPermission performCapabilityCheckWithProto(CapabilityParameters parameters) {
     CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
     if (parameters.getCapabilityCase() != CapabilityParameters.CapabilityCase.PROCESS_EXECUTOR_PARAMETERS) {

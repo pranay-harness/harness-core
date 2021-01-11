@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SmbConnectionCapabilityCheck implements CapabilityCheck {
+public class SmbConnectionCapabilityCheck implements CapabilityCheck, ProtoCapabilityCheck {
   @Override
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
     SmbConnectionCapability capability = (SmbConnectionCapability) delegateCapability;
@@ -31,6 +31,7 @@ public class SmbConnectionCapabilityCheck implements CapabilityCheck {
     }
   }
 
+  @Override
   public CapabilitySubjectPermission performCapabilityCheckWithProto(CapabilityParameters parameters) {
     CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
     if (parameters.getCapabilityCase() != CapabilityParameters.CapabilityCase.SMB_CONNECTION_PARAMETERS) {
