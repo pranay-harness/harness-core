@@ -18,7 +18,6 @@ import io.harness.yaml.TestClassWithManyFields;
 import io.harness.yaml.schema.beans.YamlSchemaConfiguration;
 
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import java.io.IOException;
@@ -64,7 +63,7 @@ public class YamlSchemaGeneratorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = ABHINAV)
+  @Owner(developers = ABHINAV, intermittent = true)
   @Category(UnitTests.class)
   public void testGenerateYamlSchemaFilesWithFieldHavingManyPossibleValue() throws IOException {
     SwaggerGenerator swaggerGenerator = new SwaggerGenerator();
