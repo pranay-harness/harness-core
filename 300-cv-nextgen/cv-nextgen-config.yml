@@ -76,11 +76,12 @@ notificationClient:
     readTimeOutSeconds: 15
   secrets:
     notificationClientSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
 eventsFramework:
   redis:
     sentinel: false
     masterName: "mymaster"
-    redisUrl: "dummyRedisUrl"
+    redisUrl: redis://localhost:6379
     sentinelUrls:
       - "redis://localhost:26379"
       - "redis://localhost:26380"

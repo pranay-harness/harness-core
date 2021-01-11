@@ -132,6 +132,7 @@ NOTE: the data from it is used for every git operation github does on you behave
 3. Go to `portal` directory and run
 
     `mvn clean install -DskipTests`
+
     `bazel build :all`
 
 4. If Global Search is not required:
@@ -192,6 +193,8 @@ NOTE: the data from it is used for every git operation github does on you behave
     timescaledbUsername: admin
     timescaledbPassword: password
   ```
+7. Install Redis - Follow the instructions from [here](https://gist.github.com/tomysmile/1b8a321e7c58499ef9f9441b2faa0aa8)
+
 
 ### Run Harness without IDE (especially for the UI development)
 cd to `portal` directory
