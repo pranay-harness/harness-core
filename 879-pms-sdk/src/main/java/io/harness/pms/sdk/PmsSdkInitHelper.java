@@ -57,6 +57,7 @@ public class PmsSdkInitHelper {
 
   private static void initialize(Injector injector, PmsSdkConfiguration config) {
     String serviceName = config.getServiceName();
+    log.info("Initializing PMS SDK for service: {}", serviceName);
     if (config.getDeploymentMode().isNonLocal()) {
       ServiceManager serviceManager =
           injector.getInstance(Key.get(ServiceManager.class, Names.named("pmsSDKServiceManager"))).startAsync();
@@ -66,7 +67,6 @@ public class PmsSdkInitHelper {
           ? null
           : injector.getInstance(config.getPipelineServiceInfoProviderClass());
       registerSdk(pipelineServiceInfoProvider, serviceName, injector);
-      // registerEventListeners(injector);
     }
   }
 
@@ -93,10 +93,4 @@ public class PmsSdkInitHelper {
       throw ex;
     }
   }
-
-  //  private void registerEventListeners(Injector injector) {
-  //    QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-  //    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
-  //    queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 1);
-  //  }
 }

@@ -109,7 +109,7 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
           FacilitatorResponseMapper.toFacilitatorResponseProto(currFacilitatorResponse));
       return true;
     } catch (Exception ex) {
-      log.error("Error while facilitating execution: {}", ex.getMessage());
+      log.error("Error while facilitating execution", ex);
       pmsNodeExecutionService.handleEventError(event.getEventType(), event.getNotifyId(), constructFailureInfo(ex));
       return false;
     }
@@ -133,7 +133,7 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
               .build());
       return true;
     } catch (Exception ex) {
-      log.error("Error while starting execution: {}", ex.getMessage());
+      log.error("Error while starting execution", ex);
       pmsNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), constructStepResponse(ex));
       return false;
     }
@@ -170,7 +170,7 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
                                  .build());
       return true;
     } catch (Exception ex) {
-      log.error("Error while resuming execution : {}", ex.getMessage());
+      log.error("Error while resuming execution", ex);
       pmsNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), constructStepResponse(ex));
       return false;
     }
@@ -212,7 +212,7 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
       }
       return true;
     } catch (Exception ex) {
-      log.error("Error while advising execution : {}", ex.getMessage());
+      log.error("Error while advising execution", ex);
       pmsNodeExecutionService.handleEventError(event.getEventType(), event.getNotifyId(), constructFailureInfo(ex));
       return false;
     }

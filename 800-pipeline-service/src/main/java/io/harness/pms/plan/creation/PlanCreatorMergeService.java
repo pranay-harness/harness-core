@@ -57,6 +57,7 @@ public class PlanCreatorMergeService {
   }
 
   public PlanCreationBlobResponse createPlan(@NotNull String content, ExecutionMetadata metadata) throws IOException {
+    log.info("Starting plan creation");
     Map<String, Map<String, Set<String>>> sdkInstances = pmsSdkInstanceService.getInstanceNameToSupportedTypes();
     Map<String, PlanCreatorServiceInfo> services = new HashMap<>();
     if (EmptyPredicate.isNotEmpty(planCreatorServices) && EmptyPredicate.isNotEmpty(sdkInstances)) {
@@ -73,6 +74,7 @@ public class PlanCreatorMergeService {
     dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
     PlanCreationBlobResponse finalResponse = createPlanForDependenciesRecursive(services, dependencies, metadata);
     validatePlanCreationBlobResponse(finalResponse);
+    log.info("Done with plan creation");
     return finalResponse;
   }
 
