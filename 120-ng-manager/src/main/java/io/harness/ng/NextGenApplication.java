@@ -18,6 +18,7 @@ import io.harness.cdng.executionplan.ExecutionPlanCreatorRegistrar;
 import io.harness.cdng.orchestration.NgStepRegistrar;
 import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.gitsync.core.runnable.GitChangeSetRunnable;
+import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.EtagFilter;
@@ -159,8 +160,15 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerAuthFilters(appConfig, environment, injector);
     registerPipelineSDK(appConfig, injector);
     registerYamlSdk(injector);
+    registerHealthCheck(environment, injector);
 
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void registerHealthCheck(Environment environment, Injector injector) {
+    final HealthService healthService = injector.getInstance(HealthService.class);
+    environment.healthChecks().register("Next Gen Manager", healthService);
+    healthService.registerMonitor(injector.getInstance(HPersistence.class));
   }
 
   private void createConsumerThreadsToListenToEvents(Environment environment, Injector injector) {
@@ -304,8 +312,10 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     if (configuration.isEnableAuth()) {
       // sample usage
       Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate = resourceInfoAndRequest
-          -> resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(NextGenManagerAuth.class) != null
-          || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NextGenManagerAuth.class) != null;
+          -> (resourceInfoAndRequest.getKey().getResourceMethod() != null
+                 && resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(NextGenManagerAuth.class) != null)
+          || (resourceInfoAndRequest.getKey().getResourceClass() != null
+              && resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NextGenManagerAuth.class) != null);
       Map<String, String> serviceToSecretMapping = new HashMap<>();
       serviceToSecretMapping.put(BEARER.getServiceId(), configuration.getNextGenConfig().getJwtAuthSecret());
       serviceToSecretMapping.put(
