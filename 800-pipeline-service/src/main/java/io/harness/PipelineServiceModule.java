@@ -9,6 +9,7 @@ import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.engine.StepTypeLookupService;
+import io.harness.filter.FiltersModule;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.grpc.server.PipelineServiceGrpcModule;
@@ -111,6 +112,7 @@ public class PipelineServiceModule extends AbstractModule {
     install(NGTriggersModule.getInstance());
     install(PersistentLockModule.getInstance());
     install(TimeModule.getInstance());
+    install(FiltersModule.getInstance());
 
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);

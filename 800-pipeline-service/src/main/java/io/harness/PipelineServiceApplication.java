@@ -13,6 +13,7 @@ import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.pms.exception.WingsExceptionMapper;
 import io.harness.pms.plan.creation.PipelineServiceFilterCreationResponseMerger;
 import io.harness.pms.plan.creation.PipelineServiceInternalInfoProvider;
@@ -42,6 +43,7 @@ import io.harness.waiter.OrchestrationNotifyEventListener;
 import io.harness.waiter.ProgressUpdateService;
 
 import com.codahale.metrics.MetricRegistry;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.*;
@@ -100,7 +102,12 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         return appConfig.getSwaggerBundleConfiguration();
       }
     });
-    bootstrap.getObjectMapper().registerModule(new PmsBeansJacksonModule());
+    configureObjectMapper(bootstrap.getObjectMapper());
+  }
+
+  public static void configureObjectMapper(final ObjectMapper mapper) {
+    NGPipelineObjectMapperHelper.configureNGObjectMapper(mapper);
+    mapper.registerModule(new PmsBeansJacksonModule());
   }
 
   @Override
