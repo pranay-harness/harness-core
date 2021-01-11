@@ -51,7 +51,6 @@ import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.junit.Test;
@@ -151,7 +150,8 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
             .cloudProvider(KubernetesClusterConfig.builder().delegateName("tag1").useKubernetesDelegate(true).build())
             .build();
     prepareK8sTaskData(k8sClusterConfig);
-    assertThat(client.getValidationTask(getClientContext(true), ACCOUNT_ID))
+    final DelegateTask validationTask = client.getValidationTask(getClientContext(true), ACCOUNT_ID);
+    assertThat(validationTask)
         .isEqualTo(DelegateTask.builder()
                        .accountId(ACCOUNT_ID)
                        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
@@ -166,12 +166,15 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
                                                                .namespace("namespace")
                                                                .releaseName("release_name")
                                                                .build()})
-                                 .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
+                                 .timeout(validationTask.getData().getTimeout())
                                  .build())
                        .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
                        .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
                        .waitId("12345")
                        .build());
+    assertThat(validationTask.getData().getTimeout())
+        .isLessThanOrEqualTo(System.currentTimeMillis() + TaskData.DELEGATE_QUEUE_TIMEOUT);
+    assertThat(validationTask.getData().getTimeout()).isGreaterThanOrEqualTo(System.currentTimeMillis());
   }
 
   @Test
@@ -180,7 +183,8 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
   public void getAzureValidationTask() {
     AzureConfig azureConfig = AzureConfig.builder().accountId(ACCOUNT_ID).tenantId("harness").build();
     prepareAzureTaskData(azureConfig);
-    assertThat(client.getValidationTask(getClientContext(false), ACCOUNT_ID))
+    final DelegateTask validationTask = client.getValidationTask(getClientContext(false), ACCOUNT_ID);
+    assertThat(validationTask)
         .isEqualTo(
             DelegateTask.builder()
                 .accountId(ACCOUNT_ID)
@@ -203,11 +207,15 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
                                   .masterUrl("master_url")
                                   .releaseName("release_name")
                                   .build()})
-                          .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
+                          .timeout(validationTask.getData().getTimeout())
                           .build())
                 .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
                 .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
                 .build());
+
+    assertThat(validationTask.getData().getTimeout())
+        .isLessThanOrEqualTo(System.currentTimeMillis() + TaskData.DELEGATE_QUEUE_TIMEOUT);
+    assertThat(validationTask.getData().getTimeout()).isGreaterThanOrEqualTo(System.currentTimeMillis());
   }
 
   @Test
@@ -216,7 +224,8 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
   public void getAwsValidationTask() {
     AwsConfig awsConfig = AwsConfig.builder().accountId(ACCOUNT_ID).tag("harness").build();
     prepareAwsTaskData(awsConfig);
-    assertThat(client.getValidationTask(getClientContext(false), ACCOUNT_ID))
+    final DelegateTask validationTask = client.getValidationTask(getClientContext(false), ACCOUNT_ID);
+    assertThat(validationTask)
         .isEqualTo(DelegateTask.builder()
                        .accountId(ACCOUNT_ID)
                        .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
@@ -238,11 +247,15 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
                                          .masterUrl("")
                                          .releaseName("release_name")
                                          .build()})
-                                 .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
+                                 .timeout(validationTask.getData().getTimeout())
                                  .build())
                        .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
                        .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
                        .build());
+
+    assertThat(validationTask.getData().getTimeout())
+        .isLessThanOrEqualTo(System.currentTimeMillis() + TaskData.DELEGATE_QUEUE_TIMEOUT);
+    assertThat(validationTask.getData().getTimeout()).isGreaterThanOrEqualTo(System.currentTimeMillis());
   }
 
   private void prepareAwsTaskData(AwsConfig awsConfig) {
