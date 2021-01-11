@@ -13,7 +13,7 @@ import io.harness.EntityType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.yaml.TestClass;
-import io.harness.yaml.YamlSdkConfiguration;
+import io.harness.yaml.YamlSdkInitConstants;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
 import java.io.IOException;
@@ -51,7 +51,7 @@ public class YamlSchemaValidatorTest extends CategoryTest {
     intializeAndMockInputStream();
     Set<Class<?>> classes = new HashSet<>();
     classes.add(TestClass.ClassWhichContainsInterface.class);
-    yamlSchemaValidator.populateSchemaInStaticMap(YamlSdkConfiguration.schemaBasePath, classes);
+    yamlSchemaValidator.populateSchemaInStaticMap(YamlSdkInitConstants.schemaBasePath, classes);
 
     final Set<String> type1Val = yamlSchemaValidator.validate(type1, EntityType.CONNECTORS);
     assertThat(type1Val).isEmpty();

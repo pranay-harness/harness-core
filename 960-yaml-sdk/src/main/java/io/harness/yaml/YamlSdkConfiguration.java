@@ -1,20 +1,12 @@
 package io.harness.yaml;
 
-/**
- * Configuration required to use SDK.
- * Fixing config as convention.
- */
+import lombok.Builder;
+import lombok.Value;
+
+@Value
+@Builder
 public class YamlSdkConfiguration {
-  /**
-   * Snippets base path.
-   */
-  public static final String snippetBasePath = "snippets";
-  /**
-   * Snippets index file.
-   */
-  public static final String snippetIndexFile = "index.xml";
-  /**
-   * Schema base path.
-   */
-  public static final String schemaBasePath = "schema";
+  boolean requireSchemaInit;
+  boolean requireSnippetInit;
+  boolean requireValidatorInit;
 }
