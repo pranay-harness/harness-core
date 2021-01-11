@@ -426,7 +426,7 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
     String projectIdentifier = AmbianceHelper.getProjectIdentifier(ambiance);
     String orgIdentifier = AmbianceHelper.getOrgIdentifier(ambiance);
 
-    if (serviceConfig.getServiceRef() != null) {
+    if (serviceConfig.getServiceRef() != null && EmptyPredicate.isNotEmpty(serviceConfig.getServiceRef().getValue())) {
       String serviceIdentifier = serviceConfig.getServiceRef().getValue();
       Optional<ServiceEntity> serviceEntity =
           serviceEntityService.get(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, false);
