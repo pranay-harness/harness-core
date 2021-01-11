@@ -6,6 +6,7 @@ import io.harness.cdng.creator.plan.infrastructure.InfrastructurePmsPlanCreator;
 import io.harness.cdng.creator.plan.service.ServicePMSPlanCreator;
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
 import io.harness.cdng.pipeline.steps.DeploymentStageStep;
+import io.harness.cdng.visitor.YamlTypes;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
@@ -45,7 +46,8 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
     Map<String, YamlField> dependenciesNodeMap = new HashMap<>();
 
     // Adding service child
-    YamlField serviceField = ctx.getCurrentField().getNode().getField("spec").getNode().getField("serviceConfig");
+    YamlField serviceField =
+        ctx.getCurrentField().getNode().getField(YamlTypes.SPEC).getNode().getField(YamlTypes.SERVICE_CONFIG);
 
     if (serviceField != null) {
       PlanNode servicePlanNode = ServicePMSPlanCreator.createPlanForServiceNode(
@@ -56,14 +58,15 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
     // Adding infrastructure node
     String infraDefNodeUuid = ctx.getCurrentField()
                                   .getNode()
-                                  .getField("spec")
+                                  .getField(YamlTypes.SPEC)
                                   .getNode()
-                                  .getField("infrastructure")
+                                  .getField(YamlTypes.PIPELINE_INFRASTRUCTURE)
                                   .getNode()
-                                  .getField("infrastructureDefinition")
+                                  .getField(YamlTypes.INFRASTRUCTURE_DEF)
                                   .getNode()
                                   .getUuid();
-    YamlField infraField = ctx.getCurrentField().getNode().getField("spec").getNode().getField("infrastructure");
+    YamlField infraField =
+        ctx.getCurrentField().getNode().getField(YamlTypes.SPEC).getNode().getField(YamlTypes.PIPELINE_INFRASTRUCTURE);
     YamlNode infraNode = infraField.getNode();
 
     PlanNode infraStepNode = InfrastructurePmsPlanCreator.getInfraStepPlanNode(
@@ -78,7 +81,8 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
         infraNode.getUuid(), PlanCreationResponse.builder().node(infraNode.getUuid(), infraSectionPlanNode).build());
 
     // Add dependency for execution
-    YamlField executionField = ctx.getCurrentField().getNode().getField("spec").getNode().getField("execution");
+    YamlField executionField =
+        ctx.getCurrentField().getNode().getField(YamlTypes.SPEC).getNode().getField(YAMLFieldNameConstants.EXECUTION);
     dependenciesNodeMap.put(executionField.getNode().getUuid(), executionField);
 
     planCreationResponseMap.put(
@@ -109,8 +113,8 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
       if (currentField.checkIfParentIsParallel(STAGES)) {
         return adviserObtainments;
       }
-      YamlField siblingField =
-          currentField.getNode().nextSiblingFromParentArray(currentField.getName(), Arrays.asList("stage", "parallel"));
+      YamlField siblingField = currentField.getNode().nextSiblingFromParentArray(
+          currentField.getName(), Arrays.asList(YAMLFieldNameConstants.STAGE, YAMLFieldNameConstants.PARALLEL));
       if (siblingField != null && siblingField.getNode().getUuid() != null) {
         adviserObtainments.add(
             AdviserObtainment.newBuilder()

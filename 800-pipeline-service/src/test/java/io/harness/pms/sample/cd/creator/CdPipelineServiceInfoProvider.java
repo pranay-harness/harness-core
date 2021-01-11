@@ -1,6 +1,5 @@
 package io.harness.pms.sample.cd.creator;
 
-import io.harness.plancreator.execution.ExecutionPMSPlanCreator;
 import io.harness.plancreator.pipeline.NGPipelinePlanCreator;
 import io.harness.plancreator.stages.StagesPlanCreator;
 import io.harness.plancreator.stages.parallel.ParallelPlanCreator;
@@ -34,7 +33,6 @@ public class CdPipelineServiceInfoProvider implements PipelineServiceInfoProvide
     planCreators.add(new CdStepPlanCreator());
     planCreators.add(new ParallelPlanCreator());
     planCreators.add(new StepGroupPMSPlanCreator());
-    planCreators.add(new ExecutionPMSPlanCreator());
     injectorUtils.injectMembers(planCreators);
     return planCreators;
   }

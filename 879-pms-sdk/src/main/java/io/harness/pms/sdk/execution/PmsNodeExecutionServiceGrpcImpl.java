@@ -77,7 +77,7 @@ public class PmsNodeExecutionServiceGrpcImpl implements PmsNodeExecutionService 
                                                        .setNodeExecutionId(nodeExecutionId)
                                                        .setExecutableResponse(executableResponse)
                                                        .addAllCallbackIds(callbackIds);
-    if (status != null && status != Status.UNRECOGNIZED) {
+    if (status != null && status != Status.NO_OP) {
       builder.setStatus(status);
     }
     nodeExecutionProtoServiceBlockingStub.addExecutableResponse(builder.build());

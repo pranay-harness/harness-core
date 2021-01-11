@@ -89,7 +89,7 @@ public class PmsNodeExecutionServiceImpl implements PmsNodeExecutionService {
       waitNotifyEngine.waitForAllOn(publisherName, callback, callbackIds.toArray(new String[0]));
     }
 
-    if (status == Status.UNRECOGNIZED) {
+    if (status == Status.NO_OP) {
       nodeExecutionService.update(
           nodeExecutionId, ops -> ops.addToSet(NodeExecutionKeys.executableResponses, executableResponse));
     } else {

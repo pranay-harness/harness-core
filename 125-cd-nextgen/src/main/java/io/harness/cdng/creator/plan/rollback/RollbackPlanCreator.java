@@ -6,6 +6,7 @@ import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters.R
 import io.harness.cdng.pipeline.steps.RollbackOptionalChildChainStep;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
+import io.harness.plancreator.beans.PlanCreationConstants;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
@@ -14,6 +15,7 @@ import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
@@ -30,17 +32,20 @@ public class RollbackPlanCreator implements PartialPlanCreator<YamlField> {
 
   @Override
   public Map<String, Set<String>> getSupportedTypes() {
-    return Collections.singletonMap("rollbackSteps", Collections.singleton(PlanCreatorUtils.ANY_TYPE));
+    return Collections.singletonMap(
+        YAMLFieldNameConstants.ROLLBACK_STEPS, Collections.singleton(PlanCreatorUtils.ANY_TYPE));
   }
 
   @Override
   public PlanCreationResponse createPlanForField(PlanCreationContext ctx, YamlField executionRollbackSteps) {
-    YamlNode stageNode = YamlUtils.getGivenYamlNodeFromParentPath(ctx.getCurrentField().getNode(), "stage");
+    YamlNode stageNode =
+        YamlUtils.getGivenYamlNodeFromParentPath(ctx.getCurrentField().getNode(), YAMLFieldNameConstants.STAGE);
     RollbackOptionalChildChainStepParametersBuilder stepParametersBuilder =
         RollbackOptionalChildChainStepParameters.builder();
 
     YamlField executionStepsField =
-        YamlUtils.getGivenYamlNodeFromParentPath(ctx.getCurrentField().getNode(), "execution").getField("steps");
+        YamlUtils.getGivenYamlNodeFromParentPath(ctx.getCurrentField().getNode(), YAMLFieldNameConstants.EXECUTION)
+            .getField(YAMLFieldNameConstants.STEPS);
     PlanCreationResponse stepGroupsRollbackPlanNode =
         StepGroupsRollbackPMSPlanCreator.createStepGroupsRollbackPlanNode(executionStepsField);
 
@@ -63,9 +68,9 @@ public class RollbackPlanCreator implements PartialPlanCreator<YamlField> {
 
     PlanNode deploymentStageRollbackNode =
         PlanNode.builder()
-            .uuid(executionRollbackSteps.getNode().getUuid() + "_section")
-            .name(stageNode.getNameOrIdentifier() + ":Rollback")
-            .identifier(stageNode.getIdentifier() + "Rollback")
+            .uuid(executionRollbackSteps.getNode().getUuid())
+            .name(PlanCreationConstants.ROLLBACK_NODE_NAME)
+            .identifier(YAMLFieldNameConstants.ROLLBACK_STEPS)
             .stepType(RollbackOptionalChildChainStep.STEP_TYPE)
             .stepParameters(stepParametersBuilder.build())
             .facilitatorObtainment(
@@ -78,6 +83,7 @@ public class RollbackPlanCreator implements PartialPlanCreator<YamlField> {
     PlanCreationResponse finalResponse =
         PlanCreationResponse.builder().node(deploymentStageRollbackNode.getUuid(), deploymentStageRollbackNode).build();
     finalResponse.merge(stepGroupsRollbackPlanNode);
+    finalResponse.merge(executionRollbackPlanNode);
 
     return finalResponse;
   }

@@ -35,10 +35,11 @@ public class PlanCreatorUtils {
     if (EmptyPredicate.isEmpty(stageIdentifier)) {
       return null;
     }
-    if (yamlField.getName().equals("pipeline") || yamlField.getName().equals("stages")) {
+    if (yamlField.getName().equals(YAMLFieldNameConstants.PIPELINE)
+        || yamlField.getName().equals(YAMLFieldNameConstants.STAGES)) {
       return null;
     }
-    YamlNode stages = YamlUtils.getGivenYamlNodeFromParentPath(yamlField.getNode(), "stages");
+    YamlNode stages = YamlUtils.getGivenYamlNodeFromParentPath(yamlField.getNode(), YAMLFieldNameConstants.STAGES);
     List<YamlField> stageYamlFields = getStageYamlFields(stages);
     for (YamlField stageYamlField : stageYamlFields) {
       if (stageYamlField.getNode().getIdentifier().equals(stageIdentifier)) {
@@ -53,8 +54,8 @@ public class PlanCreatorUtils {
     List<YamlField> stageFields = new LinkedList<>();
 
     yamlNodes.forEach(yamlNode -> {
-      YamlField stageField = yamlNode.getField("stage");
-      YamlField parallelStageField = yamlNode.getField("parallel");
+      YamlField stageField = yamlNode.getField(YAMLFieldNameConstants.STAGE);
+      YamlField parallelStageField = yamlNode.getField(YAMLFieldNameConstants.PARALLEL);
       if (stageField != null) {
         stageFields.add(stageField);
       } else if (parallelStageField != null) {
