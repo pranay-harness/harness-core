@@ -44,6 +44,7 @@ import io.harness.perpetualtask.connector.ConnectorHearbeatPublisher;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
+import io.harness.service.intfc.DelegateTaskService;
 
 import software.wings.beans.Delegate;
 import software.wings.core.managerConfiguration.ConfigurationController;
@@ -97,6 +98,7 @@ public class DelegateAgentResourceTest {
   private static final SubdomainUrlHelperIntfc subdomainUrlHelper = mock(SubdomainUrlHelperIntfc.class);
   private static final InstanceHelper instanceSyncResponseHandler = mock(InstanceHelper.class);
   private static final ArtifactCollectionResponseHandler artifactCollectionResponseHandler;
+  private static final DelegateTaskService delegateTaskService = mock(DelegateTaskService.class);
 
   static {
     artifactCollectionResponseHandler = mock(ArtifactCollectionResponseHandler.class);
@@ -462,7 +464,7 @@ public class DelegateAgentResourceTest {
         .target("/agent/delegates/" + DELEGATE_ID + "/tasks/" + taskId + "?accountId=" + ACCOUNT_ID)
         .request()
         .post(entity(taskResponse, "application/x-kryo"), new GenericType<RestResponse<String>>() {});
-    verify(delegateService, atLeastOnce()).processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, taskId, taskResponse);
+    verify(delegateTaskService, atLeastOnce()).processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, taskId, taskResponse);
   }
 
   @Test

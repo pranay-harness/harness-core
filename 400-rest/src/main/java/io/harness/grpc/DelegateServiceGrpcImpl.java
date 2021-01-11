@@ -55,6 +55,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentEntity;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateCallbackRegistry;
+import io.harness.service.intfc.DelegateTaskService;
 
 import software.wings.service.intfc.DelegateService;
 
@@ -81,16 +82,18 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
   private DelegateService delegateService;
   private KryoSerializer kryoSerializer;
   private HPersistence persistence;
+  private DelegateTaskService delegateTaskService;
 
   @Inject
   public DelegateServiceGrpcImpl(DelegateCallbackRegistry delegateCallbackRegistry,
-      PerpetualTaskService perpetualTaskService, DelegateService delegateService, KryoSerializer kryoSerializer,
-      HPersistence persistence) {
+      PerpetualTaskService perpetualTaskService, DelegateService delegateService,
+      DelegateTaskService delegateTaskService, KryoSerializer kryoSerializer, HPersistence persistence) {
     this.delegateCallbackRegistry = delegateCallbackRegistry;
     this.perpetualTaskService = perpetualTaskService;
     this.delegateService = delegateService;
     this.kryoSerializer = kryoSerializer;
     this.persistence = persistence;
+    this.delegateTaskService = delegateTaskService;
   }
 
   @Override
@@ -202,7 +205,7 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
               .response((DelegateResponseData) kryoSerializer.asInflatedObject(
                   request.getTaskResponseData().getKryoResultsData().toByteArray()))
               .build();
-      delegateService.processDelegateResponse(
+      delegateTaskService.processDelegateResponse(
           request.getAccountId().getId(), null, request.getTaskId().getId(), delegateTaskResponse);
       responseObserver.onNext(SendTaskStatusResponse.newBuilder().setSuccess(true).build());
       responseObserver.onCompleted();

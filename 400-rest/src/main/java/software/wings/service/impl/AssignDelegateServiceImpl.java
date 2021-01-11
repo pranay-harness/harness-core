@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.DelegateTask.Status.QUEUED;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -13,6 +14,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.DelegateTask;
+import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.delegate.beans.DelegateActivity;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
@@ -25,6 +27,8 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.selection.log.BatchDelegateSelectionLog;
+import io.harness.service.dto.RetryDelegate;
+import io.harness.service.intfc.DelegateTaskRetryObserver;
 import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.beans.Delegate;
@@ -77,7 +81,7 @@ import org.mongodb.morphia.query.UpdateOperations;
  */
 @Singleton
 @Slf4j
-public class AssignDelegateServiceImpl implements AssignDelegateService {
+public class AssignDelegateServiceImpl implements AssignDelegateService, DelegateTaskRetryObserver {
   private static final SecureRandom random = new SecureRandom();
   public static final long MAX_DELEGATE_LAST_HEARTBEAT = (5 * 60 * 1000L) + (15 * 1000L); // 5 minutes 15 seconds
 
@@ -782,5 +786,44 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
                                          .collect(Collectors.toSet());
       delegateSelectionLogsService.logWaitingForApprovalDelegate(batch, accountId, wapprDelegateIds);
     }
+  }
+
+  @Override
+  public RetryDelegate onPossibleRetry(RetryDelegate retryDelegate) {
+    log.info("Delegate returned retryable error for task");
+
+    Set<String> alreadyTriedDelegates = retryDelegate.getDelegateTask().getAlreadyTriedDelegates();
+    List<String> remainingConnectedDelegates =
+        this.connectedWhitelistedDelegates(retryDelegate.getDelegateTask())
+            .stream()
+            .filter(item -> !retryDelegate.getDelegateId().equals(item))
+            .filter(item -> isEmpty(alreadyTriedDelegates) || !alreadyTriedDelegates.contains(item))
+            .collect(toList());
+
+    if (!remainingConnectedDelegates.isEmpty()) {
+      log.info("Requeueing task");
+
+      wingsPersistence.update(retryDelegate.getTaskQuery(),
+          wingsPersistence.createUpdateOperations(DelegateTask.class)
+              .unset(DelegateTaskKeys.delegateId)
+              .unset(DelegateTaskKeys.validationStartedAt)
+              .unset(DelegateTaskKeys.lastBroadcastAt)
+              .unset(DelegateTaskKeys.validatingDelegateIds)
+              .unset(DelegateTaskKeys.validationCompleteDelegateIds)
+              .set(DelegateTaskKeys.broadcastCount, 1)
+              .set(DelegateTaskKeys.status, QUEUED)
+              .addToSet(DelegateTaskKeys.alreadyTriedDelegates, retryDelegate.getDelegateId()));
+
+      return RetryDelegate.builder().retryPossible(true).build();
+    } else {
+      log.info("Task has been tried on all the connected delegates. Proceeding with error.");
+    }
+
+    return RetryDelegate.builder().retryPossible(false).build();
+  }
+
+  @Override
+  public void onTaskResponseProcessed(DelegateTask delegateTask, String delegateId) {
+    this.refreshWhitelist(delegateTask, delegateId);
   }
 }

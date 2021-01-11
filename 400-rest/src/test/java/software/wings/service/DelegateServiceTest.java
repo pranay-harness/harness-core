@@ -112,7 +112,10 @@ import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.serializer.KryoSerializer;
+import io.harness.service.dto.RetryDelegate;
 import io.harness.service.intfc.DelegateProfileObserver;
+import io.harness.service.intfc.DelegateTaskRetryObserver;
+import io.harness.service.intfc.DelegateTaskService;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.version.VersionInfo;
 import io.harness.version.VersionInfoManager;
@@ -238,10 +241,12 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @InjectMocks @Inject private DelegateTaskBroadcastHelper delegateTaskBroadcastHelper;
   @InjectMocks @Inject private DelegateService delegateService;
+  @InjectMocks @Inject private DelegateTaskService delegateTaskService;
   @Mock private UsageLimitedFeature delegatesFeature;
 
   @Inject private WingsPersistence wingsPersistence;
   private Subject<DelegateProfileObserver> delegateProfileSubject = mock(Subject.class);
+  private Subject<DelegateTaskRetryObserver> retryObserverSubject = mock(Subject.class);
 
   private Account account =
       anAccount().withLicenseInfo(LicenseInfo.builder().accountStatus(AccountStatus.ACTIVE).build()).build();
@@ -305,6 +310,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     //    when(delegatesFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(Integer.MAX_VALUE);
 
     FieldUtils.writeField(delegateService, "delegateProfileSubject", delegateProfileSubject, true);
+    FieldUtils.writeField(delegateTaskService, "retryObserverSubject", retryObserverSubject, true);
   }
 
   @Test
@@ -1248,7 +1254,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldProcessDelegateTaskResponse() {
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
-    delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
+    delegateTaskService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
         DelegateTaskResponse.builder()
             .accountId(ACCOUNT_ID)
             .response(ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build())
@@ -1266,7 +1272,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldProcessDelegateTaskResponseWithoutWaitId() {
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
-    delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
+    delegateTaskService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
         DelegateTaskResponse.builder()
             .accountId(ACCOUNT_ID)
             .response(ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build())
@@ -1281,7 +1287,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldProcessSyncDelegateTaskResponse() {
     DelegateTask delegateTask = saveDelegateTask(false, emptySet(), QUEUED);
-    delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
+    delegateTaskService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
         DelegateTaskResponse.builder()
             .accountId(ACCOUNT_ID)
             .response(ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build())
@@ -1312,20 +1318,20 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     when(assignDelegateService.connectedWhitelistedDelegates(any())).thenReturn(asList("delegate1", "delegate2"));
 
-    delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
+    RetryDelegate retryDelegate = RetryDelegate.builder().retryPossible(true).delegateTask(delegateTask).build();
+    when(retryObserverSubject.fireProcess(any(), any())).thenReturn(retryDelegate);
+
+    delegateTaskService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
         DelegateTaskResponse.builder()
             .accountId(ACCOUNT_ID)
             .response(ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build())
             .responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE)
             .build());
+
     DelegateTask updatedDelegateTask =
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get();
 
     assertThat(updatedDelegateTask).isNotNull();
-    assertThat(updatedDelegateTask.getDelegateId()).isNull();
-    assertThat(updatedDelegateTask.getAlreadyTriedDelegates()).isNotNull();
-    assertThat(updatedDelegateTask.getAlreadyTriedDelegates().size()).isEqualTo(1);
-    assertThat(updatedDelegateTask.getAlreadyTriedDelegates()).contains(DELEGATE_ID);
   }
 
   @Test
@@ -1350,14 +1356,19 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     when(assignDelegateService.connectedWhitelistedDelegates(any())).thenReturn(asList(DELEGATE_ID));
 
-    delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
+    RetryDelegate retryDelegate = RetryDelegate.builder().retryPossible(false).build();
+    when(retryObserverSubject.fireProcess(any(), any())).thenReturn(retryDelegate);
+
+    delegateTaskService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
         DelegateTaskResponse.builder()
             .accountId(ACCOUNT_ID)
             .response(ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build())
             .responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE)
             .build());
+
     DelegateTask updatedDelegateTask =
         wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get();
+
     assertThat(updatedDelegateTask).isEqualTo(null);
   }
 
@@ -1850,7 +1861,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     JenkinsExecutionResponse jenkinsExecutionResponse =
         JenkinsExecutionResponse.builder().delegateMetaInfo(delegateMetaInfo).build();
 
-    delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
+    delegateTaskService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
         DelegateTaskResponse.builder().accountId(ACCOUNT_ID).response(jenkinsExecutionResponse).build());
     DelegateTaskNotifyResponseData delegateTaskNotifyResponseData = jenkinsExecutionResponse;
     assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getHostName()).isEqualTo(HOST_NAME);
@@ -1859,7 +1870,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     jenkinsExecutionResponse = JenkinsExecutionResponse.builder().delegateMetaInfo(delegateMetaInfo).build();
     delegateTaskNotifyResponseData = jenkinsExecutionResponse;
     wingsPersistence.save(delegateTask);
-    delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
+    delegateTaskService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
         DelegateTaskResponse.builder().accountId(ACCOUNT_ID).response(jenkinsExecutionResponse).build());
     assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getId()).isEqualTo(DELEGATE_ID);
   }

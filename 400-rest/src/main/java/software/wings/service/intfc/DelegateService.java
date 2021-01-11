@@ -15,7 +15,6 @@ import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateTaskAbortEvent;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
-import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.validation.Create;
 
@@ -33,7 +32,6 @@ import java.util.Optional;
 import java.util.Set;
 import javax.validation.Valid;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.mongodb.morphia.query.Query;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 public interface DelegateService extends OwnedByAccount {
@@ -131,9 +129,6 @@ public interface DelegateService extends OwnedByAccount {
 
   void clearCache(String accountId, String delegateId);
 
-  void processDelegateResponse(
-      String accountId, String delegateId, String taskId, @Valid DelegateTaskResponse response);
-
   void publishTaskProgressResponse(
       String accountId, String driverId, String delegateTaskId, DelegateProgressData responseData);
 
@@ -157,8 +152,6 @@ public interface DelegateService extends OwnedByAccount {
   List<Integer> getCountOfDelegatesForAccounts(List<String> collect);
 
   Optional<DelegateTask> fetchDelegateTask(String accountId, String taskId);
-
-  void handleResponse(DelegateTask delegateTask, Query<DelegateTask> taskQuery, DelegateTaskResponse response);
 
   boolean validateThatDelegateNameIsUnique(String accountId, String delegateName);
 

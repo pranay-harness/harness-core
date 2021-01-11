@@ -45,12 +45,16 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
+import io.harness.observer.Subject;
 import io.harness.rule.Owner;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.serializer.KryoSerializer;
+import io.harness.service.dto.RetryDelegate;
 import io.harness.service.impl.DelegateSyncServiceImpl;
+import io.harness.service.impl.DelegateTaskServiceImpl;
 import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateCallbackService;
+import io.harness.service.intfc.DelegateTaskRetryObserver;
 import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.WingsBaseTest;
@@ -77,6 +81,7 @@ import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.joda.time.DateTime;
@@ -99,6 +104,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Mock private Account account;
   @InjectMocks @Inject private DelegateServiceImpl delegateService;
   @InjectMocks @Inject private DelegateSyncServiceImpl delegateSyncService;
+  @InjectMocks @Inject private DelegateTaskServiceImpl delegateTaskService;
   @Mock private AssignDelegateService assignDelegateService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private DelegateSelectionLogsService delegateSelectionLogsService;
@@ -106,10 +112,12 @@ public class DelegateServiceImplTest extends WingsBaseTest {
 
   @InjectMocks @Spy private DelegateServiceImpl spydelegateService;
   @Inject private KryoSerializer kryoSerializer;
+  private Subject<DelegateTaskRetryObserver> retryObserverSubject = mock(Subject.class);
 
   @Before
-  public void setUp() {
+  public void setUp() throws IllegalAccessException {
     when(broadcasterFactory.lookup(anyString(), anyBoolean())).thenReturn(broadcaster);
+    FieldUtils.writeField(delegateTaskService, "retryObserverSubject", retryObserverSubject, true);
   }
 
   private DelegateBuilder createDelegateBuilder() {
@@ -148,11 +156,16 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     when(assignDelegateService.retrieveActiveDelegates(
              eq(delegateTask.getAccountId()), any(BatchDelegateSelectionLog.class)))
         .thenReturn(Arrays.asList(delegate.getUuid()));
+
+    RetryDelegate retryDelegate = RetryDelegate.builder().retryPossible(true).delegateTask(delegateTask).build();
+    when(retryObserverSubject.fireProcess(any(), any())).thenReturn(retryDelegate);
+
     Thread thread = new Thread(() -> {
       await().atMost(5L, TimeUnit.SECONDS).until(() -> isNotEmpty(delegateSyncService.syncTaskWaitMap));
       DelegateTask task =
           wingsPersistence.createQuery(DelegateTask.class).filter("accountId", delegateTask.getAccountId()).get();
-      delegateService.processDelegateResponse(task.getAccountId(), delegate.getUuid(), task.getUuid(),
+
+      delegateTaskService.processDelegateResponse(task.getAccountId(), delegate.getUuid(), task.getUuid(),
           DelegateTaskResponse.builder()
               .accountId(task.getAccountId())
               .response(HttpStateExecutionResponse.builder().executionStatus(ExecutionStatus.SUCCESS).build())

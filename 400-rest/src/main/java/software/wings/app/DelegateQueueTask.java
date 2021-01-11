@@ -25,6 +25,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
+import io.harness.service.intfc.DelegateTaskService;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -63,6 +64,7 @@ public class DelegateQueueTask implements Runnable {
   @Inject private DelegateService delegateService;
   @Inject private DelegateTaskBroadcastHelper broadcastHelper;
   @Inject private ConfigurationController configurationController;
+  @Inject private DelegateTaskService delegateTaskService;
 
   @Override
   public void run() {
@@ -181,7 +183,7 @@ public class DelegateQueueTask implements Runnable {
           log.info("Marking task as failed - {}: {}", taskId, errorMessage);
 
           if (delegateTasks.get(taskId) != null) {
-            delegateService.handleResponse(delegateTasks.get(taskId), null,
+            delegateTaskService.handleResponse(delegateTasks.get(taskId), null,
                 DelegateTaskResponse.builder()
                     .accountId(delegateTasks.get(taskId).getAccountId())
                     .responseCode(DelegateTaskResponse.ResponseCode.FAILED)
