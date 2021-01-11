@@ -1,13 +1,13 @@
 package io.harness.cdng.creator;
 
 import io.harness.cdng.creator.filters.DeploymentStageFilterJsonCreator;
+import io.harness.cdng.creator.plan.execution.CDExecutionPMSPlanCreator;
 import io.harness.cdng.creator.plan.rollback.RollbackPlanCreator;
 import io.harness.cdng.creator.plan.stage.DeploymentStagePMSPlanCreator;
 import io.harness.cdng.creator.plan.steps.CDPMSStepPlanCreator;
 import io.harness.cdng.creator.variables.DeploymentStageVariableCreator;
 import io.harness.cdng.creator.variables.K8sStepVariableCreator;
 import io.harness.executions.steps.StepSpecTypeConstants;
-import io.harness.plancreator.execution.ExecutionPMSPlanCreator;
 import io.harness.plancreator.steps.StepGroupPMSPlanCreator;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepMetaData;
@@ -33,7 +33,7 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
   public List<PartialPlanCreator<?>> getPlanCreators() {
     List<PartialPlanCreator<?>> planCreators = new LinkedList<>();
     planCreators.add(new DeploymentStagePMSPlanCreator());
-    planCreators.add(new ExecutionPMSPlanCreator());
+    planCreators.add(new CDExecutionPMSPlanCreator());
     planCreators.add(new StepGroupPMSPlanCreator());
     planCreators.add(new CDPMSStepPlanCreator());
     planCreators.add(new RollbackPlanCreator());

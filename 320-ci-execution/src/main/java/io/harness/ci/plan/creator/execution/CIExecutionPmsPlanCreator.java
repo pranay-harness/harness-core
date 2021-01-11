@@ -1,7 +1,10 @@
-package io.harness.plancreator.execution;
+package io.harness.ci.plan.creator.execution;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.plancreator.beans.PlanCreationConstants;
+import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
@@ -26,7 +29,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-public class ExecutionPMSPlanCreator extends ChildrenPlanCreator<ExecutionElementConfig> {
+public class CIExecutionPmsPlanCreator extends ChildrenPlanCreator<ExecutionElementConfig> {
   @Override
   public LinkedHashMap<String, PlanCreationResponse> createPlanForChildrenNodes(
       PlanCreationContext ctx, ExecutionElementConfig config) {
@@ -38,7 +41,15 @@ public class ExecutionPMSPlanCreator extends ChildrenPlanCreator<ExecutionElemen
       responseMap.put(
           stepYamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(stepYamlFieldMap).build());
     }
-    YamlField rollbackStepsField = ctx.getCurrentField().getNode().getField("rollbackSteps");
+    // Add Steps Node
+    if (EmptyPredicate.isNotEmpty(stepYamlFields)) {
+      YamlField stepsField =
+          Preconditions.checkNotNull(ctx.getCurrentField().getNode().getField(YAMLFieldNameConstants.STEPS));
+      PlanNode stepsNode = getStepsPlanNode(stepsField, stepYamlFields.get(0).getNode().getUuid());
+      responseMap.put(stepsNode.getUuid(), PlanCreationResponse.builder().node(stepsNode.getUuid(), stepsNode).build());
+    }
+
+    YamlField rollbackStepsField = ctx.getCurrentField().getNode().getField(YAMLFieldNameConstants.ROLLBACK_STEPS);
     if (rollbackStepsField != null) {
       Map<String, YamlField> rollbackDependencyMap = new HashMap<>();
       rollbackDependencyMap.put(rollbackStepsField.getNode().getUuid(), rollbackStepsField);
@@ -51,11 +62,15 @@ public class ExecutionPMSPlanCreator extends ChildrenPlanCreator<ExecutionElemen
   @Override
   public PlanNode createPlanForParentNode(
       PlanCreationContext ctx, ExecutionElementConfig config, List<String> childrenNodeIds) {
-    StepParameters stepParameters =
-        NGSectionStepParameters.builder().childNodeId(childrenNodeIds.get(0)).logMessage("Execution Element").build();
+    YamlField stepsField =
+        Preconditions.checkNotNull(ctx.getCurrentField().getNode().getField(YAMLFieldNameConstants.STEPS));
+    StepParameters stepParameters = NGSectionStepParameters.builder()
+                                        .childNodeId(stepsField.getNode().getUuid())
+                                        .logMessage("Execution Element")
+                                        .build();
     return PlanNode.builder()
         .uuid(ctx.getCurrentField().getNode().getUuid())
-        .identifier(PlanCreationConstants.EXECUTION_NODE_IDENTIFIER + "." + YAMLFieldNameConstants.STEPS)
+        .identifier(PlanCreationConstants.EXECUTION_NODE_IDENTIFIER)
         .stepType(NGSectionStep.STEP_TYPE)
         .group(StepOutcomeGroup.EXECUTION.name())
         .name(PlanCreationConstants.EXECUTION_NODE_NAME)
@@ -72,22 +87,23 @@ public class ExecutionPMSPlanCreator extends ChildrenPlanCreator<ExecutionElemen
 
   @Override
   public Map<String, Set<String>> getSupportedTypes() {
-    return Collections.singletonMap("execution", Collections.singleton(PlanCreatorUtils.ANY_TYPE));
+    return Collections.singletonMap(YAMLFieldNameConstants.EXECUTION, Collections.singleton(PlanCreatorUtils.ANY_TYPE));
   }
 
   private List<YamlField> getStepYamlFields(PlanCreationContext planCreationContext) {
-    List<YamlNode> yamlNodes =
-        Optional
-            .of(Preconditions.checkNotNull(planCreationContext.getCurrentField().getNode().getField("steps"))
-                    .getNode()
-                    .asArray())
-            .orElse(Collections.emptyList());
+    List<YamlNode> yamlNodes = Optional
+                                   .of(Preconditions
+                                           .checkNotNull(planCreationContext.getCurrentField().getNode().getField(
+                                               YAMLFieldNameConstants.STEPS))
+                                           .getNode()
+                                           .asArray())
+                                   .orElse(Collections.emptyList());
     List<YamlField> stepFields = new LinkedList<>();
 
     yamlNodes.forEach(yamlNode -> {
-      YamlField stepField = yamlNode.getField("step");
-      YamlField stepGroupField = yamlNode.getField("stepGroup");
-      YamlField parallelStepField = yamlNode.getField("parallel");
+      YamlField stepField = yamlNode.getField(YAMLFieldNameConstants.STEP);
+      YamlField stepGroupField = yamlNode.getField(YAMLFieldNameConstants.STEP_GROUP);
+      YamlField parallelStepField = yamlNode.getField(YAMLFieldNameConstants.PARALLEL);
       if (stepField != null) {
         stepFields.add(stepField);
       } else if (stepGroupField != null) {
@@ -97,5 +113,19 @@ public class ExecutionPMSPlanCreator extends ChildrenPlanCreator<ExecutionElemen
       }
     });
     return stepFields;
+  }
+
+  PlanNode getStepsPlanNode(YamlField stepsYamlField, String childNodeId) {
+    StepParameters stepParameters =
+        NGSectionStepParameters.builder().childNodeId(childNodeId).logMessage("Steps Element").build();
+    return PlanNode.builder()
+        .uuid(stepsYamlField.getNode().getUuid())
+        .identifier(YAMLFieldNameConstants.STEPS)
+        .stepType(NGSectionStep.STEP_TYPE)
+        .name(YAMLFieldNameConstants.STEPS)
+        .stepParameters(stepParameters)
+        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
+        .skipGraphType(SkipType.SKIP_NODE)
+        .build();
   }
 }

@@ -1,11 +1,13 @@
 package io.harness.cdng.creator.plan.rollback;
 
+import io.harness.plancreator.beans.PlanCreationConstants;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse.PlanCreationResponseBuilder;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.steps.StepOutcomeGroup;
@@ -22,7 +24,7 @@ import java.util.Optional;
 
 public class StepGroupRollbackPMSPlanCreator {
   public static PlanCreationResponse createStepGroupRollbackPlan(YamlField stepGroup) {
-    YamlField rollbackStepsNode = stepGroup.getNode().getField("rollbackSteps");
+    YamlField rollbackStepsNode = stepGroup.getNode().getField(YAMLFieldNameConstants.ROLLBACK_STEPS);
 
     if (rollbackStepsNode != null) {
       PlanCreationResponseBuilder planCreationResponseBuilder = PlanCreationResponse.builder();
@@ -42,8 +44,8 @@ public class StepGroupRollbackPMSPlanCreator {
       PlanNode stepGroupRollbackNode =
           PlanNode.builder()
               .uuid(rollbackStepsNode.getNode().getUuid())
-              .name(stepGroup.getNode().getNameOrIdentifier() + "_rollback")
-              .identifier(stepGroup.getNode().getIdentifier() + "_rollback")
+              .name(stepGroup.getNode().getNameOrIdentifier() + "-" + PlanCreationConstants.ROLLBACK_NODE_NAME)
+              .identifier(YAMLFieldNameConstants.ROLLBACK_STEPS)
               .stepType(NGSectionStep.STEP_TYPE)
               .group(StepOutcomeGroup.STEP.name())
               .stepParameters(stepParameters)

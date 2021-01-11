@@ -1,9 +1,9 @@
 package io.harness.ci.plan.creator;
 
+import io.harness.ci.plan.creator.execution.CIExecutionPmsPlanCreator;
 import io.harness.ci.plan.creator.filter.CIStageFilterJsonCreator;
 import io.harness.ci.plan.creator.stage.IntegrationStagePMSPlanCreator;
 import io.harness.ci.plan.creator.step.CIPMSStepPlanCreator;
-import io.harness.plancreator.execution.ExecutionPMSPlanCreator;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
@@ -25,7 +25,7 @@ public class CIPipelineServiceInfoProvider implements PipelineServiceInfoProvide
   public List<PartialPlanCreator<?>> getPlanCreators() {
     List<PartialPlanCreator<?>> planCreators = new LinkedList<>();
     planCreators.add(new IntegrationStagePMSPlanCreator());
-    planCreators.add(new ExecutionPMSPlanCreator());
+    planCreators.add(new CIExecutionPmsPlanCreator());
     planCreators.add(new CIPMSStepPlanCreator());
     injectorUtils.injectMembers(planCreators);
     return planCreators;

@@ -7,6 +7,7 @@ import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse.PlanCreationResponseBuilder;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.steps.common.NGSectionStep;
@@ -57,9 +58,9 @@ public class ExecutionRollbackPMSPlanCreator {
     List<YamlField> stepFields = new LinkedList<>();
 
     yamlNodes.forEach(yamlNode -> {
-      YamlField stepField = yamlNode.getField("step");
-      YamlField stepGroupField = yamlNode.getField("stepGroup");
-      YamlField parallelStepField = yamlNode.getField("parallel");
+      YamlField stepField = yamlNode.getField(YAMLFieldNameConstants.STEP);
+      YamlField stepGroupField = yamlNode.getField(YAMLFieldNameConstants.STEP_GROUP);
+      YamlField parallelStepField = yamlNode.getField(YAMLFieldNameConstants.PARALLEL);
       if (stepField != null) {
         stepFields.add(stepField);
       } else if (stepGroupField != null) {

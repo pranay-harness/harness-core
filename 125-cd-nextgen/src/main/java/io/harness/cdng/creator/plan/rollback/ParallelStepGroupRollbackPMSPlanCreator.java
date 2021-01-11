@@ -12,6 +12,7 @@ import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse.PlanCreationResponseBuilder;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
@@ -29,14 +30,15 @@ public class ParallelStepGroupRollbackPMSPlanCreator {
       return PlanCreationResponse.builder().build();
     }
 
-    YamlNode stageNode = YamlUtils.getGivenYamlNodeFromParentPath(parallelStepGroup.getNode(), "stage");
+    YamlNode stageNode =
+        YamlUtils.getGivenYamlNodeFromParentPath(parallelStepGroup.getNode(), YAMLFieldNameConstants.STAGE);
     RollbackOptionalChildrenParametersBuilder rollbackOptionalChildrenParametersBuilder =
         RollbackOptionalChildrenParameters.builder();
 
     PlanCreationResponseBuilder planCreationResponseBuilder = PlanCreationResponse.builder();
     PlanCreationResponse stepGroupResponses = PlanCreationResponse.builder().build();
     for (YamlField stepGroupField : stepGroupFields) {
-      YamlField rollbackStepsNode = stepGroupField.getNode().getField("rollbackSteps");
+      YamlField rollbackStepsNode = stepGroupField.getNode().getField(YAMLFieldNameConstants.ROLLBACK_STEPS);
       RollbackNode rollbackNode =
           RollbackNode.builder()
               .nodeId(rollbackStepsNode.getNode().getUuid())
@@ -75,8 +77,8 @@ public class ParallelStepGroupRollbackPMSPlanCreator {
         Optional.of(Preconditions.checkNotNull(parallelStepGroup).getNode().asArray()).orElse(Collections.emptyList());
     List<YamlField> stepGroupFields = new LinkedList<>();
     yamlNodes.forEach(yamlNode -> {
-      YamlField stepGroupField = yamlNode.getField("stepGroup");
-      if (stepGroupField != null && stepGroupField.getNode().getField("rollbackSteps") != null) {
+      YamlField stepGroupField = yamlNode.getField(YAMLFieldNameConstants.STEP_GROUP);
+      if (stepGroupField != null && stepGroupField.getNode().getField(YAMLFieldNameConstants.ROLLBACK_STEPS) != null) {
         stepGroupFields.add(stepGroupField);
       }
     });
