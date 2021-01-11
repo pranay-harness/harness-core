@@ -9,7 +9,6 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Event.Builder.anEvent;
 
 import static java.util.Collections.singletonList;
 
@@ -28,7 +27,6 @@ import io.harness.waiter.WaitNotifyEngine;
 
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
-import software.wings.beans.Event.Type;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
@@ -48,8 +46,6 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.delegatetasks.buildsource.ArtifactStreamLogContext;
 import software.wings.delegatetasks.collect.artifacts.AzureArtifactsCollectionTaskParameters;
-import software.wings.service.impl.EventEmitter;
-import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.DelegateService;
@@ -74,7 +70,6 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
   @Inject private SettingsService settingsService;
   @Inject private DelegateService delegateService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
-  @Inject private EventEmitter eventEmitter;
   @Inject private SecretManager secretManager;
 
   @Inject
@@ -98,11 +93,6 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
 
       artifactService.updateStatus(uuid, accountId, Status.RUNNING, ContentStatus.DOWNLOADING);
 
-      if (!GLOBAL_APP_ID.equals(artifact.fetchAppId())) {
-        eventEmitter.send(
-            Channel.ARTIFACTS, anEvent().withType(Type.UPDATE).withUuid(uuid).withAppId(artifact.fetchAppId()).build());
-      }
-
       ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId());
       if (artifactStream == null) {
         throw new InvalidRequestException("Artifact Stream does not exist", USER);
@@ -117,10 +107,6 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
     } catch (Exception ex) {
       log.error("Failed to collect artifact. Reason {}", ExceptionUtils.getMessage(ex), ex);
       artifactService.updateStatus(uuid, accountId, Status.APPROVED, ContentStatus.FAILED);
-      if (!GLOBAL_APP_ID.equals(artifact.fetchAppId())) {
-        eventEmitter.send(
-            Channel.ARTIFACTS, anEvent().withType(Type.UPDATE).withUuid(uuid).withAppId(artifact.fetchAppId()).build());
-      }
     }
   }
 

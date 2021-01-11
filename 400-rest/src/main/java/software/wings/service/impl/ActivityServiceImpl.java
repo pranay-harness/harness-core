@@ -5,8 +5,6 @@ import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.ADMIN;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import static software.wings.beans.Event.Builder.anEvent;
-
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
@@ -21,7 +19,6 @@ import io.harness.queue.QueuePublisher;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityKeys;
 import software.wings.beans.Environment.EnvironmentType;
-import software.wings.beans.Event.Type;
 import software.wings.beans.Log;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.Command.CommandKeys;
@@ -30,7 +27,6 @@ import software.wings.beans.command.CommandUnitDetails;
 import software.wings.dl.WingsPersistence;
 import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
-import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.LogService;
@@ -68,7 +64,6 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private LogService logService;
   @Inject private ServiceInstanceService serviceInstanceService;
-  @Inject private EventEmitter eventEmitter;
   @Inject private AppService appService;
 
   @Inject private QueuePublisher<PruneEvent> pruneQueue;
@@ -97,13 +92,6 @@ public class ActivityServiceImpl implements ActivityService {
     if (isNotBlank(activity.getServiceInstanceId())) {
       serviceInstanceService.updateActivity(activity);
     }
-    eventEmitter.send(Channel.ACTIVITIES,
-        anEvent()
-            .withType(Type.CREATE)
-            .withUuid(activity.getUuid())
-            .withAppId(activity.getAppId())
-            .withEnvId(activity.getEnvironmentId())
-            .build());
     return activity;
   }
 
@@ -116,13 +104,6 @@ public class ActivityServiceImpl implements ActivityService {
     if (isNotBlank(activity.getServiceInstanceId())) {
       serviceInstanceService.updateActivity(activity);
     }
-    eventEmitter.send(Channel.ACTIVITIES,
-        anEvent()
-            .withType(Type.UPDATE)
-            .withUuid(activity.getUuid())
-            .withAppId(activity.getAppId())
-            .withEnvId(activity.getEnvironmentId())
-            .build());
   }
 
   @Override
