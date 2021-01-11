@@ -148,6 +148,8 @@ spec:
           value: ""
         - name: HELM_PATH
           value: ""
+        - name: LOG_STREAMING_SERVICE_BASE_URL
+          value: ""
         - name: ENABlE_CE
           value: "${enableCE}"
         - name: GRPC_SERVICE_ENABLED
