@@ -698,12 +698,22 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @Override
   public ManifestFile upsertApplicationManifestFile(
       ManifestFile manifestFile, ApplicationManifest applicationManifest, boolean isCreate) {
+    notNullCheck("applicationManifest", applicationManifest, USER);
     manifestFile.setApplicationManifestId(applicationManifest.getUuid());
     manifestFile.setAccountId(appService.getAccountIdByAppId(manifestFile.getAppId()));
 
     validateManifestFileName(manifestFile);
     validateFileNamePrefixForDirectory(manifestFile);
-    notNullCheck("applicationManifest", applicationManifest, USER);
+
+    ManifestFile oldManifestFile = null;
+    if (!isCreate) {
+      oldManifestFile = wingsPersistence.createQuery(ManifestFile.class)
+                            .field(ManifestFileKeys.accountId)
+                            .equal(manifestFile.getAccountId())
+                            .field("_id")
+                            .equal(manifestFile.getUuid())
+                            .get();
+    }
 
     if (isCreate
         && getManifestFilesCount(applicationManifest.getUuid()) >= MAX_MANIFEST_FILES_PER_APPLICATION_MANIFEST) {
@@ -720,8 +730,9 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     String accountId = appService.getAccountIdByAppId(appId);
 
     Type type = isCreate ? Type.CREATE : Type.UPDATE;
+    boolean isRename = oldManifestFile != null && !oldManifestFile.getFileName().equals(manifestFile.getFileName());
     yamlPushService.pushYamlChangeSet(
-        accountId, isCreate ? null : savedManifestFile, savedManifestFile, type, manifestFile.isSyncFromGit(), false);
+        accountId, isCreate ? null : oldManifestFile, savedManifestFile, type, manifestFile.isSyncFromGit(), isRename);
 
     return savedManifestFile;
   }
