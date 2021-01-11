@@ -124,7 +124,7 @@ public class AzureWebAppSlotShiftTraffic extends AbstractAzureAppServiceState {
         .build();
   }
 
-  private int renderTrafficWeight(ExecutionContext context) {
-    return azureVMSSStateHelper.renderExpressionOrGetDefault(trafficWeightExpr, context, 0);
+  private float renderTrafficWeight(ExecutionContext context) {
+    return azureVMSSStateHelper.renderFloatExpression(trafficWeightExpr, context, 0);
   }
 }

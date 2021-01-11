@@ -30,6 +30,7 @@ import static io.harness.provision.TerraformConstants.RUN_PLAN_ONLY_KEY;
 import static io.harness.validation.Validator.notEmptyCheck;
 import static io.harness.validation.Validator.notNullCheck;
 
+import static software.wings.api.DeploymentType.AZURE_WEBAPP;
 import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
@@ -1500,7 +1501,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private boolean artifactCheckRequiredForDeployment(
       WorkflowPhase workflowPhase, CanaryOrchestrationWorkflow orchestrationWorkflow) {
-    return (workflowPhase.getDeploymentType() == SSH || workflowPhase.getDeploymentType() == DeploymentType.PCF)
+    return (workflowPhase.getDeploymentType() == SSH || workflowPhase.getDeploymentType() == DeploymentType.PCF
+               || workflowPhase.getDeploymentType() == AZURE_WEBAPP)
         && orchestrationWorkflow.getOrchestrationWorkflowType() != BUILD;
   }
 

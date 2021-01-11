@@ -342,7 +342,7 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
                                    .preDeploymentData(AzureAppServicePreDeploymentData.builder()
                                                           .appName(APP_NAME)
                                                           .appSettingsToAdd(Collections.emptyMap())
-                                                          .connSettingsToAdd(Collections.emptyMap())
+                                                          .connStringsToAdd(Collections.emptyMap())
                                                           .slotName(DEPLOYMENT_SLOT)
                                                           .build())
                                    .build())

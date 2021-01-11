@@ -17,8 +17,8 @@ public class AzureAppServicePreDeploymentData {
   private double trafficWeight;
   private Map<String, AzureAppServiceApplicationSettingDTO> appSettingsToRemove;
   private Map<String, AzureAppServiceApplicationSettingDTO> appSettingsToAdd;
-  private Map<String, AzureAppServiceConnectionStringDTO> connSettingsToRemove;
-  private Map<String, AzureAppServiceConnectionStringDTO> connSettingsToAdd;
+  private Map<String, AzureAppServiceConnectionStringDTO> connStringsToRemove;
+  private Map<String, AzureAppServiceConnectionStringDTO> connStringsToAdd;
   private Map<String, AzureAppServiceDockerSettingDTO> dockerSettingsToAdd;
   private String imageNameAndTag;
   private AzureAppServiceTaskType failedTaskType;

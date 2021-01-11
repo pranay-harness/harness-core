@@ -69,7 +69,7 @@ public class AzureWebAppSlotSetupTaskHandlerTest extends WingsBaseTest {
 
     doReturn(appServicePreDeploymentData)
         .when(azureAppServiceDeploymentService)
-        .getAzureAppServicePreDeploymentData(any(), anyString(), any(), any());
+        .getAzureAppServicePreDeploymentData(any(), anyString(), any(), any(), any());
 
     doReturn(Collections.singletonList(azureAppDeploymentData))
         .when(azureAppServiceDeploymentService)
@@ -95,10 +95,10 @@ public class AzureWebAppSlotSetupTaskHandlerTest extends WingsBaseTest {
     return AzureAppServicePreDeploymentData.builder()
         .appName("preAppName")
         .dockerSettingsToAdd(Collections.emptyMap())
-        .connSettingsToRemove(Collections.emptyMap())
+        .connStringsToRemove(Collections.emptyMap())
         .appSettingsToRemove(Collections.emptyMap())
         .appSettingsToAdd(Collections.emptyMap())
-        .connSettingsToAdd(Collections.emptyMap())
+        .connStringsToAdd(Collections.emptyMap())
         .slotName("preSlotName")
         .imageNameAndTag("preImageNameAndTag")
         .build();

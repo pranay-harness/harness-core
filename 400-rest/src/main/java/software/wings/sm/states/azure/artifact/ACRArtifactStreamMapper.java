@@ -5,19 +5,18 @@ import io.harness.delegate.beans.azure.registry.AzureRegistryType;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.azureconnector.AzureContainerRegistryConnectorDTO;
 
-import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 
 import java.util.Optional;
 
 public class ACRArtifactStreamMapper extends ArtifactStreamMapper {
-  protected ACRArtifactStreamMapper(ArtifactStream artifactStream) {
-    super(artifactStream);
+  protected ACRArtifactStreamMapper(Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes) {
+    super(artifact, artifactStreamAttributes);
   }
 
   @Override
   public ConnectorConfigDTO getConnectorDTO() {
-    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
     String registryName = artifactStreamAttributes.getRegistryName();
     String registryHostName = artifactStreamAttributes.getRegistryHostName();
     String azureResourceGroup = artifactStreamAttributes.getAzureResourceGroup();

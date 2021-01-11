@@ -29,7 +29,7 @@ public class AzureWebAppSlotSwapTaskHandler extends AbstractAzureWebAppTaskHandl
 
     swapSlots(slotSwapParameters, webClientContext, logStreamingTaskClient);
 
-    return AzureWebAppSwapSlotsResponse.builder().build();
+    return AzureWebAppSwapSlotsResponse.builder().preDeploymentData(slotSwapParameters.getPreDeploymentData()).build();
   }
 
   private void validateSlotSwapParameters(AzureWebAppSwapSlotsParameters slotSwapParameters) {
@@ -57,7 +57,7 @@ public class AzureWebAppSlotSwapTaskHandler extends AbstractAzureWebAppTaskHandl
     AzureAppServiceDeploymentContext azureAppServiceDeploymentContext = toAzureAppServiceDeploymentContext(
         slotSwapParameters, webClientContext, timeoutIntervalInMin, logStreamingTaskClient);
 
-    azureAppServiceDeploymentService.swapSlots(
+    azureAppServiceDeploymentService.swapSlotsUsingCallback(
         azureAppServiceDeploymentContext, targetSlotName, logStreamingTaskClient);
   }
 

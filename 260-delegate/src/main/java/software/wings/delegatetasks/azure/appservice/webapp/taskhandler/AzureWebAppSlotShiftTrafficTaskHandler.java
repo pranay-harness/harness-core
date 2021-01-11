@@ -29,7 +29,9 @@ public class AzureWebAppSlotShiftTrafficTaskHandler extends AbstractAzureWebAppT
 
     updateSlotTrafficWeight(slotShiftTrafficParameters, webClientContext, logStreamingTaskClient);
 
-    return AzureWebAppSlotShiftTrafficResponse.builder().build();
+    return AzureWebAppSlotShiftTrafficResponse.builder()
+        .preDeploymentData(slotShiftTrafficParameters.getPreDeploymentData())
+        .build();
   }
 
   private void validateSlotShiftTrafficParameters(AzureWebAppSlotShiftTrafficParameters slotShiftTrafficParameters) {

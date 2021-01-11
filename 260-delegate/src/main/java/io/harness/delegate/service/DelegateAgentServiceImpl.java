@@ -72,6 +72,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
@@ -143,7 +144,6 @@ import software.wings.beans.TaskType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.delegation.ShellScriptParameters;
-import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParameters;
 import software.wings.delegatetasks.ActivityBasedLogSanitizer;
 import software.wings.delegatetasks.DelegateLogService;
@@ -1913,7 +1913,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     // Extract appId and activityId from task params, in case LogCallback logging has to be used for backward
     // compatibility reasons
     Object[] taskParameters = delegateTaskPackage.getData().getParameters();
-    if (taskParameters != null && taskParameters.length == 1 && taskParameters[0] instanceof ApplicationAccess
+    if (taskParameters != null && taskParameters.length == 1 && taskParameters[0] instanceof Cd1ApplicationAccess
         && taskParameters[0] instanceof ActivityAccess) {
       Cd1ApplicationAccess applicationAccess = (Cd1ApplicationAccess) taskParameters[0];
       appId = applicationAccess.getAppId();
@@ -1929,7 +1929,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     if (!logStreamingConfigPresent && !logCallbackConfigPresent) {
       return null;
     }
-    String logBaseKey = LogHelper.generateLogBaseKey(delegateTaskPackage.getLogStreamingAbstractions());
+    String logBaseKey = delegateTaskPackage.getLogStreamingAbstractions() != null
+        ? LogHelper.generateLogBaseKey(delegateTaskPackage.getLogStreamingAbstractions())
+        : EMPTY;
 
     LogStreamingTaskClientBuilder taskClientBuilder =
         LogStreamingTaskClient.builder()

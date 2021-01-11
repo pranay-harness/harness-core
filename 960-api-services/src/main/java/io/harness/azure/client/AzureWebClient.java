@@ -10,6 +10,8 @@ import io.harness.azure.model.WebAppHostingOS;
 import com.microsoft.azure.management.appservice.DeploymentSlot;
 import com.microsoft.azure.management.appservice.WebApp;
 import com.microsoft.azure.management.appservice.implementation.SiteInstanceInner;
+import com.microsoft.rest.ServiceCallback;
+import com.microsoft.rest.ServiceFuture;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -67,6 +69,7 @@ public interface AzureWebClient {
    */
   Completable startDeploymentSlotAsync(AzureWebClientContext context, String slotName);
 
+  void startDeploymentSlotAsync(AzureWebClientContext context, String slotName, ServiceCallback<Void> callback);
   /**
    * Start deployment slot.
    *
@@ -99,6 +102,7 @@ public interface AzureWebClient {
    */
   Completable stopDeploymentSlotAsync(AzureWebClientContext context, String slotName);
 
+  void stopDeploymentSlotAsync(AzureWebClientContext context, final String slotName, ServiceCallback<Void> callback);
   /**
    * Stop deployment slot.
    *
@@ -150,7 +154,7 @@ public interface AzureWebClient {
    * @param slotName
    * @param connectionSettings
    */
-  void updateDeploymentSlotConnectionSettings(
+  void updateDeploymentSlotConnectionStrings(
       AzureWebClientContext context, String slotName, Map<String, AzureAppServiceConnectionString> connectionSettings);
 
   /**
@@ -160,7 +164,7 @@ public interface AzureWebClient {
    * @param slotName
    * @return
    */
-  Map<String, AzureAppServiceConnectionString> listDeploymentSlotConnectionSettings(
+  Map<String, AzureAppServiceConnectionString> listDeploymentSlotConnectionStrings(
       AzureWebClientContext context, String slotName);
 
   /**
@@ -247,6 +251,8 @@ public interface AzureWebClient {
   Observable<Void> swapDeploymentSlotsAsync(
       AzureWebClientContext context, final String sourceSlotName, String targetSlotName);
 
+  ServiceFuture<Void> swapDeploymentSlotsAsync(AzureWebClientContext context, final String sourceSlotName,
+      String targetSlotName, ServiceCallback<Void> callback);
   /**
    * Get Web App hosting operating system.
    *
@@ -293,7 +299,7 @@ public interface AzureWebClient {
    * @param connSettingsToRemove
    * @return
    */
-  DeploymentSlot deleteDeploymentSlotConnectionSettings(AzureWebClientContext context, String slotName,
+  DeploymentSlot deleteDeploymentSlotConnectionStrings(AzureWebClientContext context, String slotName,
       Map<String, AzureAppServiceConnectionString> connSettingsToRemove);
 
   /**

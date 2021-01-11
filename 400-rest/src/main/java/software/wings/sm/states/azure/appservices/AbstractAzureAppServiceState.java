@@ -67,13 +67,20 @@ public abstract class AbstractAzureAppServiceState extends State {
   @Override
   @SchemaIgnore
   public Integer getTimeoutMillis(ExecutionContext context) {
+    return getTimeout(context);
+  }
+
+  @NotNull
+  protected Integer getTimeout(ExecutionContext context) {
     int timeOut = AzureConstants.DEFAULT_AZURE_VMSS_TIMEOUT_MIN;
     SweepingOutput setupElementFromSweepingOutput =
         azureSweepingOutputServiceHelper.getSetupElementFromSweepingOutput(context, SWEEPING_OUTPUT_APP_SERVICE);
     if (setupElementFromSweepingOutput != null) {
       AzureAppServiceSlotSetupContextElement setupContextElement =
           (AzureAppServiceSlotSetupContextElement) setupElementFromSweepingOutput;
-      timeOut = setupContextElement.getAppServiceSlotSetupTimeOut();
+      Integer appServiceSlotSetupTimeOut = setupContextElement.getAppServiceSlotSetupTimeOut();
+      timeOut = appServiceSlotSetupTimeOut != null ? appServiceSlotSetupTimeOut
+                                                   : AzureConstants.DEFAULT_AZURE_VMSS_TIMEOUT_MIN;
     }
     return Ints.checkedCast(TimeUnit.MINUTES.toMillis(timeOut));
   }

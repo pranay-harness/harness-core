@@ -112,6 +112,7 @@ import software.wings.beans.FailureStrategy;
 import software.wings.beans.GraphNode;
 import software.wings.beans.GraphNode.GraphNodeBuilder;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
@@ -253,11 +254,10 @@ public class WorkflowServiceHelper {
   public static final String AZURE_WEBAPP_SLOT_SETUP = "Slot Setup";
   public static final String AZURE_WEBAPP_SLOT_RESIZE = "Slot Resize";
   public static final String AZURE_WEBAPP_SLOT_SWAP = "Swap Slot";
-  public static final String AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC = "Slot Shift Traffic Weight";
   public static final String AZURE_WEBAPP_SLOT_ROLLBACK = "Slot Rollback";
-  public static final String AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT = "Slot Traffic Shift";
-  public static final String AZURE_WEBAPP_SLOT_TRAFFIC_WEIGHT = "Slot Traffic Weight";
-  public static final String AZURE_WEBAPP_SLOT_ROUTE = "Update Slot Route";
+  public static final String AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT = "Shift Traffic to Slot";
+  public static final String AZURE_WEBAPP_SLOT_TRAFFIC = "Slot Traffic";
+  public static final String AZURE_WEBAPP_SLOT_ROUTE = "Swap Deployment Slots";
   public static final String KUBERNETES_SERVICE_SETUP_BLUEGREEN = "Blue/Green Service Setup";
   public static final String INFRA_ROUTE_PCF = "infra.pcf.route";
   public static final String VERIFY_STAGE_SERVICE = "Verify Stage Service";
@@ -415,7 +415,9 @@ public class WorkflowServiceHelper {
                         -> AWS_SSH.name().equals(infra.getInfrastructure().getInfrastructureType())
                   || PHYSICAL_DATA_CENTER_SSH.name().equals(infra.getInfrastructure().getInfrastructureType())
                   || PCF_PCF.name().equals(infra.getInfrastructure().getInfrastructureType())
-                  || AWS_AWS_LAMBDA.name().equals(infra.getInfrastructure().getInfrastructureType()));
+                  || AWS_AWS_LAMBDA.name().equals(infra.getInfrastructure().getInfrastructureType())
+                  || InfrastructureMappingType.AZURE_WEBAPP.name().equals(
+                      infra.getInfrastructure().getInfrastructureType()));
     }
     return false;
   }
@@ -961,7 +963,7 @@ public class WorkflowServiceHelper {
   }
 
   public void generateNewWorkflowPhaseStepsForAzureWebApp(String appId, String accountId, WorkflowPhase workflowPhase,
-      OrchestrationWorkflowType orchestrationWorkflowType, boolean isDynamicInfrastructure) {
+      OrchestrationWorkflowType orchestrationWorkflowType, boolean isDynamicInfrastructure, boolean isFirstPhase) {
     validateWebAppWorkflowCreation(accountId, orchestrationWorkflowType);
     Service service = serviceResourceService.getWithDetails(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
@@ -970,7 +972,52 @@ public class WorkflowServiceHelper {
     if (isDynamicInfrastructure) {
       phaseSteps.add(aPhaseStep(PhaseStepType.PROVISION_INFRASTRUCTURE, PROVISION_INFRASTRUCTURE).build());
     }
+    if (CANARY == orchestrationWorkflowType) {
+      generateAppServiceCanaryPhaseSteps(isFirstPhase, phaseSteps, commandMap);
+    } else if (BLUE_GREEN == orchestrationWorkflowType) {
+      generateAppServiceBlueGreenPhaseSteps(phaseSteps, commandMap);
+    }
+  }
 
+  private void generateAppServiceCanaryPhaseSteps(
+      boolean isFirstPhase, List<PhaseStep> phaseSteps, Map<CommandType, List<Command>> commandMap) {
+    if (isFirstPhase) {
+      phaseSteps.add(aPhaseStep(PhaseStepType.AZURE_WEBAPP_SLOT_SETUP, AZURE_WEBAPP_SLOT_SETUP)
+                         .addStep(GraphNode.builder()
+                                      .id(generateUuid())
+                                      .type(StateType.AZURE_WEBAPP_SLOT_SETUP.name())
+                                      .name(AZURE_WEBAPP_SLOT_SETUP)
+                                      .build())
+                         .build());
+
+      phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, VERIFY_SERVICE)
+                         .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                         .build());
+    }
+    Map<String, Object> defaultData = new HashMap<>();
+    defaultData.put(AzureConstants.TRAFFIC_WEIGHT_EXPR, 0);
+    phaseSteps.add(aPhaseStep(PhaseStepType.AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(StateType.AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC.name())
+                                    .name(AZURE_WEBAPP_SLOT_TRAFFIC)
+                                    .properties(defaultData)
+                                    .build())
+                       .build());
+
+    phaseSteps.add(aPhaseStep(PhaseStepType.AZURE_WEBAPP_SLOT_SWAP, AZURE_WEBAPP_SLOT_ROUTE)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(StateType.AZURE_WEBAPP_SLOT_SWAP.name())
+                                    .name(AZURE_WEBAPP_SLOT_SWAP)
+                                    .build())
+                       .build());
+
+    phaseSteps.add(aPhaseStep(PhaseStepType.WRAP_UP, WRAP_UP).build());
+  }
+
+  private void generateAppServiceBlueGreenPhaseSteps(
+      List<PhaseStep> phaseSteps, Map<CommandType, List<Command>> commandMap) {
     phaseSteps.add(aPhaseStep(PhaseStepType.AZURE_WEBAPP_SLOT_SETUP, AZURE_WEBAPP_SLOT_SETUP)
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
@@ -983,24 +1030,11 @@ public class WorkflowServiceHelper {
                        .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                        .build());
 
-    if (CANARY == orchestrationWorkflowType) {
-      Map<String, Object> defaultData = new HashMap<>();
-      defaultData.put(AzureConstants.TRAFFIC_WEIGHT_EXPR, 0);
-      phaseSteps.add(aPhaseStep(PhaseStepType.AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT)
-                         .addStep(GraphNode.builder()
-                                      .id(generateUuid())
-                                      .type(StateType.AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC.name())
-                                      .name(AZURE_WEBAPP_SLOT_TRAFFIC_WEIGHT)
-                                      .properties(defaultData)
-                                      .build())
-                         .build());
-    }
-
-    phaseSteps.add(aPhaseStep(PhaseStepType.AZURE_WEBAPP_SLOT_SWAP, AZURE_WEBAPP_SLOT_SWAP)
+    phaseSteps.add(aPhaseStep(PhaseStepType.AZURE_WEBAPP_SLOT_SWAP, AZURE_WEBAPP_SLOT_ROUTE)
                        .addStep(GraphNode.builder()
                                     .id(generateUuid())
                                     .type(StateType.AZURE_WEBAPP_SLOT_SWAP.name())
-                                    .name(AZURE_WEBAPP_SLOT_ROUTE)
+                                    .name(AZURE_WEBAPP_SLOT_SWAP)
                                     .build())
                        .build());
 
@@ -1010,11 +1044,12 @@ public class WorkflowServiceHelper {
   private void validateWebAppWorkflowCreation(String accountId, OrchestrationWorkflowType orchestrationWorkflowType) {
     if (!featureFlagService.isEnabled(FeatureName.AZURE_WEBAPP, accountId)) {
       throw new InvalidRequestException(
-          format("Azure WebApp is disabled by feature flag for account id : %s", accountId), USER);
+          format("Azure WebApp deployment is disabled by feature flag for account id : %s", accountId), USER);
     }
     if (!isAzureWebAppSupportedWorkflowType(orchestrationWorkflowType)) {
       throw new InvalidRequestException(
-          format("Unsupported Azure Web App deployment type, orchestrationWorkflowType: %s",
+          format(
+              "Unsupported workflow type [%s] for Azure Web App deployment. Canary & Blue/Green deployment are supported",
               orchestrationWorkflowType != null ? orchestrationWorkflowType.name() : ""),
           USER);
     }
@@ -2767,7 +2802,7 @@ public class WorkflowServiceHelper {
           appId, accountId, workflowPhase, orchestrationWorkflowType, !serviceRepeat);
     } else if (deploymentType == AZURE_WEBAPP) {
       generateNewWorkflowPhaseStepsForAzureWebApp(
-          appId, accountId, workflowPhase, orchestrationWorkflowType, isDynamicInfrastructure);
+          appId, accountId, workflowPhase, orchestrationWorkflowType, isDynamicInfrastructure, !serviceRepeat);
     } else {
       generateNewWorkflowPhaseStepsForSSH(appId, workflowPhase, orchestrationWorkflowType);
     }
@@ -2942,6 +2977,7 @@ public class WorkflowServiceHelper {
 
   /**
    * Get service commands - exclude service that has internal commands
+   *
    * @param workflowPhase
    * @param appId
    * @param svcId

@@ -4,6 +4,8 @@ import io.harness.aws.AwsAccessKeyCredential;
 import io.harness.aws.AwsConfig;
 import io.harness.aws.CrossAccountAccess;
 import io.harness.azure.AzureEnvironmentType;
+import io.harness.azure.model.AzureAppServiceConfiguration;
+import io.harness.azure.model.AzureAppServiceConnectionStringType;
 import io.harness.azure.model.AzureVMData;
 import io.harness.azure.model.SubscriptionData;
 import io.harness.azure.model.VirtualMachineScaleSetData;
@@ -229,5 +231,7 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(TfVarSourceType.class, 1435);
     kryo.register(InstanceDetails.AZURE_WEBAPP.class, 1437);
     kryo.register(ExecuteCommandResponse.class, 1438);
+    kryo.register(AzureAppServiceConnectionStringType.class, 1439);
+    kryo.register(AzureAppServiceConfiguration.class, 1440);
   }
 }

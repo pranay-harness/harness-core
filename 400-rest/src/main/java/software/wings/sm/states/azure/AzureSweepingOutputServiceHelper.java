@@ -122,11 +122,11 @@ public class AzureSweepingOutputServiceHelper {
                                    .build());
   }
 
-  public void saveTrafficShiftInfoToSweepingOutput(ExecutionContext context, int trafficShift) {
+  public void saveTrafficShiftInfoToSweepingOutput(ExecutionContext context, float trafficShift) {
     sweepingOutputService.save(
         context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
             .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
-            .value(InstanceInfoVariables.builder().newInstanceTrafficPercent(trafficShift).build())
+            .value(InstanceInfoVariables.builder().newInstanceTrafficPercent((int) trafficShift).build())
             .build());
   }
 
@@ -158,7 +158,7 @@ public class AzureSweepingOutputServiceHelper {
           String hostName = getHostnameFromConvention(contextMap, "");
           hostElement.setHostName(hostName);
           return anInstanceElement()
-              .uuid(webAppInstance.getDeploySlotId())
+              .uuid(webAppInstance.getInstanceId())
               .hostName(hostName)
               .displayName(webAppInstance.getHostName())
               .host(hostElement)

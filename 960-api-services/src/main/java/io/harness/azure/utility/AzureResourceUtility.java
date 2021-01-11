@@ -85,12 +85,15 @@ public class AzureResourceUtility {
     return String.format(DOCKER_IMAGE_FULL_PATH_PATTERN, imageAndTag);
   }
 
-  public String getDockerImagePathAndTagPath(String imageName, String imageTag) {
+  public String getDockerImageFullNameAndTag(String imageName, String imageTag) {
+    if (imageName.contains(":")) {
+      return imageName;
+    }
     return String.format(DOCKER_IMAGE_AND_TAG_PATH_PATTERN, imageName, imageTag);
   }
 
   public String getAzureCloudExceptionMessage(Exception ex) {
-    String message = ex.getMessage();
+    String message = ex.getMessage() != null ? ex.getMessage() : EMPTY;
     if (ex.getCause() instanceof CloudException) {
       CloudException cloudException = (CloudException) ex.getCause();
       String cloudExMsg = cloudException.getMessage();

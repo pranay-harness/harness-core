@@ -38,7 +38,7 @@ public interface AzureConstants {
   int DEFAULT_AZURE_VMSS_MAX_INSTANCES = 10;
   int DEFAULT_AZURE_VMSS_MIN_INSTANCES = 0;
   int DEFAULT_AZURE_VMSS_DESIRED_INSTANCES = 6;
-  int DEFAULT_AZURE_VMSS_TIMEOUT_MIN = 10;
+  int DEFAULT_AZURE_VMSS_TIMEOUT_MIN = 20;
 
   // Command unit Names
   String SETUP_COMMAND_UNIT = "Setup Virtual Machine Scale Set";
@@ -157,11 +157,12 @@ public interface AzureConstants {
   String DEPLOYMENT_SLOT_PRODUCTION_TYPE = "production";
 
   // Azure App Service Command Units
+  String SAVE_EXISTING_CONFIGURATIONS = "Save App Service Configurations";
   String STOP_DEPLOYMENT_SLOT = "Stop Slot";
   String UPDATE_DEPLOYMENT_SLOT_CONFIGURATION_SETTINGS = "Update Slot Configuration Settings";
   String UPDATE_DEPLOYMENT_SLOT_CONTAINER_SETTINGS = "Update Slot Container Settings";
   String START_DEPLOYMENT_SLOT = "Start Slot";
-  String SLOT_TRAFFIC_WEIGHT = "Update Slot Traffic Weight";
+  String SLOT_TRAFFIC_WEIGHT = "Update Slot Traffic Percentage";
   String SLOT_SWAP = "Swap Slots";
   long SLOT_STARTING_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
   long SLOT_STOPPING_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
@@ -176,5 +177,6 @@ public interface AzureConstants {
   String WEB_APP_INSTANCE_STATUS_RUNNING = "Running";
 
   // App Service Manifest Utils
-  Pattern IS_SETTING_SECRET_REGEX = Pattern.compile("^\\$\\{secrets\\.getValue\\(['\"]+(?<secretName>\\S+)['\"]+\\)}$");
+  Pattern IS_SETTING_SECRET_REGEX =
+      Pattern.compile("^\\$\\{secrets\\.getValue\\(['\"]+(?<secretName>[^~!@#$%^&*'\"/?<>,;.]+)['\"]+\\)}$");
 }

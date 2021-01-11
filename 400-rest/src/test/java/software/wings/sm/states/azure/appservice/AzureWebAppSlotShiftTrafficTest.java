@@ -179,6 +179,9 @@ public class AzureWebAppSlotShiftTrafficTest extends WingsBaseTest {
     doReturn(Integer.valueOf(trafficWeight))
         .when(azureVMSSStateHelper)
         .renderExpressionOrGetDefault(anyString(), eq(mockContext), anyInt());
+    doReturn(Float.valueOf(trafficWeight))
+        .when(azureVMSSStateHelper)
+        .renderFloatExpression(anyString(), eq(mockContext), anyInt());
     doReturn(20)
         .when(azureVMSSStateHelper)
         .getStateTimeOutFromContext(eq(mockContext), eq(ContextElementType.AZURE_WEBAPP_SETUP));
@@ -227,7 +230,7 @@ public class AzureWebAppSlotShiftTrafficTest extends WingsBaseTest {
     assertThat(stateExecutionData.getAppServiceSlotSetupTimeOut()).isNotNull();
     assertThat(stateExecutionData.getAppServiceName()).isEqualTo("app-service");
     assertThat(stateExecutionData.getDeploySlotName()).isEqualTo("stage");
-    assertThat(stateExecutionData.getTrafficWeight()).isEqualTo(trafficWeight);
+    assertThat(Float.parseFloat(stateExecutionData.getTrafficWeight())).isEqualTo(Float.parseFloat(trafficWeight));
     assertThat(stateExecutionData.getInfrastructureMappingId()).isEqualTo("infraMappingId");
 
     AzureAppServiceSlotShiftTrafficExecutionSummary stepExecutionSummary = stateExecutionData.getStepExecutionSummary();

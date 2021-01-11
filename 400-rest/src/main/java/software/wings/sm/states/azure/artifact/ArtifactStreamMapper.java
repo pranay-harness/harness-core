@@ -7,27 +7,31 @@ import io.harness.delegate.beans.azure.registry.AzureRegistryType;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.exception.InvalidRequestException;
 
-import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 
 import java.util.Optional;
 
 public abstract class ArtifactStreamMapper {
-  protected ArtifactStream artifactStream;
+  protected ArtifactStreamAttributes artifactStreamAttributes;
+  protected Artifact artifact;
 
-  protected ArtifactStreamMapper(ArtifactStream artifactStream) {
-    this.artifactStream = artifactStream;
+  protected ArtifactStreamMapper(Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes) {
+    this.artifactStreamAttributes = artifactStreamAttributes;
+    this.artifact = artifact;
   }
 
-  public static ArtifactStreamMapper getArtifactStreamMapper(ArtifactStream artifactStream) {
-    String artifactStreamType = artifactStream.getArtifactStreamType();
+  public static ArtifactStreamMapper getArtifactStreamMapper(
+      Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes) {
+    String artifactStreamType = artifactStreamAttributes.getArtifactStreamType();
 
     if (ArtifactStreamType.DOCKER.name().equals(artifactStreamType)) {
-      return new DockerArtifactStreamMapper(artifactStream);
+      return new DockerArtifactStreamMapper(artifact, artifactStreamAttributes);
     } else if (ArtifactStreamType.ARTIFACTORY.name().equals(artifactStreamType)) {
-      return new ArtifactoryArtifactStreamMapper(artifactStream);
+      return new ArtifactoryArtifactStreamMapper(artifact, artifactStreamAttributes);
     } else if (ArtifactStreamType.ACR.name().equals(artifactStreamType)) {
-      return new ACRArtifactStreamMapper(artifactStream);
+      return new ACRArtifactStreamMapper(artifact, artifactStreamAttributes);
     } else {
       throw new InvalidRequestException(
           format("Unsupported artifact stream type for Azure Web Application deployment type %s", artifactStreamType));
@@ -37,4 +41,12 @@ public abstract class ArtifactStreamMapper {
   public abstract ConnectorConfigDTO getConnectorDTO();
   public abstract AzureRegistryType getAzureRegistryType();
   public abstract Optional<DecryptableEntity> getConnectorDTOAuthCredentials(ConnectorConfigDTO connectorConfigDTO);
+
+  public String getFullImageName() {
+    return artifact.getMetadata().get("image");
+  }
+
+  public String getImageTag() {
+    return artifact.getMetadata().get("tag");
+  }
 }

@@ -62,6 +62,7 @@ import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuild
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.APPROVAL_RESUME;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
+import static software.wings.sm.StateType.AZURE_WEBAPP_SLOT_SETUP;
 import static software.wings.sm.StateType.CUSTOM_DEPLOYMENT_FETCH_INSTANCES;
 import static software.wings.sm.StateType.ENV_LOOP_RESUME_STATE;
 import static software.wings.sm.StateType.ENV_LOOP_STATE;
@@ -292,6 +293,7 @@ import software.wings.sm.states.ForkState.ForkStateExecutionData;
 import software.wings.sm.states.HoldingScope;
 import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 import software.wings.sm.states.azure.AzureVMSSDeployStateExecutionData;
+import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupExecutionData;
 import software.wings.sm.states.spotinst.SpotInstDeployStateExecutionData;
 import software.wings.sm.status.StateStatusUpdateInfo;
 import software.wings.sm.status.WorkflowStatusPropagator;
@@ -3990,6 +3992,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             if (isNotEmpty(instanceFetchStateExecutionData.getNewInstanceStatusSummaries())) {
               instanceStatusSummaries.addAll(instanceFetchStateExecutionData.getNewInstanceStatusSummaries());
             }
+          }
+        } else if (nextStateType == AZURE_WEBAPP_SLOT_SETUP
+            && next.fetchStateExecutionData() instanceof AzureAppServiceSlotSetupExecutionData) {
+          AzureAppServiceSlotSetupExecutionData appServiceSetupStateExecutionData =
+              (AzureAppServiceSlotSetupExecutionData) next.fetchStateExecutionData();
+          if (isNotEmpty(appServiceSetupStateExecutionData.getNewInstanceStatusSummaries())) {
+            instanceStatusSummaries.addAll(appServiceSetupStateExecutionData.getNewInstanceStatusSummaries());
           }
         }
         last = next;

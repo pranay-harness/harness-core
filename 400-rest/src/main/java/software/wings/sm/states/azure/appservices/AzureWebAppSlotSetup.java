@@ -77,11 +77,11 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
   @Override
   @SchemaIgnore
   public Integer getTimeoutMillis(ExecutionContext context) {
-    int timeOut = getTimeOut(context);
+    int timeOut = getUserDefinedTimeOut(context);
     return Ints.checkedCast(TimeUnit.MINUTES.toMillis(timeOut));
   }
 
-  private int getTimeOut(ExecutionContext context) {
+  private int getUserDefinedTimeOut(ExecutionContext context) {
     return azureVMSSStateHelper.renderExpressionOrGetDefault(
         slotSteadyStateTimeout, context, AzureConstants.DEFAULT_AZURE_VMSS_TIMEOUT_MIN);
   }
@@ -121,7 +121,7 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
         .deploySlotName(deploySlotName)
         .targetSlotName(targetSlotName)
         .infrastructureMappingId(azureAppServiceStateData.getInfrastructureMapping().getUuid())
-        .appServiceSlotSetupTimeOut(getTimeOut(context))
+        .appServiceSlotSetupTimeOut(getUserDefinedTimeOut(context))
         .build();
   }
 
@@ -168,7 +168,7 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
     AzureAppServiceSlotSetupContextElement setupContextElement =
         AzureAppServiceSlotSetupContextElement.builder()
             .infraMappingId(stateExecutionData.getInfrastructureMappingId())
-            .appServiceSlotSetupTimeOut(getTimeOut(context))
+            .appServiceSlotSetupTimeOut(getUserDefinedTimeOut(context))
             .commandName(APP_SERVICE_SLOT_SETUP)
             .subscriptionId(stateExecutionData.getSubscriptionId())
             .resourceGroup(stateExecutionData.getResourceGroup())
@@ -205,7 +205,8 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
 
   @Override
   protected List<CommandUnit> commandUnits() {
-    return ImmutableList.of(new AzureVMSSDummyCommandUnit(AzureConstants.STOP_DEPLOYMENT_SLOT),
+    return ImmutableList.of(new AzureVMSSDummyCommandUnit(AzureConstants.SAVE_EXISTING_CONFIGURATIONS),
+        new AzureVMSSDummyCommandUnit(AzureConstants.STOP_DEPLOYMENT_SLOT),
         new AzureVMSSDummyCommandUnit(AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONFIGURATION_SETTINGS),
         new AzureVMSSDummyCommandUnit(AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONTAINER_SETTINGS),
         new AzureVMSSDummyCommandUnit(AzureConstants.START_DEPLOYMENT_SLOT));
@@ -223,15 +224,19 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
     provideAppServiceSettings(context, slotSetupParametersBuilder);
     provideRegistryDetails(context, azureAppServiceStateData, slotSetupParametersBuilder);
 
+    String appServiceName = context.renderExpression(appService);
+    String deploySlotName =
+        AzureResourceUtility.fixDeploymentSlotName(context.renderExpression(deploymentSlot), appServiceName);
+
     return slotSetupParametersBuilder.accountId(azureAppServiceStateData.getApplication().getAccountId())
         .appId(azureAppServiceStateData.getApplication().getAppId())
         .commandName(APP_SERVICE_SLOT_SETUP)
         .activityId(activity.getUuid())
         .subscriptionId(azureAppServiceStateData.getSubscriptionId())
         .resourceGroupName(azureAppServiceStateData.getResourceGroup())
-        .slotName(context.renderExpression(deploymentSlot))
-        .webAppName(context.renderExpression(appService))
-        .timeoutIntervalInMin(getTimeOut(context))
+        .slotName(deploySlotName)
+        .webAppName(appServiceName)
+        .timeoutIntervalInMin(getUserDefinedTimeOut(context))
         .build();
   }
 
@@ -294,6 +299,8 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
     slotSetupParametersBuilder.connectorConfigDTO(connectorConfigDTO);
     slotSetupParametersBuilder.encryptedDataDetails(encryptedDataDetails);
     slotSetupParametersBuilder.azureRegistryType(azureRegistryType);
+    slotSetupParametersBuilder.imageName(artifactStreamMapper.getFullImageName());
+    slotSetupParametersBuilder.imageTag(artifactStreamMapper.getImageTag());
   }
 
   private void provideInstanceElementDetails(
