@@ -6,7 +6,6 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAGHU;
 
 import static software.wings.beans.Environment.EnvironmentType.PROD;
-import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.command.CleanupSshCommandUnit.CLEANUP_UNIT;
 import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.COMMAND;
 import static software.wings.beans.command.CommandUnitType.EXEC;
@@ -50,15 +49,12 @@ import io.harness.rule.Owner;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityKeys;
-import software.wings.beans.Event.Type;
 import software.wings.beans.command.CleanupSshCommandUnit;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.InitSshCommandUnit;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.EventEmitter;
-import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.LogService;
@@ -84,7 +80,6 @@ public class ActivityServiceTest extends WingsBaseTest {
   @Mock private ServiceInstanceService serviceInstanceService;
   @Mock private LogService logService;
 
-  @Mock private EventEmitter eventEmitter;
   @Mock private AppService appService;
   @Inject @InjectMocks private ActivityService activityService;
 
@@ -210,14 +205,6 @@ public class ActivityServiceTest extends WingsBaseTest {
     assertThat(wingsPersistence.getWithAppId(Activity.class, activity.getAppId(), activity.getUuid()))
         .isEqualTo(activity);
     verify(serviceInstanceService).updateActivity(activity);
-    verify(eventEmitter)
-        .send(Channel.ACTIVITIES,
-            anEvent()
-                .withUuid(activity.getUuid())
-                .withEnvId(activity.getEnvironmentId())
-                .withAppId(activity.getAppId())
-                .withType(Type.CREATE)
-                .build());
   }
 
   /**
@@ -422,27 +409,11 @@ public class ActivityServiceTest extends WingsBaseTest {
     activityService.save(activity);
     assertThat(wingsPersistence.getWithAppId(Activity.class, activity.getAppId(), activity.getUuid()))
         .isEqualTo(activity);
-    verify(eventEmitter)
-        .send(Channel.ACTIVITIES,
-            anEvent()
-                .withUuid(activity.getUuid())
-                .withEnvId(activity.getEnvironmentId())
-                .withAppId(activity.getAppId())
-                .withType(Type.CREATE)
-                .build());
 
     activityService.updateStatus(activity.getUuid(), activity.getAppId(), ExecutionStatus.SUCCESS);
 
     activity.setStatus(ExecutionStatus.SUCCESS);
     verify(serviceInstanceService, times(2)).updateActivity(anyObject());
-    verify(eventEmitter)
-        .send(Channel.ACTIVITIES,
-            anEvent()
-                .withUuid(activity.getUuid())
-                .withEnvId(activity.getEnvironmentId())
-                .withAppId(activity.getAppId())
-                .withType(Type.UPDATE)
-                .build());
   }
 
   @Test
