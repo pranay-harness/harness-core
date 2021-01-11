@@ -17,6 +17,18 @@ public class GcpDataFetcherHelper {
   public SettingAttribute toSettingAttribute(QLGcpCloudProviderInput input, String accountId) {
     GcpConfigBuilder configBuilder = GcpConfig.builder().accountId(accountId);
 
+    if (input.getSkipValidation().isPresent()) {
+      input.getSkipValidation().getValue().ifPresent(configBuilder::skipValidation);
+    }
+
+    if (input.getUseDelegate().isPresent()) {
+      input.getUseDelegate().getValue().ifPresent(configBuilder::useDelegate);
+    }
+
+    if (input.getDelegateSelector().isPresent()) {
+      input.getDelegateSelector().getValue().ifPresent(configBuilder::delegateSelector);
+    }
+
     if (input.getServiceAccountKeySecretId().isPresent()) {
       input.getServiceAccountKeySecretId().getValue().ifPresent(configBuilder::encryptedServiceAccountKeyFileContent);
     }
@@ -36,6 +48,18 @@ public class GcpDataFetcherHelper {
   public void updateSettingAttribute(
       SettingAttribute settingAttribute, QLUpdateGcpCloudProviderInput input, String accountId) {
     GcpConfig config = (GcpConfig) settingAttribute.getValue();
+
+    if (input.getSkipValidation().isPresent()) {
+      input.getSkipValidation().getValue().ifPresent(config::setSkipValidation);
+    }
+
+    if (input.getUseDelegate().isPresent()) {
+      input.getUseDelegate().getValue().ifPresent(config::setUseDelegate);
+    }
+
+    if (input.getDelegateSelector().isPresent()) {
+      input.getDelegateSelector().getValue().ifPresent(config::setDelegateSelector);
+    }
 
     if (input.getServiceAccountKeySecretId().isPresent()) {
       input.getServiceAccountKeySecretId().getValue().ifPresent(config::setEncryptedServiceAccountKeyFileContent);
