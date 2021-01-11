@@ -1,4 +1,4 @@
-package io.harness.connector.apis.dto.stats;
+package io.harness.connector.stats;
 
 import io.harness.delegate.beans.connector.ConnectivityStatus;
 

@@ -13,10 +13,14 @@ import io.harness.security.dto.PrincipalType;
 import io.harness.security.dto.UserPrincipal;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Map;
 
 @Singleton
 public class FilterMapper {
+  @Inject Map<String, FilterPropertiesMapper> filterPropertiesMapperMap;
+
   public Filter toEntity(FilterDTO filterDTO, String accountId) {
     String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountId, filterDTO.getOrgIdentifier(), filterDTO.getProjectIdentifier(), filterDTO.getIdentifier());
@@ -49,7 +53,9 @@ public class FilterMapper {
   }
 
   private FilterProperties getFilterPropertiesDTO(FilterPropertiesDTO filterProperties) {
-    return filterProperties.toEntity();
+    FilterPropertiesMapper filterPropertiesMapper =
+        filterPropertiesMapperMap.get(filterProperties.getFilterType().toString());
+    return filterPropertiesMapper.toEntity(filterProperties);
   }
 
   public FilterDTO writeDTO(Filter filterEntity) {
@@ -67,6 +73,8 @@ public class FilterMapper {
   }
 
   private FilterPropertiesDTO getFilterProperties(FilterProperties filterProperties) {
-    return filterProperties.writeDTO();
+    FilterPropertiesMapper filterPropertiesMapper =
+        filterPropertiesMapperMap.get(filterProperties.getType().toString());
+    return filterPropertiesMapper.writeDTO(filterProperties);
   }
 }

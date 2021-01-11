@@ -1,23 +1,24 @@
-package io.harness.connector.apis.dto.stats;
+package io.harness.connector.stats;
+
+import io.harness.delegate.beans.connector.ConnectorType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
-import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 
-@Value
+@Data
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@FieldNameConstants(innerTypeName = "ConnectorStatisticsKeys")
+@FieldNameConstants(innerTypeName = "ConnectorTypeStatsKeys")
 @Builder
-@ApiModel("ConnectorStatistics")
-public class ConnectorStatistics {
-  List<ConnectorTypeStats> typeStats;
-  List<ConnectorStatusStats> statusStats;
+@ApiModel("ConnectorTypeStatistics")
+public class ConnectorTypeStats {
+  ConnectorType type;
+  int count;
 }

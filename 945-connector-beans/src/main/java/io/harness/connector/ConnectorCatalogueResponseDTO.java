@@ -1,11 +1,9 @@
-package io.harness.connector.apis.dto;
 
-import io.harness.connector.ConnectorCategory;
-import io.harness.delegate.beans.connector.ConnectorType;
+package io.harness.connector;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
-import java.util.Set;
+import java.util.List;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -15,8 +13,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@ApiModel("ConnectorCatalogueItem")
-public class ConnectorCatalogueItem {
-  ConnectorCategory category;
-  Set<ConnectorType> connectors;
+@ApiModel("ConnectorCatalogueResponse")
+public class ConnectorCatalogueResponseDTO {
+  List<ConnectorCatalogueItem> catalogue;
 }

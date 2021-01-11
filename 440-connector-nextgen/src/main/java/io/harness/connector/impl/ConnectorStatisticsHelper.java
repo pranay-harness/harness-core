@@ -7,11 +7,11 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.grou
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.project;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
-import io.harness.connector.apis.dto.stats.ConnectorStatistics;
-import io.harness.connector.apis.dto.stats.ConnectorStatistics.ConnectorStatisticsKeys;
-import io.harness.connector.apis.dto.stats.ConnectorStatusStats.ConnectorStatusStatsKeys;
-import io.harness.connector.apis.dto.stats.ConnectorTypeStats.ConnectorTypeStatsKeys;
 import io.harness.connector.entities.Connector.ConnectorKeys;
+import io.harness.connector.stats.ConnectorStatistics;
+import io.harness.connector.stats.ConnectorStatistics.ConnectorStatisticsKeys;
+import io.harness.connector.stats.ConnectorStatusStats.ConnectorStatusStatsKeys;
+import io.harness.connector.stats.ConnectorTypeStats.ConnectorTypeStatsKeys;
 import io.harness.repositories.ConnectorRepository;
 
 import com.google.inject.Inject;
