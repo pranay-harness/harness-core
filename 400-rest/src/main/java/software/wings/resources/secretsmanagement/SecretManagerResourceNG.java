@@ -129,7 +129,7 @@ public class SecretManagerResourceNG {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier) {
-    return new RestResponse<>(
-        ngSecretManagerService.deleteSecretManager(accountIdentifier, orgIdentifier, projectIdentifier, identifier));
+    return new RestResponse<>(ngSecretManagerService.deleteSecretManager(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier, true));
   }
 }
