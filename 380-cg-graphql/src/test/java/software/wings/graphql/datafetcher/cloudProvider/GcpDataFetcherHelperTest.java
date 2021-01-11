@@ -27,6 +27,7 @@ public class GcpDataFetcherHelperTest extends WingsBaseTest {
   private static final String NAME = "NAME";
   private static final String KEY = "KEY";
   private static final String ACCOUNT_ID = "777";
+  private static final String DELEGATE_SELECTOR = "primary";
 
   @Mock private UsageScopeController usageScopeController;
 
@@ -44,6 +45,9 @@ public class GcpDataFetcherHelperTest extends WingsBaseTest {
     QLGcpCloudProviderInput input = QLGcpCloudProviderInput.builder()
                                         .name(RequestField.ofNullable(NAME))
                                         .serviceAccountKeySecretId(RequestField.ofNullable(KEY))
+                                        .skipValidation(RequestField.ofNullable(false))
+                                        .delegateSelector(RequestField.ofNullable(DELEGATE_SELECTOR))
+                                        .useDelegate(RequestField.ofNull())
                                         .build();
 
     SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
@@ -53,6 +57,9 @@ public class GcpDataFetcherHelperTest extends WingsBaseTest {
     assertThat(setting.getValue()).isInstanceOf(GcpConfig.class);
     GcpConfig config = (GcpConfig) setting.getValue();
     assertThat(config.getEncryptedServiceAccountKeyFileContent()).isEqualTo(KEY);
+    assertThat(config.getDelegateSelector()).isEqualTo(DELEGATE_SELECTOR);
+    assertThat(config.isSkipValidation()).isFalse();
+    assertThat(config.isUseDelegate()).isFalse();
   }
 
   @Test
@@ -62,6 +69,9 @@ public class GcpDataFetcherHelperTest extends WingsBaseTest {
     QLGcpCloudProviderInput input = QLGcpCloudProviderInput.builder()
                                         .name(RequestField.ofNull())
                                         .serviceAccountKeySecretId(RequestField.ofNull())
+                                        .skipValidation(RequestField.ofNull())
+                                        .delegateSelector(RequestField.ofNull())
+                                        .useDelegate(RequestField.ofNull())
                                         .build();
 
     SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
@@ -76,6 +86,9 @@ public class GcpDataFetcherHelperTest extends WingsBaseTest {
     QLUpdateGcpCloudProviderInput input = QLUpdateGcpCloudProviderInput.builder()
                                               .name(RequestField.ofNullable(NAME))
                                               .serviceAccountKeySecretId(RequestField.ofNullable(KEY))
+                                              .skipValidation(RequestField.ofNullable(true))
+                                              .delegateSelector(RequestField.ofNullable(DELEGATE_SELECTOR))
+                                              .useDelegate(RequestField.ofNullable(true))
                                               .build();
 
     SettingAttribute setting =
@@ -87,6 +100,9 @@ public class GcpDataFetcherHelperTest extends WingsBaseTest {
     assertThat(setting.getValue()).isInstanceOf(GcpConfig.class);
     GcpConfig config = (GcpConfig) setting.getValue();
     assertThat(config.getEncryptedServiceAccountKeyFileContent()).isEqualTo(KEY);
+    assertThat(config.getDelegateSelector()).isEqualTo(DELEGATE_SELECTOR);
+    assertThat(config.isUseDelegate()).isTrue();
+    assertThat(config.isSkipValidation()).isTrue();
   }
 
   @Test
@@ -96,6 +112,9 @@ public class GcpDataFetcherHelperTest extends WingsBaseTest {
     QLUpdateGcpCloudProviderInput input = QLUpdateGcpCloudProviderInput.builder()
                                               .name(RequestField.ofNull())
                                               .serviceAccountKeySecretId(RequestField.ofNull())
+                                              .skipValidation(RequestField.ofNull())
+                                              .delegateSelector(RequestField.ofNull())
+                                              .useDelegate(RequestField.ofNull())
                                               .build();
 
     SettingAttribute setting =

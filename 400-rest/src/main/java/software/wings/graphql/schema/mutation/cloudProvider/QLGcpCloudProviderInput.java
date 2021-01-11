@@ -15,6 +15,8 @@ import lombok.Value;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class QLGcpCloudProviderInput {
   private RequestField<String> name;
-
   private RequestField<String> serviceAccountKeySecretId;
+  private RequestField<String> delegateSelector;
+  private RequestField<Boolean> skipValidation;
+  private RequestField<Boolean> useDelegate;
 }

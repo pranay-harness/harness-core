@@ -115,6 +115,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.mapping.Mapper;
 
@@ -237,6 +238,10 @@ public class SettingValidationService {
       if (!gcpConfig.isUseDelegate() && gcpConfig.isSkipValidation()) {
         throw new InvalidArgumentsException(
             "Validation can be skipped only if inherit from delegate option is selected.", USER);
+      }
+      if (gcpConfig.isUseDelegate() && StringUtils.isBlank(gcpConfig.getDelegateSelector())) {
+        throw new InvalidArgumentsException(
+            "Delegate Selector must be provided if inherit from delegate option is selected.", USER);
       }
       if (!gcpConfig.isSkipValidation()) {
         gcpHelperServiceManager.validateCredential((GcpConfig) settingValue, encryptedDataDetails);
