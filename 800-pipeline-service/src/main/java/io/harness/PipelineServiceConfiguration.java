@@ -40,6 +40,7 @@ import org.reflections.Reflections;
 public class PipelineServiceConfiguration extends Configuration {
   public static final String RESOURCE_PACKAGE = "io.harness.pms";
   public static final String NG_TRIGGER_RESOURCE_PACKAGE = "io.harness.ngtriggers";
+  public static final String FILTER_PACKAGE = "io.harness.filter";
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConfig;
@@ -86,7 +87,7 @@ public class PipelineServiceConfiguration extends Configuration {
   }
 
   public static Collection<Class<?>> getResourceClasses() {
-    Reflections reflections = new Reflections(RESOURCE_PACKAGE, NG_TRIGGER_RESOURCE_PACKAGE);
+    Reflections reflections = new Reflections(RESOURCE_PACKAGE, NG_TRIGGER_RESOURCE_PACKAGE, FILTER_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 
