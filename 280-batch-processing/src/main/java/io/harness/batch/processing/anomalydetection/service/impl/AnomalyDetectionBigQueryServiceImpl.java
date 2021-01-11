@@ -144,7 +144,7 @@ public class AnomalyDetectionBigQueryServiceImpl {
       currentHash = row.get("hashcode").getStringValue();
       currentTime = Instant.ofEpochMilli(
           row.get(PreAggregatedTableSchema.startTime.getColumnNameSQL()).getTimestampValue() / 1000);
-      currentValue = row.get("sum_cost").getDoubleValue();
+      currentValue = row.get(timeSeriesMetaData.getCloudQueryMetaData().getAggerateColumnName()).getDoubleValue();
       if (previousHash == null || !previousHash.equals(currentHash)) {
         if (currentTimeSeries != null) {
           if (TimeSeriesUtils.validate(currentTimeSeries, timeSeriesMetaData)) {

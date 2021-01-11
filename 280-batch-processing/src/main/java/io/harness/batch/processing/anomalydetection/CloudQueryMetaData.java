@@ -34,6 +34,11 @@ public class CloudQueryMetaData {
   List<CloudBillingAggregate> aggregationList;
   List<CloudBillingSortCriteria> sortCriteriaList;
 
+  public String getAggerateColumnName() {
+    CloudBillingAggregate aggregate = aggregationList.get(0);
+    return String.join("_", aggregate.getOperationType().name().toLowerCase(), aggregate.getColumnName());
+  }
+
   public String getMetaDataQuery() {
     SelectQuery metaQuery = new SelectQuery();
 
