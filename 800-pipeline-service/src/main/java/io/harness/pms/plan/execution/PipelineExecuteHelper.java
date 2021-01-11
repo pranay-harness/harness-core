@@ -1,7 +1,5 @@
 package io.harness.pms.plan.execution;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.OrchestrationService;
