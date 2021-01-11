@@ -45,7 +45,7 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
     Map<String, YamlField> dependenciesNodeMap = new HashMap<>();
 
     // Adding service child
-    YamlField serviceField = ctx.getCurrentField().getNode().getField("spec").getNode().getField("service");
+    YamlField serviceField = ctx.getCurrentField().getNode().getField("spec").getNode().getField("serviceConfig");
 
     if (serviceField != null) {
       PlanNode servicePlanNode = ServicePMSPlanCreator.createPlanForServiceNode(
