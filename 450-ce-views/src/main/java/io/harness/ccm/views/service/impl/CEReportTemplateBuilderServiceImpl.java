@@ -180,7 +180,7 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
                     .build());
     List<QLCEViewTimeSeriesData> chartData =
         viewsBillingService.convertToQLViewTimeSeriesData(viewsBillingService.getTimeSeriesStats(
-            bigQuery, filters, groupBy, aggregationFunction, Collections.emptyList(), cloudProviderTableName));
+            bigQuery, filters, groupBy, aggregationFunction, sortCriteria, cloudProviderTableName));
     if (chartData == null) {
       throw new InvalidRequestException("Exception while generating report. No data to for chart");
     }
