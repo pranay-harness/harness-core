@@ -8,4 +8,5 @@ import lombok.Value;
 public class QLCEAggregation {
   QLCEAggregationFunction function;
   QLCECost cost;
+  QLCEUtilization utilization;
 }
