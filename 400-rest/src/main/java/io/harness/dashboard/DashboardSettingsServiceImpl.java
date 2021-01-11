@@ -134,6 +134,7 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
     return asList(finalAction);
   }
 
+  @Override
   public List<DashboardAccessPermissions> flattenPermissions(List<DashboardAccessPermissions> permissions) {
     if (isEmpty(permissions)) {
       return permissions;
