@@ -38,7 +38,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
@@ -79,14 +81,27 @@ public class ExportExecutionsResourceServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testExport() {
     Query<WorkflowExecution> query = mock(Query.class);
+
+    String validId = "valid_uid";
+    String invalidId = "invalid_uid";
+    UserGroup validUserGroup = UserGroup.builder().uuid(validId).build();
+    List<String> listWithAllValidUserGroupIds = Collections.singletonList(validId);
+    List<String> listWithOnlyInvalidGroupIds = Collections.singletonList(invalidId);
+    List<String> listWithBothInvalidAndValidGroupIds = Arrays.asList(invalidId, validId);
+    List<UserGroup> validUsers = Arrays.asList(validUserGroup);
+
+    ExportExecutionsUserParams userParams = ExportExecutionsUserParams.builder()
+                                                .notifyOnlyTriggeringUser(false)
+                                                .userGroupIds(listWithAllValidUserGroupIds)
+                                                .build();
+
     when(limitConfigurationService.getOrDefault(eq(ACCOUNT_ID), eq(ActionType.EXPORT_EXECUTIONS_REQUEST)))
         .thenReturn(new ConfiguredLimit(ACCOUNT_ID, new StaticLimit(25), ActionType.EXPORT_EXECUTIONS_REQUEST));
     when(exportExecutionsRequestService.getTotalRequestsInLastDay(ACCOUNT_ID)).thenReturn(5L);
+    when(userGroupService.fetchUserGroupNamesFromIds(listWithOnlyInvalidGroupIds)).thenReturn(Collections.emptyList());
+    when(userGroupService.fetchUserGroupNamesFromIds(listWithAllValidUserGroupIds)).thenReturn(validUsers);
+    when(userGroupService.fetchUserGroupNamesFromIds(listWithBothInvalidAndValidGroupIds)).thenReturn(validUsers);
 
-    ExportExecutionsUserParams userParams = ExportExecutionsUserParams.builder()
-                                                .notifyOnlyTriggeringUser(true)
-                                                .userGroupIds(Collections.singletonList("uid"))
-                                                .build();
     exportExecutionsResourceService.export(ACCOUNT_ID, query, userParams);
     verify(exportExecutionsRequestService, times(1))
         .queueExportExecutionRequest(eq(ACCOUNT_ID), eq(query), eq(userParams));
@@ -96,26 +111,40 @@ public class ExportExecutionsResourceServiceTest extends CategoryTest {
     assertThatThrownBy(() -> exportExecutionsResourceService.export(ACCOUNT_ID, query, null))
         .isInstanceOf(InvalidRequestException.class);
 
+    // Providing both notifyOnlyTriggeringUser and userGroupIds in ExportExecutionsUserParams should throw exception.
+    ExportExecutionsUserParams invalidUserParams = ExportExecutionsUserParams.builder()
+                                                       .notifyOnlyTriggeringUser(true)
+                                                       .userGroupIds(listWithAllValidUserGroupIds)
+                                                       .build();
+    assertThatThrownBy(() -> exportExecutionsResourceService.export(ACCOUNT_ID, null, invalidUserParams))
+        .isInstanceOf(InvalidRequestException.class);
+
+    // InvalidRequestException should be thrown if all Provided groups are invalid.
     ExportExecutionsUserParams userParams1 = ExportExecutionsUserParams.builder()
                                                  .notifyOnlyTriggeringUser(false)
-                                                 .userGroupIds(Collections.singletonList("uid"))
+                                                 .userGroupIds(listWithOnlyInvalidGroupIds)
                                                  .build();
     assertThatThrownBy(() -> exportExecutionsResourceService.export(ACCOUNT_ID, query, userParams1))
         .isInstanceOf(InvalidRequestException.class);
 
-    when(userGroupService.fetchUserGroupNamesFromIds(any()))
-        .thenReturn(Collections.singletonList(UserGroup.builder().uuid("uid-tmp").build()));
-    assertThatThrownBy(() -> exportExecutionsResourceService.export(ACCOUNT_ID, query, userParams1))
+    // InvalidRequestException should be thrown if a subset of Provided groups are invalid.
+    ExportExecutionsUserParams userParamsWithValidAndInvalidUsers =
+        ExportExecutionsUserParams.builder()
+            .notifyOnlyTriggeringUser(false)
+            .userGroupIds(listWithBothInvalidAndValidGroupIds)
+            .build();
+    assertThatThrownBy(
+        () -> exportExecutionsResourceService.export(ACCOUNT_ID, query, userParamsWithValidAndInvalidUsers))
         .isInstanceOf(InvalidRequestException.class);
 
-    when(userGroupService.fetchUserGroupNamesFromIds(any()))
-        .thenReturn(Collections.singletonList(UserGroup.builder().uuid("uid").build()));
     exportExecutionsResourceService.export(ACCOUNT_ID, query, userParams);
     verify(exportExecutionsRequestService, times(2))
         .queueExportExecutionRequest(eq(ACCOUNT_ID), eq(query), eq(userParams));
     verify(exportExecutionsRequestService, times(2)).get(eq(ACCOUNT_ID), anyString());
     verify(exportExecutionsRequestHelper, times(2)).prepareSummary(any());
 
+    // InvalidRequestException should be thrown if number of export executions requests from this account
+    // exceed configured its daily limit.
     when(exportExecutionsRequestService.getTotalRequestsInLastDay(ACCOUNT_ID)).thenReturn(25L);
     assertThatThrownBy(() -> exportExecutionsResourceService.export(ACCOUNT_ID, query, userParams))
         .isInstanceOf(InvalidRequestException.class);
