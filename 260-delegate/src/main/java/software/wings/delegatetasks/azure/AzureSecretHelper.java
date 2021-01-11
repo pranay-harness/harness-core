@@ -92,8 +92,8 @@ public class AzureSecretHelper {
     AzureAppServicePreDeploymentData preDeploymentData = azureWebAppRollbackParameters.getPreDeploymentData();
     decryptSettings(preDeploymentData.getAppSettingsToAdd());
     decryptSettings(preDeploymentData.getAppSettingsToRemove());
-    decryptSettings(preDeploymentData.getConnSettingsToAdd());
-    decryptSettings(preDeploymentData.getConnSettingsToRemove());
+    decryptSettings(preDeploymentData.getConnStringsToAdd());
+    decryptSettings(preDeploymentData.getConnStringsToRemove());
     decryptSettings(preDeploymentData.getDockerSettingsToAdd());
   }
 
@@ -143,8 +143,8 @@ public class AzureSecretHelper {
     AzureAppServicePreDeploymentData preDeploymentData = azureTaskResponse.getPreDeploymentData();
     encryptSettings(preDeploymentData.getAppSettingsToRemove(), accountId);
     encryptSettings(preDeploymentData.getAppSettingsToAdd(), accountId);
-    encryptSettings(preDeploymentData.getConnSettingsToRemove(), accountId);
-    encryptSettings(preDeploymentData.getConnSettingsToAdd(), accountId);
+    encryptSettings(preDeploymentData.getConnStringsToRemove(), accountId);
+    encryptSettings(preDeploymentData.getConnStringsToAdd(), accountId);
     encryptSettings(preDeploymentData.getDockerSettingsToAdd(), accountId);
   }
 

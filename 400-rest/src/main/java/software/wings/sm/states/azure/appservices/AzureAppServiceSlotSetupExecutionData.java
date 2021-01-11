@@ -53,7 +53,7 @@ public class AzureAppServiceSlotSetupExecutionData
     putNotNull(executionDetails, "deploySlotName",
         ExecutionDataValue.builder().displayName("Deployment Slot").value(deploySlotName).build());
     putNotNull(executionDetails, "targetSlotName",
-        ExecutionDataValue.builder().displayName("Target Slot").value(deploySlotName).build());
+        ExecutionDataValue.builder().displayName("Target Slot").value(targetSlotName).build());
     putNotNull(
         executionDetails, ACTIVITY_ID, ExecutionDataValue.builder().displayName(ACTIVITY_ID).value(activityId).build());
     return executionDetails;

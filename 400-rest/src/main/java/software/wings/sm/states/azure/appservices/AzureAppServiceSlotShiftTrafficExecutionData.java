@@ -45,7 +45,7 @@ public class AzureAppServiceSlotShiftTrafficExecutionData
     putNotNull(executionDetails, "deploySlotName",
         ExecutionDataValue.builder().displayName("Deployment Slot").value(deploySlotName).build());
     putNotNull(executionDetails, "trafficWeight",
-        ExecutionDataValue.builder().displayName("Traffic Weight").value(trafficWeight + " %").build());
+        ExecutionDataValue.builder().displayName("Traffic %").value(trafficWeight).build());
     putNotNull(
         executionDetails, ACTIVITY_ID, ExecutionDataValue.builder().displayName(ACTIVITY_ID).value(activityId).build());
     return executionDetails;

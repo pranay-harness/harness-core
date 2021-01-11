@@ -174,7 +174,7 @@ public class AzureAppServiceConfigurationDTOMapper {
       AzureAppServiceDockerSetting dockerSetting, AzureAppServiceSettingValueType type) {
     String name = dockerSetting.getName();
     String value = dockerSetting.getValue();
-    if (isBlank(value) || isBlank(name)) {
+    if (isBlank(name)) {
       throw new IllegalArgumentException("Docker settings name or value can't be null or empty");
     }
 

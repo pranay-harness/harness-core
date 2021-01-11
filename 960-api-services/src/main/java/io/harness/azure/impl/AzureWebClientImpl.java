@@ -36,6 +36,8 @@ import com.microsoft.azure.management.appservice.WebApp;
 import com.microsoft.azure.management.appservice.implementation.SiteConfigResourceInner;
 import com.microsoft.azure.management.appservice.implementation.SiteInstanceInner;
 import com.microsoft.azure.management.appservice.implementation.StringDictionaryInner;
+import com.microsoft.rest.ServiceCallback;
+import com.microsoft.rest.ServiceFuture;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -147,6 +149,17 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
   }
 
   @Override
+  public void startDeploymentSlotAsync(AzureWebClientContext context, String slotName, ServiceCallback<Void> callback) {
+    log.debug("Stopping async slot with name: {}, context: {}", slotName, context);
+    String resourceGroupName = context.getResourceGroupName();
+    String webAppName = context.getAppName();
+    Azure azure = getAzureClientByContext(context);
+
+    log.debug("Start async swapping slot with production, slotName: {}, context: {}", slotName, context);
+    azure.webApps().inner().startSlotAsync(resourceGroupName, webAppName, slotName, callback);
+  }
+
+  @Override
   public void startDeploymentSlot(DeploymentSlot slot) {
     log.debug("Starting slot with name: {}", slot.name());
     slot.start();
@@ -170,6 +183,18 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
     DeploymentSlot deploymentSlot = getDeploymentSlot(context, slotName);
     log.debug("Stopping async slot with name: {}, context: {}", slotName, context);
     return deploymentSlot.stopAsync();
+  }
+
+  @Override
+  public void stopDeploymentSlotAsync(
+      AzureWebClientContext context, final String slotName, ServiceCallback<Void> callback) {
+    log.debug("Stopping async slot with name: {}, context: {}", slotName, context);
+    String resourceGroupName = context.getResourceGroupName();
+    String webAppName = context.getAppName();
+    Azure azure = getAzureClientByContext(context);
+
+    log.debug("Start async swapping slot with production, slotName: {}, context: {}", slotName, context);
+    azure.webApps().inner().stopSlotAsync(resourceGroupName, webAppName, slotName, callback);
   }
 
   @Override
@@ -201,11 +226,12 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
     DeploymentSlot deploymentSlot = getDeploymentSlot(context, slotName);
 
     log.debug("Start updating slot app settings by slotName: {}, context: {}", slotName, context);
+
+    DeploymentSlot.Update update = deploymentSlot.update();
     appSettings.values().forEach(appSetting
-        -> deploymentSlot.update()
-               .withAppSetting(appSetting.getName(), appSetting.getValue())
-               .withAppSettingStickiness(appSetting.getName(), appSetting.isSticky())
-               .apply());
+        -> update.withAppSetting(appSetting.getName(), appSetting.getValue())
+               .withAppSettingStickiness(appSetting.getName(), appSetting.isSticky()));
+    update.apply();
   }
 
   @Override
@@ -237,7 +263,7 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
   }
 
   @Override
-  public void updateDeploymentSlotConnectionSettings(AzureWebClientContext context, final String slotName,
+  public void updateDeploymentSlotConnectionStrings(AzureWebClientContext context, final String slotName,
       Map<String, AzureAppServiceConnectionString> connectionSettings) {
     if (connectionSettings.isEmpty()) {
       log.info("Slot connection settings list is empty, slotName: {}, context: {}", slotName, context);
@@ -245,16 +271,20 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
     }
 
     DeploymentSlot deploymentSlot = getDeploymentSlot(context, slotName);
-    connectionSettings.values().forEach(connectionSetting
-        -> deploymentSlot.update()
-               .withConnectionString(connectionSetting.getName(), connectionSetting.getValue(),
-                   ConnectionStringType.fromString(connectionSetting.getType().getValue()))
-               .withConnectionStringStickiness(connectionSetting.getName(), connectionSetting.isSticky())
-               .apply());
+    DeploymentSlot.Update update = deploymentSlot.update();
+    connectionSettings.values().forEach(connectionSetting -> {
+      String name = connectionSetting.getName();
+      String value = connectionSetting.getValue();
+      boolean sticky = connectionSetting.isSticky();
+      ConnectionStringType type = ConnectionStringType.fromString(connectionSetting.getType().getValue());
+
+      update.withConnectionString(name, value, type).withAppSettingStickiness(name, sticky);
+    });
+    update.apply();
   }
 
   @Override
-  public Map<String, AzureAppServiceConnectionString> listDeploymentSlotConnectionSettings(
+  public Map<String, AzureAppServiceConnectionString> listDeploymentSlotConnectionStrings(
       AzureWebClientContext context, final String slotName) {
     log.debug("Start listing slot connection settings by slotName: {}, context: {}", slotName, context);
     DeploymentSlot deploymentSlot = getDeploymentSlot(context, slotName);
@@ -273,7 +303,7 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
         .build();
   }
 
-  public DeploymentSlot deleteDeploymentSlotConnectionSettings(AzureWebClientContext context, String slotName,
+  public DeploymentSlot deleteDeploymentSlotConnectionStrings(AzureWebClientContext context, String slotName,
       Map<String, AzureAppServiceConnectionString> connSettingsToRemove) {
     log.debug("Start deleting slot connection settings by slotName: {}, context: {}", slotName, context);
     DeploymentSlot deploymentSlot = getDeploymentSlot(context, slotName);
@@ -294,11 +324,10 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
     DeploymentSlot deploymentSlot = getDeploymentSlot(context, slotName);
 
     log.debug("Start updating slot docker settings by slotName: {}, context: {}", slotName, context);
-    dockerSettings.values().forEach(dockerSetting
-        -> deploymentSlot.update()
-               .withAppSetting(dockerSetting.getName(), dockerSetting.getValue())
-               .withAppSettingStickiness(dockerSetting.getName(), dockerSetting.isSticky())
-               .apply());
+    DeploymentSlot.Update update = deploymentSlot.update();
+    dockerSettings.values().forEach(
+        dockerSetting -> update.withAppSetting(dockerSetting.getName(), dockerSetting.getValue()));
+    update.apply();
   }
 
   private void validateDockerSettings(Map<String, AzureAppServiceDockerSetting> dockerSettings) {
@@ -438,6 +467,19 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
         resourceGroupName, webAppName, sourceSlotName, targetSlotSwapEntity);
   }
 
+  @Override
+  public ServiceFuture<Void> swapDeploymentSlotsAsync(AzureWebClientContext context, final String sourceSlotName,
+      String targetSlotName, ServiceCallback<Void> callback) {
+    String resourceGroupName = context.getResourceGroupName();
+    String webAppName = context.getAppName();
+    Azure azure = getAzureClientByContext(context);
+    CsmSlotEntity targetSlotSwapEntity = getTargetCsmSlotEntity(targetSlotName);
+
+    log.debug("Start async swapping slot with production, slotName: {}, context: {}", sourceSlotName, context);
+    return azure.webApps().inner().swapSlotSlotAsync(
+        resourceGroupName, webAppName, sourceSlotName, targetSlotSwapEntity, callback);
+  }
+
   @NotNull
   public CsmSlotEntity getTargetCsmSlotEntity(String targetSlotName) {
     CsmSlotEntity targetSlotSwapEntity = new CsmSlotEntity();
@@ -568,12 +610,6 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
         resourceGroupName, slotName, context);
     PagedList<SiteInstanceInner> siteInstanceInners =
         azure.webApps().inner().listInstanceIdentifiersSlot(resourceGroupName, appName, slotName);
-
-    List<SiteInstanceInner> siteInstanceInnersList = new ArrayList<>();
-    for (SiteInstanceInner siteInstanceInner : siteInstanceInners) {
-      siteInstanceInnersList.add(siteInstanceInner);
-    }
-
-    return siteInstanceInnersList;
+    return new ArrayList<>(siteInstanceInners);
   }
 }

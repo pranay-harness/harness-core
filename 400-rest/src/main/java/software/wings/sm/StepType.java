@@ -14,6 +14,7 @@ import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTE
 import static software.wings.beans.PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP;
 import static software.wings.beans.PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP;
 import static software.wings.beans.PhaseStepType.AMI_SWITCH_AUTOSCALING_GROUP_ROUTES;
+import static software.wings.beans.PhaseStepType.AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT;
 import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
 import static software.wings.beans.PhaseStepType.COLLECT_ARTIFACT;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
@@ -322,10 +323,9 @@ public enum StepType {
       singletonList(WorkflowStepType.AZURE_WEBAPP), singletonList(PhaseStepType.AZURE_WEBAPP_SLOT_SWAP),
       Lists.newArrayList(DeploymentType.AZURE_WEBAPP), singletonList(PhaseType.NON_ROLLBACK),
       asList(CANARY, BLUE_GREEN)),
-  AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC(AzureWebAppSlotShiftTraffic.class,
-      WorkflowServiceHelper.AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC, singletonList(WorkflowStepType.AZURE_WEBAPP),
-      singletonList(PhaseStepType.AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT), Lists.newArrayList(DeploymentType.AZURE_WEBAPP),
-      singletonList(PhaseType.NON_ROLLBACK), singletonList(CANARY)),
+  AZURE_WEBAPP_SLOT_SHIFT_TRAFFIC(AzureWebAppSlotShiftTraffic.class, WorkflowServiceHelper.AZURE_WEBAPP_SLOT_TRAFFIC,
+      singletonList(WorkflowStepType.AZURE_WEBAPP), singletonList(AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT),
+      Lists.newArrayList(DeploymentType.AZURE_WEBAPP), singletonList(PhaseType.NON_ROLLBACK), singletonList(CANARY)),
   AZURE_WEBAPP_SLOT_ROLLBACK(AzureWebAppSlotRollback.class, WorkflowServiceHelper.AZURE_WEBAPP_SLOT_ROLLBACK,
       singletonList(WorkflowStepType.AZURE_WEBAPP), singletonList(PhaseStepType.AZURE_WEBAPP_SLOT_ROLLBACK),
       Lists.newArrayList(DeploymentType.AZURE_WEBAPP), singletonList(PhaseType.ROLLBACK), asList(CANARY, BLUE_GREEN)),
@@ -562,37 +562,35 @@ public enum StepType {
 
   // APM
   APP_DYNAMICS(AppDynamicsState.class, APPDYNAMICS, asList(APM),
-      asList(VERIFY_SERVICE, K8S_PHASE_STEP, PhaseStepType.SPOTINST_LISTENER_UPDATE,
-          PhaseStepType.AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, CUSTOM_DEPLOYMENT_PHASE_STEP),
+      asList(VERIFY_SERVICE, K8S_PHASE_STEP, PhaseStepType.SPOTINST_LISTENER_UPDATE, AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT,
+          CUSTOM_DEPLOYMENT_PHASE_STEP),
       asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   NEW_RELIC(NewRelicState.class, WorkflowServiceHelper.NEW_RELIC, asList(APM),
-      asList(
-          VERIFY_SERVICE, K8S_PHASE_STEP, PhaseStepType.AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, CUSTOM_DEPLOYMENT_PHASE_STEP),
+      asList(VERIFY_SERVICE, K8S_PHASE_STEP, AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, CUSTOM_DEPLOYMENT_PHASE_STEP),
       asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   INSTANA(InstanaState.class, WorkflowServiceHelper.INSTANA, asList(APM),
-      asList(
-          VERIFY_SERVICE, K8S_PHASE_STEP, PhaseStepType.AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, CUSTOM_DEPLOYMENT_PHASE_STEP),
+      asList(VERIFY_SERVICE, K8S_PHASE_STEP, AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, CUSTOM_DEPLOYMENT_PHASE_STEP),
       asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
 
   DYNA_TRACE(DynatraceState.class, DYNATRACE, asList(APM),
-      asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
-      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+      asList(VERIFY_SERVICE, K8S_PHASE_STEP, AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, CUSTOM_DEPLOYMENT_PHASE_STEP),
+      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   PROMETHEUS(PrometheusState.class, WorkflowServiceHelper.PROMETHEUS, asList(APM),
-      asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
-      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+      asList(VERIFY_SERVICE, K8S_PHASE_STEP, AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, CUSTOM_DEPLOYMENT_PHASE_STEP),
+      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   DATA_DOG(DatadogState.class, DATADOG_METRICS, asList(APM),
-      asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
-      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+      asList(VERIFY_SERVICE, K8S_PHASE_STEP, AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, CUSTOM_DEPLOYMENT_PHASE_STEP),
+      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   STACK_DRIVER(StackDriverState.class, STACKDRIVER, asList(APM),
-      asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
-      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+      asList(VERIFY_SERVICE, K8S_PHASE_STEP, AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, CUSTOM_DEPLOYMENT_PHASE_STEP),
+      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   CLOUD_WATCH(CloudWatchState.class, CLOUDWATCH, asList(APM),
-      asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
-      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+      asList(VERIFY_SERVICE, K8S_PHASE_STEP, AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, CUSTOM_DEPLOYMENT_PHASE_STEP),
+      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
 
   APM_VERIFICATION(APMVerificationState.class, CUSTOM_METRICS, asList(APM),
-      asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
-      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+      asList(VERIFY_SERVICE, K8S_PHASE_STEP, AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, CUSTOM_DEPLOYMENT_PHASE_STEP),
+      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
 
   // Logs
   DATA_DOG_LOG(DatadogLogState.class, DATADOG_LOG, asList(LOG),

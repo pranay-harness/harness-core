@@ -219,6 +219,7 @@ public class AzureSweepingOutputServiceHelperTest extends WingsBaseTest {
                                                    .appServicePlanId(APP_SERVICE_PLAN_ID)
                                                    .hostName(HOST_NAME)
                                                    .instanceIp(PRIVATE_IP_ADDRESS)
+                                                   .instanceId(INSTANCE_ID)
                                                    .build();
     List<AzureAppDeploymentData> azureAppDeploymentData = Collections.singletonList(appDeploymentData);
 
@@ -245,7 +246,7 @@ public class AzureSweepingOutputServiceHelperTest extends WingsBaseTest {
 
     assertThat(instanceElementsList.size()).isEqualTo(1);
     assertThat(instanceElement.isNewInstance()).isTrue();
-    assertThat(instanceElement.getUuid()).isEqualTo(DEPLOYMENT_SLOT_ID);
+    assertThat(instanceElement.getUuid()).isEqualTo(INSTANCE_ID);
     assertThat(instanceElement.getDisplayName()).isEqualTo(HOST_NAME);
     assertThat(instanceElement.getHostName()).isEqualTo(HOST_NAME_FROM_CONVENTION);
 

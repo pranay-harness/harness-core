@@ -2,7 +2,6 @@ package software.wings.sm.states.azure.appservices;
 
 import static software.wings.sm.StateType.AZURE_WEBAPP_SLOT_ROLLBACK;
 
-import io.harness.context.ContextElementType;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
 import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppRollbackParameters;
 
@@ -26,7 +25,7 @@ public class AzureWebAppSlotRollback extends AzureWebAppSlotSetup {
   @Override
   @SchemaIgnore
   public Integer getTimeoutMillis(ExecutionContext context) {
-    return azureVMSSStateHelper.getStateTimeOutFromContext(context, ContextElementType.AZURE_WEBAPP_SETUP);
+    return getTimeout(context);
   }
 
   @Override

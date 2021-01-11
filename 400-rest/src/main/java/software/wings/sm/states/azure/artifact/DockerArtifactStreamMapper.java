@@ -14,18 +14,17 @@ import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 
 import software.wings.beans.DockerConfig;
-import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 
 import java.util.Optional;
 
 public class DockerArtifactStreamMapper extends ArtifactStreamMapper {
-  public DockerArtifactStreamMapper(ArtifactStream artifactStream) {
-    super(artifactStream);
+  public DockerArtifactStreamMapper(Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes) {
+    super(artifact, artifactStreamAttributes);
   }
 
   public ConnectorConfigDTO getConnectorDTO() {
-    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
     DockerConfig dockerConfig = (DockerConfig) artifactStreamAttributes.getServerSetting().getValue();
     String dockerUserName = dockerConfig.getUsername();
     String dockerRegistryUrl = dockerConfig.fetchRegistryUrl();
@@ -40,7 +39,6 @@ public class DockerArtifactStreamMapper extends ArtifactStreamMapper {
   }
 
   public AzureRegistryType getAzureRegistryType() {
-    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
     DockerConfig dockerConfig = (DockerConfig) artifactStreamAttributes.getServerSetting().getValue();
     String dockerUserName = dockerConfig.getUsername();
     String passwordSecretRef = dockerConfig.getEncryptedPassword();

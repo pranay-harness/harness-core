@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.azure.appservice.deployment;
 
 import static io.harness.azure.model.AzureConstants.IMAGE_AND_TAG_BLANK_ERROR_MSG;
+import static io.harness.azure.model.AzureConstants.SAVE_EXISTING_CONFIGURATIONS;
 import static io.harness.azure.model.AzureConstants.SLOT_NAME_BLANK_ERROR_MSG;
 import static io.harness.azure.model.AzureConstants.SLOT_STARTING_STATUS_CHECK_INTERVAL;
 import static io.harness.azure.model.AzureConstants.SLOT_STOPPING_STATUS_CHECK_INTERVAL;
@@ -17,6 +18,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -34,6 +36,7 @@ import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureConstants;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.connector.azureconnector.AzureContainerRegistryConnectorDTO;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploymentData;
 import io.harness.exception.InvalidRequestException;
@@ -63,7 +66,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.Spy;
 import rx.Completable;
 import rx.Observable;
@@ -87,6 +89,7 @@ public class AzureAppServiceDeploymentServiceTest extends WingsBaseTest {
   @Mock private AzureMonitorClient mockAzureMonitorClient;
   @Mock private LogStreamingTaskClient mockLogStreamingTaskClient;
   @Mock private LogCallback mockLogCallback;
+  @Mock private SlotSteadyStateChecker slotSteadyStateChecker;
 
   @Spy @InjectMocks AzureAppServiceDeploymentService azureAppServiceDeploymentService;
 
@@ -129,7 +132,7 @@ public class AzureAppServiceDeploymentServiceTest extends WingsBaseTest {
             .connSettingsToRemove(connSettingsToRemove)
             .build();
 
-    DeploymentSlot deploymentSlot = Mockito.mock(DeploymentSlot.class);
+    DeploymentSlot deploymentSlot = mock(DeploymentSlot.class);
     doReturn(Completable.complete()).when(deploymentSlot).stopAsync();
     doReturn(Completable.complete()).when(deploymentSlot).startAsync();
     doReturn(Optional.of(deploymentSlot))
@@ -138,20 +141,20 @@ public class AzureAppServiceDeploymentServiceTest extends WingsBaseTest {
 
     azureAppServiceDeploymentService.deployDockerImage(azureAppServiceDockerDeploymentContext);
 
-    verify(mockAzureTimeLimiter, times(1))
+    verify(slotSteadyStateChecker, times(1))
         .waitUntilCompleteWithTimeout(
-            eq(1L), eq(SLOT_STOPPING_STATUS_CHECK_INTERVAL), any(), any(), any(), eq(STOP_DEPLOYMENT_SLOT));
-    verify(mockAzureTimeLimiter, times(1))
+            eq(1L), eq(SLOT_STOPPING_STATUS_CHECK_INTERVAL), any(), eq(STOP_DEPLOYMENT_SLOT), any());
+    verify(slotSteadyStateChecker, times(1))
         .waitUntilCompleteWithTimeout(
-            eq(1L), eq(SLOT_STARTING_STATUS_CHECK_INTERVAL), any(), any(), any(), eq(START_DEPLOYMENT_SLOT));
+            eq(1L), eq(SLOT_STARTING_STATUS_CHECK_INTERVAL), any(), eq(START_DEPLOYMENT_SLOT), any());
     verify(mockAzureWebClient, times(1))
         .deleteDeploymentSlotAppSettings(azureWebClientContext, SLOT_NAME, appSettingsToRemove);
     verify(mockAzureWebClient, times(1))
         .updateDeploymentSlotAppSettings(azureWebClientContext, SLOT_NAME, appSettingsToAdd);
     verify(mockAzureWebClient, times(1))
-        .deleteDeploymentSlotConnectionSettings(azureWebClientContext, SLOT_NAME, connSettingsToRemove);
+        .deleteDeploymentSlotConnectionStrings(azureWebClientContext, SLOT_NAME, connSettingsToRemove);
     verify(mockAzureWebClient, times(1))
-        .updateDeploymentSlotConnectionSettings(azureWebClientContext, SLOT_NAME, connSettingsToAdd);
+        .updateDeploymentSlotConnectionStrings(azureWebClientContext, SLOT_NAME, connSettingsToAdd);
     verify(mockAzureWebClient, times(1))
         .updateDeploymentSlotDockerSettings(azureWebClientContext, SLOT_NAME, dockerSettings);
   }
@@ -172,7 +175,7 @@ public class AzureAppServiceDeploymentServiceTest extends WingsBaseTest {
             .azureWebClientContext(azureWebClientContext)
             .build();
 
-    DeploymentSlot deploymentSlot = Mockito.mock(DeploymentSlot.class);
+    DeploymentSlot deploymentSlot = mock(DeploymentSlot.class);
     doReturn(Completable.complete()).when(deploymentSlot).stopAsync();
     doReturn(Completable.complete()).when(deploymentSlot).startAsync();
     doReturn(Optional.of(deploymentSlot))
@@ -181,12 +184,12 @@ public class AzureAppServiceDeploymentServiceTest extends WingsBaseTest {
 
     azureAppServiceDeploymentService.deployDockerImage(azureAppServiceDockerDeploymentContext);
 
-    verify(mockAzureTimeLimiter, times(1))
+    verify(slotSteadyStateChecker, times(1))
         .waitUntilCompleteWithTimeout(
-            eq(1L), eq(SLOT_STOPPING_STATUS_CHECK_INTERVAL), any(), any(), any(), eq(STOP_DEPLOYMENT_SLOT));
-    verify(mockAzureTimeLimiter, times(1))
+            eq(1L), eq(SLOT_STOPPING_STATUS_CHECK_INTERVAL), any(), eq(STOP_DEPLOYMENT_SLOT), any());
+    verify(slotSteadyStateChecker, times(1))
         .waitUntilCompleteWithTimeout(
-            eq(1L), eq(SLOT_STARTING_STATUS_CHECK_INTERVAL), any(), any(), any(), eq(START_DEPLOYMENT_SLOT));
+            eq(1L), eq(SLOT_STARTING_STATUS_CHECK_INTERVAL), any(), eq(START_DEPLOYMENT_SLOT), any());
   }
 
   @Test
@@ -283,7 +286,7 @@ public class AzureAppServiceDeploymentServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testFetchDeploymentData() {
     AzureWebClientContext azureWebClientContext = getAzureWebClientContext();
-    DeploymentSlot deploymentSlot = Mockito.mock(DeploymentSlot.class);
+    DeploymentSlot deploymentSlot = mock(DeploymentSlot.class);
     doReturn(DEPLOYMENT_SLOT_ID).when(deploymentSlot).id();
     doReturn(APP_SERVICE_PLAN_ID).when(deploymentSlot).appServicePlanId();
     doReturn(DEFAULT_HOST_NAME).when(deploymentSlot).defaultHostName();
@@ -292,7 +295,7 @@ public class AzureAppServiceDeploymentServiceTest extends WingsBaseTest {
         .when(mockAzureWebClient)
         .getDeploymentSlotByName(azureWebClientContext, SLOT_NAME);
 
-    SiteInstanceInner siteInstanceInner = Mockito.mock(SiteInstanceInner.class);
+    SiteInstanceInner siteInstanceInner = mock(SiteInstanceInner.class);
     doReturn("id").when(siteInstanceInner).id();
     doReturn("name").when(siteInstanceInner).name();
     doReturn("type").when(siteInstanceInner).type();
@@ -356,7 +359,7 @@ public class AzureAppServiceDeploymentServiceTest extends WingsBaseTest {
 
     doReturn(existingConnSettingsOnSlot)
         .when(mockAzureWebClient)
-        .listDeploymentSlotConnectionSettings(azureWebClientContext, SLOT_NAME);
+        .listDeploymentSlotConnectionStrings(azureWebClientContext, SLOT_NAME);
 
     Map<String, AzureAppServiceDockerSetting> dockerSettingsNeedBeUpdatedInRollback = new HashMap<>();
     doReturn(dockerSettingsNeedBeUpdatedInRollback)
@@ -370,18 +373,22 @@ public class AzureAppServiceDeploymentServiceTest extends WingsBaseTest {
 
     doReturn(2.0).when(mockAzureWebClient).getDeploymentSlotTrafficWeight(azureWebClientContext, SLOT_NAME);
 
+    ILogStreamingTaskClient logStreamingTaskClient = mock(ILogStreamingTaskClient.class);
+    LogCallback logCallback = mock(LogCallback.class);
+    doReturn(logCallback).when(logStreamingTaskClient).obtainLogCallback(SAVE_EXISTING_CONFIGURATIONS);
+
     AzureAppServicePreDeploymentData azureAppServicePreDeploymentData =
         azureAppServiceDeploymentService.getAzureAppServicePreDeploymentData(
-            azureWebClientContext, SLOT_NAME, userAddedAppSettings, userAddedConnSettings);
+            azureWebClientContext, SLOT_NAME, userAddedAppSettings, userAddedConnSettings, logStreamingTaskClient);
 
     Assertions.assertThat(azureAppServicePreDeploymentData.getAppSettingsToRemove().get("appSetting2")).isNotNull();
     Assertions.assertThat(azureAppServicePreDeploymentData.getAppSettingsToAdd().get("appSetting1")).isNotNull();
-    Assertions.assertThat(azureAppServicePreDeploymentData.getConnSettingsToRemove().get("connSetting2")).isNotNull();
-    Assertions.assertThat(azureAppServicePreDeploymentData.getConnSettingsToAdd().get("connSetting1")).isNotNull();
+    Assertions.assertThat(azureAppServicePreDeploymentData.getConnStringsToRemove().get("connSetting2")).isNotNull();
+    Assertions.assertThat(azureAppServicePreDeploymentData.getConnStringsToAdd().get("connSetting1")).isNotNull();
     Assertions.assertThat(azureAppServicePreDeploymentData.getAppSettingsToRemove().size()).isEqualTo(1);
     Assertions.assertThat(azureAppServicePreDeploymentData.getAppSettingsToAdd().size()).isEqualTo(1);
-    Assertions.assertThat(azureAppServicePreDeploymentData.getConnSettingsToRemove().size()).isEqualTo(1);
-    Assertions.assertThat(azureAppServicePreDeploymentData.getConnSettingsToAdd().size()).isEqualTo(1);
+    Assertions.assertThat(azureAppServicePreDeploymentData.getConnStringsToRemove().size()).isEqualTo(1);
+    Assertions.assertThat(azureAppServicePreDeploymentData.getConnStringsToAdd().size()).isEqualTo(1);
     Assertions.assertThat(azureAppServicePreDeploymentData.getDockerSettingsToAdd().size()).isEqualTo(0);
     Assertions.assertThat(azureAppServicePreDeploymentData.getAppName()).isEqualTo(APP_NAME);
     Assertions.assertThat(azureAppServicePreDeploymentData.getImageNameAndTag()).isEqualTo(IMAGE_AND_TAG);
@@ -399,13 +406,13 @@ public class AzureAppServiceDeploymentServiceTest extends WingsBaseTest {
                                                                                 .azureRegistryName(AZURE_REGISTRY_NAME)
                                                                                 .resourceGroupName("")
                                                                                 .build();
-    RegistryCredentials registryCredentials = Mockito.mock(RegistryCredentials.class);
+    RegistryCredentials registryCredentials = mock(RegistryCredentials.class);
     ArgumentCaptor<AzureContainerRegistryClientContext> argumentCaptor =
         ArgumentCaptor.forClass(AzureContainerRegistryClientContext.class);
     doReturn(Optional.of(registryCredentials))
         .when(mockAzureContainerRegistryClient)
         .getContainerRegistryCredentials(argumentCaptor.capture());
-    Registry registry = Mockito.mock(Registry.class);
+    Registry registry = mock(Registry.class);
     doReturn(RESOURCE_GROUP_NAME).when(registry).resourceGroupName();
     doReturn(Optional.of(registry))
         .when(mockAzureContainerRegistryClient)
@@ -494,7 +501,7 @@ public class AzureAppServiceDeploymentServiceTest extends WingsBaseTest {
     doReturn(observable)
         .when(mockAzureWebClient)
         .swapDeploymentSlotsAsync(azureWebClientContext, SLOT_NAME, TARGET_SLOT_NAME);
-    doReturn(Collections.singletonList(Mockito.mock(EventData.class)))
+    doReturn(Collections.singletonList(mock(EventData.class)))
         .when(mockAzureMonitorClient)
         .listEventDataWithAllPropertiesByResourceGroupName(eq(azureWebClientContext.getAzureConfig()),
             eq(SUBSCRIPTION_ID), eq(RESOURCE_GROUP_NAME), any(DateTime.class), any(DateTime.class));

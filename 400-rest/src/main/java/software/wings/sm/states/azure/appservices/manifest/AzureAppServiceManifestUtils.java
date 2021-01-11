@@ -148,7 +148,7 @@ public class AzureAppServiceManifestUtils {
   }
 
   public Map<String, String> renderServiceVariables(ExecutionContext context) {
-    return context.getServiceVariables().entrySet().stream().collect(
-        Collectors.toMap(Map.Entry::getKey, e -> context.renderExpression(e.getValue().toString())));
+    return context.getServiceVariables().entrySet().stream().collect(Collectors.toMap(
+        Map.Entry::getKey, serviceVariable -> context.renderExpression(serviceVariable.getValue().toString())));
   }
 }

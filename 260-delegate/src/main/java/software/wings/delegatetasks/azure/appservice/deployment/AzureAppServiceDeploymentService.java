@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.azure.appservice.deployment;
 
+import static io.harness.azure.model.AzureConstants.SAVE_EXISTING_CONFIGURATIONS;
 import static io.harness.azure.model.AzureConstants.SLOT_NAME_BLANK_ERROR_MSG;
 import static io.harness.azure.model.AzureConstants.SLOT_STARTING_STATUS_CHECK_INTERVAL;
 import static io.harness.azure.model.AzureConstants.SLOT_STOPPING_STATUS_CHECK_INTERVAL;
@@ -12,9 +13,18 @@ import static io.harness.azure.model.AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONFI
 import static io.harness.azure.model.AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONTAINER_SETTINGS;
 import static io.harness.azure.model.AzureConstants.WEB_APP_INSTANCE_STATUS_RUNNING;
 import static io.harness.azure.model.AzureConstants.WEB_APP_NAME_BLANK_ERROR_MSG;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceSettingValueType.AZURE_SETTING;
+import static io.harness.eraro.ErrorCode.AZURE_SERVICE_EXCEPTION;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
+import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
+
+import static software.wings.delegatetasks.azure.appservice.deployment.SlotStatusVerifier.SlotStatusVerifierType.START_VERIFIER;
+import static software.wings.delegatetasks.azure.appservice.deployment.SlotStatusVerifier.SlotStatusVerifierType.STOP_VERIFIER;
+import static software.wings.delegatetasks.azure.appservice.deployment.SlotStatusVerifier.SlotStatusVerifierType.SWAP_VERIFIER;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -38,11 +48,14 @@ import io.harness.delegate.beans.azure.mapper.AzureAppServiceConfigurationDTOMap
 import io.harness.delegate.beans.connector.azureconnector.AzureContainerRegistryConnectorDTO;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
+import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData.AzureAppServicePreDeploymentDataBuilder;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploymentData;
+import io.harness.exception.AzureServiceException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.LogCallback;
 
+import software.wings.delegatetasks.azure.AzureServiceCallBack;
 import software.wings.delegatetasks.azure.AzureTimeLimiter;
 import software.wings.delegatetasks.azure.DefaultCompletableSubscriber;
 import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServiceDeploymentContext;
@@ -61,6 +74,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -77,6 +92,7 @@ public class AzureAppServiceDeploymentService {
   @Inject private AzureWebClient azureWebClient;
   @Inject private AzureContainerRegistryClient azureContainerRegistryClient;
   @Inject private AzureTimeLimiter azureTimeLimiter;
+  @Inject private SlotSteadyStateChecker slotSteadyStateChecker;
   @Inject private AzureMonitorClient azureMonitorClient;
 
   public void deployDockerImage(AzureAppServiceDockerDeploymentContext deploymentContext) {
@@ -89,10 +105,10 @@ public class AzureAppServiceDeploymentService {
     DeploymentSlot deploymentSlot =
         getDeploymentSlot(deploymentContext.getAzureWebClientContext(), deploymentContext.getSlotName());
 
-    stopSlotAsyncWithSteadyCheck(deploymentSlot, logStreamingTaskClient, steadyStateTimeoutInMin);
+    stopSlotAsyncWithSteadyCheck(deploymentSlot, logStreamingTaskClient, steadyStateTimeoutInMin, deploymentContext);
     updateDeploymentSlotConfigurationSettings(deploymentContext);
     updateDeploymentSlotContainerSettings(deploymentContext);
-    startSlotAsyncWithSteadyCheck(deploymentSlot, logStreamingTaskClient, steadyStateTimeoutInMin);
+    startSlotAsyncWithSteadyCheck(deploymentSlot, logStreamingTaskClient, steadyStateTimeoutInMin, deploymentContext);
   }
 
   public List<AzureAppDeploymentData> fetchDeploymentData(
@@ -162,78 +178,73 @@ public class AzureAppServiceDeploymentService {
     LogCallback configurationLogCallback =
         logStreamingTaskClient.obtainLogCallback(UPDATE_DEPLOYMENT_SLOT_CONFIGURATION_SETTINGS);
 
-    configurationLogCallback.saveExecutionLog(format("Start updating [%s] deployment slot configuration", slotName));
-    deleteDeploymentSlotAppSettings(azureWebClientContext, slotName, appSettingsToRemove, configurationLogCallback);
-    updateDeploymentSlotAppSettings(azureWebClientContext, slotName, appSettingsToAdd, configurationLogCallback);
-    deleteDeploymentSlotConnectionSettings(
-        azureWebClientContext, slotName, connSettingsToRemove, configurationLogCallback);
-    updateDeploymentSlotConnectionSettings(
-        azureWebClientContext, slotName, connSettingsToAdd, configurationLogCallback);
-    configurationLogCallback.saveExecutionLog("Deployment slot configuration updated successfully", INFO, SUCCESS);
+    configurationLogCallback.saveExecutionLog(
+        format("Start updating application configurations for slot - [%s]", slotName));
+
+    try {
+      deleteDeploymentSlotAppSettings(azureWebClientContext, slotName, appSettingsToRemove, configurationLogCallback);
+      updateDeploymentSlotAppSettings(azureWebClientContext, slotName, appSettingsToAdd, configurationLogCallback);
+      deleteDeploymentSlotConnectionSettings(
+          azureWebClientContext, slotName, connSettingsToRemove, configurationLogCallback);
+      updateDeploymentSlotConnectionSettings(
+          azureWebClientContext, slotName, connSettingsToAdd, configurationLogCallback);
+
+      configurationLogCallback.saveExecutionLog("Deployment slot configuration updated successfully", INFO, SUCCESS);
+    } catch (Exception ex) {
+      String message = String.format("Failed to update slot configurations - [%s]", ex.getMessage());
+      configurationLogCallback.saveExecutionLog(message, ERROR, FAILURE);
+      throw ex;
+    }
   }
 
   private void deleteDeploymentSlotAppSettings(AzureWebClientContext azureWebClientContext, String slotName,
       Map<String, AzureAppServiceApplicationSetting> appSettingsToRemove, LogCallback configurationLogCallback) {
-    if (appSettingsToRemove == null || appSettingsToRemove.keySet().isEmpty()) {
-      configurationLogCallback.saveExecutionLog(
-          format("Application settings list for deleting slot configuration is empty, slot name [%s]", slotName));
+    if (isEmpty(appSettingsToRemove)) {
       return;
     }
-
     String appSettingKeysStr = Arrays.toString(appSettingsToRemove.keySet().toArray(new String[0]));
     configurationLogCallback.saveExecutionLog(
-        format("Start deleting [%s] deployment slot application settings: [%s]", slotName, appSettingKeysStr));
+        format("Deleting following Application settings: %n[%s]", appSettingKeysStr));
     azureWebClient.deleteDeploymentSlotAppSettings(azureWebClientContext, slotName, appSettingsToRemove);
-    configurationLogCallback.saveExecutionLog(
-        format("Application settings deleted successfully for slot [%s]", slotName));
+    configurationLogCallback.saveExecutionLog("Application settings deleted successfully");
   }
 
   private void updateDeploymentSlotAppSettings(AzureWebClientContext azureWebClientContext, String slotName,
       Map<String, AzureAppServiceApplicationSetting> appSettings, LogCallback configurationLogCallback) {
-    if (appSettings == null || appSettings.keySet().isEmpty()) {
-      configurationLogCallback.saveExecutionLog(
-          format("Application settings list for updating slot configuration is empty, slot name [%s]", slotName));
+    if (isEmpty(appSettings)) {
       return;
     }
 
     String appSettingKeysStr = Arrays.toString(appSettings.keySet().toArray(new String[0]));
     configurationLogCallback.saveExecutionLog(
-        format("Start updating [%s] deployment slot application settings: [%s]", slotName, appSettingKeysStr));
+        format("Adding following Application settings: %n[%s]", appSettingKeysStr));
     azureWebClient.updateDeploymentSlotAppSettings(azureWebClientContext, slotName, appSettings);
-    configurationLogCallback.saveExecutionLog(
-        format("Application settings updated successfully for slot [%s]", slotName));
+    configurationLogCallback.saveExecutionLog("Application settings updated successfully");
   }
 
   private void deleteDeploymentSlotConnectionSettings(AzureWebClientContext azureWebClientContext, String slotName,
       Map<String, AzureAppServiceConnectionString> connSettingsToRemove, LogCallback configurationLogCallback) {
-    if (connSettingsToRemove == null || connSettingsToRemove.keySet().isEmpty()) {
-      configurationLogCallback.saveExecutionLog(
-          format("Connection settings list for deleting slot configuration is empty, slot name [%s]", slotName));
+    if (isEmpty(connSettingsToRemove)) {
       return;
     }
 
     String connSettingKeysStr = Arrays.toString(connSettingsToRemove.keySet().toArray(new String[0]));
     configurationLogCallback.saveExecutionLog(
-        format("Start deleting [%s] deployment slot connection settings: [%s]", slotName, connSettingKeysStr));
-    azureWebClient.deleteDeploymentSlotConnectionSettings(azureWebClientContext, slotName, connSettingsToRemove);
-    configurationLogCallback.saveExecutionLog(
-        format("Connection settings deleted successfully for slot [%s]", slotName));
+        format("Deleting following Connection strings: %n[%s]", connSettingKeysStr));
+    azureWebClient.deleteDeploymentSlotConnectionStrings(azureWebClientContext, slotName, connSettingsToRemove);
+    configurationLogCallback.saveExecutionLog("Connection strings deleted successfully");
   }
 
   private void updateDeploymentSlotConnectionSettings(AzureWebClientContext azureWebClientContext, String slotName,
       Map<String, AzureAppServiceConnectionString> connSettings, LogCallback configurationLogCallback) {
-    if (connSettings == null || connSettings.keySet().isEmpty()) {
-      configurationLogCallback.saveExecutionLog(
-          format("Connection settings list for updating slot configuration is empty, slot name [%s]", slotName));
+    if (isEmpty(connSettings)) {
       return;
     }
-
     String connSettingKeysStr = Arrays.toString(connSettings.keySet().toArray(new String[0]));
     configurationLogCallback.saveExecutionLog(
-        format("Start updating [%s] deployment slot connection settings: [%s]", slotName, connSettingKeysStr));
-    azureWebClient.updateDeploymentSlotConnectionSettings(azureWebClientContext, slotName, connSettings);
-    configurationLogCallback.saveExecutionLog(
-        format("Connection settings updated successfully for slot [%s]", slotName));
+        format("Adding following Connection strings: %n[%s]", connSettingKeysStr));
+    azureWebClient.updateDeploymentSlotConnectionStrings(azureWebClientContext, slotName, connSettings);
+    configurationLogCallback.saveExecutionLog("Connection strings updated successfully");
   }
 
   private void updateDeploymentSlotContainerSettings(AzureAppServiceDockerDeploymentContext deploymentContext) {
@@ -245,31 +256,33 @@ public class AzureAppServiceDeploymentService {
     LogCallback containerLogCallback =
         logStreamingTaskClient.obtainLogCallback(UPDATE_DEPLOYMENT_SLOT_CONTAINER_SETTINGS);
 
-    containerLogCallback.saveExecutionLog(format("Start updating [%s] deployment slot container settings", slotName));
-    deleteDeploymentSlotContainerSettings(azureWebClientContext, slotName, containerLogCallback);
-    deleteDeploymentSlotDockerImageNameAndTagSettings(azureWebClientContext, slotName, containerLogCallback);
-    updateDeploymentSlotContainerSettings(azureWebClientContext, slotName, dockerSettings, containerLogCallback);
-    updateDeploymentSlotDockerImageNameAndTagSettings(
-        azureWebClientContext, slotName, imageAndTag, containerLogCallback);
-    containerLogCallback.saveExecutionLog("Deployment slot container settings updated successfully", INFO, SUCCESS);
+    containerLogCallback.saveExecutionLog(format("Start updating Container settings for slot - [%s]", slotName));
+    try {
+      deleteDeploymentSlotContainerSettings(azureWebClientContext, slotName, containerLogCallback);
+      deleteDeploymentSlotDockerImageNameAndTagSettings(azureWebClientContext, slotName, containerLogCallback);
+      updateDeploymentSlotContainerSettings(azureWebClientContext, slotName, dockerSettings, containerLogCallback);
+      updateDeploymentSlotDockerImageNameAndTagSettings(
+          azureWebClientContext, slotName, imageAndTag, containerLogCallback);
+
+      containerLogCallback.saveExecutionLog("Deployment slot container settings updated successfully", INFO, SUCCESS);
+    } catch (Exception ex) {
+      containerLogCallback.saveExecutionLog("Failed to update Container settings", ERROR, FAILURE);
+      throw new AzureServiceException(ex.getMessage(), AZURE_SERVICE_EXCEPTION, USER);
+    }
   }
 
   private void deleteDeploymentSlotContainerSettings(
       AzureWebClientContext azureWebClientContext, String slotName, LogCallback containerLogCallback) {
-    containerLogCallback.saveExecutionLog(
-        format("Start cleaning [%s] deployment slot existing container settings", slotName));
+    containerLogCallback.saveExecutionLog("Start cleaning existing container settings");
     azureWebClient.deleteDeploymentSlotDockerSettings(azureWebClientContext, slotName);
-    containerLogCallback.saveExecutionLog(
-        format("Existing container settings for [%s] deployment slot deleted successfully", slotName));
+    containerLogCallback.saveExecutionLog("Existing container settings deleted successfully");
   }
 
   private void deleteDeploymentSlotDockerImageNameAndTagSettings(
       AzureWebClientContext azureWebClientContext, String slotName, LogCallback containerLogCallback) {
-    containerLogCallback.saveExecutionLog(
-        format("Start cleaning [%s] deployment slot existing image settings", slotName));
+    containerLogCallback.saveExecutionLog("Start cleaning existing image settings");
     azureWebClient.deleteDeploymentSlotDockerImageNameAndTagSettings(azureWebClientContext, slotName);
-    containerLogCallback.saveExecutionLog(
-        format("Existing image settings for [%s] deployment slot deleted successfully", slotName));
+    containerLogCallback.saveExecutionLog("Existing image settings deleted successfully");
   }
 
   private void updateDeploymentSlotContainerSettings(AzureWebClientContext azureWebClientContext, String slotName,
@@ -282,18 +295,16 @@ public class AzureAppServiceDeploymentService {
     }
 
     String containerSettingKeysStr = Arrays.toString(containerSettingKeys.toArray(new String[0]));
-    containerLogCallback.saveExecutionLog(
-        format("Start updating [%s] deployment slot container settings: [%s]", slotName, containerSettingKeysStr));
+    containerLogCallback.saveExecutionLog(format("Start updating Container settings: %n[%s]", containerSettingKeysStr));
     azureWebClient.updateDeploymentSlotDockerSettings(azureWebClientContext, slotName, dockerSettings);
-    containerLogCallback.saveExecutionLog(format("Container settings updated successfully for slot [%s]", slotName));
+    containerLogCallback.saveExecutionLog("Container settings updated successfully");
   }
 
   private void updateDeploymentSlotDockerImageNameAndTagSettings(AzureWebClientContext azureWebClientContext,
       String slotName, String newImageAndTag, LogCallback containerLogCallback) {
     WebAppHostingOS webAppHostingOS = azureWebClient.getWebAppHostingOS(azureWebClientContext);
-    containerLogCallback.saveExecutionLog(
-        format("Start updating [%s] deployment slot container image and tag [%s], web app hosting OS [%s]", slotName,
-            newImageAndTag, webAppHostingOS));
+    containerLogCallback.saveExecutionLog(format(
+        "Start updating container image and tag: %n[%s], web app hosting OS [%s]", newImageAndTag, webAppHostingOS));
     azureWebClient.updateDeploymentSlotDockerImageNameAndTagSettings(
         azureWebClientContext, slotName, newImageAndTag, webAppHostingOS);
     containerLogCallback.saveExecutionLog(format("Image and tag updated successfully for slot [%s]", slotName));
@@ -305,19 +316,36 @@ public class AzureAppServiceDeploymentService {
     String slotName = deploymentSlot.name();
     DefaultCompletableSubscriber defaultSubscriber = new DefaultCompletableSubscriber();
 
-    startLogCallback.saveExecutionLog(format("Sending request for starting [%s] deployment slot", slotName));
+    startLogCallback.saveExecutionLog(format("Sending request for starting deployment slot - [%s]", slotName));
     deploymentSlot.startAsync().subscribe(defaultSubscriber);
     startLogCallback.saveExecutionLog(SUCCESS_REQUEST);
 
-    startLogCallback.saveExecutionLog(format("Starting [%s] deployment slot", deploymentSlot.name()));
     Supplier<Void> getSlotStatus = () -> {
       String slotState = deploymentSlot.state();
-      startLogCallback.saveExecutionLog(format("Current [%s] deployment slot state [%s]", slotName, slotState));
+      startLogCallback.saveExecutionLog(format("Current state for deployment slot is - [%s]", slotState));
       return null;
     };
 
     azureTimeLimiter.waitUntilCompleteWithTimeout(slotStartingSteadyStateTimeoutInMinutes,
         SLOT_STARTING_STATUS_CHECK_INTERVAL, defaultSubscriber, getSlotStatus, startLogCallback, START_DEPLOYMENT_SLOT);
+    startLogCallback.saveExecutionLog("Deployment slot started successfully", INFO, SUCCESS);
+  }
+
+  private void startSlotAsyncWithSteadyCheck(DeploymentSlot deploymentSlot,
+      ILogStreamingTaskClient logStreamingTaskClient, long slotStartingSteadyStateTimeoutInMinutes,
+      AzureAppServiceDockerDeploymentContext deploymentContext) {
+    LogCallback startLogCallback = logStreamingTaskClient.obtainLogCallback(START_DEPLOYMENT_SLOT);
+    String slotName = deploymentSlot.name();
+
+    AzureServiceCallBack restCallBack = new AzureServiceCallBack(startLogCallback, START_DEPLOYMENT_SLOT);
+    startLogCallback.saveExecutionLog(format("Sending request for starting deployment slot - [%s]", slotName));
+    azureWebClient.startDeploymentSlotAsync(deploymentContext.getAzureWebClientContext(), slotName, restCallBack);
+    startLogCallback.saveExecutionLog(SUCCESS_REQUEST);
+
+    SlotStatusVerifier statusVerifier = SlotStatusVerifier.getStatusVerifier(START_VERIFIER, startLogCallback, slotName,
+        azureWebClient, null, deploymentContext.getAzureWebClientContext(), restCallBack);
+    slotSteadyStateChecker.waitUntilCompleteWithTimeout(slotStartingSteadyStateTimeoutInMinutes,
+        SLOT_STARTING_STATUS_CHECK_INTERVAL, startLogCallback, START_DEPLOYMENT_SLOT, statusVerifier);
     startLogCallback.saveExecutionLog("Deployment slot started successfully", INFO, SUCCESS);
   }
 
@@ -327,14 +355,13 @@ public class AzureAppServiceDeploymentService {
     String slotName = deploymentSlot.name();
     DefaultCompletableSubscriber defaultSubscriber = new DefaultCompletableSubscriber();
 
-    stopLogCallback.saveExecutionLog(format("Sending request for stopping [%s] deployment slot", slotName));
+    stopLogCallback.saveExecutionLog(format("Sending request for stopping deployment slot - [%s]", slotName));
     deploymentSlot.stopAsync().subscribe(defaultSubscriber);
     stopLogCallback.saveExecutionLog(SUCCESS_REQUEST);
 
-    stopLogCallback.saveExecutionLog(format("Stopping [%s] deployment slot", slotName));
     Supplier<Void> getSlotStatus = () -> {
       String slotState = deploymentSlot.state();
-      stopLogCallback.saveExecutionLog(format("Current [%s] deployment slot state [%s]", slotName, slotState));
+      stopLogCallback.saveExecutionLog(format("Current state for deployment slot is - [%s]", slotState));
       return null;
     };
 
@@ -343,49 +370,123 @@ public class AzureAppServiceDeploymentService {
     stopLogCallback.saveExecutionLog("Deployment slot stopped successfully", INFO, SUCCESS);
   }
 
+  private void stopSlotAsyncWithSteadyCheck(DeploymentSlot deploymentSlot,
+      ILogStreamingTaskClient logStreamingTaskClient, long slotStartingSteadyStateTimeoutInMinutes,
+      AzureAppServiceDockerDeploymentContext deploymentContext) {
+    LogCallback stopLogCallback = logStreamingTaskClient.obtainLogCallback(STOP_DEPLOYMENT_SLOT);
+    String slotName = deploymentSlot.name();
+
+    stopLogCallback.saveExecutionLog(format("Sending request for stopping deployment slot - [%s]", slotName));
+    AzureServiceCallBack restCallBack = new AzureServiceCallBack(stopLogCallback, STOP_DEPLOYMENT_SLOT);
+    azureWebClient.stopDeploymentSlotAsync(deploymentContext.getAzureWebClientContext(), slotName, restCallBack);
+    stopLogCallback.saveExecutionLog(SUCCESS_REQUEST);
+
+    SlotStatusVerifier statusVerifier = SlotStatusVerifier.getStatusVerifier(STOP_VERIFIER, stopLogCallback, slotName,
+        azureWebClient, null, deploymentContext.getAzureWebClientContext(), restCallBack);
+
+    slotSteadyStateChecker.waitUntilCompleteWithTimeout(slotStartingSteadyStateTimeoutInMinutes,
+        SLOT_STOPPING_STATUS_CHECK_INTERVAL, stopLogCallback, STOP_DEPLOYMENT_SLOT, statusVerifier);
+    stopLogCallback.saveExecutionLog("Deployment slot stopped successfully", INFO, SUCCESS);
+  }
+
+  @NotNull
+  private Supplier<String> getSlotStatusSupplier(
+      AzureAppServiceDockerDeploymentContext deploymentContext, LogCallback logCallback, String slotName) {
+    return () -> {
+      DeploymentSlot slot = getDeploymentSlot(deploymentContext.getAzureWebClientContext(), slotName);
+      String slotState = slot.state();
+      logCallback.saveExecutionLog(format("Current state for deployment slot is - [%s]", slotState));
+      return slotState;
+    };
+  }
+
   public AzureAppServicePreDeploymentData getAzureAppServicePreDeploymentData(
       AzureWebClientContext azureWebClientContext, final String slotName,
       Map<String, AzureAppServiceApplicationSetting> userAddedAppSettings,
-      Map<String, AzureAppServiceConnectionString> userAddedConnSettings) {
-    // app settings
+      Map<String, AzureAppServiceConnectionString> userAddedConnStrings,
+      ILogStreamingTaskClient logStreamingTaskClient) {
+    LogCallback logCallback = logStreamingTaskClient.obtainLogCallback(SAVE_EXISTING_CONFIGURATIONS);
+    logCallback.saveExecutionLog(String.format("Saving existing configurations for slot - [%s] of App Service - [%s]",
+        slotName, azureWebClientContext.getAppName()));
+
+    AzureAppServicePreDeploymentDataBuilder preDeploymentDataBuilder = AzureAppServicePreDeploymentData.builder();
+
+    saveApplicationSettings(
+        azureWebClientContext, slotName, userAddedAppSettings, preDeploymentDataBuilder, logCallback);
+    saveConnectionStrings(azureWebClientContext, slotName, userAddedConnStrings, preDeploymentDataBuilder, logCallback);
+    saveDockerSettings(azureWebClientContext, slotName, preDeploymentDataBuilder, logCallback);
+    saveTrafficWeight(azureWebClientContext, slotName, preDeploymentDataBuilder, logCallback);
+
+    logCallback.saveExecutionLog(
+        String.format("All configurations saved successfully for slot - [%s] of App Service - [%s]", slotName,
+            azureWebClientContext.getAppName()),
+        INFO, SUCCESS);
+
+    return preDeploymentDataBuilder.slotName(slotName)
+        .appName(azureWebClientContext.getAppName())
+        .failedTaskType(AzureAppServiceTaskParameters.AzureAppServiceTaskType.SLOT_SWAP)
+        .build();
+  }
+
+  private void saveApplicationSettings(AzureWebClientContext azureWebClientContext, String slotName,
+      Map<String, AzureAppServiceApplicationSetting> userAddedAppSettings,
+      AzureAppServicePreDeploymentDataBuilder preDeploymentDataBuilder, LogCallback logCallback) {
     Map<String, AzureAppServiceApplicationSetting> existingAppSettingsOnSlot =
         azureWebClient.listDeploymentSlotAppSettings(azureWebClientContext, slotName);
+
     Map<String, AzureAppServiceApplicationSetting> appSettingsNeedBeDeletedInRollback =
         getAppSettingsNeedBeDeletedInRollback(userAddedAppSettings, existingAppSettingsOnSlot);
+
     Map<String, AzureAppServiceApplicationSetting> appSettingsNeedBeUpdatedInRollback =
         getAppSettingsNeedToBeUpdatedInRollback(userAddedAppSettings, existingAppSettingsOnSlot);
 
-    // connection settings
-    Map<String, AzureAppServiceConnectionString> existingConnSettingsOnSlot =
-        azureWebClient.listDeploymentSlotConnectionSettings(azureWebClientContext, slotName);
-    Map<String, AzureAppServiceConnectionString> connSettingsNeedBeDeletedInRollback =
-        getConnSettingsNeedBeDeletedInRollback(userAddedConnSettings, existingConnSettingsOnSlot);
-    Map<String, AzureAppServiceConnectionString> connSettingsNeedBeUpdatedInRollback =
-        getConnSettingsNeedBeUpdatedInRollback(userAddedConnSettings, existingConnSettingsOnSlot);
+    preDeploymentDataBuilder
+        .appSettingsToRemove(AzureAppServiceConfigurationDTOMapper.getAzureAppServiceAppSettingDTOs(
+            appSettingsNeedBeDeletedInRollback, AZURE_SETTING))
+        .appSettingsToAdd(AzureAppServiceConfigurationDTOMapper.getAzureAppServiceAppSettingDTOs(
+            appSettingsNeedBeUpdatedInRollback, AZURE_SETTING));
 
+    logCallback.saveExecutionLog(String.format("Saved existing Application settings for slot - [%s]", slotName));
+  }
+
+  private void saveConnectionStrings(AzureWebClientContext azureWebClientContext, String slotName,
+      Map<String, AzureAppServiceConnectionString> userAddedConnStrings,
+      AzureAppServicePreDeploymentDataBuilder preDeploymentDataBuilder, LogCallback logCallback) {
+    Map<String, AzureAppServiceConnectionString> existingConnSettingsOnSlot =
+        azureWebClient.listDeploymentSlotConnectionStrings(azureWebClientContext, slotName);
+
+    Map<String, AzureAppServiceConnectionString> connSettingsNeedBeDeletedInRollback =
+        getConnSettingsNeedBeDeletedInRollback(userAddedConnStrings, existingConnSettingsOnSlot);
+
+    Map<String, AzureAppServiceConnectionString> connSettingsNeedBeUpdatedInRollback =
+        getConnSettingsNeedBeUpdatedInRollback(userAddedConnStrings, existingConnSettingsOnSlot);
+
+    preDeploymentDataBuilder
+        .connStringsToRemove(AzureAppServiceConfigurationDTOMapper.getAzureAppServiceConnStringDTOs(
+            connSettingsNeedBeDeletedInRollback, AZURE_SETTING))
+        .connStringsToAdd(AzureAppServiceConfigurationDTOMapper.getAzureAppServiceConnStringDTOs(
+            connSettingsNeedBeUpdatedInRollback, AZURE_SETTING));
+    logCallback.saveExecutionLog(String.format("Saved existing Connection strings for slot - [%s]", slotName));
+  }
+
+  private void saveDockerSettings(AzureWebClientContext azureWebClientContext, String slotName,
+      AzureAppServicePreDeploymentDataBuilder preDeploymentDataBuilder, LogCallback logCallback) {
     Map<String, AzureAppServiceDockerSetting> dockerSettingsNeedBeUpdatedInRollback =
         azureWebClient.listDeploymentSlotDockerSettings(azureWebClientContext, slotName);
     String dockerImageNameAndTag =
         azureWebClient.getSlotDockerImageNameAndTag(azureWebClientContext, slotName).orElse(EMPTY);
-    double slotTrafficWeight = azureWebClient.getDeploymentSlotTrafficWeight(azureWebClientContext, slotName);
-
-    return AzureAppServicePreDeploymentData.builder()
-        .appSettingsToRemove(AzureAppServiceConfigurationDTOMapper.getAzureAppServiceAppSettingDTOs(
-            appSettingsNeedBeDeletedInRollback, AZURE_SETTING))
-        .appSettingsToAdd(AzureAppServiceConfigurationDTOMapper.getAzureAppServiceAppSettingDTOs(
-            appSettingsNeedBeUpdatedInRollback, AZURE_SETTING))
-        .connSettingsToRemove(AzureAppServiceConfigurationDTOMapper.getAzureAppServiceConnStringDTOs(
-            connSettingsNeedBeDeletedInRollback, AZURE_SETTING))
-        .connSettingsToAdd(AzureAppServiceConfigurationDTOMapper.getAzureAppServiceConnStringDTOs(
-            connSettingsNeedBeUpdatedInRollback, AZURE_SETTING))
+    preDeploymentDataBuilder
         .dockerSettingsToAdd(AzureAppServiceConfigurationDTOMapper.getAzureAppServiceDockerSettingDTOs(
             dockerSettingsNeedBeUpdatedInRollback, AZURE_SETTING))
-        .slotName(slotName)
-        .appName(azureWebClientContext.getAppName())
-        .imageNameAndTag(dockerImageNameAndTag)
-        .trafficWeight(slotTrafficWeight)
-        .failedTaskType(AzureAppServiceTaskParameters.AzureAppServiceTaskType.SLOT_SWAP)
-        .build();
+        .imageNameAndTag(dockerImageNameAndTag);
+    logCallback.saveExecutionLog(String.format("Saved existing Container settings for slot - [%s]", slotName));
+  }
+
+  private void saveTrafficWeight(AzureWebClientContext azureWebClientContext, String slotName,
+      AzureAppServicePreDeploymentDataBuilder preDeploymentDataBuilder, LogCallback logCallback) {
+    double slotTrafficWeight = azureWebClient.getDeploymentSlotTrafficWeight(azureWebClientContext, slotName);
+    logCallback.saveExecutionLog(String.format("Saved existing Traffic percentage for slot - [%s]", slotName));
+    preDeploymentDataBuilder.trafficWeight(slotTrafficWeight);
   }
 
   @NotNull
@@ -486,10 +587,33 @@ public class AzureAppServiceDeploymentService {
       double trafficWeightInPercentage, ILogStreamingTaskClient logStreamingTaskClient) {
     LogCallback rerouteTrafficLogCallback = logStreamingTaskClient.obtainLogCallback(SLOT_TRAFFIC_WEIGHT);
 
-    rerouteTrafficLogCallback.saveExecutionLog(format(
-        "Start rerouting [%.2f] traffic to deployment slot: [%s] ", trafficWeightInPercentage, shiftTrafficSlotName));
+    rerouteTrafficLogCallback.saveExecutionLog(
+        format("Sending request to shift [%.2f] traffic to deployment slot: [%s]", trafficWeightInPercentage,
+            shiftTrafficSlotName));
     azureWebClient.rerouteProductionSlotTraffic(webClientContext, shiftTrafficSlotName, trafficWeightInPercentage);
-    rerouteTrafficLogCallback.saveExecutionLog("Traffic rerouted successfully", INFO, SUCCESS);
+    rerouteTrafficLogCallback.saveExecutionLog("Traffic percentage updated successfully", INFO, SUCCESS);
+  }
+
+  public void swapSlotsUsingCallback(AzureAppServiceDeploymentContext azureAppServiceDeploymentContext,
+      String targetSlotName, ILogStreamingTaskClient logStreamingTaskClient) {
+    String sourceSlotName = azureAppServiceDeploymentContext.getSlotName();
+    int steadyStateTimeoutInMinutes = azureAppServiceDeploymentContext.getSteadyStateTimeoutInMin();
+    AzureWebClientContext webClientContext = azureAppServiceDeploymentContext.getAzureWebClientContext();
+    LogCallback slotSwapLogCallback = logStreamingTaskClient.obtainLogCallback(SLOT_SWAP);
+    AzureServiceCallBack restCallBack = new AzureServiceCallBack(slotSwapLogCallback, SLOT_SWAP);
+
+    SlotStatusVerifier statusVerifier =
+        SlotStatusVerifier.getStatusVerifier(SWAP_VERIFIER, slotSwapLogCallback, sourceSlotName, azureWebClient,
+            azureMonitorClient, azureAppServiceDeploymentContext.getAzureWebClientContext(), restCallBack);
+
+    ExecutorService executorService = Executors.newFixedThreadPool(1);
+    executorService.submit(new SlotSwapper(
+        sourceSlotName, targetSlotName, azureWebClient, webClientContext, restCallBack, slotSwapLogCallback));
+    executorService.shutdown();
+
+    slotSteadyStateChecker.waitUntilCompleteWithTimeout(steadyStateTimeoutInMinutes,
+        SLOT_STOPPING_STATUS_CHECK_INTERVAL, slotSwapLogCallback, SLOT_SWAP, statusVerifier);
+    slotSwapLogCallback.saveExecutionLog("Swapping slots done successfully", INFO, SUCCESS);
   }
 
   public void swapSlots(AzureAppServiceDeploymentContext azureAppServiceDeploymentContext, String targetSlotName,
@@ -501,15 +625,13 @@ public class AzureAppServiceDeploymentService {
     LogCallback slotSwapLogCallback = logStreamingTaskClient.obtainLogCallback(SLOT_SWAP);
     DefaultCompletableSubscriber defaultSubscriber = new DefaultCompletableSubscriber();
 
-    slotSwapLogCallback.saveExecutionLog(
-        format("Sending request for swapping source [%s] slot with target [%s]", sourceSlotName, targetSlotName));
+    slotSwapLogCallback.saveExecutionLog(format(
+        "Sending request for swapping source slot: [%s] with target slot: [%s]", sourceSlotName, targetSlotName));
     AtomicReference<DateTime> startTime = new AtomicReference<>(DateTime.now());
     azureWebClient.swapDeploymentSlotsAsync(webClientContext, sourceSlotName, targetSlotName)
         .subscribe(defaultSubscriber);
     slotSwapLogCallback.saveExecutionLog(SUCCESS_REQUEST);
 
-    slotSwapLogCallback.saveExecutionLog(
-        format("Swapping deployment source slot [%s] with target [%s]", sourceSlotName, targetSlotName));
     Supplier<Void> getSwappingStatus = getSwappingSlotsStatus(webClientContext, slotSwapLogCallback, startTime);
 
     azureTimeLimiter.waitUntilCompleteWithTimeout(steadyStateTimeoutInMinutes, SLOT_STOPPING_STATUS_CHECK_INTERVAL,

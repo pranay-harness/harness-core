@@ -94,7 +94,7 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
     Map<String, AzureAppServiceDockerSetting> dockerSettings =
         getAzureAppServiceDockerSettings(connectorConfigDTO, azureRegistryType, azureConfig);
 
-    String imagePathAndTag = AzureResourceUtility.getDockerImagePathAndTagPath(
+    String imagePathAndTag = AzureResourceUtility.getDockerImageFullNameAndTag(
         azureWebAppSlotSetupParameters.getImageName(), azureWebAppSlotSetupParameters.getImageTag());
 
     return AzureAppServiceDockerDeploymentContext.builder()
@@ -174,9 +174,8 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
     AzureWebClientContext azureWebClientContext = dockerDeploymentContext.getAzureWebClientContext();
     Map<String, AzureAppServiceApplicationSetting> userAddedAppSettings = dockerDeploymentContext.getAppSettingsToAdd();
     Map<String, AzureAppServiceConnectionString> userAddedConnSettings = dockerDeploymentContext.getConnSettingsToAdd();
-
-    return azureAppServiceDeploymentService.getAzureAppServicePreDeploymentData(
-        azureWebClientContext, slotName, userAddedAppSettings, userAddedConnSettings);
+    return azureAppServiceDeploymentService.getAzureAppServicePreDeploymentData(azureWebClientContext, slotName,
+        userAddedAppSettings, userAddedConnSettings, dockerDeploymentContext.getLogStreamingTaskClient());
   }
 
   private void updatePreDeploymentData(AzureAppServicePreDeploymentData azureAppServicePreDeploymentData) {

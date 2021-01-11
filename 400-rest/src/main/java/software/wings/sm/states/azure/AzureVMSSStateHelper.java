@@ -276,6 +276,19 @@ public class AzureVMSSStateHelper {
     return retVal;
   }
 
+  public float renderFloatExpression(String expr, ExecutionContext context, float defaultValue) {
+    float retVal = defaultValue;
+    if (isNotEmpty(expr)) {
+      try {
+        retVal = Float.parseFloat(context.renderExpression(expr));
+      } catch (NumberFormatException e) {
+        log.error(format("Number format Exception while evaluating: [%s]", expr), e);
+        retVal = defaultValue;
+      }
+    }
+    return retVal;
+  }
+
   public String getBase64EncodedUserData(ExecutionContext context, String appId, String serviceId) {
     return Optional.ofNullable(serviceResourceService.getUserDataSpecification(appId, serviceId))
         .map(UserDataSpecification::getData)
@@ -538,7 +551,12 @@ public class AzureVMSSStateHelper {
   public ArtifactStreamMapper getConnectorMapper(Artifact artifact) {
     String artifactStreamId = artifact.getArtifactStreamId();
     ArtifactStream artifactStream = getArtifactStream(artifactStreamId);
-    return ArtifactStreamMapper.getArtifactStreamMapper(artifactStream);
+    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+    artifactStreamAttributes.setArtifactStreamId(artifactStream.getUuid());
+    artifactStreamAttributes.setServerSetting(settingsService.get(artifactStream.getSettingId()));
+    artifactStreamAttributes.setMetadataOnly(artifactStream.isMetadataOnly());
+    artifactStreamAttributes.setArtifactStreamType(artifactStream.getArtifactStreamType());
+    return ArtifactStreamMapper.getArtifactStreamMapper(artifact, artifactStreamAttributes);
   }
 
   public List<EncryptedDataDetail> getNgEncryptedDataDetails(

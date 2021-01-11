@@ -28,7 +28,7 @@ public class DefaultCompletableSubscriber implements CompletableSubscriber, Obse
     unsubscribe();
   }
 
-  private void unsubscribe() {
+  public void unsubscribe() {
     if (subscription != null) {
       subscription.unsubscribe();
     }

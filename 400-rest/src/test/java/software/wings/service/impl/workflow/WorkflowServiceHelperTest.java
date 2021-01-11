@@ -1206,7 +1206,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
 
     // canary deployment test
     workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
-        APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.CANARY, false);
+        APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.CANARY, false, true);
     List<PhaseStepType> phaseStepTypes =
         workflowPhase.getPhaseSteps().stream().map(PhaseStep::getPhaseStepType).collect(Collectors.toList());
     assertThat(phaseStepTypes)
@@ -1214,9 +1214,18 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
             AZURE_WEBAPP_SLOT_SETUP, VERIFY_SERVICE, AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, AZURE_WEBAPP_SLOT_SWAP, WRAP_UP);
     workflowPhase.getPhaseSteps().clear();
 
+    // blue green deployment test
+    workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
+        APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.BLUE_GREEN, false, true);
+    phaseStepTypes =
+        workflowPhase.getPhaseSteps().stream().map(PhaseStep::getPhaseStepType).collect(Collectors.toList());
+    assertThat(phaseStepTypes)
+        .containsExactly(AZURE_WEBAPP_SLOT_SETUP, VERIFY_SERVICE, AZURE_WEBAPP_SLOT_SWAP, WRAP_UP);
+    workflowPhase.getPhaseSteps().clear();
+
     // dynamic provisioner test
     workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
-        APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.CANARY, true);
+        APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.CANARY, true, true);
     phaseStepTypes =
         workflowPhase.getPhaseSteps().stream().map(PhaseStep::getPhaseStepType).collect(Collectors.toList());
     assertThat(phaseStepTypes)
@@ -1227,26 +1236,26 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     // unsupported deployment type test
     assertThatThrownBy(()
                            -> workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
-                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.BASIC, false))
+                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.BASIC, true, false))
         .isInstanceOf(InvalidRequestException.class);
     assertThatThrownBy(()
                            -> workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
-                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.BUILD, false))
+                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.BUILD, true, false))
         .isInstanceOf(InvalidRequestException.class);
     assertThatThrownBy(()
                            -> workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
-                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.MULTI_SERVICE, false))
+                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.MULTI_SERVICE, true, false))
         .isInstanceOf(InvalidRequestException.class);
     assertThatThrownBy(()
                            -> workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
-                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.ROLLING, false))
+                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.ROLLING, true, false))
         .isInstanceOf(InvalidRequestException.class);
 
     // feature flag test
     when(mockFeatureFlagService.isEnabled(FeatureName.AZURE_WEBAPP, ACCOUNT_ID)).thenReturn(false);
     assertThatThrownBy(()
                            -> workflowServiceHelper.generateNewWorkflowPhaseStepsForAzureWebApp(
-                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.CANARY, false))
+                               APP_ID, ACCOUNT_ID, workflowPhase, OrchestrationWorkflowType.CANARY, true, false))
         .isInstanceOf(InvalidRequestException.class);
   }
 
