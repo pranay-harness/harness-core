@@ -30,12 +30,16 @@ public class EngineJexlContext implements JexlContext {
   public synchronized Object get(String key) {
     Object object = null;
     if (updatesMap.containsKey(key)) {
-      object = updatesMap.get(key);
+      object = getInternal(updatesMap, key);
     }
     if (object == null && originalMap.containsKey(key)) {
-      object = originalMap.get(key);
+      object = getInternal(originalMap, key);
     }
+    return object;
+  }
 
+  private Object getInternal(Map<String, Object> map, String key) {
+    Object object = map.get(key);
     if (object instanceof LateBindingValue) {
       originalMap.remove(key);
       object = ((LateBindingValue) object).bind();
