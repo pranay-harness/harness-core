@@ -249,7 +249,7 @@ pipeline:
                     region: us-east1
                     bucket: bucket
                     target: someTarget # (optional) Build the specified stage as defined inside the Dockerfile
-                    sourcePath: somePath
+                    sourcePath: sourcePath
                     resources:
                       limits:
                         memory: 64Mi
@@ -263,7 +263,7 @@ pipeline:
                     connectorRef: my_GCP_Connector # only show GCP connectors in UI dropdown
                     bucket: bucket
                     target: someTarget # (optional) Build the specified stage as defined inside the Dockerfile
-                    sourcePath: somePath
+                    sourcePath: sourcePath
                     resources:
                       limits:
                         memory: 64Mi

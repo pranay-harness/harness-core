@@ -50,15 +50,15 @@ public class SaveCacheGCSStepInfo implements PluginCompatibleStep {
   // plugin settings
   @NotNull private ParameterField<String> key;
   @NotNull private ParameterField<String> bucket;
-  @NotNull private ParameterField<List<String>> sourcePath;
+  @NotNull private ParameterField<List<String>> sourcePaths;
   private ParameterField<String> target;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "containerImage", "resources", "key", "bucket",
-      "sourcePath", "target"})
+      "sourcePaths", "target"})
   public SaveCacheGCSStepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
       ParameterField<String> containerImage, ContainerResource resources, ParameterField<String> key,
-      ParameterField<String> bucket, ParameterField<List<String>> sourcePath, ParameterField<String> target) {
+      ParameterField<String> bucket, ParameterField<List<String>> sourcePaths, ParameterField<String> target) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -72,7 +72,7 @@ public class SaveCacheGCSStepInfo implements PluginCompatibleStep {
     this.resources = resources;
     this.key = key;
     this.bucket = bucket;
-    this.sourcePath = sourcePath;
+    this.sourcePaths = sourcePaths;
     this.target = target;
   }
 

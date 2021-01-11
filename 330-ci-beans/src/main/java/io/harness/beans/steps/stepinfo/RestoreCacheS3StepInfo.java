@@ -52,14 +52,16 @@ public class RestoreCacheS3StepInfo implements PluginCompatibleStep {
   @NotNull private ParameterField<String> key;
   @NotNull private ParameterField<String> bucket;
   private ParameterField<String> target;
+  private ParameterField<String> region;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "containerImage", "resources", "endpoint",
-      "key", "bucket", "target"})
+      "key", "bucket", "target", "region"})
 
   public RestoreCacheS3StepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
       ParameterField<String> containerImage, ContainerResource resources, ParameterField<String> endpoint,
-      ParameterField<String> key, ParameterField<String> bucket, ParameterField<String> target) {
+      ParameterField<String> key, ParameterField<String> bucket, ParameterField<String> target,
+      ParameterField<String> region) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -77,6 +79,7 @@ public class RestoreCacheS3StepInfo implements PluginCompatibleStep {
     this.key = key;
     this.bucket = bucket;
     this.target = target;
+    this.region = region;
   }
 
   @Override

@@ -50,16 +50,17 @@ public class SaveCacheS3StepInfo implements PluginCompatibleStep {
   private ParameterField<String> endpoint;
   @NotNull private ParameterField<String> key;
   @NotNull private ParameterField<String> bucket;
-  @NotNull private ParameterField<List<String>> sourcePath;
+  @NotNull private ParameterField<List<String>> sourcePaths;
   private ParameterField<String> target;
+  private ParameterField<String> region;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "containerImage", "resources", "endpoint",
-      "key", "bucket", "sourcePath", "target"})
+      "key", "bucket", "sourcePaths", "target", "region"})
   public SaveCacheS3StepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
       ParameterField<String> containerImage, ContainerResource resources, ParameterField<String> endpoint,
-      ParameterField<String> key, ParameterField<String> bucket, ParameterField<List<String>> sourcePath,
-      ParameterField<String> target) {
+      ParameterField<String> key, ParameterField<String> bucket, ParameterField<List<String>> sourcePaths,
+      ParameterField<String> target, ParameterField<String> region) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -74,8 +75,9 @@ public class SaveCacheS3StepInfo implements PluginCompatibleStep {
     this.endpoint = endpoint;
     this.key = key;
     this.bucket = bucket;
-    this.sourcePath = sourcePath;
+    this.sourcePaths = sourcePaths;
     this.target = target;
+    this.region = region;
   }
 
   @Override

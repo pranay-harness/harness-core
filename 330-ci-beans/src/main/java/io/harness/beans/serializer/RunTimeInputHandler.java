@@ -99,7 +99,10 @@ public class RunTimeInputHandler {
             format("Failed to resolve mandatory field %s in step type %s with identifier %s", fieldName, stepType,
                 stepIdentifier));
       } else {
-        return defaultValue;
+        if (defaultValue != null) {
+          return defaultValue;
+        }
+        return "";
       }
     }
 

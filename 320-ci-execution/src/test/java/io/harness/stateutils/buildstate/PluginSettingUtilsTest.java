@@ -122,6 +122,7 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
                                                         .target(ParameterField.createValueField("target"))
                                                         .bucket(ParameterField.createValueField("bucket"))
                                                         .endpoint(ParameterField.createValueField("endpoint"))
+                                                        .region(ParameterField.createValueField("region"))
                                                         .build();
     Map<String, String> expected = new HashMap<>();
     expected.put("PLUGIN_PATH", "target");
@@ -129,6 +130,7 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_ENDPOINT", "endpoint");
     expected.put("PLUGIN_FILENAME", "key.tar");
     expected.put("PLUGIN_RESTORE", "true");
+    expected.put("PLUGIN_REGION", "region");
     Map<String, String> pluginCompatibleCacheStepEnvVariables =
         PluginSettingUtils.getPluginCompatibleEnvVariables(restoreCacheS3StepInfo, "identifier");
     assertThat(pluginCompatibleCacheStepEnvVariables).isEqualTo(expected);
@@ -138,13 +140,15 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldGetSaveCacheS3StepInfoEnvVariables() {
-    SaveCacheS3StepInfo saveCacheS3StepInfo = SaveCacheS3StepInfo.builder()
-                                                  .key(ParameterField.createValueField("key"))
-                                                  .target(ParameterField.createValueField("target"))
-                                                  .bucket(ParameterField.createValueField("bucket"))
-                                                  .sourcePath(ParameterField.createValueField(asList("path1", "path2")))
-                                                  .endpoint(ParameterField.createValueField("endpoint"))
-                                                  .build();
+    SaveCacheS3StepInfo saveCacheS3StepInfo =
+        SaveCacheS3StepInfo.builder()
+            .key(ParameterField.createValueField("key"))
+            .target(ParameterField.createValueField("target"))
+            .bucket(ParameterField.createValueField("bucket"))
+            .region(ParameterField.createValueField("region"))
+            .sourcePaths(ParameterField.createValueField(asList("path1", "path2")))
+            .endpoint(ParameterField.createValueField("endpoint"))
+            .build();
     Map<String, String> expected = new HashMap<>();
     expected.put("PLUGIN_PATH", "target");
     expected.put("PLUGIN_MOUNT", "path1,path2");
@@ -152,6 +156,7 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_ENDPOINT", "endpoint");
     expected.put("PLUGIN_FILENAME", "key.tar");
     expected.put("PLUGIN_REBUILD", "true");
+    expected.put("PLUGIN_REGION", "region");
     Map<String, String> pluginCompatibleCacheStepEnvVariables =
         PluginSettingUtils.getPluginCompatibleEnvVariables(saveCacheS3StepInfo, "identifier");
     assertThat(pluginCompatibleCacheStepEnvVariables).isEqualTo(expected);
@@ -185,7 +190,7 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
             .key(ParameterField.createValueField("key"))
             .target(ParameterField.createValueField("target"))
             .bucket(ParameterField.createValueField("bucket"))
-            .sourcePath(ParameterField.createValueField(asList("path1", "path2")))
+            .sourcePaths(ParameterField.createValueField(asList("path1", "path2")))
             .build();
     Map<String, String> expected = new HashMap<>();
     expected.put("PLUGIN_PATH", "target");

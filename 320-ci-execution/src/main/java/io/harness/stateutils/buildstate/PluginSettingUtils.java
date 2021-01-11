@@ -236,10 +236,10 @@ public class PluginSettingUtils {
     setMandatoryEnvironmentVariable(
         map, PLUGIN_BUCKET, resolveStringParameter("bucket", "SaveCacheGCS", identifier, stepInfo.getBucket(), true));
 
-    List<String> sourcePath =
-        resolveListParameter("sourcePath", "SaveCacheGCS", identifier, stepInfo.getSourcePath(), true);
+    List<String> sourcePaths =
+        resolveListParameter("sourcePaths", "SaveCacheGCS", identifier, stepInfo.getSourcePaths(), true);
 
-    setMandatoryEnvironmentVariable(map, PLUGIN_MOUNT, listToStringSlice(sourcePath));
+    setMandatoryEnvironmentVariable(map, PLUGIN_MOUNT, listToStringSlice(sourcePaths));
     setMandatoryEnvironmentVariable(map, PLUGIN_REBUILD, "true");
 
     String target = resolveStringParameter("target", "SaveCacheGCS", identifier, stepInfo.getTarget(), false);
@@ -272,6 +272,11 @@ public class PluginSettingUtils {
       setOptionalEnvironmentVariable(map, PLUGIN_ENDPOINT, endpoint);
     }
 
+    String region = resolveStringParameter("region", "RestoreCacheS3", identifier, stepInfo.getRegion(), true);
+    if (region != null && !region.equals(UNRESOLVED_PARAMETER)) {
+      setOptionalEnvironmentVariable(map, PLUGIN_REGION, region);
+    }
+
     return map;
   }
 
@@ -284,7 +289,8 @@ public class PluginSettingUtils {
     setMandatoryEnvironmentVariable(
         map, PLUGIN_ROOT, resolveStringParameter("bucket", "SaveCacheS3", identifier, stepInfo.getBucket(), true));
     setMandatoryEnvironmentVariable(map, PLUGIN_MOUNT,
-        listToStringSlice(resolveListParameter("bucket", "SaveCacheS3", identifier, stepInfo.getSourcePath(), true)));
+        listToStringSlice(
+            resolveListParameter("sourcePaths", "SaveCacheS3", identifier, stepInfo.getSourcePaths(), true)));
     setMandatoryEnvironmentVariable(map, PLUGIN_REBUILD, "true");
 
     String target = resolveStringParameter("target", "SaveCacheS3", identifier, stepInfo.getTarget(), false);
@@ -295,6 +301,12 @@ public class PluginSettingUtils {
     if (endpoint != null && !endpoint.equals(UNRESOLVED_PARAMETER)) {
       setOptionalEnvironmentVariable(map, PLUGIN_ENDPOINT, endpoint);
     }
+
+    String region = resolveStringParameter("region", "SaveCacheS3", identifier, stepInfo.getRegion(), true);
+    if (region != null && !region.equals(UNRESOLVED_PARAMETER)) {
+      setOptionalEnvironmentVariable(map, PLUGIN_REGION, region);
+    }
+
     return map;
   }
 
@@ -303,7 +315,7 @@ public class PluginSettingUtils {
     Map<String, String> map = new HashMap<>();
 
     setMandatoryEnvironmentVariable(map, PLUGIN_SOURCE,
-        resolveStringParameter("sourcePath", "GCSUpload", identifier, stepInfo.getSourcePath(), true));
+        resolveStringParameter("sourcePaths", "GCSUpload", identifier, stepInfo.getSourcePath(), true));
     String target = null;
     String stepInfoBucket = resolveStringParameter("bucket", "GCSUpload", identifier, stepInfo.getBucket(), true);
     String stepInfoTarget = resolveStringParameter("target", "GCSUpload", identifier, stepInfo.getTarget(), true);
@@ -321,7 +333,7 @@ public class PluginSettingUtils {
     setMandatoryEnvironmentVariable(
         map, PLUGIN_BUCKET, resolveStringParameter("bucket", "S3Upload", identifier, stepInfo.getBucket(), true));
     setMandatoryEnvironmentVariable(map, PLUGIN_SOURCE,
-        resolveStringParameter("sourcePath", "S3Upload", identifier, stepInfo.getSourcePath(), true));
+        resolveStringParameter("sourcePaths", "S3Upload", identifier, stepInfo.getSourcePath(), true));
     setMandatoryEnvironmentVariable(
         map, PLUGIN_TARGET, resolveStringParameter("target", "S3Upload", identifier, stepInfo.getTarget(), true));
 
