@@ -114,6 +114,7 @@ import software.wings.utils.ApplicationManifestUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Splitter;
 import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -127,6 +128,7 @@ import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -136,6 +138,8 @@ import org.apache.commons.lang3.tuple.Pair;
 public class PcfStateHelper {
   public static final String WORKFLOW_STANDARD_PARAMS = "workflowStandardParams";
   public static final String CURRENT_USER = "currentUser";
+  private static final Splitter lineSplitter = Splitter.onPattern("\\r?\\n").trimResults().omitEmptyStrings();
+
   @Inject private ApplicationManifestService applicationManifestService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private ServiceHelper serviceHelper;
@@ -814,6 +818,14 @@ public class PcfStateHelper {
                             .build())
                    .build())
         .collect(toList());
+  }
+
+  public String removeCommentedLineFromScript(String scriptString) {
+    return lineSplitter.splitToList(scriptString)
+        .stream()
+        .filter(line -> !line.isEmpty())
+        .filter(line -> line.charAt(0) != '#')
+        .collect(Collectors.joining("\n"));
   }
 
   @VisibleForTesting

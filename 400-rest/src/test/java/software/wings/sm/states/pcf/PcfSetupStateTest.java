@@ -1,6 +1,7 @@
 package software.wings.sm.states.pcf;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
+import static io.harness.beans.FeatureName.CF_CUSTOM_EXTRACTION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pcf.model.PcfConstants.INFRA_ROUTE;
 import static io.harness.pcf.model.PcfConstants.PCF_INFRA_ROUTE;
@@ -53,6 +54,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -61,6 +63,7 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -106,6 +109,7 @@ import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.CommandUnit;
@@ -396,6 +400,55 @@ public class PcfSetupStateTest extends WingsBaseTest {
     assertThat(pcfCommandSetupRequest.getOrganization()).isEqualTo(ORG);
     assertThat(pcfCommandSetupRequest.getSpace()).isEqualTo(SPACE);
     assertThat(pcfCommandSetupRequest.getMaxCount()).isEqualTo(3);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testExceptionThrownWhenArtifactProcessingScriptIsSetForDockerDeployment() {
+    on(context).set("serviceTemplateService", serviceTemplateService);
+    stateExecutionInstance.setStateExecutionMap(new HashMap<>());
+    pcfSetupState.setUseCurrentRunningCount(false);
+    pcfSetupState.setMaxInstances(2);
+    pcfSetupState.setUseArtifactProcessingScript(true);
+    pcfSetupState.setArtifactProcessingScript("test");
+    doReturn(true).when(featureFlagService).isEnabled(eq(CF_CUSTOM_EXTRACTION), any());
+
+    doReturn(PcfManifestsPackage.builder().manifestYml(MANIFEST_YAML_CONTENT).build())
+        .when(pcfStateHelper)
+        .generateManifestMap(any(), anyMap(), any(), any());
+
+    doReturn(DockerArtifactStream.builder().build()).when(artifactStreamService).get(any());
+
+    assertThatThrownBy(() -> pcfSetupState.execute(context))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Docker based deployment shouldn't contain an artifact processing script");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testExecuteWithCustomExtractionEnabled() {
+    on(context).set("serviceTemplateService", serviceTemplateService);
+    stateExecutionInstance.setStateExecutionMap(new HashMap<>());
+    pcfSetupState.setUseCurrentRunningCount(false);
+    pcfSetupState.setMaxInstances(2);
+    pcfSetupState.setUseArtifactProcessingScript(true);
+    pcfSetupState.setArtifactProcessingScript("script");
+    doReturn(true).when(featureFlagService).isEnabled(eq(CF_CUSTOM_EXTRACTION), any());
+
+    doReturn(PcfManifestsPackage.builder().manifestYml(MANIFEST_YAML_CONTENT).build())
+        .when(pcfStateHelper)
+        .generateManifestMap(any(), anyMap(), any(), any());
+
+    ExecutionResponse executionResponse = pcfSetupState.execute(context);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+
+    PcfSetupStateExecutionData stateExecutionData =
+        (PcfSetupStateExecutionData) executionResponse.getStateExecutionData();
+    assertThat(stateExecutionData.getCommandName()).isEqualTo("PCF Setup");
+    PcfCommandSetupRequest pcfCommandSetupRequest = (PcfCommandSetupRequest) stateExecutionData.getPcfCommandRequest();
+    assertThat(pcfCommandSetupRequest.getArtifactProcessingScript()).isEqualTo("script");
   }
 
   @Test

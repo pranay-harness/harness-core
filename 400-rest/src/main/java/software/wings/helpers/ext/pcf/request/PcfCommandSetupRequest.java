@@ -37,6 +37,7 @@ public class PcfCommandSetupRequest extends PcfCommandRequest {
   private boolean blueGreen;
   private Integer olderActiveVersionCountToKeep;
   private PcfManifestsPackage pcfManifestsPackage;
+  private String artifactProcessingScript;
 
   @Builder
   public PcfCommandSetupRequest(String accountId, String appId, String commandName, String activityId,
@@ -47,7 +48,7 @@ public class PcfCommandSetupRequest extends PcfCommandRequest {
       Integer timeoutIntervalInMin, Integer maxCount, Integer currentRunningCount, boolean useCurrentCount,
       boolean blueGreen, Integer olderActiveVersionCountToKeep, boolean useCLIForPcfAppCreation,
       PcfManifestsPackage pcfManifestsPackage, boolean useAppAutoscalar, boolean enforceSslValidation,
-      boolean limitPcfThreads, boolean ignorePcfConnectionContextCache) {
+      boolean limitPcfThreads, boolean ignorePcfConnectionContextCache, String artifactProcessingScript) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
         workflowExecutionId, timeoutIntervalInMin, useCLIForPcfAppCreation, enforceSslValidation, useAppAutoscalar,
         limitPcfThreads, ignorePcfConnectionContextCache);
@@ -65,5 +66,6 @@ public class PcfCommandSetupRequest extends PcfCommandRequest {
     this.currentRunningCount = currentRunningCount;
     this.useCurrentCount = useCurrentCount;
     this.pcfManifestsPackage = pcfManifestsPackage;
+    this.artifactProcessingScript = artifactProcessingScript;
   }
 }
