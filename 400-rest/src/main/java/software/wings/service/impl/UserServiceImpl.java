@@ -798,7 +798,6 @@ public class UserServiceImpl implements UserService {
   @Override
   public List<InviteOperationResponse> inviteUsers(UserInvite userInvite) {
     String accountId = userInvite.getAccountId();
-    limitCheck(accountId, userInvite);
 
     List<InviteOperationResponse> inviteOperationResponses = new ArrayList<>();
     if (userInvite.getEmails().isEmpty()) {
@@ -847,14 +846,11 @@ public class UserServiceImpl implements UserService {
         log.error("No account found for accountId={}", accountId);
         return;
       }
-
-      PageRequest<User> request = aPageRequest()
-                                      .addFilter(UserKeys.accounts, IN, Collections.singletonList(account).toArray())
-                                      .withLimit(PageRequest.UNLIMITED)
-                                      .build();
-
-      List<User> existingUsersAndInvites = list(request, false);
-      userServiceLimitChecker.limitCheck(accountId, existingUsersAndInvites, new HashSet<>(userInvite.getEmails()));
+      Query<User> query = getListUserQuery(accountId, true);
+      query.criteria(UserKeys.disabled).notEqual(true);
+      List<User> existingUsersAndInvites = query.asList();
+      userServiceLimitChecker.limitCheck(
+          accountId, existingUsersAndInvites, new HashSet<>(Arrays.asList(userInvite.getEmail())));
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -869,6 +865,8 @@ public class UserServiceImpl implements UserService {
     signupService.checkIfEmailIsValid(userInvite.getEmail());
 
     String accountId = userInvite.getAccountId();
+    limitCheck(accountId, userInvite);
+
     Account account = accountService.get(accountId);
 
     User user = getUserByEmail(userInvite.getEmail());
