@@ -39,6 +39,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.StringValue;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -53,13 +54,14 @@ public class ConnectorServiceImpl implements ConnectorService {
   private final ConnectorRepository connectorRepository;
   private final Producer eventProducer;
   private final KryoSerializer kryoSerializer;
+  private final ExecutorService executorService;
 
   @Inject
   public ConnectorServiceImpl(@Named(DEFAULT_CONNECTOR_SERVICE) ConnectorService defaultConnectorService,
       @Named(SECRET_MANAGER_CONNECTOR_SERVICE) ConnectorService secretManagerConnectorService,
       ConnectorActivityService connectorActivityService, ConnectorHeartbeatService connectorHeartbeatService,
       ConnectorRepository connectorRepository, @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer,
-      KryoSerializer kryoSerializer) {
+      KryoSerializer kryoSerializer, ExecutorService executorService) {
     this.defaultConnectorService = defaultConnectorService;
     this.secretManagerConnectorService = secretManagerConnectorService;
     this.connectorActivityService = connectorActivityService;
@@ -67,6 +69,7 @@ public class ConnectorServiceImpl implements ConnectorService {
     this.connectorRepository = connectorRepository;
     this.eventProducer = eventProducer;
     this.kryoSerializer = kryoSerializer;
+    this.executorService = executorService;
   }
 
   private ConnectorService getConnectorService(ConnectorType connectorType) {
@@ -90,7 +93,15 @@ public class ConnectorServiceImpl implements ConnectorService {
     ConnectorInfoDTO savedConnector = connectorResponse.getConnector();
     createConnectorCreationActivity(accountIdentifier, savedConnector);
     connectorHeartbeatService.createConnectorHeatbeatTask(accountIdentifier, savedConnector);
+    runTestConnectionAsync(connector, accountIdentifier);
     return connectorResponse;
+  }
+
+  private void runTestConnectionAsync(ConnectorDTO connectorRequestDTO, String accountIdentifier) {
+    // User can create a connector without test connection, in this flow we won't have
+    // a status for the connector, to solve this issue we will do one test connection
+    // asynchronously
+    executorService.submit(() -> validate(connectorRequestDTO, accountIdentifier));
   }
 
   private void createConnectorCreationActivity(String accountIdentifier, ConnectorInfoDTO connector) {

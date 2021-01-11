@@ -9,6 +9,7 @@ import io.harness.filter.FiltersTestBase;
 import io.harness.filter.dto.FilterDTO;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import io.harness.testlib.RealMongo;
 
 import com.google.inject.Inject;
 import java.util.List;
@@ -42,6 +43,7 @@ public class FilterServiceTest extends FiltersTestBase {
   @Test
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
+  @RealMongo
   public void testListForAccountLevelFilter() {
     for (int i = 0; i < 5; i++) {
       FilterDTO inputFilterDTO = createFilter(accountIdentifier, null, null, filterIdentifier);
@@ -57,6 +59,7 @@ public class FilterServiceTest extends FiltersTestBase {
   @Test
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
+  @RealMongo
   public void testListForOrgLevelFilter() {
     for (int i = 0; i < 5; i++) {
       FilterDTO inputFilterDTO = createFilter(accountIdentifier, orgIdentifier, null, filterIdentifier);
@@ -72,6 +75,7 @@ public class FilterServiceTest extends FiltersTestBase {
   @Test
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
+  @RealMongo
   public void testListForProjectLevelFilter() {
     for (int i = 0; i < 5; i++) {
       FilterDTO inputFilterDTO = createFilter(accountIdentifier, null, null, filterIdentifier);

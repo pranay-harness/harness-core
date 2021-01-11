@@ -48,6 +48,9 @@ public class ConnectorHeartbeatPerpetualTaskExecutor implements PerpetualTaskExe
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails(taskParams);
     final ConnectorDTO connectorDTO = (ConnectorDTO) kryoSerializer.asObject(taskParams.getConnector().toByteArray());
     ConnectorInfoDTO connectorInfoDTO = connectorDTO.getConnectorInfo();
+    String connectorMessage = String.format(CONNECTOR_STRING, connectorInfoDTO.getIdentifier(), accountId,
+        connectorInfoDTO.getOrgIdentifier(), connectorInfoDTO.getProjectIdentifier());
+    log.info("Starting validation task for the connector {}", connectorMessage);
     ConnectorValidationHandler connectorValidationHandler =
         connectorTypeToConnectorValidationHandlerMap.get(connectorInfoDTO.getConnectorType().toString());
     if (connectorValidationHandler == null) {
@@ -68,6 +71,7 @@ public class ConnectorHeartbeatPerpetualTaskExecutor implements PerpetualTaskExe
               connectorInfoDTO.getOrgIdentifier(), connectorInfoDTO.getProjectIdentifier()),
           ex);
     }
+    log.info("Completed validation task for the connector {}", connectorMessage);
     return getPerpetualTaskResponse(connectorValidationResult);
   }
 

@@ -28,9 +28,11 @@ import io.harness.ng.core.mapper.TagMapper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.util.StringUtils;
@@ -59,10 +61,9 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
       criteria.and(ConnectorKeys.projectIdentifier).is(projectIdentifier);
     }
     criteria.orOperator(where(ConnectorKeys.deleted).exists(false), where(ConnectorKeys.deleted).is(false));
-    if (isNotBlank(searchTerm)) {
-      populateSearchTermFilter(criteria, searchTerm);
-    }
+
     if (isEmpty(filterIdentifier) && filterProperties == null) {
+      applySearchFilter(criteria, searchTerm);
       return criteria;
     }
 
@@ -73,6 +74,13 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
       populateConnectorFiltersInTheCriteria(criteria, (ConnectorFilterPropertiesDTO) filterProperties, searchTerm);
     }
     return criteria;
+  }
+
+  private void applySearchFilter(Criteria criteria, String searchTerm) {
+    if (isNotBlank(searchTerm)) {
+      Criteria criteriaWithSearchTerm = getSearchTermFilter(criteria, searchTerm);
+      criteria.andOperator(criteriaWithSearchTerm);
+    }
   }
 
   private void addCriteriaToReturnAllConnectorsAccessible(
@@ -112,12 +120,49 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
     }
     populateInFilter(criteria, ConnectorKeys.categories, connectorFilter.getCategories());
     populateInFilter(criteria, ConnectorKeys.type, connectorFilter.getTypes());
-    populateInFilter(criteria, ConnectorKeys.name, connectorFilter.getConnectorNames());
+    populateNameDesciptionAndSearchTermFilter(criteria, connectorFilter.getConnectorNames(),
+        connectorFilter.getDescription(), searchTerm, connectorFilter.getInheritingCredentialsFromDelegate());
     populateInFilter(criteria, ConnectorKeys.identifier, connectorFilter.getConnectorIdentifiers());
-    populateDescriptionFilter(criteria, connectorFilter.getDescription(), searchTerm);
     populateInFilter(criteria, ConnectorKeys.connectionStatus, connectorFilter.getConnectivityStatuses());
-    populateInheritCredentialsFromDelegateFilter(criteria, connectorFilter.getInheritingCredentialsFromDelegate());
     populateTagsFilter(criteria, connectorFilter.getTags());
+  }
+
+  private void populateNameDesciptionAndSearchTermFilter(Criteria criteria, List<String> connectorNames,
+      String description, String searchTerm, Boolean inheritingCredentialsFromDelegate) {
+    List<Criteria> criteriaList = new ArrayList<>();
+    Criteria nameCriteria = getNameFilter(criteria, connectorNames);
+    if (nameCriteria != null) {
+      criteriaList.add(nameCriteria);
+    }
+    Criteria descriptionCriteria = getDescriptionFilter(criteria, description, searchTerm);
+    if (descriptionCriteria != null) {
+      criteriaList.add(descriptionCriteria);
+    }
+    Criteria inheritingFromDelegateCriteria =
+        getInheritCredentialsFromDelegateFilter(criteria, inheritingCredentialsFromDelegate);
+    if (inheritingFromDelegateCriteria != null) {
+      criteriaList.add(inheritingFromDelegateCriteria);
+    }
+    Criteria searchCriteria = getSearchTermFilter(criteria, searchTerm);
+    if (searchCriteria != null) {
+      criteriaList.add(searchCriteria);
+    }
+    if (criteriaList.size() != 0) {
+      criteria.andOperator(criteriaList.toArray(new Criteria[0]));
+    }
+  }
+
+  private Criteria getNameFilter(Criteria criteria, List<String> connectorNames) {
+    if (isEmpty(connectorNames)) {
+      return null;
+    }
+    List<Criteria> criteriaForNames =
+        connectorNames.stream()
+            .map(
+                name -> where(ConnectorKeys.name).regex(name, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS))
+            .collect(Collectors.toList());
+    Criteria searchCriteriaForNames = new Criteria().orOperator(criteriaForNames.toArray(new Criteria[0]));
+    return searchCriteriaForNames;
   }
 
   private void populateTagsFilter(Criteria criteria, Map<String, String> tags) {
@@ -127,53 +172,54 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
     criteria.and(ConnectorKeys.tags).in(TagMapper.convertToList(tags));
   }
 
-  private void populateInheritCredentialsFromDelegateFilter(
+  private Criteria getInheritCredentialsFromDelegateFilter(
       Criteria criteria, Boolean inheritingCredentialsFromDelegate) {
     if (inheritingCredentialsFromDelegate != null) {
       if (inheritingCredentialsFromDelegate.booleanValue()) {
-        addCriteriaForInheritingFromDelegate(criteria);
+        return addCriteriaForInheritingFromDelegate(criteria);
       } else {
-        addCriteriaForNotInheritingFromDelegate(criteria);
+        return addCriteriaForNotInheritingFromDelegate(criteria);
       }
     }
+    return null;
   }
 
-  private void addCriteriaForNotInheritingFromDelegate(Criteria criteria) {
+  private Criteria addCriteriaForNotInheritingFromDelegate(Criteria criteria) {
     Criteria criteriaForInheritingFromDelegate = new Criteria().orOperator(
         where(CREDENTIAL_TYPE_KEY).exists(false), where(CREDENTIAL_TYPE_KEY).ne(INHERIT_FROM_DELEGATE_STRING));
-    criteria.andOperator(criteriaForInheritingFromDelegate);
+    return criteriaForInheritingFromDelegate;
   }
 
-  private void addCriteriaForInheritingFromDelegate(Criteria criteria) {
-    criteria.and(CREDENTIAL_TYPE_KEY).is(INHERIT_FROM_DELEGATE_STRING);
+  private Criteria addCriteriaForInheritingFromDelegate(Criteria criteria) {
+    return where(CREDENTIAL_TYPE_KEY).is(INHERIT_FROM_DELEGATE_STRING);
   }
 
   private String getPatternForMatchingAnyOneOf(List<String> wordsToBeMatched) {
     return StringUtils.collectionToDelimitedString(wordsToBeMatched, "|");
   }
 
-  private void populateDescriptionFilter(Criteria criteria, String description, String searchTerm) {
+  private Criteria getDescriptionFilter(Criteria criteria, String description, String searchTerm) {
     if (isBlank(description)) {
-      return;
+      return null;
     }
     String[] descriptionsWords = description.split(" ");
-    if (isNotEmpty(descriptionsWords) && isBlank(searchTerm)) {
+    if (isNotEmpty(descriptionsWords)) {
       String pattern = getPatternForMatchingAnyOneOf(Arrays.asList(descriptionsWords));
-      Criteria descriptionCriteria = Criteria.where(ConnectorKeys.description)
-                                         .regex(pattern, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS);
-      criteria.andOperator(descriptionCriteria);
+      return where(ConnectorKeys.description).regex(pattern, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS);
     }
+    return null;
   }
 
-  private void populateSearchTermFilter(Criteria criteria, String searchTerm) {
+  private Criteria getSearchTermFilter(Criteria criteria, String searchTerm) {
     if (isNotBlank(searchTerm)) {
       Criteria searchCriteria = new Criteria().orOperator(
           where(ConnectorKeys.name).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
           where(ConnectorKeys.identifier).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
           where(ConnectorKeys.tags).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
           where(ConnectorKeys.description).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
-      criteria.andOperator(searchCriteria);
+      return searchCriteria;
     }
+    return null;
   }
 
   public Criteria createCriteriaFromConnectorFilter(String accountIdentifier, String orgIdentifier,

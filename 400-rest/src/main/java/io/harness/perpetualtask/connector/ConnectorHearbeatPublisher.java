@@ -48,6 +48,9 @@ public class ConnectorHearbeatPublisher {
           CONNECTOR_HEARTBEAT_LOG_PREFIX, accountId);
       return;
     }
+    String connectorMessage = String.format(CONNECTOR_STRING, heartbeatDelegateResponse.getIdentifier(), accountId,
+        heartbeatDelegateResponse.getOrgIdentifier(), heartbeatDelegateResponse.getProjectIdentifier());
+    log.info("Got validation task response for the connector {}", connectorMessage);
     EntityActivityCreateDTO ngActivityDTO = createConnectivityCheckActivityDTO(heartbeatDelegateResponse);
     try {
       eventProducer.send(
@@ -63,6 +66,7 @@ public class ConnectorHearbeatPublisher {
               heartbeatDelegateResponse.getAccountIdentifier(), heartbeatDelegateResponse.getOrgIdentifier(),
               heartbeatDelegateResponse.getProjectIdentifier()));
     }
+    log.info("Sent validation task response to the ng manager for the connector {}", connectorMessage);
   }
 
   private EntityActivityCreateDTO createConnectivityCheckActivityDTO(

@@ -50,6 +50,7 @@ public class EntityActivityCrudEventMessageProcessor implements MessageProcessor
           log.info("Invalid action type: {}", metadataMap.get(EventsFrameworkMetadataConstants.ACTION));
       }
     }
+    log.info("Completed processing the activity crud event with the id {}", messageId);
   }
 
   private void saveConnectivityCheckResultInConnectorRecords(NGActivityDTO ngActivityDTO) {
