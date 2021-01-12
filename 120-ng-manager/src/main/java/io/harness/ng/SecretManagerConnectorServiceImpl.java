@@ -23,6 +23,7 @@ import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import io.harness.eraro.ErrorCode;
 import io.harness.errorhandling.NGErrorHelper;
+import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
 import io.harness.ng.core.api.NGSecretManagerService;
@@ -75,6 +76,12 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
 
   private ConnectorResponseDTO createSecretManagerConnector(ConnectorDTO connector, String accountIdentifier) {
     ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
+    if (get(accountIdentifier, connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(),
+            connectorInfo.getIdentifier())
+            .isPresent()) {
+      throw new DuplicateFieldException(String.format(
+          "Try using different connector identifier, [%s] cannot be used", connectorInfo.getIdentifier()));
+    }
     SecretManagerConfigDTO secretManagerConfigDTO =
         SecretManagerConfigDTOMapper.fromConnectorDTO(accountIdentifier, connector, connectorInfo.getConnectorConfig());
     SecretManagerConfigDTO createdSecretManager = ngSecretManagerService.createSecretManager(secretManagerConfigDTO);

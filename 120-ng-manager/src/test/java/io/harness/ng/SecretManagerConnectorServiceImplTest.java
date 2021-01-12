@@ -28,6 +28,7 @@ import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.VaultConfigDTO;
 
 import java.io.IOException;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -68,6 +69,7 @@ public class SecretManagerConnectorServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCreateSecretManagerConnector() throws IOException {
     SecretManagerConfigDTO secretManagerConfigDTO = random(VaultConfigDTO.class);
+    when(defaultConnectorService.get(any(), any(), any(), any())).thenReturn(Optional.empty());
     when(ngSecretManagerService.createSecretManager(any())).thenReturn(secretManagerConfigDTO);
     when(defaultConnectorService.create(any(), any())).thenReturn(null);
     when(connectorRepository.updateMultiple(any(), any())).thenReturn(null);
@@ -80,6 +82,7 @@ public class SecretManagerConnectorServiceImplTest extends CategoryTest {
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
   public void testCreateSecretManagerConnectorShouldFail_ManagerReturnsNull() throws IOException {
+    when(defaultConnectorService.get(any(), any(), any(), any())).thenReturn(Optional.empty());
     when(ngSecretManagerService.createSecretManager(any())).thenReturn(null);
     when(connectorRepository.updateMultiple(any(), any())).thenReturn(null);
     try {
@@ -95,6 +98,7 @@ public class SecretManagerConnectorServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCreateSecretManagerConnectorShouldFail_exceptionFromManager() throws IOException {
     SecretManagerConfigDTO secretManagerConfigDTO = random(VaultConfigDTO.class);
+    when(defaultConnectorService.get(any(), any(), any(), any())).thenReturn(Optional.empty());
     when(ngSecretManagerService.createSecretManager(any())).thenThrow(getInvalidRequestException());
     when(connectorRepository.updateMultiple(any(), any())).thenReturn(null);
     try {

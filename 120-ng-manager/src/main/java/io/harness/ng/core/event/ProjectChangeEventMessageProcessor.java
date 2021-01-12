@@ -5,6 +5,7 @@ import static io.harness.exception.WingsException.USER;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
+import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 
 import com.google.inject.Inject;
@@ -57,10 +58,10 @@ public class ProjectChangeEventMessageProcessor implements MessageProcessor {
     try {
       harnessSMManager.createHarnessSecretManager(projectEntityChangeDTO.getAccountIdentifier(),
           projectEntityChangeDTO.getOrgIdentifier(), projectEntityChangeDTO.getIdentifier());
-    } catch (Exception ex) {
+    } catch (DuplicateFieldException ex) {
       log.error(
           String.format(
-              "Harness Secret Manager could not be created for accountIdentifier %s, orgIdentifier %s and projectIdentifier %s",
+              "Harness Secret Manager for accountIdentifier %s, orgIdentifier %s and projectIdentifier %s already exists",
               projectEntityChangeDTO.getAccountIdentifier(), projectEntityChangeDTO.getOrgIdentifier(),
               projectEntityChangeDTO.getIdentifier()),
           ex, USER);

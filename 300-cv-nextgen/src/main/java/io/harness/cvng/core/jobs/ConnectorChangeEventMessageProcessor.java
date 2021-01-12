@@ -8,7 +8,7 @@ import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
-import io.harness.eventsframework.entity_crud.connector.ConnectorEntityChangeDTO;
+import io.harness.eventsframework.entity_crud.EntityChangeDTO;
 import io.harness.utils.IdentifierRefHelper;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -31,11 +31,11 @@ public class ConnectorChangeEventMessageProcessor implements ConsumerMessageProc
   public void processMessage(Message message) {
     Preconditions.checkState(validateMessage(message), "Invalid message received by Connector Change Event Processor");
 
-    ConnectorEntityChangeDTO connectorEntityChangeDTO;
+    EntityChangeDTO connectorEntityChangeDTO;
     try {
-      connectorEntityChangeDTO = ConnectorEntityChangeDTO.parseFrom(message.getMessage().getData());
+      connectorEntityChangeDTO = EntityChangeDTO.parseFrom(message.getMessage().getData());
     } catch (InvalidProtocolBufferException e) {
-      log.error("Exception in unpacking ConnectorEntityChangeDTO for key {}", message.getId(), e);
+      log.error("Exception in unpacking EntityChangeDTO for key {}", message.getId(), e);
       throw new IllegalStateException(e);
     }
 
@@ -50,7 +50,7 @@ public class ConnectorChangeEventMessageProcessor implements ConsumerMessageProc
     }
   }
   @VisibleForTesting
-  void processUpdateAction(ConnectorEntityChangeDTO connectorEntityChangeDTO) {
+  void processUpdateAction(EntityChangeDTO connectorEntityChangeDTO) {
     IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRefFromEntityIdentifiers(
         connectorEntityChangeDTO.getIdentifier().getValue(), connectorEntityChangeDTO.getAccountIdentifier().getValue(),
         connectorEntityChangeDTO.getOrgIdentifier().getValue(),

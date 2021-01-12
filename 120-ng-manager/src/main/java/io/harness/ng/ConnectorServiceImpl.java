@@ -25,7 +25,7 @@ import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.entity_crud.connector.ConnectorEntityChangeDTO;
+import io.harness.eventsframework.entity_crud.EntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.activityhistory.NGActivityType;
@@ -125,8 +125,8 @@ public class ConnectorServiceImpl implements ConnectorService {
 
   private void publishEventForConnectorUpdate(String accountIdentifier, ConnectorInfoDTO savedConnector) {
     try {
-      ConnectorEntityChangeDTO.Builder connectorUpdateDTOBuilder =
-          ConnectorEntityChangeDTO.newBuilder()
+      EntityChangeDTO.Builder connectorUpdateDTOBuilder =
+          EntityChangeDTO.newBuilder()
               .setAccountIdentifier(StringValue.of(accountIdentifier))
               .setIdentifier(StringValue.of(savedConnector.getIdentifier()));
       if (isNotBlank(savedConnector.getOrgIdentifier())) {
