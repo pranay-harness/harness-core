@@ -354,9 +354,14 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
       return ViewIdOperator.IN;
     } else if (operator.equals(QLCEViewFilterOperator.NOT_IN)) {
       return ViewIdOperator.NOT_IN;
+    } else if (operator.equals(QLCEViewFilterOperator.NOT_NULL)) {
+      return ViewIdOperator.NOT_NULL;
+    } else if (operator.equals(QLCEViewFilterOperator.NULL)) {
+      return ViewIdOperator.NULL;
     }
     return null;
   }
+
   public ViewField getViewField(QLCEViewFieldInput field) {
     return ViewField.builder()
         .fieldId(field.getFieldId())

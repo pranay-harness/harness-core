@@ -34,7 +34,6 @@ public class ViewCustomFieldServiceImpl implements ViewCustomFieldService {
 
   private static final String CUSTOM_FIELD_DUPLICATE_EXCEPTION = "Custom Field with given name already exists";
   private static final String CUSTOM_FIELD_IN_USE = "Custom Field in use, clean up all usages to delete the field";
-  private static final String leftJoinLabels = " LEFT JOIN UNNEST(labels) as labels";
 
   @Override
   public ViewCustomField save(ViewCustomField viewCustomField, BigQuery bigQuery, String cloudProviderTableName) {
@@ -142,7 +141,6 @@ public class ViewCustomFieldServiceImpl implements ViewCustomFieldService {
 
     SelectQuery selectQuery = new SelectQuery();
     selectQuery.addCustomFromTable(cloudProviderTableName);
-    selectQuery.addCustomJoin(leftJoinLabels);
     selectQuery.addCustomColumns(new CustomSql(viewCustomField.getSqlFormula()));
 
     QueryJobConfiguration queryConfig =
