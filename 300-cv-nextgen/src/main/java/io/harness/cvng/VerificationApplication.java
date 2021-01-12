@@ -13,10 +13,14 @@ import static com.google.inject.matcher.Matchers.not;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
+import io.harness.cvng.activity.entities.Activity;
+import io.harness.cvng.activity.entities.Activity.ActivityKeys;
 import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceKeys;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
+import io.harness.cvng.activity.jobs.ActivityStatusJob;
 import io.harness.cvng.activity.jobs.K8ActivityCollectionHandler;
 import io.harness.cvng.beans.activity.ActivitySourceType;
+import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.client.NextGenClientModule;
 import io.harness.cvng.client.VerificationManagerClientModule;
 import io.harness.cvng.core.entities.CVConfig;
@@ -248,6 +252,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerHealthChecks(environment, injector);
     createConsumerThreadsToListenToEvents(injector);
     registerCVNGSchemaMigrationIterator(injector);
+    registerActivityIterator(injector);
     log.info("Leaving startup maintenance mode");
     MaintenanceController.forceMaintenance(false);
 
@@ -282,6 +287,34 @@ public class VerificationApplication extends Application<VerificationConfigurati
     injector.injectMembers(analysisOrchestrationIterator);
     workflowVerificationExecutor.scheduleWithFixedDelay(
         () -> analysisOrchestrationIterator.process(), 0, 20, TimeUnit.SECONDS);
+  }
+
+  private void registerActivityIterator(Injector injector) {
+    ScheduledThreadPoolExecutor workflowVerificationExecutor =
+        new ScheduledThreadPoolExecutor(5, new ThreadFactoryBuilder().setNameFormat("Iterator-Activity").build());
+    Handler<Activity> handler = injector.getInstance(ActivityStatusJob.class);
+    PersistenceIterator activityIterator =
+        MongoPersistenceIterator.<Activity, MorphiaFilterExpander<Activity>>builder()
+            .mode(PersistenceIterator.ProcessMode.PUMP)
+            .clazz(Activity.class)
+            .fieldName(ActivityKeys.verificationIteration)
+            .targetInterval(ofSeconds(30))
+            .acceptableNoAlertDelay(ofSeconds(15))
+            .executorService(workflowVerificationExecutor)
+            .semaphore(new Semaphore(7))
+            .handler(handler)
+            .schedulingType(REGULAR)
+            .filterExpander(query
+                -> query.field(ActivityKeys.verificationJobInstanceIds)
+                       .exists()
+                       .field(ActivityKeys.analysisStatus)
+                       .in(Lists.newArrayList(
+                           ActivityVerificationStatus.NOT_STARTED, ActivityVerificationStatus.IN_PROGRESS)))
+            .redistribute(true)
+            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
+            .build();
+    injector.injectMembers(activityIterator);
+    workflowVerificationExecutor.scheduleWithFixedDelay(() -> activityIterator.process(), 0, 30, TimeUnit.SECONDS);
   }
 
   private void registerVerificationTaskOrchestrationIterator(Injector injector) {

@@ -280,7 +280,7 @@ public class AlertRuleServiceImpl implements AlertRuleService {
   }
 
   private String getRiskUrl(String accountId, String orgIdentifier, String projectIdentifier, Instant timeStamp) {
-    return portalUrl + "ng/#/account/" + accountId + "/cv/org/" + orgIdentifier + "/project/" + projectIdentifier
+    return portalUrl + "ng/#/account/" + accountId + "/cv/orgs/" + orgIdentifier + "/projects/" + projectIdentifier
         + "/services?timeStamp=" + timeStamp.toEpochMilli();
   }
 }

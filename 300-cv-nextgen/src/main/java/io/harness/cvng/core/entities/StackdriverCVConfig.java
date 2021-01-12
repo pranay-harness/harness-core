@@ -118,6 +118,7 @@ public class StackdriverCVConfig extends MetricCVConfig {
                              .jsonMetricDefinition(JsonUtils.asJson(definition.getJsonMetricDefinition()))
                              .metricType(metricType)
                              .tags(definition.getMetricTags())
+                             .isManualQuery(definition.isManualQuery())
                              .build());
 
       // add this metric to the pack and the corresponding thresholds

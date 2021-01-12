@@ -88,6 +88,7 @@ public class CVConnectorValidator<T extends ConnectorConfigDTO> implements Conne
     CVConnectorTaskResponse cvConnectorTaskResponse = (CVConnectorTaskResponse) delegateResponseData;
     return ConnectorValidationResult.builder()
         .status(cvConnectorTaskResponse.isValid() ? ConnectivityStatus.SUCCESS : ConnectivityStatus.FAILURE)
+        .errorSummary(cvConnectorTaskResponse.getErrorMessage())
         .delegateId(getDelegateId(cvConnectorTaskResponse))
         .build();
   }

@@ -116,6 +116,24 @@ public class ActivityServiceImpl implements ActivityService {
     return activity.getUuid();
   }
 
+  @Override
+  public void updateActivityStatus(Activity activity) {
+    ActivityVerificationSummary summary = verificationJobInstanceService.getActivityVerificationSummary(
+        verificationJobInstanceService.get(activity.getVerificationJobInstanceIds()));
+    if (!summary.getAggregatedStatus().equals(ActivityVerificationStatus.IN_PROGRESS)
+        && !summary.getAggregatedStatus().equals(ActivityVerificationStatus.NOT_STARTED)) {
+      Query<Activity> activityQuery =
+          hPersistence.createQuery(Activity.class).filter(ActivityKeys.uuid, activity.getUuid());
+      UpdateOperations<Activity> activityUpdateOperations =
+          hPersistence.createUpdateOperations(Activity.class)
+              .set(ActivityKeys.analysisStatus, summary.getAggregatedStatus())
+              .set(ActivityKeys.verificationSummary, summary);
+      hPersistence.update(activityQuery, activityUpdateOperations);
+
+      log.info("Updated the status of activity {} to {}", activity.getUuid(), summary.getAggregatedStatus());
+    }
+  }
+
   public String createActivity(Activity activity) {
     return hPersistence.save(activity);
   }
@@ -350,8 +368,11 @@ public class ActivityServiceImpl implements ActivityService {
     List<ActivityDashboardDTO> activityDashboardDTOList = new ArrayList<>();
     if (isNotEmpty(activities)) {
       activities.forEach(activity -> {
-        ActivityVerificationSummary summary = verificationJobInstanceService.getActivityVerificationSummary(
-            verificationJobInstanceService.get(activity.getVerificationJobInstanceIds()));
+        ActivityVerificationSummary summary = activity.getVerificationSummary();
+        if (summary == null) {
+          summary = verificationJobInstanceService.getActivityVerificationSummary(
+              verificationJobInstanceService.get(activity.getVerificationJobInstanceIds()));
+        }
 
         activityDashboardDTOList.add(ActivityDashboardDTO.builder()
                                          .activityType(getActivityType(activity))

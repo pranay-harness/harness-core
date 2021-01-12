@@ -3,6 +3,7 @@ package io.harness.cvng.migration;
 
 import io.harness.cvng.migration.list.CVNGBaseMigration;
 import io.harness.cvng.migration.list.RecreateMetricPackAndThresholdMigration;
+import io.harness.cvng.migration.list.UpdateActivityStatusMigration;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -20,6 +21,7 @@ public class CVNGBackgroundMigrationList {
     return new ImmutableList.Builder<Pair<Integer, Class<? extends CNVGMigration>>>()
         .add(Pair.of(1, CVNGBaseMigration.class))
         .add(Pair.of(2, RecreateMetricPackAndThresholdMigration.class))
+        .add(Pair.of(3, UpdateActivityStatusMigration.class))
         .build();
   }
 }

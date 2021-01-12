@@ -882,6 +882,86 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     assertThat(activityService.createVerificationJobInstancesForActivity(kubernetesActivity).size()).isEqualTo(1);
   }
 
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testUpdateActivityStatus_passed() {
+    VerificationJob verificationJob = createVerificationJob();
+    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+        .thenReturn(verificationJob);
+    instant = Instant.now();
+
+    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
+    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
+
+    List<Activity> activities = hPersistence.createQuery(Activity.class).asList();
+    activities.get(0).setVerificationJobInstanceIds(Arrays.asList("jobId1"));
+    activities.get(1).setVerificationJobInstanceIds(Arrays.asList("jobId2"));
+
+    assertThat(activities.get(0).getAnalysisStatus().name()).isEqualTo(ActivityVerificationStatus.NOT_STARTED.name());
+    assertThat(activities.get(0).getVerificationSummary()).isNull();
+
+    ActivityVerificationSummary summary = createActivitySummary(Instant.now());
+    summary.setTotal(1);
+    summary.setPassed(1);
+    summary.setProgress(0);
+
+    List<VerificationJobInstance> jobInstances1 =
+        Arrays.asList(VerificationJobInstance.builder().uuid("jobId1").build());
+    when(verificationJobInstanceService.get(Arrays.asList("jobId1"))).thenReturn(jobInstances1);
+
+    when(verificationJobInstanceService.getActivityVerificationSummary(jobInstances1)).thenReturn(summary);
+    // when(verificationJobInstanceService.getActivityVerificationSummary(jobInstances1)).thenReturn(createActivitySummary(Instant.now()));
+
+    activityService.updateActivityStatus(activities.get(0));
+
+    activities = hPersistence.createQuery(Activity.class).asList();
+
+    assertThat(activities.get(0).getAnalysisStatus().name())
+        .isEqualTo(ActivityVerificationStatus.VERIFICATION_PASSED.name());
+    assertThat(activities.get(0).getVerificationSummary()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testUpdateActivityStatus_inProgress() {
+    VerificationJob verificationJob = createVerificationJob();
+    when(verificationJobService.getVerificationJob(accountId, verificationJob.getIdentifier()))
+        .thenReturn(verificationJob);
+    instant = Instant.now();
+
+    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
+    activityService.register(accountId, generateUuid(), getDeploymentActivity(verificationJob));
+
+    List<Activity> activities = hPersistence.createQuery(Activity.class).asList();
+    activities.get(0).setVerificationJobInstanceIds(Arrays.asList("jobId1"));
+    activities.get(1).setVerificationJobInstanceIds(Arrays.asList("jobId2"));
+
+    assertThat(activities.get(0).getAnalysisStatus().name()).isEqualTo(ActivityVerificationStatus.NOT_STARTED.name());
+    assertThat(activities.get(0).getVerificationSummary()).isNull();
+
+    ActivityVerificationSummary summary = createActivitySummary(Instant.now());
+    summary.setTotal(1);
+    summary.setPassed(1);
+    summary.setProgress(0);
+
+    List<VerificationJobInstance> jobInstances1 =
+        Arrays.asList(VerificationJobInstance.builder().uuid("jobId1").build());
+    when(verificationJobInstanceService.get(Arrays.asList("jobId1"))).thenReturn(jobInstances1);
+
+    when(verificationJobInstanceService.getActivityVerificationSummary(jobInstances1)).thenReturn(summary);
+    when(verificationJobInstanceService.getActivityVerificationSummary(anyList()))
+        .thenReturn(createActivitySummary(Instant.now()));
+
+    activityService.updateActivityStatus(activities.get(1));
+
+    activities = hPersistence.createQuery(Activity.class).asList();
+
+    assertThat(activities.get(0).getAnalysisStatus().name()).isEqualTo(ActivityVerificationStatus.NOT_STARTED.name());
+    assertThat(activities.get(0).getVerificationSummary()).isNull();
+  }
+
   private DeploymentActivityDTO getDeploymentActivity(VerificationJob verificationJob) {
     List<VerificationJobRuntimeDetails> verificationJobDetails = new ArrayList<>();
     Map<String, String> runtimeParams = new HashMap<>();
