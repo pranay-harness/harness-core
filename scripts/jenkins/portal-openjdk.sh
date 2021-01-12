@@ -213,11 +213,11 @@ cd ../..
 mkdir -p dist/notification-service
 cd dist/notification-service
 
-cp ../../930-notification-service/target/notification-service-capsule.jar .
-cp ../../930-notification-service/config.yml .
-cp ../../930-notification-service/keystore.jks .
-cp ../../930-notification-service/key.pem .
-cp ../../930-notification-service/cert.pem .
+cp ../../830-notification-service/target/notification-service-capsule.jar .
+cp ../../830-notification-service/config.yml .
+cp ../../830-notification-service/keystore.jks .
+cp ../../830-notification-service/key.pem .
+cp ../../830-notification-service/cert.pem .
 cp ../../dockerization/notification-service/Dockerfile-notification-service-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/notification-service/Dockerfile-notification-service-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
 cp -r ../../dockerization/notification-service/scripts/ .

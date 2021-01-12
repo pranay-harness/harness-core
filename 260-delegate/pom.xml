@@ -82,6 +82,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>835-notification-senders</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>910-delegate-task-grpc-service</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -98,11 +103,6 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>930-delegate-tasks</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>935-notification-senders</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

@@ -60,7 +60,7 @@ public class PagerDutyServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ANKUSH)
   @Category(UnitTests.class)
-  public void sendNotificaiton_EmptyRequest() {
+  public void sendNotification_EmptyRequest() {
     NotificationRequest notificationRequest = NotificationRequest.newBuilder().build();
     NotificationProcessingResponse notificationProcessingResponse = pagerdutyService.send(notificationRequest);
     assertTrue(notificationProcessingResponse.equals(NotificationProcessingResponse.trivialResponseWithNoRetries));
@@ -69,7 +69,7 @@ public class PagerDutyServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ANKUSH)
   @Category(UnitTests.class)
-  public void sendNotificaiton_OnlyIdInRequest() {
+  public void sendNotification_OnlyIdInRequest() {
     NotificationRequest notificationRequest = NotificationRequest.newBuilder().setId(id).build();
     NotificationProcessingResponse notificationProcessingResponse = pagerdutyService.send(notificationRequest);
     assertTrue(notificationProcessingResponse.equals(NotificationProcessingResponse.trivialResponseWithNoRetries));
@@ -78,7 +78,7 @@ public class PagerDutyServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ANKUSH)
   @Category(UnitTests.class)
-  public void sendNotificaiton_NoTemplateIdInRequest() {
+  public void sendNotification_NoTemplateIdInRequest() {
     NotificationRequest notificationRequest =
         NotificationRequest.newBuilder()
             .setId(id)
@@ -94,7 +94,7 @@ public class PagerDutyServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ANKUSH)
   @Category(UnitTests.class)
-  public void sendNotificaiton_NoRecipientInRequest() {
+  public void sendNotification_NoRecipientInRequest() {
     NotificationRequest notificationRequest =
         NotificationRequest.newBuilder()
             .setId(id)
@@ -112,7 +112,7 @@ public class PagerDutyServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ANKUSH)
   @Category(UnitTests.class)
-  public void sendNotificaiton_ValidCase() {
+  public void sendNotification_ValidCase() {
     NotificationRequest notificationRequest =
         NotificationRequest.newBuilder()
             .setId(id)
@@ -177,7 +177,7 @@ public class PagerDutyServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ANKUSH)
   @Category(UnitTests.class)
-  public void sendTestNotificaiton_ValidRequest() {
+  public void sendTestNotification_ValidRequest() {
     final NotificationSettingDTO notificationSettingDTO4 =
         PagerDutySettingDTO.builder().accountId(accountId).recipient("email@harness.io").build();
     NotificationProcessingResponse notificationExpectedResponse =
