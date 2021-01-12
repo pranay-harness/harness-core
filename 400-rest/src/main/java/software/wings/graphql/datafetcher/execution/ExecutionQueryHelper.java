@@ -116,7 +116,7 @@ public class ExecutionQueryHelper {
       }
 
       if (filter.getTriggeredBy() != null) {
-        field = query.field(WorkflowExecutionKeys.triggeredBy);
+        field = query.field(WorkflowExecutionKeys.triggeredByID);
         QLIdFilter idFilter = filter.getTriggeredBy();
         utils.setIdFilter(field, idFilter);
       }
