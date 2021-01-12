@@ -351,6 +351,7 @@ public class WorkflowExecution implements PersistentRegularIterable, AccountData
     public static final String executionArgs_artifact_variables =
         executionArgs + "." + ExecutionArgsKeys.artifactVariables;
     public static final String tags_name = tags + "." + NameValuePairKeys.name;
+    public static final String triggeredByID = triggeredBy + "." + User.BaseKeys.uuid;
     public static final String pipelineSummary_pipelineId = pipelineSummary + "." + ExecutionArgsKeys.pipelineId;
   }
 
