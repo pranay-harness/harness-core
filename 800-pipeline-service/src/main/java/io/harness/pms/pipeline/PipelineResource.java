@@ -9,6 +9,7 @@ import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.filter.dto.FilterPropertiesDTO;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -21,6 +22,7 @@ import io.harness.pms.pipeline.mappers.PipelineExecutionSummaryDtoMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionDetailDTO;
+import io.harness.pms.plan.execution.beans.dto.PipelineExecutionFilterPropertiesDTO;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionSummaryDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.variables.VariableMergeServiceResponse;
@@ -38,6 +40,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.*;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -220,28 +223,18 @@ public class PipelineResource {
     return ResponseDTO.newResponse(pmsPipelineService.getSteps(module, category));
   }
 
-  @GET
+  @POST
   @Path("/execution/summary")
   @ApiOperation(value = "Gets Executions list", nickname = "getListOfExecutions")
   public ResponseDTO<Page<PipelineExecutionSummaryDTO>> getListOfExecutions(
       @NotNull @QueryParam("accountIdentifier") String accountId, @QueryParam("orgIdentifier") String orgId,
       @NotNull @QueryParam("projectIdentifier") String projectId, @QueryParam("filter") String filter,
       @QueryParam("pipelineIdentifier") String pipelineIdentifier, @QueryParam("page") @DefaultValue("0") int page,
-      @QueryParam("size") @DefaultValue("10") int size, @QueryParam("sort") List<String> sort) {
+      @QueryParam("size") @DefaultValue("10") int size, @QueryParam("sort") List<String> sort,
+      @QueryParam("filterIdentifier") String filterIdentifier, FilterPropertiesDTO filterProperties) {
     log.info("Get List of executions");
-    Criteria criteria = new Criteria();
-    if (EmptyPredicate.isNotEmpty(accountId)) {
-      criteria.and(PipelineEntityKeys.accountId).is(accountId);
-    }
-    if (EmptyPredicate.isNotEmpty(orgId)) {
-      criteria.and(PipelineEntityKeys.orgIdentifier).is(orgId);
-    }
-    if (EmptyPredicate.isNotEmpty(projectId)) {
-      criteria.and(PipelineEntityKeys.projectIdentifier).is(projectId);
-    }
-    if (EmptyPredicate.isNotEmpty(pipelineIdentifier)) {
-      criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.pipelineIdentifier).is(pipelineIdentifier);
-    }
+    Criteria criteria = pmsExecutionService.formCriteria(accountId, orgId, projectId, pipelineIdentifier,
+        filterIdentifier, (PipelineExecutionFilterPropertiesDTO) filterProperties);
     Pageable pageRequest;
     if (EmptyPredicate.isEmpty(sort)) {
       pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.createdAt));
