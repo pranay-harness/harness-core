@@ -28,7 +28,7 @@ import io.harness.beans.WorkflowType;
 import software.wings.api.ServiceElement;
 import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.EnvSummary;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GraphNode;
 import software.wings.beans.NameValuePair;

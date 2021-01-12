@@ -7,8 +7,8 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.EnvironmentType.ALL;
 import static software.wings.sm.StateType.ECS_STEADY_STATE_CHECK;
 
 import static java.util.Collections.singletonList;

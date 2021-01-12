@@ -72,7 +72,7 @@ import software.wings.app.PortalConfig;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.alert.Alert;

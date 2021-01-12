@@ -3,7 +3,7 @@ package software.wings.sm.states.pcf;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.Application;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;

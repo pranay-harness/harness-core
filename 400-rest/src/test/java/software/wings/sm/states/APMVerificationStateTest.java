@@ -33,7 +33,7 @@ import software.wings.api.HostElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.beans.APMVerificationConfig;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.apm.APMMetricInfo;
 import software.wings.service.impl.apm.CustomAPMDataCollectionInfo;

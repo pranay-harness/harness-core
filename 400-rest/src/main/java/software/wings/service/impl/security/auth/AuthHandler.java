@@ -61,7 +61,7 @@ import software.wings.beans.Account;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.Base;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Pipeline;

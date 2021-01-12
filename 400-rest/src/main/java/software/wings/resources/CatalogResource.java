@@ -1,7 +1,3 @@
-/**
- *
- */
-
 package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -13,7 +9,7 @@ import io.harness.rest.RestResponse;
 import io.harness.security.annotations.PublicApi;
 
 import software.wings.beans.CatalogNames;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.ExecutionCredential.ExecutionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;

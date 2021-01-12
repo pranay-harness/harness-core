@@ -1,6 +1,6 @@
 package software.wings.service.impl.instance;
 
-import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
+import static software.wings.beans.EnvironmentType.NON_PROD;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;

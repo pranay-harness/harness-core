@@ -18,7 +18,6 @@ import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
 
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.entityinterface.ApplicationAccess;

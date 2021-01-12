@@ -7,8 +7,8 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
-import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.EnvironmentType.ALL;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.PRIMARY_SERVICE_NAME_EXPRESSION;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.STAGE_SERVICE_NAME_EXPRESSION;
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;

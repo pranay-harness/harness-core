@@ -107,7 +107,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;

@@ -21,7 +21,7 @@ import io.harness.testframework.restutils.WorkflowRestUtils;
 
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;

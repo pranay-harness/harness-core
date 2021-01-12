@@ -27,7 +27,7 @@ import software.wings.beans.Application;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.ConnectionType;

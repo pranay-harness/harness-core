@@ -43,7 +43,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;

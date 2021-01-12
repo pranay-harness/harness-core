@@ -1,7 +1,3 @@
-/**
- *
- */
-
 package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -33,7 +29,6 @@ import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
 
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionArgs.ExecutionArgsKeys;
 import software.wings.beans.NameValuePair.NameValuePairKeys;
 import software.wings.beans.appmanifest.HelmChart;

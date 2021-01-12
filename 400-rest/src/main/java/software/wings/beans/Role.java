@@ -8,7 +8,6 @@ import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.persistence.AccountAccess;
 
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.security.PermissionAttribute.PermissionType;
 
 import java.util.ArrayList;

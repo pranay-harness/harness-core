@@ -16,8 +16,8 @@ import static io.harness.rule.OwnerRule.VUK;
 
 import static software.wings.beans.Delegate.Status.ENABLED;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
-import static software.wings.beans.Environment.EnvironmentType.PROD;
+import static software.wings.beans.EnvironmentType.NON_PROD;
+import static software.wings.beans.EnvironmentType.PROD;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.service.impl.AssignDelegateServiceImpl.BLACKLIST_TTL;
 import static software.wings.service.impl.AssignDelegateServiceImpl.ERROR_MESSAGE;

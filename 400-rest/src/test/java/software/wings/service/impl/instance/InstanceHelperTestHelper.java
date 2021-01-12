@@ -15,7 +15,7 @@ import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.command.CodeDeployParams;

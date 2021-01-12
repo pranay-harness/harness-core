@@ -11,7 +11,7 @@ import io.harness.governance.TimeRangeBasedFreezeConfig;
 import io.harness.governance.WeeklyFreezeConfig;
 
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.compliance.GovernanceConfigService;

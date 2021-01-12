@@ -64,7 +64,7 @@ import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.CodeDeployInfrastructureMapping.CodeDeployInfrastructureMappingBuilder;
 import software.wings.beans.EcsInfrastructureMapping;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.InfrastructureMapping;

@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
 
-import static software.wings.beans.Environment.EnvironmentType.PROD;
+import static software.wings.beans.EnvironmentType.PROD;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;

@@ -1,7 +1,5 @@
 package software.wings.beans;
 
-import software.wings.beans.Environment.EnvironmentType;
-
 import lombok.Builder;
 import lombok.Data;
 

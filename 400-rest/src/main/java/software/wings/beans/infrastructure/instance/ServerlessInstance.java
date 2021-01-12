@@ -13,7 +13,7 @@ import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
 
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.infrastructure.instance.info.ServerlessInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.AwsLambdaInstanceKey;

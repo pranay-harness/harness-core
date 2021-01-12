@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAGHU;
 
-import static software.wings.beans.Environment.EnvironmentType.PROD;
+import static software.wings.beans.EnvironmentType.PROD;
 import static software.wings.beans.command.CleanupSshCommandUnit.CLEANUP_UNIT;
 import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.COMMAND;
 import static software.wings.beans.command.CommandUnitType.EXEC;

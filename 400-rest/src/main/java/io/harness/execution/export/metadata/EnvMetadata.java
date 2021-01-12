@@ -6,7 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.EnvSummary;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 
 import java.util.List;
 import lombok.Builder;

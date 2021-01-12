@@ -19,7 +19,7 @@ import software.wings.beans.Application.Builder;
 import software.wings.beans.BuildWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.PhysicalDataCenterConfig;

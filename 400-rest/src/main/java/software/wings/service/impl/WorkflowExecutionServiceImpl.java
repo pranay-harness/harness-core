@@ -170,7 +170,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.EnvSummary;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphNode;

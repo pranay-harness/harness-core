@@ -20,7 +20,7 @@ import io.harness.governance.WeeklyFreezeConfig;
 import io.harness.rule.Owner;
 
 import software.wings.beans.Account;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.Event;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.User;

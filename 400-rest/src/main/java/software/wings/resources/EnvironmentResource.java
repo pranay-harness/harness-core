@@ -13,7 +13,7 @@ import io.harness.rest.RestResponse;
 
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.Service;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;

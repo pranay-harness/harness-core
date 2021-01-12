@@ -18,7 +18,7 @@ import io.harness.testframework.restutils.SearchRestUtils;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.search.entities.environment.EnvironmentSearchEntity;
 import software.wings.search.framework.SearchResult;
 import software.wings.search.framework.SearchResults;

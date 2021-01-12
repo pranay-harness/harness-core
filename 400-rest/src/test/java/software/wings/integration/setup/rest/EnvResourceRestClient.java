@@ -2,7 +2,7 @@ package software.wings.integration.setup.rest;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
+import static software.wings.beans.EnvironmentType.NON_PROD;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.integration.SeedData.randomText;
 import static software.wings.utils.WingsIntegrationTestConstants.API_BASE;

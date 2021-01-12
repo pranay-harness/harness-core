@@ -85,7 +85,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.EntityType;
 import software.wings.beans.EnvSummary;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;

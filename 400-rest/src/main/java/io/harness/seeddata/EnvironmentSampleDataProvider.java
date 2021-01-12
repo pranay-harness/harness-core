@@ -4,8 +4,8 @@ import static io.harness.seeddata.SampleDataProviderConstants.K8S_PROD_ENVIRONME
 import static io.harness.seeddata.SampleDataProviderConstants.K8S_QA_ENVIRONMENT;
 
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
-import static software.wings.beans.Environment.EnvironmentType.PROD;
+import static software.wings.beans.EnvironmentType.NON_PROD;
+import static software.wings.beans.EnvironmentType.PROD;
 
 import software.wings.beans.Environment;
 import software.wings.service.intfc.EnvironmentService;

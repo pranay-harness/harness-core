@@ -24,7 +24,7 @@ import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.service.impl.event.timeseries.TimeSeriesEventInfo;
 import software.wings.utils.WingsTestConstants;
 

@@ -13,7 +13,7 @@ import static software.wings.beans.Activity.Type.Command;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Environment.EnvironmentType.PROD;
+import static software.wings.beans.EnvironmentType.PROD;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;

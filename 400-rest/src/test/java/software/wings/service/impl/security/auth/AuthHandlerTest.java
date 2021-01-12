@@ -60,7 +60,7 @@ import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
