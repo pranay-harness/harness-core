@@ -56,6 +56,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.ws.rs.NotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -423,5 +424,21 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   public ConnectorStatistics getConnectorStatistics(
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     return connectorStatisticsHelper.getStats(accountIdentifier, orgIdentifier, projectIdentifier);
+  }
+
+  @Override
+  public List<ConnectorResponseDTO> listbyFQN(String accountIdentifier, List<String> connectorFQN) {
+    Pageable pageable = PageUtils.getPageRequest(
+        PageRequest.builder()
+            .pageSize(100)
+            .sortOrders(Collections.singletonList(
+                SortOrder.Builder.aSortOrder().withField(ConnectorKeys.createdAt, OrderType.DESC).build()))
+            .build());
+    Page<Connector> connectors =
+        connectorRepository.findAll(Criteria.where(ConnectorKeys.fullyQualifiedIdentifier).in(connectorFQN), pageable);
+    return connectors.getContent()
+        .stream()
+        .map(connector -> connectorMapper.writeDTO(connector))
+        .collect(Collectors.toList());
   }
 }
