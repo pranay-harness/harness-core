@@ -6,11 +6,13 @@ import java.util.Set;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldDefaults;
 
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@EqualsAndHashCode(callSuper = false)
 public class FieldSubtypeData {
   /**
    * Field name in jsonSchema on which {@link JsonSubTypes} is applied.

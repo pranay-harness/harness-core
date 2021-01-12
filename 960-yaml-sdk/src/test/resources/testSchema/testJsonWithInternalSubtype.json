@@ -7,10 +7,10 @@
     "testInterface": {
       "oneOf": [
         {
-          "$ref": "#/definitions/ClassWithoutApiModelOverride"
+          "$ref": "#/definitions/testName"
         },
         {
-          "$ref": "#/definitions/testName"
+          "$ref": "#/definitions/ClassWithoutApiModelOverride"
         }
       ]
     }
@@ -26,10 +26,10 @@
         "testInterface": {
           "oneOf": [
             {
-              "$ref": "#/definitions/ClassWithoutApiModelOverride"
+              "$ref": "#/definitions/testName"
             },
             {
-              "$ref": "#/definitions/testName"
+              "$ref": "#/definitions/ClassWithoutApiModelOverride"
             }
           ]
         }

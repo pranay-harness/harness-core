@@ -68,7 +68,7 @@ public class YamlSchemaGeneratorTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = ABHINAV, intermittent = true)
+  @Owner(developers = ABHINAV)
   @Category({UnitTests.class})
   public void testGenerateYamlSchemaFilesWithFieldHavingManyPossibleValue() throws IOException {
     Set<Class<?>> schemaClasses = new HashSet<>();

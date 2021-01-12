@@ -18,22 +18,6 @@
       "if": {
         "properties": {
           "type": {
-            "const": "ClassWithoutApiModelOverride"
-          }
-        }
-      },
-      "then": {
-        "properties": {
-          "spec": {
-            "$ref": "#/definitions/ClassWithoutApiModelOverride"
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "type": {
             "const": "ClassWithApiModelOverride"
           }
         }
@@ -42,6 +26,22 @@
         "properties": {
           "spec": {
             "$ref": "#/definitions/testName"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "ClassWithoutApiModelOverride"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "spec": {
+            "$ref": "#/definitions/ClassWithoutApiModelOverride"
           }
         }
       }
@@ -68,22 +68,6 @@
           "if": {
             "properties": {
               "type": {
-                "const": "ClassWithoutApiModelOverride"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/ClassWithoutApiModelOverride"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
                 "const": "ClassWithApiModelOverride"
               }
             }
@@ -92,6 +76,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/testName"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ClassWithoutApiModelOverride"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/ClassWithoutApiModelOverride"
               }
             }
           }

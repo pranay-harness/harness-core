@@ -41,22 +41,6 @@
       "if": {
         "properties": {
           "type": {
-            "const": "Ssh"
-          }
-        }
-      },
-      "then": {
-        "properties": {
-          "spec": {
-            "$ref": "#/definitions/GitSSHAuthenticationDTO"
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "type": {
             "const": "Http"
           }
         }
@@ -65,6 +49,22 @@
         "properties": {
           "spec": {
             "$ref": "#/definitions/GitHTTPAuthenticationDTO"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "Ssh"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "spec": {
+            "$ref": "#/definitions/GitSSHAuthenticationDTO"
           }
         }
       }
