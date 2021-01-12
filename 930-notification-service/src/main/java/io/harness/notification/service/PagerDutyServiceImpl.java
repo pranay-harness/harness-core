@@ -88,7 +88,7 @@ public class PagerDutyServiceImpl implements ChannelService {
   public boolean sendTestNotification(NotificationSettingDTO notificationSettingDTO) {
     PagerDutySettingDTO pagerDutySettingDTO = (PagerDutySettingDTO) notificationSettingDTO;
     String pagerdutyKey = pagerDutySettingDTO.getRecipient();
-    if (Objects.isNull(stripToNull(pagerdutyKey))) {
+    if (Objects.isNull(stripToNull(pagerdutyKey)) || Objects.isNull(stripToNull(pagerDutySettingDTO.getAccountId()))) {
       throw new NotificationException("Malformed pagerduty key encountered while processing Test Connection request "
               + notificationSettingDTO.getNotificationId(),
           DEFAULT_ERROR_CODE, USER);

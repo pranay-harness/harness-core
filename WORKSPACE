@@ -1947,6 +1947,7 @@ maven_install(
         "xpp3:xpp3:1.1.3.3",
         "io.netty:netty-all:4.1.51.Final",
         "com.github.spullara.mustache.java:compiler:0.9.5",
+        "io.dropwizard:dropwizard-testing:1.3.24",
     ],
     excluded_artifacts = [
         "org.clojure:clojure",

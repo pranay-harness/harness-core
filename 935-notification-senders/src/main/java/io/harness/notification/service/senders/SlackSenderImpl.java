@@ -14,7 +14,15 @@ import okhttp3.Response;
 @Slf4j
 public class SlackSenderImpl {
   public static final MediaType APPLICATION_JSON = MediaType.parse("application/json; charset=utf-8");
-  private final OkHttpClient client = new OkHttpClient();
+  private final OkHttpClient client;
+
+  public SlackSenderImpl(OkHttpClient client) {
+    this.client = client;
+  }
+
+  public SlackSenderImpl() {
+    client = new OkHttpClient();
+  }
 
   public NotificationProcessingResponse send(List<String> slackWebhookUrls, String message, String notificationId) {
     List<Boolean> results = new ArrayList<>();

@@ -26,11 +26,11 @@ public class NotificationProcessingResponse {
   }
 
   public static boolean isNotificationResquestFailed(NotificationProcessingResponse response) {
-    return response.getResult().stream().reduce(false, (e1, e2) -> e1 || e2);
+    return !response.getResult().stream().reduce(false, (e1, e2) -> e1 || e2);
   }
 
   public static boolean isNotificationResquestFailed(List<Boolean> response) {
-    return response.stream().reduce(false, (e1, e2) -> e1 || e2);
+    return !response.stream().reduce(false, (e1, e2) -> e1 || e2);
   }
 
   List<Boolean> result;

@@ -154,6 +154,7 @@ java_library(
         "@maven//:io_dropwizard_dropwizard_metrics",
         "@maven//:io_dropwizard_dropwizard_request_logging",
         "@maven//:io_dropwizard_dropwizard_servlets",
+        "@maven//:io_dropwizard_dropwizard_testing",
         "@maven//:io_dropwizard_dropwizard_util",
         "@maven//:io_dropwizard_dropwizard_validation",
         "@maven//:io_dropwizard_dropwizard_views",
@@ -369,25 +370,37 @@ java_binary(
     ],
 )
 
-#java_library(
-#    name = "test_deps",
-#    exports = [
-#        "//960-persistence:supporter-test",
-#        "//990-commons-test:module",
-#        "@maven//:ch_qos_logback_logback_classic",
-#        "@maven//:ch_qos_logback_logback_core",
-#        "@maven//:de_flapdoodle_embed_de_flapdoodle_embed_process",
-#        "@maven//:junit_junit",
-#        "@maven//:org_assertj_assertj_core",
-#        "@maven//:org_mockito_mockito_core",
-#        "@maven//:org_springframework_spring_beans",
-#    ],
-#)
+java_library(
+    name = "test_deps",
+    exports = [
+        "//960-persistence:supporter-test",
+        "//990-commons-test:module",
+        "@maven//:ch_qos_logback_logback_classic",
+        "@maven//:ch_qos_logback_logback_core",
+        "@maven//:de_flapdoodle_embed_de_flapdoodle_embed_process",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_springframework_spring_beans",
+    ],
+)
 
 #java_library(
 #    name = "tests",
 #    srcs = glob(["src/test/**/*.java"]),
+#    data = [
+#        "//930-notification-service/src/test/resources:resource",
+#    ],
+#    resources = [
+#        "//:resource",
+#        "//930-notification-service/src/main/resources:resource",
+#    ],
 #    visibility = ["//visibility:public"],
+#    runtime_deps = [
+#        "//930-notification-service/src/main/resources",
+#        "//980-commons/src/test/resources",
+#        "@maven//:javax_ws_rs_javax_ws_rs_api",
+#    ],
 #    deps = [
 #        "maven_deps",
 #        "module",
@@ -395,8 +408,8 @@ java_binary(
 #        "//:lombok",
 #    ],
 #)
-
-run_tests()
+#
+#run_tests()
 
 checkstyle()
 

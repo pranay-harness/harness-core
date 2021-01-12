@@ -10,7 +10,7 @@ import static io.harness.notification.constant.NotificationConstants.COMPLETED_C
 import static io.harness.notification.constant.NotificationConstants.FAILED_COLOR;
 import static io.harness.notification.constant.NotificationConstants.PAUSED_COLOR;
 import static io.harness.notification.constant.NotificationConstants.RESUMED_COLOR;
-import static io.harness.notification.constant.NotificationServiceConstants.TEST_MICROSOFTTEAMS_TEMPLATE;
+import static io.harness.notification.constant.NotificationServiceConstants.TEST_MSTEAMS_TEMPLATE;
 
 import static java.lang.String.format;
 import static java.lang.String.join;
@@ -76,9 +76,9 @@ public class MSTeamsServiceImpl implements ChannelService {
   private static final String URL = "_URL";
   private static final Pattern placeHolderPattern = Pattern.compile("\\$\\{.+?}");
 
-  private final MSTeamsSenderImpl microsoftTeamsSender;
   private final NotificationSettingsService notificationSettingsService;
   private final NotificationTemplateService notificationTemplateService;
+  private final MSTeamsSenderImpl microsoftTeamsSender;
   private final DelegateGrpcClientWrapper delegateGrpcClientWrapper;
 
   @Override
@@ -111,12 +111,12 @@ public class MSTeamsServiceImpl implements ChannelService {
   public boolean sendTestNotification(NotificationSettingDTO notificationSettingDTO) {
     MSTeamSettingDTO msTeamSettingDTO = (MSTeamSettingDTO) notificationSettingDTO;
     String webhookUrl = msTeamSettingDTO.getRecipient();
-    if (Objects.isNull(stripToNull(webhookUrl))) {
+    if (Objects.isNull(stripToNull(webhookUrl)) || Objects.isNull(stripToNull(msTeamSettingDTO.getAccountId()))) {
       throw new NotificationException("Malformed webhook Url encountered while processing Test Connection request "
               + notificationSettingDTO.getNotificationId(),
           DEFAULT_ERROR_CODE, USER);
     }
-    NotificationProcessingResponse response = send(Collections.singletonList(webhookUrl), TEST_MICROSOFTTEAMS_TEMPLATE,
+    NotificationProcessingResponse response = send(Collections.singletonList(webhookUrl), TEST_MSTEAMS_TEMPLATE,
         Collections.emptyMap(), msTeamSettingDTO.getNotificationId(), null, notificationSettingDTO.getAccountId());
     if (NotificationProcessingResponse.isNotificationResquestFailed(response)) {
       throw new NotificationException("Invalid webhook Url encountered while processing Test Connection request "

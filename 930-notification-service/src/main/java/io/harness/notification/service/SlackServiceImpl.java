@@ -50,7 +50,8 @@ public class SlackServiceImpl implements ChannelService {
 
   @Override
   public NotificationProcessingResponse send(NotificationRequest notificationRequest) {
-    if (Objects.isNull(notificationRequest) || !notificationRequest.hasSlack()) {
+    if (Objects.isNull(notificationRequest) || !notificationRequest.hasSlack()
+        || Objects.isNull(notificationRequest.getAccountId())) {
       return NotificationProcessingResponse.trivialResponseWithNoRetries;
     }
 
@@ -78,7 +79,7 @@ public class SlackServiceImpl implements ChannelService {
   public boolean sendTestNotification(NotificationSettingDTO notificationSettingDTO) {
     SlackSettingDTO slackSettingDTO = (SlackSettingDTO) notificationSettingDTO;
     String webhookUrl = slackSettingDTO.getRecipient();
-    if (Objects.isNull(stripToNull(webhookUrl))) {
+    if (Objects.isNull(stripToNull(webhookUrl)) || Objects.isNull(stripToNull(slackSettingDTO.getAccountId()))) {
       throw new NotificationException(
           "Malformed webhook Url encountered while processing Test Connection request " + webhookUrl,
           DEFAULT_ERROR_CODE, USER);
