@@ -117,6 +117,7 @@ import software.wings.service.impl.yaml.handler.inframapping.InfraMappingYamlHan
 import software.wings.service.impl.yaml.handler.inframapping.PcfInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.PhysicalInfraMappingWinRmYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.PhysicalInfraMappingYamlHandler;
+import software.wings.service.impl.yaml.handler.infraprovisioner.ARMInfrastructureProvisionerYamlHandler;
 import software.wings.service.impl.yaml.handler.infraprovisioner.CloudFormationInfrastructureProvisionerYamlHandler;
 import software.wings.service.impl.yaml.handler.infraprovisioner.InfrastructureProvisionerYamlHandler;
 import software.wings.service.impl.yaml.handler.infraprovisioner.ShellScriptProvisionerYamlHandler;
@@ -465,6 +466,8 @@ public class YamlModule extends CommandLibrarySharedModule {
         .to(CloudFormationInfrastructureProvisionerYamlHandler.class);
     infrastructureProvisionerYamlHandlerMapBinder.addBinding(InfrastructureProvisionerType.SHELL_SCRIPT.name())
         .to(ShellScriptProvisionerYamlHandler.class);
+    infrastructureProvisionerYamlHandlerMapBinder.addBinding(InfrastructureProvisionerType.ARM.name())
+        .to(ARMInfrastructureProvisionerYamlHandler.class);
 
     MapBinder<String, TemplateLibraryYamlHandler> templateLibraryYamlHandlerMapBinder =
         MapBinder.newMapBinder(binder(), String.class, TemplateLibraryYamlHandler.class);

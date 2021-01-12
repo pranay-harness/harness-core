@@ -37,7 +37,8 @@ import org.mongodb.morphia.annotations.Entity;
 @JsonSubTypes({
   @Type(value = TerraformInfrastructureProvisioner.class, name = "TERRAFORM")
   , @Type(value = ShellScriptInfrastructureProvisioner.class, name = "SHELL_SCRIPT"),
-      @Type(value = CloudFormationInfrastructureProvisioner.class, name = "CLOUD_FORMATION")
+      @Type(value = CloudFormationInfrastructureProvisioner.class, name = "CLOUD_FORMATION"),
+      @Type(value = ARMInfrastructureProvisioner.class, name = "ARM")
 })
 @CdIndex(name = "accountIdCreatedAtIdx",
     fields =
