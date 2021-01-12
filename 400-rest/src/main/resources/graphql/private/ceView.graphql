@@ -137,6 +137,7 @@ enum ViewFilterOperator {
   IN
   NOT_IN
   NOT_NULL
+  NULL
 }
 
 input CEViewAggregation {
