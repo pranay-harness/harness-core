@@ -118,9 +118,9 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
                                   .analysisStatus(analysisStatus)
                                   .isFinalState(true)
                                   .log("Time series analysis")
+                                  .verificationTaskId(analysisInput.getVerificationTaskId())
                                   .build();
-    verificationJobInstanceService.logProgress(
-        verificationTaskService.getVerificationJobInstanceId(analysisInput.getVerificationTaskId()), progressLog);
+    verificationJobInstanceService.logProgress(progressLog);
   }
 
   private TimeSeriesLoadTestLearningEngineTask createTimeSeriesLoadTestLearningEngineTask(AnalysisInput input) {

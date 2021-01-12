@@ -293,9 +293,9 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
             .isFinalState(
                 true) // TODO: analysis is the final state now. We need to change it once feedback is implemented
             .log("Log analysis")
+            .verificationTaskId(inputs.getVerificationTaskId())
             .build();
-    verificationJobInstanceService.logProgress(
-        verificationTaskService.getVerificationJobInstanceId(inputs.getVerificationTaskId()), progressLog);
+    verificationJobInstanceService.logProgress(progressLog);
   }
 
   @Override

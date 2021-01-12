@@ -285,8 +285,8 @@ public class LogClusterServiceImpl implements LogClusterService {
                                   .analysisStatus(analysisStatus)
                                   .isFinalState(false)
                                   .log("Log clustering for " + clusterLevel)
+                                  .verificationTaskId(analysisInput.getVerificationTaskId())
                                   .build();
-    verificationJobInstanceService.logProgress(
-        verificationTaskService.getVerificationJobInstanceId(analysisInput.getVerificationTaskId()), progressLog);
+    verificationJobInstanceService.logProgress(progressLog);
   }
 }

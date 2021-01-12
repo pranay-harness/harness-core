@@ -172,9 +172,21 @@ public class VerificationJobInstance
     Instant endTime;
     boolean isFinalState;
     String log;
+    private String verificationTaskId;
+    private Instant createdAt;
+    public void validate() {
+      Preconditions.checkNotNull(verificationTaskId);
+      Preconditions.checkNotNull(startTime);
+      Preconditions.checkNotNull(endTime);
+      Preconditions.checkNotNull(log);
+      Preconditions.checkNotNull(createdAt);
+    }
     public abstract ExecutionStatus getVerificationJobExecutionStatus();
     public boolean shouldUpdateJobStatus(VerificationJobInstance verificationJobInstance) {
-      return getEndTime().equals(verificationJobInstance.getEndTime()) && isFinalState() || isFailedStatus();
+      return isFailedStatus();
+    }
+    public boolean isLastProgressLog(VerificationJobInstance verificationJobInstance) {
+      return getEndTime().equals(verificationJobInstance.getEndTime()) && isFinalState();
     }
 
     public abstract boolean isFailedStatus();
