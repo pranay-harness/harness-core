@@ -152,8 +152,12 @@ public class StepUtils {
   }
 
   private static List<String> generateLogKeys(LinkedHashMap<String, String> logAbstractionMap, List<String> units) {
-    List<String> unitKeys = new ArrayList<>();
     String baseLogKey = LogHelper.generateLogBaseKey(logAbstractionMap);
+    if (isEmpty(units)) {
+      return Collections.singletonList(baseLogKey);
+    }
+
+    List<String> unitKeys = new ArrayList<>();
     for (String unit : units) {
       String logKey = baseLogKey + (isEmpty(baseLogKey) ? "" : String.format(COMMAND_UNIT_PLACEHOLDER, unit));
       unitKeys.add(logKey);
