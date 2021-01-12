@@ -81,9 +81,9 @@ public class BudgetUtils {
     return QLCCMTimeSeriesAggregation.builder().timeGroupType(QLTimeGroupType.MONTH).build();
   }
 
-  public double getForecastCost(Budget budget) {
+  public double getForecastCost(Budget budget, String cloudProviderTable) {
     if (isPerspectiveBudget(budget)) {
-      return getForecastCostForPerspectiveBudget(budget);
+      return getForecastCostForPerspectiveBudget(budget, cloudProviderTable);
     }
     List<QLBillingDataFilter> filters = new ArrayList<>();
     filters.add(budget.getScope().getBudgetScopeFilter());
@@ -103,9 +103,9 @@ public class BudgetUtils {
     return forecastCost.doubleValue();
   }
 
-  public double getActualCost(Budget budget) {
+  public double getActualCost(Budget budget, String cloudProviderTable) {
     if (isPerspectiveBudget(budget)) {
-      return getActualCostForPerspectiveBudget(budget);
+      return getActualCostForPerspectiveBudget(budget, cloudProviderTable);
     }
     List<QLBillingDataFilter> filters = new ArrayList<>();
     filters.add(budget.getScope().getBudgetScopeFilter());
@@ -324,20 +324,25 @@ public class BudgetUtils {
             Collections.emptyList(), cloudBillingHelper.getCloudProviderTableName(accountId, unified)));
   }
 
-  private double getActualCostForPerspectiveBudget(Budget budget) {
+  private double getActualCostForPerspectiveBudget(Budget budget, String cloudProviderTable) {
     String viewId = budget.getScope().getBudgetScopeFilter().getView().getValues()[0];
     long startTime = getStartOfMonthFilterForCurrentBillingCycle().getStartTime().getValue().longValue();
+    long endTime = getEndOfMonthFilterForCurrentBillingCycle().getEndTime().getValue().longValue();
     List<QLCEViewFilterWrapper> filters = new ArrayList<>();
     filters.add(getViewFilter(viewId));
     filters.add(getPerspectiveTimeFilter(startTime, AFTER));
+    filters.add(getPerspectiveTimeFilter(endTime, BEFORE));
 
-    QLCEViewTrendInfo trendData =
-        viewsBillingService.getTrendStatsData(bigQueryService.get(), filters, getPerspectiveTotalCostAggregation(),
-            cloudBillingHelper.getCloudProviderTableName(budget.getAccountId(), unified));
+    if (cloudProviderTable == null) {
+      cloudProviderTable = cloudBillingHelper.getCloudProviderTableName(budget.getAccountId(), unified);
+    }
+
+    QLCEViewTrendInfo trendData = viewsBillingService.getTrendStatsData(
+        bigQueryService.get(), filters, getPerspectiveTotalCostAggregation(), cloudProviderTable);
     return trendData.getValue().doubleValue();
   }
 
-  private double getForecastCostForPerspectiveBudget(Budget budget) {
+  private double getForecastCostForPerspectiveBudget(Budget budget, String cloudProviderTable) {
     String viewId = budget.getScope().getBudgetScopeFilter().getView().getValues()[0];
     long startTime = getStartTimeFilterForForecasting().getStartTime().getValue().longValue();
     long endTime = getEndOfMonthFilterForCurrentBillingCycle().getEndTime().getValue().longValue();
@@ -348,9 +353,12 @@ public class BudgetUtils {
     filters.add(getPerspectiveTimeFilter(startTime, AFTER));
     filters.add(getPerspectiveTimeFilter(endTime, BEFORE));
 
-    QLCEViewTrendInfo trendData =
-        viewsBillingService.getTrendStatsData(bigQueryService.get(), filters, getPerspectiveTotalCostAggregation(),
-            cloudBillingHelper.getCloudProviderTableName(budget.getAccountId(), unified));
+    if (cloudProviderTable == null) {
+      cloudProviderTable = cloudBillingHelper.getCloudProviderTableName(budget.getAccountId(), unified);
+    }
+
+    QLCEViewTrendInfo trendData = viewsBillingService.getTrendStatsData(
+        bigQueryService.get(), filters, getPerspectiveTotalCostAggregation(), cloudProviderTable);
     Instant endInstant = Instant.ofEpochMilli(endTime);
     QLBillingAmountData billingAmountData = QLBillingAmountData.builder()
                                                 .cost(BigDecimal.valueOf(trendData.getValue().doubleValue()))

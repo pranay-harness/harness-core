@@ -36,6 +36,7 @@ public class ViewTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAggre
                   .statsLabel(trendStatsData.getStatsLabel())
                   .statsDescription(trendStatsData.getStatsDescription())
                   .statsValue(trendStatsData.getStatsValue())
+                  .value(trendStatsData.getValue())
                   .build())
         .build();
   }
