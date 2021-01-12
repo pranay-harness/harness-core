@@ -96,13 +96,13 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
+    configureObjectMapper(bootstrap.getObjectMapper());
     bootstrap.addBundle(new SwaggerBundle<PipelineServiceConfiguration>() {
       @Override
       protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(PipelineServiceConfiguration appConfig) {
         return appConfig.getSwaggerBundleConfiguration();
       }
     });
-    configureObjectMapper(bootstrap.getObjectMapper());
   }
 
   public static void configureObjectMapper(final ObjectMapper mapper) {
