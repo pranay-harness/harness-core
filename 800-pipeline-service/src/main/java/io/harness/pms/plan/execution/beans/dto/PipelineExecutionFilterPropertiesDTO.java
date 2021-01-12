@@ -6,7 +6,6 @@ import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterPropertiesDTO;
 import io.harness.filter.entity.FilterProperties;
 import io.harness.ng.core.mapper.TagMapper;
-import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.plan.execution.entity.PipelineExecutionFilterProperties;
 
