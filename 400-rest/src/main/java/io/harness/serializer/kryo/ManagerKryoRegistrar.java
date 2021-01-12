@@ -172,7 +172,7 @@ import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.Event;
 import software.wings.beans.ExecutionCredential;

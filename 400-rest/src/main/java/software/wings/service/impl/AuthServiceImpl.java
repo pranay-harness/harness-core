@@ -53,7 +53,7 @@ import software.wings.beans.Application;
 import software.wings.beans.AuthToken;
 import software.wings.beans.AuthToken.AuthTokenKeys;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.Event;
 import software.wings.beans.Permission;
 import software.wings.beans.Pipeline;

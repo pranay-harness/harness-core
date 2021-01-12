@@ -2,7 +2,7 @@ package io.harness.governance;
 
 import io.harness.data.structure.CollectionUtils;
 
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;

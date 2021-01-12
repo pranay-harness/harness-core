@@ -62,7 +62,7 @@ import software.wings.api.SpotinstAmiDeploymentInfo;
 import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;

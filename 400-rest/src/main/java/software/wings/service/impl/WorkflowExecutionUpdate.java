@@ -1,7 +1,3 @@
-/**
- *
- */
-
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -32,7 +28,7 @@ import io.harness.waiter.WaitNotifyEngine;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.EnvSummary;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.WorkflowExecution;

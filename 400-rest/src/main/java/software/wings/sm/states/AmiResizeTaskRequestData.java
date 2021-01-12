@@ -4,7 +4,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.service.impl.aws.model.AwsAmiResizeData;
 import software.wings.sm.ExecutionContext;
 

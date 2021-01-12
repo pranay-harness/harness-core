@@ -19,7 +19,7 @@ import io.harness.timescaledb.TimeScaleDBService;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.EnvSummary;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.PipelineExecution.Builder;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.WorkflowExecution;

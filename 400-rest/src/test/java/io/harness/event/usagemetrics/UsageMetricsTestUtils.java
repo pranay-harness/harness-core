@@ -8,7 +8,7 @@ import io.harness.event.timeseries.processor.EventProcessor;
 
 import software.wings.api.DeploymentTimeSeriesEvent;
 import software.wings.beans.EnvSummary;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.PipelineExecution.Builder;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.WorkflowExecution;

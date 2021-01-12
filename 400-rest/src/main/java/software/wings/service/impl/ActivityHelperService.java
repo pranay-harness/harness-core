@@ -2,8 +2,8 @@ package software.wings.service.impl;
 
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 
-import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
+import static software.wings.beans.EnvironmentType.ALL;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;

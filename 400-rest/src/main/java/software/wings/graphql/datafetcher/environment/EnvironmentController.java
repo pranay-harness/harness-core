@@ -6,7 +6,7 @@ import static io.harness.govern.Switch.unhandled;
 import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.graphql.datafetcher.user.UserController;
 import software.wings.graphql.schema.type.QLEnvironment.QLEnvironmentBuilder;
 import software.wings.graphql.schema.type.QLEnvironmentType;

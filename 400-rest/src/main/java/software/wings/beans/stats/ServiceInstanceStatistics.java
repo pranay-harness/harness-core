@@ -1,6 +1,6 @@
 package software.wings.beans.stats;
 
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 
 import java.util.HashMap;
 import java.util.List;

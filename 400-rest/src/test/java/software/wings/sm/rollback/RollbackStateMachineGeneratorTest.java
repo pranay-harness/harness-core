@@ -3,7 +3,7 @@ package software.wings.sm.rollback;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRASHANT;
 
-import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
+import static software.wings.beans.EnvironmentType.NON_PROD;
 import static software.wings.common.InfrastructureConstants.RC_INFRA_STEP_NAME;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicWorkflowWithRollbackForAMI;
 import static software.wings.sm.StateType.AWS_AMI_ROLLBACK_SWITCH_ROUTES;

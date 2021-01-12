@@ -6,7 +6,7 @@ import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.rule.OwnerRule.VGLIJIN;
 
 import static software.wings.beans.Activity.Type.Verification;
-import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
+import static software.wings.beans.EnvironmentType.NON_PROD;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;

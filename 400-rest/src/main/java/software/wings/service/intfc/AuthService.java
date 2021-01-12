@@ -1,7 +1,7 @@
 package software.wings.service.intfc;
 
 import software.wings.beans.AuthToken;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;

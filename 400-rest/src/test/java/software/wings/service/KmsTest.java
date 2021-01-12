@@ -75,7 +75,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.EntityType;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.Event;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;

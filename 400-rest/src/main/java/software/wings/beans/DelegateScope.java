@@ -18,7 +18,6 @@ import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
 
 import software.wings.beans.DelegateScope.DelegateScopeKeys;
-import software.wings.beans.Environment.EnvironmentType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;

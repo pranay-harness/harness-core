@@ -19,7 +19,7 @@ import io.harness.metrics.HarnessMetricRegistry;
 
 import software.wings.beans.Account;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;

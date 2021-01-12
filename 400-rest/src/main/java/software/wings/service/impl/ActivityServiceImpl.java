@@ -18,7 +18,7 @@ import io.harness.queue.QueuePublisher;
 
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityKeys;
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.Log;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.Command.CommandKeys;

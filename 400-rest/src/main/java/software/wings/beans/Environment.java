@@ -1,7 +1,7 @@
 package software.wings.beans;
 
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
+import static software.wings.beans.EnvironmentType.NON_PROD;
 import static software.wings.yaml.YamlHelper.trimYaml;
 
 import static java.util.Arrays.asList;
@@ -251,24 +251,6 @@ public class Environment extends Base implements KeywordsAware, NameAccess, TagA
     Set<String> keywords = KeywordsAware.super.generateKeywords();
     keywords.addAll(asList(name, description, environmentType.name()));
     return keywords;
-  }
-
-  /**
-   * The enum Environment type.
-   */
-  public enum EnvironmentType {
-    /**
-     * Prod environment type.
-     */
-    PROD,
-    /**
-     * Non prod environment type.
-     */
-    NON_PROD,
-    /**
-     * All environment type.
-     */
-    ALL,
   }
 
   /**

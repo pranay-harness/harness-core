@@ -11,7 +11,7 @@ import io.harness.governance.TimeRangeBasedFreezeConfig;
 import io.harness.governance.WeeklyFreezeConfig;
 import io.harness.rule.Owner;
 
-import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.governance.GovernanceConfig;
 
 import java.util.Calendar;

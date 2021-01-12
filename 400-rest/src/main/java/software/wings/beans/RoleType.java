@@ -2,7 +2,6 @@ package software.wings.beans;
 
 import static software.wings.beans.Permission.Builder.aPermission;
 
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 
