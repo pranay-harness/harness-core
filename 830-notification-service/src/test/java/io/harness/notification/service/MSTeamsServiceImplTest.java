@@ -54,7 +54,7 @@ public class MSTeamsServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ANKUSH)
   @Category(UnitTests.class)
-  public void sendNotificaiton_EmptyRequest() {
+  public void sendNotification_EmptyRequest() {
     NotificationRequest notificationRequest = NotificationRequest.newBuilder().build();
     NotificationProcessingResponse notificationProcessingResponse = msTeamService.send(notificationRequest);
     assertTrue(notificationProcessingResponse.equals(NotificationProcessingResponse.trivialResponseWithNoRetries));
@@ -63,7 +63,7 @@ public class MSTeamsServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ANKUSH)
   @Category(UnitTests.class)
-  public void sendNotificaiton_OnlyIdInRequest() {
+  public void sendNotification_OnlyIdInRequest() {
     NotificationRequest notificationRequest = NotificationRequest.newBuilder().setId(id).build();
     NotificationProcessingResponse notificationProcessingResponse = msTeamService.send(notificationRequest);
     assertTrue(notificationProcessingResponse.equals(NotificationProcessingResponse.trivialResponseWithNoRetries));
@@ -72,7 +72,7 @@ public class MSTeamsServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ANKUSH)
   @Category(UnitTests.class)
-  public void sendNotificaiton_NoTemplateIdInRequest() {
+  public void sendNotification_NoTemplateIdInRequest() {
     NotificationRequest notificationRequest =
         NotificationRequest.newBuilder()
             .setId(id)
@@ -88,7 +88,7 @@ public class MSTeamsServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ANKUSH)
   @Category(UnitTests.class)
-  public void sendNotificaiton_NoRecipientInRequest() {
+  public void sendNotification_NoRecipientInRequest() {
     NotificationRequest notificationRequest = NotificationRequest.newBuilder()
                                                   .setId(id)
                                                   .setAccountId(accountId)
@@ -105,7 +105,7 @@ public class MSTeamsServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ANKUSH)
   @Category(UnitTests.class)
-  public void sendNotificaiton_ValidCase() {
+  public void sendNotification_ValidCase() {
     NotificationRequest notificationRequest =
         NotificationRequest.newBuilder()
             .setId(id)
@@ -169,7 +169,7 @@ public class MSTeamsServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ANKUSH)
   @Category(UnitTests.class)
-  public void sendTestNotificaiton_ValidRequest() {
+  public void sendTestNotification_ValidRequest() {
     final NotificationSettingDTO notificationSettingDTO4 =
         MSTeamSettingDTO.builder().accountId(accountId).recipient(msTeamsWebhookurl).build();
     NotificationProcessingResponse notificationExpectedResponse =

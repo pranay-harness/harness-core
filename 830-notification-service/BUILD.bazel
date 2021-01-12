@@ -11,11 +11,11 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
+        "//835-notification-senders:module",
         "//910-delegate-service-driver:module",
         "//920-delegate-service-beans:module",
         "//920-delegate-service-beans/src/main/proto:920_delegate_service_beans_java_proto",
         "//930-delegate-tasks:module",
-        "//935-notification-senders:module",
         "//940-notification-client:module",
         "//950-ng-project-n-orgs:module",
         "//960-ng-core-beans:module",
@@ -352,11 +352,11 @@ java_binary(
     data = ["//:resource"],
     main_class = "io.harness.notification.NotificationApplication",
     resources = [
-        "//930-notification-service/src/main/resources:resource",
+        "//830-notification-service/src/main/resources:resource",
     ],
     visibility = ["//visibility:public"],
     runtime_deps = [
-        "//930-notification-service/src/main/resources",
+        "//830-notification-service/src/main/resources",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
     deps = [
@@ -389,15 +389,15 @@ java_library(
 #    name = "tests",
 #    srcs = glob(["src/test/**/*.java"]),
 #    data = [
-#        "//930-notification-service/src/test/resources:resource",
+#        "//830-notification-service/src/test/resources:resource",
 #    ],
 #    resources = [
 #        "//:resource",
-#        "//930-notification-service/src/main/resources:resource",
+#        "//830-notification-service/src/main/resources:resource",
 #    ],
 #    visibility = ["//visibility:public"],
 #    runtime_deps = [
-#        "//930-notification-service/src/main/resources",
+#        "//830-notification-service/src/main/resources",
 #        "//980-commons/src/test/resources",
 #        "@maven//:javax_ws_rs_javax_ws_rs_api",
 #    ],
