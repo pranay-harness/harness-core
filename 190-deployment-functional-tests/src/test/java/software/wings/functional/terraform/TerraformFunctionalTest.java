@@ -17,10 +17,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.FeatureName;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
-import io.harness.ff.FeatureFlagService;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.EnvironmentGenerator;
@@ -80,7 +78,6 @@ public class TerraformFunctionalTest extends AbstractFunctionalTest {
   @Inject private WorkflowGenerator workflowGenerator;
   @Inject private WorkflowService workflowService;
   @Inject private InfrastructureProvisionerGenerator infrastructureProvisionerGenerator;
-  @Inject private FeatureFlagService featureFlagService;
 
   final Randomizer.Seed seed = new Randomizer.Seed(0);
   OwnerManager.Owners owners;
@@ -102,8 +99,7 @@ public class TerraformFunctionalTest extends AbstractFunctionalTest {
     environment = owners.obtainEnvironment(
         () -> environmentGenerator.ensurePredefined(seed, owners, EnvironmentGenerator.Environments.GENERIC_TEST));
     assertThat(environment).isNotNull();
-
-    enableFeatureFlag(FeatureName.EXPORT_TF_PLAN, application.getAccountId());
+    logManagerFeatureFlags(application.getAccountId());
   }
 
   @Test
