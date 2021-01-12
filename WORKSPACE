@@ -1986,11 +1986,12 @@ load("//:bazel-credentials.bzl", "JFROG_PASSWORD", "JFROG_USERNAME")
 maven_install(
     name = "data_collection_dsl",
     artifacts = [
-        "io.harness.cv:data-collection-dsl:0.12-RELEASE",
+        "io.harness.cf:cf-client-sdk-java:1.0.0-SNAPSHOT",
+        "io.harness.cv:data-collection-dsl:0.18-RELEASE",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",
-        "https://%s:%s@harness.jfrog.io/harness/datacollection-dsl" % (JFROG_USERNAME, JFROG_PASSWORD),
+        "https://%s:%s@harness.jfrog.io/artifactory/harness-internal" % (JFROG_USERNAME, JFROG_PASSWORD),
     ],
 )
 
