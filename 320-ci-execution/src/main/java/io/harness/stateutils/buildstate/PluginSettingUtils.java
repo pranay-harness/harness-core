@@ -343,7 +343,7 @@ public class PluginSettingUtils {
     }
 
     String region = resolveStringParameter("region", "S3Upload", identifier, stepInfo.getRegion(), true);
-    if (endpoint != null && !endpoint.equals(UNRESOLVED_PARAMETER)) {
+    if (region != null && !region.equals(UNRESOLVED_PARAMETER)) {
       setOptionalEnvironmentVariable(map, PLUGIN_REGION, region);
     }
     return map;
