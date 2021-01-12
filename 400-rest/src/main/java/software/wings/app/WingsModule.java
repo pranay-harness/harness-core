@@ -1276,10 +1276,14 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(new PerpetualTaskServiceModule());
     install(new CESetupServiceModule());
     install(new CVNextGenCommonsServiceModule());
-    install(new ConnectorResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
-        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
-    install(new OrganizationManagementClientModule(configuration.getNgManagerServiceHttpClientConfig(),
-        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
+    try {
+      install(new ConnectorResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+          configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
+      install(new OrganizationManagementClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+          configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
+    } catch (Exception ex) {
+      log.info("Could not create the connector resource client module", ex);
+    }
 
     // Orchestration Dependencies
     install(OrchestrationStepsModule.getInstance());
