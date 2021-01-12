@@ -2,7 +2,6 @@ package io.harness.pms.pipeline;
 
 import static java.lang.Long.parseLong;
 import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 import io.harness.NGCommonEntityConstants;
@@ -20,46 +19,24 @@ import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
 import io.harness.pms.pipeline.mappers.PMSPipelineFilterHelper;
 import io.harness.pms.pipeline.mappers.PipelineExecutionSummaryDtoMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
-import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionDetailDTO;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionFilterPropertiesDTO;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionSummaryDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.variables.VariableMergeServiceResponse;
 import io.harness.serializer.JsonUtils;
-import io.harness.tasks.ProgressData;
 import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import java.io.IOException;
+import io.swagger.annotations.*;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.groovy.util.Maps;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -78,15 +55,15 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 @Slf4j
 public class PipelineResource {
-  private PMSPipelineService pmsPipelineService;
-  private PMSExecutionService pmsExecutionService;
+  private final PMSPipelineService pmsPipelineService;
+  private final PMSExecutionService pmsExecutionService;
 
   @POST
   @ApiOperation(value = "Create a Pipeline", nickname = "createPipeline")
-  public ResponseDTO createPipeline(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+  public ResponseDTO<String> createPipeline(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
-      @NotNull @ApiParam(hidden = true, type = "") String yaml) throws IOException {
+      @NotNull @ApiParam(hidden = true) String yaml) {
     log.info("Creating pipeline");
 
     PipelineEntity pipelineEntity = PMSPipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
@@ -103,7 +80,7 @@ public class PipelineResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @PathParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId,
-      @NotNull @ApiParam(hidden = true, type = "") String yaml) throws IOException {
+      @NotNull @ApiParam(hidden = true) String yaml) {
     log.info("Creating variables for pipeline.");
 
     PipelineEntity pipelineEntity = PMSPipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
@@ -123,9 +100,11 @@ public class PipelineResource {
     log.info("Get pipeline");
 
     Optional<PipelineEntity> pipelineEntity = pmsPipelineService.get(accountId, orgId, projectId, pipelineId, false);
-
-    return ResponseDTO.newResponse(pipelineEntity.get().getVersion().toString(),
-        pipelineEntity.map(PMSPipelineDtoMapper::writePipelineDto).orElse(null));
+    String version = "0";
+    if (pipelineEntity.isPresent()) {
+      version = pipelineEntity.get().getVersion().toString();
+    }
+    return ResponseDTO.newResponse(version, pipelineEntity.map(PMSPipelineDtoMapper::writePipelineDto).orElse(null));
   }
 
   @PUT
@@ -136,7 +115,7 @@ public class PipelineResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @PathParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId,
-      @NotNull @ApiParam(hidden = true, type = "") String yaml) {
+      @NotNull @ApiParam(hidden = true) String yaml) {
     log.info("Updating pipeline");
 
     PipelineEntity pipelineEntity = PMSPipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
@@ -279,11 +258,5 @@ public class PipelineResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
     return pmsExecutionService.getInputsetYaml(accountId, orgId, projectId, planExecutionId);
-  }
-
-  @Value
-  @Builder
-  private static class DummyProgressData implements ProgressData {
-    String data;
   }
 }

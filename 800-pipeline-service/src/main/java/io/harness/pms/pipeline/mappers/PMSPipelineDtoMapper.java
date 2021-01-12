@@ -1,5 +1,6 @@
 package io.harness.pms.pipeline.mappers;
 
+import io.harness.common.NGExpressionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.pms.pipeline.ExecutionSummaryInfoDTO;
@@ -10,13 +11,10 @@ import io.harness.pms.pipeline.yaml.BasicPipeline;
 import io.harness.pms.yaml.YamlUtils;
 
 import java.io.IOException;
-import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
-import lombok.Data;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -31,6 +29,9 @@ public class PMSPipelineDtoMapper {
   public PipelineEntity toPipelineEntity(String accountId, String orgId, String projectId, String yaml) {
     try {
       BasicPipeline basicPipeline = YamlUtils.read(yaml, BasicPipeline.class);
+      if (NGExpressionUtils.matchesInputSetPattern(basicPipeline.getIdentifier())) {
+        throw new InvalidRequestException("Pipeline identifier cannot be runtime input");
+      }
       return PipelineEntity.builder()
           .yaml(yaml)
           .accountId(accountId)
