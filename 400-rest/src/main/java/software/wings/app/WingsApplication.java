@@ -671,8 +671,12 @@ public class WingsApplication extends Application<MainConfiguration> {
         injector.getInstance(CustomDeploymentInstanceSyncClient.class));
     clientRegistry.registerClient(
         PerpetualTaskType.MANIFEST_COLLECTION, injector.getInstance(ManifestCollectionPTaskServiceClient.class));
-    clientRegistry.registerClient(
-        PerpetualTaskType.CONNECTOR_TEST_CONNECTION, injector.getInstance(ConnectorHeartbeatPerpetualTaskClient.class));
+    try {
+      clientRegistry.registerClient(PerpetualTaskType.CONNECTOR_TEST_CONNECTION,
+          injector.getInstance(ConnectorHeartbeatPerpetualTaskClient.class));
+    } catch (Exception ex) {
+      log.info("Could not create the connector task client", ex);
+    }
     clientRegistry.registerClient(PerpetualTaskType.AZURE_WEB_APP_INSTANCE_SYNC,
         injector.getInstance(AzureWebAppInstanceSyncPerpetualTaskClient.class));
   }
