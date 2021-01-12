@@ -28,7 +28,7 @@ public interface VerificationJobInstanceService {
   VerificationJobInstance getVerificationJobInstance(String verificationJobInstanceId);
   void processVerificationJobInstance(VerificationJobInstance verificationJobInstance);
   void createDataCollectionTasks(VerificationJobInstance verificationJobInstance);
-  void logProgress(String verificationJobInstanceId, ProgressLog progressLog);
+  void logProgress(ProgressLog progressLog);
   void deletePerpetualTasks(VerificationJobInstance entity);
   Optional<TimeRange> getPreDeploymentTimeRange(String verificationJobInstanceId);
   DeploymentActivityVerificationResultDTO getAggregatedVerificationResult(List<String> verificationJobInstanceIds);

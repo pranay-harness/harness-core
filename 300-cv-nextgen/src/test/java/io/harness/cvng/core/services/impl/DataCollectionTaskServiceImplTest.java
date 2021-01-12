@@ -100,6 +100,9 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     dataCollectionTaskService = spy(dataCollectionTaskService);
     clock = Clock.fixed(Instant.parse("2020-04-22T10:02:06Z"), ZoneOffset.UTC);
     FieldUtils.writeField(dataCollectionTaskService, "clock", clock, true);
+    FieldUtils.writeField(verificationJobInstanceService, "clock", clock, true);
+    FieldUtils.writeField(
+        dataCollectionTaskService, "verificationJobInstanceService", verificationJobInstanceService, true);
     fakeNow = clock.instant();
     dataCollectionWorkerId = cvConfigId;
   }
@@ -459,7 +462,9 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     assertThat(jobInstanceWithProgressLog.getProgressLogs().get(0))
         .isEqualTo(VerificationJobInstance.DataCollectionProgressLog.builder()
                        .executionStatus(DataCollectionExecutionStatus.FAILED)
+                       .verificationTaskId(verificationTaskId)
                        .startTime(dataCollectionTask.getStartTime())
+                       .createdAt(clock.instant())
                        .endTime(dataCollectionTask.getEndTime())
                        .log("Data collection failed with exception: exception msg")
                        .isFinalState(false)
@@ -489,7 +494,9 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     assertThat(jobInstanceWithProgressLog.getProgressLogs().get(0))
         .isEqualTo(VerificationJobInstance.DataCollectionProgressLog.builder()
                        .executionStatus(SUCCESS)
+                       .verificationTaskId(verificationTaskId)
                        .startTime(dataCollectionTask.getStartTime())
+                       .createdAt(clock.instant())
                        .endTime(dataCollectionTask.getEndTime())
                        .log("Data collection task successful")
                        .isFinalState(false)

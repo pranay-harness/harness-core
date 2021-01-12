@@ -5,7 +5,6 @@ import static io.harness.rule.OwnerRule.PRAVEEN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -191,10 +190,11 @@ public class HealthVerificationServiceImplTest extends CvNextGenTest {
         verificationTaskId, start.plus(Duration.ofMinutes(10)), AnalysisStatus.RUNNING, false);
     ArgumentCaptor<VerificationJobInstance.AnalysisProgressLog> captor =
         ArgumentCaptor.forClass(VerificationJobInstance.AnalysisProgressLog.class);
-    verify(verificationJobInstanceService).logProgress(eq(verificationJobInstanceId), captor.capture());
+    verify(verificationJobInstanceService).logProgress(captor.capture());
     VerificationJobInstance.AnalysisProgressLog progressLog = captor.getValue();
     assertThat(progressLog.getAnalysisStatus().name()).isEqualTo(AnalysisStatus.RUNNING.name());
     assertThat(progressLog.getEndTime()).isEqualTo(start.plus(Duration.ofMinutes(10)));
+    assertThat(progressLog.getVerificationTaskId()).isEqualTo(verificationTaskId);
   }
 
   private CVConfig getAppDCVConfig() {

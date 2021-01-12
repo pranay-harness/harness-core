@@ -3,6 +3,7 @@ package io.harness.cvng.verificationjob.services.impl;
 import static io.harness.cvng.CVConstants.DEPLOYMENT_RISK_SCORE_FAILURE_THRESHOLD;
 import static io.harness.cvng.activity.CVActivityConstants.HEALTH_VERIFICATION_RETRIGGER_BUFFER_MINS;
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.QUEUED;
+import static io.harness.cvng.beans.DataCollectionExecutionStatus.SUCCESS;
 import static io.harness.cvng.core.utils.DateTimeUtils.roundDownTo1MinBoundary;
 import static io.harness.cvng.verificationjob.entities.VerificationJobInstance.ENV_IDENTIFIER_KEY;
 import static io.harness.cvng.verificationjob.entities.VerificationJobInstance.ORG_IDENTIFIER_KEY;
@@ -317,7 +318,11 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   }
 
   @Override
-  public void logProgress(String verificationJobInstanceId, ProgressLog progressLog) {
+  public void logProgress(ProgressLog progressLog) {
+    progressLog.setCreatedAt(clock.instant());
+    progressLog.validate();
+    String verificationJobInstanceId =
+        verificationTaskService.getVerificationJobInstanceId(progressLog.getVerificationTaskId());
     VerificationJobInstance verificationJobInstance = getVerificationJobInstance(verificationJobInstanceId);
 
     UpdateOperations<VerificationJobInstance> verificationJobInstanceUpdateOperations =
@@ -333,6 +338,34 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         .update(hPersistence.createQuery(VerificationJobInstance.class)
                     .filter(VerificationJobInstanceKeys.uuid, verificationJobInstanceId),
             verificationJobInstanceUpdateOperations, options);
+    updateStatusIfDone(verificationJobInstanceId);
+  }
+
+  private void updateStatusIfDone(String verificationJobInstanceId) {
+    VerificationJobInstance verificationJobInstance = getVerificationJobInstance(verificationJobInstanceId);
+    if (verificationJobInstance.getExecutionStatus() != ExecutionStatus.RUNNING) {
+      // If the last update already updated the status.
+      return;
+    }
+    int verificationTaskCount =
+        verificationTaskService
+            .getVerificationTaskIds(verificationJobInstance.getAccountId(), verificationJobInstanceId)
+            .size();
+    if (verificationJobInstance.getProgressLogs()
+            .stream()
+            .filter(progressLog -> progressLog.isLastProgressLog(verificationJobInstance))
+            .map(ProgressLog::getVerificationTaskId)
+            .distinct()
+            .count()
+        == verificationTaskCount) {
+      UpdateOperations<VerificationJobInstance> verificationJobInstanceUpdateOperations =
+          hPersistence.createUpdateOperations(VerificationJobInstance.class);
+      verificationJobInstanceUpdateOperations.set(VerificationJobInstanceKeys.executionStatus, SUCCESS);
+      hPersistence.getDatastore(VerificationJobInstance.class)
+          .update(hPersistence.createQuery(VerificationJobInstance.class)
+                      .filter(VerificationJobInstanceKeys.uuid, verificationJobInstanceId),
+              verificationJobInstanceUpdateOperations, new UpdateOptions());
+    }
   }
 
   @Override

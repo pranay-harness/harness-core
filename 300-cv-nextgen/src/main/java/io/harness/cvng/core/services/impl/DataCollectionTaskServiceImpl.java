@@ -137,15 +137,14 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
       } else {
         enqueueNextTask(dataCollectionTask);
         if (dataCollectionTask instanceof DeploymentDataCollectionTask) {
-          verificationJobInstanceService.logProgress(
-              verificationTaskService.getVerificationJobInstanceId(dataCollectionTask.getVerificationTaskId()),
-              DataCollectionProgressLog.builder()
-                  .executionStatus(dataCollectionTask.getStatus())
-                  .isFinalState(false)
-                  .startTime(dataCollectionTask.getStartTime())
-                  .endTime(dataCollectionTask.getEndTime())
-                  .log("Data collection task successful")
-                  .build());
+          verificationJobInstanceService.logProgress(DataCollectionProgressLog.builder()
+                                                         .executionStatus(dataCollectionTask.getStatus())
+                                                         .isFinalState(false)
+                                                         .startTime(dataCollectionTask.getStartTime())
+                                                         .endTime(dataCollectionTask.getEndTime())
+                                                         .verificationTaskId(dataCollectionTask.getVerificationTaskId())
+                                                         .log("Data collection task successful")
+                                                         .build());
         }
       }
       if (dataCollectionTask.shouldQueueAnalysis()) {
@@ -160,12 +159,12 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   private void markDependentTasksFailed(DataCollectionTask task) {
     if (task instanceof DeploymentDataCollectionTask) {
       verificationJobInstanceService.logProgress(
-          verificationTaskService.getVerificationJobInstanceId(task.getVerificationTaskId()),
           DataCollectionProgressLog.builder()
               .executionStatus(task.getStatus())
               .isFinalState(false)
               .startTime(task.getStartTime())
               .endTime(task.getEndTime())
+              .verificationTaskId(task.getVerificationTaskId())
               .log("Data collection failed with exception: " + task.getException())
               .build());
     }

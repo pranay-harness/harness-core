@@ -374,7 +374,8 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testLogProgress_multipleUpdates() {
     cvConfigService.save(newCVConfig());
-    String verificationJobInstanceId = createVerificationJobInstance().getUuid();
+    String verificationJobInstanceId =
+        createVerificationJobInstance("identifier", "envIdentifier", ExecutionStatus.RUNNING, CANARY).getUuid();
 
     VerificationJobInstance verificationJobInstance =
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
@@ -384,35 +385,44 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
                                           .endTime(verificationJobInstance.getStartTime().plus(Duration.ofMinutes(1)))
                                           .analysisStatus(AnalysisStatus.SUCCESS)
                                           .log("time series analysis done")
+                                          .verificationTaskId(verificationTaskService.getVerificationTaskId(
+                                              accountId, cvConfigId, verificationJobInstanceId))
                                           .build();
-    verificationJobInstanceService.logProgress(verificationJobInstanceId, progressLog);
+    verificationJobInstanceService.logProgress(progressLog);
+    assertThat(progressLog.getCreatedAt()).isEqualTo(clock.instant());
     verificationJobInstance = verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     assertThat(verificationJobInstance.getProgressLogs()).hasSize(1);
     assertThat(((AnalysisProgressLog) verificationJobInstance.getProgressLogs().get(0)).getAnalysisStatus())
         .isEqualTo(AnalysisStatus.SUCCESS);
     assertThat(verificationJobInstance.getProgressLogs().get(0).getLog()).isEqualTo("time series analysis done");
 
-    assertThat(verificationJobInstance.getExecutionStatus()).isEqualTo(ExecutionStatus.QUEUED);
+    assertThat(verificationJobInstance.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
     progressLog = AnalysisProgressLog.builder()
                       .startTime(verificationJobInstance.getEndTime().minus(Duration.ofMinutes(1)))
                       .endTime(verificationJobInstance.getEndTime())
                       .analysisStatus(AnalysisStatus.SUCCESS)
+                      .verificationTaskId(verificationTaskService.getVerificationTaskId(
+                          accountId, cvConfigId, verificationJobInstanceId))
                       .isFinalState(false)
+                      .log("log")
                       .build();
-    verificationJobInstanceService.logProgress(verificationJobInstanceId, progressLog);
+    verificationJobInstanceService.logProgress(progressLog);
     verificationJobInstance = verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     assertThat(verificationJobInstance.getProgressLogs()).hasSize(2);
     assertThat(((AnalysisProgressLog) verificationJobInstance.getProgressLogs().get(1)).getAnalysisStatus())
         .isEqualTo(AnalysisStatus.SUCCESS);
-    assertThat(verificationJobInstance.getExecutionStatus()).isEqualTo(ExecutionStatus.QUEUED);
+    assertThat(verificationJobInstance.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
 
     progressLog = AnalysisProgressLog.builder()
                       .startTime(verificationJobInstance.getEndTime().minus(Duration.ofMinutes(1)))
                       .endTime(verificationJobInstance.getEndTime())
                       .analysisStatus(AnalysisStatus.SUCCESS)
+                      .verificationTaskId(verificationTaskService.getVerificationTaskId(
+                          accountId, cvConfigId, verificationJobInstanceId))
                       .isFinalState(true)
+                      .log("log")
                       .build();
-    verificationJobInstanceService.logProgress(verificationJobInstanceId, progressLog);
+    verificationJobInstanceService.logProgress(progressLog);
     verificationJobInstance = verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     assertThat(verificationJobInstance.getProgressLogs()).hasSize(3);
     assertThat(((AnalysisProgressLog) verificationJobInstance.getProgressLogs().get(2)).getAnalysisStatus())
@@ -433,13 +443,58 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
                                           .startTime(verificationJobInstance.getStartTime())
                                           .endTime(verificationJobInstance.getStartTime().plus(Duration.ofMinutes(1)))
                                           .analysisStatus(AnalysisStatus.FAILED)
+                                          .log("log")
+                                          .verificationTaskId(verificationTaskService.getVerificationTaskId(
+                                              accountId, cvConfigId, verificationJobInstanceId))
                                           .build();
-    verificationJobInstanceService.logProgress(verificationJobInstanceId, progressLog);
+    verificationJobInstanceService.logProgress(progressLog);
     verificationJobInstance = verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     assertThat(verificationJobInstance.getProgressLogs()).hasSize(1);
     assertThat(((AnalysisProgressLog) verificationJobInstance.getProgressLogs().get(0)).getAnalysisStatus())
         .isEqualTo(AnalysisStatus.FAILED);
     assertThat(verificationJobInstance.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testLogProgress_multipleVerificationTasks() {
+    CVConfig cvConfig1 = newCVConfig();
+    cvConfigService.save(cvConfig1);
+    String verificationJobInstanceId =
+        createVerificationJobInstance("identifier", "env", ExecutionStatus.RUNNING, CANARY).getUuid();
+    verificationTaskService.create(accountId, cvConfig1.getUuid(), verificationJobInstanceId);
+    VerificationJobInstance verificationJobInstance =
+        verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
+    AnalysisProgressLog progressLog =
+        AnalysisProgressLog.builder()
+            .startTime(verificationJobInstance.getStartTime().minus(Duration.ofMinutes(1)))
+            .endTime(verificationJobInstance.getEndTime())
+            .verificationTaskId(
+                verificationTaskService.getVerificationTaskId(accountId, cvConfigId, verificationJobInstanceId))
+            .analysisStatus(AnalysisStatus.SUCCESS)
+            .isFinalState(true)
+            .log("log")
+            .build();
+    verificationJobInstanceService.logProgress(progressLog);
+    verificationJobInstanceService.logProgress(progressLog); // Multiple updates for same call is handled.
+    verificationJobInstance = verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
+    assertThat(verificationJobInstance.getProgressLogs()).hasSize(1);
+    assertThat(((AnalysisProgressLog) verificationJobInstance.getProgressLogs().get(0)).getAnalysisStatus())
+        .isEqualTo(AnalysisStatus.SUCCESS);
+    assertThat(verificationJobInstance.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
+    progressLog = AnalysisProgressLog.builder()
+                      .startTime(verificationJobInstance.getStartTime().minus(Duration.ofMinutes(1)))
+                      .endTime(verificationJobInstance.getEndTime())
+                      .verificationTaskId(verificationTaskService.getVerificationTaskId(
+                          accountId, cvConfig1.getUuid(), verificationJobInstanceId))
+                      .analysisStatus(AnalysisStatus.SUCCESS)
+                      .isFinalState(true)
+                      .log("log")
+                      .build();
+    verificationJobInstanceService.logProgress(progressLog);
+    verificationJobInstance = verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
+    assertThat(verificationJobInstance.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
   @Test
@@ -555,12 +610,14 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
         createVerificationJobInstance("devVerificationJobInstance", "dev");
     VerificationJobInstance prodVerificationJobInstance =
         createVerificationJobInstance("prodVerificationJobInstance", "prod");
-    verificationJobInstanceService.logProgress(prodVerificationJobInstance.getUuid(),
+    verificationJobInstanceService.logProgress(
         AnalysisProgressLog.builder()
             .analysisStatus(AnalysisStatus.FAILED)
             .startTime(prodVerificationJobInstance.getStartTime())
             .endTime(prodVerificationJobInstance.getStartTime().plus(Duration.ofMinutes(1)))
             .isFinalState(true)
+            .verificationTaskId(verificationTaskService.getVerificationTaskId(
+                accountId, cvConfigId, prodVerificationJobInstance.getUuid()))
             .log("Time series")
             .build());
     DeploymentActivityPopoverResultDTO deploymentActivityPopoverResultDTO =
@@ -601,12 +658,14 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
         createVerificationJobInstance("devVerificationJobInstance", "dev", ExecutionStatus.RUNNING, CANARY);
     VerificationJobInstance prodVerificationJobInstance =
         createVerificationJobInstance("prodVerificationJobInstance", "prod", ExecutionStatus.RUNNING, CANARY);
-    verificationJobInstanceService.logProgress(prodVerificationJobInstance.getUuid(),
+    verificationJobInstanceService.logProgress(
         AnalysisProgressLog.builder()
             .analysisStatus(AnalysisStatus.SUCCESS)
             .startTime(prodVerificationJobInstance.getStartTime())
             .endTime(prodVerificationJobInstance.getStartTime().plus(Duration.ofMinutes(1)))
             .isFinalState(true)
+            .verificationTaskId(verificationTaskService.getVerificationTaskId(
+                accountId, cvConfigId, prodVerificationJobInstance.getUuid()))
             .log("Time series")
             .build());
     DeploymentActivityPopoverResultDTO deploymentActivityPopoverResultDTO =
