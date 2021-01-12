@@ -52,10 +52,10 @@ import org.apache.commons.validator.routines.EmailValidator;
 @Slf4j
 public class MailServiceImpl implements ChannelService {
   private final Configuration cfg = new Configuration(VERSION_2_3_23);
-  private final SmtpConfig smtpConfigDefault;
   private final NotificationSettingsService notificationSettingsService;
   private final NotificationTemplateService notificationTemplateService;
   private final YamlUtils yamlUtils;
+  private final SmtpConfig smtpConfigDefault;
   private final MailSenderImpl mailSender;
   private final DelegateGrpcClientWrapper delegateGrpcClientWrapper;
 
@@ -107,7 +107,8 @@ public class MailServiceImpl implements ChannelService {
   public boolean sendTestNotification(NotificationSettingDTO notificationSettingDTO) {
     EmailSettingDTO emailSettingDTO = (EmailSettingDTO) notificationSettingDTO;
     String email = emailSettingDTO.getRecipient();
-    if (Objects.isNull(stripToNull(email)) || !EmailValidator.getInstance().isValid(email)) {
+    if (Objects.isNull(stripToNull(email)) || !EmailValidator.getInstance().isValid(email)
+        || Objects.isNull(emailSettingDTO.getAccountId())) {
       throw new NotificationException("Invalid email encountered while processing Test Connection request "
               + notificationSettingDTO.getNotificationId(),
           DEFAULT_ERROR_CODE, USER);

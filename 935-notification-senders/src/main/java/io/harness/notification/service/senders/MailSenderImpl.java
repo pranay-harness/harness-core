@@ -15,15 +15,17 @@ import java.util.List;
 import java.util.Objects;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.mail.DefaultAuthenticator;
 import org.apache.commons.mail.Email;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
 
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class MailSenderImpl {
-  @Inject private SmtpConfig smtpConfig;
+  private SmtpConfig smtpConfig;
 
   public NotificationProcessingResponse send(
       List<String> emailIds, String subject, String body, String notificationId) {

@@ -12,17 +12,22 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class MongoMessageConsumer extends QueueListener<MongoNotificationRequest> implements MessageConsumer {
-  @Inject private NotificationService notificationService;
+  private NotificationService notificationService;
 
   @Inject
-  public MongoMessageConsumer(QueueConsumer<MongoNotificationRequest> queueConsumer) {
+  public MongoMessageConsumer(
+      QueueConsumer<MongoNotificationRequest> queueConsumer, NotificationService notificationService) {
     super(queueConsumer, true);
+    this.notificationService = notificationService;
   }
 
   @Override
   public void onMessage(MongoNotificationRequest message) {
     try {
       NotificationRequest notificationRequest = NotificationRequest.parseFrom(message.getBytes());
+      if (!notificationRequest.getUnknownFields().asMap().isEmpty()) {
+        throw new InvalidProtocolBufferException("Unknown fields detected. Check Notification Request producer");
+      }
       notificationService.processNewMessage(notificationRequest);
     } catch (InvalidProtocolBufferException e) {
       log.error("Corrupted message received off the mongo queue");
