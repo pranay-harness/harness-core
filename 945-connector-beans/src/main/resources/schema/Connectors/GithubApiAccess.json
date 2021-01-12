@@ -18,22 +18,6 @@
       "if": {
         "properties": {
           "type": {
-            "const": "Token"
-          }
-        }
-      },
-      "then": {
-        "properties": {
-          "spec": {
-            "$ref": "#/definitions/GithubTokenSpec"
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "type": {
             "const": "GithubApp"
           }
         }
@@ -42,6 +26,22 @@
         "properties": {
           "spec": {
             "$ref": "#/definitions/GithubAppSpec"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "Token"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "spec": {
+            "$ref": "#/definitions/GithubTokenSpec"
           }
         }
       }

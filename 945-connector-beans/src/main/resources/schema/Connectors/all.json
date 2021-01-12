@@ -637,78 +637,14 @@
           "if": {
             "properties": {
               "type": {
-                "const": "Nexus"
+                "const": "AppDynamics"
               }
             }
           },
           "then": {
             "properties": {
               "spec": {
-                "$ref": "#/definitions/NexusConnector"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "Jira"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/JiraConnector"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "Bitbucket"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/BitbucketConnector"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "Splunk"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/SplunkConnectorDTO"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "K8sCluster"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/KubernetesClusterConfigDTO"
+                "$ref": "#/definitions/AppDynamicsConnectorDTO"
               }
             }
           }
@@ -733,14 +669,14 @@
           "if": {
             "properties": {
               "type": {
-                "const": "AppDynamics"
+                "const": "Aws"
               }
             }
           },
           "then": {
             "properties": {
               "spec": {
-                "$ref": "#/definitions/AppDynamicsConnectorDTO"
+                "$ref": "#/definitions/AwsConnector"
               }
             }
           }
@@ -749,14 +685,14 @@
           "if": {
             "properties": {
               "type": {
-                "const": "Gcp"
+                "const": "Bitbucket"
               }
             }
           },
           "then": {
             "properties": {
               "spec": {
-                "$ref": "#/definitions/GcpConnector"
+                "$ref": "#/definitions/BitbucketConnector"
               }
             }
           }
@@ -765,30 +701,14 @@
           "if": {
             "properties": {
               "type": {
-                "const": "Vault"
+                "const": "CEAws"
               }
             }
           },
           "then": {
             "properties": {
               "spec": {
-                "$ref": "#/definitions/VaultConnectorDTO"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "Git"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/GitConfigDTO"
+                "$ref": "#/definitions/CEAwsConnector"
               }
             }
           }
@@ -813,14 +733,14 @@
           "if": {
             "properties": {
               "type": {
-                "const": "Aws"
+                "const": "Gcp"
               }
             }
           },
           "then": {
             "properties": {
               "spec": {
-                "$ref": "#/definitions/AwsConnector"
+                "$ref": "#/definitions/GcpConnector"
               }
             }
           }
@@ -845,30 +765,14 @@
           "if": {
             "properties": {
               "type": {
-                "const": "Local"
+                "const": "Git"
               }
             }
           },
           "then": {
             "properties": {
               "spec": {
-                "$ref": "#/definitions/LocalConnectorDTO"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "CEAws"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/CEAwsConnector"
+                "$ref": "#/definitions/GitConfigDTO"
               }
             }
           }
@@ -901,6 +805,102 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/GitlabConnector"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Jira"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/JiraConnector"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "K8sCluster"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/KubernetesClusterConfigDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Local"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/LocalConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Nexus"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/NexusConnector"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Splunk"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/SplunkConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Vault"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/VaultConnectorDTO"
               }
             }
           }
@@ -1218,22 +1218,6 @@
           "if": {
             "properties": {
               "type": {
-                "const": "Ssh"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/GitSSHAuthenticationDTO"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
                 "const": "Http"
               }
             }
@@ -1242,6 +1226,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/GitHTTPAuthenticationDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Ssh"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/GitSSHAuthenticationDTO"
               }
             }
           }
@@ -1323,22 +1323,6 @@
           "if": {
             "properties": {
               "type": {
-                "const": "Token"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/GithubTokenSpec"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
                 "const": "GithubApp"
               }
             }
@@ -1347,6 +1331,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/GithubAppSpec"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Token"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/GithubTokenSpec"
               }
             }
           }
@@ -1498,22 +1498,6 @@
           "if": {
             "properties": {
               "type": {
-                "const": "UsernameToken"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/GithubUsernameToken"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
                 "const": "UsernamePassword"
               }
             }
@@ -1522,6 +1506,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/GithubUsernamePassword"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "UsernameToken"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/GithubUsernameToken"
               }
             }
           }
@@ -1799,22 +1799,6 @@
           "if": {
             "properties": {
               "type": {
-                "const": "UsernameToken"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/GitlabUsernameToken"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
                 "const": "Kerberos"
               }
             }
@@ -1839,6 +1823,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/GitlabUsernamePassword"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "UsernameToken"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/GitlabUsernameToken"
               }
             }
           }
@@ -2036,22 +2036,6 @@
           "if": {
             "properties": {
               "type": {
-                "const": "UsernamePassword"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/KubernetesUserNamePasswordDTO"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "type": {
                 "const": "ClientKeyCert"
               }
             }
@@ -2092,6 +2076,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/KubernetesServiceAccountDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "UsernamePassword"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/KubernetesUserNamePasswordDTO"
               }
             }
           }

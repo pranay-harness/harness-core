@@ -21,6 +21,9 @@ import io.harness.yaml.schema.beans.SubtypeClassMap;
 import io.harness.yaml.schema.beans.SupportedPossibleFieldTypes;
 import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
 import io.harness.yaml.schema.beans.YamlSchemaConfiguration;
+import io.harness.yaml.schema.helper.FieldSubTypeComparator;
+import io.harness.yaml.schema.helper.SubtypeClassMapComparator;
+import io.harness.yaml.schema.helper.SupportedPossibleFieldTypesComparator;
 import io.harness.yaml.utils.YamlConstants;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
@@ -227,8 +230,9 @@ public class YamlSchemaGenerator {
       List<ObjectNode> fieldOneOfNodes = new ArrayList<>();
       if (fieldNode != null) {
         final ObjectNode currentFieldNodeValue = fieldNode.deepCopy();
-
-        fieldPossibleTypes.getFieldTypes().forEach(type -> {
+        final List<SupportedPossibleFieldTypes> fieldTypes = new ArrayList<>(fieldPossibleTypes.getFieldTypes());
+        fieldTypes.sort(new SupportedPossibleFieldTypesComparator());
+        fieldTypes.forEach(type -> {
           final ObjectNode nodeFromType = getNodeFromType(type, mapper);
           if (nodeFromType == null) {
             return;
@@ -320,7 +324,9 @@ public class YamlSchemaGenerator {
 
   private void addConditionalAndCleanupFields(Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap,
       ObjectMapper mapper, String name, ObjectNode value, List<ObjectNode> allOfNodeContents) {
-    final Set<FieldSubtypeData> fieldSubtypeDatas = swaggerDefinitionsMetaInfoMap.get(name).getSubtypeClassMap();
+    List<FieldSubtypeData> fieldSubtypeDatas =
+        new ArrayList<>(swaggerDefinitionsMetaInfoMap.get(name).getSubtypeClassMap());
+    fieldSubtypeDatas.sort(new FieldSubTypeComparator());
     for (FieldSubtypeData fieldSubtypeData : fieldSubtypeDatas) {
       if (fieldSubtypeData.getDiscriminatorType() == JsonTypeInfo.As.EXTERNAL_PROPERTY) {
         addConditionalBlock(mapper, allOfNodeContents, fieldSubtypeData);
@@ -339,9 +345,10 @@ public class YamlSchemaGenerator {
     if (fieldNode.get(ONE_OF_NODE) != null) {
       throw new InvalidRequestException("Both Subtype and one of not handled for a single field");
     }
+    final List<SubtypeClassMap> subtypesMapping = new ArrayList<>(fieldSubtypeData.getSubtypesMapping());
+    subtypesMapping.sort(new SubtypeClassMapComparator());
     List<ObjectNode> possibleNodes =
-        fieldSubtypeData.getSubtypesMapping()
-            .stream()
+        subtypesMapping.stream()
             .map(fieldData
                 -> mapper.createObjectNode().put(
                     REF_NODE, SchemaConstants.DEFINITIONS_STRING_PREFIX + fieldData.getSubTypeDefinitionKey()))
@@ -391,7 +398,9 @@ public class YamlSchemaGenerator {
    */
   private void addConditionalBlock(
       ObjectMapper mapper, List<ObjectNode> allOfNodeContents, FieldSubtypeData fieldSubtypeData) {
-    for (SubtypeClassMap subtypeClassMap : fieldSubtypeData.getSubtypesMapping()) {
+    final List<SubtypeClassMap> fieldSubtypeDataList = new ArrayList<>(fieldSubtypeData.getSubtypesMapping());
+    fieldSubtypeDataList.sort(new SubtypeClassMapComparator());
+    for (SubtypeClassMap subtypeClassMap : fieldSubtypeDataList) {
       ObjectNode ifElseBlock = mapper.createObjectNode();
       ifElseBlock.with(SchemaConstants.IF_NODE)
           .with(PROPERTIES_NODE)

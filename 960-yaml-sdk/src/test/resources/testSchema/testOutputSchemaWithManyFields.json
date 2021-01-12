@@ -105,10 +105,10 @@
               "$ref": "#/definitions/TestRandomClass2"
             },
             {
-              "type": "number"
+              "type": "string"
             },
             {
-              "type": "string"
+              "type": "number"
             }
           ]
         }

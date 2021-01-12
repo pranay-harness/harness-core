@@ -21,22 +21,6 @@
       "if": {
         "properties": {
           "type": {
-            "const": "UsernamePassword"
-          }
-        }
-      },
-      "then": {
-        "properties": {
-          "spec": {
-            "$ref": "#/definitions/KubernetesUserNamePasswordDTO"
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "type": {
             "const": "ClientKeyCert"
           }
         }
@@ -77,6 +61,22 @@
         "properties": {
           "spec": {
             "$ref": "#/definitions/KubernetesServiceAccountDTO"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "UsernamePassword"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "spec": {
+            "$ref": "#/definitions/KubernetesUserNamePasswordDTO"
           }
         }
       }
