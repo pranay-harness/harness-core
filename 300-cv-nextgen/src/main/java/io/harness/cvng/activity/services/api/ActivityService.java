@@ -23,6 +23,8 @@ public interface ActivityService {
   String register(String accountId, String webhookToken, ActivityDTO activityDTO);
   String register(String accountId, ActivityDTO activityDTO);
 
+  void updateActivityStatus(Activity activity);
+
   List<DeploymentActivityVerificationResultDTO> getRecentDeploymentActivityVerifications(
       String accountId, String orgIdentifier, String projectIdentifier);
 
