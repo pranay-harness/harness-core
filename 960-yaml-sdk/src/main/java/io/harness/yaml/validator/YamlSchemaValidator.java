@@ -50,6 +50,14 @@ public class YamlSchemaValidator {
     return validateMsg.stream().map(ValidationMessage::getMessage).collect(Collectors.toSet());
   }
 
+  public Set<String> validate(String yaml, String stringSchema) throws IOException {
+    JsonNode jsonNode = mapper.readTree(yaml);
+    JsonSchemaFactory factory =
+        JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7)).build();
+    JsonSchema schema = factory.getSchema(stringSchema);
+    Set<ValidationMessage> validateMsg = schema.validate(jsonNode);
+    return validateMsg.stream().map(ValidationMessage::getMessage).collect(Collectors.toSet());
+  }
   /**
    * Finds all classes with {@link YamlSchemaRoot} in classpath and store its schema in schemas map.
    */

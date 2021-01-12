@@ -64,4 +64,40 @@ public class TestClass {
   }
 
   public enum Types { ClassWithApiModelOverride, ClassWithoutApiModelOverride }
+
+  @YamlSchemaRoot(value = EntityType.CONNECTORS, availableAtAccountLevel = true, availableAtOrgLevel = true,
+      availableAtProjectLevel = true)
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @FieldDefaults(level = AccessLevel.PUBLIC)
+  public static class ClassWhichContainsInterfaceWithInternal {
+    String mnop;
+    @JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY, visible = true)
+    TestInterface testInterface;
+  }
+
+  @JsonSubTypes({
+    @JsonSubTypes.Type(value = InterfaceImpl1.class, name = "InterfaceImpl1")
+    , @JsonSubTypes.Type(value = InterfaceImpl2.class, name = "InterfaceImpl2")
+  })
+  public interface TestInterface1 {}
+
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @FieldDefaults(level = AccessLevel.PUBLIC)
+  public static class InterfaceImpl1 {
+    String type;
+    String abc;
+  }
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @FieldDefaults(level = AccessLevel.PUBLIC)
+  public static class InterfaceImpl2 {
+    String type;
+    String xyz;
+  }
 }

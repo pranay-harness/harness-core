@@ -8,6 +8,7 @@ import static io.harness.yaml.schema.beans.SchemaConstants.NUMBER_TYPE_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.OBJECT_TYPE_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.ONE_OF_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.PROPERTIES_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.REF_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.STRING_TYPE_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.TYPE_NODE;
 
@@ -218,16 +219,7 @@ public class YamlSchemaGenerator {
 
   private void addPossibleValuesInFields(
       ObjectMapper mapper, ObjectNode value, SwaggerDefinitionsMetaInfo swaggerDefinitionsMetaInfo) {
-    ObjectNode propertiesNode;
-    // In case of child classes they contain parent node information in 0 index of all of.
-    // assuming index 1 to have properties node.
-    // later if we find a corner case we will have to iterate over all the nodes to find properties node and see if it
-    // works.
-    if (value.get(ALL_OF_NODE) != null) {
-      propertiesNode = (ObjectNode) value.get(ALL_OF_NODE).get(1).get(PROPERTIES_NODE);
-    } else {
-      propertiesNode = (ObjectNode) value.get(PROPERTIES_NODE);
-    }
+    ObjectNode propertiesNode = getPropertiesNodeFromDefinitionNode(value);
     swaggerDefinitionsMetaInfo.getFieldPossibleTypes().forEach(fieldPossibleTypes -> {
       final String fieldName = fieldPossibleTypes.getFieldName();
       final SupportedPossibleFieldTypes defaultFieldType = fieldPossibleTypes.getDefaultFieldType();
@@ -257,6 +249,20 @@ public class YamlSchemaGenerator {
         fieldNode.putArray(ONE_OF_NODE).addAll(fieldOneOfNodes);
       }
     });
+  }
+
+  private ObjectNode getPropertiesNodeFromDefinitionNode(ObjectNode value) {
+    // In case of child classes they contain parent node information in 0 index of all of.
+    // assuming index 1 to have properties node.
+    // later if we find a corner case we will have to iterate over all the nodes to find properties node and see if it
+    // works.
+    ObjectNode propertiesNode;
+    if (value.get(ALL_OF_NODE) != null) {
+      propertiesNode = (ObjectNode) value.get(ALL_OF_NODE).get(1).get(PROPERTIES_NODE);
+    } else {
+      propertiesNode = (ObjectNode) value.get(PROPERTIES_NODE);
+    }
+    return propertiesNode;
   }
 
   private ObjectNode getNodeFromType(SupportedPossibleFieldTypes type, ObjectMapper mapper) {
@@ -316,9 +322,32 @@ public class YamlSchemaGenerator {
       ObjectMapper mapper, String name, ObjectNode value, List<ObjectNode> allOfNodeContents) {
     final Set<FieldSubtypeData> fieldSubtypeDatas = swaggerDefinitionsMetaInfoMap.get(name).getSubtypeClassMap();
     for (FieldSubtypeData fieldSubtypeData : fieldSubtypeDatas) {
-      addConditionalBlock(mapper, allOfNodeContents, fieldSubtypeData);
-      removeFieldWithRefFromSchema(value, fieldSubtypeData);
+      if (fieldSubtypeData.getDiscriminatorType() == JsonTypeInfo.As.EXTERNAL_PROPERTY) {
+        addConditionalBlock(mapper, allOfNodeContents, fieldSubtypeData);
+        removeFieldWithRefFromSchema(value, fieldSubtypeData);
+      } else {
+        addInternalConditionalBlock(value, mapper, fieldSubtypeData);
+      }
     }
+  }
+
+  // todo(abhinav): solve it to handle conditional better.
+  private void addInternalConditionalBlock(ObjectNode value, ObjectMapper mapper, FieldSubtypeData fieldSubtypeData) {
+    ObjectNode propertiesNodeFromDefinitionNode = getPropertiesNodeFromDefinitionNode(value);
+    final String fieldName = fieldSubtypeData.getFieldName();
+    final ObjectNode fieldNode = (ObjectNode) propertiesNodeFromDefinitionNode.get(fieldName);
+    if (fieldNode.get(ONE_OF_NODE) != null) {
+      throw new InvalidRequestException("Both Subtype and one of not handled for a single field");
+    }
+    List<ObjectNode> possibleNodes =
+        fieldSubtypeData.getSubtypesMapping()
+            .stream()
+            .map(fieldData
+                -> mapper.createObjectNode().put(
+                    REF_NODE, SchemaConstants.DEFINITIONS_STRING_PREFIX + fieldData.getSubTypeDefinitionKey()))
+            .collect(Collectors.toList());
+    fieldNode.removeAll();
+    fieldNode.putArray(ONE_OF_NODE).addAll(possibleNodes);
   }
 
   private void removeFieldWithRefFromSchema(ObjectNode value, FieldSubtypeData fieldSubtypeData) {
