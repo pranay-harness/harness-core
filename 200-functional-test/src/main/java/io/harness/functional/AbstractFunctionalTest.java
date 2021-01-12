@@ -416,13 +416,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
     }
   }
 
-  protected void enableFeatureFlag(FeatureName featureName, String accountId) {
-    if (!featureFlagService.isEnabled(featureName, accountId)) {
-      featureFlagService.enableAccount(featureName, accountId);
-    }
-    assertThat(featureFlagService.isEnabled(featureName, accountId));
-
-    // This is needed only for debuging purposes
+  protected void logManagerFeatureFlags(String accountId) {
     Collection<FeatureFlag> managerFeatureFlags = UserRestUtils.listFeatureFlags(accountId, bearerToken);
     StringBuilder featureFlagListAsString = new StringBuilder();
     for (FeatureFlag featureFlag : managerFeatureFlags) {
@@ -430,11 +424,5 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
     }
 
     log.info("Feature flags on manager:\n{}", featureFlagListAsString.toString());
-    log.info("{} enabled on manager: {}", featureName.name(),
-        managerFeatureFlags.stream()
-            .filter(ff -> featureName.name().equals(ff.getName()))
-            .findFirst()
-            .map(FeatureFlag::isEnabled)
-            .orElse(false));
   }
 }

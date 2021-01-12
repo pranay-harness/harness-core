@@ -8,7 +8,6 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.PageRequest;
 import io.harness.category.element.CDFunctionalTests;
@@ -81,10 +80,8 @@ public class HelmChartAsArtifactFunctionalTest extends AbstractFunctionalTest {
     application = owners.obtainApplication(
         () -> applicationGenerator.ensurePredefined(seed, owners, ApplicationGenerator.Applications.GENERIC_TEST));
 
-    enableFeatureFlag(FeatureName.HELM_CHART_AS_ARTIFACT, application.getAccountId());
-    enableFeatureFlag(FeatureName.HELM_STEADY_STATE_CHECK_1_16, application.getAccountId());
-
     resetCache(owners.obtainAccount().getUuid());
+    logManagerFeatureFlags(application.getAccountId());
   }
 
   @Test
