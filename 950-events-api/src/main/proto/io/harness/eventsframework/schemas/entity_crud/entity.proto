@@ -1,11 +1,11 @@
 syntax = "proto3";
 
-package io.harness.eventsframework.entity_crud.connector;
+package io.harness.eventsframework.entity_crud;
 import "google/protobuf/wrappers.proto";
 
 option java_multiple_files = true;
 
-message ConnectorEntityChangeDTO {
+message EntityChangeDTO {
   google.protobuf.StringValue identifier = 1;
   google.protobuf.StringValue accountIdentifier = 2;
   google.protobuf.StringValue orgIdentifier = 3;

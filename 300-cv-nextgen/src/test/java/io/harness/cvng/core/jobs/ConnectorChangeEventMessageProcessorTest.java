@@ -26,7 +26,7 @@ import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
-import io.harness.eventsframework.entity_crud.connector.ConnectorEntityChangeDTO;
+import io.harness.eventsframework.entity_crud.EntityChangeDTO;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.Lists;
@@ -73,7 +73,7 @@ public class ConnectorChangeEventMessageProcessorTest extends CvNextGenTest {
     CVConfig cvConfig = createCVConfig();
     cvConfigService.save(cvConfig);
     connectorChangeEventMessageProcessor.processUpdateAction(
-        ConnectorEntityChangeDTO.newBuilder()
+        EntityChangeDTO.newBuilder()
             .setAccountIdentifier(StringValue.newBuilder().setValue(accountIdentifier).build())
             .setOrgIdentifier(StringValue.newBuilder().setValue(orgIdentifier).build())
             .setProjectIdentifier(StringValue.newBuilder().setValue(projectIdentifier).build())
@@ -99,7 +99,7 @@ public class ConnectorChangeEventMessageProcessorTest extends CvNextGenTest {
         connectorChangeEventMessageProcessor, "verificationJobInstanceService", verificationJobInstanceService, true);
     doNothing().when(verificationJobInstanceService).resetVerificationJobPerpetualTasks(any());
     connectorChangeEventMessageProcessor.processUpdateAction(
-        ConnectorEntityChangeDTO.newBuilder()
+        EntityChangeDTO.newBuilder()
             .setAccountIdentifier(StringValue.newBuilder().setValue(accountIdentifier).build())
             .setOrgIdentifier(StringValue.newBuilder().setValue(orgIdentifier).build())
             .setProjectIdentifier(StringValue.newBuilder().setValue(projectIdentifier).build())

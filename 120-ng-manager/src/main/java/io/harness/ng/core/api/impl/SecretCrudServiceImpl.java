@@ -15,7 +15,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.api.ProducerShutdownException;
-import io.harness.eventsframework.entity_crud.secret.SecretEntityChangeDTO;
+import io.harness.eventsframework.entity_crud.EntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
@@ -255,8 +255,8 @@ public class SecretCrudServiceImpl implements SecretCrudService {
 
   private void publishEvent(Secret secret, String action) {
     try {
-      SecretEntityChangeDTO.Builder secretEntityChangeDTOBuilder =
-          SecretEntityChangeDTO.newBuilder()
+      EntityChangeDTO.Builder secretEntityChangeDTOBuilder =
+          EntityChangeDTO.newBuilder()
               .setAccountIdentifier(StringValue.of(secret.getAccountIdentifier()))
               .setIdentifier(StringValue.of(secret.getIdentifier()));
       if (isNotBlank(secret.getOrgIdentifier())) {
