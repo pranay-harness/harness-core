@@ -342,7 +342,7 @@ public class InstanceFetchState extends State {
     activityHelperService.updateStatus(
         stateExecutionData.getActivityId(), context.getAppId(), executionData.getExecutionStatus());
 
-    String messageToLog = format("%n Found %d hosts {%s}", instanceDetails.size(),
+    String messageToLog = format("%n Found %d targets {%s}", instanceDetails.size(),
         instanceDetails.stream().map(InstanceDetails::getHostName).collect(Collectors.toList()));
     logCallback.saveExecutionLog(
         doneColoring(color(messageToLog, LogColor.Green)), LogLevel.INFO, CommandExecutionStatus.SUCCESS);
