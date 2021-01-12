@@ -3578,4 +3578,55 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(trigger.getUuid()).isNotEmpty();
     assertThat(trigger.getCondition()).isInstanceOf(PipelineTriggerCondition.class);
   }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldPopulateManifestForOnNewArtifactTriggerWithLastCollectedFilter() {
+    Trigger trigger = buildArtifactTrigger();
+    ArtifactTriggerCondition artifactTriggerCondition = (ArtifactTriggerCondition) trigger.getCondition();
+    artifactTriggerCondition.setArtifactFilter(null);
+    trigger.setArtifactSelections(asList(ArtifactSelection.builder()
+                                             .artifactStreamId(ARTIFACT_STREAM_ID)
+                                             .serviceId(SERVICE_ID)
+                                             .type(LAST_COLLECTED)
+                                             .artifactFilter("FILTER")
+                                             .build()));
+    trigger.setManifestSelections(asList(ManifestSelection.builder()
+                                             .type(ManifestSelectionType.LAST_COLLECTED)
+                                             .serviceId(SERVICE_ID)
+                                             .appManifestId(MANIFEST_ID)
+                                             .build(),
+        ManifestSelection.builder()
+            .type(ManifestSelectionType.LAST_DEPLOYED)
+            .serviceId(SERVICE_ID + 2)
+            .appManifestId(MANIFEST_ID + 2)
+            .pipelineId(WORKFLOW_ID)
+            .build()));
+    triggerService.save(trigger);
+
+    when(featureFlagService.isEnabled(FeatureName.ON_NEW_ARTIFACT_TRIGGER_WITH_LAST_COLLECTED_FILTER, ACCOUNT_ID))
+        .thenReturn(true);
+
+    when(helmChartService.getLastCollectedManifest(ACCOUNT_ID, MANIFEST_ID))
+        .thenReturn(HelmChart.builder().uuid(HELM_CHART_ID).build());
+    when(workflowExecutionService.obtainLastGoodDeployedHelmCharts(APP_ID, WORKFLOW_ID))
+        .thenReturn(asList(HelmChart.builder().uuid(HELM_CHART_ID + 2).serviceId(SERVICE_ID + 2).build()));
+    ApplicationManifest appManifest =
+        ApplicationManifest.builder().accountId(ACCOUNT_ID).storeType(StoreType.HelmChartRepo).build();
+    appManifest.setUuid(MANIFEST_ID);
+    when(applicationManifestService.getById(APP_ID, MANIFEST_ID)).thenReturn(appManifest);
+    when(artifactService.getArtifactByBuildNumber(artifactStream, "FILTER", false))
+        .thenReturn(Artifact.Builder.anArtifact().withUuid(ARTIFACT_ID).build());
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(artifactStream);
+    ArgumentCaptor<ExecutionArgs> argsArgumentCaptor = ArgumentCaptor.forClass(ExecutionArgs.class);
+
+    triggerService.triggerExecutionPostArtifactCollectionAsync(ACCOUNT_ID, APP_ID, ARTIFACT_STREAM_ID,
+        Collections.singletonList(Artifact.Builder.anArtifact().withUuid(ARTIFACT_ID).build()));
+    verify(workflowExecutionService, times(1))
+        .triggerEnvExecution(eq(APP_ID), anyString(), argsArgumentCaptor.capture(), eq(trigger));
+    assertThat(argsArgumentCaptor.getValue().getHelmCharts()).hasSize(2);
+    assertThat(argsArgumentCaptor.getValue().getHelmCharts().stream().map(HelmChart::getUuid))
+        .containsExactlyInAnyOrder(HELM_CHART_ID, HELM_CHART_ID + 2);
+  }
 }
