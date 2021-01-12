@@ -517,6 +517,7 @@ public class WatcherServiceImpl implements WatcherService {
       if (isEmpty(runningDelegates)) {
         if (!multiVersion) {
           if (working.compareAndSet(false, true)) {
+            downloadRunScriptsBeforeRestartingDelegateAndWatcher();
             startDelegateProcess(null, ".", emptyList(), "DelegateStartScript", getProcessId());
           }
         }
@@ -690,6 +691,7 @@ public class WatcherServiceImpl implements WatcherService {
             log.info("Delegate processes {} ready for upgrade. Sending confirmation", upgradeNeededList);
             upgradeNeededList.forEach(
                 delegateProcess -> messageService.writeMessageToChannel(DELEGATE, delegateProcess, UPGRADING_DELEGATE));
+            downloadRunScriptsBeforeRestartingDelegateAndWatcher();
             startDelegateProcess(null, ".", upgradeNeededList, "DelegateUpgradeScript", getProcessId());
           }
         }
