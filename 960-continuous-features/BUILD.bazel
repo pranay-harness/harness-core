@@ -1,0 +1,40 @@
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//:macros.bzl", "sources")
+load("//:macros.bzl", "sonarqube_test")
+
+sources()
+
+java_library(
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//:lombok",
+        "//980-commons:module",
+        "@data_collection_dsl//:io_harness_cf_cf_client_sdk_java",
+        "@maven//:com_google_code_findbugs_annotations",
+        "@maven//:com_google_guava_guava",
+        "@maven//:com_google_inject_guice",
+        "@maven//:io_dropwizard_metrics_metrics_annotation",
+        "@maven//:io_swagger_swagger_annotations",
+        "@maven//:javax_ws_rs_javax_ws_rs_api",
+    ],
+)
+
+# tests library should go here
+
+run_tests()
+
+checkstyle()
+
+sonarqube_test(
+    name = "sq_mycomponent",
+    srcs = ["sources"],
+    targets = [
+        ":module",
+    ],
+)
+
+pmd()

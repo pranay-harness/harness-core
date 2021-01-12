@@ -61,6 +61,7 @@ java_library(
         "//950-timeout-engine:module",
         "//950-wait-engine:module",
         "//960-api-services:module",
+        "//960-continuous-features:module",
         "//960-ng-core-beans:module",
         "//960-notification-beans:module",
         "//960-persistence:module",
