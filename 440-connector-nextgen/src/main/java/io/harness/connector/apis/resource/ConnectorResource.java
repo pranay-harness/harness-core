@@ -32,6 +32,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -47,6 +48,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import org.hibernate.validator.constraints.NotEmpty;
+import retrofit2.http.Body;
 
 @Api("/connectors")
 @Path("/connectors")
@@ -125,7 +127,7 @@ public class ConnectorResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @QueryParam(NGResourceFilterConstants.FILTER_KEY) String filterIdentifier,
       @QueryParam(INCLUDE_ALL_CONNECTORS_ACCESSIBLE) Boolean includeAllConnectorsAccessibleAtScope,
-      ConnectorFilterPropertiesDTO connectorListFilter) {
+      @Body ConnectorFilterPropertiesDTO connectorListFilter) {
     return ResponseDTO.newResponse(
         getNGPageResponse(connectorService.list(page, size, accountIdentifier, connectorListFilter, orgIdentifier,
             projectIdentifier, filterIdentifier, searchTerm, includeAllConnectorsAccessibleAtScope)));
@@ -223,5 +225,14 @@ public class ConnectorResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     return ResponseDTO.newResponse(
         connectorService.getConnectorStatistics(accountIdentifier, orgIdentifier, projectIdentifier));
+  }
+
+  @POST
+  @Path("/listbyfqn")
+  @ApiOperation(value = "Gets Connector list", nickname = "listConnectorByFQN")
+  public ResponseDTO<List<ConnectorResponseDTO>> listConnectorByFQN(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Body List<String> connectorsFQN) {
+    return ResponseDTO.newResponse(connectorService.listbyFQN(accountIdentifier, connectorsFQN));
   }
 }

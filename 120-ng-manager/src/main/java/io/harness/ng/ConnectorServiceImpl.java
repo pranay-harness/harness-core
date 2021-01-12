@@ -38,6 +38,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.StringValue;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import javax.validation.constraints.NotNull;
@@ -265,5 +266,10 @@ public class ConnectorServiceImpl implements ConnectorService {
       String projectIdentifier, String searchTerm, ConnectorType type, ConnectorCategory category) {
     return defaultConnectorService.list(
         page, size, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category);
+  }
+
+  @Override
+  public List<ConnectorResponseDTO> listbyFQN(String accountIdentifier, List<String> connectorFQN) {
+    return defaultConnectorService.listbyFQN(accountIdentifier, connectorFQN);
   }
 }

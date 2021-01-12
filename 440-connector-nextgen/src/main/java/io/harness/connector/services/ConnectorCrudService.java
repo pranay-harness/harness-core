@@ -9,6 +9,7 @@ import io.harness.connector.ConnectorResponseDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 
@@ -35,4 +36,6 @@ public interface ConnectorCrudService {
 
   void updateConnectivityDetailOfTheConnector(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String identifier, ConnectorValidationResult connectorValidationResult);
+
+  List<ConnectorResponseDTO> listbyFQN(String accountIdentifier, List<String> connectorsFQN);
 }

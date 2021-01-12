@@ -241,4 +241,9 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
       String projectIdentifier, String searchTerm, ConnectorType type, ConnectorCategory category) {
     throw new UnsupportedOperationException("Cannot call list api on secret manager");
   }
+
+  @Override
+  public List<ConnectorResponseDTO> listbyFQN(String accountIdentifier, List<String> connectorFQN) {
+    return defaultConnectorService.listbyFQN(accountIdentifier, connectorFQN);
+  }
 }
