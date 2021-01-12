@@ -7,6 +7,7 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACC
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ENV_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_ID;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -32,6 +33,8 @@ import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
+import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
@@ -42,6 +45,7 @@ import software.wings.helpers.ext.k8s.request.K8sInstanceSyncTaskParameters;
 import software.wings.service.InstanceSyncConstants;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.instance.InstanceSyncTestConstants;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -69,6 +73,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest {
   @Mock InfrastructureMappingService infraMappingService;
+  @Mock EnvironmentService environmentService;
   @Mock ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
   @Mock AwsCommandHelper awsCommandHelper;
   @Mock SecretManager secretManager;
@@ -169,7 +174,9 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
                                  .timeout(validationTask.getData().getTimeout())
                                  .build())
                        .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+                       .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, EnvironmentType.PROD.name())
                        .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
+                       .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, SERVICE_ID)
                        .waitId("12345")
                        .build());
     assertThat(validationTask.getData().getTimeout())
@@ -210,7 +217,9 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
                           .timeout(validationTask.getData().getTimeout())
                           .build())
                 .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+                .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, EnvironmentType.PROD.name())
                 .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
+                .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, SERVICE_ID)
                 .build());
 
     assertThat(validationTask.getData().getTimeout())
@@ -250,7 +259,9 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
                                  .timeout(validationTask.getData().getTimeout())
                                  .build())
                        .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+                       .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, EnvironmentType.PROD.name())
                        .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
+                       .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, SERVICE_ID)
                        .build());
 
     assertThat(validationTask.getData().getTimeout())
@@ -265,8 +276,12 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
     infraMapping.setAppId(APP_ID);
     infraMapping.setRegion("us-east-1");
     infraMapping.setEnvId(ENV_ID);
-    infraMapping.setServiceId(InstanceSyncTestConstants.SERVICE_ID);
+    infraMapping.setServiceId(SERVICE_ID);
     infraMapping.setComputeProviderSettingId(InstanceSyncTestConstants.COMPUTE_PROVIDER_SETTING_ID);
+    Environment environment = new Environment();
+    environment.setEnvironmentType(EnvironmentType.PROD);
+    environment.setUuid(ENV_ID);
+    doReturn(environment).when(environmentService).get(APP_ID, ENV_ID);
 
     doReturn(infraMapping).when(infraMappingService).get(APP_ID, INFRA_MAPPING_ID);
     doReturn(SettingAttribute.Builder.aSettingAttribute().withValue(awsConfig).build())
@@ -283,8 +298,12 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
     infraMapping.setResourceGroup("resource_group");
     infraMapping.setMasterUrl("master_url");
     infraMapping.setEnvId(ENV_ID);
-    infraMapping.setServiceId(InstanceSyncTestConstants.SERVICE_ID);
+    infraMapping.setServiceId(SERVICE_ID);
     infraMapping.setComputeProviderSettingId(InstanceSyncTestConstants.COMPUTE_PROVIDER_SETTING_ID);
+    Environment environment = new Environment();
+    environment.setEnvironmentType(EnvironmentType.PROD);
+    environment.setUuid(ENV_ID);
+    doReturn(environment).when(environmentService).get(APP_ID, ENV_ID);
 
     doReturn(infraMapping).when(infraMappingService).get(APP_ID, INFRA_MAPPING_ID);
     doReturn(SettingAttribute.Builder.aSettingAttribute().withValue(azureConfig).build())
@@ -297,9 +316,13 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
     infraMapping.setClusterName("cluster");
     infraMapping.setAccountId(ACCOUNT_ID);
     infraMapping.setAppId(APP_ID);
-    infraMapping.setServiceId(InstanceSyncTestConstants.SERVICE_ID);
+    infraMapping.setServiceId(SERVICE_ID);
     infraMapping.setComputeProviderSettingId(InstanceSyncTestConstants.COMPUTE_PROVIDER_SETTING_ID);
     infraMapping.setEnvId(ENV_ID);
+    Environment environment = new Environment();
+    environment.setEnvironmentType(EnvironmentType.PROD);
+    environment.setUuid(ENV_ID);
+    doReturn(environment).when(environmentService).get(APP_ID, ENV_ID);
 
     doReturn(infraMapping).when(infraMappingService).get(APP_ID, INFRA_MAPPING_ID);
     doReturn(k8sClusterConfig).when(containerDeploymentManagerHelper).getK8sClusterConfig(infraMapping, null);
