@@ -708,16 +708,20 @@ public class TriggerServiceImpl implements TriggerService {
               featureFlagService.isEnabled(FeatureName.ON_NEW_ARTIFACT_TRIGGER_WITH_LAST_COLLECTED_FILTER, accountId);
           if (preferArtifactSelectionOverTriggeringArtifact) {
             List<Artifact> artifactsFromSelection = new ArrayList<>();
+            List<HelmChart> helmCharts = new ArrayList<>();
             if (isNotEmpty(trigger.getArtifactSelections())) {
               log.info("Artifact selections found collecting artifacts as per artifactStream selections");
               addArtifactsFromSelectionsTriggeringArtifactSource(
                   trigger.getAppId(), trigger, artifactsFromSelection, artifacts);
             }
+            if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, accountId)) {
+              addHelmChartsFromSelections(appId, trigger, helmCharts);
+            }
             if (isNotEmpty(artifactsFromSelection)) {
               log.info("The artifacts  set for the trigger {} are {}", trigger.getUuid(),
                   artifactsFromSelection.stream().map(Artifact::getUuid).collect(toList()));
               try {
-                triggerDeployment(artifactsFromSelection, new ArrayList<>(), null, trigger);
+                triggerDeployment(artifactsFromSelection, helmCharts, null, trigger);
               } catch (WingsException exception) {
                 ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
               }
