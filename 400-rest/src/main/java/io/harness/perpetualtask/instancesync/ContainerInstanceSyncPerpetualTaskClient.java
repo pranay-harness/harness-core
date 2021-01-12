@@ -26,6 +26,7 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
+import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
@@ -34,6 +35,7 @@ import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sInstanceSyncTaskParameters;
 import software.wings.service.impl.ContainerMetadataType;
 import software.wings.service.impl.ContainerServiceParams;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -54,6 +56,7 @@ import org.apache.commons.collections.ListUtils;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ContainerInstanceSyncPerpetualTaskClient implements PerpetualTaskServiceClient {
   @Inject InfrastructureMappingService infraMappingService;
+  @Inject EnvironmentService environmentService;
   @Inject ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
   @Inject transient AwsCommandHelper awsCommandHelper;
   @Inject SecretManager secretManager;
@@ -138,7 +141,9 @@ public class ContainerInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
         .accountId(taskData.getAccountId())
         .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, taskData.getAppId())
         .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, taskData.getEnvId())
+        .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, taskData.getEnvType())
         .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, clientParams.get(INFRASTRUCTURE_MAPPING_ID))
+        .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, taskData.getServiceId())
         .tags(fetchTagsFromK8sCloudProvider(delegateTaskParams))
         .build();
   }
@@ -168,7 +173,9 @@ public class ContainerInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
                   .timeout(System.currentTimeMillis() + TaskData.DELEGATE_QUEUE_TIMEOUT)
                   .build())
         .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, taskData.getEnvId())
+        .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, taskData.getEnvType())
         .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infraMappingId)
+        .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, taskData.getServiceId())
         .build();
   }
 
@@ -178,6 +185,7 @@ public class ContainerInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
     String infraMappingId = clientParams.get(INFRASTRUCTURE_MAPPING_ID);
     ContainerInfrastructureMapping containerInfrastructureMapping =
         (ContainerInfrastructureMapping) infraMappingService.get(appId, infraMappingId);
+    Environment environment = environmentService.get(appId, containerInfrastructureMapping.getEnvId());
 
     boolean isK8sContainerType = isK8sContainerType(clientParams);
     SettingAttribute settingAttribute = getSettingAttribute(isK8sContainerType, containerInfrastructureMapping);
@@ -197,7 +205,9 @@ public class ContainerInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
         .subscriptionId(emptyIfNull(getSubscriptionId(containerInfrastructureMapping)))
         .resourceGroup(emptyIfNull(getResourceGroup(containerInfrastructureMapping)))
         .masterUrl(emptyIfNull(getMasterUrl(containerInfrastructureMapping)))
-        .envId(emptyIfNull(containerInfrastructureMapping.getEnvId()))
+        .envId(emptyIfNull(environment.getUuid()))
+        .envType(environment.getEnvironmentType().name())
+        .serviceId(containerInfrastructureMapping.getServiceId())
         .build();
   }
 
@@ -264,6 +274,7 @@ public class ContainerInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
     String releaseName;
     String containerServiceName;
     String envId;
+    String envType;
     K8sClusterConfig k8sClusterConfig;
     SettingAttribute settingAttribute;
     List<EncryptedDataDetail> encryptionDetails;
@@ -272,5 +283,6 @@ public class ContainerInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
     String subscriptionId;
     String resourceGroup;
     String masterUrl;
+    String serviceId;
   }
 }

@@ -235,7 +235,9 @@ public abstract class ContainerServiceDeploy extends State {
                         .timeout(TimeUnit.HOURS.toMillis(1))
                         .build())
               .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, contextData.env.getUuid())
+              .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, contextData.env.getEnvironmentType().name())
               .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, contextData.infrastructureMappingId)
+              .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, contextData.service.getUuid())
               .build());
 
       return ExecutionResponse.builder()

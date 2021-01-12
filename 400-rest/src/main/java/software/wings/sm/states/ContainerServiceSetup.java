@@ -242,8 +242,10 @@ public abstract class ContainerServiceSetup extends State {
                         .timeout(TimeUnit.HOURS.toMillis(1))
                         .build())
               .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
+              .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
               .tags(isNotEmpty(allTaskTags) ? allTaskTags : null)
               .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMapping.getUuid())
+              .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infrastructureMapping.getServiceId())
               .build());
 
       return ExecutionResponse.builder()
