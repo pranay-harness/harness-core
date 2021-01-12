@@ -193,7 +193,7 @@ public class BudgetServiceImpl implements BudgetService {
 
   @Override
   public double getForecastCost(Budget budget) {
-    return budgetUtils.getForecastCost(budget);
+    return budgetUtils.getForecastCost(budget, null);
   }
 
   @Override

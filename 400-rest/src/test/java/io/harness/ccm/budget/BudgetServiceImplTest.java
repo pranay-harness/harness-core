@@ -332,7 +332,7 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldGetForecastCost() {
     budgetService.getForecastCost(budget1);
-    verify(budgetUtils).getForecastCost(eq(budget1));
+    verify(budgetUtils).getForecastCost(eq(budget1), eq(null));
   }
 
   @Test

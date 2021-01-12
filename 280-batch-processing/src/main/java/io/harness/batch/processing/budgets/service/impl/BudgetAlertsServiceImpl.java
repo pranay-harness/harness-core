@@ -4,6 +4,8 @@ import static io.harness.ccm.budget.entities.AlertThresholdBase.ACTUAL_COST;
 import static io.harness.ccm.commons.Constants.HARNESS_NAME;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unified;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -28,6 +30,7 @@ import software.wings.beans.User;
 import software.wings.beans.notification.SlackNotificationConfiguration;
 import software.wings.beans.notification.SlackNotificationSetting;
 import software.wings.beans.security.UserGroup;
+import software.wings.graphql.datafetcher.billing.CloudBillingHelper;
 import software.wings.graphql.datafetcher.budget.BudgetTimescaleQueryHelper;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
@@ -62,6 +65,7 @@ public class BudgetAlertsServiceImpl {
   @Autowired private BatchMainConfig mainConfiguration;
   @Autowired private CloudToHarnessMappingService cloudToHarnessMappingService;
   @Autowired private AccountShardService accountShardService;
+  @Autowired private CloudBillingHelper cloudBillingHelper;
 
   private static final String BUDGET_MAIL_ERROR = "Budget alert email couldn't be sent";
   private static final String BUDGET_DETAILS_URL_FORMAT = "/account/%s/continuous-efficiency/budget/%s";
@@ -97,9 +101,11 @@ public class BudgetAlertsServiceImpl {
       return;
     }
 
+    String cloudProviderTable = cloudBillingHelper.getCloudProviderTableName(
+        mainConfiguration.getBillingDataPipelineConfig().getGcpProjectId(), budget.getAccountId(), unified);
     AlertThreshold[] alertThresholds = budget.getAlertThresholds();
     for (int i = 0; i < alertThresholds.length; i++) {
-      double actualCost = budgetUtils.getActualCost(budget);
+      double actualCost = budgetUtils.getActualCost(budget, cloudProviderTable);
       BudgetAlertsData data = BudgetAlertsData.builder()
                                   .accountId(budget.getAccountId())
                                   .actualCost(actualCost)
@@ -119,7 +125,7 @@ public class BudgetAlertsServiceImpl {
         if (alertThresholds[i].getBasedOn() == ACTUAL_COST) {
           currentCost = actualCost;
         } else {
-          currentCost = budgetUtils.getForecastCost(budget);
+          currentCost = budgetUtils.getForecastCost(budget, cloudProviderTable);
           costType = FORECASTED_COST_BUDGET;
         }
         log.info("{} has been spent under the budget with id={} ", currentCost, budget.getUuid());
@@ -221,9 +227,8 @@ public class BudgetAlertsServiceImpl {
   private double getThresholdAmount(Budget budget, AlertThreshold alertThreshold) {
     switch (alertThreshold.getBasedOn()) {
       case ACTUAL_COST:
-        return budget.getBudgetAmount() * alertThreshold.getPercentage() / 100;
       case FORECASTED_COST:
-        return budgetUtils.getForecastCost(budget) * alertThreshold.getPercentage() / 100;
+        return budget.getBudgetAmount() * alertThreshold.getPercentage() / 100;
       default:
         return 0;
     }
