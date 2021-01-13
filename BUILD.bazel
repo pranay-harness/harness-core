@@ -68,6 +68,7 @@ modules = [
     "//884-pms-commons",
     "//882-pms-sdk-core",
     "//876-orchestration-beans",
+    "//878-pipeline-service-utilities",
     "//879-pms-sdk",
     "//870-orchestration",
     "//860-orchestration-steps",

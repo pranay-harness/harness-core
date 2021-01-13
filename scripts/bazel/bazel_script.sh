@@ -52,6 +52,7 @@ BAZEL_MODULES="\
   //870-orchestration:module \
   //870-yaml-beans:module \
   //876-orchestration-beans:module \
+  //878-pipeline-service-utilities:module \
   //879-pms-sdk:module \
   //882-pms-sdk-core:module \
   //884-pms-commons:module \
@@ -251,6 +252,7 @@ build_bazel_module 860-orchestration-visualization
 build_bazel_module 870-orchestration
 build_bazel_module 870-yaml-beans
 build_bazel_module 876-orchestration-beans
+build_bazel_module 878-pipeline-service-utilities
 build_bazel_module 879-pms-sdk
 build_bazel_module 882-pms-sdk-core
 build_bazel_module 884-pms-commons
