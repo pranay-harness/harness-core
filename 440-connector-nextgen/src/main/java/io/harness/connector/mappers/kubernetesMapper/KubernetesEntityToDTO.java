@@ -35,7 +35,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
-public class KubernetesEntityToDTO implements ConnectorEntityToDTOMapper<KubernetesClusterConfig> {
+public class KubernetesEntityToDTO
+    extends ConnectorEntityToDTOMapper<KubernetesClusterConfigDTO, KubernetesClusterConfig> {
   @Inject private KubernetesConfigCastHelper kubernetesConfigCastHelper;
 
   @Override

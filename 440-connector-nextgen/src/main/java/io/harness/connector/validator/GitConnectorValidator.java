@@ -25,15 +25,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-public class GitConnectorValidator extends AbstractConnectorValidator implements ConnectionValidator<GitConfigDTO> {
+public class GitConnectorValidator extends AbstractConnectorValidator {
   @Inject NGErrorHelper ngErrorHelper;
-  public ConnectorValidationResult validate(
-      GitConfigDTO gitConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    validateFieldsPresent(gitConfig);
-    GitCommandExecutionResponse gitCommandExecutionResponse = (GitCommandExecutionResponse) super.validateConnector(
-        gitConfig, accountIdentifier, orgIdentifier, projectIdentifier);
-    return buildConnectorValidationResult(gitCommandExecutionResponse);
-  }
 
   private void validateFieldsPresent(GitConfigDTO gitConfig) {
     switch (gitConfig.getGitAuthType()) {
@@ -92,5 +85,14 @@ public class GitConnectorValidator extends AbstractConnectorValidator implements
   @Override
   public String getTaskType() {
     return "NG_GIT_COMMAND";
+  }
+
+  @Override
+  public ConnectorValidationResult validate(
+      ConnectorConfigDTO gitConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    validateFieldsPresent((GitConfigDTO) gitConfig);
+    GitCommandExecutionResponse gitCommandExecutionResponse = (GitCommandExecutionResponse) super.validateConnector(
+        gitConfig, accountIdentifier, orgIdentifier, projectIdentifier);
+    return buildConnectorValidationResult(gitCommandExecutionResponse);
   }
 }

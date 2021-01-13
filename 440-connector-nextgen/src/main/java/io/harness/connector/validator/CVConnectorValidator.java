@@ -2,6 +2,8 @@ package io.harness.connector.validator;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import static software.wings.beans.TaskType.CVNG_CONNECTOR_VALIDATE_TASK;
+
 import static java.time.Duration.ofMinutes;
 
 import io.harness.beans.DecryptableEntity;
@@ -16,6 +18,7 @@ import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorValidationResult.ConnectorValidationResultBuilder;
 import io.harness.delegate.beans.connector.cvconnector.CVConnectorTaskParams;
 import io.harness.delegate.beans.connector.cvconnector.CVConnectorTaskResponse;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
@@ -35,63 +38,10 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
-public class CVConnectorValidator<T extends ConnectorConfigDTO> implements ConnectionValidator<T> {
+public class CVConnectorValidator extends AbstractConnectorValidator {
   @Inject private final SecretManagerClientService ngSecretService;
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   @Inject private NGErrorHelper ngErrorHelper;
-
-  @Override
-  public ConnectorValidationResult validate(
-      T connectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    NGAccess basicNGAccessObject = BaseNGAccess.builder()
-                                       .accountIdentifier(accountIdentifier)
-                                       .orgIdentifier(orgIdentifier)
-                                       .projectIdentifier(projectIdentifier)
-                                       .build();
-
-    List<EncryptedDataDetail> encryptedDataDetailList = new ArrayList<>();
-    if (connectorDTO instanceof DecryptableEntity) {
-      encryptedDataDetailList =
-          ngSecretService.getEncryptionDetails(basicNGAccessObject, (DecryptableEntity) connectorDTO);
-    }
-
-    final DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
-                                                        .accountId(accountIdentifier)
-                                                        .taskType("CVNG_CONNECTOR_VALIDATE_TASK")
-                                                        .taskParameters(CVConnectorTaskParams.builder()
-                                                                            .connectorConfigDTO(connectorDTO)
-                                                                            .encryptionDetails(encryptedDataDetailList)
-                                                                            .build())
-                                                        .executionTimeout(ofMinutes(1))
-                                                        .taskSetupAbstraction("orgIdentifier", orgIdentifier)
-                                                        .taskSetupAbstraction("projectIdentifier", projectIdentifier)
-                                                        .build();
-    DelegateResponseData delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
-    if (delegateResponseData instanceof ErrorNotifyResponseData) {
-      ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) delegateResponseData;
-      String errorMessage = errorNotifyResponseData.getErrorMessage();
-      String errorSummary = ngErrorHelper.createErrorSummary("Invalid Credentials", errorMessage);
-      List<ErrorDetail> errorDetail = getErrorDetail(errorMessage);
-      ConnectorValidationResultBuilder connectorValidationResult =
-          ConnectorValidationResult.builder()
-              .status(ConnectivityStatus.FAILURE)
-              .testedAt(System.currentTimeMillis())
-              .delegateId(getDelegateId((ErrorNotifyResponseData) delegateResponseData));
-      if (isNotEmpty(errorMessage)) {
-        connectorValidationResult.errorSummary(errorSummary).errors(errorDetail);
-      }
-      return connectorValidationResult.build();
-    } else if (delegateResponseData instanceof RemoteMethodReturnValueData) {
-      return ConnectorValidationResult.builder().status(ConnectivityStatus.FAILURE).build();
-    }
-
-    CVConnectorTaskResponse cvConnectorTaskResponse = (CVConnectorTaskResponse) delegateResponseData;
-    return ConnectorValidationResult.builder()
-        .status(cvConnectorTaskResponse.isValid() ? ConnectivityStatus.SUCCESS : ConnectivityStatus.FAILURE)
-        .errorSummary(cvConnectorTaskResponse.getErrorMessage())
-        .delegateId(getDelegateId(cvConnectorTaskResponse))
-        .build();
-  }
 
   private String getDelegateId(DelegateTaskNotifyResponseData cvConnectorTaskResponse) {
     if (cvConnectorTaskResponse == null || cvConnectorTaskResponse.getDelegateMetaInfo() == null) {
@@ -103,5 +53,34 @@ public class CVConnectorValidator<T extends ConnectorConfigDTO> implements Conne
   private List<ErrorDetail> getErrorDetail(String errorMessage) {
     return Collections.singletonList(
         ErrorDetail.builder().message(errorMessage).code(450).reason("Invalid Credentials").build());
+  }
+
+  @Override
+  public <T extends ConnectorConfigDTO> TaskParameters getTaskParameters(
+      T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    final List<EncryptedDataDetail> encryptionDetail =
+        super.getEncryptionDetail(connectorConfig, accountIdentifier, orgIdentifier, projectIdentifier);
+    return CVConnectorTaskParams.builder()
+        .connectorConfigDTO(connectorConfig)
+        .encryptionDetails(encryptionDetail)
+        .build();
+  }
+
+  @Override
+  public String getTaskType() {
+    return CVNG_CONNECTOR_VALIDATE_TASK.name();
+  }
+
+  @Override
+  public ConnectorValidationResult validate(
+      ConnectorConfigDTO connectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    final DelegateResponseData delegateResponseData =
+        super.validateConnector(connectorDTO, accountIdentifier, orgIdentifier, projectIdentifier);
+    CVConnectorTaskResponse cvConnectorTaskResponse = (CVConnectorTaskResponse) delegateResponseData;
+    return ConnectorValidationResult.builder()
+        .status(cvConnectorTaskResponse.isValid() ? ConnectivityStatus.SUCCESS : ConnectivityStatus.FAILURE)
+        .errorSummary(cvConnectorTaskResponse.getErrorMessage())
+        .delegateId(getDelegateId(cvConnectorTaskResponse))
+        .build();
   }
 }

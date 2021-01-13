@@ -26,7 +26,7 @@ import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernameTokenA
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.UnknownEnumTypeException;
 
-public class BitbucketEntityToDTO implements ConnectorEntityToDTOMapper<BitbucketConnector> {
+public class BitbucketEntityToDTO extends ConnectorEntityToDTOMapper<BitbucketConnectorDTO, BitbucketConnector> {
   @Override
   public BitbucketConnectorDTO createConnectorDTO(BitbucketConnector connector) {
     BitbucketAuthenticationDTO bitbucketAuthenticationDTO = buildBitbucketAuthentication(connector);

@@ -5,9 +5,9 @@ import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 
-public class GcpKmsEntityToDTO implements ConnectorEntityToDTOMapper<GcpKmsConnector> {
+public class GcpKmsEntityToDTO extends ConnectorEntityToDTOMapper<GcpKmsConnectorDTO, GcpKmsConnector> {
   @Override
-  public ConnectorConfigDTO createConnectorDTO(GcpKmsConnector connector) {
+  public GcpKmsConnectorDTO createConnectorDTO(GcpKmsConnector connector) {
     return GcpKmsConnectorDTO.builder()
         .keyName(connector.getKeyName())
         .keyRing(connector.getKeyRing())

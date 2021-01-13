@@ -12,7 +12,7 @@ import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryUsern
 import com.google.inject.Singleton;
 
 @Singleton
-public class ArtifactoryEntityToDTO implements ConnectorEntityToDTOMapper<ArtifactoryConnector> {
+public class ArtifactoryEntityToDTO extends ConnectorEntityToDTOMapper<ArtifactoryConnectorDTO, ArtifactoryConnector> {
   @Override
   public ArtifactoryConnectorDTO createConnectorDTO(ArtifactoryConnector artifactoryConnector) {
     ArtifactoryAuthenticationDTO artifactoryAuthenticationDTO = null;

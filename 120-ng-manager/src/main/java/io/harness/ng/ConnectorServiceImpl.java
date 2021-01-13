@@ -14,6 +14,7 @@ import io.harness.connector.ConnectorCategory;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.ConnectorInfoDTO;
+import io.harness.connector.ConnectorRegistryFactory;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.services.ConnectorActivityService;
@@ -74,7 +75,7 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   private ConnectorService getConnectorService(ConnectorType connectorType) {
-    if (SECRET_MANAGER.getConnectors().contains(connectorType)) {
+    if (ConnectorRegistryFactory.getConnectorCategory(connectorType).equals(SECRET_MANAGER)) {
       return secretManagerConnectorService;
     }
     return defaultConnectorService;

@@ -13,7 +13,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Singleton
-public class JiraDTOToEntity implements ConnectorDTOToEntityMapper<JiraConnectorDTO> {
+public class JiraDTOToEntity extends ConnectorDTOToEntityMapper<JiraConnectorDTO, JiraConnector> {
   @Override
   public JiraConnector toConnectorEntity(JiraConnectorDTO configDTO) {
     return JiraConnector.builder()
@@ -21,10 +21,5 @@ public class JiraDTOToEntity implements ConnectorDTOToEntityMapper<JiraConnector
         .username(configDTO.getUsername())
         .passwordRef(SecretRefHelper.getSecretConfigString(configDTO.getPasswordRef()))
         .build();
-  }
-
-  @Override
-  public List<ConnectorCategory> getConnectorCategory() {
-    return Collections.singletonList(TICKETING);
   }
 }

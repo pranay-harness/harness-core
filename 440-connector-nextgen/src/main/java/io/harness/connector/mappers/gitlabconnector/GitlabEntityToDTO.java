@@ -28,7 +28,7 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernameTokenDTO;
 import io.harness.encryption.SecretRefData;
 
-public class GitlabEntityToDTO implements ConnectorEntityToDTOMapper<GitlabConnector> {
+public class GitlabEntityToDTO extends ConnectorEntityToDTOMapper<GitlabConnectorDTO, GitlabConnector> {
   @Override
   public GitlabConnectorDTO createConnectorDTO(GitlabConnector connector) {
     GitlabAuthenticationDTO gitlabAuthenticationDTO = buildGitlabAuthentication(connector);

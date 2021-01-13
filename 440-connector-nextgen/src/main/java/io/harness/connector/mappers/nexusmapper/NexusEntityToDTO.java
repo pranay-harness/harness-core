@@ -12,7 +12,7 @@ import io.harness.delegate.beans.connector.nexusconnector.NexusUsernamePasswordA
 import com.google.inject.Singleton;
 
 @Singleton
-public class NexusEntityToDTO implements ConnectorEntityToDTOMapper<NexusConnector> {
+public class NexusEntityToDTO extends ConnectorEntityToDTOMapper<NexusConnectorDTO, NexusConnector> {
   @Override
   public NexusConnectorDTO createConnectorDTO(NexusConnector nexusConnector) {
     NexusAuthenticationDTO nexusAuthenticationDTO = null;

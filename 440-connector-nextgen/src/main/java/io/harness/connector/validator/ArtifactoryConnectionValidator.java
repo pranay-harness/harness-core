@@ -11,8 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-public class ArtifactoryConnectionValidator
-    extends AbstractConnectorValidator implements ConnectionValidator<ArtifactoryConnectorDTO> {
+public class ArtifactoryConnectionValidator extends AbstractConnectorValidator {
   @Override
   public <T extends ConnectorConfigDTO> TaskParameters getTaskParameters(
       T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
@@ -26,7 +25,7 @@ public class ArtifactoryConnectionValidator
 
   @Override
   public ConnectorValidationResult validate(
-      ArtifactoryConnectorDTO connectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+      ConnectorConfigDTO connectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     return ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build();
   }
 }

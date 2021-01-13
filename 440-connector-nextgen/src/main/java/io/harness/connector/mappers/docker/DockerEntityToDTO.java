@@ -13,7 +13,7 @@ import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
 import com.google.inject.Singleton;
 
 @Singleton
-public class DockerEntityToDTO implements ConnectorEntityToDTOMapper<DockerConnector> {
+public class DockerEntityToDTO extends ConnectorEntityToDTOMapper<DockerConnectorDTO, DockerConnector> {
   @Override
   public DockerConnectorDTO createConnectorDTO(DockerConnector dockerConnector) {
     DockerAuthenticationDTO dockerAuthenticationDTO = null;

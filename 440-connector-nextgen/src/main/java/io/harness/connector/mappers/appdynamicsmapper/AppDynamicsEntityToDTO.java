@@ -5,7 +5,7 @@ import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
 import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 
-public class AppDynamicsEntityToDTO implements ConnectorEntityToDTOMapper<AppDynamicsConnector> {
+public class AppDynamicsEntityToDTO extends ConnectorEntityToDTOMapper<AppDynamicsConnectorDTO, AppDynamicsConnector> {
   @Override
   public AppDynamicsConnectorDTO createConnectorDTO(AppDynamicsConnector connector) {
     return AppDynamicsConnectorDTO.builder()

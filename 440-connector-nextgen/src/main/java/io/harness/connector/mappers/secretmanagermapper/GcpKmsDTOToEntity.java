@@ -9,9 +9,9 @@ import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import java.util.Collections;
 import java.util.List;
 
-public class GcpKmsDTOToEntity implements ConnectorDTOToEntityMapper<GcpKmsConnectorDTO> {
+public class GcpKmsDTOToEntity extends ConnectorDTOToEntityMapper<GcpKmsConnectorDTO, GcpKmsConnector> {
   @Override
-  public Connector toConnectorEntity(GcpKmsConnectorDTO connectorDTO) {
+  public GcpKmsConnector toConnectorEntity(GcpKmsConnectorDTO connectorDTO) {
     return GcpKmsConnector.builder()
         .projectId(connectorDTO.getProjectId())
         .region(connectorDTO.getRegion())
@@ -20,10 +20,5 @@ public class GcpKmsDTOToEntity implements ConnectorDTOToEntityMapper<GcpKmsConne
         .isDefault(connectorDTO.isDefault())
         .harnessManaged(connectorDTO.isHarnessManaged())
         .build();
-  }
-
-  @Override
-  public List<ConnectorCategory> getConnectorCategory() {
-    return Collections.singletonList(ConnectorCategory.SECRET_MANAGER);
   }
 }
