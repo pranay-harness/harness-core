@@ -63,4 +63,17 @@ public class FQNUtilsTest extends CategoryTest {
       assertThat(reverseConfig.getYaml().replace("\"", "")).isEqualTo(yaml);
     }
   }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testGenerateFQNAndYamlMapOnFailureStrategiesYaml() throws IOException {
+    ClassLoader classLoader = getClass().getClassLoader();
+    String filename = "failure-strategy.yaml";
+    String yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
+    PipelineYamlConfig config = new PipelineYamlConfig(yaml);
+    assertThat(config).isNotNull();
+    PipelineYamlConfig configRes = new PipelineYamlConfig(config.getFqnToValueMap(), config.getYamlMap());
+    assertThat(configRes.getYaml().replace("\"", "")).isEqualTo(yaml);
+  }
 }
