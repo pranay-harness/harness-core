@@ -12,4 +12,6 @@ enum EntityTypeProtoEnum {
   ENVIRONMENT = 5;
   INPUT_SETS = 6;
   CV_CONFIG = 7;
+  DELEGATES = 8;
+  DELEGATE_CONFIGURATIONS = 9;
 }

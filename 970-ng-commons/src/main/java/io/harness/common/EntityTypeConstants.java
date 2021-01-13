@@ -9,4 +9,6 @@ public interface EntityTypeConstants {
   String ENVIRONMENT = "Environment";
   String INPUT_SETS = "InputSets";
   String CV_CONFIG = "CvConfig";
+  String DELEGATES = "Delegates";
+  String DELEGATE_CONFIGURATIONS = "DelegateConfigurations";
 }
