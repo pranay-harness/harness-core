@@ -23,10 +23,7 @@ public class CvPipelineServiceInfoProvider implements PipelineServiceInfoProvide
   @Override
   public List<PartialPlanCreator<?>> getPlanCreators() {
     List<PartialPlanCreator<?>> planCreators = new ArrayList<>();
-    planCreators.add(new NGPipelinePlanCreator());
-    planCreators.add(new StagesPlanCreator());
     planCreators.add(new CvStepPlanCreator());
-    planCreators.add(new ParallelPlanCreator());
     injectorUtils.injectMembers(planCreators);
     return planCreators;
   }
@@ -34,7 +31,6 @@ public class CvPipelineServiceInfoProvider implements PipelineServiceInfoProvide
   @Override
   public List<FilterJsonCreator> getFilterJsonCreators() {
     List<FilterJsonCreator> filterJsonCreators = new ArrayList<>();
-    filterJsonCreators.add(new PipelineFilterJsonCreator());
     injectorUtils.injectMembers(filterJsonCreators);
     return filterJsonCreators;
   }

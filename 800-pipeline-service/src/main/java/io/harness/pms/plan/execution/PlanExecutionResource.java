@@ -83,6 +83,7 @@ public class PlanExecutionResource {
       + "                    name: staging\n"
       + "                  infrastructureDefinition:\n"
       + "                    type: k8sDirect\n"
+      + "                    tmpBool: <+abc.def>\n"
       + "                    spec:\n"
       + "                      connectorRef: pEIkEiNPSgSUsbWDDyjNKw\n"
       + "                      namespace: harness\n"
@@ -399,12 +400,12 @@ public class PlanExecutionResource {
   @GET
   @ApiOperation(value = "Execute A Pipeline", nickname = "executePipeline")
   public Response executePipeline() throws IOException {
-    String processedYaml = YamlUtils.injectUuid(ngPipeline);
+    String processedYaml = YamlUtils.injectUuid(pipelineYaml);
     PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(processedYaml);
     Plan plan = PlanExecutionUtils.extractPlan(resp);
     PlanExecution planExecution = orchestrationService.startExecution(plan,
-        new HashMap<>(ImmutableMap.of(
-            "accountId", "kmpySmUISimoRrJL6NL73w", "orgIdentifier", "harness", "projectIdentifier", "pipeline")),
+        new HashMap<>(ImmutableMap.of("accountId", "kmpySmUISimoRrJL6NL73w", "orgIdentifier", "harness",
+            "projectIdentifier", "pipeline", "expressionFunctorToken", "12345")),
         ExecutionMetadata.newBuilder()
             .setRunSequence(0)
             .setTriggerInfo(ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).build())

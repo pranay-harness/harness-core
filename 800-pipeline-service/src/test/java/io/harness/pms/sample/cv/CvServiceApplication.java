@@ -3,12 +3,14 @@ package io.harness.pms.sample.cv;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
 import io.harness.maintenance.MaintenanceController;
-import io.harness.persistence.HPersistence;
 import io.harness.pms.sample.cv.creator.CvPipelineServiceInfoProvider;
 import io.harness.pms.sample.cv.creator.filters.CVFilterCreationResponseMerger;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
+import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
+import io.harness.queue.QueueListenerController;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -60,14 +62,14 @@ public class CvServiceApplication extends Application<CvServiceConfiguration> {
     modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(config)));
     Injector injector = Guice.createInjector(modules);
 
-    injector.getInstance(HPersistence.class);
+    registerQueueListeners(injector);
     registerJerseyProviders(environment, injector);
 
     PmsSdkConfiguration sdkConfig = getPmsSdkConfiguration(config);
     try {
       PmsSdkInitHelper.initializeSDKInstance(injector, sdkConfig);
     } catch (Exception e) {
-      log.error("Failed To register pipeline sdk");
+      log.error("Failed To register pipeline sdk", e);
       System.exit(1);
     }
 
@@ -85,6 +87,13 @@ public class CvServiceApplication extends Application<CvServiceConfiguration> {
         .filterCreationResponseMerger(new CVFilterCreationResponseMerger())
         .engineSteps(CvServiceStepRegistrar.getEngineSteps())
         .build();
+  }
+
+  private void registerQueueListeners(Injector injector) {
+    log.info("Initializing queue listeners...");
+    QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
+    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 1);
   }
 
   private void registerJerseyProviders(Environment environment, Injector injector) {

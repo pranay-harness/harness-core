@@ -4,7 +4,6 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sample.steps.*;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.steps.common.NGSectionStep;
-import io.harness.steps.common.pipeline.PipelineSetupStep;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,7 +19,6 @@ public class CdServiceStepRegistrar {
     engineSteps.put(InfrastructureStep.STEP_TYPE, InfrastructureStep.class);
     engineSteps.put(K8sRollingStep.STEP_TYPE, K8sRollingStep.class);
     engineSteps.put(K8sCanaryStep.STEP_TYPE, K8sCanaryStep.class);
-    engineSteps.put(PipelineSetupStep.STEP_TYPE, PipelineSetupStep.class);
     engineSteps.put(NGSectionStep.STEP_TYPE, NGSectionStep.class);
     return engineSteps;
   }

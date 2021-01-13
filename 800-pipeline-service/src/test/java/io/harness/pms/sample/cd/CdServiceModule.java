@@ -20,7 +20,6 @@ import io.harness.queue.QueueController;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationBeansRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
-import io.harness.springdata.SpringPersistenceModule;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -29,7 +28,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +48,7 @@ public class CdServiceModule extends AbstractModule {
   @Override
   protected void configure() {
     install(MongoModule.getInstance());
-    install(new SpringPersistenceModule());
+    install(new CdPersistenceModule());
     bind(HPersistence.class).to(MongoPersistence.class);
     install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
                                                 .serviceName("CD_SAMPLE")
