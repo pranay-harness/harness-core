@@ -35,11 +35,12 @@ public class SecretManagerConfigMapper {
     }
   }
 
-  public static SecretManagerConfig applyUpdate(
-      SecretManagerConfig secretManagerConfig, SecretManagerConfigUpdateDTO dto) {
+  public static SecretManagerConfig applyUpdate(SecretManagerConfig secretManagerConfig,
+      SecretManagerConfigUpdateDTO dto, boolean secretsPresentInSecretManager) {
     switch (dto.getEncryptionType()) {
       case VAULT:
-        return VaultConfigMapper.applyUpdate((VaultConfig) secretManagerConfig, (VaultConfigUpdateDTO) dto);
+        return VaultConfigMapper.applyUpdate(
+            (VaultConfig) secretManagerConfig, (VaultConfigUpdateDTO) dto, secretsPresentInSecretManager);
       case GCP_KMS:
         return GcpKmsConfigMapper.applyUpdate((GcpKmsConfig) secretManagerConfig, (GcpKmsConfigUpdateDTO) dto);
       default:

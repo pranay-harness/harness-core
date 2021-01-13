@@ -18,7 +18,7 @@ import java.util.List;
  */
 @OwnedBy(PL)
 public interface VaultService {
-  String saveOrUpdateVaultConfig(String accountId, VaultConfig vaultConfig, boolean validate);
+  String saveOrUpdateVaultConfig(String accountId, VaultConfig vaultConfig, boolean validateBySavingTestSecret);
 
   boolean deleteVaultConfig(String accountId, String vaultConfigId);
 
@@ -39,6 +39,8 @@ public interface VaultService {
   KmsSetupAlert getRenewalAlert(VaultConfig vaultConfig);
 
   void validateVaultConfig(String accountId, VaultConfig vaultConfig);
+
+  void validateVaultConfig(String accountId, VaultConfig vaultConfig, boolean validateBySavingDummySecret);
 
   VaultAppRoleLoginResult appRoleLogin(VaultConfig vaultConfig);
 }

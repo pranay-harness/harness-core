@@ -2,7 +2,6 @@ package io.harness.ng;
 
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.delegate.beans.connector.ConnectivityStatus.FAILURE;
-import static io.harness.delegate.beans.connector.ConnectivityStatus.SUCCESS;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
 
@@ -176,9 +175,7 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     long currentTime = System.currentTimeMillis();
     try {
-      boolean success =
-          ngSecretManagerService.validate(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-      return ConnectorValidationResult.builder().status(success ? SUCCESS : FAILURE).testedAt(currentTime).build();
+      return ngSecretManagerService.validate(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     } catch (Exception exception) {
       log.info("Test connection for connector {}, {}, {}, {} failed.", accountIdentifier, orgIdentifier,
           projectIdentifier, connectorIdentifier, exception);

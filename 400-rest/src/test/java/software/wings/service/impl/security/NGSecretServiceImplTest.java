@@ -77,8 +77,7 @@ public class NGSecretServiceImplTest extends WingsBaseTest {
     encryptedData.setEncryptionType(VAULT);
 
     doReturn(Optional.empty()).when(ngSecretService).get(any(), any(), any(), any());
-    when(ngSecretManagerService.getSecretManager(any(), any(), any(), any()))
-        .thenReturn(Optional.of(secretManagerConfig));
+    when(ngSecretManagerService.get(any(), any(), any(), any())).thenReturn(Optional.of(secretManagerConfig));
     when(vaultEncryptor.createSecret(any(), any(), any(), any())).thenReturn(encryptedData);
 
     EncryptedData savedData = ngSecretService.createSecretText(secretTextDTO);
@@ -101,8 +100,7 @@ public class NGSecretServiceImplTest extends WingsBaseTest {
     ((VaultConfig) secretManagerConfig).setReadOnly(false);
 
     doReturn(Optional.of(encryptedData)).when(ngSecretService).get(any(), any(), any(), any());
-    when(ngSecretManagerService.getSecretManager(any(), any(), any(), any()))
-        .thenReturn(Optional.of(secretManagerConfig));
+    when(ngSecretManagerService.get(any(), any(), any(), any())).thenReturn(Optional.of(secretManagerConfig));
     doNothing().when(secretManagerConfigService).decryptEncryptionConfigSecrets(any(), any(), anyBoolean());
     doNothing().when(ngSecretService).deleteSecretInSecretManager(any(), any(), any());
     when(vaultEncryptor.createSecret(any(), any(), any(), any())).thenReturn(encryptedData);
@@ -123,8 +121,7 @@ public class NGSecretServiceImplTest extends WingsBaseTest {
     DecryptableEntity decryptableEntity = random(KubernetesClientKeyCertDTO.class);
     decryptableEntity.setDecrypted(false);
     doReturn(Optional.of(encryptedData)).when(ngSecretService).get(any(), any(), any(), any());
-    when(ngSecretManagerService.getSecretManager(any(), any(), any(), any()))
-        .thenReturn(Optional.of(secretManagerConfig));
+    when(ngSecretManagerService.get(any(), any(), any(), any())).thenReturn(Optional.of(secretManagerConfig));
     doNothing().when(secretManagerConfigService).decryptEncryptionConfigSecrets(any(), any(), anyBoolean());
 
     List<EncryptedDataDetail> detailList =

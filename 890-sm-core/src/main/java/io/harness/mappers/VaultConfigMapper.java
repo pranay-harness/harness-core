@@ -1,9 +1,16 @@
 package io.harness.mappers;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
+import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
+import static io.harness.exception.WingsException.*;
 import static io.harness.mappers.SecretManagerConfigMapper.ngMetaDataFromDto;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.SecretManagementException;
+import io.harness.exception.WingsException;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata;
 import io.harness.secretmanagerclient.dto.VaultConfigDTO;
@@ -27,8 +34,8 @@ public class VaultConfigMapper {
                                   .secretEngineVersion(vaultConfigDTO.getSecretEngineVersion())
                                   .basePath(vaultConfigDTO.getBasePath())
                                   .appRoleId(vaultConfigDTO.getAppRoleId())
-                                  .renewIntervalHours(vaultConfigDTO.getRenewIntervalHours())
                                   .secretId(vaultConfigDTO.getSecretId())
+                                  .renewalInterval(vaultConfigDTO.getRenewalIntervalMinutes())
                                   .isReadOnly(vaultConfigDTO.isReadOnly())
                                   .build();
     vaultConfig.setNgMetadata(ngMetaDataFromDto(vaultConfigDTO));
@@ -38,28 +45,44 @@ public class VaultConfigMapper {
     return vaultConfig;
   }
 
-  public static VaultConfig applyUpdate(VaultConfig vaultConfig, VaultConfigUpdateDTO vaultConfigDTO) {
-    vaultConfig.setVaultUrl(vaultConfigDTO.getVaultUrl());
-    if (StringUtils.isEmpty(vaultConfigDTO.getAuthToken())) {
-      vaultConfig.setAuthToken(vaultConfigDTO.getAuthToken());
+  private static void checkEqualValues(Object x, Object y, String fieldName) {
+    if (x != null && !x.equals(y)) {
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
+          String.format(
+              "Cannot change the value of %s since there are secrets already present in vault. Please delete or migrate them and try again.",
+              fieldName),
+          USER);
     }
-    if (StringUtils.isEmpty(vaultConfigDTO.getAppRoleId())) {
-      vaultConfig.setAppRoleId(vaultConfigDTO.getAppRoleId());
+  }
+
+  public static VaultConfig applyUpdate(
+      VaultConfig vaultConfig, VaultConfigUpdateDTO updateDTO, boolean secretsPresentInVault) {
+    if (secretsPresentInVault) {
+      checkEqualValues(vaultConfig.getVaultUrl(), updateDTO.getVaultUrl(), "url");
+      checkEqualValues(vaultConfig.getBasePath(), updateDTO.getBasePath(), "base path");
+      checkEqualValues(vaultConfig.getSecretEngineName(), updateDTO.getSecretEngineName(), "secret engine name");
+      checkEqualValues(
+          vaultConfig.getSecretEngineVersion(), updateDTO.getSecretEngineVersion(), "secret engine version");
     }
-    if (StringUtils.isEmpty(vaultConfigDTO.getSecretId())) {
-      vaultConfig.setSecretId(vaultConfigDTO.getSecretId());
-    }
-    vaultConfig.setSecretEngineName(vaultConfigDTO.getSecretEngineName());
-    vaultConfig.setBasePath(vaultConfigDTO.getBasePath());
-    vaultConfig.setRenewIntervalHours(vaultConfigDTO.getRenewIntervalHours());
-    vaultConfig.setReadOnly(vaultConfigDTO.isReadOnly());
-    vaultConfig.setDefault(vaultConfigDTO.isDefault());
-    vaultConfig.setSecretEngineVersion(vaultConfigDTO.getSecretEngineVersion());
+    vaultConfig.setVaultUrl(updateDTO.getVaultUrl());
+    Optional.ofNullable(updateDTO.getAuthToken()).ifPresent(vaultConfig::setAuthToken);
+    Optional.ofNullable(updateDTO.getAppRoleId()).ifPresent(vaultConfig::setAppRoleId);
+    Optional.ofNullable(updateDTO.getSecretId()).ifPresent(secretId -> {
+      vaultConfig.setSecretId(secretId);
+      vaultConfig.setAuthToken(null);
+    });
+    vaultConfig.setSecretEngineVersion(updateDTO.getSecretEngineVersion());
+    vaultConfig.setSecretEngineName(updateDTO.getSecretEngineName());
+    vaultConfig.setBasePath(updateDTO.getBasePath());
+    vaultConfig.setRenewalInterval(updateDTO.getRenewalIntervalMinutes());
+    vaultConfig.setReadOnly(updateDTO.isReadOnly());
+    vaultConfig.setDefault(updateDTO.isDefault());
+
     if (!Optional.ofNullable(vaultConfig.getNgMetadata()).isPresent()) {
       vaultConfig.setNgMetadata(NGSecretManagerMetadata.builder().build());
     }
-    vaultConfig.getNgMetadata().setTags(TagMapper.convertToList(vaultConfigDTO.getTags()));
-    vaultConfig.getNgMetadata().setDescription(vaultConfigDTO.getDescription());
+    vaultConfig.getNgMetadata().setTags(TagMapper.convertToList(updateDTO.getTags()));
+    vaultConfig.getNgMetadata().setDescription(updateDTO.getDescription());
     return vaultConfig;
   }
 }

@@ -2,6 +2,7 @@ package io.harness.ng.core.api.impl;
 
 import static io.harness.remote.client.RestClientUtils.getResponse;
 
+import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
@@ -60,7 +61,7 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
   }
 
   @Override
-  public boolean validate(
+  public ConnectorValidationResult validate(
       @NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier, @NotNull String identifier) {
     return getResponse(
         secretManagerClient.validateSecretManager(identifier, accountIdentifier, orgIdentifier, projectIdentifier));

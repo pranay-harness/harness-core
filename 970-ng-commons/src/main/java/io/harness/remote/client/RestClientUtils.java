@@ -40,7 +40,7 @@ public class RestClientUtils {
       }
     } catch (IOException ex) {
       log.error("IO error while connecting to manager", ex);
-      throw new UnexpectedException("Unable to connect, please try again.");
+      throw new UnexpectedException("Unable to connect to upstream systems, please try again.");
     }
   }
 }

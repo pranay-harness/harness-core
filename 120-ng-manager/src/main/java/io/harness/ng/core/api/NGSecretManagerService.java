@@ -1,5 +1,6 @@
 package io.harness.ng.core.api;
 
+import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerMetadataDTO;
@@ -22,7 +23,8 @@ public interface NGSecretManagerService {
   SecretManagerConfigDTO getSecretManager(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 
-  boolean validate(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
+  ConnectorValidationResult validate(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 
   SecretManagerConfigDTO getGlobalSecretManager(String accountIdentifier);
 

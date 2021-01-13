@@ -18,7 +18,8 @@ public class VaultDTOToEntity extends ConnectorDTOToEntityMapper<VaultConnectorD
         .secretEngineName(connectorDTO.getSecretEngineName())
         .vaultUrl(connectorDTO.getVaultUrl())
         .secretEngineVersion(connectorDTO.getSecretEngineVersion())
-        .renewalIntervalHours(connectorDTO.getRenewIntervalHours())
+        .secretEngineManuallyConfigured(connectorDTO.isSecretEngineManuallyConfigured())
+        .renewalIntervalMinutes(connectorDTO.getRenewalIntervalMinutes())
         .appRoleId(connectorDTO.getAppRoleId())
         .basePath(connectorDTO.getBasePath())
         .build();
