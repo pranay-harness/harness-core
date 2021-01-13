@@ -318,9 +318,12 @@ public class PluginSettingUtils {
         resolveStringParameter("sourcePaths", "GCSUpload", identifier, stepInfo.getSourcePath(), true));
     String target = null;
     String stepInfoBucket = resolveStringParameter("bucket", "GCSUpload", identifier, stepInfo.getBucket(), true);
-    String stepInfoTarget = resolveStringParameter("target", "GCSUpload", identifier, stepInfo.getTarget(), true);
-    if (isNotEmpty(stepInfoBucket) && isNotEmpty(stepInfoTarget)) {
+    String stepInfoTarget = resolveStringParameter("target", "GCSUpload", identifier, stepInfo.getTarget(), false);
+
+    if (stepInfoTarget != null && !stepInfoTarget.equals(UNRESOLVED_PARAMETER)) {
       target = format("%s/%s", trimTrailingCharacter(stepInfoBucket, '/'), trimLeadingCharacter(stepInfoTarget, '/'));
+    } else {
+      target = format("%s", trimTrailingCharacter(stepInfoBucket, '/'));
     }
     setMandatoryEnvironmentVariable(map, PLUGIN_TARGET, target);
 
@@ -334,8 +337,12 @@ public class PluginSettingUtils {
         map, PLUGIN_BUCKET, resolveStringParameter("bucket", "S3Upload", identifier, stepInfo.getBucket(), true));
     setMandatoryEnvironmentVariable(map, PLUGIN_SOURCE,
         resolveStringParameter("sourcePaths", "S3Upload", identifier, stepInfo.getSourcePath(), true));
-    setMandatoryEnvironmentVariable(
-        map, PLUGIN_TARGET, resolveStringParameter("target", "S3Upload", identifier, stepInfo.getTarget(), true));
+
+    String target = resolveStringParameter("target", "S3Upload", identifier, stepInfo.getTarget(), false);
+
+    if (target != null && !target.equals(UNRESOLVED_PARAMETER)) {
+      setOptionalEnvironmentVariable(map, PLUGIN_TARGET, target);
+    }
 
     String endpoint = resolveStringParameter("endpoint", "S3Upload", identifier, stepInfo.getEndpoint(), false);
     if (endpoint != null && !endpoint.equals(UNRESOLVED_PARAMETER)) {
