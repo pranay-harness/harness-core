@@ -10,7 +10,6 @@ import io.harness.connector.entities.embedded.githubconnector.GithubTokenApiAcce
 import io.harness.connector.entities.embedded.githubconnector.GithubUsernamePassword;
 import io.harness.connector.entities.embedded.githubconnector.GithubUsernameToken;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
-import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessSpecDTO;
@@ -28,6 +27,7 @@ import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
 import io.harness.encryption.SecretRefData;
+import io.harness.encryption.SecretRefHelper;
 
 public class GithubEntityToDTO extends ConnectorEntityToDTOMapper<GithubConnectorDTO, GithubConnector> {
   @Override

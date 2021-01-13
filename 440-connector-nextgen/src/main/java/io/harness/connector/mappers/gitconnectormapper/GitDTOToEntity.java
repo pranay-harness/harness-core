@@ -1,12 +1,10 @@
 package io.harness.connector.mappers.gitconnectormapper;
 
-import io.harness.connector.ConnectorCategory;
 import io.harness.connector.entities.embedded.gitconnector.GitAuthentication;
 import io.harness.connector.entities.embedded.gitconnector.GitConfig;
 import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
 import io.harness.connector.entities.embedded.gitconnector.GitUserNamePasswordAuthentication;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
-import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.CustomCommitAttributes;
@@ -14,11 +12,10 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthentica
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
+import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.UnknownEnumTypeException;
 
 import com.google.inject.Singleton;
-import java.util.Collections;
-import java.util.List;
 
 @Singleton
 public class GitDTOToEntity extends ConnectorDTOToEntityMapper<GitConfigDTO, GitConfig> {
@@ -82,7 +79,9 @@ public class GitDTOToEntity extends ConnectorDTOToEntityMapper<GitConfigDTO, Git
   }
 
   private GitSSHAuthentication getSSHGitAuthentication(GitSSHAuthenticationDTO gitSSHAuthenticationDTO) {
-    return GitSSHAuthentication.builder().sshKeyReference(gitSSHAuthenticationDTO.getEncryptedSshKey()).build();
+    return GitSSHAuthentication.builder()
+        .sshKeyReference(SecretRefHelper.getSecretConfigString(gitSSHAuthenticationDTO.getEncryptedSshKey()))
+        .build();
   }
 
   private String getGitURL(GitConfigDTO gitConfig) {

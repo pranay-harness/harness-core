@@ -15,7 +15,6 @@ import io.harness.connector.entities.embedded.githubconnector.GithubSshAuthentic
 import io.harness.connector.entities.embedded.githubconnector.GithubTokenApiAccess;
 import io.harness.connector.entities.embedded.githubconnector.GithubUsernamePassword;
 import io.harness.connector.entities.embedded.githubconnector.GithubUsernameToken;
-import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
@@ -30,6 +29,7 @@ import io.harness.delegate.beans.connector.scm.github.GithubSshCredentialsSpecDT
 import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
+import io.harness.encryption.SecretRefHelper;
 import io.harness.rule.Owner;
 
 import org.junit.Before;

@@ -5,6 +5,9 @@
     },
     {
       "type": "object",
+      "required": [
+        "sshKeyReference"
+      ],
       "properties": {
         "sshKeyReference": {
           "type": "string"
