@@ -59,8 +59,8 @@ func TestEvaluateJEXLErr(t *testing.T) {
 	stepO[envVar2] = envVal2
 	so[stepID] = &output.StepOutput{Output: stepO}
 
-	expr1 := fmt.Sprintf("${%s.output.%s}", stepID, envVar1)
-	expr2 := fmt.Sprintf("${%s.output.%s}", stepID, envVar2)
+	expr1 := fmt.Sprintf("<+%s.output.%s>", stepID, envVar1)
+	expr2 := fmt.Sprintf("<+%s.output.%s>", stepID, envVar2)
 	expressions := []string{expr1, expr2}
 
 	tests := []struct {
@@ -125,8 +125,8 @@ func TestEvaluateJEXLClientCreateErr(t *testing.T) {
 	token := "foo"
 	svcID := "bar"
 
-	expr1 := fmt.Sprintf("${%s.output.%s}", stepID, envVar1)
-	expr2 := fmt.Sprintf("${%s.output.%s}", stepID, envVar2)
+	expr1 := fmt.Sprintf("<+%s.output.%s>", stepID, envVar1)
+	expr2 := fmt.Sprintf("<+%s.output.%s>", stepID, envVar2)
 	expressions := []string{expr1, expr2}
 
 	so := make(output.StageOutput)
@@ -164,8 +164,8 @@ func TestEvaluateJEXLSuccess(t *testing.T) {
 	token := "foo"
 	svcID := "bar"
 
-	expr1 := fmt.Sprintf("${%s.output.%s}", stepID, envVar1)
-	expr2 := fmt.Sprintf("${%s.output.%s}", stepID, envVar2)
+	expr1 := fmt.Sprintf("<+%s.output.%s>", stepID, envVar1)
+	expr2 := fmt.Sprintf("<+%s.output.%s>", stepID, envVar2)
 	expressions := []string{expr1, expr2}
 
 	so := make(output.StageOutput)
@@ -224,8 +224,8 @@ func TestEvaluateJEXLServerErr(t *testing.T) {
 	token := "foo"
 	svcID := "bar"
 
-	expr1 := fmt.Sprintf("${%s.output.%s}", stepID, envVar1)
-	expr2 := fmt.Sprintf("${%s.output.%s}", stepID, envVar2)
+	expr1 := fmt.Sprintf("<+%s.output.%s>", stepID, envVar1)
+	expr2 := fmt.Sprintf("<+%s.output.%s>", stepID, envVar2)
 	expressions := []string{expr1, expr2}
 
 	so := make(output.StageOutput)
@@ -270,8 +270,8 @@ func TestEvaluateJEXLInvalidExpression(t *testing.T) {
 	token := "foo"
 	svcID := "bar"
 
-	expr1 := fmt.Sprintf("${%s.output.%s}", stepID, envVar1)
-	expr2 := fmt.Sprintf("${%s.output.%s}", stepID, envVar2)
+	expr1 := fmt.Sprintf("<+%s.output.%s>", stepID, envVar1)
+	expr2 := fmt.Sprintf("<+%s.output.%s>", stepID, envVar2)
 	expressions := []string{expr1, expr2}
 
 	so := make(output.StageOutput)

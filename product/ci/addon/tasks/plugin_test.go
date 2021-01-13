@@ -166,7 +166,7 @@ func TestPluginWithJEXlErr(t *testing.T) {
 	defer ctrl.Finish()
 
 	k := "PLUGIN_KEY"
-	v := "${foo.bar}"
+	v := "<+foo.bar>"
 	os.Setenv(k, v)
 	defer os.Unsetenv(k)
 
