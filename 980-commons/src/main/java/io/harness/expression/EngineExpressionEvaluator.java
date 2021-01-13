@@ -145,14 +145,22 @@ public class EngineExpressionEvaluator {
   }
 
   public String renderExpression(String expression) {
+    return renderExpression(expression, null);
+  }
+
+  public String renderExpression(String expression, Map<String, Object> ctx) {
     if (!hasVariables(expression)) {
       return expression;
     }
 
-    return ExpressionEvaluatorUtils.substitute(this, expression, prepareContext());
+    return ExpressionEvaluatorUtils.substitute(this, expression, prepareContext(ctx));
   }
 
   public Object evaluateExpression(String expression) {
+    return evaluateExpression(expression, null);
+  }
+
+  public Object evaluateExpression(String expression, Map<String, Object> ctx) {
     // TODO(gpahal): Look at adding support for recursion and nested expressions in this method.
 
     // NOTE: Don't check for hasExpressions here. There might be normal expressions like '"true" != "false"'
@@ -160,15 +168,15 @@ public class EngineExpressionEvaluator {
       return null;
     }
 
-    EngineJexlContext ctx = prepareContext();
+    EngineJexlContext finalCtx = prepareContext(ctx);
     StrSubstitutor strSubstitutor = new StrSubstitutor(EngineVariableResolver.builder()
                                                            .expressionEvaluator(this)
-                                                           .ctx(ctx)
+                                                           .ctx(finalCtx)
                                                            .prefix(IdentifierName.random())
                                                            .suffix(IdentifierName.random())
                                                            .build(),
         EXPR_START, EXPR_END, StrSubstitutor.DEFAULT_ESCAPE);
-    return evaluateInternal(strSubstitutor.replace(expression), ctx);
+    return evaluateInternal(strSubstitutor.replace(expression), finalCtx);
   }
 
   /**
@@ -263,7 +271,7 @@ public class EngineExpressionEvaluator {
     return jexlExpression.evaluate(ctx);
   }
 
-  private EngineJexlContext prepareContext() {
+  private EngineJexlContext prepareContext(Map<String, Object> ctx) {
     synchronized (this) {
       if (!initialized) {
         initialize();
@@ -273,6 +281,9 @@ public class EngineExpressionEvaluator {
 
     Map<String, Object> clonedContext = new LateBindingMap();
     clonedContext.putAll(contextMap);
+    if (EmptyPredicate.isNotEmpty(ctx)) {
+      clonedContext.putAll(ctx);
+    }
     return new EngineJexlContext(this, clonedContext);
   }
 
