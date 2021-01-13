@@ -220,6 +220,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       log.error("Failed to mark node as retry");
       return false;
     }
+    emitEvent(nodeExecution);
     return true;
   }
 
