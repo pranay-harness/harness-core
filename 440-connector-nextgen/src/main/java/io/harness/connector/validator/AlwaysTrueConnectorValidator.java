@@ -3,10 +3,9 @@ package io.harness.connector.validator;
 import io.harness.delegate.beans.connector.ConnectivityStatus;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
 import io.harness.delegate.task.TaskParameters;
 
-public class BitbucketConnectorValidator extends AbstractConnectorValidator {
+public class AlwaysTrueConnectorValidator extends AbstractConnectorValidator {
   @Override
   public <T extends ConnectorConfigDTO> TaskParameters getTaskParameters(
       T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
@@ -21,9 +20,6 @@ public class BitbucketConnectorValidator extends AbstractConnectorValidator {
   @Override
   public ConnectorValidationResult validate(
       ConnectorConfigDTO connectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    return ConnectorValidationResult.builder()
-        .status(ConnectivityStatus.SUCCESS)
-        .testedAt(System.currentTimeMillis())
-        .build();
+    return ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build();
   }
 }

@@ -39,7 +39,8 @@ import java.util.Collections;
 import java.util.List;
 
 @Singleton
-public class KubernetesDTOToEntity implements ConnectorDTOToEntityMapper<KubernetesClusterConfigDTO> {
+public class KubernetesDTOToEntity
+    extends ConnectorDTOToEntityMapper<KubernetesClusterConfigDTO, KubernetesClusterConfig> {
   @Override
   public KubernetesClusterConfig toConnectorEntity(KubernetesClusterConfigDTO k8ClusterDTO) {
     KubernetesCredentialType credentialType = getKubernetesCredentialType(k8ClusterDTO);
@@ -48,11 +49,6 @@ public class KubernetesDTOToEntity implements ConnectorDTOToEntityMapper<Kuberne
         KubernetesClusterConfig.builder().credentialType(credentialType).credential(kubernetesCredential).build();
     kubernetesClusterConfig.setType(KUBERNETES_CLUSTER);
     return kubernetesClusterConfig;
-  }
-
-  @Override
-  public List<ConnectorCategory> getConnectorCategory() {
-    return Collections.singletonList(ConnectorCategory.CLOUD_PROVIDER);
   }
 
   private KubernetesCredentialType getKubernetesCredentialType(KubernetesClusterConfigDTO k8ClusterDTO) {

@@ -29,7 +29,7 @@ import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
 import io.harness.encryption.SecretRefData;
 
-public class GithubEntityToDTO implements ConnectorEntityToDTOMapper<GithubConnector> {
+public class GithubEntityToDTO extends ConnectorEntityToDTOMapper<GithubConnectorDTO, GithubConnector> {
   @Override
   public GithubConnectorDTO createConnectorDTO(GithubConnector connector) {
     GithubAuthenticationDTO githubAuthenticationDTO = buildGithubAuthentication(connector);

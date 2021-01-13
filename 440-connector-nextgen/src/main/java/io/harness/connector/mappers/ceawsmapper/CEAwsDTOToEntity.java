@@ -18,7 +18,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Singleton
-public class CEAwsDTOToEntity implements ConnectorDTOToEntityMapper<CEAwsConnectorDTO> {
+public class CEAwsDTOToEntity extends ConnectorDTOToEntityMapper<CEAwsConnectorDTO, CEAwsConfig> {
   @Override
   public CEAwsConfig toConnectorEntity(CEAwsConnectorDTO connectorDTO) {
     CEAwsConfigBuilder ceAwsConfigBuilder = CEAwsConfig.builder();
@@ -54,10 +54,5 @@ public class CEAwsDTOToEntity implements ConnectorDTOToEntityMapper<CEAwsConnect
   private static String getAccountId(final CrossAccountAccessDTO crossAccountAccessDTO) {
     Arn roleArn = Arn.fromString(crossAccountAccessDTO.getCrossAccountRoleArn());
     return roleArn.getAccountId();
-  }
-
-  @Override
-  public List<ConnectorCategory> getConnectorCategory() {
-    return Collections.singletonList(ConnectorCategory.CLOUD_COST);
   }
 }

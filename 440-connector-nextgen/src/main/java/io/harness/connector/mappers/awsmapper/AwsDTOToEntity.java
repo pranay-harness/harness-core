@@ -1,6 +1,5 @@
 package io.harness.connector.mappers.awsmapper;
 
-import io.harness.connector.ConnectorCategory;
 import io.harness.connector.entities.embedded.awsconnector.AwsAccessKeyCredential;
 import io.harness.connector.entities.embedded.awsconnector.AwsConfig;
 import io.harness.connector.entities.embedded.awsconnector.AwsConfig.AwsConfigBuilder;
@@ -15,11 +14,9 @@ import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
 import io.harness.exception.InvalidRequestException;
 
 import com.google.inject.Singleton;
-import java.util.Collections;
-import java.util.List;
 
 @Singleton
-public class AwsDTOToEntity implements ConnectorDTOToEntityMapper<AwsConnectorDTO> {
+public class AwsDTOToEntity extends ConnectorDTOToEntityMapper<AwsConnectorDTO, AwsConfig> {
   @Override
   public AwsConfig toConnectorEntity(AwsConnectorDTO connectorDTO) {
     final AwsCredentialDTO credential = connectorDTO.getCredential();
@@ -36,11 +33,6 @@ public class AwsDTOToEntity implements ConnectorDTOToEntityMapper<AwsConnectorDT
         throw new InvalidRequestException("Invalid Credential type.");
     }
     return awsConfigBuilder.crossAccountAccess(credential.getCrossAccountAccess()).build();
-  }
-
-  @Override
-  public List<ConnectorCategory> getConnectorCategory() {
-    return Collections.singletonList(ConnectorCategory.CLOUD_PROVIDER);
   }
 
   private AwsConfigBuilder buildInheritFromDelegate(AwsCredentialDTO connector) {

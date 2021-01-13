@@ -13,18 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-public class JiraConnectorValidator
-    extends AbstractConnectorValidator implements ConnectionValidator<JiraConnectorDTO> {
-  @Override
-  public ConnectorValidationResult validate(
-      JiraConnectorDTO jiraConnectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    JiraTestConnectionTaskNGResponse delegateResponseData = (JiraTestConnectionTaskNGResponse) super.validateConnector(
-        jiraConnectorDTO, accountIdentifier, orgIdentifier, projectIdentifier);
-    return ConnectorValidationResult.builder()
-        .status(delegateResponseData.getCanConnect() ? ConnectivityStatus.SUCCESS : ConnectivityStatus.FAILURE)
-        .build();
-  }
-
+public class JiraConnectorValidator extends AbstractConnectorValidator {
   @Override
   public <T extends ConnectorConfigDTO> TaskParameters getTaskParameters(
       T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
@@ -40,5 +29,15 @@ public class JiraConnectorValidator
   @Override
   public String getTaskType() {
     return "JIRA_CONNECTIVITY_TASK_NG";
+  }
+
+  @Override
+  public ConnectorValidationResult validate(
+      ConnectorConfigDTO jiraConnectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    JiraTestConnectionTaskNGResponse delegateResponseData = (JiraTestConnectionTaskNGResponse) super.validateConnector(
+        jiraConnectorDTO, accountIdentifier, orgIdentifier, projectIdentifier);
+    return ConnectorValidationResult.builder()
+        .status(delegateResponseData.getCanConnect() ? ConnectivityStatus.SUCCESS : ConnectivityStatus.FAILURE)
+        .build();
   }
 }

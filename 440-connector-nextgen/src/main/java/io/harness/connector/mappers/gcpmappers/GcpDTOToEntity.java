@@ -18,7 +18,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Singleton
-public class GcpDTOToEntity implements ConnectorDTOToEntityMapper<GcpConnectorDTO> {
+public class GcpDTOToEntity extends ConnectorDTOToEntityMapper<GcpConnectorDTO, GcpConfig> {
   @Override
   public GcpConfig toConnectorEntity(GcpConnectorDTO connectorDTO) {
     final GcpConnectorCredentialDTO credential = connectorDTO.getCredential();
@@ -31,11 +31,6 @@ public class GcpDTOToEntity implements ConnectorDTOToEntityMapper<GcpConnectorDT
       default:
         throw new InvalidRequestException("Invalid Credential type.");
     }
-  }
-
-  @Override
-  public List<ConnectorCategory> getConnectorCategory() {
-    return Collections.singletonList(ConnectorCategory.CLOUD_PROVIDER);
   }
 
   private GcpConfig buildManualCredential(GcpConnectorCredentialDTO connector) {

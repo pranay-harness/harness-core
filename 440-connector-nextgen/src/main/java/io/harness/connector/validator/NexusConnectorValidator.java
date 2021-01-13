@@ -9,8 +9,7 @@ import io.harness.delegate.task.TaskParameters;
 import com.google.inject.Singleton;
 
 @Singleton
-public class NexusConnectorValidator
-    extends AbstractConnectorValidator implements ConnectionValidator<NexusConnectorDTO> {
+public class NexusConnectorValidator extends AbstractConnectorValidator {
   @Override
   public <T extends ConnectorConfigDTO> TaskParameters getTaskParameters(
       T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
@@ -24,7 +23,7 @@ public class NexusConnectorValidator
 
   @Override
   public ConnectorValidationResult validate(
-      NexusConnectorDTO connectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+      ConnectorConfigDTO connectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     // making always true.
     return ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build();
   }

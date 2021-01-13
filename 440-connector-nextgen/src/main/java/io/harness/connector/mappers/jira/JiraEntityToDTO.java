@@ -8,7 +8,7 @@ import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
 import com.google.inject.Singleton;
 
 @Singleton
-public class JiraEntityToDTO implements ConnectorEntityToDTOMapper<JiraConnector> {
+public class JiraEntityToDTO extends ConnectorEntityToDTOMapper<JiraConnectorDTO, JiraConnector> {
   @Override
   public JiraConnectorDTO createConnectorDTO(JiraConnector jiraConnector) {
     return JiraConnectorDTO.builder()

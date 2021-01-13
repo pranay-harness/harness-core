@@ -1,5 +1,7 @@
 package io.harness.connector.validator;
 
+import static software.wings.beans.TaskType.DOCKER_CONNECTIVITY_TEST_TASK;
+
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.docker.DockerAuthCredentialsDTO;
@@ -13,16 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-public class DockerConnectionValidator
-    extends AbstractConnectorValidator implements ConnectionValidator<DockerConnectorDTO> {
-  @Override
-  public ConnectorValidationResult validate(
-      DockerConnectorDTO dockerConnector, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    DockerTestConnectionTaskResponse responseData = (DockerTestConnectionTaskResponse) super.validateConnector(
-        dockerConnector, accountIdentifier, orgIdentifier, projectIdentifier);
-    return responseData.getConnectorValidationResult();
-  }
-
+public class DockerConnectionValidator extends AbstractConnectorValidator {
   @Override
   public <T extends ConnectorConfigDTO> TaskParameters getTaskParameters(
       T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
@@ -38,6 +31,14 @@ public class DockerConnectionValidator
 
   @Override
   public String getTaskType() {
-    return "DOCKER_CONNECTIVITY_TEST_TASK";
+    return DOCKER_CONNECTIVITY_TEST_TASK.name();
+  }
+
+  @Override
+  public ConnectorValidationResult validate(
+      ConnectorConfigDTO dockerConnector, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    DockerTestConnectionTaskResponse responseData = (DockerTestConnectionTaskResponse) super.validateConnector(
+        dockerConnector, accountIdentifier, orgIdentifier, projectIdentifier);
+    return responseData.getConnectorValidationResult();
   }
 }

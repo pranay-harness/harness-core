@@ -15,7 +15,7 @@ import io.harness.exception.UnknownEnumTypeException;
 import com.google.inject.Singleton;
 
 @Singleton
-public class GitEntityToDTO implements ConnectorEntityToDTOMapper<GitConfig> {
+public class GitEntityToDTO extends ConnectorEntityToDTOMapper<GitConfigDTO, GitConfig> {
   @Override
   public GitConfigDTO createConnectorDTO(GitConfig gitConnector) {
     GitAuthenticationDTO gitAuth = createGitAuthenticationDTO(gitConnector);

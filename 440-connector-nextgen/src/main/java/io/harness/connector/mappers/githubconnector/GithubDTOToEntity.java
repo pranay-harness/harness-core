@@ -33,7 +33,7 @@ import io.harness.exception.UnknownEnumTypeException;
 import java.util.Collections;
 import java.util.List;
 
-public class GithubDTOToEntity implements ConnectorDTOToEntityMapper<GithubConnectorDTO> {
+public class GithubDTOToEntity extends ConnectorDTOToEntityMapper<GithubConnectorDTO, GithubConnector> {
   @Override
   public GithubConnector toConnectorEntity(GithubConnectorDTO configDTO) {
     GitAuthType gitAuthType = getAuthType(configDTO.getAuthentication());
@@ -137,10 +137,5 @@ public class GithubDTOToEntity implements ConnectorDTOToEntityMapper<GithubConne
 
   private GitAuthType getAuthType(GithubAuthenticationDTO authentication) {
     return authentication.getAuthType();
-  }
-
-  @Override
-  public List<ConnectorCategory> getConnectorCategory() {
-    return Collections.singletonList(ConnectorCategory.CODE_REPO);
   }
 }

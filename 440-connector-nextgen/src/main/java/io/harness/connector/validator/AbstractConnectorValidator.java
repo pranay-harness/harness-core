@@ -6,6 +6,7 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.BaseNGAccess;
@@ -20,7 +21,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class AbstractConnectorValidator {
+public abstract class AbstractConnectorValidator implements ConnectionValidator {
   @Inject private SecretManagerClientService ngSecretService;
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
 

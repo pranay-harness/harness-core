@@ -14,7 +14,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Singleton
-public class NexusDTOToEntity implements ConnectorDTOToEntityMapper<NexusConnectorDTO> {
+public class NexusDTOToEntity extends ConnectorDTOToEntityMapper<NexusConnectorDTO, NexusConnector> {
   @Override
   public NexusConnector toConnectorEntity(NexusConnectorDTO configDTO) {
     NexusAuthType nexusAuthType =
@@ -29,11 +29,6 @@ public class NexusDTOToEntity implements ConnectorDTOToEntityMapper<NexusConnect
       nexusConnectorBuilder.nexusAuthentication(createNexusAuthentication(nexusUsernamePasswordAuthDTO));
     }
     return nexusConnectorBuilder.build();
-  }
-
-  @Override
-  public List<ConnectorCategory> getConnectorCategory() {
-    return Collections.singletonList(ConnectorCategory.ARTIFACTORY);
   }
 
   private NexusUserNamePasswordAuthentication createNexusAuthentication(

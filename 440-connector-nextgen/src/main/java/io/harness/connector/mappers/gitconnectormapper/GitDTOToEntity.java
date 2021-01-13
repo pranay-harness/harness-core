@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Singleton
-public class GitDTOToEntity implements ConnectorDTOToEntityMapper<GitConfigDTO> {
+public class GitDTOToEntity extends ConnectorDTOToEntityMapper<GitConfigDTO, GitConfig> {
   @Override
   public GitConfig toConnectorEntity(GitConfigDTO configDTO) {
     GitConnectionType gitConnectionType = getGitConnectionLevel(configDTO);
@@ -37,11 +37,6 @@ public class GitDTOToEntity implements ConnectorDTOToEntityMapper<GitConfigDTO> 
         .customCommitAttributes(customCommitAttributes)
         .authenticationDetails(gitAuthentication)
         .build();
-  }
-
-  @Override
-  public List<ConnectorCategory> getConnectorCategory() {
-    return Collections.singletonList(ConnectorCategory.CODE_REPO);
   }
 
   private String getBranchName(GitConfigDTO gitConfigDTO) {

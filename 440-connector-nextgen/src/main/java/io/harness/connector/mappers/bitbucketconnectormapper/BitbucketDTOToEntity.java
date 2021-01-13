@@ -28,7 +28,7 @@ import io.harness.exception.UnknownEnumTypeException;
 import java.util.Collections;
 import java.util.List;
 
-public class BitbucketDTOToEntity implements ConnectorDTOToEntityMapper<BitbucketConnectorDTO> {
+public class BitbucketDTOToEntity extends ConnectorDTOToEntityMapper<BitbucketConnectorDTO, BitbucketConnector> {
   @Override
   public BitbucketConnector toConnectorEntity(BitbucketConnectorDTO configDTO) {
     GitAuthType gitAuthType = getAuthType(configDTO.getAuthentication());
@@ -108,10 +108,5 @@ public class BitbucketDTOToEntity implements ConnectorDTOToEntityMapper<Bitbucke
 
   private GitAuthType getAuthType(BitbucketAuthenticationDTO authentication) {
     return authentication.getAuthType();
-  }
-
-  @Override
-  public List<ConnectorCategory> getConnectorCategory() {
-    return Collections.singletonList(ConnectorCategory.CODE_REPO);
   }
 }
