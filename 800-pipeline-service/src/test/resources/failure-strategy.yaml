@@ -57,10 +57,11 @@ pipeline:
                 method: GET
                 url: http://httpstat.us/500
           rollbackSteps:
-          - name: http rollback step 1
-            identifier: httpStep3
-            type: Http
-            spec:
-              socketTimeoutMillis: 1000
-              method: GET
-              url: https://www.google.com/
+          - step:
+              identifier: httpStepRollback1
+              name: http rollback step 1
+              type: Http
+              spec:
+                socketTimeoutMillis: 1000
+                method: GET
+                url: https://www.google.com/

@@ -39,13 +39,15 @@ public class ManifestStep {
       stageOverrideManifests = serviceConfig.getStageOverrides().getManifests();
     }
 
-    return processManifests(serviceSpecManifests, manifestOverrideSets, stageOverrideManifests,
-        serviceConfig.getServiceDefinition()
-            .getServiceSpec()
-            .getManifestOverrideSets()
-            .stream()
-            .map(ManifestOverrideSetWrapper::getOverrideSet)
-            .collect(Collectors.toList()));
+    List<ManifestOverrideSetWrapper> manifestOverrideSetWrappers =
+        serviceConfig.getServiceDefinition().getServiceSpec().getManifestOverrideSets();
+    List<ManifestOverrideSets> allOverrideSets = manifestOverrideSetWrappers == null
+        ? new ArrayList<>()
+        : manifestOverrideSetWrappers.stream()
+              .map(ManifestOverrideSetWrapper::getOverrideSet)
+              .collect(Collectors.toList());
+
+    return processManifests(serviceSpecManifests, manifestOverrideSets, stageOverrideManifests, allOverrideSets);
   }
 
   private List<ManifestConfigWrapper> getManifestOverrideSetsApplicable(ServiceConfig serviceConfig) {

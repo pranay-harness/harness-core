@@ -1,0 +1,31 @@
+pipeline:
+  identifier: basichttpFail
+  stages:
+    - stage:
+        identifier: qaStage
+        spec:
+          serviceConfig:
+            serviceDefinition:
+              spec:
+                manifests:
+                  - manifest:
+                      identifier: baseValues
+                      spec:
+                        store:
+                          spec:
+                            branch: master
+          infrastructure:
+            infrastructureDefinition:
+              spec:
+                namespace: harness
+          execution:
+            steps:
+              - step:
+                  identifier: httpStep1
+                  spec:
+                    url: http://httpstat.us/500
+            rollbackSteps:
+              - step:
+                  identifier: httpStepRollback1
+                  spec:
+                    url: https://www.google.com/

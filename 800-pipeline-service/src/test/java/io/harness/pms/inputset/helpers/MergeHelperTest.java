@@ -12,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.pms.merger.PipelineYamlConfig;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetErrorWrapperDTOPMS;
 import io.harness.rule.Owner;
@@ -191,5 +192,33 @@ public class MergeHelperTest extends CategoryTest {
         Resources.toString(Objects.requireNonNull(classLoader.getResource(inputSetFile)), StandardCharsets.UTF_8);
     InputSetErrorWrapperDTOPMS emptyErrorWrapperDTOPMS = MergeHelper.getErrorMap(yaml, inputSetYaml);
     assertThat(emptyErrorWrapperDTOPMS).isNull();
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testMergeOnYamlWithFailureStrategies() throws IOException {
+    ClassLoader classLoader = getClass().getClassLoader();
+    String fullYamlFile = "failure-strategy.yaml";
+    String fullYaml =
+        Resources.toString(Objects.requireNonNull(classLoader.getResource(fullYamlFile)), StandardCharsets.UTF_8);
+    String templateOfFull = createTemplateFromPipeline(fullYaml);
+    assertThat(templateOfFull).isNull();
+
+    String yamlWithRuntimeFile = "failure-strategy-with-runtime-input.yaml";
+    String yamlWithRuntime = Resources.toString(
+        Objects.requireNonNull(classLoader.getResource(yamlWithRuntimeFile)), StandardCharsets.UTF_8);
+    String template = createTemplateFromPipeline(yamlWithRuntime);
+
+    String templateFile = "failure-strategy-template.yaml";
+    String templateActual =
+        Resources.toString(Objects.requireNonNull(classLoader.getResource(templateFile)), StandardCharsets.UTF_8);
+    assertThat(template.replace("\"", "")).isEqualTo(templateActual);
+
+    String runtimeInputFile = "failure-strategy-runtime-input.yaml";
+    String runtimeInput =
+        Resources.toString(Objects.requireNonNull(classLoader.getResource(runtimeInputFile)), StandardCharsets.UTF_8);
+    String mergedYaml = mergeInputSetIntoPipeline(yamlWithRuntime, runtimeInput, false);
+    assertThat(mergedYaml.replace("\"", "")).isEqualTo(fullYaml);
   }
 }

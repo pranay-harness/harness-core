@@ -1,0 +1,31 @@
+pipeline:
+  identifier: basichttpFail
+  stages:
+  - stage:
+      identifier: qaStage
+      spec:
+        serviceConfig:
+          serviceDefinition:
+            spec:
+              manifests:
+              - manifest:
+                  identifier: baseValues
+                  spec:
+                    store:
+                      spec:
+                        branch: <+input>
+        infrastructure:
+          infrastructureDefinition:
+            spec:
+              namespace: <+input>
+        execution:
+          steps:
+          - step:
+              identifier: httpStep1
+              spec:
+                url: <+input>
+          rollbackSteps:
+          - step:
+              identifier: httpStepRollback1
+              spec:
+                url: <+input>
