@@ -203,6 +203,16 @@ public class OrganizationServiceImpl implements OrganizationService {
     return delete;
   }
 
+  @Override
+  public boolean restore(String accountIdentifier, String identifier) {
+    boolean success = organizationRepository.restore(accountIdentifier, identifier);
+    if (success) {
+      publishEvent(Organization.builder().accountIdentifier(accountIdentifier).identifier(identifier).build(),
+          EventsFrameworkMetadataConstants.RESTORE_ACTION);
+    }
+    return success;
+  }
+
   private void validateCreateOrganizationRequest(String accountIdentifier, OrganizationDTO organization) {
     verifyValuesNotChanged(Lists.newArrayList(Pair.of(accountIdentifier, organization.getAccountIdentifier())), true);
   }

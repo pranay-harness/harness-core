@@ -1,7 +1,13 @@
 package io.harness.ng.core.event;
 
-import io.harness.eventsframework.EventsFrameworkConstants;
-import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTIVITY_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CONNECTOR_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY_TYPE;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY;
+
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
@@ -9,10 +15,12 @@ import io.harness.eventsframework.consumer.Message;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -20,24 +28,24 @@ import lombok.extern.slf4j.Slf4j;
 public class EntityCRUDStreamConsumer implements Runnable {
   private final Consumer redisConsumer;
   private final Map<String, MessageProcessor> processorMap;
+  private final List<MessageListener> messageListenersList;
 
   @Inject
-  public EntityCRUDStreamConsumer(@Named(EventsFrameworkConstants.ENTITY_CRUD) Consumer redisConsumer,
-      @Named(EventsFrameworkMetadataConstants.ACCOUNT_ENTITY) MessageProcessor accountChangeEventMessageProcessor,
-      @Named(EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY)
-      MessageProcessor organizationChangeEventMessageProcessor,
-      @Named(EventsFrameworkMetadataConstants.PROJECT_ENTITY) MessageProcessor projectChangeEventMessageProcessor,
-      @Named(
-          EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY) MessageProcessor setupUsageChangeEventMessageProcessor,
-      @Named(
-          EventsFrameworkMetadataConstants.ACTIVITY_ENTITY) MessageProcessor entityActivityCrudEventMessageProcessor) {
+  public EntityCRUDStreamConsumer(@Named(ENTITY_CRUD) Consumer redisConsumer,
+      @Named(ORGANIZATION_ENTITY + ENTITY_CRUD) MessageListener organizationEntityCRUDStreamListener,
+      @Named(PROJECT_ENTITY + ENTITY_CRUD) MessageListener projectEntityCRUDStreamListener,
+      @Named(CONNECTOR_ENTITY + ENTITY_CRUD) MessageListener connectorEntityCRUDStreamListener,
+      @Named(SETUP_USAGE_ENTITY) MessageProcessor setupUsageChangeEventMessageProcessor,
+      @Named(ACTIVITY_ENTITY) MessageProcessor entityActivityCrudEventMessageProcessor) {
     this.redisConsumer = redisConsumer;
+    messageListenersList = new ArrayList<>();
+    messageListenersList.add(organizationEntityCRUDStreamListener);
+    messageListenersList.add(projectEntityCRUDStreamListener);
+    messageListenersList.add(connectorEntityCRUDStreamListener);
+
     processorMap = new HashMap<>();
-    processorMap.put(EventsFrameworkMetadataConstants.ACCOUNT_ENTITY, accountChangeEventMessageProcessor);
-    processorMap.put(EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY, organizationChangeEventMessageProcessor);
-    processorMap.put(EventsFrameworkMetadataConstants.PROJECT_ENTITY, projectChangeEventMessageProcessor);
-    processorMap.put(EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY, setupUsageChangeEventMessageProcessor);
-    processorMap.put(EventsFrameworkMetadataConstants.ACTIVITY_ENTITY, entityActivityCrudEventMessageProcessor);
+    processorMap.put(SETUP_USAGE_ENTITY, setupUsageChangeEventMessageProcessor);
+    processorMap.put(ACTIVITY_ENTITY, entityActivityCrudEventMessageProcessor);
   }
 
   @Override
@@ -68,8 +76,7 @@ public class EntityCRUDStreamConsumer implements Runnable {
 
   private boolean handleMessage(Message message) {
     try {
-      processMessage(message);
-      return true;
+      return processMessage(message);
     } catch (Exception ex) {
       // This is not evicted from events framework so that it can be processed
       // by other consumer if the error is a runtime error
@@ -78,15 +85,25 @@ public class EntityCRUDStreamConsumer implements Runnable {
     }
   }
 
-  private void processMessage(Message message) {
+  private boolean processMessage(Message message) {
+    AtomicBoolean success = new AtomicBoolean(true);
+    messageListenersList.forEach(messageListener -> {
+      if (!messageListener.handleMessage(message)) {
+        success.set(false);
+      }
+    });
+
     if (message.hasMessage()) {
       Map<String, String> metadataMap = message.getMessage().getMetadataMap();
-      if (metadataMap != null && metadataMap.get(EventsFrameworkMetadataConstants.ENTITY_TYPE) != null) {
-        String entityType = metadataMap.get(EventsFrameworkMetadataConstants.ENTITY_TYPE);
+      if (metadataMap != null && metadataMap.get(ENTITY_TYPE) != null) {
+        String entityType = metadataMap.get(ENTITY_TYPE);
         if (processorMap.get(entityType) != null) {
-          processorMap.get(entityType).processMessage(message);
+          if (!processorMap.get(entityType).processMessage(message)) {
+            success.set(false);
+          }
         }
       }
     }
+    return success.get();
   }
 }

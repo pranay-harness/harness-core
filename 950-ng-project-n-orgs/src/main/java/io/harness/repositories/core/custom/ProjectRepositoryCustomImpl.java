@@ -35,6 +35,21 @@ public class ProjectRepositoryCustomImpl implements ProjectRepositoryCustom {
   }
 
   @Override
+  public boolean restore(String accountIdentifier, String orgIdentifier, String identifier) {
+    Criteria criteria = Criteria.where(ProjectKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(ProjectKeys.orgIdentifier)
+                            .is(orgIdentifier)
+                            .and(ProjectKeys.identifier)
+                            .is(identifier)
+                            .and(ProjectKeys.deleted)
+                            .is(Boolean.TRUE);
+    Query query = new Query(criteria);
+    Update update = new Update().set(ProjectKeys.deleted, Boolean.FALSE);
+    return mongoTemplate.findAndModify(query, update, Project.class) != null;
+  }
+
+  @Override
   public Project update(Query query, Update update) {
     return mongoTemplate.findAndModify(query, update, new FindAndModifyOptions().returnNew(true), Project.class);
   }

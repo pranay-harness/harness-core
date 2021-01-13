@@ -5,6 +5,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.k8s.KubernetesConvention.getAccountIdentifier;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -304,7 +305,7 @@ public class AccountServiceImpl implements AccountService {
       publishAccountChangeEvent(account);
       // TODO {karan} remove this if condition when NG is enabled globally for new accounts
       if (fromDataGen) {
-        publishAccountChangeEventViaEventFramework(account, EventsFrameworkMetadataConstants.CREATE_ACTION);
+        publishAccountChangeEventViaEventFramework(account.getUuid(), EventsFrameworkMetadataConstants.CREATE_ACTION);
       }
 
       log.info("Successfully created account.");
@@ -312,16 +313,17 @@ public class AccountServiceImpl implements AccountService {
     return account;
   }
 
-  private void publishAccountChangeEventViaEventFramework(Account account, String action) {
+  private void publishAccountChangeEventViaEventFramework(String accountId, String action) {
     try {
       eventProducer.send(
           Message.newBuilder()
               .putAllMetadata(ImmutableMap.of(EventsFrameworkMetadataConstants.ENTITY_TYPE,
                   EventsFrameworkMetadataConstants.ACCOUNT_ENTITY, EventsFrameworkMetadataConstants.ACTION, action))
-              .setData(AccountEntityChangeDTO.newBuilder().setAccountId(account.getUuid()).build().toByteString())
+              .setData(AccountEntityChangeDTO.newBuilder().setAccountId(accountId).build().toByteString())
               .build());
     } catch (Exception ex) {
-      log.error("Failed to publish account creation event via event framework.");
+      log.error(
+          String.format("Failed to publish account %s event for accountId %s via event framework.", action, accountId));
     }
   }
 
@@ -516,7 +518,11 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public boolean delete(String accountId) {
-    return accountId != null && deleteAccountHelper.deleteAccount(accountId);
+    boolean success = accountId != null && deleteAccountHelper.deleteAccount(accountId);
+    if (success) {
+      publishAccountChangeEventViaEventFramework(accountId, DELETE_ACTION);
+    }
+    return success;
   }
 
   @Override

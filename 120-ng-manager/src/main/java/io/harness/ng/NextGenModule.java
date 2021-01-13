@@ -1,6 +1,11 @@
 package io.harness.ng;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
+import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CONNECTOR_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
 
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
@@ -18,7 +23,6 @@ import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
-import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.gitsync.GitSyncModule;
@@ -44,11 +48,13 @@ import io.harness.ng.core.api.impl.NGSecretServiceV2Impl;
 import io.harness.ng.core.api.impl.UserGroupServiceImpl;
 import io.harness.ng.core.entityactivity.event.EntityActivityCrudEventMessageProcessor;
 import io.harness.ng.core.entitysetupusage.event.SetupUsageChangeEventMessageProcessor;
-import io.harness.ng.core.event.AccountChangeEventMessageProcessor;
-import io.harness.ng.core.event.FeatureFlagChangeEventMessageProcessor;
+import io.harness.ng.core.event.ConnectorEntityCRUDStreamListener;
+import io.harness.ng.core.event.ConnectorFeatureFlagStreamListener;
+import io.harness.ng.core.event.MessageListener;
 import io.harness.ng.core.event.MessageProcessor;
-import io.harness.ng.core.event.OrganizationChangeEventMessageProcessor;
-import io.harness.ng.core.event.ProjectChangeEventMessageProcessor;
+import io.harness.ng.core.event.OrganizationEntityCRUDStreamListener;
+import io.harness.ng.core.event.OrganizationFeatureFlagStreamListener;
+import io.harness.ng.core.event.ProjectEntityCRUDStreamListener;
 import io.harness.ng.core.gitsync.GitChangeProcessorService;
 import io.harness.ng.core.gitsync.GitSyncManagerInterface;
 import io.harness.ng.core.gitsync.YamlHandler;
@@ -258,23 +264,32 @@ public class NextGenModule extends AbstractModule {
     bind(YamlBaseUrlService.class).to(YamlBaseUrlServiceImpl.class);
 
     bind(MessageProcessor.class)
-        .annotatedWith(Names.named(EventsFrameworkMetadataConstants.ACCOUNT_ENTITY))
-        .to(AccountChangeEventMessageProcessor.class);
-    bind(MessageProcessor.class)
-        .annotatedWith(Names.named(EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY))
-        .to(OrganizationChangeEventMessageProcessor.class);
-    bind(MessageProcessor.class)
-        .annotatedWith(Names.named(EventsFrameworkMetadataConstants.PROJECT_ENTITY))
-        .to(ProjectChangeEventMessageProcessor.class);
-    bind(MessageProcessor.class)
         .annotatedWith(Names.named(EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY))
         .to(SetupUsageChangeEventMessageProcessor.class);
     bind(MessageProcessor.class)
         .annotatedWith(Names.named(EventsFrameworkMetadataConstants.ACTIVITY_ENTITY))
         .to(EntityActivityCrudEventMessageProcessor.class);
-    bind(MessageProcessor.class)
-        .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
-        .to(FeatureFlagChangeEventMessageProcessor.class);
+
+    registerEventsFrameworkMessageListeners();
+  }
+
+  private void registerEventsFrameworkMessageListeners() {
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(ORGANIZATION_ENTITY + ENTITY_CRUD))
+        .to(OrganizationEntityCRUDStreamListener.class);
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(PROJECT_ENTITY + ENTITY_CRUD))
+        .to(ProjectEntityCRUDStreamListener.class);
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(CONNECTOR_ENTITY + ENTITY_CRUD))
+        .to(ConnectorEntityCRUDStreamListener.class);
+
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(ORGANIZATION_ENTITY + FEATURE_FLAG_STREAM))
+        .to(OrganizationFeatureFlagStreamListener.class);
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(CONNECTOR_ENTITY + FEATURE_FLAG_STREAM))
+        .to(ConnectorFeatureFlagStreamListener.class);
   }
 
   private OrchestrationModuleConfig getOrchestrationConfig() {
