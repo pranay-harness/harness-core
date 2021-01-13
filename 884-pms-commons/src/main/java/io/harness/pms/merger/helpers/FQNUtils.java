@@ -209,6 +209,13 @@ public class FQNUtils {
   private void generateYamlMapFromListOfSingleKeyMaps(
       ArrayNode list, FQN baseFQN, Map<FQN, Object> fqnMap, Map<String, Object> res, String topKey) {
     List<Object> topKeyList = new ArrayList<>();
+    if (checkIfListHasNoIdentifier(list)) {
+      if (fqnMap.containsKey(baseFQN)) {
+        topKeyList.add(list);
+        res.put(topKey, topKeyList);
+      }
+      return;
+    }
     list.forEach(element -> {
       if (element.has(YAMLFieldNameConstants.PARALLEL)) {
         FQN currFQN = FQN.duplicateAndAddNode(baseFQN, FQNNode.builder().nodeType(FQNNode.NodeType.PARALLEL).build());
