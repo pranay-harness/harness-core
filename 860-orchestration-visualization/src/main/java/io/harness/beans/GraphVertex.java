@@ -10,6 +10,7 @@ import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.steps.SkipType;
+import io.harness.pms.execution.beans.RepresentationStrategy;
 import io.harness.tasks.ProgressData;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -54,4 +55,7 @@ public class GraphVertex implements Serializable {
 
   // skip
   private SkipType skipType;
+
+  // UI
+  @Builder.Default RepresentationStrategy representationStrategy = RepresentationStrategy.CAMELCASE;
 }

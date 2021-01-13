@@ -242,7 +242,7 @@ public class YamlUtils {
     return field.getName();
   }
 
-  private boolean shouldNotIncludeInQualifiedName(String fieldName) {
+  public boolean shouldNotIncludeInQualifiedName(String fieldName) {
     if (ignorableStringForQualifiedName.contains(fieldName)) {
       return true;
     }

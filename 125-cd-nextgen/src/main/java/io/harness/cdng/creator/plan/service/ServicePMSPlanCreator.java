@@ -56,7 +56,7 @@ public class ServicePMSPlanCreator {
         .uuid(serviceNode.getUuid())
         .stepType(ServiceStep.STEP_TYPE)
         .name(PlanCreatorConstants.SERVICE_NODE_NAME)
-        .identifier(YamlTypes.SERVICE_CONFIG + serviceNode.getUuid())
+        .identifier(YamlTypes.SERVICE_CONFIG)
         .stepParameters(stepParameters)
         .facilitatorObtainment(
             FacilitatorObtainment.newBuilder().setType(TaskChainFacilitator.FACILITATOR_TYPE).build())

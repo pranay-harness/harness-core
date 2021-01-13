@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
+import org.bson.Document;
 
 @Value
 @Builder
@@ -16,6 +17,9 @@ public class ExecutionNode {
   String uuid;
   String name;
   String identifier;
+  String baseFqn;
+  List<Document> outcomes;
+  Map<String, Object> stepParameters;
   Long startTs;
   Long endTs;
   String stepType;
