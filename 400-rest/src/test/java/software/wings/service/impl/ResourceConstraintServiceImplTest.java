@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.PRANJAL;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -13,6 +15,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -22,6 +25,7 @@ import static org.mockito.Mockito.mock;
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.constraint.Constraint.Strategy;
 import io.harness.distribution.constraint.Consumer.State;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
 import io.harness.steps.resourcerestraint.beans.ResourceConstraint.ResourceConstraintKeys;
@@ -161,5 +165,32 @@ public class ResourceConstraintServiceImplTest extends WingsBaseTest {
     assertThat(resourceConstraintService.getAllCurrentlyAcquiredPermits(
                    HoldingScope.WORKFLOW.name(), WORKFLOW_EXECUTION_ID, APP_ID))
         .isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testUpdateWithCapacityGreaterThanUsage() {
+    ResourceConstraintInstance resourceConstraintInstance = ResourceConstraintInstance.builder()
+                                                                .resourceConstraintId(RESOURCE_CONSTRAINT_ID)
+                                                                .permits(100)
+                                                                .state(State.ACTIVE.name())
+                                                                .build();
+    doReturn(query).when(wingsPersistence).createQuery(ResourceConstraintInstance.class, excludeAuthority);
+    doReturn(query).when(query).filter(ResourceConstraintInstanceKeys.resourceConstraintId, RESOURCE_CONSTRAINT_ID);
+    doReturn(query).when(query).filter(ResourceConstraintInstanceKeys.state, State.ACTIVE.name());
+    doReturn(query).when(query).project(ResourceConstraintInstanceKeys.permits, true);
+    doReturn(Arrays.asList(resourceConstraintInstance)).when(query).asList();
+
+    ResourceConstraint resourceConstraint = ResourceConstraint.builder()
+                                                .uuid(RESOURCE_CONSTRAINT_ID)
+                                                .lastUpdatedAt(1234)
+                                                .accountId(ACCOUNT_ID)
+                                                .name(RESOURCE_CONSTRAINT_NAME)
+                                                .capacity(99)
+                                                .build();
+    assertThatThrownBy(() -> resourceConstraintService.update(resourceConstraint))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Resource Constraint capacity cannot be less than the current usage");
   }
 }
