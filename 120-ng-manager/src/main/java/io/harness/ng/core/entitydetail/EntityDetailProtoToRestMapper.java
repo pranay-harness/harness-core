@@ -3,6 +3,8 @@ package io.harness.ng.core.entitydetail;
 import static io.harness.data.structure.HarnessStringUtils.nullIfEmpty;
 import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.CONNECTORS;
 import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.CV_CONFIG;
+import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.DELEGATES;
+import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.DELEGATE_CONFIGURATIONS;
 import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.ENVIRONMENT;
 import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.INPUT_SETS;
 import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.PIPELINES;
@@ -97,6 +99,8 @@ public class EntityDetailProtoToRestMapper {
     mappingBetweenProtoAndActualEnum.put(CONNECTORS, EntityType.CONNECTORS);
     mappingBetweenProtoAndActualEnum.put(CV_CONFIG, EntityType.CV_CONFIG);
     mappingBetweenProtoAndActualEnum.put(ENVIRONMENT, EntityType.ENVIRONMENT);
+    mappingBetweenProtoAndActualEnum.put(DELEGATES, EntityType.DELEGATES);
+    mappingBetweenProtoAndActualEnum.put(DELEGATE_CONFIGURATIONS, EntityType.DELEGATE_CONFIGURATIONS);
     return mappingBetweenProtoAndActualEnum;
   }
 }
