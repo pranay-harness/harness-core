@@ -10,13 +10,13 @@ import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 
-@Value
-@AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "ConnectorStatisticsKeys")
-@Builder
 @ApiModel("ConnectorStatistics")
+@Value
+@Builder
+@AllArgsConstructor
 public class ConnectorStatistics {
   List<ConnectorTypeStats> typeStats;
   List<ConnectorStatusStats> statusStats;

@@ -3,9 +3,6 @@ package io.harness.ng.core.activityhistory.service;
 import io.harness.ng.core.activityhistory.NGActivityStatus;
 import io.harness.ng.core.activityhistory.dto.ConnectivityCheckSummaryDTO;
 import io.harness.ng.core.activityhistory.dto.NGActivityDTO;
-import io.harness.ng.core.activityhistory.dto.NGActivityListDTO;
-import io.harness.ng.core.activityhistory.dto.NGActivitySummaryDTO;
-import io.harness.ng.core.activityhistory.dto.TimeGroupType;
 
 import org.springframework.data.domain.Page;
 

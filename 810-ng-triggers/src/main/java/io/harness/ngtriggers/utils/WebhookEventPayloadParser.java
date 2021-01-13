@@ -14,11 +14,27 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ngtriggers.beans.config.HeaderConfig;
 import io.harness.ngtriggers.beans.dto.WebhookEventHeaderData;
+import io.harness.ngtriggers.beans.dto.WebhookEventHeaderData.WebhookEventHeaderDataBuilder;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
-import io.harness.ngtriggers.beans.scm.*;
+import io.harness.ngtriggers.beans.scm.BranchWebhookEvent;
+import io.harness.ngtriggers.beans.scm.CommitDetails;
+import io.harness.ngtriggers.beans.scm.PRWebhookEvent;
 import io.harness.ngtriggers.beans.scm.Repository;
+import io.harness.ngtriggers.beans.scm.WebhookBaseAttributes;
+import io.harness.ngtriggers.beans.scm.WebhookGitUser;
+import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData.WebhookPayloadDataBuilder;
-import io.harness.product.ci.scm.proto.*;
+import io.harness.product.ci.scm.proto.Commit;
+import io.harness.product.ci.scm.proto.GitProvider;
+import io.harness.product.ci.scm.proto.Header;
+import io.harness.product.ci.scm.proto.ParseWebhookRequest;
+import io.harness.product.ci.scm.proto.ParseWebhookResponse;
+import io.harness.product.ci.scm.proto.PullRequest;
+import io.harness.product.ci.scm.proto.PullRequestHook;
+import io.harness.product.ci.scm.proto.PushHook;
+import io.harness.product.ci.scm.proto.SCMGrpc;
+import io.harness.product.ci.scm.proto.Signature;
+import io.harness.product.ci.scm.proto.User;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -271,7 +287,7 @@ public class WebhookEventPayloadParser {
                                     .findFirst()
                                     .orElse(null);
 
-    WebhookEventHeaderData.WebhookEventHeaderDataBuilder builder = WebhookEventHeaderData.builder().dataFound(false);
+    WebhookEventHeaderDataBuilder builder = WebhookEventHeaderData.builder().dataFound(false);
     if (headerConfig != null) {
       return WebhookEventHeaderData.builder()
           .sourceKey(headerConfig.getKey())

@@ -21,7 +21,6 @@ import io.harness.persistence.HPersistence;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
-import java.util.Arrays;
 
 public class ConnectorModule extends AbstractModule {
   public static final String DEFAULT_CONNECTOR_SERVICE = "defaultConnectorService";
@@ -38,14 +37,14 @@ public class ConnectorModule extends AbstractModule {
     MapBinder<String, ConnectionValidator> connectorValidatorMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ConnectionValidator.class);
 
-    Arrays.stream(ConnectorType.values()).forEach(connectorType -> {
+    for (ConnectorType connectorType : ConnectorType.values()) {
       connectorValidatorMapBinder.addBinding(connectorType.getDisplayName())
           .to(ConnectorRegistryFactory.getConnectorValidator(connectorType));
       connectorDTOToEntityMapBinder.addBinding(connectorType.getDisplayName())
           .to(ConnectorRegistryFactory.getConnectorDTOToEntityMapper(connectorType));
       connectorEntityToDTOMapper.addBinding(connectorType.getDisplayName())
           .to(ConnectorRegistryFactory.getConnectorEntityToDTOMapper(connectorType));
-    });
+    }
 
     bind(ConnectorService.class)
         .annotatedWith(Names.named(DEFAULT_CONNECTOR_SERVICE))

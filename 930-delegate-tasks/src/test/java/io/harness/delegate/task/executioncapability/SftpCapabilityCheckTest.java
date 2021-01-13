@@ -10,9 +10,7 @@ import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.SftpCapability;
 import io.harness.rule.Owner;
 
-import com.google.inject.Inject;
 import net.schmizz.sshj.SSHClient;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;

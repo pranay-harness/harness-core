@@ -16,10 +16,10 @@ import org.springframework.data.annotation.TypeAlias;
 @Data
 @SuperBuilder
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = false)
 @Entity(value = "entityActivity", noClassnameStored = true)
 @Persistent
 @TypeAlias("io.harness.ng.core.activity.EntityUsageActivityDetail")
-@EqualsAndHashCode(callSuper = false)
 public class EntityUsageActivityDetail extends NGActivity {
   @NotBlank String referredByEntityFQN;
   @NotBlank String referredByEntityType;

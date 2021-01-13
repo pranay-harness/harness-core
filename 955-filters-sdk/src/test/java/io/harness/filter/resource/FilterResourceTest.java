@@ -12,7 +12,6 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.filter.dto.FilterDTO;
-import io.harness.filter.resource.FilterResource;
 import io.harness.filter.service.FilterService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ResponseDTO;

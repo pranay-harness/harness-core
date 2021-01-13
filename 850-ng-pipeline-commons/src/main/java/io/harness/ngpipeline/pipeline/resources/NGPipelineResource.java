@@ -23,7 +23,6 @@ import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.ngpipeline.pipeline.mappers.NgPipelineFilterHelper;
 import io.harness.ngpipeline.pipeline.mappers.PipelineDtoMapper;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
-// import io.harness.ngtriggers.utils.TriggerUtils;
 import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.utils.PageUtils;
 
@@ -57,6 +56,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
+
+// import io.harness.ngtriggers.utils.TriggerUtils;
 
 // import io.harness.ngtriggers.utils.TriggerUtils;
 

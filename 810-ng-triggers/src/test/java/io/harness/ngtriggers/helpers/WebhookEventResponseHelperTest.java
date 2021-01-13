@@ -8,7 +8,6 @@ import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalSta
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.TARGET_DID_NOT_EXECUTE;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.TARGET_EXECUTION_REQUESTED;
 import static io.harness.ngtriggers.beans.target.TargetType.PIPELINE;
-import static io.harness.pms.contracts.execution.Status.RUNNING;
 import static io.harness.rule.OwnerRule.ADWAIT;
 
 import static io.grpc.Status.UNAVAILABLE;
@@ -17,9 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
-import io.harness.execution.PlanExecution;
 import io.harness.ngpipeline.pipeline.beans.resources.NGPipelineExecutionResponseDTO;
-import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.response.TargetExecutionSummary;

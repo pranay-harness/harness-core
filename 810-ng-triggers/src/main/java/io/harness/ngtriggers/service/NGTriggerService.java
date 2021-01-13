@@ -1,7 +1,5 @@
 package io.harness.ngtriggers.service;
 
-import io.harness.ngtriggers.beans.config.NGTriggerConfig;
-import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 

@@ -1,6 +1,5 @@
 package io.harness.capability;
 
-import io.harness.capability.CapabilityParameters;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.persistence.PersistentEntity;

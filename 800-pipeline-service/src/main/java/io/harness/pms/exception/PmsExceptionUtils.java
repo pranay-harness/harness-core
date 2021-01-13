@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class PmsExceptionUtil {
+public class PmsExceptionUtils {
   public String getUnresolvedDependencyErrorMessage(Collection<YamlFieldBlob> yamlFieldBlobs) throws IOException {
     return String.format("Following Nodes could not be parsed: %s.",
         getYamlNodeErrorInfo(yamlFieldBlobs).stream().map(YamlNodeErrorInfo::toJson).collect(Collectors.joining(",")));

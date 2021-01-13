@@ -10,9 +10,6 @@ import static io.harness.shell.SshHelperUtils.normalizeError;
 
 import io.harness.exception.WingsException;
 import io.harness.logging.LogCallback;
-import io.harness.shell.AccessType;
-import io.harness.shell.SshSessionConfig;
-import io.harness.shell.SshSessionFactory;
 
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSchException;

@@ -1,7 +1,6 @@
 package io.harness.filter;
 
 import io.harness.factory.ClosingFactory;
-import io.harness.filter.FiltersModule;
 import io.harness.filter.serializer.FiltersRegistrars;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;

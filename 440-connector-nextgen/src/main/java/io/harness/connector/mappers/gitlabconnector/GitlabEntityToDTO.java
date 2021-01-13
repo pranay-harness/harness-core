@@ -27,6 +27,7 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernameTokenDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretRefHelper;
+import io.harness.govern.Switch;
 
 public class GitlabEntityToDTO extends ConnectorEntityToDTOMapper<GitlabConnectorDTO, GitlabConnector> {
   @Override
@@ -64,6 +65,9 @@ public class GitlabEntityToDTO extends ConnectorEntityToDTOMapper<GitlabConnecto
         GitlabHttpCredentialsSpecDTO gitlabHttpCredentialsSpecDTO = getHttpCredentialsSpecDTO(type, auth);
         gitlabCredentialsDTO =
             GitlabHttpCredentialsDTO.builder().type(type).httpCredentialsSpec(gitlabHttpCredentialsSpecDTO).build();
+        break;
+      default:
+        Switch.unhandled(authType);
     }
     return GitlabAuthenticationDTO.builder().authType(authType).credentials(gitlabCredentialsDTO).build();
   }
@@ -103,6 +107,8 @@ public class GitlabEntityToDTO extends ConnectorEntityToDTOMapper<GitlabConnecto
                 .kerberosKeyRef(SecretRefHelper.createSecretRef(gitlabKerberos.getKerberosKeyRef()))
                 .build();
         break;
+      default:
+        Switch.unhandled(type);
     }
     return gitlabHttpCredentialsSpecDTO;
   }

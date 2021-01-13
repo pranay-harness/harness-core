@@ -5,9 +5,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-@EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor
 @Data
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class NotificationResultWithoutStatus extends NotificationResult {
   @Builder
   public NotificationResultWithoutStatus(String notificationId) {

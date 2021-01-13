@@ -5,11 +5,13 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.lang.String.format;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
-import io.harness.pms.contracts.plan.*;
-import io.harness.pms.exception.PmsExceptionUtil;
+import io.harness.pms.contracts.plan.PlanCreationServiceGrpc;
+import io.harness.pms.contracts.plan.VariablesCreationBlobRequest;
+import io.harness.pms.contracts.plan.VariablesCreationBlobResponse;
+import io.harness.pms.contracts.plan.YamlFieldBlob;
+import io.harness.pms.exception.PmsExceptionUtils;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.utils.CompletableFutures;
@@ -49,7 +51,7 @@ public class VariableCreatorMergeService {
   public VariableMergeServiceResponse createVariablesResponse(@NotNull String yaml) throws IOException {
     Map<String, Map<String, Set<String>>> sdkInstances = pmsSdkInstanceService.getInstanceNameToSupportedTypes();
     Map<String, PlanCreatorServiceInfo> services = new HashMap<>();
-    if (EmptyPredicate.isNotEmpty(planCreatorServices) && EmptyPredicate.isNotEmpty(sdkInstances)) {
+    if (isNotEmpty(planCreatorServices) && isNotEmpty(sdkInstances)) {
       sdkInstances.forEach((k, v) -> {
         if (planCreatorServices.containsKey(k)) {
           services.put(k, new PlanCreatorServiceInfo(v, planCreatorServices.get(k)));
@@ -77,12 +79,12 @@ public class VariableCreatorMergeService {
       return responseBuilder.build();
     }
 
-    for (int i = 0; i < MAX_DEPTH && EmptyPredicate.isNotEmpty(responseBuilder.getDependenciesMap()); i++) {
+    for (int i = 0; i < MAX_DEPTH && isNotEmpty(responseBuilder.getDependenciesMap()); i++) {
       VariablesCreationBlobResponse variablesCreationBlobResponse = obtainVariablesPerIteration(services, dependencies);
       VariableCreationBlobResponseUtils.mergeResolvedDependencies(responseBuilder, variablesCreationBlobResponse);
       if (isNotEmpty(responseBuilder.getDependenciesMap())) {
         throw new InvalidRequestException(
-            PmsExceptionUtil.getUnresolvedDependencyErrorMessage(responseBuilder.getDependenciesMap().values()));
+            PmsExceptionUtils.getUnresolvedDependencyErrorMessage(responseBuilder.getDependenciesMap().values()));
       }
       VariableCreationBlobResponseUtils.mergeDependencies(responseBuilder, variablesCreationBlobResponse);
       VariableCreationBlobResponseUtils.mergeYamlProperties(responseBuilder, variablesCreationBlobResponse);

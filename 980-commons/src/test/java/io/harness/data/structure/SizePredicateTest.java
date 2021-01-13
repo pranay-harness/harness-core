@@ -7,7 +7,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
-import io.harness.category.FastUnitTests;
 import io.harness.data.structure.SizeFunction.Size;
 import io.harness.rule.Owner;
 
@@ -17,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 public class SizePredicateTest extends CategoryTest {
   @Builder

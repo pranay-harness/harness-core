@@ -22,7 +22,7 @@ import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviser;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
-import io.harness.pms.sdk.core.resolver.RefObjectUtil;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviser;
 import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
@@ -122,7 +122,7 @@ public class CustomExecutionProvider {
                     FacilitatorObtainment.newBuilder()
                         .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
                         .build())
-                .refObject(RefObjectUtil.getOutcomeRefObject("http", httpNodeId, null))
+                .refObject(RefObjectUtils.getOutcomeRefObject("http", httpNodeId, null))
                 .build())
         .node(
             PlanNode.builder()
@@ -1498,7 +1498,7 @@ public class CustomExecutionProvider {
                       FacilitatorObtainment.newBuilder()
                           .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
                           .build())
-                  .refObject(RefObjectUtil.getOutcomeRefObject("http", httpSwitchId, null))
+                  .refObject(RefObjectUtils.getOutcomeRefObject("http", httpSwitchId, null))
                   .build())
         .node(PlanNode.builder()
                   .uuid(dummyNode2Id)

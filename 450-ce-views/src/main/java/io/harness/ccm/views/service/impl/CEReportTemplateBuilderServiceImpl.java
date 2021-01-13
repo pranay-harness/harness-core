@@ -1,5 +1,8 @@
 package io.harness.ccm.views.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.entities.ViewFieldIdentifier;
 import io.harness.ccm.views.entities.ViewTimeRangeType;
@@ -169,7 +172,7 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
     // Generating table data
     List<QLCEViewEntityStatsDataPoint> tableData = viewsBillingService.getEntityStatsDataPoints(bigQuery, filters,
         groupBy, aggregationFunction, sortCriteria, cloudProviderTableName, DEFAULT_LIMIT, DEFAULT_OFFSET);
-    if (tableData == null || tableData.isEmpty()) {
+    if (isEmpty(tableData)) {
       throw new InvalidRequestException("Exception while generating report. No data to for table");
     }
     List<String> entities = tableData.stream().map(QLCEViewEntityStatsDataPoint::getName).collect(Collectors.toList());
@@ -278,7 +281,7 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
 
   private String generateTable(List<QLCEViewEntityStatsDataPoint> tableData, String entity) {
     String table = "";
-    if (tableData != null && !tableData.isEmpty()) {
+    if (isNotEmpty(tableData)) {
       StringJoiner joiner = new StringJoiner(" ");
       joiner.add(TABLE_START);
       joiner.add(ROW_START);

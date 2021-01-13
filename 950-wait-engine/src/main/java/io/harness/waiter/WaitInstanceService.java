@@ -3,17 +3,14 @@ package io.harness.waiter;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.persistence.HPersistence;
-import io.harness.serializer.KryoSerializer;
+import io.harness.waiter.ProgressUpdate.ProgressUpdateKeys;
+import io.harness.waiter.WaitInstance.WaitInstanceKeys;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.WriteConcern;
 import java.time.Duration;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
@@ -31,13 +28,13 @@ public class WaitInstanceService {
 
   public WaitInstance fetchForProcessingWaitInstance(String waitInstanceId, long now) {
     final Query<WaitInstance> waitInstanceQuery = persistence.createQuery(WaitInstance.class)
-                                                      .filter(WaitInstance.WaitInstanceKeys.uuid, waitInstanceId)
-                                                      .field(WaitInstance.WaitInstanceKeys.callbackProcessingAt)
+                                                      .filter(WaitInstanceKeys.uuid, waitInstanceId)
+                                                      .field(WaitInstanceKeys.callbackProcessingAt)
                                                       .lessThan(now);
 
     final UpdateOperations<WaitInstance> updateOperations =
         persistence.createUpdateOperations(WaitInstance.class)
-            .set(WaitInstance.WaitInstanceKeys.callbackProcessingAt, now + MAX_CALLBACK_PROCESSING_TIME.toMillis());
+            .set(WaitInstanceKeys.callbackProcessingAt, now + MAX_CALLBACK_PROCESSING_TIME.toMillis());
 
     return persistence.findAndModify(waitInstanceQuery, updateOperations, findAndModifyOptions);
   }
@@ -45,19 +42,18 @@ public class WaitInstanceService {
   public ProgressUpdate fetchForProcessingProgressUpdate(Set<String> busyCorrelationIds, long now) {
     Query<ProgressUpdate> query = null;
     if (busyCorrelationIds.isEmpty()) {
-      query = persistence.createQuery(ProgressUpdate.class, excludeAuthority)
-                  .order(ProgressUpdate.ProgressUpdateKeys.createdAt);
+      query = persistence.createQuery(ProgressUpdate.class, excludeAuthority).order(ProgressUpdateKeys.createdAt);
     } else {
       query = persistence.createQuery(ProgressUpdate.class, excludeAuthority)
-                  .field(ProgressUpdate.ProgressUpdateKeys.correlationId)
+                  .field(ProgressUpdateKeys.correlationId)
                   .notIn(busyCorrelationIds)
-                  .order(ProgressUpdate.ProgressUpdateKeys.createdAt);
+                  .order(ProgressUpdateKeys.createdAt);
     }
 
     UpdateOperations<ProgressUpdate> updateOperations =
         persistence.createUpdateOperations(ProgressUpdate.class)
-            .set(ProgressUpdate.ProgressUpdateKeys.expireProcessing,
-                now + WaitInstanceService.MAX_CALLBACK_PROCESSING_TIME.toMillis());
+            .set(
+                ProgressUpdateKeys.expireProcessing, now + WaitInstanceService.MAX_CALLBACK_PROCESSING_TIME.toMillis());
 
     return persistence.findAndModify(query, updateOperations, findAndModifyOptions);
   }

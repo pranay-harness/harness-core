@@ -7,12 +7,12 @@ import static io.harness.k8s.kubectl.Utils.executeCommand;
 
 import io.harness.capability.CapabilityParameters;
 import io.harness.capability.CapabilitySubjectPermission;
+import io.harness.capability.CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder;
 import io.harness.capability.CapabilitySubjectPermission.PermissionResult;
 import io.harness.capability.HelmInstallationParameters;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
-import io.harness.delegate.task.executioncapability.CapabilityCheck;
 import io.harness.helm.HelmCommandTemplateFactory;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.HelmVersion;
@@ -43,7 +43,7 @@ public class HelmInstallationCapabilityCheck implements CapabilityCheck, ProtoCa
 
   @Override
   public CapabilitySubjectPermission performCapabilityCheckWithProto(CapabilityParameters parameters) {
-    CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
+    CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
     if (parameters.getCapabilityCase() != CapabilityParameters.CapabilityCase.HELM_INSTALLATION_PARAMETERS) {
       return builder.permissionResult(PermissionResult.DENIED).build();
     }

@@ -1,6 +1,8 @@
 package io.harness.ngpipeline.executions.mapper;
 
-import static io.harness.pms.execution.ExecutionStatus.*;
+import static io.harness.pms.execution.ExecutionStatus.FAILED;
+import static io.harness.pms.execution.ExecutionStatus.RUNNING;
+import static io.harness.pms.execution.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static org.assertj.core.api.Assertions.assertThat;

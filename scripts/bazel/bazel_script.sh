@@ -34,6 +34,21 @@ then
   # 400-rest and 260-delegate modules are excluded.
 fi
 
+if [ "${RUN_CHECKS}" == "true" ]
+then
+  TARGETS=`bazel ${bazelrc} query //... | grep ":checkstyle$"`
+  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -k ${TARGETS}
+  exit 0
+fi
+
+if [ "${RUN_PMDS}" == "true" ]
+then
+  TARGETS=`bazel ${bazelrc} query //... | grep ":pmd$"`
+  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -k ${TARGETS}
+  exit 0
+fi
+
+
 BAZEL_MODULES="\
   //420-delegate-agent:module \
   //420-delegate-service:module \

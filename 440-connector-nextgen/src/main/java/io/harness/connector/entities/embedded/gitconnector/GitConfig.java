@@ -15,9 +15,9 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
+@EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "GitConfigKeys")
 @Entity(value = "connectors", noClassnameStored = true)
-@EqualsAndHashCode(callSuper = true)
 @TypeAlias("io.harness.connector.entities.embedded.gitconnector.GitConfig")
 @Persistent
 public class GitConfig extends Connector {

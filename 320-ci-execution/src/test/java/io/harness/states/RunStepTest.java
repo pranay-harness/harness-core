@@ -24,7 +24,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.refobjects.RefObject;
-import io.harness.pms.sdk.core.resolver.RefObjectUtil;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -64,7 +64,7 @@ public class RunStepTest extends CIExecutionTest {
     ambiance = Ambiance.newBuilder().addLevels(Level.newBuilder().setIdentifier("runStepId").build()).build();
     stepInfo = RunStepInfo.builder().identifier(STEP_ID).build();
     stepInputPackage = StepInputPackage.builder().build();
-    refObject = RefObjectUtil.getSweepingOutputRefObject(CALLBACK_IDS);
+    refObject = RefObjectUtils.getSweepingOutputRefObject(CALLBACK_IDS);
     Map<String, String> callbackIds = new HashMap<>();
     callbackIds.put(STEP_ID, callbackId);
     stepTaskDetails = StepTaskDetails.builder().taskIds(callbackIds).build();

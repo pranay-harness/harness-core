@@ -57,9 +57,9 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 
-@Slf4j
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@Slf4j
 public class YamlSchemaGenerator {
   JacksonClassHelper jacksonSubtypeHelper;
   SwaggerGenerator swaggerGenerator;

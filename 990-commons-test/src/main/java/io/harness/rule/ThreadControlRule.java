@@ -1,7 +1,7 @@
 package io.harness.rule;
 
 import static java.lang.Thread.activeCount;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.fail;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.TestRule;

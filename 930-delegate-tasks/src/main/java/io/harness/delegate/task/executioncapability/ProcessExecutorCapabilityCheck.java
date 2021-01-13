@@ -2,11 +2,11 @@ package io.harness.delegate.task.executioncapability;
 
 import io.harness.capability.CapabilityParameters;
 import io.harness.capability.CapabilitySubjectPermission;
+import io.harness.capability.CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder;
 import io.harness.capability.CapabilitySubjectPermission.PermissionResult;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
-import io.harness.expression.ExpressionEvaluator;
 
 import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +37,7 @@ public class ProcessExecutorCapabilityCheck implements CapabilityCheck, ProtoCap
 
   @Override
   public CapabilitySubjectPermission performCapabilityCheckWithProto(CapabilityParameters parameters) {
-    CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
+    CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
     if (parameters.getCapabilityCase() != CapabilityParameters.CapabilityCase.PROCESS_EXECUTOR_PARAMETERS) {
       return builder.permissionResult(PermissionResult.DENIED).build();
     }

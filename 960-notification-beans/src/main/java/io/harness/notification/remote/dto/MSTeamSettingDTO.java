@@ -7,9 +7,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-@EqualsAndHashCode(callSuper = true)
 @Data
 @NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class MSTeamSettingDTO extends NotificationSettingDTO {
   @Builder
   public MSTeamSettingDTO(String accountId, String recipient) {

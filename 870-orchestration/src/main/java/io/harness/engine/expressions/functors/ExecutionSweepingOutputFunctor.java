@@ -6,7 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.expression.LateBindingMap;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.sdk.core.resolver.RefObjectUtil;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 
 import lombok.Builder;
@@ -23,7 +23,7 @@ public class ExecutionSweepingOutputFunctor extends LateBindingMap {
 
   @Override
   public synchronized Object get(Object key) {
-    String json = pmsSweepingOutputService.resolve(ambiance, RefObjectUtil.getSweepingOutputRefObject((String) key));
+    String json = pmsSweepingOutputService.resolve(ambiance, RefObjectUtils.getSweepingOutputRefObject((String) key));
     if (json == null) {
       return null;
     }

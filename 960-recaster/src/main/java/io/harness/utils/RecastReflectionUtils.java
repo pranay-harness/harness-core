@@ -18,7 +18,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import org.bson.Document;
 
 public class RecastReflectionUtils {
   public static Field[] getDeclaredAndInheritedFields(final Class<?> type, final boolean returnFinalFields) {

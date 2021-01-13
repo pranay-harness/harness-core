@@ -16,10 +16,14 @@ import io.harness.execution.NodeExecution;
 import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.LateBindingMap;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.sdk.core.resolver.RefObjectUtil;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -141,7 +145,7 @@ public class NodeExecutionMap extends LateBindingMap {
     }
 
     try {
-      return jsonToObject(pmsOutcomeService.resolve(newAmbiance, RefObjectUtil.getOutcomeRefObject(key)));
+      return jsonToObject(pmsOutcomeService.resolve(newAmbiance, RefObjectUtils.getOutcomeRefObject(key)));
     } catch (OutcomeException ignored) {
       return Optional.empty();
     }
@@ -153,7 +157,8 @@ public class NodeExecutionMap extends LateBindingMap {
     }
 
     try {
-      return jsonToObject(pmsSweepingOutputService.resolve(newAmbiance, RefObjectUtil.getSweepingOutputRefObject(key)));
+      return jsonToObject(
+          pmsSweepingOutputService.resolve(newAmbiance, RefObjectUtils.getSweepingOutputRefObject(key)));
     } catch (SweepingOutputException ignored) {
       return Optional.empty();
     }

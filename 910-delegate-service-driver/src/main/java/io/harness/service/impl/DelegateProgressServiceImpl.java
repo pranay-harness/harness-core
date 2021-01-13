@@ -6,8 +6,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static java.lang.System.currentTimeMillis;
 
-import io.harness.delegate.beans.DelegateResponseData;
-import io.harness.delegate.beans.DelegateStringProgressData;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoSerializer;

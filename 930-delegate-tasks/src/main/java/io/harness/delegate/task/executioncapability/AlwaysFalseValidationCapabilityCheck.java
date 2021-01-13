@@ -3,7 +3,6 @@ package io.harness.delegate.task.executioncapability;
 import io.harness.delegate.beans.executioncapability.AlwaysFalseValidationCapability;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.expression.ExpressionEvaluator;
 
 import com.google.inject.Singleton;
 

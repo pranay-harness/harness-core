@@ -23,7 +23,7 @@ def impl_checkstyle(
             "> \"$@\"",
             "&& sed -Ei.bak 's|/private/(.*)/harness_monorepo/||g'  \"$@\"",
             "&& sed -Ei.bak 's|/tmp/(.*)/harness_monorepo/||g'  \"$@\"",
-            "&& cat \"$@\"",
+            "&& if grep -B 1 \"<error \" \"$@\"; then exit 1; fi",
         ]),
         tools = [
             checkstyle_xml,

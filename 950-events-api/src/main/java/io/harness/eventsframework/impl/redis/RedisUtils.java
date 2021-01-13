@@ -8,10 +8,13 @@ import static java.lang.Long.parseLong;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.redis.RedisConfig;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import lombok.experimental.UtilityClass;
 import org.redisson.Redisson;
 import org.redisson.api.RStream;
@@ -55,8 +58,10 @@ public class RedisUtils {
   }
 
   public StreamMessageId getStreamId(String messageId) {
-    if (messageId.equals("$"))
+    if (messageId.equals("$")) {
       return StreamMessageId.NEWEST;
+    }
+
     String[] parts = messageId.split("-");
     return new StreamMessageId(parseLong(parts[0]), parseLong(parts[1]));
   }

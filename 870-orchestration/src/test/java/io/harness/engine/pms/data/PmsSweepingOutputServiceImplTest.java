@@ -14,7 +14,7 @@ import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.resolver.GroupNotFoundException;
-import io.harness.pms.sdk.core.resolver.RefObjectUtil;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.ResolverUtils;
 import io.harness.rule.Owner;
 import io.harness.utils.AmbianceTestUtils;
@@ -139,7 +139,7 @@ public class PmsSweepingOutputServiceImplTest extends OrchestrationTestBase {
 
   private Document resolve(Ambiance ambiance, String outputName) {
     String resolvedVal =
-        pmsSweepingOutputService.resolve(ambiance, RefObjectUtil.getSweepingOutputRefObject(outputName));
+        pmsSweepingOutputService.resolve(ambiance, RefObjectUtils.getSweepingOutputRefObject(outputName));
     if (resolvedVal == null) {
       return null;
     }

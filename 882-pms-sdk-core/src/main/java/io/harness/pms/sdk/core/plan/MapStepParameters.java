@@ -9,7 +9,6 @@ public class MapStepParameters extends HashMap<String, Object> implements StepPa
   public MapStepParameters() {}
 
   public MapStepParameters(String key, Object value) {
-    super();
     put(key, value);
   }
 

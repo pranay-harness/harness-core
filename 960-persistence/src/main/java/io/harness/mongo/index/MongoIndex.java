@@ -5,7 +5,6 @@ import io.harness.mongo.IndexManagerInspectException;
 
 import com.mongodb.BasicDBObject;
 import java.util.List;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 
 public interface MongoIndex {

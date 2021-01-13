@@ -14,9 +14,6 @@ import io.harness.ngtriggers.beans.source.webhook.WebhookPayloadCondition;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
 import io.harness.ngtriggers.conditionchecker.ConditionEvaluator;
 import io.harness.ngtriggers.expressions.TriggerExpressionEvaluator;
-import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.contracts.plan.ExecutionMetadata;
-import io.harness.pms.contracts.triggers.TriggerPayload;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
@@ -27,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
 @Slf4j
-public class WebhookTriggerFilterUtil {
+public class WebhookTriggerFilterUtils {
   public boolean evaluateFilterConditions(
       WebhookPayloadData webhookPayloadData, WebhookTriggerSpec webhookTriggerConfigSpec) {
     return checkIfEventTypeMatches(webhookPayloadData.getWebhookEvent().getType(), webhookTriggerConfigSpec.getEvent())

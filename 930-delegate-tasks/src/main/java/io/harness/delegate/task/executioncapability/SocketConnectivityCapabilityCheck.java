@@ -2,12 +2,12 @@ package io.harness.delegate.task.executioncapability;
 
 import io.harness.capability.CapabilityParameters;
 import io.harness.capability.CapabilitySubjectPermission;
+import io.harness.capability.CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder;
 import io.harness.capability.CapabilitySubjectPermission.PermissionResult;
 import io.harness.capability.SocketConnectivityParameters;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SocketConnectivityExecutionCapability;
-import io.harness.expression.ExpressionEvaluator;
 
 import com.google.inject.Singleton;
 import java.io.IOException;
@@ -38,7 +38,7 @@ public class SocketConnectivityCapabilityCheck implements CapabilityCheck, Proto
 
   @Override
   public CapabilitySubjectPermission performCapabilityCheckWithProto(CapabilityParameters parameters) {
-    CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
+    CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
     if (parameters.getCapabilityCase() != CapabilityParameters.CapabilityCase.SOCKET_CONNECTIVITY_PARAMETERS) {
       return builder.permissionResult(PermissionResult.DENIED).build();
     }

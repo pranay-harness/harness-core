@@ -11,8 +11,12 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.filter.creation.FilterCreatorMergeService;
 import io.harness.pms.filter.creation.FilterCreatorMergeServiceResponse;
-import io.harness.pms.pipeline.*;
+import io.harness.pms.pipeline.CommonStepInfo;
+import io.harness.pms.pipeline.ExecutionSummaryInfo;
+import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
+import io.harness.pms.pipeline.StepCategory;
+import io.harness.pms.pipeline.StepData;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.variables.VariableCreatorMergeService;
 import io.harness.pms.variables.VariableMergeServiceResponse;
@@ -318,7 +322,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   private StepCategory calculateStepsForModuleBasedOnCategory(String category, List<StepInfo> stepInfos) {
-    List<StepInfo> filteredStepTypes = new ArrayList<StepInfo>();
+    List<StepInfo> filteredStepTypes = new ArrayList<>();
     if (!stepInfos.isEmpty()) {
       filteredStepTypes =
           stepInfos.stream()

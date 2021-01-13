@@ -1,26 +1,26 @@
 package io.harness.ng.core.invites.remote;
 
-import static io.harness.ng.core.invites.InviteOperationResponse.*;
 import static io.harness.ng.core.invites.InviteOperationResponse.USER_ALREADY_ADDED;
+import static io.harness.ng.core.invites.InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
+import static io.harness.ng.core.invites.InviteOperationResponse.USER_INVITE_RESENT;
 import static io.harness.ng.core.invites.entities.Invite.InviteType.ADMIN_INITIATED_INVITE;
 import static io.harness.rule.OwnerRule.ANKUSH;
 
-import static javax.ws.rs.core.Response.Status.*;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.eraro.ErrorCode;
 import io.harness.mongo.MongoConfig;
 import io.harness.ng.beans.PageRequest;
-import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.invites.api.InvitesService;
-import io.harness.ng.core.invites.api.impl.InvitesServiceImpl;
 import io.harness.ng.core.invites.dto.CreateInviteListDTO;
 import io.harness.ng.core.invites.dto.InviteDTO;
 import io.harness.ng.core.invites.dto.RoleDTO;
@@ -31,22 +31,16 @@ import io.harness.rule.Owner;
 import io.harness.utils.PageUtils;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Range;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import javax.ws.rs.core.Response;
-import org.apache.http.protocol.HTTP;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 
 public class InviteResourceTest extends CategoryTest {

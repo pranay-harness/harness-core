@@ -1,7 +1,6 @@
 package io.harness.delegate.beans;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptionConfig;
 
 import java.util.HashMap;

@@ -87,13 +87,11 @@ modules = [
     "//450-ce-views",
     "//460-capability",
     "//490-ce-commons",
-    "//930-delegate-tasks",
     "//950-delegate-tasks-beans",
     "//960-api-services",
     "//960-expression-service",
     "//960-recaster",
     "//970-api-services-beans",
-    "//970-atmosphere",
     "//970-grpc",
     "//970-ng-commons",
     "//980-commons",
@@ -133,15 +131,6 @@ sonarqube(
     scm_info = [":git"],
     tags = ["manual"],
     targets = [],
-)
-
-filegroup(
-    name = "checkstyle",
-    srcs = get_checkstyle_targets(modules),
-    tags = [
-        "manual",
-        "no-ide",
-    ],
 )
 
 filegroup(

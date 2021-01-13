@@ -2,6 +2,7 @@ package io.harness.pms.plan.execution;
 
 import io.harness.dto.LevelDTO;
 import io.harness.plan.Plan;
+import io.harness.plan.Plan.PlanBuilder;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.yaml.YamlUtils;
@@ -14,7 +15,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class PlanExecutionUtils {
   public Plan extractPlan(PlanCreationBlobResponse planCreationBlobResponse) {
-    Plan.PlanBuilder planBuilder = Plan.builder();
+    PlanBuilder planBuilder = Plan.builder();
     Collection<PlanNodeProto> planNodeProtoList = planCreationBlobResponse.getNodesMap().values();
     for (PlanNodeProto planNodeProto : planNodeProtoList) {
       planBuilder.node(planNodeProto);

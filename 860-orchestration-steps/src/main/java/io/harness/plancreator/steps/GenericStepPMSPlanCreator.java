@@ -11,15 +11,14 @@ import static io.harness.pms.yaml.YAMLFieldNameConstants.STEP_GROUP;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.govern.Switch;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.commons.RepairActionCode;
 import io.harness.pms.contracts.execution.failure.FailureType;
-import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.execution.utils.SkipInfoUtils;
-import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.adviser.abort.OnAbortAdviser;
 import io.harness.pms.sdk.core.adviser.abort.OnAbortAdviserParameters;
@@ -167,7 +166,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
                               retryAction.getSpecConfig()
                                   .getRetryInterval()
                                   .stream()
-                                  .map(s -> ((int) (TimeoutUtils.getTimeoutInSeconds(Timeout.fromString(s), 0))))
+                                  .map(s -> (int) TimeoutUtils.getTimeoutInSeconds(Timeout.fromString(s), 0))
                                   .collect(Collectors.toList()))
                           .build())))
                   .build());
@@ -216,6 +215,8 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
                       ManualInterventionAdviserParameters.builder().applicableFailureTypes(failureTypes).build())))
                   .build());
           break;
+        default:
+          Switch.unhandled(actionType);
       }
     }
 

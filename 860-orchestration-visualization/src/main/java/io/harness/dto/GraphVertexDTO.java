@@ -7,7 +7,6 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.execution.beans.RepresentationStrategy;
-import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.tasks.ProgressData;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

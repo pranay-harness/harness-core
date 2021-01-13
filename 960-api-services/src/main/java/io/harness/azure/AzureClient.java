@@ -5,7 +5,6 @@ import static io.harness.exception.WingsException.USER;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.azure.AzureEnvironmentType;
 import io.harness.azure.context.AzureClientContext;
 import io.harness.azure.model.AzureConfig;
 import io.harness.exception.ExceptionUtils;

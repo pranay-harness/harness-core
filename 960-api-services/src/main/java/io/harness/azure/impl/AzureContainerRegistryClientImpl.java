@@ -1,7 +1,6 @@
 package io.harness.azure.impl;
 
 import static io.harness.azure.model.AzureConstants.ACR_REGISTRY_NAME_BLANK_VALIDATION_MSG;
-import static io.harness.azure.model.AzureConstants.RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 

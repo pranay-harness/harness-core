@@ -8,6 +8,7 @@ import static io.harness.ng.core.activityhistory.dto.TimeGroupType.HOUR;
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.bucket;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
+import static org.springframework.data.mongodb.core.aggregation.BooleanOperators.And.and;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnknownEnumTypeException;
@@ -173,20 +174,19 @@ public class EntityActivitySummaryServiceImpl implements EntityActivitySummarySe
   }
 
   private And getCriteriaForSuccessFulNonHearbeatActivity() {
-    return And.and(
+    return and(
         ComparisonOperators.valueOf(ActivityHistoryEntityKeys.type).notEqualToValue(CONNECTIVITY_CHECK.toString()),
         ComparisonOperators.valueOf(ActivityHistoryEntityKeys.activityStatus).equalToValue(SUCCESS.toString()));
   }
 
   private And getCriteriaForFailedNonHearbeatActivity() {
-    return And.and(
+    return and(
         ComparisonOperators.valueOf(ActivityHistoryEntityKeys.type).notEqualToValue(CONNECTIVITY_CHECK.toString()),
         ComparisonOperators.valueOf(ActivityHistoryEntityKeys.activityStatus).equalToValue(FAILED.toString()));
   }
 
   private And getCriteriaForFailedConnectivityCheck() {
-    return And.and(
-        ComparisonOperators.valueOf(ActivityHistoryEntityKeys.type).equalToValue(CONNECTIVITY_CHECK.toString()),
+    return and(ComparisonOperators.valueOf(ActivityHistoryEntityKeys.type).equalToValue(CONNECTIVITY_CHECK.toString()),
         ComparisonOperators.valueOf(ActivityHistoryEntityKeys.activityStatus).equalToValue(FAILED.toString()));
   }
 

@@ -7,9 +7,13 @@ import static software.wings.beans.LogHelper.COMMAND_UNIT_PLACEHOLDER;
 
 import static java.util.stream.Collectors.toList;
 
-import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.CollectionUtils;
-import io.harness.delegate.*;
+import io.harness.delegate.Capability;
+import io.harness.delegate.TaskDetails;
+import io.harness.delegate.TaskLogAbstractions;
+import io.harness.delegate.TaskMode;
+import io.harness.delegate.TaskSetupAbstractions;
+import io.harness.delegate.TaskType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -35,7 +39,11 @@ import software.wings.beans.LogHelper;
 import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.collections4.MapUtils;
@@ -130,7 +138,7 @@ public class StepUtils {
             .addAllLogKeys(CollectionUtils.emptyIfNull(generateLogKeys(logAbstractionMap, units)))
             .setLogAbstractions(TaskLogAbstractions.newBuilder().putAllValues(logAbstractionMap).build())
             .setSetupAbstractions(TaskSetupAbstractions.newBuilder()
-                                      .putAllValues((MapUtils.emptyIfNull(ambiance.getSetupAbstractionsMap())))
+                                      .putAllValues(MapUtils.emptyIfNull(ambiance.getSetupAbstractionsMap()))
                                       .build());
 
     if (isNotEmpty(capabilities)) {

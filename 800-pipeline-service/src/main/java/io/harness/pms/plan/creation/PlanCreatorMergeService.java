@@ -1,7 +1,5 @@
 package io.harness.pms.plan.creation;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
 import static java.lang.String.format;
 
 import io.harness.data.structure.EmptyPredicate;
@@ -13,7 +11,7 @@ import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc.PlanCreationServiceBlockingStub;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
-import io.harness.pms.exception.PmsExceptionUtil;
+import io.harness.pms.exception.PmsExceptionUtils;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.utils.CompletableFutures;
 import io.harness.pms.yaml.YamlField;
@@ -102,7 +100,7 @@ public class PlanCreatorMergeService {
       PlanCreationBlobResponseUtils.mergeLayoutNodeInfo(finalResponseBuilder, currIterationResponse);
       if (EmptyPredicate.isNotEmpty(finalResponseBuilder.getDependenciesMap())) {
         throw new InvalidRequestException(
-            PmsExceptionUtil.getUnresolvedDependencyErrorMessage(finalResponseBuilder.getDependenciesMap().values()));
+            PmsExceptionUtils.getUnresolvedDependencyErrorMessage(finalResponseBuilder.getDependenciesMap().values()));
       }
       PlanCreationBlobResponseUtils.mergeContext(finalResponseBuilder, currIterationResponse.getContextMap());
       PlanCreationBlobResponseUtils.addDependencies(finalResponseBuilder, currIterationResponse.getDependenciesMap());

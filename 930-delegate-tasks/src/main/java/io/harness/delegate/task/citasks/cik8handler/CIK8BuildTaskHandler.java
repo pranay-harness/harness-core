@@ -6,7 +6,6 @@ package io.harness.delegate.task.citasks.cik8handler;
  */
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.beans.ci.k8s.PodStatus.Status.PENDING;
 import static io.harness.delegate.beans.ci.k8s.PodStatus.Status.RUNNING;
 import static io.harness.delegate.task.citasks.cik8handler.SecretSpecBuilder.SECRET;
 import static io.harness.govern.Switch.unhandled;

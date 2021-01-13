@@ -3,7 +3,6 @@ package io.harness.waiter;
 import static java.time.Duration.ofDays;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
@@ -12,7 +11,6 @@ import io.harness.persistence.UuidAccess;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
-import java.util.List;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;

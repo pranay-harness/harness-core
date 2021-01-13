@@ -82,7 +82,7 @@ public class K8EventHandler {
   }
 
   private LogLevel getLogLevel(String eventType) {
-    if (eventType == "WARNING") {
+    if (eventType.equals("WARNING")) {
       return LogLevel.WARN;
     }
     return LogLevel.INFO;

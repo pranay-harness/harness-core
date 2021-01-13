@@ -12,10 +12,10 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
+@EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "AppDynamicsConnectorKeys")
 @Entity(value = "connectors", noClassnameStored = true)
 @Persistent
-@EqualsAndHashCode(callSuper = true)
 @TypeAlias("io.harness.connector.entities.embedded.appdynamicsconnector.AppDynamicsConnector")
 public class AppDynamicsConnector extends Connector {
   private String username;

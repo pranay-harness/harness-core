@@ -14,7 +14,12 @@ import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 
 import com.google.common.collect.ImmutableList;
-import com.google.inject.*;
+import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 import java.util.List;
 import org.springframework.data.mongodb.core.MongoTemplate;

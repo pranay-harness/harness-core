@@ -7,7 +7,6 @@ import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import java.util.concurrent.TimeUnit;
 import org.awaitility.Awaitility;
 import org.springframework.data.mongodb.core.MongoTemplate;

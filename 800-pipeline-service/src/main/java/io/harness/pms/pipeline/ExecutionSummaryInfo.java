@@ -2,7 +2,6 @@ package io.harness.pms.pipeline;
 
 import io.harness.pms.execution.ExecutionStatus;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.Builder;

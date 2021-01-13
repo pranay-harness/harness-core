@@ -3,8 +3,6 @@ package io.harness.pms.filter.creation;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import static java.lang.String.format;
-
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
@@ -12,7 +10,7 @@ import io.harness.pms.contracts.plan.FilterCreationBlobRequest;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc.PlanCreationServiceBlockingStub;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
-import io.harness.pms.exception.PmsExceptionUtil;
+import io.harness.pms.exception.PmsExceptionUtils;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.utils.CompletableFutures;
@@ -31,7 +29,6 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -78,7 +75,7 @@ public class FilterCreatorMergeService {
   public void validateFilterCreationBlobResponse(FilterCreationBlobResponse response) throws IOException {
     if (isNotEmpty(response.getDependenciesMap())) {
       throw new InvalidRequestException(
-          PmsExceptionUtil.getUnresolvedDependencyErrorMessage(response.getDependenciesMap().values()));
+          PmsExceptionUtils.getUnresolvedDependencyErrorMessage(response.getDependenciesMap().values()));
     }
   }
 
@@ -99,7 +96,7 @@ public class FilterCreatorMergeService {
       FilterCreationBlobResponseUtils.mergeResolvedDependencies(responseBuilder, currIterResponse);
       if (isNotEmpty(responseBuilder.getDependenciesMap())) {
         throw new InvalidRequestException(
-            PmsExceptionUtil.getUnresolvedDependencyErrorMessage(responseBuilder.getDependenciesMap().values()));
+            PmsExceptionUtils.getUnresolvedDependencyErrorMessage(responseBuilder.getDependenciesMap().values()));
       }
       FilterCreationBlobResponseUtils.mergeDependencies(responseBuilder, currIterResponse);
       FilterCreationBlobResponseUtils.updateStageCount(responseBuilder, currIterResponse);

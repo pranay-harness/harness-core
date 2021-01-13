@@ -115,7 +115,7 @@ public class GithubDTOToEntity extends ConnectorDTOToEntityMapper<GithubConnecto
         return GithubAppApiAccess.builder()
             .applicationId(githubAppSpecDTO.getApplicationId())
             .installationId(githubAppSpecDTO.getInstallationId())
-            .privateKeyRef(SecretRefHelper.getSecretConfigString((githubAppSpecDTO.getPrivateKeyRef())))
+            .privateKeyRef(SecretRefHelper.getSecretConfigString(githubAppSpecDTO.getPrivateKeyRef()))
             .build();
       default:
         throw new UnknownEnumTypeException(

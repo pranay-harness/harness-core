@@ -20,8 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class ConnectorActivityServiceImpl implements ConnectorActivityService {
-  public final static String CREATION_DESCRIPTION = "Connector Created";
-  public final static String UPDATE_DESCRIPTION = "Connector Updated";
+  public static final String CREATION_DESCRIPTION = "Connector Created";
+  public static final String UPDATE_DESCRIPTION = "Connector Updated";
   private NGActivityService ngActivityService;
 
   @Override

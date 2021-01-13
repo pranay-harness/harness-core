@@ -1,7 +1,5 @@
 package io.harness.secrets.remote;
 
-import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
-
 import io.harness.NGCommonEntityConstants;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.ng.core.dto.ResponseDTO;

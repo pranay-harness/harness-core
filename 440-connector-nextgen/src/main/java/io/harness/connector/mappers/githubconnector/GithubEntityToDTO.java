@@ -28,6 +28,7 @@ import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretRefHelper;
+import io.harness.govern.Switch;
 
 public class GithubEntityToDTO extends ConnectorEntityToDTOMapper<GithubConnectorDTO, GithubConnector> {
   @Override
@@ -65,6 +66,9 @@ public class GithubEntityToDTO extends ConnectorEntityToDTOMapper<GithubConnecto
         GithubHttpCredentialsSpecDTO githubHttpCredentialsSpecDTO = getHttpCredentialsSpecDTO(type, auth);
         githubCredentialsDTO =
             GithubHttpCredentialsDTO.builder().type(type).httpCredentialsSpec(githubHttpCredentialsSpecDTO).build();
+        break;
+      default:
+        Switch.unhandled(authType);
     }
     return GithubAuthenticationDTO.builder().authType(authType).credentials(githubCredentialsDTO).build();
   }
@@ -96,6 +100,9 @@ public class GithubEntityToDTO extends ConnectorEntityToDTOMapper<GithubConnecto
                 .username(githubUsernamePassword.getUsername())
                 .usernameRef(usernameRef)
                 .build();
+        break;
+      default:
+        Switch.unhandled(type);
     }
     return githubHttpCredentialsSpecDTO;
   }
@@ -117,6 +124,9 @@ public class GithubEntityToDTO extends ConnectorEntityToDTOMapper<GithubConnecto
         apiAccessSpecDTO = GithubTokenSpecDTO.builder()
                                .tokenRef(SecretRefHelper.createSecretRef(githubTokenApiAccess.getTokenRef()))
                                .build();
+        break;
+      default:
+        Switch.unhandled(apiAccessType);
     }
     return GithubApiAccessDTO.builder().type(apiAccessType).spec(apiAccessSpecDTO).build();
   }

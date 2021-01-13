@@ -123,7 +123,7 @@ public class PmsSdkGrpcModule extends AbstractModule {
     String authorityToUse = clientConfig.getAuthority();
     Channel channel;
 
-    if (("ONPREM".equals(deployMode) || "KUBERNETES_ONPREM".equals(deployMode))) {
+    if ("ONPREM".equals(deployMode) || "KUBERNETES_ONPREM".equals(deployMode)) {
       channel = NettyChannelBuilder.forTarget(clientConfig.getTarget())
                     .overrideAuthority(authorityToUse)
                     .usePlaintext()
