@@ -1,4 +1,4 @@
-package io.harness.connector.mappers;
+package io.harness.encryption;
 
 import io.harness.encryption.SecretRefData;
 

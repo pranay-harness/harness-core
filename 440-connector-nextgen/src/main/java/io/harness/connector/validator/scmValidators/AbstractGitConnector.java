@@ -1,14 +1,16 @@
-package io.harness.connector.validator;
+package io.harness.connector.validator.scmValidators;
 
+import static software.wings.beans.TaskType.NG_GIT_COMMAND;
+
+import io.harness.connector.validator.AbstractConnectorValidator;
+import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectivityStatus;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
-import io.harness.delegate.beans.connector.ConnectorValidationResult.ConnectorValidationResultBuilder;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
-import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatus;
 import io.harness.delegate.beans.git.GitCommandParams;
 import io.harness.delegate.beans.git.GitCommandType;
 import io.harness.delegate.task.TaskParameters;
@@ -18,56 +20,11 @@ import io.harness.exception.UnknownEnumTypeException;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import java.util.Collections;
 import java.util.Objects;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-@Singleton
-public class GitConnectorValidator extends AbstractConnectorValidator {
+public abstract class AbstractGitConnector extends AbstractConnectorValidator {
   @Inject NGErrorHelper ngErrorHelper;
-
-  private void validateFieldsPresent(GitConfigDTO gitConfig) {
-    switch (gitConfig.getGitAuthType()) {
-      case HTTP:
-        GitHTTPAuthenticationDTO gitAuthenticationDTO = (GitHTTPAuthenticationDTO) gitConfig.getGitAuth();
-        validateRequiredFieldsPresent(gitAuthenticationDTO.getPasswordRef(), gitConfig.getUrl(),
-            gitAuthenticationDTO.getUsername(), gitConfig.getGitConnectionType(), gitConfig.getBranchName());
-        break;
-      case SSH:
-        throw new InvalidRequestException("Not implemented");
-      default:
-        throw new UnknownEnumTypeException("Git Authentication Type",
-            gitConfig.getGitAuthType() == null ? null : gitConfig.getGitAuthType().getDisplayName());
-    }
-  }
-
-  private ConnectorValidationResult buildConnectorValidationResult(
-      GitCommandExecutionResponse gitCommandExecutionResponse) {
-    String delegateId = null;
-    if (gitCommandExecutionResponse.getDelegateMetaInfo() != null) {
-      delegateId = gitCommandExecutionResponse.getDelegateMetaInfo().getId();
-    }
-    ConnectorValidationResultBuilder validationResultBuilder =
-        ConnectorValidationResult.builder().delegateId(delegateId).testedAt(System.currentTimeMillis());
-    if (gitCommandExecutionResponse != null
-        && GitCommandStatus.SUCCESS == gitCommandExecutionResponse.getGitCommandStatus()) {
-      validationResultBuilder.status(ConnectivityStatus.SUCCESS);
-    } else {
-      String errorMessage = gitCommandExecutionResponse.getErrorMessage();
-      return ConnectorValidationResult.builder()
-          .status(ConnectivityStatus.FAILURE)
-          .errorSummary(ngErrorHelper.getErrorSummary(errorMessage))
-          .errors(Collections.singletonList(ngErrorHelper.createErrorDetail(errorMessage)))
-          .build();
-    }
-    return validationResultBuilder.build();
-  }
-
-  private void validateRequiredFieldsPresent(Object... fields) {
-    Lists.newArrayList(fields).forEach(field -> Objects.requireNonNull(field, "One of the required fields is null."));
-  }
 
   @Override
   public <T extends ConnectorConfigDTO> TaskParameters getTaskParameters(
@@ -82,15 +39,57 @@ public class GitConnectorValidator extends AbstractConnectorValidator {
         .build();
   }
 
-  @Override
-  public String getTaskType() {
-    return "NG_GIT_COMMAND";
-  }
+  public abstract GitConfigDTO getGitConfigFromConnectorConfig(ConnectorConfigDTO connectorConfig);
 
   @Override
+  public String getTaskType() {
+    return NG_GIT_COMMAND.name();
+  }
+
+  public void validateFieldsPresent(GitConfigDTO gitConfig) {
+    switch (gitConfig.getGitAuthType()) {
+      case HTTP:
+        GitHTTPAuthenticationDTO gitAuthenticationDTO = (GitHTTPAuthenticationDTO) gitConfig.getGitAuth();
+        validateRequiredFieldsPresent(gitAuthenticationDTO.getPasswordRef(), gitConfig.getUrl(),
+            gitAuthenticationDTO.getUsername(), gitConfig.getGitConnectionType());
+        break;
+      case SSH:
+        throw new InvalidRequestException("Not implemented");
+      default:
+        throw new UnknownEnumTypeException("Git Authentication Type",
+            gitConfig.getGitAuthType() == null ? null : gitConfig.getGitAuthType().getDisplayName());
+    }
+  }
+
+  public ConnectorValidationResult buildConnectorValidationResult(
+      GitCommandExecutionResponse gitCommandExecutionResponse) {
+    String delegateId = null;
+    if (gitCommandExecutionResponse.getDelegateMetaInfo() != null) {
+      delegateId = gitCommandExecutionResponse.getDelegateMetaInfo().getId();
+    }
+    ConnectorValidationResult.ConnectorValidationResultBuilder validationResultBuilder =
+        ConnectorValidationResult.builder().delegateId(delegateId).testedAt(System.currentTimeMillis());
+    if (GitCommandExecutionResponse.GitCommandStatus.SUCCESS == gitCommandExecutionResponse.getGitCommandStatus()) {
+      validationResultBuilder.status(ConnectivityStatus.SUCCESS);
+    } else {
+      String errorMessage = gitCommandExecutionResponse.getErrorMessage();
+      return ConnectorValidationResult.builder()
+          .status(ConnectivityStatus.FAILURE)
+          .errorSummary(ngErrorHelper.getErrorSummary(errorMessage))
+          .errors(Collections.singletonList(ngErrorHelper.createErrorDetail(errorMessage)))
+          .build();
+    }
+    return validationResultBuilder.build();
+  }
+
+  private void validateRequiredFieldsPresent(Object... fields) {
+    Lists.newArrayList(fields).forEach(field -> Objects.requireNonNull(field, "One of the required field is empty."));
+  }
+
   public ConnectorValidationResult validate(
-      ConnectorConfigDTO gitConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    validateFieldsPresent((GitConfigDTO) gitConfig);
+      ConnectorConfigDTO connectorConfigDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    final GitConfigDTO gitConfig = getGitConfigFromConnectorConfig(connectorConfigDTO);
+    validateFieldsPresent(gitConfig);
     GitCommandExecutionResponse gitCommandExecutionResponse = (GitCommandExecutionResponse) super.validateConnector(
         gitConfig, accountIdentifier, orgIdentifier, projectIdentifier);
     return buildConnectorValidationResult(gitCommandExecutionResponse);

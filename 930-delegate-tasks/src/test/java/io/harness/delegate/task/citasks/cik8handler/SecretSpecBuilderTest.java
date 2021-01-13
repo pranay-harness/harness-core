@@ -13,7 +13,6 @@ import static junit.framework.TestCase.assertNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -39,6 +38,7 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthent
 import io.harness.delegate.task.citasks.cik8handler.helper.ConnectorEnvVariablesHelper;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
+import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.rule.Owner;
@@ -94,7 +94,7 @@ public class SecretSpecBuilderTest extends CategoryTest {
 
   private GitConfigDTO getGitConfigWithSshKeys() {
     GitSSHAuthenticationDTO gitSSHAuthenticationDTO =
-        GitSSHAuthenticationDTO.builder().encryptedSshKey(encryptedKey).build();
+        GitSSHAuthenticationDTO.builder().encryptedSshKey(SecretRefHelper.createSecretRef(encryptedKey)).build();
     return GitConfigDTO.builder()
         .url(gitRepoUrl)
         .branchName("master")

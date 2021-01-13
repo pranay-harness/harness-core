@@ -2,8 +2,8 @@ package io.harness.connector.mappers.splunkconnectormapper;
 
 import io.harness.connector.entities.embedded.splunkconnector.SplunkConnector;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
-import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
+import io.harness.encryption.SecretRefHelper;
 
 import com.google.inject.Singleton;
 

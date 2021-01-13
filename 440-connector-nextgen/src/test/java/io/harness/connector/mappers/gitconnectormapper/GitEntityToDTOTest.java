@@ -17,6 +17,7 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
 import io.harness.encryption.Scope;
+import io.harness.encryption.SecretRefHelper;
 import io.harness.rule.Owner;
 
 import org.junit.Before;
@@ -93,7 +94,7 @@ public class GitEntityToDTOTest extends CategoryTest {
     assertThat(gitConfigDTO.getGitSyncConfig().isSyncEnabled()).isEqualTo(true);
     assertThat(gitConfigDTO.getGitSyncConfig().getCustomCommitAttributes()).isEqualTo(customCommitAttributes);
     GitSSHAuthenticationDTO gitAuthentication = (GitSSHAuthenticationDTO) gitConfigDTO.getGitAuth();
-    assertThat(gitAuthentication.getEncryptedSshKey()).isEqualTo(sshKeyReference);
+    assertThat(gitAuthentication.getEncryptedSshKey()).isEqualTo(SecretRefHelper.createSecretRef(sshKeyReference));
     assertThat(gitConfigDTO.getUrl()).isEqualTo(url);
     assertThat(gitConfigDTO.getGitConnectionType()).isEqualTo(ACCOUNT);
   }

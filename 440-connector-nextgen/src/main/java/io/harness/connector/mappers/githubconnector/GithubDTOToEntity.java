@@ -1,6 +1,5 @@
 package io.harness.connector.mappers.githubconnector;
 
-import io.harness.connector.ConnectorCategory;
 import io.harness.connector.entities.embedded.githubconnector.GithubApiAccess;
 import io.harness.connector.entities.embedded.githubconnector.GithubAppApiAccess;
 import io.harness.connector.entities.embedded.githubconnector.GithubAuthentication;
@@ -12,7 +11,6 @@ import io.harness.connector.entities.embedded.githubconnector.GithubTokenApiAcce
 import io.harness.connector.entities.embedded.githubconnector.GithubUsernamePassword;
 import io.harness.connector.entities.embedded.githubconnector.GithubUsernameToken;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
-import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessSpecDTO;
@@ -28,10 +26,8 @@ import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
 import io.harness.encryption.SecretRefData;
+import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.UnknownEnumTypeException;
-
-import java.util.Collections;
-import java.util.List;
 
 public class GithubDTOToEntity extends ConnectorDTOToEntityMapper<GithubConnectorDTO, GithubConnector> {
   @Override
