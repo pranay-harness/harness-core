@@ -44,6 +44,7 @@ import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 
 @Slf4j
 public class DataCollectionTaskServiceImpl implements DataCollectionTaskService {
@@ -127,8 +128,15 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
       updateOperations.set(DataCollectionTaskKeys.stacktrace, result.getStacktrace());
     }
     Query<DataCollectionTask> query = hPersistence.createQuery(DataCollectionTask.class)
-                                          .filter(DataCollectionTaskKeys.uuid, result.getDataCollectionTaskId());
-    hPersistence.update(query, updateOperations);
+                                          .filter(DataCollectionTaskKeys.uuid, result.getDataCollectionTaskId())
+                                          .filter(DataCollectionTaskKeys.status, DataCollectionExecutionStatus.RUNNING);
+    UpdateResults updateResults = hPersistence.update(query, updateOperations);
+    if (updateResults.getUpdatedCount() == 0) {
+      // https://harness.atlassian.net/browse/CVNG-1601
+      log.info("Task is not in running state. Skipping the update {}", result);
+      throw new IllegalStateException(
+          "Task is not in running state. Skipping the update. Most likely previous updateStatus call succeeded.");
+    }
     DataCollectionTask dataCollectionTask = getDataCollectionTask(result.getDataCollectionTaskId());
     if (result.getStatus() == DataCollectionExecutionStatus.SUCCESS) {
       // TODO: make this an atomic operation

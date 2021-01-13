@@ -151,14 +151,24 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
       log.info("Updated task status to success.");
 
     } catch (Exception e) {
-      log.error("Perpetual task failed with exception", e);
-      DataCollectionTaskResult result = DataCollectionTaskResult.builder()
-                                            .dataCollectionTaskId(dataCollectionTask.getUuid())
-                                            .status(FAILED)
-                                            .exception(ExceptionUtils.getMessage(e))
-                                            .stacktrace(ExceptionUtils.getStackTrace(e))
-                                            .build();
+      updateStatusWithException(taskParams, dataCollectionTask, e);
+    }
+  }
+
+  private void updateStatusWithException(
+      DataCollectionPerpetualTaskParams taskParams, DataCollectionTaskDTO dataCollectionTask, Exception e) {
+    DataCollectionTaskResult result = DataCollectionTaskResult.builder()
+                                          .dataCollectionTaskId(dataCollectionTask.getUuid())
+                                          .status(FAILED)
+                                          .exception(ExceptionUtils.getMessage(e))
+                                          .stacktrace(ExceptionUtils.getStackTrace(e))
+                                          .build();
+    log.error("Data collection task failed with exception Result: {} exception: {}", result, e);
+    try {
       cvngRequestExecutor.execute(cvNextGenServiceClient.updateTaskStatus(taskParams.getAccountId(), result));
+    } catch (Exception exceptionOnExecute) {
+      // ignore
+      log.error("status Update call failed with {}", exceptionOnExecute);
     }
   }
 
