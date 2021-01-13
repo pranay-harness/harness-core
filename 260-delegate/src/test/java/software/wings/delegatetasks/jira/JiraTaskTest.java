@@ -32,7 +32,10 @@ import net.rcarz.jiraclient.Issue.FluentCreate;
 import net.rcarz.jiraclient.Issue.FluentUpdate;
 import net.rcarz.jiraclient.JiraClient;
 import net.rcarz.jiraclient.JiraException;
+import net.rcarz.jiraclient.RestException;
 import net.rcarz.jiraclient.TimeTracking;
+import org.apache.http.Header;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -41,6 +44,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -65,6 +69,11 @@ public class JiraTaskTest extends CategoryTest {
 
   private JiraConfig jiraConfig =
       JiraConfig.builder().baseUrl(BASE_URL).username("username").password(new char['p']).build();
+
+  @Before
+  public void initMocks() {
+    MockitoAnnotations.initMocks(this);
+  }
 
   @Test
   @Owner(developers = AGORODETKI)
@@ -193,6 +202,53 @@ public class JiraTaskTest extends CategoryTest {
     System.setProperty("http.proxyPassword", "user");
     JiraClient jiraClient = jiraTask.getJiraClient(jiraTaskParameters);
     assertThat(jiraClient.getRestClient().getHttpClient()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category({UnitTests.class})
+  public void shouldThrowProxyAuthErrorOnValidateCredentials() {
+    JiraTaskParameters jiraTaskParameters = getJiraTaskParametersForAUTH();
+
+    System.setProperty("http.proxyHost", "testProxyHost");
+    System.setProperty("http.proxyPort", "80");
+    System.setProperty("http.proxyUser", "user");
+    System.setProperty("http.proxyPassword", "user");
+
+    Mockito
+        .doAnswer(invocation -> {
+          throw new JiraException("", new RestException("Proxy Authentication Required", 407, "", new Header['a']));
+        })
+        .when(encryptionService)
+        .decrypt(jiraConfig, jiraTaskParameters.getEncryptionDetails(), false);
+
+    JiraExecutionData jiraExecutionData = (JiraExecutionData) jiraTask.validateCredentials(jiraTaskParameters);
+    assertThat(jiraExecutionData.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(jiraExecutionData.getErrorMessage())
+        .isEqualTo(
+            "Failed to fetch projects during credential validation. Reason: Proxy Authentication Required. Error Code: 407");
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category({UnitTests.class})
+  public void shouldThrowProxyAuthErrorOnGetProjects() {
+    JiraTaskParameters jiraTaskParameters = getJiraTaskParametersForAUTH();
+
+    System.setProperty("http.proxyHost", "testProxyHost");
+    System.setProperty("http.proxyPort", "80");
+    System.setProperty("http.proxyUser", "user");
+    System.setProperty("http.proxyPassword", "user");
+
+    Mockito
+        .doAnswer(invocation -> { throw new RestException("Proxy Authentication Required", 407, "", new Header['a']); })
+        .when(encryptionService)
+        .decrypt(jiraConfig, jiraTaskParameters.getEncryptionDetails(), false);
+
+    JiraExecutionData jiraExecutionData = (JiraExecutionData) jiraTask.getProjects(jiraTaskParameters);
+    assertThat(jiraExecutionData.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(jiraExecutionData.getErrorMessage())
+        .isEqualTo("Failed to fetch projects from Jira server. Reason: Proxy Authentication Required. Error Code: 407");
   }
 
   private JiraTaskParameters getJiraTaskParametersForAUTH() {
