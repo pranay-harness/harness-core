@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.pms.sdk.registries.registrar.OrchestrationFieldRegistrar;
+import io.harness.pms.sdk.core.registries.registrar.OrchestrationFieldRegistrar;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
