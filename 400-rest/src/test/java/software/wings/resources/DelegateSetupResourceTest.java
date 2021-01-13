@@ -558,7 +558,7 @@ public class DelegateSetupResourceTest {
     try (OutputStreamWriter outputStreamWriter = new FileWriter(file)) {
       IOUtils.write("Test", outputStreamWriter);
     }
-    when(delegateService.downloadKubernetes(anyString(), anyString(), anyString(), anyString(), anyString(), false))
+    when(delegateService.downloadKubernetes(anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(file);
     Response restResponse = RESOURCES.client()
                                 .target("/setup/delegates/kubernetes?accountId=" + ACCOUNT_ID + "&delegateName="
@@ -569,7 +569,7 @@ public class DelegateSetupResourceTest {
 
     verify(downloadTokenService, atLeastOnce()).validateDownloadToken("delegate." + ACCOUNT_ID, "token");
     verify(delegateService, atLeastOnce())
-        .downloadKubernetes(anyString(), anyString(), anyString(), anyString(), anyString(), false);
+        .downloadKubernetes(anyString(), anyString(), anyString(), anyString(), anyString());
 
     assertThat(restResponse.getHeaderString("Content-Disposition"))
         .isEqualTo("attachment; filename=" + DelegateServiceImpl.KUBERNETES_DELEGATE + ".tar.gz");
