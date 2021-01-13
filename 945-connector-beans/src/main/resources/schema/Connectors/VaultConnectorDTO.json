@@ -6,6 +6,13 @@
     {
       "type": "object",
       "properties": {
+        "accessType": {
+          "type": "string",
+          "enum": [
+            "APP_ROLE",
+            "TOKEN"
+          ]
+        },
         "appRoleId": {
           "type": "string"
         },
@@ -21,9 +28,12 @@
         "readOnly": {
           "type": "boolean"
         },
-        "renewIntervalHours": {
+        "renewalIntervalMinutes": {
           "type": "integer",
-          "format": "int32"
+          "format": "int64"
+        },
+        "secretEngineManuallyConfigured": {
+          "type": "boolean"
         },
         "secretEngineName": {
           "type": "string"

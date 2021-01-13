@@ -1,12 +1,12 @@
 package io.harness.callgraph.instr;
 
 import java.lang.instrument.Instrumentation;
-import java.util.List;
+import java.util.Set;
 
 public abstract class Instr {
-  protected final List<String> includes;
+  protected final Set<String> includes;
 
-  protected Instr(List<String> includes) {
+  protected Instr(Set<String> includes) {
     this.includes = includes;
   }
 
