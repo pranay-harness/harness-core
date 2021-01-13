@@ -237,8 +237,10 @@ public class ConnectorUtils {
           (GitlabHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
       encryptedDataDetails =
           secretManagerClientService.getEncryptionDetails(ngAccess, gitlabHttpCredentialsDTO.getHttpCredentialsSpec());
-      encryptedDataDetails.addAll(
-          secretManagerClientService.getEncryptionDetails(ngAccess, gitConfigDTO.getApiAccess().getSpec()));
+      if (gitConfigDTO.getApiAccess() != null && gitConfigDTO.getApiAccess().getSpec() != null) {
+        encryptedDataDetails.addAll(
+            secretManagerClientService.getEncryptionDetails(ngAccess, gitConfigDTO.getApiAccess().getSpec()));
+      }
       return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
     } else {
       throw new CIStageExecutionException(
@@ -256,8 +258,10 @@ public class ConnectorUtils {
           (GithubHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
       encryptedDataDetails =
           secretManagerClientService.getEncryptionDetails(ngAccess, githubHttpCredentialsDTO.getHttpCredentialsSpec());
-      encryptedDataDetails.addAll(
-          secretManagerClientService.getEncryptionDetails(ngAccess, gitConfigDTO.getApiAccess().getSpec()));
+      if (gitConfigDTO.getApiAccess() != null && gitConfigDTO.getApiAccess().getSpec() != null) {
+        encryptedDataDetails.addAll(
+            secretManagerClientService.getEncryptionDetails(ngAccess, gitConfigDTO.getApiAccess().getSpec()));
+      }
       return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
     } else {
       throw new CIStageExecutionException(
@@ -274,9 +278,10 @@ public class ConnectorUtils {
           (BitbucketHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
       encryptedDataDetails = secretManagerClientService.getEncryptionDetails(
           ngAccess, bitbucketHttpCredentialsDTO.getHttpCredentialsSpec());
-      encryptedDataDetails.addAll(
-          secretManagerClientService.getEncryptionDetails(ngAccess, gitConfigDTO.getApiAccess().getSpec()));
-
+      if (gitConfigDTO.getApiAccess() != null && gitConfigDTO.getApiAccess().getSpec() != null) {
+        encryptedDataDetails.addAll(
+            secretManagerClientService.getEncryptionDetails(ngAccess, gitConfigDTO.getApiAccess().getSpec()));
+      }
       return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
     } else {
       throw new CIStageExecutionException(
