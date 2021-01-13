@@ -1,6 +1,4 @@
-package io.harness.beans.serializer;
-
-import io.harness.yaml.core.timeout.Timeout;
+package io.harness.yaml.core.timeout;
 
 import lombok.experimental.UtilityClass;
 

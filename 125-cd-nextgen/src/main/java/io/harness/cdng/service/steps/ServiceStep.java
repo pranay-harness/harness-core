@@ -19,6 +19,7 @@ import io.harness.cdng.manifest.state.ManifestStep;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestsOutcome;
 import io.harness.cdng.service.beans.ServiceConfig;
+import io.harness.cdng.service.beans.ServiceConfigOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome.ArtifactsOutcomeBuilder;
@@ -165,14 +166,20 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
         : serviceStepParameters.getService();
     serviceEntityService.upsert(getServiceEntity(serviceConfig, ambiance));
 
+    ServiceOutcome serviceOutcome =
+        createServiceOutcome(ambiance, serviceConfig, serviceStepPassThroughData.getStepOutcomes(),
+            Integer.parseInt(AmbianceHelper.getExpressionFunctorToken(ambiance)));
     return StepResponse.builder()
-        .stepOutcome(
-            StepResponse.StepOutcome.builder()
-                .name(OutcomeExpressionConstants.SERVICE)
-                .outcome(createServiceOutcome(ambiance, serviceConfig, serviceStepPassThroughData.getStepOutcomes(),
-                    Integer.parseInt(AmbianceHelper.getExpressionFunctorToken(ambiance))))
-                .group(StepOutcomeGroup.STAGE.name())
-                .build())
+        .stepOutcome(StepResponse.StepOutcome.builder()
+                         .name(OutcomeExpressionConstants.SERVICE)
+                         .outcome(serviceOutcome)
+                         .group(StepOutcomeGroup.STAGE.name())
+                         .build())
+        .stepOutcome(StepResponse.StepOutcome.builder()
+                         .name(YamlTypes.SERVICE_CONFIG)
+                         .outcome(ServiceConfigOutcome.builder().service(serviceOutcome).build())
+                         .group(StepOutcomeGroup.STAGE.name())
+                         .build())
         .status(Status.SUCCEEDED)
         .build();
   }

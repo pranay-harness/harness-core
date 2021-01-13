@@ -75,7 +75,7 @@ public class YamlNode {
 
   private YamlField getMatchingFieldNameFromParent(YamlNode parent, Set<String> fieldNames) {
     for (YamlField field : parent.fields()) {
-      if (fieldNames.contains(field.getName())) {
+      if (fieldNames.contains(field.getName()) && !field.getNode().getCurrJsonNode().isNull()) {
         return field;
       }
     }

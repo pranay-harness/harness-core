@@ -13,6 +13,7 @@ import io.harness.cdng.infra.beans.InfraUseFromStage;
 import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
 import io.harness.cdng.infra.steps.InfraStepParameters;
 import io.harness.cdng.service.beans.ServiceConfig;
+import io.harness.cdng.service.beans.ServiceConfigOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome;
 import io.harness.cdng.service.beans.ServiceUseFromStage;
@@ -44,6 +45,7 @@ public class NGMorphiaRegistrar implements MorphiaRegistrar {
     h.put("cdng.artifact.bean.yaml.SidecarArtifact", SidecarArtifact.class);
     h.put("cdng.artifact.bean.DockerArtifactOutcome", DockerArtifactOutcome.class);
     h.put("cdng.service.beans.ServiceOutcome", ServiceOutcome.class);
+    h.put("cdng.service.beans.ServiceConfigOutcome", ServiceConfigOutcome.class);
     h.put("cdng.service.beans.ServiceOutcome$ArtifactsOutcome", ArtifactsOutcome.class);
     h.put("cdng.manifest.yaml.ManifestsOutcome", ArtifactsOutcome.class);
     h.put("cdng.service.beans.StageOverridesConfig", StageOverridesConfig.class);
