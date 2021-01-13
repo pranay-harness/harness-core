@@ -1,6 +1,8 @@
 package io.harness.engine.executions.node;
 
 import io.harness.engine.OrchestrationEngine;
+import io.harness.pms.contracts.plan.AbortExecutionRequest;
+import io.harness.pms.contracts.plan.AbortExecutionResponse;
 import io.harness.pms.contracts.plan.AccumulateResponsesRequest;
 import io.harness.pms.contracts.plan.AccumulateResponsesResponse;
 import io.harness.pms.contracts.plan.AddExecutableResponseRequest;
@@ -112,6 +114,14 @@ public class PmsNodeExecutionGrpcSevice extends NodeExecutionProtoServiceImplBas
         request.getEventType(), request.getEventNotifyId(), request.getFailureInfo());
 
     responseObserver.onNext(EventErrorResponse.newBuilder().build());
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void abortExecution(AbortExecutionRequest request, StreamObserver<AbortExecutionResponse> responseObserver) {
+    pmsNodeExecutionService.abortExecution(request.getNodeExecution(), request.getStatus());
+
+    responseObserver.onNext(AbortExecutionResponse.newBuilder().build());
     responseObserver.onCompleted();
   }
 }

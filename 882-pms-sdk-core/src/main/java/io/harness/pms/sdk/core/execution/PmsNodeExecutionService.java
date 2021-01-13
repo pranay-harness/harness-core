@@ -43,4 +43,6 @@ public interface PmsNodeExecutionService {
       @NonNull String nodeExecutionId, @NonNull String notifyId, AdviserResponse adviserResponse);
 
   void handleEventError(NodeExecutionEventType eventType, String eventNotifyId, FailureInfo failureInfo);
+
+  void abortExecution(NodeExecutionProto nodeExecution, Status finalStatus);
 }

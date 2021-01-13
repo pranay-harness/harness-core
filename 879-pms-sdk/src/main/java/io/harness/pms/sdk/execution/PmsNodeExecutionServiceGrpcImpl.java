@@ -11,6 +11,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
+import io.harness.pms.contracts.plan.AbortExecutionRequest;
 import io.harness.pms.contracts.plan.AccumulateResponsesRequest;
 import io.harness.pms.contracts.plan.AccumulateResponsesResponse;
 import io.harness.pms.contracts.plan.AddExecutableResponseRequest;
@@ -32,14 +33,12 @@ import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.io.ResponseDataMapper;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
-import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.NonNull;
@@ -150,5 +149,11 @@ public class PmsNodeExecutionServiceGrpcImpl implements PmsNodeExecutionService 
       return null;
     }
     return JsonOrchestrationUtils.asObject(stepParameters, step.getStepParametersClass());
+  }
+
+  @Override
+  public void abortExecution(NodeExecutionProto nodeExecution, Status finalStatus) {
+    nodeExecutionProtoServiceBlockingStub.abortExecution(
+        AbortExecutionRequest.newBuilder().setNodeExecution(nodeExecution).setStatus(finalStatus).build());
   }
 }
