@@ -51,24 +51,36 @@ public class NodeExecutionStatusUpdateEventHandlerV2 implements AsyncOrchestrati
 
       Map<String, GraphVertex> graphVertexMap = orchestrationGraph.getAdjacencyList().getGraphVertexMap();
       if (graphVertexMap.containsKey(nodeExecutionId)) {
-        log.info("Updating graph vertex for [{}] with status [{}]. PlanExecutionId: [{}]", nodeExecutionId,
-            nodeExecution.getStatus(), planExecutionId);
-        graphVertexMap.computeIfPresent(nodeExecutionId, (key, prevValue) -> {
-          GraphVertex newValue = GraphVertexConverter.convertFrom(nodeExecution);
-          if (StatusUtils.isFinalStatus(newValue.getStatus())) {
-            newValue.setOutcomeDocuments(PmsOutcomeMapper.convertJsonToDocument(
-                pmsOutcomeService.findAllByRuntimeId(planExecutionId, nodeExecutionId)));
-          }
-          return newValue;
-        });
+        if (nodeExecution.isOldRetry()) {
+          log.info("Removing graph vertex with id [{}] and status [{}]. PlanExecutionId: [{}]", nodeExecutionId,
+              nodeExecution.getStatus(), planExecutionId);
+          orchestrationAdjacencyListGenerator.removeVertex(orchestrationGraph.getAdjacencyList(), nodeExecution);
+        } else {
+          updateGraphVertex(graphVertexMap, nodeExecution, planExecutionId);
+        }
       } else {
         log.info("Adding graph vertex with id [{}] and status [{}]. PlanExecutionId: [{}]", nodeExecutionId,
             nodeExecution.getStatus(), planExecutionId);
-        orchestrationAdjacencyListGenerator.populateAdjacencyList(orchestrationGraph.getAdjacencyList(), nodeExecution);
+        orchestrationAdjacencyListGenerator.addVertex(orchestrationGraph.getAdjacencyList(), nodeExecution);
       }
       graphGenerationService.cacheOrchestrationGraph(orchestrationGraph);
     } catch (Exception e) {
       log.error("[{}] event failed for [{}] for plan [{}]", event.getEventType(), nodeExecutionId, planExecutionId, e);
     }
+  }
+
+  private void updateGraphVertex(
+      Map<String, GraphVertex> graphVertexMap, NodeExecution nodeExecution, String planExecutionId) {
+    String nodeExecutionId = nodeExecution.getUuid();
+    log.info("Updating graph vertex for [{}] with status [{}]. PlanExecutionId: [{}]", nodeExecutionId,
+        nodeExecution.getStatus(), planExecutionId);
+    graphVertexMap.computeIfPresent(nodeExecutionId, (key, prevValue) -> {
+      GraphVertex newValue = GraphVertexConverter.convertFrom(nodeExecution);
+      if (StatusUtils.isFinalStatus(newValue.getStatus())) {
+        newValue.setOutcomeDocuments(PmsOutcomeMapper.convertJsonToDocument(
+            pmsOutcomeService.findAllByRuntimeId(planExecutionId, nodeExecutionId)));
+      }
+      return newValue;
+    });
   }
 }

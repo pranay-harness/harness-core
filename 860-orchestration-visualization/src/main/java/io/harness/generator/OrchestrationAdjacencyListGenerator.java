@@ -53,12 +53,11 @@ public class OrchestrationAdjacencyListGenerator {
     nodeExecutions.sort(Comparator.comparing(NodeExecution::getCreatedAt));
 
     for (NodeExecution nodeExecution : nodeExecutions) {
-      populateAdjacencyList(adjacencyListInternal, nodeExecution);
+      addVertex(adjacencyListInternal, nodeExecution);
     }
   }
 
-  public void populateAdjacencyList(
-      OrchestrationAdjacencyListInternal adjacencyListInternal, NodeExecution nodeExecution) {
+  public void addVertex(OrchestrationAdjacencyListInternal adjacencyListInternal, NodeExecution nodeExecution) {
     Map<String, GraphVertex> graphVertexMap = adjacencyListInternal.getGraphVertexMap();
     Map<String, EdgeListInternal> adjacencyList = adjacencyListInternal.getAdjacencyMap();
 
@@ -87,6 +86,26 @@ public class OrchestrationAdjacencyListGenerator {
             .prevIds(prevIds)
             .parentId(parentId)
             .build());
+  }
+
+  public void removeVertex(OrchestrationAdjacencyListInternal adjacencyListInternal, NodeExecution nodeExecution) {
+    Map<String, GraphVertex> graphVertexMap = adjacencyListInternal.getGraphVertexMap();
+    Map<String, EdgeListInternal> adjacencyList = adjacencyListInternal.getAdjacencyMap();
+
+    String currentUuid = nodeExecution.getUuid();
+
+    String parentId;
+    if (isIdPresent(nodeExecution.getPreviousId())) {
+      EdgeListInternal previousEdgeList = adjacencyList.get(nodeExecution.getPreviousId());
+      previousEdgeList.getNextIds().remove(currentUuid);
+    } else if (isIdPresent(nodeExecution.getParentId())) {
+      parentId = nodeExecution.getParentId();
+      EdgeListInternal parentEdgeList = adjacencyList.get(parentId);
+      parentEdgeList.getEdges().remove(currentUuid);
+    }
+
+    graphVertexMap.remove(currentUuid);
+    adjacencyList.remove(currentUuid);
   }
 
   public OrchestrationAdjacencyListInternal generatePartialAdjacencyList(
