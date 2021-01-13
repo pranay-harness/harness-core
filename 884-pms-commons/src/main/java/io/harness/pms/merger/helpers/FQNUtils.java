@@ -4,6 +4,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.pms.merger.PipelineYamlConfig;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.merger.fqn.FQNNode;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -75,22 +76,26 @@ public class FQNUtils {
   }
 
   private void generateFQNMapFromListOfSingleKeyMaps(ArrayNode list, FQN baseFQN, Map<FQN, Object> res) {
+    if (checkIfListHasNoIdentifier(list)) {
+      res.put(baseFQN, list);
+      return;
+    }
     list.forEach(element -> {
-      if (element.has("parallel")) {
+      if (element.has(YAMLFieldNameConstants.PARALLEL)) {
         FQN currFQN = FQN.duplicateAndAddNode(baseFQN, FQNNode.builder().nodeType(FQNNode.NodeType.PARALLEL).build());
-        ArrayNode listOfMaps = (ArrayNode) element.get("parallel");
+        ArrayNode listOfMaps = (ArrayNode) element.get(YAMLFieldNameConstants.PARALLEL);
         generateFQNMapFromList(listOfMaps, currFQN, res);
       } else {
         Set<String> fieldNames = new LinkedHashSet<>();
         element.fieldNames().forEachRemaining(fieldNames::add);
         String topKey = fieldNames.iterator().next();
         JsonNode innerMap = element.get(topKey);
-        String identifier = innerMap.get("identifier").asText();
+        String identifier = innerMap.get(YAMLFieldNameConstants.IDENTIFIER).asText();
         FQN currFQN = FQN.duplicateAndAddNode(baseFQN,
             FQNNode.builder()
                 .nodeType(FQNNode.NodeType.KEY_WITH_UUID)
                 .key(topKey)
-                .uuidKey("identifier")
+                .uuidKey(YAMLFieldNameConstants.IDENTIFIER)
                 .uuidValue(identifier)
                 .build());
         generateFQNMap(innerMap, currFQN, res);
@@ -98,22 +103,34 @@ public class FQNUtils {
     });
   }
 
+  private boolean checkIfListHasNoIdentifier(ArrayNode list) {
+    JsonNode firstNode = list.get(0);
+    Set<String> fieldNames = new LinkedHashSet<>();
+    firstNode.fieldNames().forEachRemaining(fieldNames::add);
+    String topKey = fieldNames.iterator().next();
+    if (topKey.equals(YAMLFieldNameConstants.PARALLEL)) {
+      return false;
+    }
+    JsonNode innerMap = firstNode.get(topKey);
+    return !innerMap.has(YAMLFieldNameConstants.IDENTIFIER);
+  }
+
   private void generateFQNMapFromListOfMultipleKeyMaps(ArrayNode list, FQN baseFQN, Map<FQN, Object> res) {
     list.forEach(element -> {
       FQN currFQN;
-      if (element.has("name")) {
+      if (element.has(YAMLFieldNameConstants.NAME)) {
         currFQN = FQN.duplicateAndAddNode(baseFQN,
             FQNNode.builder()
                 .nodeType(FQNNode.NodeType.UUID)
-                .uuidKey("name")
-                .uuidValue(element.get("name").asText())
+                .uuidKey(YAMLFieldNameConstants.NAME)
+                .uuidValue(element.get(YAMLFieldNameConstants.NAME).asText())
                 .build());
       } else {
         currFQN = FQN.duplicateAndAddNode(baseFQN,
             FQNNode.builder()
                 .nodeType(FQNNode.NodeType.UUID)
-                .uuidKey("key")
-                .uuidValue(element.get("key").asText())
+                .uuidKey(YAMLFieldNameConstants.KEY)
+                .uuidValue(element.get(YAMLFieldNameConstants.KEY).asText())
                 .build());
       }
 
@@ -158,11 +175,11 @@ public class FQNUtils {
       }
     }
     if (!tempMap.isEmpty()) {
-      if (!fieldNames.contains("identifier")) {
+      if (!fieldNames.contains(YAMLFieldNameConstants.IDENTIFIER)) {
         res.put(topKey, tempMap);
       } else {
         Map<String, Object> newTempMap = new LinkedHashMap<>();
-        newTempMap.put("identifier", originalYaml.get("identifier"));
+        newTempMap.put(YAMLFieldNameConstants.IDENTIFIER, originalYaml.get(YAMLFieldNameConstants.IDENTIFIER));
         newTempMap.putAll(tempMap);
         res.put(topKey, newTempMap);
       }
@@ -193,11 +210,12 @@ public class FQNUtils {
       ArrayNode list, FQN baseFQN, Map<FQN, Object> fqnMap, Map<String, Object> res, String topKey) {
     List<Object> topKeyList = new ArrayList<>();
     list.forEach(element -> {
-      if (element.has("parallel")) {
+      if (element.has(YAMLFieldNameConstants.PARALLEL)) {
         FQN currFQN = FQN.duplicateAndAddNode(baseFQN, FQNNode.builder().nodeType(FQNNode.NodeType.PARALLEL).build());
-        ArrayNode listOfMaps = (ArrayNode) element.get("parallel");
+        ArrayNode listOfMaps = (ArrayNode) element.get(YAMLFieldNameConstants.PARALLEL);
         Map<String, Object> tempMap = new LinkedHashMap<>();
-        generateYamlMapFromList(listOfMaps, currFQN, getSubMap(fqnMap, currFQN), tempMap, "parallel");
+        generateYamlMapFromList(
+            listOfMaps, currFQN, getSubMap(fqnMap, currFQN), tempMap, YAMLFieldNameConstants.PARALLEL);
         if (!tempMap.isEmpty()) {
           topKeyList.add(tempMap);
         }
@@ -206,12 +224,12 @@ public class FQNUtils {
         element.fieldNames().forEachRemaining(fieldNames::add);
         String topKeyOfInnerMap = fieldNames.iterator().next();
         JsonNode innerMap = element.get(topKeyOfInnerMap);
-        String identifier = innerMap.get("identifier").asText();
+        String identifier = innerMap.get(YAMLFieldNameConstants.IDENTIFIER).asText();
         FQN currFQN = FQN.duplicateAndAddNode(baseFQN,
             FQNNode.builder()
                 .nodeType(FQNNode.NodeType.KEY_WITH_UUID)
                 .key(topKeyOfInnerMap)
-                .uuidKey("identifier")
+                .uuidKey(YAMLFieldNameConstants.IDENTIFIER)
                 .uuidValue(identifier)
                 .build());
         Map<String, Object> tempMap = new LinkedHashMap<>();
@@ -232,19 +250,19 @@ public class FQNUtils {
     list.forEach(element -> {
       Map<String, Object> tempMap = new LinkedHashMap<>();
       FQN currFQN;
-      if (element.has("name")) {
+      if (element.has(YAMLFieldNameConstants.NAME)) {
         currFQN = FQN.duplicateAndAddNode(baseFQN,
             FQNNode.builder()
                 .nodeType(FQNNode.NodeType.UUID)
-                .uuidKey("name")
-                .uuidValue(element.get("name").asText())
+                .uuidKey(YAMLFieldNameConstants.NAME)
+                .uuidValue(element.get(YAMLFieldNameConstants.NAME).asText())
                 .build());
       } else {
         currFQN = FQN.duplicateAndAddNode(baseFQN,
             FQNNode.builder()
                 .nodeType(FQNNode.NodeType.UUID)
-                .uuidKey("key")
-                .uuidValue(element.get("key").asText())
+                .uuidKey(YAMLFieldNameConstants.KEY)
+                .uuidValue(element.get(YAMLFieldNameConstants.KEY).asText())
                 .build());
       }
 
@@ -259,7 +277,7 @@ public class FQNUtils {
       }
       if (!tempMap.isEmpty()) {
         Map<String, Object> newTempMap = new LinkedHashMap<>();
-        newTempMap.put("name", element.get("name"));
+        newTempMap.put(YAMLFieldNameConstants.NAME, element.get(YAMLFieldNameConstants.NAME));
         newTempMap.putAll(tempMap);
         topKeyList.add(newTempMap);
       }
@@ -303,10 +321,10 @@ public class FQNUtils {
     int size = curr.size();
     for (int i = 0; i < size; i++) {
       JsonNode elem = curr.get(i);
-      if (!elem.has("parallel")) {
+      if (!elem.has(YAMLFieldNameConstants.PARALLEL)) {
         continue;
       }
-      ArrayNode innerList = (ArrayNode) elem.get("parallel");
+      ArrayNode innerList = (ArrayNode) elem.get(YAMLFieldNameConstants.PARALLEL);
       int sizeOfInnerList = innerList.size();
       for (int j = 0; j < sizeOfInnerList; j++) {
         JsonNode element = innerList.get(j).get(node.getKey());
