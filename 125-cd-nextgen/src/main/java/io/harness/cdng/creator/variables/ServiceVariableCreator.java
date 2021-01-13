@@ -21,27 +21,35 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ServiceVariableCreator {
-  public VariableCreationResponse createVariableResponse(YamlField serviceField) {
-    if (serviceField == null) {
+  public VariableCreationResponse createVariableResponse(YamlField serviceConfigField) {
+    if (serviceConfigField == null) {
       return VariableCreationResponse.builder().build();
     }
     Map<String, YamlProperties> yamlPropertiesMap = new HashMap<>();
-    String serviceUUID = serviceField.getNode().getUuid();
+    String serviceUUID = serviceConfigField.getNode().getUuid();
     yamlPropertiesMap.put(serviceUUID, YamlProperties.newBuilder().setFqn(YamlTypes.SERVICE_CONFIG).build());
-    YamlField nameField = serviceField.getNode().getField(YAMLFieldNameConstants.NAME);
-    if (nameField != null) {
-      addFieldToPropertiesMapUnderService(nameField, yamlPropertiesMap);
-    }
-    YamlField descriptionField = serviceField.getNode().getField(YAMLFieldNameConstants.DESCRIPTION);
-    if (descriptionField != null) {
-      addFieldToPropertiesMapUnderService(descriptionField, yamlPropertiesMap);
+
+    YamlField serviceYamlNode = serviceConfigField.getNode().getField(YamlTypes.SERVICE_ENTITY);
+    if (serviceYamlNode != null) {
+      addVariablesForServiceYaml(serviceYamlNode, yamlPropertiesMap);
     }
 
-    YamlField serviceDefNode = serviceField.getNode().getField(YamlTypes.SERVICE_DEFINITION);
+    YamlField serviceDefNode = serviceConfigField.getNode().getField(YamlTypes.SERVICE_DEFINITION);
     if (serviceDefNode != null && serviceDefNode.getNode().getField(YamlTypes.SERVICE_SPEC) != null) {
       addVariablesForServiceSpec(serviceDefNode, yamlPropertiesMap);
     }
     return VariableCreationResponse.builder().yamlProperties(yamlPropertiesMap).build();
+  }
+
+  private void addVariablesForServiceYaml(YamlField serviceYamlNode, Map<String, YamlProperties> yamlPropertiesMap) {
+    YamlField nameField = serviceYamlNode.getNode().getField(YAMLFieldNameConstants.NAME);
+    if (nameField != null) {
+      addFieldToPropertiesMapUnderService(nameField, yamlPropertiesMap);
+    }
+    YamlField descriptionField = serviceYamlNode.getNode().getField(YAMLFieldNameConstants.DESCRIPTION);
+    if (descriptionField != null) {
+      addFieldToPropertiesMapUnderService(descriptionField, yamlPropertiesMap);
+    }
   }
 
   private void addVariablesForServiceSpec(YamlField serviceDefNode, Map<String, YamlProperties> yamlPropertiesMap) {
@@ -70,12 +78,24 @@ public class ServiceVariableCreator {
     if (manifestsNode != null) {
       addVariablesForManifests(manifestsNode, yamlPropertiesMap);
     }
+    YamlField artifactOverrideSetsNode = serviceSpecNode.getNode().getField(YamlTypes.ARTIFACT_OVERRIDE_SETS);
+    if (artifactOverrideSetsNode != null) {
+      addVariablesForArtifactOverrideSets(artifactOverrideSetsNode, yamlPropertiesMap);
+    }
+    YamlField manifestOverrideSetsNode = serviceSpecNode.getNode().getField(YamlTypes.MANIFEST_OVERRIDE_SETS);
+    if (manifestOverrideSetsNode != null) {
+      addVariablesForManifestOverrideSets(manifestOverrideSetsNode, yamlPropertiesMap);
+    }
   }
 
   private void addVariablesForArtifacts(YamlField artifactsNode, Map<String, YamlProperties> yamlPropertiesMap) {
     YamlField primaryNode = artifactsNode.getNode().getField(YamlTypes.PRIMARY_ARTIFACT);
     if (primaryNode != null) {
       addVariablesForPrimaryArtifact(primaryNode, yamlPropertiesMap);
+    }
+    YamlField sidecarsNode = artifactsNode.getNode().getField(YamlTypes.SIDECARS_ARTIFACT_CONFIG);
+    if (sidecarsNode != null) {
+      addVariablesForArtifactSidecars(sidecarsNode, yamlPropertiesMap);
     }
   }
 
@@ -171,6 +191,14 @@ public class ServiceVariableCreator {
     }
   }
 
+  private void addVariablesForArtifactSidecars(YamlField sidecarsNode, Map<String, YamlProperties> yamlPropertiesMap) {
+    List<YamlNode> sidecarNodes = sidecarsNode.getNode().asArray();
+    sidecarNodes.forEach(yamlNode -> {
+      YamlField field = yamlNode.getField(YamlTypes.SIDECAR_ARTIFACT_CONFIG);
+      addVariablesForPrimaryArtifact(field, yamlPropertiesMap);
+    });
+  }
+
   private void addVariablesForDockerArtifact(
       YamlField artifactSpecNode, Map<String, YamlProperties> yamlPropertiesMap) {
     YamlField connectorRefNode = artifactSpecNode.getNode().getField(YamlTypes.CONNECTOR_REF);
@@ -189,6 +217,38 @@ public class ServiceVariableCreator {
     if (tagRegexField != null) {
       addFieldToPropertiesMapUnderService(tagRegexField, yamlPropertiesMap);
     }
+  }
+
+  private void addVariablesForArtifactOverrideSets(YamlField fieldNode, Map<String, YamlProperties> yamlPropertiesMap) {
+    List<YamlNode> overrideNodes = fieldNode.getNode().asArray();
+    overrideNodes.forEach(yamlNode -> {
+      YamlField field = yamlNode.getField(YamlTypes.OVERRIDE_SET);
+      if (field != null) {
+        YamlField artifactsNode = field.getNode().getField(YamlTypes.ARTIFACT_LIST_CONFIG);
+        if (artifactsNode != null) {
+          addVariablesForArtifacts(artifactsNode, yamlPropertiesMap);
+        }
+      }
+    });
+  }
+
+  private void addVariablesForManifestOverrideSets(YamlField fieldNode, Map<String, YamlProperties> yamlPropertiesMap) {
+    List<YamlNode> overrideNodes = fieldNode.getNode().asArray();
+    overrideNodes.forEach(yamlNode -> {
+      YamlField field = yamlNode.getField(YamlTypes.OVERRIDE_SET);
+      if (field != null) {
+        YamlField manifestsNode = field.getNode().getField(YamlTypes.MANIFEST_LIST_CONFIG);
+        if (manifestsNode != null) {
+          List<YamlNode> manifestNodes = Optional.of(manifestsNode.getNode().asArray()).orElse(Collections.emptyList());
+          for (YamlNode manifestNode : manifestNodes) {
+            YamlField manifestField = manifestNode.getField(YamlTypes.MANIFEST_CONFIG);
+            if (manifestField != null) {
+              addVariablesForManifest(manifestField, yamlPropertiesMap);
+            }
+          }
+        }
+      }
+    });
   }
 
   private void addFieldToPropertiesMapUnderService(YamlField fieldNode, Map<String, YamlProperties> yamlPropertiesMap) {

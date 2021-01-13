@@ -4,6 +4,7 @@ import static io.harness.ng.core.mapper.TagMapper.convertToList;
 import static io.harness.rule.OwnerRule.ARCHIT;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -23,6 +24,7 @@ import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
 import io.harness.cdng.service.beans.KubernetesServiceSpec;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.StageOverridesConfig;
+import io.harness.cdng.variables.beans.NGVariableOverrideSetWrapper;
 import io.harness.cdng.variables.beans.NGVariableOverrideSets;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
@@ -176,7 +178,7 @@ public class PipelineYamlTest extends CategoryTest {
         .isEqualTo("['paths1', 'master/paths2', 'paths3']");
 
     // manifestOverrideSet
-    manifestConfigWrapper = serviceSpec.getManifestOverrideSets().get(0).getManifests().get(0);
+    manifestConfigWrapper = serviceSpec.getManifestOverrideSets().get(0).getOverrideSet().getManifests().get(0);
     manifestConfig = manifestConfigWrapper.getManifest();
     storeConfig = (GitStore) manifestConfig.getManifestAttributes().getStoreConfig();
     assertThat(storeConfig.getConnectorRef()).isInstanceOf(ParameterField.class);
@@ -186,7 +188,11 @@ public class PipelineYamlTest extends CategoryTest {
 
     // VariableOverrideSets
     assertThat(serviceSpec.getVariableOverrideSets().size()).isEqualTo(1);
-    NGVariableOverrideSets ngVariableOverrideSets = serviceSpec.getVariableOverrideSets().get(0);
+    NGVariableOverrideSets ngVariableOverrideSets = serviceSpec.getVariableOverrideSets()
+                                                        .stream()
+                                                        .map(NGVariableOverrideSetWrapper::getOverrideSet)
+                                                        .collect(toList())
+                                                        .get(0);
     assertThat(ngVariableOverrideSets.getIdentifier()).isEqualTo("VariableoverrideSet");
     assertThat(ngVariableOverrideSets.getVariables().size()).isEqualTo(1);
     numberNGVariable = (NumberNGVariable) ngVariableOverrideSets.getVariables().get(0);

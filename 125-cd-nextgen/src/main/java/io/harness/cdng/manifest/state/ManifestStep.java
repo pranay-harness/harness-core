@@ -6,6 +6,7 @@ import io.harness.cdng.manifest.mappers.ManifestOutcomeMapper;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.cdng.manifest.yaml.ManifestOverrideSetWrapper;
 import io.harness.cdng.manifest.yaml.ManifestOverrideSets;
 import io.harness.cdng.manifest.yaml.ManifestsOutcome;
 import io.harness.cdng.manifest.yaml.ManifestsOutcome.ManifestsOutcomeBuilder;
@@ -39,7 +40,12 @@ public class ManifestStep {
     }
 
     return processManifests(serviceSpecManifests, manifestOverrideSets, stageOverrideManifests,
-        serviceConfig.getServiceDefinition().getServiceSpec().getManifestOverrideSets());
+        serviceConfig.getServiceDefinition()
+            .getServiceSpec()
+            .getManifestOverrideSets()
+            .stream()
+            .map(ManifestOverrideSetWrapper::getOverrideSet)
+            .collect(Collectors.toList()));
   }
 
   private List<ManifestConfigWrapper> getManifestOverrideSetsApplicable(ServiceConfig serviceConfig) {
@@ -55,13 +61,13 @@ public class ManifestStep {
                      .getServiceSpec()
                      .getManifestOverrideSets()
                      .stream()
-                     .filter(o -> o.getIdentifier().equals(useManifestOverrideSet))
+                     .filter(o -> o.getOverrideSet().getIdentifier().equals(useManifestOverrideSet))
                      .findFirst())
           .forEachOrdered(optionalManifestOverrideSets -> {
             if (!optionalManifestOverrideSets.isPresent()) {
               throw new InvalidRequestException("Manifest Override Set is not defined.");
             }
-            manifestOverrideSets.addAll(optionalManifestOverrideSets.get().getManifests());
+            manifestOverrideSets.addAll(optionalManifestOverrideSets.get().getOverrideSet().getManifests());
           });
     }
     return manifestOverrideSets;

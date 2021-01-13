@@ -10,6 +10,7 @@ import static java.util.stream.Collectors.toList;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
+import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSetWrapper;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSets;
 import io.harness.cdng.artifact.mappers.ArtifactResponseToOutcomeMapper;
 import io.harness.cdng.artifact.steps.ArtifactStep;
@@ -30,6 +31,7 @@ import io.harness.cdng.service.beans.ServiceOutcome.StageOverridesOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.StageOverridesOutcome.StageOverridesOutcomeBuilder;
 import io.harness.cdng.service.beans.ServiceOutcome.VariablesWrapperOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
+import io.harness.cdng.variables.beans.NGVariableOverrideSetWrapper;
 import io.harness.cdng.variables.beans.NGVariableOverrideSets;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.data.structure.EmptyPredicate;
@@ -294,9 +296,14 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
       }
     }
 
-    List<NGVariableOverrideSets> variableOverrideSets =
+    List<NGVariableOverrideSetWrapper> variableOverrideSetWrappers =
         serviceConfig.getServiceDefinition().getServiceSpec().getVariableOverrideSets();
-    if (variableOverrideSets != null) {
+
+    List<NGVariableOverrideSets> variableOverrideSets = variableOverrideSetWrappers == null
+        ? new ArrayList<>()
+        : variableOverrideSetWrappers.stream().map(NGVariableOverrideSetWrapper::getOverrideSet).collect(toList());
+
+    if (EmptyPredicate.isNotEmpty(variableOverrideSets)) {
       for (NGVariableOverrideSets variableOverrideSet : variableOverrideSets) {
         outcomeBuilder.variableOverrideSet(variableOverrideSet.getIdentifier(),
             VariablesWrapperOutcome.builder()
@@ -373,9 +380,14 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
       }
     }
 
-    List<ArtifactOverrideSets> artifactOverrideSets =
+    List<ArtifactOverrideSetWrapper> artifactOverrideSetsWrappers =
         serviceConfig.getServiceDefinition().getServiceSpec().getArtifactOverrideSets();
-    if (artifactOverrideSets != null) {
+
+    List<ArtifactOverrideSets> artifactOverrideSets = artifactOverrideSetsWrappers == null
+        ? new ArrayList<>()
+        : artifactOverrideSetsWrappers.stream().map(ArtifactOverrideSetWrapper::getOverrideSet).collect(toList());
+
+    if (EmptyPredicate.isNotEmpty(artifactOverrideSets)) {
       for (ArtifactOverrideSets artifactOverrideSet : artifactOverrideSets) {
         ArtifactListConfig artifacts = artifactOverrideSet.getArtifacts();
         List<ArtifactConfig> artifactConfigs = ArtifactUtils.convertArtifactListIntoArtifacts(artifacts);
@@ -408,13 +420,13 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
                      .getServiceSpec()
                      .getVariableOverrideSets()
                      .stream()
-                     .filter(o -> o.getIdentifier().equals(useVariableOverrideSet))
+                     .filter(o -> o.getOverrideSet().getIdentifier().equals(useVariableOverrideSet))
                      .findFirst())
           .forEachOrdered(optionalVariableOverrideSets -> {
             if (!optionalVariableOverrideSets.isPresent()) {
               throw new InvalidRequestException("Service Variable Override Set is not defined.");
             }
-            variableOverrideSets.addAll(optionalVariableOverrideSets.get().getVariables());
+            variableOverrideSets.addAll(optionalVariableOverrideSets.get().getOverrideSet().getVariables());
           });
     }
     return variableOverrideSets;

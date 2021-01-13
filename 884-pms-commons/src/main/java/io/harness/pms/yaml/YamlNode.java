@@ -3,12 +3,7 @@ package io.harness.pms.yaml;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import javax.validation.constraints.NotNull;
 import lombok.Value;
 
@@ -113,10 +108,11 @@ public class YamlNode {
   private boolean compareFirstChildOfArrayNode(YamlNode firstParent, YamlNode secondParent) {
     List<YamlNode> firstParentChildNodes = firstParent.asArray();
     List<YamlNode> secondParentChildNodes = secondParent.asArray();
-    if (firstParentChildNodes.isEmpty() || secondParentChildNodes.isEmpty()) {
+    if (firstParentChildNodes.isEmpty() || secondParentChildNodes.isEmpty()
+        || firstParentChildNodes.get(0).getUuid() == null || secondParentChildNodes.get(0).getUuid() == null) {
       return false;
     }
-    return firstParentChildNodes.get(0).getUuid().equals(secondParentChildNodes.get(0).getUuid());
+    return Objects.equals(firstParentChildNodes.get(0).getUuid(), secondParentChildNodes.get(0).getUuid());
   }
 
   public String getIdentifier() {
