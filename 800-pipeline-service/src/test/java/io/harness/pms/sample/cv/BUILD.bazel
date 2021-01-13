@@ -26,6 +26,10 @@ java_binary(
     srcs = glob([
         "**/*.java",
     ]),
+    data = [
+        "cert.pem",
+        "key.pem",
+    ],
     main_class = "io.harness.pms.sample.cv.CvServiceApplication",
     visibility = ["//visibility:public"],
     deps = [

@@ -1,8 +1,5 @@
 package io.harness.pms.sample.cd.creator;
 
-import io.harness.plancreator.pipeline.NGPipelinePlanCreator;
-import io.harness.plancreator.stages.StagesPlanCreator;
-import io.harness.plancreator.stages.parallel.ParallelPlanCreator;
 import io.harness.plancreator.steps.StepGroupPMSPlanCreator;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepMetaData;
@@ -27,11 +24,8 @@ public class CdPipelineServiceInfoProvider implements PipelineServiceInfoProvide
   @Override
   public List<PartialPlanCreator<?>> getPlanCreators() {
     List<PartialPlanCreator<?>> planCreators = new ArrayList<>();
-    planCreators.add(new NGPipelinePlanCreator());
-    planCreators.add(new StagesPlanCreator());
     planCreators.add(new DeploymentStagePlanCreator());
     planCreators.add(new CdStepPlanCreator());
-    planCreators.add(new ParallelPlanCreator());
     planCreators.add(new StepGroupPMSPlanCreator());
     injectorUtils.injectMembers(planCreators);
     return planCreators;
@@ -40,8 +34,6 @@ public class CdPipelineServiceInfoProvider implements PipelineServiceInfoProvide
   @Override
   public List<FilterJsonCreator> getFilterJsonCreators() {
     List<FilterJsonCreator> filterJsonCreators = new ArrayList<>();
-    filterJsonCreators.add(new PipelineFilterJsonCreator());
-    filterJsonCreators.add(new ParallelFilterJsonCreator());
     filterJsonCreators.add(new DeploymentStageFilterCreator());
     injectorUtils.injectMembers((filterJsonCreators));
     return filterJsonCreators;

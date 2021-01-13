@@ -20,7 +20,6 @@ import io.harness.queue.QueueController;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationBeansRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
-import io.harness.springdata.SpringPersistenceModule;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -49,7 +48,7 @@ public class CvServiceModule extends AbstractModule {
   @Override
   protected void configure() {
     install(MongoModule.getInstance());
-    install(new SpringPersistenceModule());
+    install(new CvPersistenceModule());
     bind(HPersistence.class).to(MongoPersistence.class);
     install(OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
                                                 .serviceName("CV_SAMPLE")

@@ -3,13 +3,15 @@ package io.harness.pms.sample.cd;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
 import io.harness.maintenance.MaintenanceController;
-import io.harness.persistence.HPersistence;
 import io.harness.pms.sample.cd.creator.CdPipelineServiceInfoProvider;
 import io.harness.pms.sample.cd.creator.filters.CDFilterCreationResponseMerger;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
+import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
+import io.harness.queue.QueueListenerController;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -62,13 +64,13 @@ public class CdServiceApplication extends Application<CdServiceConfiguration> {
     modules.add(PmsSdkModule.getInstance(sdkConfig));
     Injector injector = Guice.createInjector(modules);
 
-    injector.getInstance(HPersistence.class);
+    registerQueueListeners(injector);
     registerJerseyProviders(environment, injector);
 
     try {
       PmsSdkInitHelper.initializeSDKInstance(injector, sdkConfig);
     } catch (Exception e) {
-      log.error("Failed To register pipeline sdk");
+      log.error("Failed To register pipeline sdk", e);
       System.exit(1);
     }
 
@@ -87,6 +89,13 @@ public class CdServiceApplication extends Application<CdServiceConfiguration> {
         .engineSteps(CdServiceStepRegistrar.getEngineSteps())
         .executionSummaryModuleInfoProviderClass(CDExecutionSummaryModuleInfoProvider.class)
         .build();
+  }
+
+  private void registerQueueListeners(Injector injector) {
+    log.info("Initializing queue listeners...");
+    QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
+    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 1);
   }
 
   private void registerJerseyProviders(Environment environment, Injector injector) {
