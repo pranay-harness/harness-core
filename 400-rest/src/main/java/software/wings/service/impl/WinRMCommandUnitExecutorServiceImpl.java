@@ -15,6 +15,7 @@ import static java.lang.String.format;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.ShellExecutionException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.ExceptionLogger;
@@ -43,6 +44,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javax.validation.executable.ValidateOnExecution;
+import javax.xml.ws.soap.SOAPFaultException;
 import lombok.extern.slf4j.Slf4j;
 
 @ValidateOnExecution
@@ -162,6 +164,21 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
         throw new WingsException(ErrorCode.UNKNOWN_ERROR, exception);
       }
     } catch (Exception e) {
+      Exception ex = ExceptionUtils.cause(SOAPFaultException.class, e);
+      if (ex != null) {
+        String errorMessage = ExceptionUtils.getMessage(ex);
+        logService.save(context.getAccountId(),
+            aLog()
+                .appId(context.getAppId())
+                .activityId(activityId)
+                .hostName(publicDns)
+                .commandUnitName(commandUnit.getName())
+                .logLevel(SUCCESS == commandExecutionStatus ? INFO : ERROR)
+                .logLine(errorMessage)
+                .executionResult(commandExecutionStatus)
+                .build());
+        throw new ShellExecutionException("Script Execution Failed", e);
+      }
       logService.save(context.getAccountId(),
           aLog()
               .appId(context.getAppId())
