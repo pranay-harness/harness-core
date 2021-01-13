@@ -81,6 +81,7 @@ public class BuildEnvironmentUtils {
       }
       if (!isEmpty(manualExecutionSource.getTag())) {
         envVarMap.put(DRONE_TAG, manualExecutionSource.getTag());
+        envVarMap.put(DRONE_BUILD_EVENT, "tag");
       }
     }
     return envVarMap;
