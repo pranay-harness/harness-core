@@ -3,6 +3,7 @@ package io.harness.cdng.artifact.steps;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
+import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSetWrapper;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSets;
 import io.harness.cdng.artifact.mappers.ArtifactResponseToOutcomeMapper;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters.ArtifactStepParametersBuilder;
@@ -138,7 +139,8 @@ public class ArtifactStep {
                 .getServiceSpec()
                 .getArtifactOverrideSets()
                 .stream()
-                .filter(o -> o.getIdentifier().equals(useArtifactOverrideSet))
+                .filter(o -> o.getOverrideSet().getIdentifier().equals(useArtifactOverrideSet))
+                .map(ArtifactOverrideSetWrapper::getOverrideSet)
                 .collect(Collectors.toList());
         if (artifactOverrideSetsList.size() != 1) {
           throw new InvalidRequestException("Artifact Override Set is not defined properly.");

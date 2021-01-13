@@ -6,7 +6,6 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
-import io.harness.yaml.core.intfc.OverrideSetsWrapper;
 import io.harness.yaml.core.variables.NGVariable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -20,7 +19,7 @@ import lombok.Value;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("overrideSet")
 @SimpleVisitorHelper(helperClass = VariableOverridesVisitorHelper.class)
-public class NGVariableOverrideSets implements OverrideSetsWrapper, Visitable {
+public class NGVariableOverrideSets implements Visitable {
   @EntityIdentifier String identifier;
   List<NGVariable> variables;
 

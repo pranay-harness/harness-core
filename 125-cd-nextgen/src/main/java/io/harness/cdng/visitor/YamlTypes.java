@@ -14,6 +14,7 @@ public interface YamlTypes {
   String INFRASTRUCTURE_DEF = "infrastructureDefinition";
   String INFRA_USE_FROM_STAGE = "useFromStage";
   String INFRA_USE_FROM_STAGE_OVERRIDES = "overrides";
+  String OVERRIDE_SET = "overrideSet";
 
   String K8S_ROLLING_ROLLBACK = StepSpecTypeConstants.K8S_ROLLING_ROLLBACK;
   String K8S_ROLLING_DEPLOY = StepSpecTypeConstants.K8S_ROLLING_DEPLOY;

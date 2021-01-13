@@ -9,6 +9,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.pms.contracts.plan.*;
+import io.harness.pms.exception.PmsExceptionUtil;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.utils.CompletableFutures;
@@ -69,7 +70,7 @@ public class VariableCreatorMergeService {
   }
 
   private VariablesCreationBlobResponse createVariablesForDependenciesRecursive(
-      Map<String, PlanCreatorServiceInfo> services, Map<String, YamlFieldBlob> dependencies) {
+      Map<String, PlanCreatorServiceInfo> services, Map<String, YamlFieldBlob> dependencies) throws IOException {
     VariablesCreationBlobResponse.Builder responseBuilder =
         VariablesCreationBlobResponse.newBuilder().putAllDependencies(dependencies);
     if (isEmpty(services) || isEmpty(dependencies)) {
@@ -80,8 +81,8 @@ public class VariableCreatorMergeService {
       VariablesCreationBlobResponse variablesCreationBlobResponse = obtainVariablesPerIteration(services, dependencies);
       VariableCreationBlobResponseUtils.mergeResolvedDependencies(responseBuilder, variablesCreationBlobResponse);
       if (isNotEmpty(responseBuilder.getDependenciesMap())) {
-        throw new InvalidRequestException(format(
-            "Some YAML nodes could not be parsed: %s", responseBuilder.getDependenciesMap().keySet().toString()));
+        throw new InvalidRequestException(
+            PmsExceptionUtil.getUnresolvedDependencyErrorMessage(responseBuilder.getDependenciesMap().values()));
       }
       VariableCreationBlobResponseUtils.mergeDependencies(responseBuilder, variablesCreationBlobResponse);
       VariableCreationBlobResponseUtils.mergeYamlProperties(responseBuilder, variablesCreationBlobResponse);

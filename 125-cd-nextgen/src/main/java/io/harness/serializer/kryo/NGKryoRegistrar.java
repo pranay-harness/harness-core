@@ -4,6 +4,7 @@ import io.harness.cdng.artifact.bean.ArtifactSpecWrapper;
 import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSource;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
+import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSetWrapper;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSets;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.GcrArtifactConfig;
@@ -26,6 +27,7 @@ import io.harness.cdng.k8s.K8sStepPassThroughData;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestConfig;
+import io.harness.cdng.manifest.yaml.ManifestOverrideSetWrapper;
 import io.harness.cdng.manifest.yaml.ManifestOverrideSets;
 import io.harness.cdng.manifest.yaml.ManifestsOutcome;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
@@ -56,6 +58,7 @@ import io.harness.cdng.service.steps.ServiceStep.ServiceStepPassThroughData;
 import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchOutcome;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchParameters;
+import io.harness.cdng.variables.beans.NGVariableOverrideSetWrapper;
 import io.harness.http.HttpOutcome;
 import io.harness.serializer.KryoRegistrar;
 
@@ -127,5 +130,8 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(ManifestsWrapperOutcome.class, 12506);
     kryo.register(VariablesWrapperOutcome.class, 12507);
     kryo.register(ServiceConfigOutcome.class, 12508);
+    kryo.register(ArtifactOverrideSetWrapper.class, 12509);
+    kryo.register(ManifestOverrideSetWrapper.class, 12510);
+    kryo.register(NGVariableOverrideSetWrapper.class, 12511);
   }
 }

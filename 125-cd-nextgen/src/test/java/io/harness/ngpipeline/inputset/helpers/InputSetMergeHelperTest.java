@@ -39,6 +39,7 @@ import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.joor.Reflect;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
@@ -67,6 +68,7 @@ public class InputSetMergeHelperTest extends CDNGBaseTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  @Ignore("Tests a feature that is not used anymore")
   public void testGetTemplateFromPipeline() throws IOException {
     ClassLoader classLoader = getClass().getClassLoader();
     String pipelineFilename = "pipeline-extensive.yaml";
@@ -85,6 +87,7 @@ public class InputSetMergeHelperTest extends CDNGBaseTest {
   @Test
   @Owner(developers = OwnerRule.ARCHIT)
   @Category(UnitTests.class)
+  @Ignore("Tests a feature that is not used anymore")
   public void testMergingInputSets() throws IOException {
     Call<ResponseDTO<Page<EntitySetupUsageDTO>>> request = mock(Call.class);
     doReturn(request).when(entitySetupUsageClient).save(any());
@@ -103,6 +106,7 @@ public class InputSetMergeHelperTest extends CDNGBaseTest {
   @Test
   @Owner(developers = OwnerRule.ARCHIT)
   @Category(UnitTests.class)
+  @Ignore("Tests a feature that is not used anymore")
   public void testMergingInputSetsWithWrongTemplate() throws IOException {
     Call<ResponseDTO<Page<EntitySetupUsageDTO>>> request = mock(Call.class);
     doReturn(request).when(entitySetupUsageClient).save(any());
@@ -246,6 +250,7 @@ public class InputSetMergeHelperTest extends CDNGBaseTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  @Ignore("Tests a feature that is not used anymore")
   public void testRemoveRuntimeInputFromInputSet() throws IOException {
     ClassLoader classLoader = getClass().getClassLoader();
     String filename = "input-set-with-runtime-input.yaml";

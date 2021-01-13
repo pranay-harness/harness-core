@@ -4,10 +4,10 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
-import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSets;
+import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSetWrapper;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
-import io.harness.cdng.manifest.yaml.ManifestOverrideSets;
-import io.harness.cdng.variables.beans.NGVariableOverrideSets;
+import io.harness.cdng.manifest.yaml.ManifestOverrideSetWrapper;
+import io.harness.cdng.variables.beans.NGVariableOverrideSetWrapper;
 import io.harness.yaml.core.intfc.WithType;
 import io.harness.yaml.core.variables.NGVariable;
 
@@ -19,9 +19,9 @@ import java.util.List;
 public interface ServiceSpec extends WithType {
   ArtifactListConfig getArtifacts();
   List<ManifestConfigWrapper> getManifests();
-  List<ManifestOverrideSets> getManifestOverrideSets();
-  List<ArtifactOverrideSets> getArtifactOverrideSets();
-  List<NGVariableOverrideSets> getVariableOverrideSets();
+  List<ManifestOverrideSetWrapper> getManifestOverrideSets();
+  List<ArtifactOverrideSetWrapper> getArtifactOverrideSets();
+  List<NGVariableOverrideSetWrapper> getVariableOverrideSets();
   List<NGVariable> getVariables();
   @Override @JsonIgnore String getType();
 }
