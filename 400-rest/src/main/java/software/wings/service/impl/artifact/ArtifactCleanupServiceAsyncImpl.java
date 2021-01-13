@@ -1,11 +1,11 @@
 package software.wings.service.impl.artifact;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
-import static software.wings.service.impl.artifact.ArtifactCollectionUtils.DELEGATE_QUEUE_TIMEOUT;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
@@ -55,10 +55,8 @@ public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
     BuildSourceParameters buildSourceRequest;
 
     String waitId = generateUuid();
-    final TaskDataBuilder dataBuilder = TaskData.builder()
-                                            .async(true)
-                                            .taskType(TaskType.BUILD_SOURCE_TASK.name())
-                                            .timeout(System.currentTimeMillis() + DELEGATE_QUEUE_TIMEOUT);
+    final TaskDataBuilder dataBuilder =
+        TaskData.builder().async(true).taskType(TaskType.BUILD_SOURCE_TASK.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT);
     DelegateTaskBuilder delegateTaskBuilder =
         DelegateTask.builder().setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID).waitId(waitId);
 
