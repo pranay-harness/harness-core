@@ -759,6 +759,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>878-pipeline-service-utilities</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>879-pms-sdk</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

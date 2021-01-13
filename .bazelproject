@@ -20,6 +20,7 @@ directories:
   870-orchestration
   870-yaml-beans
   876-orchestration-beans
+  878-pipeline-service-utilities
   879-pms-sdk
   882-pms-sdk-core
   884-pms-commons
