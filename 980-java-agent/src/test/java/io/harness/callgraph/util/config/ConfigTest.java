@@ -112,5 +112,23 @@ public class ConfigTest {
     }
 
     ConfigUtils.replace(true, "writeTo: " + Target.COVERAGE_JSON + "," + Target.GRAPH_DB_CSV);
+    assertThat(Config.getInst().writeTo()[0]).isEqualTo(Target.COVERAGE_JSON);
+    assertThat(Config.getInst().writeTo()[1]).isEqualTo(Target.GRAPH_DB_CSV);
+  }
+
+  @Test
+  @Owner(developers = SHIVAKUMAR)
+  @Category(UnitTests.class)
+  public void testInstrPackages() throws IOException {
+    String[] pkgs = {"io.harness.", "software.wings.", "migrations."};
+    for (String pkg : pkgs) {
+      ConfigUtils.replace(true, "instrPackages: " + pkg);
+      assertThat(Config.getInst().instrPackages()[0]).isEqualTo(pkg);
+    }
+
+    ConfigUtils.replace(true, "instrPackages: " + pkgs[0] + "," + pkgs[1] + "," + pkgs[2]);
+    for (int i = 0; i < pkgs.length; i++) {
+      assertThat(Config.getInst().instrPackages()[i]).isEqualTo(pkgs[i]);
+    }
   }
 }

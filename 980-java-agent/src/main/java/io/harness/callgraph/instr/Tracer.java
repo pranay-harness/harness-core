@@ -9,7 +9,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Instrument the target classes.
@@ -38,7 +39,7 @@ public class Tracer {
 
     ShutdownHook.init();
 
-    List<String> includes = Arrays.asList(Config.getInst().instrPackages());
+    Set<String> includes = new HashSet<>(Arrays.asList(Config.getInst().instrPackages()));
     new ByteBuddyInstr(includes).instrument(instrumentation);
   }
 }
