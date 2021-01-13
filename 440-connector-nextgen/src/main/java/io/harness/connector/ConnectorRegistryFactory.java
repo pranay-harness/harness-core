@@ -4,6 +4,8 @@ import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsDTOToEntity;
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsEntityToDTO;
+import io.harness.connector.mappers.artifactorymapper.ArtifactoryDTOToEntity;
+import io.harness.connector.mappers.artifactorymapper.ArtifactoryEntityToDTO;
 import io.harness.connector.mappers.awsmapper.AwsDTOToEntity;
 import io.harness.connector.mappers.awsmapper.AwsEntityToDTO;
 import io.harness.connector.mappers.bitbucketconnectormapper.BitbucketDTOToEntity;
@@ -84,12 +86,10 @@ public class ConnectorRegistryFactory {
     registrar.put(ConnectorType.LOCAL,
         new ConnectorRegistrar(ConnectorCategory.SECRET_MANAGER, AlwaysTrueConnectorValidator.class,
             NoOpConnectorValidationHandler.class, LocalDTOToEntity.class, LocalEntityToDTO.class));
-
     registrar.put(ConnectorType.DOCKER,
         new ConnectorRegistrar(ConnectorCategory.ARTIFACTORY, DockerConnectionValidator.class,
             DockerTestConnectionDelegateTask.DockerValidationHandler.class, DockerDTOToEntity.class,
             DockerEntityToDTO.class));
-
     registrar.put(ConnectorType.GCP,
         new ConnectorRegistrar(ConnectorCategory.CLOUD_PROVIDER, GcpConnectorValidator.class,
             NoOpConnectorValidationHandler.class, GcpDTOToEntity.class, GcpEntityToDTO.class));
@@ -101,7 +101,7 @@ public class ConnectorRegistryFactory {
             NoOpConnectorValidationHandler.class, CEAwsDTOToEntity.class, CEAwsEntityToDTO.class));
     registrar.put(ConnectorType.ARTIFACTORY,
         new ConnectorRegistrar(ConnectorCategory.ARTIFACTORY, ArtifactoryConnectionValidator.class,
-            NoOpConnectorValidationHandler.class, CEAwsDTOToEntity.class, CEAwsEntityToDTO.class));
+            NoOpConnectorValidationHandler.class, ArtifactoryDTOToEntity.class, ArtifactoryEntityToDTO.class));
     registrar.put(ConnectorType.JIRA,
         new ConnectorRegistrar(ConnectorCategory.TICKETING, JiraConnectorValidator.class,
             NoOpConnectorValidationHandler.class, JiraDTOToEntity.class, JiraEntityToDTO.class));
