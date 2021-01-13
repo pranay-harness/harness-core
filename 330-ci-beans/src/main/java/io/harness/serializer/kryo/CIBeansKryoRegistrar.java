@@ -44,6 +44,7 @@ import io.harness.beans.steps.stepinfo.SaveCacheS3StepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
 import io.harness.beans.steps.stepinfo.TestIntelligenceStepInfo;
 import io.harness.beans.steps.stepinfo.TestStepInfo;
+import io.harness.beans.steps.stepinfo.UploadToArtifactoryStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToGCSStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToS3StepInfo;
 import io.harness.beans.steps.stepinfo.publish.artifact.DockerFileArtifact;
@@ -165,5 +166,6 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(UploadToS3StepInfo.class, 100083);
     kryo.register(UploadToGCSStepInfo.class, 100084);
     kryo.register(K8BuildJobEnvInfo.ConnectorConversionInfo.class, 100085);
+    kryo.register(UploadToArtifactoryStepInfo.class, 100086);
   }
 }

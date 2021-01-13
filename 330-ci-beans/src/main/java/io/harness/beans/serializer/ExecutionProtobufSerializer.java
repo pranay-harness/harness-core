@@ -135,6 +135,7 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
         case GCR:
         case DOCKER:
         case ECR:
+        case UPLOAD_ARTIFACTORY:
         case UPLOAD_GCS:
         case UPLOAD_S3:
         case SAVE_CACHE_GCS:

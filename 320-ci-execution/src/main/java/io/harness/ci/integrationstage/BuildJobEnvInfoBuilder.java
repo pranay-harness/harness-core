@@ -87,6 +87,7 @@ public class BuildJobEnvInfoBuilder {
   private static final String PLUGIN_ACCESS_KEY = "PLUGIN_ACCESS_KEY";
   private static final String PLUGIN_SECRET_KEY = "PLUGIN_SECRET_KEY";
   private static final String PLUGIN_JSON_KEY = "PLUGIN_JSON_KEY";
+  private static final String PLUGIN_URL = "PLUGIN_URL";
 
   @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
 
@@ -247,6 +248,7 @@ public class BuildJobEnvInfoBuilder {
       case RESTORE_CACHE_S3:
       case RESTORE_CACHE_GCS:
       case SAVE_CACHE_GCS:
+      case UPLOAD_ARTIFACTORY:
       case UPLOAD_S3:
       case UPLOAD_GCS:
         return createPluginCompatibleStepContainerDefinition((PluginCompatibleStep) ciStepInfo, ciExecutionArgs,
@@ -390,8 +392,8 @@ public class BuildJobEnvInfoBuilder {
     return ContainerResourceParams.builder()
         .resourceRequestMilliCpu(STEP_REQUEST_MILLI_CPU)
         .resourceRequestMemoryMiB(STEP_REQUEST_MEMORY_MIB)
-        .resourceLimitMilliCpu(getContainerCpuLimit(resource, stepId, stepType))
-        .resourceLimitMemoryMiB(getContainerMemoryLimit(resource, stepId, stepType))
+        .resourceLimitMilliCpu(getContainerCpuLimit(resource, stepType, stepId))
+        .resourceLimitMemoryMiB(getContainerMemoryLimit(resource, stepType, stepId))
         .build();
   }
 
@@ -567,6 +569,16 @@ public class BuildJobEnvInfoBuilder {
                   .envToSecretEntry(EnvVariableEnum.DOCKER_REGISTRY, PLUGIN_REGISTRY)
                   .build());
           break;
+        case "ArtifactoryUpload":
+          map.put(stepElement.getIdentifier(),
+              ConnectorConversionInfo.builder()
+                  .connectorRef(resolveStringParameter(
+                      "connectorRef", stepElement.getType(), stepElement.getIdentifier(), step.getConnectorRef(), true))
+                  .envToSecretEntry(EnvVariableEnum.ARTIFACTORY_ENDPOINT, PLUGIN_URL)
+                  .envToSecretEntry(EnvVariableEnum.ARTIFACTORY_USERNAME, PLUGIN_USERNAME)
+                  .envToSecretEntry(EnvVariableEnum.ARTIFACTORY_PASSWORD, PLUGIN_PASSW)
+                  .build());
+          break;
         default:
           throw new IllegalStateException("Unexpected value: " + stepElement.getType());
       }
@@ -678,6 +690,7 @@ public class BuildJobEnvInfoBuilder {
       case GCR:
       case ECR:
       case DOCKER:
+      case UPLOAD_ARTIFACTORY:
       case UPLOAD_GCS:
       case UPLOAD_S3:
       case RESTORE_CACHE_GCS:
@@ -741,6 +754,7 @@ public class BuildJobEnvInfoBuilder {
       case GCR:
       case ECR:
       case DOCKER:
+      case UPLOAD_ARTIFACTORY:
       case UPLOAD_GCS:
       case UPLOAD_S3:
       case RESTORE_CACHE_GCS:
