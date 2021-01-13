@@ -10,6 +10,7 @@ public class CIPMSStepPlanCreator extends GenericStepPMSPlanCreator {
   public Set<String> getSupportedStepTypes() {
     return Sets.newHashSet("SaveCacheS3", "Test", "TestIntelligence", "SaveCache", "liteEngineTask", "GitClone",
         "BuildAndPushGCR", "BuildAndPushECR", "BuildAndPushDockerHub", "Cleanup", "Plugin", "PublishArtifacts",
-        "RestoreCacheGCS", "RestoreCacheS3", "RestoreCache", "SaveCacheGCS", "Run", "S3Upload", "GCSUpload");
+        "RestoreCacheGCS", "RestoreCacheS3", "RestoreCache", "SaveCacheGCS", "Run", "S3Upload", "GCSUpload",
+        "ArtifactoryUpload");
   }
 }

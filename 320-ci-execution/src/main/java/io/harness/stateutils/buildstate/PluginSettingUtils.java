@@ -19,6 +19,7 @@ import io.harness.beans.steps.stepinfo.RestoreCacheGCSStepInfo;
 import io.harness.beans.steps.stepinfo.RestoreCacheS3StepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheGCSStepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheS3StepInfo;
+import io.harness.beans.steps.stepinfo.UploadToArtifactoryStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToGCSStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToS3StepInfo;
 import io.harness.exception.InvalidArgumentsException;
@@ -60,6 +61,8 @@ public class PluginSettingUtils {
         return getGCRStepInfoEnvVariables((GCRStepInfo) stepInfo, identifier);
       case DOCKER:
         return getDockerStepInfoEnvVariables((DockerStepInfo) stepInfo, identifier);
+      case UPLOAD_ARTIFACTORY:
+        return getUploadToArtifactoryStepInfoEnvVariables((UploadToArtifactoryStepInfo) stepInfo, identifier);
       case UPLOAD_GCS:
         return getUploadToGCSStepInfoEnvVariables((UploadToGCSStepInfo) stepInfo, identifier);
       case UPLOAD_S3:
@@ -309,6 +312,17 @@ public class PluginSettingUtils {
 
     return map;
   }
+  private static Map<String, String> getUploadToArtifactoryStepInfoEnvVariables(
+      UploadToArtifactoryStepInfo stepInfo, String identifier) {
+    Map<String, String> map = new HashMap<>();
+
+    setMandatoryEnvironmentVariable(map, PLUGIN_SOURCE,
+        resolveStringParameter("sourcePath", "ArtifactoryUpload", identifier, stepInfo.getSourcePath(), true));
+    setMandatoryEnvironmentVariable(map, PLUGIN_TARGET,
+        resolveStringParameter("target", "ArtifactoryUpload", identifier, stepInfo.getTarget(), true));
+
+    return map;
+  }
 
   private static Map<String, String> getUploadToGCSStepInfoEnvVariables(
       UploadToGCSStepInfo stepInfo, String identifier) {
@@ -336,7 +350,7 @@ public class PluginSettingUtils {
     setMandatoryEnvironmentVariable(
         map, PLUGIN_BUCKET, resolveStringParameter("bucket", "S3Upload", identifier, stepInfo.getBucket(), true));
     setMandatoryEnvironmentVariable(map, PLUGIN_SOURCE,
-        resolveStringParameter("sourcePaths", "S3Upload", identifier, stepInfo.getSourcePath(), true));
+        resolveStringParameter("sourcePath", "S3Upload", identifier, stepInfo.getSourcePath(), true));
 
     String target = resolveStringParameter("target", "S3Upload", identifier, stepInfo.getTarget(), false);
 

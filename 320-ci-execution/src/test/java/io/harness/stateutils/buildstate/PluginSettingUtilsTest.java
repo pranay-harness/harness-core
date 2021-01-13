@@ -12,6 +12,7 @@ import io.harness.beans.steps.stepinfo.RestoreCacheGCSStepInfo;
 import io.harness.beans.steps.stepinfo.RestoreCacheS3StepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheGCSStepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheS3StepInfo;
+import io.harness.beans.steps.stepinfo.UploadToArtifactoryStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToGCSStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToS3StepInfo;
 import io.harness.category.element.UnitTests;
@@ -26,6 +27,25 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class PluginSettingUtilsTest extends CIExecutionTest {
+  @Test
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void shouldGetUploadToArtifactoryStepInfoStepEnvVariables() {
+    UploadToArtifactoryStepInfo uploadToArtifactoryStepInfo =
+        UploadToArtifactoryStepInfo.builder()
+            .target(ParameterField.createValueField("repo/wings/software/module/1.0.0-SNAPSHOT"))
+            .sourcePath(ParameterField.createValueField("target/libmodule.jar"))
+            .build();
+
+    Map<String, String> expected = new HashMap<>();
+    expected.put("PLUGIN_TARGET", "repo/wings/software/module/1.0.0-SNAPSHOT");
+    expected.put("PLUGIN_SOURCE", "target/libmodule.jar");
+
+    Map<String, String> actual =
+        PluginSettingUtils.getPluginCompatibleEnvVariables(uploadToArtifactoryStepInfo, "identifier");
+    assertThat(actual).isEqualTo(expected);
+  }
+
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
@@ -51,9 +71,8 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_TARGET", "target");
     expected.put("PLUGIN_BUILD_ARGS", "arg1,arg2");
     expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
-    Map<String, String> pluginCompatiblePublishStepEnvVariables =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(gcrStepInfo, "identifier");
-    assertThat(pluginCompatiblePublishStepEnvVariables).isEqualTo(expected);
+    Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(gcrStepInfo, "identifier");
+    assertThat(actual).isEqualTo(expected);
   }
 
   @Test
@@ -81,9 +100,8 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_TARGET", "target");
     expected.put("PLUGIN_BUILD_ARGS", "arg1,arg2");
     expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
-    Map<String, String> pluginCompatiblePublishStepEnvVariables =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(ecrStepInfo, "identifier");
-    assertThat(pluginCompatiblePublishStepEnvVariables).isEqualTo(expected);
+    Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(ecrStepInfo, "identifier");
+    assertThat(actual).isEqualTo(expected);
   }
   @Test
   @Owner(developers = ALEKSANDAR)
@@ -108,9 +126,8 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_TARGET", "target");
     expected.put("PLUGIN_BUILD_ARGS", "arg1,arg2");
     expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
-    Map<String, String> pluginCompatiblePublishStepEnvVariables =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(dockerStepInfo, "identifier");
-    assertThat(pluginCompatiblePublishStepEnvVariables).isEqualTo(expected);
+    Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(dockerStepInfo, "identifier");
+    assertThat(actual).isEqualTo(expected);
   }
 
   @Test
@@ -131,9 +148,9 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_FILENAME", "key.tar");
     expected.put("PLUGIN_RESTORE", "true");
     expected.put("PLUGIN_REGION", "region");
-    Map<String, String> pluginCompatibleCacheStepEnvVariables =
+    Map<String, String> actual =
         PluginSettingUtils.getPluginCompatibleEnvVariables(restoreCacheS3StepInfo, "identifier");
-    assertThat(pluginCompatibleCacheStepEnvVariables).isEqualTo(expected);
+    assertThat(actual).isEqualTo(expected);
   }
 
   @Test
@@ -157,9 +174,8 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_FILENAME", "key.tar");
     expected.put("PLUGIN_REBUILD", "true");
     expected.put("PLUGIN_REGION", "region");
-    Map<String, String> pluginCompatibleCacheStepEnvVariables =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(saveCacheS3StepInfo, "identifier");
-    assertThat(pluginCompatibleCacheStepEnvVariables).isEqualTo(expected);
+    Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(saveCacheS3StepInfo, "identifier");
+    assertThat(actual).isEqualTo(expected);
   }
 
   @Test
@@ -176,9 +192,9 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_BUCKET", "bucket");
     expected.put("PLUGIN_FILENAME", "key.tar");
     expected.put("PLUGIN_RESTORE", "true");
-    Map<String, String> pluginCompatibleCacheStepEnvVariables =
+    Map<String, String> actual =
         PluginSettingUtils.getPluginCompatibleEnvVariables(restoreCacheGCSStepInfo, "identifier");
-    assertThat(pluginCompatibleCacheStepEnvVariables).isEqualTo(expected);
+    assertThat(actual).isEqualTo(expected);
   }
 
   @Test
@@ -198,9 +214,8 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_BUCKET", "bucket");
     expected.put("PLUGIN_FILENAME", "key.tar");
     expected.put("PLUGIN_REBUILD", "true");
-    Map<String, String> pluginCompatibleCacheStepEnvVariables =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(saveCacheGCSStepInfo, "identifier");
-    assertThat(pluginCompatibleCacheStepEnvVariables).isEqualTo(expected);
+    Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(saveCacheGCSStepInfo, "identifier");
+    assertThat(actual).isEqualTo(expected);
   }
 
   @Test
@@ -221,9 +236,8 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_SOURCE", "sources");
     expected.put("PLUGIN_TARGET", "target");
 
-    Map<String, String> pluginCompatibleUploadStepEnvVariables =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(uploadToS3StepInfo, "identifier");
-    assertThat(pluginCompatibleUploadStepEnvVariables).isEqualTo(expected);
+    Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(uploadToS3StepInfo, "identifier");
+    assertThat(actual).isEqualTo(expected);
   }
 
   @Test
@@ -240,8 +254,7 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_SOURCE", "/step-exec/workspace/pom.xml");
     expected.put("PLUGIN_TARGET", "bucket/dir/pom.xml");
 
-    Map<String, String> pluginCompatibleUploadStepEnvVariables =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(uploadToS3StepInfo, "identifier");
-    assertThat(pluginCompatibleUploadStepEnvVariables).isEqualTo(expected);
+    Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(uploadToS3StepInfo, "identifier");
+    assertThat(actual).isEqualTo(expected);
   }
 }
