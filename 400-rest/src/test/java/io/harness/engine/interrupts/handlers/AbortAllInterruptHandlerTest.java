@@ -4,7 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.pms.contracts.execution.Status.ABORTED;
-import static io.harness.pms.contracts.execution.Status.RUNNING;
+import static io.harness.pms.contracts.execution.Status.ASYNC_WAITING;
 import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 import static io.harness.rule.OwnerRule.PRASHANT;
 
@@ -16,11 +16,14 @@ import io.harness.engine.PlanRepo;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.engine.interrupts.InterruptTestHelper;
 import io.harness.engine.interrupts.steps.SimpleAsyncStep;
+import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.TriggeredBy;
+import io.harness.pms.execution.utils.StatusUtils;
+import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.rule.Owner;
 import io.harness.waiter.OrchestrationNotifyEventListener;
@@ -31,12 +34,13 @@ import software.wings.rules.Listeners;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import java.util.List;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@Listeners(OrchestrationNotifyEventListener.class)
+@Listeners({OrchestrationNotifyEventListener.class, NodeExecutionEventListener.class})
 public class AbortAllInterruptHandlerTest extends WingsBaseTest {
   @Inject private Injector injector;
   @Inject private OrchestrationService orchestrationService;
@@ -63,7 +67,7 @@ public class AbortAllInterruptHandlerTest extends WingsBaseTest {
   public void shouldTestHandleInterrupt() {
     PlanExecution execution =
         orchestrationService.startExecution(planRepo.planWithBigWait(), getAbstractions(), metadata);
-    interruptTestHelper.waitForPlanStatus(execution.getUuid(), RUNNING);
+    interruptTestHelper.waitForNodeStatusInPlan(execution.getUuid(), ASYNC_WAITING);
 
     Interrupt handledInterrupt = orchestrationService.registerInterrupt(
         InterruptPackage.builder().planExecutionId(execution.getUuid()).interruptType(ABORT_ALL).build());
@@ -74,6 +78,8 @@ public class AbortAllInterruptHandlerTest extends WingsBaseTest {
     PlanExecution abortedExecution = interruptTestHelper.fetchPlanExecutionStatus(execution.getUuid());
     assertThat(abortedExecution).isNotNull();
     assertThat(abortedExecution.getStatus()).isEqualTo(ABORTED);
+    List<NodeExecution> nodeExecutions = interruptTestHelper.fetchNodeExecutionsByPlan(execution.getUuid());
+    assertThat(nodeExecutions.stream().allMatch(n -> StatusUtils.isFinalStatus(n.getStatus()))).isTrue();
   }
 
   private Map<String, String> getAbstractions() {

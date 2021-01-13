@@ -2,6 +2,7 @@ package io.harness.engine.executions.node;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
 
 import io.harness.OrchestrationPublisherName;
 import io.harness.annotations.dev.OwnedBy;
@@ -9,9 +10,12 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.ExecutionEngineDispatcher;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executables.InvocationHelper;
+import io.harness.engine.interrupts.InterruptProcessingFailedException;
 import io.harness.engine.pms.tasks.TaskExecutor;
 import io.harness.engine.progress.EngineProgressCallback;
 import io.harness.engine.resume.EngineResumeCallback;
+import io.harness.exception.InvalidRequestException;
+import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.NodeExecutionMapper;
 import io.harness.pms.contracts.advisers.AdviserResponse;
@@ -26,9 +30,11 @@ import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
+import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
+import io.harness.pms.sdk.core.steps.executables.Abortable;
 import io.harness.pms.sdk.core.steps.io.ResponseDataMapper;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.json.JsonOrchestrationUtils;
@@ -148,5 +154,31 @@ public class PmsNodeExecutionServiceImpl implements PmsNodeExecutionService {
             .errorMessage(failureInfo.getErrorMessage())
             .failureTypes(EngineExceptionUtils.transformToWingsFailureTypes(failureInfo.getFailureTypesList()))
             .build());
+  }
+
+  @Override
+  public void abortExecution(NodeExecutionProto nodeExecution, Status finalStatus) {
+    try {
+      Step<?> currentStep = stepRegistry.obtain(nodeExecution.getNode().getStepType());
+      ExecutableResponse executableResponse = NodeExecutionUtils.obtainLatestExecutableResponse(nodeExecution);
+
+      if (currentStep instanceof Abortable && executableResponse != null) {
+        if (executableResponse.getResponseCase() != ExecutableResponse.ResponseCase.ASYNC) {
+          log.error("Executable Response of type {} is not supported for abort", executableResponse.getResponseCase());
+          throw new InvalidRequestException("Abort for nodeExecution [" + nodeExecution.getUuid() + "] failed");
+        }
+        ((Abortable) currentStep)
+            .handleAbort(nodeExecution.getAmbiance(), extractResolvedStepParameters(nodeExecution),
+                executableResponse.getAsync());
+        NodeExecution updatedNodeExecution = nodeExecutionService.updateStatusWithOps(
+            nodeExecution.getUuid(), finalStatus, ops -> ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
+        engine.endTransition(updatedNodeExecution);
+      }
+    } catch (Exception ex) {
+      throw new InterruptProcessingFailedException(ABORT_ALL,
+          "Abort failed for execution Plan :" + nodeExecution.getAmbiance().getPlanExecutionId()
+              + "for NodeExecutionId: " + nodeExecution.getUuid(),
+          ex);
+    }
   }
 }
