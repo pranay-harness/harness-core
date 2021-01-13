@@ -1,6 +1,9 @@
 package io.harness.ng.core.event;
 
-import io.harness.eventsframework.EventsFrameworkConstants;
+import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CONNECTOR_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
+
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
@@ -8,21 +11,26 @@ import io.harness.eventsframework.consumer.Message;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
 public class FeatureFlagStreamConsumer implements Runnable {
   private final Consumer eventConsumer;
-  private final MessageProcessor featureFlagChangeEventMessageProcessor;
+  private final List<MessageListener> messageListenersList;
 
   @Inject
-  public FeatureFlagStreamConsumer(@Named(EventsFrameworkConstants.FEATURE_FLAG_STREAM) Consumer eventConsumer,
-      @Named(EventsFrameworkConstants.FEATURE_FLAG_STREAM) MessageProcessor featureFlagChangeEventMessageProcessor) {
+  public FeatureFlagStreamConsumer(@Named(FEATURE_FLAG_STREAM) Consumer eventConsumer,
+      @Named(ORGANIZATION_ENTITY + FEATURE_FLAG_STREAM) MessageListener organizationFeatureFlagStreamListener,
+      @Named(CONNECTOR_ENTITY + FEATURE_FLAG_STREAM) MessageListener connectorFeatureFlagStreamListener) {
     this.eventConsumer = eventConsumer;
-    this.featureFlagChangeEventMessageProcessor = featureFlagChangeEventMessageProcessor;
+    messageListenersList = new ArrayList<>();
+    messageListenersList.add(organizationFeatureFlagStreamListener);
+    messageListenersList.add(connectorFeatureFlagStreamListener);
   }
 
   @Override
@@ -54,8 +62,13 @@ public class FeatureFlagStreamConsumer implements Runnable {
 
   private boolean handleMessage(Message message) {
     try {
-      featureFlagChangeEventMessageProcessor.processMessage(message);
-      return true;
+      AtomicBoolean success = new AtomicBoolean(true);
+      messageListenersList.forEach(messageListener -> {
+        if (!messageListener.handleMessage(message)) {
+          success.set(false);
+        }
+      });
+      return success.get();
     } catch (Exception ex) {
       // This is not evicted from events framework so that it can be processed
       // by other consumer if the error is a runtime error

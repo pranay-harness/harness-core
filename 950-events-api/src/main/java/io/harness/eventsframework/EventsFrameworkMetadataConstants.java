@@ -5,6 +5,7 @@ public final class EventsFrameworkMetadataConstants {
 
   public static final String ACTION = "action";
   public static final String CREATE_ACTION = "create";
+  public static final String RESTORE_ACTION = "restore";
   public static final String UPDATE_ACTION = "update";
   public static final String DELETE_ACTION = "delete";
 

@@ -29,7 +29,7 @@ public class SetupUsageChangeEventMessageProcessor implements MessageProcessor {
   }
 
   @Override
-  public void processMessage(Message message) {
+  public boolean processMessage(Message message) {
     String messageId = message.getId();
     log.info("Processing the setup usage crud event with the id {}", messageId);
     Map<String, String> metadataMap = message.getMessage().getMetadataMap();
@@ -38,15 +38,16 @@ public class SetupUsageChangeEventMessageProcessor implements MessageProcessor {
         case EventsFrameworkMetadataConstants.CREATE_ACTION:
           EntitySetupUsageCreateDTO setupUsageCreateDTO = getEntitySetupUsageCreateDTO(message);
           processCreateAction(setupUsageCreateDTO);
-          return;
+          return true;
         case EventsFrameworkMetadataConstants.DELETE_ACTION:
           DeleteSetupUsageDTO deleteRequestDTO = getEntitySetupUsageDeleteDTO(message);
           processDeleteAction(deleteRequestDTO);
-          return;
+          return true;
         default:
           log.info("Invalid action type: {}", metadataMap.get(EventsFrameworkMetadataConstants.ACTION));
       }
     }
+    return true;
   }
 
   private void processDeleteAction(DeleteSetupUsageDTO deleteRequestDTO) {

@@ -248,10 +248,29 @@ public class ProjectServiceImpl implements ProjectService {
     return delete;
   }
 
+  @Override
+  public boolean restore(String accountIdentifier, String orgIdentifier, String identifier) {
+    validateParentOrgExists(accountIdentifier, orgIdentifier);
+    boolean success = projectRepository.restore(accountIdentifier, orgIdentifier, identifier);
+    if (success) {
+      publishEvent(Project.builder()
+                       .accountIdentifier(accountIdentifier)
+                       .orgIdentifier(orgIdentifier)
+                       .identifier(identifier)
+                       .build(),
+          EventsFrameworkMetadataConstants.RESTORE_ACTION);
+    }
+    return success;
+  }
+
   private void validateCreateProjectRequest(String accountIdentifier, String orgIdentifier, ProjectDTO project) {
     verifyValuesNotChanged(Lists.newArrayList(Pair.of(accountIdentifier, project.getAccountIdentifier()),
                                Pair.of(orgIdentifier, project.getOrgIdentifier())),
         true);
+    validateParentOrgExists(accountIdentifier, orgIdentifier);
+  }
+
+  private void validateParentOrgExists(String accountIdentifier, String orgIdentifier) {
     if (!organizationService.get(accountIdentifier, orgIdentifier).isPresent()) {
       throw new InvalidArgumentsException(
           String.format("Organization [%s] in Account [%s] does not exist", orgIdentifier, accountIdentifier),
@@ -265,5 +284,6 @@ public class ProjectServiceImpl implements ProjectService {
                                Pair.of(orgIdentifier, project.getOrgIdentifier())),
         true);
     verifyValuesNotChanged(Lists.newArrayList(Pair.of(identifier, project.getIdentifier())), false);
+    validateParentOrgExists(accountIdentifier, orgIdentifier);
   }
 }
