@@ -1,11 +1,8 @@
 package software.wings.resources.secretsmanagement;
 
-import static io.harness.exception.WingsException.USER;
-
 import io.harness.NGCommonEntityConstants;
 import io.harness.beans.SecretManagerConfig;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.SecretManagementException;
+import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.mappers.SecretManagerConfigMapper;
 import io.harness.rest.RestResponse;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
@@ -45,7 +42,7 @@ public class SecretManagerResourceNG {
   @Consumes("application/x-kryo")
   public RestResponse<SecretManagerConfigDTO> createSecretManager(SecretManagerConfigDTO dto) {
     SecretManagerConfig secretManagerConfig = SecretManagerConfigMapper.fromDTO(dto);
-    return new RestResponse<>(ngSecretManagerService.createSecretManager(secretManagerConfig).toDTO(true));
+    return new RestResponse<>(ngSecretManagerService.create(secretManagerConfig).toDTO(true));
   }
 
   @POST
@@ -60,11 +57,11 @@ public class SecretManagerResourceNG {
 
   @GET
   @Path("{identifier}/validate")
-  public RestResponse<Boolean> validateSecretManager(@PathParam("identifier") String identifier,
+  public RestResponse<ConnectorValidationResult> validateSecretManager(@PathParam("identifier") String identifier,
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String account,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String org,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String project) {
-    return new RestResponse<>(ngSecretManagerService.validate(account, org, project, identifier));
+    return new RestResponse<>(ngSecretManagerService.testConnection(account, org, project, identifier));
   }
 
   @GET
@@ -73,7 +70,7 @@ public class SecretManagerResourceNG {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     List<SecretManagerConfig> secretManagerConfigs =
-        ngSecretManagerService.listSecretManagers(accountIdentifier, orgIdentifier, projectIdentifier);
+        ngSecretManagerService.list(accountIdentifier, orgIdentifier, projectIdentifier);
     List<SecretManagerConfigDTO> dtoList = new ArrayList<>();
     secretManagerConfigs.forEach(secretManagerConfig -> dtoList.add(secretManagerConfig.toDTO(true)));
     return new RestResponse<>(dtoList);
@@ -87,7 +84,7 @@ public class SecretManagerResourceNG {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     Optional<SecretManagerConfig> secretManagerConfigOptional =
-        ngSecretManagerService.getSecretManager(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+        ngSecretManagerService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     SecretManagerConfigDTO dto = null;
     if (secretManagerConfigOptional.isPresent()) {
       dto = secretManagerConfigOptional.get().toDTO(true);
@@ -112,14 +109,10 @@ public class SecretManagerResourceNG {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       SecretManagerConfigUpdateDTO secretManagerConfigUpdateDTO) {
-    Optional<SecretManagerConfig> secretManagerConfigOptional =
-        ngSecretManagerService.getSecretManager(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    if (secretManagerConfigOptional.isPresent()) {
-      SecretManagerConfig applyUpdate =
-          SecretManagerConfigMapper.applyUpdate(secretManagerConfigOptional.get(), secretManagerConfigUpdateDTO);
-      return new RestResponse<>(ngSecretManagerService.updateSecretManager(applyUpdate).toDTO(true));
-    }
-    throw new SecretManagementException(ErrorCode.SECRET_MANAGEMENT_ERROR, "Secret Manager not found", USER);
+    return new RestResponse<>(
+        ngSecretManagerService
+            .update(accountIdentifier, orgIdentifier, projectIdentifier, identifier, secretManagerConfigUpdateDTO)
+            .toDTO(true));
   }
 
   @DELETE
@@ -129,7 +122,7 @@ public class SecretManagerResourceNG {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier) {
-    return new RestResponse<>(ngSecretManagerService.deleteSecretManager(
-        accountIdentifier, orgIdentifier, projectIdentifier, identifier, true));
+    return new RestResponse<>(
+        ngSecretManagerService.delete(accountIdentifier, orgIdentifier, projectIdentifier, identifier, true));
   }
 }

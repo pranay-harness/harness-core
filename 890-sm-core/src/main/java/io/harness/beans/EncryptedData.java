@@ -79,6 +79,13 @@ import org.mongodb.morphia.annotations.Transient;
     })
 @CdIndex(name = "acctKmsIdx", fields = { @Field("accountId")
                                          , @Field("kmsId") })
+@CdIndex(name = "ngSecretManagerIdx",
+    fields =
+    {
+      @Field("ngMetadata.accountIdentifier")
+      , @Field("ngMetadata.orgIdentifier"), @Field("ngMetadata.projectIdentifier"),
+          @Field("ngMetadata.secretManagerIdentifier")
+    })
 @FieldNameConstants(innerTypeName = "EncryptedDataKeys")
 public class EncryptedData
     implements EncryptedRecord, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,

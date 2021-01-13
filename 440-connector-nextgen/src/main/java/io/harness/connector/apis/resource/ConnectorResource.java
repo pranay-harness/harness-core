@@ -167,8 +167,7 @@ public class ConnectorResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @NotNull @EntityIdentifier String connectorIdentifier) {
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connectorIdentifier)) {
-      throw new InvalidRequestException(String.format(
-          "Delete operation not supported for Harness Secret Manager (identifier: [%s])", connectorIdentifier));
+      throw new InvalidRequestException("Delete operation not supported for Harness Secret Manager (identifier: [%s])");
     }
     return ResponseDTO.newResponse(
         connectorService.delete(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));

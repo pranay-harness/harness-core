@@ -80,11 +80,11 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
   }
 
   @Override
-  public String saveGcpKmsConfig(String accountId, GcpKmsConfig gcpKmsConfig, boolean validate) {
+  public String saveGcpKmsConfig(String accountId, GcpKmsConfig gcpKmsConfig, boolean validateByCreatingTestSecret) {
     validateUserInput(gcpKmsConfig, accountId);
     checkIfSecretsManagerConfigCanBeCreatedOrUpdated(accountId);
     gcpKmsConfig.setAccountId(accountId);
-    return saveOrUpdateInternal(gcpKmsConfig, null, validate);
+    return saveOrUpdateInternal(gcpKmsConfig, null, validateByCreatingTestSecret);
   }
 
   @Override
@@ -139,8 +139,9 @@ public class GcpSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     return saveOrUpdateInternal(savedGcpKmsConfig, oldConfigForAudit, validate);
   }
 
-  private String saveOrUpdateInternal(GcpKmsConfig gcpKmsConfig, GcpKmsConfig oldKmsConfig, boolean validate) {
-    if (validate) {
+  private String saveOrUpdateInternal(
+      GcpKmsConfig gcpKmsConfig, GcpKmsConfig oldKmsConfig, boolean validateByCreatingTestSecret) {
+    if (validateByCreatingTestSecret) {
       validateSecretsManagerConfig(gcpKmsConfig.getAccountId(), gcpKmsConfig);
     }
     EncryptedData credentialEncryptedData = getEncryptedDataForSecretField(gcpKmsConfig, gcpKmsConfig.getCredentials());

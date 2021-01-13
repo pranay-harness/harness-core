@@ -154,7 +154,7 @@ public class VaultConfig extends SecretManagerConfig {
                                           .basePath(getBasePath())
                                           .secretEngineName(getSecretEngineName())
                                           .secretEngineVersion(getSecretEngineVersion())
-                                          .renewIntervalHours(getRenewIntervalHours())
+                                          .renewalIntervalMinutes(getRenewalInterval())
                                           .vaultUrl(getVaultUrl())
                                           .build();
     SecretManagerConfigMapper.updateNGSecretManagerMetadata(getNgMetadata(), ngVaultConfigDTO);

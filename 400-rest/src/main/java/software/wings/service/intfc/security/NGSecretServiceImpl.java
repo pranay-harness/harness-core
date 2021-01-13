@@ -104,6 +104,20 @@ public class NGSecretServiceImpl implements NGSecretService {
         .build();
   }
 
+  private String formNotFoundMessage(String baseMessage, String orgIdentifier, String projectIdentifier) {
+    if (!StringUtils.isEmpty(orgIdentifier)) {
+      baseMessage += String.format("in org: %s", orgIdentifier);
+      if (!StringUtils.isEmpty(projectIdentifier)) {
+        baseMessage += String.format(" and project: %s", projectIdentifier);
+      }
+    } else if (!StringUtils.isEmpty(projectIdentifier)) {
+      baseMessage += "in project: %s" + projectIdentifier;
+    } else {
+      baseMessage += "in this scope.";
+    }
+    return baseMessage;
+  }
+
   @Override
   public EncryptedData createSecretText(@NotNull SecretTextDTO dto) {
     // both value and path cannot be present, only one of them is allowed
@@ -124,7 +138,7 @@ public class NGSecretServiceImpl implements NGSecretService {
 
     // Fetch secret manager with which this secret will be saved
     Optional<SecretManagerConfig> secretManagerConfigOptional =
-        ngSecretManagerService.getSecretManager(metadata.getAccountIdentifier(), metadata.getOrgIdentifier(),
+        ngSecretManagerService.get(metadata.getAccountIdentifier(), metadata.getOrgIdentifier(),
             metadata.getProjectIdentifier(), metadata.getSecretManagerIdentifier());
 
     if (secretManagerConfigOptional.isPresent()) {
@@ -157,7 +171,9 @@ public class NGSecretServiceImpl implements NGSecretService {
       wingsPersistence.save(data);
       return data;
     } else {
-      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "No such secret manager found", USER);
+      String message = "No such secret manager found";
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
+          formNotFoundMessage(message, metadata.getOrgIdentifier(), metadata.getProjectIdentifier()), USER);
     }
   }
 
@@ -208,7 +224,7 @@ public class NGSecretServiceImpl implements NGSecretService {
 
       // get secret manager with which secret text was encrypted
       Optional<SecretManagerConfig> secretManagerConfigOptional =
-          ngSecretManagerService.getSecretManager(metadata.getAccountIdentifier(), metadata.getOrgIdentifier(),
+          ngSecretManagerService.get(metadata.getAccountIdentifier(), metadata.getOrgIdentifier(),
               metadata.getProjectIdentifier(), metadata.getSecretManagerIdentifier());
 
       if (secretManagerConfigOptional.isPresent()) {
@@ -245,9 +261,13 @@ public class NGSecretServiceImpl implements NGSecretService {
         }
         wingsPersistence.save(encryptedData);
         return true;
+      } else {
+        throw new InvalidRequestException(formNotFoundMessage("No such secret manager found",
+                                              metadata.getOrgIdentifier(), metadata.getProjectIdentifier()),
+            INVALID_REQUEST, USER);
       }
     }
-    throw new InvalidRequestException("No such secret found", INVALID_REQUEST, USER);
+    throw new InvalidRequestException(formNotFoundMessage("No such secret found", org, project), INVALID_REQUEST, USER);
   }
 
   @Override
@@ -262,7 +282,7 @@ public class NGSecretServiceImpl implements NGSecretService {
       NGEncryptedDataMetadata metadata = encryptedData.getNgMetadata();
 
       // Get secret manager with which it was encrypted
-      Optional<SecretManagerConfig> secretManagerConfigOptional = ngSecretManagerService.getSecretManager(
+      Optional<SecretManagerConfig> secretManagerConfigOptional = ngSecretManagerService.get(
           accountIdentifier, orgIdentifier, projectIdentifier, metadata.getSecretManagerIdentifier());
       if (secretManagerConfigOptional.isPresent()) {
         if (isReadOnlySecretManager(secretManagerConfigOptional.get())) {
@@ -367,9 +387,8 @@ public class NGSecretServiceImpl implements NGSecretService {
             }
 
             // get secret manager with which this was secret was encrypted
-            Optional<SecretManagerConfig> secretManagerConfigOptional =
-                ngSecretManagerService.getSecretManager(accountIdentifier, orgIdentifier, projectIdentifier,
-                    encryptedData.getNgMetadata().getSecretManagerIdentifier());
+            Optional<SecretManagerConfig> secretManagerConfigOptional = ngSecretManagerService.get(accountIdentifier,
+                orgIdentifier, projectIdentifier, encryptedData.getNgMetadata().getSecretManagerIdentifier());
             if (secretManagerConfigOptional.isPresent()) {
               SecretManagerConfig encryptionConfig = secretManagerConfigOptional.get();
 

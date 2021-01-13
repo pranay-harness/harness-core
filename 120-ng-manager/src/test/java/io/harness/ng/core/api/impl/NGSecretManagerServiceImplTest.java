@@ -13,6 +13,8 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.connector.ConnectivityStatus;
+import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.dto.LocalConfigDTO;
@@ -101,10 +103,11 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testValidateSecretManager() throws IOException {
     when(secretManagerClient.validateSecretManager(any(), any(), any(), any()).execute())
-        .thenReturn(Response.success(new RestResponse<>(true)));
+        .thenReturn(Response.success(
+            new RestResponse<>(ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build())));
 
-    boolean success = ngSecretManagerService.validate("account", null, null, "identifier");
-    assertThat(success).isTrue();
+    ConnectorValidationResult result = ngSecretManagerService.validate("account", null, null, "identifier");
+    assertThat(result).isNotNull();
     verify(secretManagerClient, atLeastOnce()).validateSecretManager(any(), any(), any(), any());
   }
 
