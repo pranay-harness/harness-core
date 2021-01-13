@@ -47,6 +47,8 @@ import io.harness.yaml.core.failurestrategy.FailureStrategyActionConfig;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.failurestrategy.NGFailureActionType;
 import io.harness.yaml.core.failurestrategy.retry.RetryFailureActionConfig;
+import io.harness.yaml.core.timeout.Timeout;
+import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.inject.Inject;
@@ -152,21 +154,23 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
           break;
         case RETRY:
           RetryFailureActionConfig retryAction = (RetryFailureActionConfig) action;
-          adviserObtainmentList.add(adviserObtainmentBuilder.setType(RetryAdviser.ADVISER_TYPE)
-                                        .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
-                                            RetryAdviserParameters.builder()
-                                                .applicableFailureTypes(failureTypes)
-                                                .nextNodeId(nextNodeUuid)
-                                                .repairActionCodeAfterRetry(toRepairAction(
-                                                    retryAction.getSpecConfig().getOnRetryFailure().getAction()))
-                                                .retryCount(retryAction.getSpecConfig().getRetryCount())
-                                                .waitIntervalList(retryAction.getSpecConfig()
-                                                                      .getRetryInterval()
-                                                                      .stream()
-                                                                      .map(Integer::valueOf)
-                                                                      .collect(Collectors.toList()))
-                                                .build())))
-                                        .build());
+          adviserObtainmentList.add(
+              adviserObtainmentBuilder.setType(RetryAdviser.ADVISER_TYPE)
+                  .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
+                      RetryAdviserParameters.builder()
+                          .applicableFailureTypes(failureTypes)
+                          .nextNodeId(nextNodeUuid)
+                          .repairActionCodeAfterRetry(
+                              toRepairAction(retryAction.getSpecConfig().getOnRetryFailure().getAction()))
+                          .retryCount(retryAction.getSpecConfig().getRetryCount())
+                          .waitIntervalList(
+                              retryAction.getSpecConfig()
+                                  .getRetryInterval()
+                                  .stream()
+                                  .map(s -> ((int) (TimeoutUtils.getTimeoutInSeconds(Timeout.fromString(s), 0))))
+                                  .collect(Collectors.toList()))
+                          .build())))
+                  .build());
 
           break;
         case MARK_AS_SUCCESS:
@@ -220,7 +224,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
 
   private AdviserObtainment getOnSuccessAdviserObtainment(YamlField currentField) {
     if (currentField != null && currentField.getNode() != null) {
-      if (currentField.checkIfParentIsParallel(STEPS)) {
+      if (currentField.checkIfParentIsParallel(STEPS) || currentField.checkIfParentIsParallel(ROLLBACK_STEPS)) {
         return null;
       }
       YamlField siblingField = currentField.getNode().nextSiblingFromParentArray(

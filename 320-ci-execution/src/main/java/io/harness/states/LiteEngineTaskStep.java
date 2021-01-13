@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.beans.dependencies.ServiceDependency;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.outcomes.DependencyOutcome;
-import io.harness.beans.serializer.TimeoutUtils;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
@@ -39,6 +38,7 @@ import io.harness.stateutils.buildstate.BuildSetupUtils;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
+import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;

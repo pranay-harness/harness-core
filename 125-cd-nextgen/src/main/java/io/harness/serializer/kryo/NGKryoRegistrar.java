@@ -41,6 +41,7 @@ import io.harness.cdng.pipeline.stepinfo.HttpStepInfo;
 import io.harness.cdng.pipeline.stepinfo.ShellScriptStepInfo;
 import io.harness.cdng.service.beans.KubernetesServiceSpec;
 import io.harness.cdng.service.beans.ServiceConfig;
+import io.harness.cdng.service.beans.ServiceConfigOutcome;
 import io.harness.cdng.service.beans.ServiceDefinition;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome;
@@ -125,5 +126,6 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(ArtifactsWrapperOutcome.class, 12505);
     kryo.register(ManifestsWrapperOutcome.class, 12506);
     kryo.register(VariablesWrapperOutcome.class, 12507);
+    kryo.register(ServiceConfigOutcome.class, 12508);
   }
 }

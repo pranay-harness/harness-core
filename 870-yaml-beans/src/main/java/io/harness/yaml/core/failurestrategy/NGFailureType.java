@@ -13,9 +13,9 @@ public enum NGFailureType {
   @JsonProperty(NGFailureTypeConstants.ALL_ERRORS)
   ALL_ERRORS(NGFailureTypeConstants.ALL_ERRORS,
       EnumSet.of(AUTHENTICATION_FAILURE, CONNECTIVITY_FAILURE, DELEGATE_PROVISIONING_FAILURE, APPLICATION_FAILURE,
-          AUTHORIZATION_FAILURE, VERIFICATION_FAILURE, TIMEOUT_FAILURE)),
+          AUTHORIZATION_FAILURE, VERIFICATION_FAILURE, TIMEOUT_FAILURE, UNKNOWN_FAILURE, SKIPPING_FAILURE)),
   @JsonProperty(NGFailureTypeConstants.OTHER_ERRORS)
-  OTHER_ERRORS(NGFailureTypeConstants.OTHER_ERRORS, EnumSet.of(APPLICATION_FAILURE)),
+  OTHER_ERRORS(NGFailureTypeConstants.OTHER_ERRORS, EnumSet.noneOf(FailureType.class)),
   @JsonProperty(NGFailureTypeConstants.AUTHENTICATION_ERROR)
   AUTHENTICATION_ERROR(NGFailureTypeConstants.AUTHENTICATION_ERROR, EnumSet.of(AUTHENTICATION_FAILURE)),
   @JsonProperty(NGFailureTypeConstants.CONNECTIVITY_ERROR)
@@ -39,7 +39,7 @@ public enum NGFailureType {
   }
 
   @JsonCreator
-  public static NGFailureType getFailureType(String yamlName) {
+  public static NGFailureType getFailureTypes(String yamlName) {
     for (NGFailureType value : NGFailureType.values()) {
       if (value.yamlName.equalsIgnoreCase(yamlName)) {
         return value;
@@ -53,7 +53,7 @@ public enum NGFailureType {
     return yamlName;
   }
 
-  public EnumSet<FailureType> getFailureType() {
+  public EnumSet<FailureType> getFailureTypes() {
     return failureType;
   }
 }
