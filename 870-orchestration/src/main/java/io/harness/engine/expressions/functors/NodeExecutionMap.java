@@ -17,6 +17,7 @@ import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.LateBindingMap;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.resolver.RefObjectUtil;
+import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 
 import java.util.*;
 import java.util.function.Function;
@@ -140,7 +141,7 @@ public class NodeExecutionMap extends LateBindingMap {
     }
 
     try {
-      return Optional.ofNullable(pmsOutcomeService.resolve(newAmbiance, RefObjectUtil.getOutcomeRefObject(key)));
+      return jsonToObject(pmsOutcomeService.resolve(newAmbiance, RefObjectUtil.getOutcomeRefObject(key)));
     } catch (OutcomeException ignored) {
       return Optional.empty();
     }
@@ -152,10 +153,13 @@ public class NodeExecutionMap extends LateBindingMap {
     }
 
     try {
-      return Optional.ofNullable(
-          pmsSweepingOutputService.resolve(newAmbiance, RefObjectUtil.getSweepingOutputRefObject(key)));
+      return jsonToObject(pmsSweepingOutputService.resolve(newAmbiance, RefObjectUtil.getSweepingOutputRefObject(key)));
     } catch (SweepingOutputException ignored) {
       return Optional.empty();
     }
+  }
+
+  private static Optional<Object> jsonToObject(String json) {
+    return Optional.ofNullable(json == null ? null : JsonOrchestrationUtils.asMap(json));
   }
 }
