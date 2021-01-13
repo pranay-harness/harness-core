@@ -1,7 +1,5 @@
 package io.harness.encryption;
 
-import io.harness.encryption.SecretRefData;
-
 import lombok.experimental.UtilityClass;
 
 @UtilityClass

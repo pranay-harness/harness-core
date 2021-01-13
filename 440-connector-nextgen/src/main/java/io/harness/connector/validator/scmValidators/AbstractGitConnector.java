@@ -3,10 +3,10 @@ package io.harness.connector.validator.scmValidators;
 import static software.wings.beans.TaskType.NG_GIT_COMMAND;
 
 import io.harness.connector.validator.AbstractConnectorValidator;
-import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectivityStatus;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.delegate.beans.connector.ConnectorValidationResult.ConnectorValidationResultBuilder;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
@@ -67,7 +67,7 @@ public abstract class AbstractGitConnector extends AbstractConnectorValidator {
     if (gitCommandExecutionResponse.getDelegateMetaInfo() != null) {
       delegateId = gitCommandExecutionResponse.getDelegateMetaInfo().getId();
     }
-    ConnectorValidationResult.ConnectorValidationResultBuilder validationResultBuilder =
+    ConnectorValidationResultBuilder validationResultBuilder =
         ConnectorValidationResult.builder().delegateId(delegateId).testedAt(System.currentTimeMillis());
     if (GitCommandExecutionResponse.GitCommandStatus.SUCCESS == gitCommandExecutionResponse.getGitCommandStatus()) {
       validationResultBuilder.status(ConnectivityStatus.SUCCESS);
