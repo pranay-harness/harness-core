@@ -1,6 +1,6 @@
 package io.harness;
 
-import io.harness.pms.sdk.registries.registrar.OrchestrationFieldRegistrar;
+import io.harness.pms.sdk.core.registries.registrar.OrchestrationFieldRegistrar;
 import io.harness.registrars.OrchestrationBeansFieldRegistrar;
 import io.harness.registrars.OrchestrationBeansTimeoutRegistrar;
 import io.harness.registries.registrar.TimeoutRegistrar;

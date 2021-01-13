@@ -1,13 +1,12 @@
 package io.harness.registrars;
 
 import static io.harness.rule.OwnerRule.BRIJESH;
-import static io.harness.rule.OwnerRule.GARVIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.pms.sdk.registries.registrar.ResolverRegistrar;
+import io.harness.pms.sdk.core.registries.registrar.ResolverRegistrar;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;

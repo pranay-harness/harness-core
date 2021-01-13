@@ -1,4 +1,4 @@
-package io.harness.pms.sdk.registries.registrar;
+package io.harness.pms.sdk.core.registries.registrar;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
