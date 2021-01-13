@@ -153,6 +153,7 @@ public class CVConfiguration extends Base implements NameAccess {
     dataCollectionInfo.setAccountId(this.getAccountId());
     dataCollectionInfo.setApplicationId(this.getAppId());
     dataCollectionInfo.setServiceId(this.getServiceId());
+    dataCollectionInfo.setEnvId(this.getEnvId());
     dataCollectionInfo.setStateExecutionId(CV_24x7_STATE_EXECUTION + "-" + this.getUuid());
     dataCollectionInfo.setHosts(Collections.emptySet());
   }
