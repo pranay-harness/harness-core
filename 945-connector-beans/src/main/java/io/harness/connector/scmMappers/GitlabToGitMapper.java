@@ -35,7 +35,7 @@ public class GitlabToGitMapper {
           httpCredentialsSpec.getUsernameRef(), httpCredentialsSpec.getPasswordRef());
     } else if (authType == GitAuthType.SSH) {
       final GitlabSshCredentialsDTO credentials =
-          ((GitlabSshCredentialsDTO) gitlabConnectorDTO.getAuthentication().getCredentials());
+          (GitlabSshCredentialsDTO) gitlabConnectorDTO.getAuthentication().getCredentials();
       final SecretRefData sshKeyRef = credentials.getSpec().getSshKeyRef();
       return gitConfigCreater.getGitConfigForSsh(connectionType, url, sshKeyRef);
     }
