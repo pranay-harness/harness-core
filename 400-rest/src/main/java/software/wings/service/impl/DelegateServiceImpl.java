@@ -5,6 +5,7 @@ import static io.harness.beans.DelegateTask.Status.ERROR;
 import static io.harness.beans.DelegateTask.Status.QUEUED;
 import static io.harness.beans.DelegateTask.Status.STARTED;
 import static io.harness.beans.DelegateTask.Status.runningStatuses;
+import static io.harness.beans.FeatureName.NEXT_GEN_ENABLED;
 import static io.harness.beans.FeatureName.USE_CDN_FOR_STORAGE_FILES;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -1416,7 +1417,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public File downloadKubernetes(String managerHost, String verificationUrl, String accountId, String delegateName,
-      String delegateProfile, Boolean isCiEnabled) throws IOException {
+      String delegateProfile) throws IOException {
     File kubernetesDelegateFile = File.createTempFile(KUBERNETES_DELEGATE, ".tar");
 
     try (TarArchiveOutputStream out = new TarArchiveOutputStream(new FileOutputStream(kubernetesDelegateFile))) {
@@ -1430,7 +1431,7 @@ public class DelegateServiceImpl implements DelegateService {
       } else {
         version = EMPTY_VERSION;
       }
-
+      boolean isCiEnabled = featureFlagService.isGlobalEnabled(NEXT_GEN_ENABLED);
       ImmutableMap<String, String> scriptParams =
           getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry.builder()
                                              .accountId(accountId)
