@@ -33,8 +33,6 @@ import io.harness.security.encryption.EncryptionType;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import javax.validation.executable.ValidateOnExecution;

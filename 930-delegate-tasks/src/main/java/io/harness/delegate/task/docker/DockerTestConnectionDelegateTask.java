@@ -6,6 +6,7 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.ConnectivityStatus;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.delegate.beans.connector.ConnectorValidationResult.ConnectorValidationResultBuilder;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerTestConnectionTaskParams;
 import io.harness.delegate.beans.connector.docker.DockerTestConnectionTaskResponse;
@@ -80,8 +81,7 @@ public class DockerTestConnectionDelegateTask extends AbstractDelegateRunnableTa
       ArtifactTaskResponse validationResponse =
           dockerArtifactTaskHelper.getArtifactCollectResponse(artifactTaskParameters);
       boolean isDockerCredentialsValid = false;
-      ConnectorValidationResult.ConnectorValidationResultBuilder validationResultBuilder =
-          ConnectorValidationResult.builder();
+      ConnectorValidationResultBuilder validationResultBuilder = ConnectorValidationResult.builder();
       if (validationResponse.getArtifactTaskExecutionResponse() != null) {
         isDockerCredentialsValid = validationResponse.getArtifactTaskExecutionResponse().isArtifactServerValid();
       }

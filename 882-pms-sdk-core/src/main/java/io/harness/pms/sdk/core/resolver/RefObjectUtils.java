@@ -9,7 +9,7 @@ import io.harness.pms.data.OrchestrationRefType;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class RefObjectUtil {
+public class RefObjectUtils {
   private final String PRODUCER_ID = "__PRODUCER_ID__";
 
   public RefObject getOutcomeRefObject(String name, String producerId, String key) {

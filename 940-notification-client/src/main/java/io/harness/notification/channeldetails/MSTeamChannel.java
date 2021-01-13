@@ -11,8 +11,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-@EqualsAndHashCode(callSuper = true)
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class MSTeamChannel extends NotificationChannel {
   List<String> msTeamKeys;
 

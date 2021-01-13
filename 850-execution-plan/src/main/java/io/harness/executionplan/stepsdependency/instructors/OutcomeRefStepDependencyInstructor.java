@@ -5,7 +5,7 @@ import io.harness.executionplan.stepsdependency.KeyAware;
 import io.harness.executionplan.stepsdependency.StepDependencyInstructor;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.pms.sdk.core.plan.PlanNode.PlanNodeBuilder;
-import io.harness.pms.sdk.core.resolver.RefObjectUtil;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 
 import lombok.Builder;
 import lombok.NonNull;
@@ -21,7 +21,7 @@ public class OutcomeRefStepDependencyInstructor implements StepDependencyInstruc
   @Override
   public void attachDependency(
       StepDependencySpec spec, PlanNodeBuilder planNodeBuilder, ExecutionPlanCreationContext context) {
-    planNodeBuilder.refObject(RefObjectUtil.getOutcomeRefObject(outcomeExpression, providerPlanNodeId, key));
+    planNodeBuilder.refObject(RefObjectUtils.getOutcomeRefObject(outcomeExpression, providerPlanNodeId, key));
   }
 
   @Override

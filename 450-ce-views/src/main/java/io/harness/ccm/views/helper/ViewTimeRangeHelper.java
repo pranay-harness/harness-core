@@ -4,6 +4,7 @@ import io.harness.ccm.views.dto.ViewTimeRangeDto;
 import io.harness.ccm.views.dto.ViewTimeRangeDto.ViewTimeRangeDtoBuilder;
 import io.harness.ccm.views.entities.ViewTimeRange;
 import io.harness.ccm.views.entities.ViewTimeRangeType;
+import io.harness.govern.Switch;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -40,6 +41,8 @@ public class ViewTimeRangeHelper {
       case CUSTOM:
         timeRangeDtoBuilder.startTime(viewTimeRange.getStartTime()).endTime(viewTimeRange.getEndTime()).build();
         break;
+      default:
+        Switch.unhandled(viewTimeRangeType);
     }
     return timeRangeDtoBuilder.build();
   }

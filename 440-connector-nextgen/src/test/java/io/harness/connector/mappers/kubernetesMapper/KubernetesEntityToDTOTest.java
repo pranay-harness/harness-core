@@ -28,7 +28,6 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetails
 import io.harness.delegate.beans.connector.k8Connector.KubernetesOpenIdConnectDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesServiceAccountDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
-import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.UnexpectedException;
 import io.harness.rule.Owner;

@@ -1,12 +1,8 @@
 package io.harness.connector.mappers.secretmanagermapper;
 
-import io.harness.connector.ConnectorCategory;
 import io.harness.connector.entities.embedded.vaultconnector.VaultConnector;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
-
-import java.util.Collections;
-import java.util.List;
 
 public class VaultDTOToEntity extends ConnectorDTOToEntityMapper<VaultConnectorDTO, VaultConnector> {
   @Override

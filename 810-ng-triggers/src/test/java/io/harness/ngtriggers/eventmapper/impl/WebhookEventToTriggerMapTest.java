@@ -20,12 +20,10 @@ import io.harness.ngtriggers.beans.response.WebhookEventResponse;
 import io.harness.ngtriggers.beans.scm.ParsePayloadResponse;
 import io.harness.ngtriggers.beans.scm.Repository;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
-import io.harness.ngtriggers.eventmapper.impl.GitWebhookEventToTriggerMapper;
 import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
-import io.harness.product.ci.scm.proto.ParseWebhookResponse;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;

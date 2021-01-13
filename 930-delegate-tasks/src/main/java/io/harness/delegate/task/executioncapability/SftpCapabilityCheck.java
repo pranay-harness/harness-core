@@ -4,13 +4,12 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.capability.CapabilityParameters;
 import io.harness.capability.CapabilitySubjectPermission;
+import io.harness.capability.CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder;
 import io.harness.capability.CapabilitySubjectPermission.PermissionResult;
-import io.harness.capability.SftpCapabilityParameters;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SftpCapability;
 
-import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +32,7 @@ public class SftpCapabilityCheck implements CapabilityCheck, ProtoCapabilityChec
 
   @Override
   public CapabilitySubjectPermission performCapabilityCheckWithProto(CapabilityParameters parameters) {
-    CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
+    CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
     if (parameters.getCapabilityCase() != CapabilityParameters.CapabilityCase.SFTP_CAPABILITY_PARAMETERS) {
       return builder.permissionResult(PermissionResult.DENIED).build();
     }

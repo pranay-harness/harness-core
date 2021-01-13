@@ -1,5 +1,5 @@
 package io.harness.serializer.kryo;
-import io.harness.azure.AzureEnvironmentType;
+
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.SecretChangeLog;

@@ -1,6 +1,5 @@
 package io.harness.connector.mappers.ceawsmapper;
 
-import io.harness.connector.ConnectorCategory;
 import io.harness.connector.entities.embedded.ceawsconnector.CEAwsConfig;
 import io.harness.connector.entities.embedded.ceawsconnector.CEAwsConfig.CEAwsConfigBuilder;
 import io.harness.connector.entities.embedded.ceawsconnector.CURAttributes;
@@ -14,7 +13,6 @@ import io.harness.exception.InvalidRequestException;
 
 import com.amazonaws.arn.Arn;
 import com.google.inject.Singleton;
-import java.util.Collections;
 import java.util.List;
 
 @Singleton

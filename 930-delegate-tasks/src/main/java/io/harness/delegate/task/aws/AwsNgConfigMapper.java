@@ -8,6 +8,7 @@ import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
 import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
 import io.harness.encryption.SecretRefData;
+import io.harness.govern.Switch;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 
@@ -52,6 +53,8 @@ public class AwsNgConfigMapper {
                                                     .build())
                         .build();
         break;
+      default:
+        Switch.unhandled(awsCredentialType);
     }
     return awsConfig;
   }

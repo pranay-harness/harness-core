@@ -10,7 +10,11 @@ import io.harness.yaml.core.failurestrategy.NGFailureType;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import java.util.*;
+import java.util.Collection;
+import java.util.EnumMap;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -20,9 +24,9 @@ public class FailureStrategiesUtils {
       List<FailureStrategyConfig> stageFailureStrategies) {
     // priority merge all declared failure strategies, least significant are added first to map
     EnumMap<NGFailureType, FailureStrategyActionConfig> failureStrategiesMap = new EnumMap<>(NGFailureType.class);
-    failureStrategiesMap.putAll(expandFailureStrategiesToMap((stageFailureStrategies)));
-    failureStrategiesMap.putAll(expandFailureStrategiesToMap((stepGroupFailureStrategies)));
-    failureStrategiesMap.putAll(expandFailureStrategiesToMap((stepFailureStrategies)));
+    failureStrategiesMap.putAll(expandFailureStrategiesToMap(stageFailureStrategies));
+    failureStrategiesMap.putAll(expandFailureStrategiesToMap(stepGroupFailureStrategies));
+    failureStrategiesMap.putAll(expandFailureStrategiesToMap(stepFailureStrategies));
 
     // invert map so that action become key
     return convertNGFailureTypeToFailureTypesMultiMap(failureStrategiesMap);

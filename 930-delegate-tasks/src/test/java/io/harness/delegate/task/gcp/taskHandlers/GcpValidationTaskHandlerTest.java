@@ -16,7 +16,6 @@ import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
 import io.harness.encryption.SecretRefData;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.gcp.client.GcpClient;
-import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.security.encryption.SecretDecryptionService;

@@ -10,7 +10,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.data.Outcome;
-import io.harness.pms.sdk.core.resolver.RefObjectUtil;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
@@ -41,12 +41,12 @@ public class OutcomeServiceImplTest extends OrchestrationTestBase {
 
     // Resolve with producer id
     DummyOutcome savedOutcome = (DummyOutcome) outcomeService.resolve(
-        ambiance, RefObjectUtil.getOutcomeRefObject(outcomeName, AmbianceUtils.obtainCurrentSetupId(ambiance), null));
+        ambiance, RefObjectUtils.getOutcomeRefObject(outcomeName, AmbianceUtils.obtainCurrentSetupId(ambiance), null));
     assertThat(savedOutcome).isNotNull();
     assertThat(savedOutcome.getTest()).isEqualTo("test");
 
     // Resolve with scope
-    savedOutcome = (DummyOutcome) outcomeService.resolve(ambiance, RefObjectUtil.getOutcomeRefObject(outcomeName));
+    savedOutcome = (DummyOutcome) outcomeService.resolve(ambiance, RefObjectUtils.getOutcomeRefObject(outcomeName));
     assertThat(savedOutcome).isNotNull();
     assertThat(savedOutcome.getTest()).isEqualTo("test");
   }
@@ -61,7 +61,7 @@ public class OutcomeServiceImplTest extends OrchestrationTestBase {
     String outcomeName = "outcomeName";
     outcomeService.consume(ambiance, outcomeName, null, null);
 
-    Outcome outcome = outcomeService.resolve(ambiance, RefObjectUtil.getOutcomeRefObject(outcomeName));
+    Outcome outcome = outcomeService.resolve(ambiance, RefObjectUtils.getOutcomeRefObject(outcomeName));
     assertThat(outcome).isNull();
   }
 

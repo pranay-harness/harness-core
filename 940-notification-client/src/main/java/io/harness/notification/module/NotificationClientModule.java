@@ -42,8 +42,8 @@ public class NotificationClientModule extends AbstractModule {
         return notificationClientConfiguration.getNotificationClientBackendConfiguration();
       }
     });
-    assert (notificationClientConfiguration.getNotificationClientBackendConfiguration().getType().equalsIgnoreCase(
-        "mongo"));
+    assert notificationClientConfiguration.getNotificationClientBackendConfiguration().getType().equalsIgnoreCase(
+        "mongo");
     bind(MessageClient.class).to(MongoClient.class);
     bind(NotificationHTTPClient.class).toProvider(NotificationHTTPFactory.class).in(Scopes.SINGLETON);
     bind(NotificationClient.class).to(NotificationClientImpl.class);

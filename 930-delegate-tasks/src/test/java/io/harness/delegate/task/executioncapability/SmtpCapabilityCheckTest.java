@@ -15,13 +15,10 @@ import io.harness.delegate.beans.executioncapability.SmtpCapability;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
-import java.util.ArrayList;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;

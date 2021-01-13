@@ -12,7 +12,6 @@ import io.harness.delegate.task.http.HttpTaskParametersNg;
 import io.harness.http.HttpService;
 import io.harness.http.beans.HttpInternalConfig;
 import io.harness.http.beans.HttpInternalResponse;
-import io.harness.logging.CommandExecutionStatus;
 
 import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;

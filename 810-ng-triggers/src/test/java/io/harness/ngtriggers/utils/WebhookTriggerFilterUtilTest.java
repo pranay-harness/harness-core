@@ -3,7 +3,7 @@ package io.harness.ngtriggers.utils;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.CLOSED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.OPENED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.MERGE_REQUEST;
-import static io.harness.ngtriggers.utils.WebhookTriggerFilterUtil.checkIfActionMatches;
+import static io.harness.ngtriggers.utils.WebhookTriggerFilterUtils.checkIfActionMatches;
 import static io.harness.rule.OwnerRule.ADWAIT;
 
 import static java.util.Collections.emptyList;
@@ -28,7 +28,6 @@ import io.harness.rule.Owner;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -50,18 +49,18 @@ public class WebhookTriggerFilterUtilTest extends CategoryTest {
   public void parseEventTest() {
     int i = 0;
     TriggerExpressionEvaluator triggerExpressionEvaluator =
-        WebhookTriggerFilterUtil.generatorPMSExpressionEvaluator(payload);
-    assertThat(WebhookTriggerFilterUtil.readFromPayload("<+eventPayload.event_type>", triggerExpressionEvaluator))
+        WebhookTriggerFilterUtils.generatorPMSExpressionEvaluator(payload);
+    assertThat(WebhookTriggerFilterUtils.readFromPayload("<+eventPayload.event_type>", triggerExpressionEvaluator))
         .isEqualTo("merge_request");
-    assertThat(WebhookTriggerFilterUtil.readFromPayload("<+eventPayload.object_kind>", triggerExpressionEvaluator))
+    assertThat(WebhookTriggerFilterUtils.readFromPayload("<+eventPayload.object_kind>", triggerExpressionEvaluator))
         .isEqualTo("merge_request");
-    assertThat(WebhookTriggerFilterUtil.readFromPayload("<+eventPayload.user.name>", triggerExpressionEvaluator))
+    assertThat(WebhookTriggerFilterUtils.readFromPayload("<+eventPayload.user.name>", triggerExpressionEvaluator))
         .isEqualTo("charles grant");
-    assertThat(WebhookTriggerFilterUtil.readFromPayload("<+eventPayload.user.username>", triggerExpressionEvaluator))
+    assertThat(WebhookTriggerFilterUtils.readFromPayload("<+eventPayload.user.username>", triggerExpressionEvaluator))
         .isEqualTo("charles.grant");
-    assertThat(WebhookTriggerFilterUtil.readFromPayload("<+eventPayload.user.avatar_url>", triggerExpressionEvaluator))
+    assertThat(WebhookTriggerFilterUtils.readFromPayload("<+eventPayload.user.avatar_url>", triggerExpressionEvaluator))
         .isEqualTo("https://secure.gravatar.com/avatar/8e");
-    assertThat(WebhookTriggerFilterUtil.readFromPayload("<+eventPayload.user.email>", triggerExpressionEvaluator))
+    assertThat(WebhookTriggerFilterUtils.readFromPayload("<+eventPayload.user.email>", triggerExpressionEvaluator))
         .isEqualTo("cgrant@gmail.com");
   }
 
@@ -142,9 +141,9 @@ public class WebhookTriggerFilterUtilTest extends CategoryTest {
                               .build())
             .build();
 
-    assertThat(WebhookTriggerFilterUtil.checkIfEventTypeMatches(Type.PR, webhookTriggerSpec.getEvent())).isTrue();
+    assertThat(WebhookTriggerFilterUtils.checkIfEventTypeMatches(Type.PR, webhookTriggerSpec.getEvent())).isTrue();
     assertThat(checkIfActionMatches(webhookPayloadData, webhookTriggerSpec)).isTrue();
-    assertThat(WebhookTriggerFilterUtil.checkIfPayloadConditionsMatch(
+    assertThat(WebhookTriggerFilterUtils.checkIfPayloadConditionsMatch(
                    webhookPayloadData, webhookTriggerSpec.getPayloadConditions()))
         .isTrue();
   }

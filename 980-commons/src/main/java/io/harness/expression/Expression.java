@@ -12,7 +12,7 @@ public @interface Expression {
   String ALLOW_SECRETS = "ALLOW_SECRETS";
   String DISALLOW_SECRETS = "DISALLOW_SECRETS";
 
-  public enum SecretsMode { ALLOW_SECRETS, DISALLOW_SECRETS }
+  enum SecretsMode { ALLOW_SECRETS, DISALLOW_SECRETS }
 
   String value();
 }

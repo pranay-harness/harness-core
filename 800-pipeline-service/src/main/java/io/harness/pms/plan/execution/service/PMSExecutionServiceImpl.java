@@ -1,10 +1,7 @@
 package io.harness.pms.plan.execution.service;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.dto.OrchestrationGraphDTO;
-import io.harness.encryption.ScopeHelper;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.exception.InvalidRequestException;
@@ -12,7 +9,6 @@ import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.service.FilterService;
 import io.harness.interrupts.Interrupt;
-import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.plan.execution.PlanExecutionInterruptType;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.InterruptDTO;

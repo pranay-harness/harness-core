@@ -1,5 +1,8 @@
 package io.harness.repositories.sdk;
 
+import static org.springframework.data.mongodb.core.query.Query.query;
+import static org.springframework.data.mongodb.core.query.Update.update;
+
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.PmsSdkInstance;
@@ -22,8 +25,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-@Slf4j
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
+@Slf4j
 public class PmsSdkInstanceRepositoryCustomImpl implements PmsSdkInstanceRepositoryCustom {
   private static final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(5);
   private static final int MAX_ATTEMPTS = 3;
@@ -33,8 +36,8 @@ public class PmsSdkInstanceRepositoryCustomImpl implements PmsSdkInstanceReposit
   @Override
   public void updatePmsSdkInstance(String name, Map<String, Set<String>> supportedTypes, List<StepInfo> supportedSteps,
       List<StepType> supportedStepTypes) {
-    Query query = Query.query(Criteria.where(PmsSdkInstanceKeys.name).is(name));
-    Update update = Update.update(PmsSdkInstanceKeys.supportedTypes, supportedTypes)
+    Query query = query(Criteria.where(PmsSdkInstanceKeys.name).is(name));
+    Update update = update(PmsSdkInstanceKeys.supportedTypes, supportedTypes)
                         .set(PmsSdkInstanceKeys.supportedSteps, supportedSteps)
                         .set(PmsSdkInstanceKeys.supportedStepTypes, supportedStepTypes);
     RetryPolicy<Object> retryPolicy = getRetryPolicy("[Retrying]: Failed updating PMS SDK instance; attempt: {}",

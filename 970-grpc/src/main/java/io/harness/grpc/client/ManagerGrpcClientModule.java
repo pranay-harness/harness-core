@@ -45,15 +45,14 @@ public class ManagerGrpcClientModule extends ProviderModule {
   @Provides
   public Channel managerChannel(VersionInfoManager versionInfoManager) throws SSLException {
     String authorityToUse = computeAuthority(versionInfoManager.getVersionInfo());
-    if (("ONPREM".equals(deployMode) || "KUBERNETES_ONPREM".equals(deployMode))) {
+    if ("ONPREM".equals(deployMode) || "KUBERNETES_ONPREM".equals(deployMode)) {
       return NettyChannelBuilder.forTarget(config.target).overrideAuthority(authorityToUse).usePlaintext().build();
-    } else {
-      SslContext sslContext = GrpcSslContexts.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
-      return NettyChannelBuilder.forTarget(config.target)
-          .overrideAuthority(authorityToUse)
-          .sslContext(sslContext)
-          .build();
     }
+    SslContext sslContext = GrpcSslContexts.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
+    return NettyChannelBuilder.forTarget(config.target)
+        .overrideAuthority(authorityToUse)
+        .sslContext(sslContext)
+        .build();
   }
 
   private String computeAuthority(VersionInfo versionInfo) {

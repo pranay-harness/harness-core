@@ -3,6 +3,7 @@ package io.harness.security;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.govern.Switch;
 import io.harness.security.dto.ApiKeyPrincipal;
 import io.harness.security.dto.Principal;
 import io.harness.security.dto.PrincipalType;
@@ -34,6 +35,8 @@ public class SecurityContextBuilder {
         case SERVICE:
           principal = ServicePrincipal.getPrincipal(claimMap);
           break;
+        default:
+          Switch.unhandled(type);
       }
     }
     PrincipalThreadLocal.set(principal);

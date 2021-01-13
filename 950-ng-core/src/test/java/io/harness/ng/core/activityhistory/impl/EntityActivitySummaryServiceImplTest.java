@@ -5,11 +5,8 @@ import static io.harness.rule.OwnerRule.DEEPAK;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.CategoryTest;
-import io.harness.category.element.FunctionalTests;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.NGCoreTestBase;
-import io.harness.ng.core.activityhistory.ActivityHistoryTestHelper;
 import io.harness.ng.core.activityhistory.NGActivityStatus;
 import io.harness.ng.core.activityhistory.NGActivityType;
 import io.harness.ng.core.activityhistory.dto.NGActivityDTO;

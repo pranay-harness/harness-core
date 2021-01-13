@@ -1,6 +1,5 @@
 package io.harness.service.intfc;
 
-import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.tasks.ResponseData;
 
 import java.time.Duration;

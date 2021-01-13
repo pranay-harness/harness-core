@@ -6,8 +6,6 @@ import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
 import io.harness.pms.yaml.YamlField;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public abstract class ChildrenFilterJsonCreator<T> implements FilterJsonCreator<T> {

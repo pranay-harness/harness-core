@@ -1,7 +1,5 @@
 package io.harness.ngtriggers.beans.entity;
 
-import static java.time.Duration.ofDays;
-
 import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdTtlIndex;
@@ -9,7 +7,6 @@ import io.harness.ngtriggers.beans.config.HeaderConfig;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 
-import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
@@ -18,7 +15,9 @@ import lombok.Builder.Default;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
-import org.springframework.data.annotation.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data

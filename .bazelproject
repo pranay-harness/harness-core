@@ -3,11 +3,13 @@ directories:
   310-ci-manager
   320-ci-execution
   330-ci-beans
+  400-rest
   420-delegate-agent
   420-delegate-service
   430-cv-nextgen-commons
   440-connector-nextgen
   450-ce-views
+  460-capability
   490-ce-commons
   800-pipeline-service
   810-ng-triggers
@@ -63,7 +65,6 @@ directories:
   980-commons
   990-commons-test
   tools/bazel
-  400-rest
 
 # Automatically includes all relevant targets under the 'directories' above
 derive_targets_from_directories: true

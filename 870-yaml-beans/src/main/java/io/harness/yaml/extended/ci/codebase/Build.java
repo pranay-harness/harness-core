@@ -1,4 +1,5 @@
 package io.harness.yaml.extended.ci.codebase;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import javax.validation.constraints.NotNull;

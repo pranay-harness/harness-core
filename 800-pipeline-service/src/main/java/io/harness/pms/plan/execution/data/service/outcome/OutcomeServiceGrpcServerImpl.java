@@ -1,8 +1,17 @@
 package io.harness.pms.plan.execution.data.service.outcome;
 
 import io.harness.engine.pms.data.PmsOutcomeService;
-import io.harness.pms.contracts.service.*;
+import io.harness.pms.contracts.service.OutcomeConsumeBlobRequest;
+import io.harness.pms.contracts.service.OutcomeConsumeBlobResponse;
+import io.harness.pms.contracts.service.OutcomeFetchOutcomeBlobRequest;
+import io.harness.pms.contracts.service.OutcomeFetchOutcomeBlobResponse;
+import io.harness.pms.contracts.service.OutcomeFetchOutcomesBlobRequest;
+import io.harness.pms.contracts.service.OutcomeFetchOutcomesBlobResponse;
+import io.harness.pms.contracts.service.OutcomeFindAllBlobRequest;
+import io.harness.pms.contracts.service.OutcomeFindAllBlobResponse;
 import io.harness.pms.contracts.service.OutcomeProtoServiceGrpc.OutcomeProtoServiceImplBase;
+import io.harness.pms.contracts.service.OutcomeResolveBlobRequest;
+import io.harness.pms.contracts.service.OutcomeResolveBlobResponse;
 
 import com.google.inject.Inject;
 import io.grpc.stub.StreamObserver;

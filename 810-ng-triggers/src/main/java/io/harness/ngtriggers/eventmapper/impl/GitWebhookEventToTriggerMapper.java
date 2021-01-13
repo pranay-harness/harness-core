@@ -21,8 +21,7 @@ import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
-import io.harness.ngtriggers.utils.WebhookTriggerFilterUtil;
-import io.harness.product.ci.scm.proto.ParseWebhookResponse;
+import io.harness.ngtriggers.utils.WebhookTriggerFilterUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -123,7 +122,7 @@ public class GitWebhookEventToTriggerMapper implements WebhookEventToTriggerMapp
 
   @VisibleForTesting
   List<TriggerDetails> applyFilters(WebhookPayloadData webhookPayloadData, List<NGTriggerEntity> triggersForRepo) {
-    List<TriggerDetails> matchedTriggers = new ArrayList<TriggerDetails>();
+    List<TriggerDetails> matchedTriggers = new ArrayList<>();
 
     for (NGTriggerEntity ngTriggerEntity : triggersForRepo) {
       NGTriggerConfig ngTriggerConfig = ngTriggerElementMapper.toTriggerConfig(ngTriggerEntity.getYaml());
@@ -145,7 +144,7 @@ public class GitWebhookEventToTriggerMapper implements WebhookEventToTriggerMapp
       }
 
       WebhookTriggerSpec triggerSpec = ((WebhookTriggerConfig) spec).getSpec();
-      return WebhookTriggerFilterUtil.evaluateFilterConditions(webhookPayloadData, triggerSpec);
+      return WebhookTriggerFilterUtils.evaluateFilterConditions(webhookPayloadData, triggerSpec);
     } catch (Exception e) {
       NGTriggerEntity ngTriggerEntity = triggerDetails.getNgTriggerEntity();
       log.error("Failed while evaluating Trigger: " + ngTriggerEntity.getIdentifier()

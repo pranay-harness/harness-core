@@ -1,6 +1,5 @@
 package io.harness.ngtriggers.resource;
 
-import static io.harness.exception.WingsException.USER;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import static java.lang.Long.parseLong;
@@ -11,8 +10,6 @@ import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.TriggerException;
-import io.harness.exception.WingsException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -29,11 +26,27 @@ import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
-import io.swagger.annotations.*;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -206,8 +219,7 @@ public class NGTriggerResource {
         TriggerFilterHelper.createCriteriaForWebhookTriggerGetList(null, repoURL, searchTerm, false, false);
     Pageable pageRequest;
     if (EmptyPredicate.isEmpty(sort)) {
-      pageRequest =
-          PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, NGTriggerEntity.NGTriggerEntityKeys.createdAt));
+      pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, NGTriggerEntityKeys.createdAt));
     } else {
       pageRequest = PageUtils.getPageRequest(page, size, sort);
     }

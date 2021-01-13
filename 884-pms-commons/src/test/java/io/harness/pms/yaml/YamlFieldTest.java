@@ -2,7 +2,7 @@ package io.harness.pms.yaml;
 
 import static io.harness.rule.OwnerRule.SAHIL;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;

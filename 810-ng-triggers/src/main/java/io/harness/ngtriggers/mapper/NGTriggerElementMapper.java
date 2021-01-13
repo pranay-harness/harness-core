@@ -3,7 +3,6 @@ package io.harness.ngtriggers.mapper;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.time.temporal.ChronoUnit.DAYS;
-import static org.springframework.data.util.Pair.toMap;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
@@ -12,18 +11,19 @@ import io.harness.ngtriggers.beans.config.HeaderConfig;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
 import io.harness.ngtriggers.beans.dto.LastTriggerExecutionDetails;
 import io.harness.ngtriggers.beans.dto.NGTriggerDetailsResponseDTO;
+import io.harness.ngtriggers.beans.dto.NGTriggerDetailsResponseDTO.NGTriggerDetailsResponseDTOBuilder;
 import io.harness.ngtriggers.beans.dto.NGTriggerResponseDTO;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.WebhookDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerEventHistory;
+import io.harness.ngtriggers.beans.entity.TriggerEventHistory.TriggerEventHistoryKeys;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata;
 import io.harness.ngtriggers.beans.source.NGTriggerSource;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
-import io.harness.repositories.ng.core.spring.NGTriggerRepository;
 import io.harness.repositories.ng.core.spring.TriggerEventHistoryRepository;
 import io.harness.yaml.utils.YamlPipelineUtils;
 
@@ -33,13 +33,10 @@ import com.google.inject.Singleton;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -134,7 +131,7 @@ public class NGTriggerElementMapper {
 
   public NGTriggerDetailsResponseDTO toNGTriggerDetailsResponseDTO(
       NGTriggerEntity ngTriggerEntity, boolean includeYaml) {
-    NGTriggerDetailsResponseDTO.NGTriggerDetailsResponseDTOBuilder ngTriggerDetailsResponseDTO =
+    NGTriggerDetailsResponseDTOBuilder ngTriggerDetailsResponseDTO =
         NGTriggerDetailsResponseDTO.builder()
             .name(ngTriggerEntity.getName())
             .identifier(ngTriggerEntity.getIdentifier())
@@ -195,7 +192,7 @@ public class NGTriggerElementMapper {
     if (isNotEmpty(triggerActivityList)) {
       List<Long> timeStamps =
           triggerActivityList.stream().map(event -> event.getCreatedAt()).sorted().collect(Collectors.toList());
-      timeStamps.stream().forEach(timeStamp -> {
+      timeStamps.forEach(timeStamp -> {
         long diff = DAYS.between(Instant.ofEpochMilli(startTime).atZone(ZoneId.systemDefault()).toLocalDate(),
             Instant.ofEpochMilli(timeStamp).atZone(ZoneId.systemDefault()).toLocalDate());
         int index = (int) Math.abs(diff);
@@ -211,8 +208,7 @@ public class NGTriggerElementMapper {
     List<TriggerEventHistory> triggerEventHistoryList =
         triggerEventHistoryRepository.findFirst1ByAccountIdAndOrgIdentifierAndProjectIdentifierAndTriggerIdentifier(
             ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(),
-            ngTriggerEntity.getIdentifier(),
-            Sort.by(TriggerEventHistory.TriggerEventHistoryKeys.createdAt).descending());
+            ngTriggerEntity.getIdentifier(), Sort.by(TriggerEventHistoryKeys.createdAt).descending());
     if (!EmptyPredicate.isEmpty(triggerEventHistoryList)) {
       return Optional.of(triggerEventHistoryList.get(0));
     }

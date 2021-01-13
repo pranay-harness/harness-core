@@ -17,11 +17,11 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
+@EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "DockerConnectorKeys")
 @Entity(value = "connectors", noClassnameStored = true)
 @Persistent
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@EqualsAndHashCode(callSuper = true)
 @TypeAlias("io.harness.connector.entities.embedded.docker.DockerConnector")
 public class DockerConnector extends Connector {
   String url;

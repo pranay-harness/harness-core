@@ -88,10 +88,12 @@ public class SecretRefData {
 
   public boolean isNull() {
     try {
-      for (Field f : getClass().getDeclaredFields())
+      for (Field f : getClass().getDeclaredFields()) {
         if (f.get(this) != null && !f.getName().equals("SECRET_DELIMINITER")
-            && !f.getName().equals("SECRET_DOT_DELIMINITER"))
+            && !f.getName().equals("SECRET_DOT_DELIMINITER")) {
           return false;
+        }
+      }
       return true;
     } catch (IllegalAccessException ex) {
       throw new UnexpectedException("Error while checking whether the secret ref is null");

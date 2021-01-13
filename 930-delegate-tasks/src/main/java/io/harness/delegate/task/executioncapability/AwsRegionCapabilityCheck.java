@@ -4,11 +4,11 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.capability.CapabilityParameters;
 import io.harness.capability.CapabilitySubjectPermission;
+import io.harness.capability.CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder;
 import io.harness.capability.CapabilitySubjectPermission.PermissionResult;
 import io.harness.delegate.beans.executioncapability.AwsRegionCapability;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.expression.ExpressionEvaluator;
 
 import com.amazonaws.regions.Regions;
 import java.io.File;
@@ -26,7 +26,7 @@ public class AwsRegionCapabilityCheck implements CapabilityCheck, ProtoCapabilit
 
   @Override
   public CapabilitySubjectPermission performCapabilityCheckWithProto(CapabilityParameters parameters) {
-    CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
+    CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
     if (parameters.getCapabilityCase() != CapabilityParameters.CapabilityCase.AWS_REGION_PARAMETERS) {
       return builder.permissionResult(PermissionResult.DENIED).build();
     }

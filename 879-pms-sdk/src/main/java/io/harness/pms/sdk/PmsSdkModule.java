@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.PmsSdkCoreModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
 
 import com.google.inject.AbstractModule;

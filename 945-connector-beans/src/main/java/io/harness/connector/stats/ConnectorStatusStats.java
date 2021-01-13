@@ -12,11 +12,11 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 
 @Data
+@Builder
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "ConnectorStatusStatsKeys")
-@Builder
 @ApiModel("ConnectorStatusStatistics")
 public class ConnectorStatusStats {
   ConnectivityStatus status;

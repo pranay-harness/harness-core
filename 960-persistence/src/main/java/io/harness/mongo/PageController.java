@@ -61,7 +61,7 @@ public class PageController {
     PageResponse<T> response = new PageResponse<>(req);
 
     // when pageRequest has SKIPCOUNT option, we won't do count query to db.
-    boolean hasSkipCount = (req.getOptions() != null && req.getOptions().contains(PageRequest.Option.SKIPCOUNT));
+    boolean hasSkipCount = req.getOptions() != null && req.getOptions().contains(PageRequest.Option.SKIPCOUNT);
     if (req.getOptions() == null || req.getOptions().contains(PageRequest.Option.LIST) || hasSkipCount) {
       q.offset(req.getStart());
 

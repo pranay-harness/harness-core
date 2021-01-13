@@ -4,7 +4,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
-import io.harness.connector.ConnectorRegistrar;
 import io.harness.connector.ConnectorRegistryFactory;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.entities.Connector;

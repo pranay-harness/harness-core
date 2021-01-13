@@ -8,6 +8,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.data.OutcomeInstance;
+import io.harness.data.OutcomeInstance.OutcomeInstanceKeys;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 import io.harness.engine.expressions.functors.NodeExecutionEntityType;
@@ -23,7 +24,12 @@ import io.harness.pms.serializer.persistence.DocumentOrchestrationUtils;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.mongodb.DuplicateKeyException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.NonNull;
@@ -80,9 +86,9 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
 
   @Override
   public List<String> findAllByRuntimeId(String planExecutionId, String runtimeId) {
-    Query query = query(where(OutcomeInstance.OutcomeInstanceKeys.planExecutionId).is(planExecutionId))
-                      .addCriteria(where(OutcomeInstance.OutcomeInstanceKeys.producedByRuntimeId).is(runtimeId))
-                      .with(Sort.by(Sort.Direction.DESC, OutcomeInstance.OutcomeInstanceKeys.createdAt));
+    Query query = query(where(OutcomeInstanceKeys.planExecutionId).is(planExecutionId))
+                      .addCriteria(where(OutcomeInstanceKeys.producedByRuntimeId).is(runtimeId))
+                      .with(Sort.by(Sort.Direction.DESC, OutcomeInstanceKeys.createdAt));
 
     List<OutcomeInstance> outcomeInstances = mongoTemplate.find(query, OutcomeInstance.class);
     if (isEmpty(outcomeInstances)) {
@@ -98,7 +104,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
       return Collections.emptyList();
     }
     List<String> outcomes = new ArrayList<>();
-    Query query = query(where(OutcomeInstance.OutcomeInstanceKeys.uuid).in(outcomeInstanceIds));
+    Query query = query(where(OutcomeInstanceKeys.uuid).in(outcomeInstanceIds));
     Iterable<OutcomeInstance> outcomesInstances = mongoTemplate.find(query, OutcomeInstance.class);
     for (OutcomeInstance instance : outcomesInstances) {
       outcomes.add(instance.getOutcome().toJson());
@@ -108,7 +114,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
 
   @Override
   public String fetchOutcome(@NonNull String outcomeInstanceId) {
-    Query query = query(where(OutcomeInstance.OutcomeInstanceKeys.uuid).is(outcomeInstanceId));
+    Query query = query(where(OutcomeInstanceKeys.uuid).is(outcomeInstanceId));
     Optional<OutcomeInstance> outcomeInstance =
         Optional.ofNullable(mongoTemplate.findOne(query, OutcomeInstance.class));
     return outcomeInstance.map(oi -> oi.getOutcome().toJson()).orElse(null);
@@ -116,10 +122,11 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
 
   private String resolveUsingRuntimeId(@NotNull Ambiance ambiance, @NotNull RefObject refObject) {
     String name = refObject.getName();
-    Query query = query(where(OutcomeInstance.OutcomeInstanceKeys.planExecutionId).is(ambiance.getPlanExecutionId()))
-                      .addCriteria(where(OutcomeInstance.OutcomeInstanceKeys.name).is(name))
-                      .addCriteria(where(OutcomeInstance.OutcomeInstanceKeys.levelRuntimeIdIdx)
-                                       .in(ResolverUtils.prepareLevelRuntimeIdIndices(ambiance)));
+    Query query =
+        query(where(OutcomeInstanceKeys.planExecutionId).is(ambiance.getPlanExecutionId()))
+            .addCriteria(where(OutcomeInstanceKeys.name).is(name))
+            .addCriteria(
+                where(OutcomeInstanceKeys.levelRuntimeIdIdx).in(ResolverUtils.prepareLevelRuntimeIdIndices(ambiance)));
 
     List<OutcomeInstance> instances = mongoTemplate.find(query, OutcomeInstance.class);
 
@@ -136,11 +143,10 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
   private String resolveUsingProducerSetupId(@NotNull Ambiance ambiance, @NotNull RefObject refObject) {
     String name = refObject.getName();
 
-    Query query =
-        query(where(OutcomeInstance.OutcomeInstanceKeys.planExecutionId).is(ambiance.getPlanExecutionId()))
-            .addCriteria(where(OutcomeInstance.OutcomeInstanceKeys.name).is(name))
-            .addCriteria(where(OutcomeInstance.OutcomeInstanceKeys.producedBySetupId).is(refObject.getProducerId()))
-            .with(Sort.by(Sort.Direction.DESC, OutcomeInstance.OutcomeInstanceKeys.createdAt));
+    Query query = query(where(OutcomeInstanceKeys.planExecutionId).is(ambiance.getPlanExecutionId()))
+                      .addCriteria(where(OutcomeInstanceKeys.name).is(name))
+                      .addCriteria(where(OutcomeInstanceKeys.producedBySetupId).is(refObject.getProducerId()))
+                      .with(Sort.by(Sort.Direction.DESC, OutcomeInstanceKeys.createdAt));
 
     List<OutcomeInstance> instances = mongoTemplate.find(query, OutcomeInstance.class);
 

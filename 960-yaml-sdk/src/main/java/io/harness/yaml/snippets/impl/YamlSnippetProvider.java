@@ -32,9 +32,9 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Singleton
 @Slf4j
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class YamlSnippetProvider {
   YamlSnippetHelper yamlSnippetHelper;
 
@@ -153,7 +153,7 @@ public class YamlSnippetProvider {
       throw new YamlSnippetException("Snippet isn't expected to have non object node at root level.");
     }
 
-    ObjectNode snippetNode = ((ObjectNode) genericSnippetNode);
+    ObjectNode snippetNode = (ObjectNode) genericSnippetNode;
 
     if (!snippetNode.fields().next().getValue().isObject()) {
       throw new YamlSnippetException("Snippet isn't expected to have non object node at first level.");

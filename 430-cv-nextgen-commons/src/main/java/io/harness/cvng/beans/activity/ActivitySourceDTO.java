@@ -1,15 +1,12 @@
 package io.harness.cvng.beans.activity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
+
 ;
-import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
 @SuperBuilder

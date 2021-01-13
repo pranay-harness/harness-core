@@ -1,7 +1,6 @@
 package io.harness.ng.core.dto.secrets;
 
 import io.harness.data.validator.EntityIdentifier;
-import io.harness.data.validator.EntityName;
 import io.harness.data.validator.NGEntityName;
 import io.harness.ng.core.models.Secret;
 import io.harness.secretmanagerclient.SecretType;

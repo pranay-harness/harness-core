@@ -1,12 +1,15 @@
 package io.harness.connector;
 
-import io.harness.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
 import java.util.Set;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @Data

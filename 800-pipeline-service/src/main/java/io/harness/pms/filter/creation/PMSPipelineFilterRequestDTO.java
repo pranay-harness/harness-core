@@ -5,7 +5,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
 import java.util.List;
 import java.util.Map;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Value;
 import lombok.experimental.FieldDefaults;
 
 @Value

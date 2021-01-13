@@ -3,7 +3,6 @@ package io.harness.engine.interrupts.helpers;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
-import static io.harness.interrupts.ExecutionInterruptType.PAUSE;
 
 import static java.util.stream.Collectors.toList;
 

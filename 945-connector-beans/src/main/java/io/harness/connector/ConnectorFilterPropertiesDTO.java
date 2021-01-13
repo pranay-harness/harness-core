@@ -19,15 +19,15 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeName(CONNECTOR_FILTER)
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("ConnectorFilterProperties")
-@EqualsAndHashCode(callSuper = true)
-@JsonTypeName(CONNECTOR_FILTER)
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class ConnectorFilterPropertiesDTO extends FilterPropertiesDTO {
   List<String> connectorNames;
   List<String> connectorIdentifiers;

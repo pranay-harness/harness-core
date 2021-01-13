@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class PmsSdkInstanceService extends PmsServiceImplBase {
-  private final static String LOCK_NAME_PREFIX = "PmsSdkInstanceService-";
+  private static final String LOCK_NAME_PREFIX = "PmsSdkInstanceService-";
 
   private final PmsSdkInstanceRepository pmsSdkInstanceRepository;
   private final PersistentLocker persistentLocker;

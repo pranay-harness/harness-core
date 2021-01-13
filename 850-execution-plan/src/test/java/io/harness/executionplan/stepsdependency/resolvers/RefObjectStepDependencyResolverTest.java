@@ -10,7 +10,7 @@ import io.harness.executionplan.stepsdependency.StepDependencyResolverContext;
 import io.harness.executionplan.stepsdependency.StepDependencySpec;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.data.StepTransput;
-import io.harness.pms.sdk.core.resolver.RefObjectUtil;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.steps.io.ResolvedRefInput;
 import io.harness.rule.Owner;
 
@@ -43,7 +43,7 @@ public class RefObjectStepDependencyResolverTest extends CategoryTest {
     StepDependencySpec spec = StepDependencySpec.defaultBuilder().key("SINGLE_KEY").build();
     StepTransput transput = new DummyOutcome("value");
     ResolvedRefInput input =
-        ResolvedRefInput.builder().transput(transput).refObject(RefObjectUtil.getOutcomeRefObject("test")).build();
+        ResolvedRefInput.builder().transput(transput).refObject(RefObjectUtils.getOutcomeRefObject("test")).build();
     Map<String, List<ResolvedRefInput>> refKeyToInputParamsMap = new HashMap<String, List<ResolvedRefInput>>() {
       {
         put("SINGLE_KEY", Collections.singletonList(input));

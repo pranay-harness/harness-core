@@ -1,10 +1,6 @@
 package io.harness.annotations.retry;
 
 import com.google.inject.Singleton;
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryConfig;
-import io.github.resilience4j.retry.RetryRegistry;
-import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +21,6 @@ public class MethodExecutionHelper {
    * @param retryOnExceptions Configure specific exceptions you want to retryOn (Default: Exception.class)
    * @param <T> Configured Type inside methodWrapper
    * @return
-   * @throws Throwable
    */
   @SafeVarargs
   public final <T> T execute(IMethodWrapper<T> method, int noOfRetryAttempts, long sleepInterval,
@@ -35,7 +30,7 @@ public class MethodExecutionHelper {
     if (noOfRetryAttempts < 1) {
       noOfRetryAttempts = 1;
     }
-    Set<Class<? extends Throwable>> retryOnExceptionSet = new HashSet<Class<? extends Throwable>>();
+    Set<Class<? extends Throwable>> retryOnExceptionSet = new HashSet<>();
     populateRetryableExceptionSet(retryOnExceptionSet, retryOnExceptions);
 
     log.debug("noOfRetryAttempts = " + noOfRetryAttempts);

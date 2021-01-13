@@ -32,6 +32,7 @@ import io.harness.connector.stats.ConnectorStatistics;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.delegate.beans.connector.ConnectorValidationResult.ConnectorValidationResultBuilder;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.errorhandling.NGErrorHelper;
@@ -355,8 +356,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     } catch (Exception ex) {
       log.info("Test Connection failed for connector with identifier[{}] in account[{}] with error [{}]",
           connectorInfo.getIdentifier(), accountIdentifier, ex.getMessage());
-      ConnectorValidationResult.ConnectorValidationResultBuilder validationFailureBuilder =
-          ConnectorValidationResult.builder();
+      ConnectorValidationResultBuilder validationFailureBuilder = ConnectorValidationResult.builder();
       validationFailureBuilder.status(FAILURE).testedAt(System.currentTimeMillis());
       String errorMessage = ex.getMessage();
       if (isNotEmpty(errorMessage)) {

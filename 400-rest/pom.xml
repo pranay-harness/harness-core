@@ -874,11 +874,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>970-api-services-beans</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>970-grpc</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

@@ -1,6 +1,5 @@
 package io.harness.ng.core.dto.secrets;
 
-import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.ng.core.models.TGTGenerationSpec;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;

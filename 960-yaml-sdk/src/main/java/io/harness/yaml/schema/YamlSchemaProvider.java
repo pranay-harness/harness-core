@@ -26,10 +26,10 @@ import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
-@Singleton
-@Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@Singleton
+@Slf4j
 public class YamlSchemaProvider {
   YamlSchemaHelper yamlSchemaHelper;
 

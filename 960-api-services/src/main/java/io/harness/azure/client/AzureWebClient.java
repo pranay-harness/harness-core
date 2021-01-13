@@ -102,7 +102,7 @@ public interface AzureWebClient {
    */
   Completable stopDeploymentSlotAsync(AzureWebClientContext context, String slotName);
 
-  void stopDeploymentSlotAsync(AzureWebClientContext context, final String slotName, ServiceCallback<Void> callback);
+  void stopDeploymentSlotAsync(AzureWebClientContext context, String slotName, ServiceCallback<Void> callback);
   /**
    * Stop deployment slot.
    *
@@ -249,10 +249,10 @@ public interface AzureWebClient {
    * @return
    */
   Observable<Void> swapDeploymentSlotsAsync(
-      AzureWebClientContext context, final String sourceSlotName, String targetSlotName);
+      AzureWebClientContext context, String sourceSlotName, String targetSlotName);
 
-  ServiceFuture<Void> swapDeploymentSlotsAsync(AzureWebClientContext context, final String sourceSlotName,
-      String targetSlotName, ServiceCallback<Void> callback);
+  ServiceFuture<Void> swapDeploymentSlotsAsync(
+      AzureWebClientContext context, String sourceSlotName, String targetSlotName, ServiceCallback<Void> callback);
   /**
    * Get Web App hosting operating system.
    *

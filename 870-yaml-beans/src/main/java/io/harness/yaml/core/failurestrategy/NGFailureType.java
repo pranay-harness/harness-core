@@ -1,6 +1,14 @@
 package io.harness.yaml.core.failurestrategy;
 
-import static io.harness.pms.contracts.execution.failure.FailureType.*;
+import static io.harness.pms.contracts.execution.failure.FailureType.APPLICATION_FAILURE;
+import static io.harness.pms.contracts.execution.failure.FailureType.AUTHENTICATION_FAILURE;
+import static io.harness.pms.contracts.execution.failure.FailureType.AUTHORIZATION_FAILURE;
+import static io.harness.pms.contracts.execution.failure.FailureType.CONNECTIVITY_FAILURE;
+import static io.harness.pms.contracts.execution.failure.FailureType.DELEGATE_PROVISIONING_FAILURE;
+import static io.harness.pms.contracts.execution.failure.FailureType.SKIPPING_FAILURE;
+import static io.harness.pms.contracts.execution.failure.FailureType.TIMEOUT_FAILURE;
+import static io.harness.pms.contracts.execution.failure.FailureType.UNKNOWN_FAILURE;
+import static io.harness.pms.contracts.execution.failure.FailureType.VERIFICATION_FAILURE;
 
 import io.harness.pms.contracts.execution.failure.FailureType;
 

@@ -19,11 +19,11 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Getter
 @Setter
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@Slf4j
 public class NotificationClientImpl implements NotificationClient {
   private MessageClient messageClient;
   private NotificationHTTPClient notificationHTTPClient;

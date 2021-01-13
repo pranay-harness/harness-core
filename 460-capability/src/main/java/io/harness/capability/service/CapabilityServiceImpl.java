@@ -2,7 +2,6 @@ package io.harness.capability.service;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.exception.GeneralException;
-import io.harness.expression.ExpressionEvaluator;
 
 import com.google.inject.Singleton;
 import java.util.Set;

@@ -5,7 +5,9 @@ import io.harness.eventsframework.consumer.Message;
 import io.harness.redis.RedisConfig;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -30,9 +32,10 @@ public class RedisConsumer extends RedisAbstractConsumer {
         if (pendingResult.getTotal() != 0) {
           Map<StreamMessageId, Map<String, String>> messages = stream.claim(
               groupName, getName(), maxProcessingTime.toMillis(), TimeUnit.MILLISECONDS, pendingResult.getLowestId());
-          if (messages.size() != 0)
+          if (messages.size() != 0) {
             // Claim will return the claimed messages after which have been undelivered for a specific time
             result = RedisUtils.getMessageObject(messages);
+          }
         }
         return result;
       } catch (RedissonShutdownException e) {

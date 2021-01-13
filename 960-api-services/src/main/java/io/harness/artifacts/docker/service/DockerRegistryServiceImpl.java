@@ -424,8 +424,8 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   @JsonIgnoreProperties(ignoreUnknown = true)
   @Data
   @Builder
-  @AllArgsConstructor
   @NoArgsConstructor
+  @AllArgsConstructor
   public static class DockerImageTagResponse {
     private String name;
     private List<String> tags;
@@ -435,8 +435,8 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   @JsonIgnoreProperties(ignoreUnknown = true)
   @Data
   @Builder
-  @AllArgsConstructor
   @NoArgsConstructor
+  @AllArgsConstructor
   public static class DockerRegistryToken {
     private String token;
     private String access_token;

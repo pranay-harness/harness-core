@@ -10,11 +10,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true)
+@AllArgsConstructor
 public class NotificationClientConfiguration {
   @JsonProperty("messageBroker") NotificationClientBackendConfiguration notificationClientBackendConfiguration;
   @JsonProperty("httpClient") private ServiceHttpClientConfig serviceHttpClientConfig;

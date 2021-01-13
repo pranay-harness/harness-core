@@ -1,16 +1,12 @@
 package io.harness.mappers;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
-import static io.harness.exception.WingsException.*;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.mappers.SecretManagerConfigMapper.ngMetaDataFromDto;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
-import io.harness.exception.WingsException;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata;
 import io.harness.secretmanagerclient.dto.VaultConfigDTO;
@@ -20,7 +16,6 @@ import software.wings.beans.VaultConfig;
 
 import java.util.Optional;
 import lombok.experimental.UtilityClass;
-import org.apache.commons.lang3.StringUtils;
 
 @UtilityClass
 @OwnedBy(PL)

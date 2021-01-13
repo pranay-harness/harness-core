@@ -42,12 +42,12 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 
-@Slf4j
 @Api("/pipeline/execute")
 @Path("/pipeline/execute")
 @Produces({"application/json", "application/yaml"})
 @Consumes({"application/json", "application/yaml"})
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
+@Slf4j
 public class PlanExecutionResource {
   public static final TriggeredBy EMBEDDED_USER = TriggeredBy.newBuilder()
                                                       .setUuid("lv0euRhKRCyiXWzS7pOg6g")

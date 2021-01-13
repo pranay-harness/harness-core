@@ -7,7 +7,6 @@ import io.harness.execution.NodeExecution;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
 
 import java.util.EnumSet;
 import java.util.List;

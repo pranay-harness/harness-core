@@ -1,8 +1,6 @@
 package io.harness.delegate.beans.executioncapability;
 
 import java.time.Duration;
-import java.util.List;
-import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
 

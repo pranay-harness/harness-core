@@ -1,7 +1,6 @@
 package io.harness.engine.pms.tasks;
 
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
-import io.harness.tasks.Task;
 
 import java.util.Map;
 

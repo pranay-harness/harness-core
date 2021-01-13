@@ -1,7 +1,5 @@
 package io.harness.ng.core.activityhistory.dto;
 
-import io.harness.ng.core.activityhistory.NGActivityStatus;
-
 import io.swagger.annotations.ApiModel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

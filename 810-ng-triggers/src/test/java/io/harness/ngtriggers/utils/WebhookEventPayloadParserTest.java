@@ -27,7 +27,6 @@ import io.harness.ngtriggers.beans.scm.WebhookEvent;
 import io.harness.ngtriggers.beans.scm.WebhookGitUser;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.product.ci.scm.proto.Action;
-import io.harness.product.ci.scm.proto.GitProvider;
 import io.harness.product.ci.scm.proto.ParseWebhookResponse;
 import io.harness.product.ci.scm.proto.PullRequest;
 import io.harness.product.ci.scm.proto.PullRequestHook;

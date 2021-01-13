@@ -2,9 +2,9 @@ package io.harness.delegate.task.citasks.cik8handler;
 
 import static io.harness.aws.AwsExceptionHandler.handleAmazonClientException;
 import static io.harness.aws.AwsExceptionHandler.handleAmazonServiceException;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import io.harness.aws.AwsClient;
 import io.harness.aws.AwsConfig;
@@ -20,7 +20,6 @@ import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.delegate.task.aws.AwsNgConfigMapper;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.SecretDecryptionService;
 

@@ -14,7 +14,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.execution.utils.AmbianceUtils;
-import io.harness.pms.sdk.core.resolver.RefObjectUtil;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.AsyncExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -39,7 +39,7 @@ public abstract class AbstractStepExecutable implements AsyncExecutable<CIStepIn
   public AsyncExecutableResponse executeAsync(
       Ambiance ambiance, CIStepInfo stepParameters, StepInputPackage inputPackage) {
     StepTaskDetails stepTaskDetails = (StepTaskDetails) executionSweepingOutputResolver.resolve(
-        ambiance, RefObjectUtil.getSweepingOutputRefObject(CALLBACK_IDS));
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(CALLBACK_IDS));
     String stepIdentifier = AmbianceUtils.obtainStepIdentifier(ambiance);
     log.info("Waiting on response for task id {} and step Id {}", stepTaskDetails.getTaskIds().get(stepIdentifier),
         stepIdentifier);

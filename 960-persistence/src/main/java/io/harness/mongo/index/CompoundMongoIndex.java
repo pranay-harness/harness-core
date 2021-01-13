@@ -11,7 +11,6 @@ import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
 
 @Value
 @Builder

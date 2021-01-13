@@ -13,7 +13,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.resolver.RefObjectUtil;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -46,10 +46,10 @@ public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollback
   public TaskRequest obtainTask(
       Ambiance ambiance, K8sRollingRollbackStepParameters stepParameters, StepInputPackage inputPackage) {
     K8sRollingOutcome k8sRollingOutcome = (K8sRollingOutcome) outcomeService.resolve(
-        ambiance, RefObjectUtil.getOutcomeRefObject(OutcomeExpressionConstants.K8S_ROLL_OUT));
+        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.K8S_ROLL_OUT));
 
     InfrastructureOutcome infrastructure = (InfrastructureOutcome) outcomeService.resolve(
-        ambiance, RefObjectUtil.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
 
     K8sRollingDeployRollbackTaskParameters taskParameters =
         K8sRollingDeployRollbackTaskParameters.builder()

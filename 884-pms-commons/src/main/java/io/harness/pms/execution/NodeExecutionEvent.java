@@ -24,13 +24,13 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @OwnedBy(HarnessTeam.CDC)
 @Value
+@Builder
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "NodeExecutionEventKeys")
 @Entity(value = "nodeExecutionEventQueue")
 @Document("nodeExecutionEventQueue")
 @TypeAlias("nodeExecutionEvent")
 @HarnessEntity(exportable = false)
-@Builder
 public class NodeExecutionEvent extends Queuable {
   NodeExecutionProto nodeExecution;
   NodeExecutionEventType eventType;

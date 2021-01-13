@@ -23,7 +23,6 @@ import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance.Resour
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
 

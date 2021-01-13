@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.plan.PlanNodeProto;
-import io.harness.tasks.ResponseData;
 
 import java.util.List;
 import java.util.Map;

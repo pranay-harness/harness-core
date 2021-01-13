@@ -3,7 +3,6 @@ package io.harness.transformers.simplevalue;
 import io.harness.beans.CastedField;
 import io.harness.core.Recaster;
 import io.harness.transformers.RecastTransformer;
-import io.harness.transformers.simplevalue.SimpleValueTransformer;
 import io.harness.utils.IterationHelper;
 import io.harness.utils.RecastReflectionUtils;
 

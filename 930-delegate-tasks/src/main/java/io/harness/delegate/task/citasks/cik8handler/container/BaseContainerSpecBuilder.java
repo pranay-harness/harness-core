@@ -7,11 +7,9 @@ package io.harness.delegate.task.citasks.cik8handler.container;
  */
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.k8s.KubernetesConvention.getKubernetesRegistrySecretName;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.delegate.beans.ci.pod.ContainerParams;
 import io.harness.delegate.beans.ci.pod.ContainerResourceParams;

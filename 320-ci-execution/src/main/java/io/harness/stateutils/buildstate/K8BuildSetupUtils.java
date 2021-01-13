@@ -75,7 +75,7 @@ import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.sdk.core.resolver.RefObjectUtil;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.product.ci.engine.proto.Execution;
 import io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider;
@@ -112,7 +112,7 @@ public class K8BuildSetupUtils {
   public CIK8BuildTaskParams getCIk8BuildTaskParams(
       LiteEngineTaskStepInfo liteEngineTaskStepInfo, Ambiance ambiance, Map<String, String> taskIds) {
     K8PodDetails k8PodDetails = (K8PodDetails) executionSweepingOutputResolver.resolve(
-        ambiance, RefObjectUtil.getSweepingOutputRefObject(ContextElement.podDetails));
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.podDetails));
 
     NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
 

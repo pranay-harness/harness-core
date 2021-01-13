@@ -12,8 +12,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class AzureAppServiceTaskParameters extends AzureTaskParameters {
   private static final Set<AzureAppServiceTaskType> SYNC_TASK_TYPES =
