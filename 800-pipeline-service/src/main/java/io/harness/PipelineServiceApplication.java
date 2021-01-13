@@ -10,6 +10,8 @@ import static java.util.Collections.singletonList;
 import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.exception.GeneralException;
 import io.harness.govern.ProviderModule;
+import io.harness.health.HealthMonitor;
+import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
@@ -68,6 +70,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 @Slf4j
 public class PipelineServiceApplication extends Application<PipelineServiceConfiguration> {
@@ -137,6 +140,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerResources(environment, injector);
     registerJerseyProviders(environment, injector);
     registerManagedBeans(environment, injector);
+    registerHealthCheck(environment, injector);
 
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     injector.getInstance(TriggerWebhookExecutionService.class).registerIterators();
@@ -149,6 +153,12 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerPmsSdk(appConfig, injector);
 
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void registerHealthCheck(Environment environment, Injector injector) {
+    final HealthService healthService = injector.getInstance(HealthService.class);
+    environment.healthChecks().register("PMS", healthService);
+    healthService.registerMonitor((HealthMonitor) injector.getInstance(MongoTemplate.class));
   }
 
   private void registerPmsSdk(PipelineServiceConfiguration config, Injector injector) {

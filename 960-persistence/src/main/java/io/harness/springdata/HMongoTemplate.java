@@ -1,9 +1,13 @@
 package io.harness.springdata;
 
+import static java.time.Duration.ofSeconds;
+
 import io.harness.exception.ExceptionUtils;
+import io.harness.health.HealthMonitor;
 
 import com.mongodb.MongoSocketOpenException;
 import com.mongodb.MongoSocketReadException;
+import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -16,7 +20,7 @@ import org.springframework.lang.Nullable;
 
 @SuppressWarnings("NullableProblems")
 @Slf4j
-public class HMongoTemplate extends MongoTemplate {
+public class HMongoTemplate extends MongoTemplate implements HealthMonitor {
   private static final int RETRIES = 3;
 
   public static final FindAndModifyOptions upsertReturnNewOptions =
@@ -39,6 +43,21 @@ public class HMongoTemplate extends MongoTemplate {
   @Override
   public <T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass) {
     return retry(() -> findAndModify(query, update, options, entityClass, getCollectionName(entityClass)));
+  }
+
+  @Override
+  public Duration healthExpectedResponseTimeout() {
+    return ofSeconds(5);
+  }
+
+  @Override
+  public Duration healthValidFor() {
+    return ofSeconds(15);
+  }
+
+  @Override
+  public void isHealthy() {
+    executeCommand("{ buildInfo: 1 }");
   }
 
   public interface Executor<R> {
