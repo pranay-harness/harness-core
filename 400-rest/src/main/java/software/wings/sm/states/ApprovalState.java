@@ -526,8 +526,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     executionData.setRejectionField(jiraApprovalParams.getRejectionField());
     executionData.setRejectionValue(jiraApprovalParams.getRejectionValue());
 
-    JiraExecutionData jiraExecutionData = jiraHelperService.fetchIssue(
-        jiraApprovalParams, app.getAccountId(), app.getAppId(), context.getWorkflowExecutionId(), approvalId);
+    JiraExecutionData jiraExecutionData =
+        jiraHelperService.fetchIssue(jiraApprovalParams, app.getAccountId(), app.getAppId(), approvalId);
 
     if (jiraExecutionData.getExecutionStatus() != null && FAILED == jiraExecutionData.getExecutionStatus()) {
       return respondWithStatus(context, executionData, null,

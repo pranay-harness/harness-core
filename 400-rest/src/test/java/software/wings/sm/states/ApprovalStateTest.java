@@ -760,7 +760,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(executionResponse).isNotNull();
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
 
-    when(jiraHelperService.fetchIssue(any(), any(), any(), any(), any()))
+    when(jiraHelperService.fetchIssue(any(), any(), any(), any()))
         .thenReturn(JiraExecutionData.builder().executionStatus(FAILED).build());
 
     approvalStateParams.getJiraApprovalParams().setIssueId("issueId");
@@ -776,7 +776,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     String approvalValue = "DONE";
     when(context.renderExpression(anyString()))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
-    when(jiraHelperService.fetchIssue(any(), any(), any(), any(), any()))
+    when(jiraHelperService.fetchIssue(any(), any(), any(), any()))
         .thenReturn(JiraExecutionData.builder().currentStatus(approvalValue).build());
 
     ApprovalStateParams approvalStateParams = new ApprovalStateParams();
@@ -800,7 +800,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     String rejectionValue = "REJECTED";
     when(context.renderExpression(anyString()))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
-    when(jiraHelperService.fetchIssue(any(), any(), any(), any(), any()))
+    when(jiraHelperService.fetchIssue(any(), any(), any(), any()))
         .thenReturn(JiraExecutionData.builder().currentStatus(rejectionValue).build());
 
     ApprovalStateParams approvalStateParams = new ApprovalStateParams();
@@ -823,7 +823,7 @@ public class ApprovalStateTest extends WingsBaseTest {
   public void testExecuteJiraApprovalWithPollingService() {
     when(context.renderExpression(anyString()))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class));
-    when(jiraHelperService.fetchIssue(any(), any(), any(), any(), any()))
+    when(jiraHelperService.fetchIssue(any(), any(), any(), any()))
         .thenReturn(JiraExecutionData.builder().currentStatus("TODO").build());
 
     ApprovalStateParams approvalStateParams = new ApprovalStateParams();

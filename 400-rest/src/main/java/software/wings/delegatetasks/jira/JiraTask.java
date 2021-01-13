@@ -157,12 +157,23 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     return responseData;
   }
 
-  private DelegateResponseData validateCredentials(JiraTaskParameters parameters) {
+  @VisibleForTesting
+  protected DelegateResponseData validateCredentials(JiraTaskParameters parameters) {
     try {
       JiraClient jiraClient = getJiraClient(parameters);
       jiraClient.getProjects();
     } catch (JiraException e) {
       String errorMessage = "Failed to fetch projects during credential validation.";
+      if (e.getCause() != null) {
+        if (e.getCause() instanceof RestException && ((RestException) e.getCause()).getHttpStatusCode() == 407) {
+          // Proxy Authentication required
+          errorMessage += " Reason: "
+              + "Proxy Authentication Required. Error Code: " + ((RestException) e.getCause()).getHttpStatusCode();
+          log.error(errorMessage, e);
+          return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(errorMessage).build();
+        }
+        errorMessage += " Reason: " + e.getCause().getMessage();
+      }
       log.error(errorMessage, e);
       return JiraExecutionData.builder().errorMessage(errorMessage).executionStatus(ExecutionStatus.FAILED).build();
     }
@@ -283,7 +294,8 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     }
   }
 
-  private DelegateResponseData getProjects(JiraTaskParameters parameters) {
+  @VisibleForTesting
+  protected DelegateResponseData getProjects(JiraTaskParameters parameters) {
     try {
       JiraClient jira = getJiraClient(parameters);
       URI uri = jira.getRestClient().buildURI(Resource.getBaseUri() + "project");
@@ -292,6 +304,16 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       return JiraExecutionData.builder().projects(projectsArray).executionStatus(ExecutionStatus.SUCCESS).build();
     } catch (URISyntaxException | IOException | RestException | JiraException | RuntimeException e) {
       String errorMessage = "Failed to fetch projects from Jira server.";
+      if (e instanceof RestException && ((RestException) e).getHttpStatusCode() == 407) {
+        // Proxy Authentication required
+        errorMessage += " Reason: "
+            + "Proxy Authentication Required. Error Code: " + ((RestException) e).getHttpStatusCode();
+        log.error(errorMessage, e);
+        return JiraExecutionData.builder().executionStatus(ExecutionStatus.FAILED).errorMessage(errorMessage).build();
+      }
+      if (e.getCause() != null) {
+        errorMessage += " Reason: " + e.getCause().getMessage();
+      }
       log.error(errorMessage, e);
       return JiraExecutionData.builder().errorMessage(errorMessage).executionStatus(ExecutionStatus.FAILED).build();
     }
