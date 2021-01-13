@@ -1,5 +1,6 @@
 package io.harness;
 
+import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
 import io.harness.callback.DelegateCallback;
@@ -22,6 +23,7 @@ import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.expressions.PMSExpressionEvaluatorProvider;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
@@ -36,6 +38,7 @@ import io.harness.pms.plan.execution.service.PMSExecutionServiceImpl;
 import io.harness.pms.sdk.StepTypeLookupServiceImpl;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
 import io.harness.pms.triggers.webhook.service.impl.TriggerWebhookExecutionServiceImpl;
+import io.harness.projectmanagerclient.ProjectManagementClientModule;
 import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
 import io.harness.serializer.KryoRegistrar;
@@ -117,6 +120,11 @@ public class PipelineServiceModule extends AbstractModule {
     install(PersistentLockModule.getInstance());
     install(TimeModule.getInstance());
     install(FiltersModule.getInstance());
+
+    install(new OrganizationManagementClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getNgManagerServiceSecret(), MANAGER.getServiceId()));
+    install(new ProjectManagementClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getNgManagerServiceSecret(), MANAGER.getServiceId()));
 
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);

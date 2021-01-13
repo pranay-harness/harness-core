@@ -17,6 +17,7 @@ java_library(
         "//879-pms-sdk:module",
         "//884-pms-commons:module",
         "//890-pms-contracts:module",
+        "//930-ng-core-clients:module",
         "//950-timeout-engine:module",
         "//955-filters-sdk:module",
         "//960-ng-core-beans:module",
