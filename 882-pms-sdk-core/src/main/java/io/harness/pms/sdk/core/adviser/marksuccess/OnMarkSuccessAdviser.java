@@ -2,10 +2,12 @@ package io.harness.pms.sdk.core.adviser.marksuccess;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.advisers.MarkSuccessAdvise;
+import io.harness.pms.contracts.advisers.MarkSuccessAdvise.Builder;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent;
@@ -26,10 +28,11 @@ public class OnMarkSuccessAdviser implements Adviser {
   @Override
   public AdviserResponse onAdviseEvent(AdvisingEvent advisingEvent) {
     OnMarkSuccessAdviserParameters parameters = extractParameters(advisingEvent);
-    return AdviserResponse.newBuilder()
-        .setMarkSuccessAdvise(MarkSuccessAdvise.newBuilder().setNextNodeId(parameters.getNextNodeId()).build())
-        .setType(AdviseType.MARK_SUCCESS)
-        .build();
+    Builder builder = MarkSuccessAdvise.newBuilder();
+    if (EmptyPredicate.isNotEmpty(parameters.getNextNodeId())) {
+      builder.setNextNodeId(parameters.getNextNodeId());
+    }
+    return AdviserResponse.newBuilder().setMarkSuccessAdvise(builder.build()).setType(AdviseType.MARK_SUCCESS).build();
   }
 
   @Override

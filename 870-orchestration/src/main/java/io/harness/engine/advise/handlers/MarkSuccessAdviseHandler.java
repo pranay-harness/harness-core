@@ -1,5 +1,6 @@
 package io.harness.engine.advise.handlers;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.advise.AdviserResponseHandler;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -22,8 +23,12 @@ public class MarkSuccessAdviseHandler implements AdviserResponseHandler {
   public void handleAdvise(NodeExecution nodeExecution, AdviserResponse adviserResponse) {
     MarkSuccessAdvise markSuccessAdvise = adviserResponse.getMarkSuccessAdvise();
     nodeExecutionService.updateStatus(nodeExecution.getUuid(), Status.SUCCEEDED);
-    PlanNodeProto nextNode = Preconditions.checkNotNull(planExecutionService.fetchExecutionNode(
-        nodeExecution.getAmbiance().getPlanExecutionId(), markSuccessAdvise.getNextNodeId()));
-    engine.triggerExecution(nodeExecution.getAmbiance(), nextNode);
+    if (EmptyPredicate.isNotEmpty(markSuccessAdvise.getNextNodeId())) {
+      PlanNodeProto nextNode = Preconditions.checkNotNull(planExecutionService.fetchExecutionNode(
+          nodeExecution.getAmbiance().getPlanExecutionId(), markSuccessAdvise.getNextNodeId()));
+      engine.triggerExecution(nodeExecution.getAmbiance(), nextNode);
+    } else {
+      engine.endNodeExecution(nodeExecution.getUuid(), Status.SUCCEEDED);
+    }
   }
 }
