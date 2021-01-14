@@ -297,16 +297,14 @@ public class AccountServiceImpl implements AccountService {
       if (account.isForImport()) {
         log.info("Creating the account for import only, no default account entities will be created");
       } else {
-        createDefaultAccountEntities(account, shouldCreateSampleApp);
+        createDefaultAccountEntities(account, shouldCreateSampleApp, fromDataGen);
         // Schedule default account level jobs.
         scheduleAccountLevelJobs(account.getUuid());
       }
 
       publishAccountChangeEvent(account);
-      // TODO {karan} remove this if condition when NG is enabled globally for new accounts
-      if (fromDataGen) {
-        publishAccountChangeEventViaEventFramework(account.getUuid(), EventsFrameworkMetadataConstants.CREATE_ACTION);
-      }
+      // TODO {karan} uncomment this when NG is enabled globally for new accounts
+      // publishAccountChangeEventViaEventFramework(account.getUuid(), EventsFrameworkMetadataConstants.CREATE_ACTION);
 
       log.info("Successfully created account.");
     }
@@ -409,7 +407,7 @@ public class AccountServiceImpl implements AccountService {
     return licenseService.updateAccountLicense(accountId, licenseInfo);
   }
 
-  private void createDefaultAccountEntities(Account account, boolean shouldCreateSampleApp) {
+  private void createDefaultAccountEntities(Account account, boolean shouldCreateSampleApp, boolean fromDataGen) {
     createDefaultRoles(account)
         .stream()
         .filter(role -> RoleType.ACCOUNT_ADMIN == role.getRoleType())
@@ -432,16 +430,25 @@ public class AccountServiceImpl implements AccountService {
       }
     });
 
-    enableFeatureFlags(account);
+    enableFeatureFlags(account, fromDataGen);
     if (shouldCreateSampleApp) {
       sampleDataProviderService.createK8sV2SampleApp(account);
     }
   }
 
-  private void enableFeatureFlags(@NotNull Account account) {
+  private void enableFeatureFlags(@NotNull Account account, boolean fromDataGen) {
     featureFlagService.enableAccount(FeatureName.DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC, account.getUuid());
     featureFlagService.enableAccount(FeatureName.DISABLE_WINRM_ENV_VARIABLES, account.getUuid());
     featureFlagService.enableAccount(FeatureName.HELM_CHART_NAME_SPLIT, account.getUuid());
+
+    if (fromDataGen) {
+      featureFlagService.enableAccount(FeatureName.NEXT_GEN_ENABLED, account.getUuid());
+      featureFlagService.enableAccount(FeatureName.CDNG_ENABLED, account.getUuid());
+      featureFlagService.enableAccount(FeatureName.CENG_ENABLED, account.getUuid());
+      featureFlagService.enableAccount(FeatureName.CFNG_ENABLED, account.getUuid());
+      featureFlagService.enableAccount(FeatureName.CING_ENABLED, account.getUuid());
+      featureFlagService.enableAccount(FeatureName.CVNG_ENABLED, account.getUuid());
+    }
   }
 
   List<Role> createDefaultRoles(Account account) {
