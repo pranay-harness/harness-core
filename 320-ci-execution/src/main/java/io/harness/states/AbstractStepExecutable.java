@@ -6,6 +6,7 @@ import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CiStepOutcome;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.delegate.task.stepstatus.StepExecutionStatus;
+import io.harness.delegate.task.stepstatus.StepMapOutput;
 import io.harness.delegate.task.stepstatus.StepStatus;
 import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -58,13 +59,16 @@ public abstract class AbstractStepExecutable implements AsyncExecutable<CIStepIn
 
     log.info("Received response {} for step {}", stepStatus.getStepExecutionStatus(), stepIdentifier);
     if (stepStatus.getStepExecutionStatus() == StepExecutionStatus.SUCCESS) {
-      return StepResponse.builder()
-          .status(Status.SUCCEEDED)
-          .stepOutcome(StepResponse.StepOutcome.builder()
-                           .outcome(CiStepOutcome.builder().output(stepStatus.getOutput()).build())
-                           .name(stepIdentifier)
-                           .build())
-          .build();
+      StepResponse.StepOutcome stepOutcome = null;
+      if (stepStatus.getOutput() != null) {
+        stepOutcome =
+            StepResponse.StepOutcome.builder()
+                .outcome(
+                    CiStepOutcome.builder().outputVariables(((StepMapOutput) stepStatus.getOutput()).getMap()).build())
+                .name("output")
+                .build();
+      }
+      return StepResponse.builder().status(Status.SUCCEEDED).stepOutcome(stepOutcome).build();
     } else if (stepStatus.getStepExecutionStatus() == StepExecutionStatus.SKIPPED) {
       return StepResponse.builder().status(Status.SKIPPED).build();
     } else {

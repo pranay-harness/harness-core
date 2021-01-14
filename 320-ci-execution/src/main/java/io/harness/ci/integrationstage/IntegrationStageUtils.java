@@ -65,6 +65,9 @@ public class IntegrationStageUtils {
     ExecutionTriggerInfo executionTriggerInfo = executionMetadata.getTriggerInfo();
 
     if (executionTriggerInfo.getTriggerType() == TriggerType.MANUAL) {
+      if (parameterFieldBuild == null) {
+        return ManualExecutionSource.builder().build();
+      }
       Build build = RunTimeInputHandler.resolveBuild(parameterFieldBuild);
       if (build != null) {
         if (build.getType().equals(BuildType.TAG)) {
