@@ -1,6 +1,6 @@
 package io.harness.connector.stats;
 
-import io.harness.delegate.beans.connector.ConnectivityStatus;
+import io.harness.connector.ConnectivityStatus;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;

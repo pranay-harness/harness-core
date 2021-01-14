@@ -1,12 +1,12 @@
 package io.harness.delegate.task.docker;
 
 import io.harness.artifacts.docker.service.DockerRegistryService;
+import io.harness.connector.ConnectivityStatus;
+import io.harness.connector.ConnectorValidationResult;
+import io.harness.connector.ConnectorValidationResult.ConnectorValidationResultBuilder;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.connector.ConnectivityStatus;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
-import io.harness.delegate.beans.connector.ConnectorValidationResult.ConnectorValidationResultBuilder;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerTestConnectionTaskParams;
 import io.harness.delegate.beans.connector.docker.DockerTestConnectionTaskResponse;

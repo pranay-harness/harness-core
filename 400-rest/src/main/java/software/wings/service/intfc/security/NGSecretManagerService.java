@@ -3,7 +3,7 @@ package software.wings.service.intfc.security;
 import static io.harness.security.encryption.EncryptionType.VAULT;
 
 import io.harness.beans.SecretManagerConfig;
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerMetadataDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerMetadataRequestDTO;

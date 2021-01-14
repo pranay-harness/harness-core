@@ -2,6 +2,7 @@ package io.harness.connector.mappers;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.connector.ConnectorConnectivityDetails;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorRegistryFactory;
@@ -88,12 +89,22 @@ public class ConnectorMapper {
                                          .build();
     return ConnectorResponseDTO.builder()
         .connector(connectorInfo)
-        .status(connector.getConnectivityDetails())
+        .status(updateLastTestedAt(connector.getConnectivityDetails()))
         .createdAt(connector.getCreatedAt())
         .lastModifiedAt(getTimeWhenTheConnectorWasUpdated(
             connector.getTimeWhenConnectorIsLastUpdated(), connector.getLastModifiedAt()))
         .harnessManaged(isHarnessManaged(connector))
         .build();
+  }
+
+  private ConnectorConnectivityDetails updateLastTestedAt(ConnectorConnectivityDetails connectivityDetails) {
+    if (connectivityDetails == null) {
+      return null;
+    }
+    if (connectivityDetails.getTestedAt() == 0L) {
+      connectivityDetails.setTestedAt(connectivityDetails.getLastTestedAt());
+    }
+    return connectivityDetails;
   }
 
   private Long getTimeWhenTheConnectorWasUpdated(Long timeWhenConnectorIsLastUpdated, Long lastModifiedAt) {

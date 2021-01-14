@@ -1,6 +1,6 @@
 package io.harness.connector.services;
 
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.connector.ConnectorValidationResult;
 
 public interface GitRepoConnectorService {
   ConnectorValidationResult testGitRepoConnection(String accountIdentifier, String orgIdentifier,

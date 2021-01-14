@@ -6,7 +6,7 @@ import static io.harness.NGConstants.FILE_METADATA_KEY;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.beans.PageResponse;
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.rest.RestResponse;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;

@@ -1,4 +1,4 @@
-package io.harness.delegate.beans.connector;
+package io.harness.connector;
 
 import io.harness.ng.core.dto.ErrorDetail;
 

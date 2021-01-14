@@ -1,7 +1,7 @@
 package io.harness.connector.impl;
 
-import static io.harness.delegate.beans.connector.ConnectivityStatus.FAILURE;
-import static io.harness.delegate.beans.connector.ConnectivityStatus.SUCCESS;
+import static io.harness.connector.ConnectivityStatus.FAILURE;
+import static io.harness.connector.ConnectivityStatus.SUCCESS;
 import static io.harness.encryption.Scope.ACCOUNT;
 import static io.harness.rule.OwnerRule.ABHINAV;
 
@@ -13,14 +13,13 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.validator.scmValidators.GitConnectorValidator;
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
-import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatus;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.rule.Owner;
@@ -61,7 +60,9 @@ public class GitConnectorValidatorTest extends CategoryTest {
                                  .gitAuthType(GitAuthType.HTTP)
                                  .build();
     GitCommandExecutionResponse gitResponse =
-        GitCommandExecutionResponse.builder().gitCommandStatus(GitCommandStatus.FAILURE).build();
+        GitCommandExecutionResponse.builder()
+            .connectorValidationResult(ConnectorValidationResult.builder().status(FAILURE).build())
+            .build();
     doReturn(gitResponse).when(delegateGrpcClientWrapper).executeSyncTask(any());
     doReturn(null).when(secretManagerClientService).getEncryptionDetails(any());
     ConnectorValidationResult connectorValidationResult =
@@ -86,7 +87,9 @@ public class GitConnectorValidatorTest extends CategoryTest {
             .url("url")
             .build();
     GitCommandExecutionResponse gitResponse =
-        GitCommandExecutionResponse.builder().gitCommandStatus(GitCommandStatus.SUCCESS).build();
+        GitCommandExecutionResponse.builder()
+            .connectorValidationResult(ConnectorValidationResult.builder().status(SUCCESS).build())
+            .build();
     doReturn(null).when(secretManagerClientService).getEncryptionDetails(any());
     doReturn(gitResponse).when(delegateGrpcClientWrapper).executeSyncTask(any());
     ConnectorValidationResult connectorValidationResult =

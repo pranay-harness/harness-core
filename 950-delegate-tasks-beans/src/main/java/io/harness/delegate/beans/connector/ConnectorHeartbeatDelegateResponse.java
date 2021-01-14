@@ -1,5 +1,7 @@
 package io.harness.delegate.beans.connector;
 
+import io.harness.connector.ConnectorValidationResult;
+
 import lombok.Builder;
 import lombok.Data;
 

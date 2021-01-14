@@ -1,7 +1,7 @@
 package io.harness.delegate.task.gcp.taskHandlers;
 
-import static io.harness.delegate.beans.connector.ConnectivityStatus.FAILURE;
-import static io.harness.delegate.beans.connector.ConnectivityStatus.SUCCESS;
+import static io.harness.connector.ConnectivityStatus.FAILURE;
+import static io.harness.connector.ConnectivityStatus.SUCCESS;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -9,7 +9,7 @@ import static org.mockito.Mockito.doThrow;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.delegate.task.gcp.request.GcpValidationRequest;
 import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;

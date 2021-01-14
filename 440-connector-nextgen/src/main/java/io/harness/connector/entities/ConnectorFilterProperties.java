@@ -1,7 +1,7 @@
 package io.harness.connector.entities;
 
+import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorCategory;
-import io.harness.delegate.beans.connector.ConnectivityStatus;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.filter.entity.FilterProperties;
 

@@ -2,14 +2,14 @@ package io.harness.delegate.task.artifactory;
 
 import io.harness.artifactory.ArtifactoryConfigRequest;
 import io.harness.artifactory.ArtifactoryServiceImpl;
+import io.harness.connector.ConnectivityStatus;
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.artifactory.ArtifactoryTaskParams;
 import io.harness.delegate.beans.artifactory.ArtifactoryTaskParams.TaskType;
 import io.harness.delegate.beans.artifactory.ArtifactoryTaskResponse;
-import io.harness.delegate.beans.connector.ConnectivityStatus;
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryAuthCredentialsDTO;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConnectorDTO;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;

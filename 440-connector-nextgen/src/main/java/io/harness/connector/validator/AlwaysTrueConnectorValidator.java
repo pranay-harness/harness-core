@@ -1,8 +1,8 @@
 package io.harness.connector.validator;
 
-import io.harness.delegate.beans.connector.ConnectivityStatus;
+import io.harness.connector.ConnectivityStatus;
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.task.TaskParameters;
 
 public class AlwaysTrueConnectorValidator extends AbstractConnectorValidator {

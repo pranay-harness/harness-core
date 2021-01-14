@@ -2,8 +2,8 @@ package io.harness.connector.validator;
 
 import static software.wings.beans.TaskType.DOCKER_CONNECTIVITY_TEST_TASK;
 
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.docker.DockerAuthCredentialsDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerTestConnectionTaskParams;

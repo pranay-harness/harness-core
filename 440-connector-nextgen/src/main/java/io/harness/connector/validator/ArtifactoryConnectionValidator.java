@@ -4,10 +4,10 @@ import static io.harness.delegate.beans.artifactory.ArtifactoryTaskParams.TaskTy
 
 import static software.wings.beans.TaskType.NG_ARTIFACTORY_TASK;
 
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.artifactory.ArtifactoryTaskParams;
 import io.harness.delegate.beans.artifactory.ArtifactoryTaskResponse;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConnectorDTO;
 import io.harness.delegate.task.TaskParameters;
 

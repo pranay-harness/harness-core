@@ -1,7 +1,8 @@
 package io.harness.connector;
 
-import io.harness.delegate.beans.connector.ConnectivityStatus;
+import io.harness.ng.core.dto.ErrorDetail;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,7 +16,9 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants(innerTypeName = "ConnectorConnectivityDetailsKeys")
 public class ConnectorConnectivityDetails {
   ConnectivityStatus status;
-  String errorMessage;
-  long lastTestedAt;
+  String errorSummary;
+  List<ErrorDetail> errors;
+  long testedAt;
+  @Deprecated long lastTestedAt;
   long lastConnectedAt;
 }

@@ -1,5 +1,9 @@
 package io.harness.ng.core.entityactivity.mapper;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import io.harness.connector.ConnectivityStatus;
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.eventsframework.schemas.entityactivity.EntityActivityCreateDTO;
 import io.harness.ng.core.activityhistory.NGActivityStatus;
 import io.harness.ng.core.activityhistory.NGActivityType;
@@ -7,9 +11,13 @@ import io.harness.ng.core.activityhistory.dto.ActivityDetail;
 import io.harness.ng.core.activityhistory.dto.ConnectivityCheckActivityDetailDTO;
 import io.harness.ng.core.activityhistory.dto.EntityUsageActivityDetailDTO;
 import io.harness.ng.core.activityhistory.dto.NGActivityDTO;
+import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
 
 import com.google.inject.Inject;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
@@ -32,7 +40,10 @@ public class EntityActivityProtoToRestDTOMapper {
 
   private ActivityDetail createEntityActivityDetailDTO(String type, EntityActivityCreateDTO entityActivityProtoDTO) {
     if (NGActivityType.CONNECTIVITY_CHECK.toString().equals(type)) {
-      return ConnectivityCheckActivityDetailDTO.builder().build();
+      return ConnectivityCheckActivityDetailDTO.builder()
+          .connectorValidationResult(
+              createConnectivityDetailFromProtoDTOs(entityActivityProtoDTO.getConnectivityDetail()))
+          .build();
     } else if (NGActivityType.ENTITY_USAGE.toString().equals(type)) {
       EntityActivityCreateDTO.EntityUsageActivityDetailProtoDTO entityUsageActivityDetailProtoDTO =
           entityActivityProtoDTO.getEntityUsageDetail();
@@ -44,5 +55,39 @@ public class EntityActivityProtoToRestDTOMapper {
     } else {
       return null;
     }
+  }
+
+  private ConnectorValidationResult createConnectivityDetailFromProtoDTOs(
+      EntityActivityCreateDTO.ConnectivityCheckActivityDetailProtoDTO connectivityDetail) {
+    if (connectivityDetail == null || !connectivityDetail.hasConnectorValidationResult()) {
+      return null;
+    }
+    return createConnectorValidationResultFromProto(connectivityDetail.getConnectorValidationResult());
+  }
+
+  private ConnectorValidationResult createConnectorValidationResultFromProto(
+      EntityActivityCreateDTO.ConnectorValidationResultProto connectorValidationResult) {
+    return ConnectorValidationResult.builder()
+        .delegateId(connectorValidationResult.getDelegateId())
+        .errorSummary(connectorValidationResult.getErrorSummary())
+        .status(getConnecitivityStatus(connectorValidationResult.getStatus()))
+        .errors(getErrorsList(connectorValidationResult.getErrorsList()))
+        .errorSummary(connectorValidationResult.getErrorSummary())
+        .build();
+  }
+
+  private ConnectivityStatus getConnecitivityStatus(String status) {
+    return ConnectivityStatus.valueOf(status);
+  }
+
+  private List<ErrorDetail> getErrorsList(List<EntityActivityCreateDTO.ErrorDetailProto> errorsProtoDTOs) {
+    if (isEmpty(errorsProtoDTOs)) {
+      return Collections.emptyList();
+    }
+    return errorsProtoDTOs.stream().map(this::createErrorDetail).collect(Collectors.toList());
+  }
+
+  private ErrorDetail createErrorDetail(EntityActivityCreateDTO.ErrorDetailProto error) {
+    return ErrorDetail.builder().code(error.getCode()).reason(error.getReason()).message(error.getMessage()).build();
   }
 }

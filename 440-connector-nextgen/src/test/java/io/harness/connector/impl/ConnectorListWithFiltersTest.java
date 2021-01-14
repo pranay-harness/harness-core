@@ -18,6 +18,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 
 import io.harness.category.element.UnitTests;
+import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorConnectivityDetails;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorFilterPropertiesDTO;
@@ -30,7 +31,6 @@ import io.harness.connector.entities.embedded.kubernetescluster.K8sUserNamePassw
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterConfig.KubernetesClusterConfigKeys;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterDetails;
-import io.harness.delegate.beans.connector.ConnectivityStatus;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;

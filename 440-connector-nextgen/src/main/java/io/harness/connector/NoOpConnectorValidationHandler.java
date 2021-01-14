@@ -1,7 +1,6 @@
 package io.harness.connector;
 
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.task.k8s.ConnectorValidationHandler;
 import io.harness.security.encryption.EncryptedDataDetail;
 

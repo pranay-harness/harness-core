@@ -10,12 +10,12 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 
 import io.harness.beans.DelegateTask;
+import io.harness.connector.ConnectivityStatus;
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.beans.connector.ConnectivityStatus;
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.task.gcp.request.GcpRequest;
 import io.harness.delegate.task.gcp.request.GcpValidationRequest;
 import io.harness.delegate.task.gcp.response.GcpResponse;

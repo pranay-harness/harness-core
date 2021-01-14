@@ -1,8 +1,8 @@
 package io.harness.connector.validator.scmValidators;
 
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.scmMappers.GitlabToGitMapper;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 
