@@ -12,6 +12,8 @@ import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
+import io.harness.delegate.beans.artifactory.ArtifactoryTaskParams;
+import io.harness.delegate.beans.artifactory.ArtifactoryTaskResponse;
 import io.harness.delegate.beans.azure.AzureConfigDTO;
 import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO;
 import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO.ImageType;
@@ -166,6 +168,7 @@ import io.harness.delegate.beans.git.GitCommandParams;
 import io.harness.delegate.beans.git.GitCommandType;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.delegate.beans.logstreaming.CommandUnitStatusProgress;
+import io.harness.delegate.beans.nexus.NexusTaskParams;
 import io.harness.delegate.beans.nexus.NexusTaskResponse;
 import io.harness.delegate.beans.secrets.SSHConfigValidationTaskResponse;
 import io.harness.delegate.beans.storeconfig.FetchType;
@@ -616,5 +619,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(ArtifactoryUsernamePasswordAuthDTO.class, 19492);
     kryo.register(AzureAppServiceAzureSettingValue.class, 19493);
     kryo.register(NexusTaskResponse.class, 19494);
+    kryo.register(ArtifactoryTaskResponse.class, 19495);
+    kryo.register(NexusTaskParams.class, 19496);
+    kryo.register(ArtifactoryTaskParams.class, 19497);
   }
 }

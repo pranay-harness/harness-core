@@ -1,5 +1,6 @@
 package io.harness.serializer.kryo;
 
+import io.harness.artifactory.ArtifactoryConfigRequest;
 import io.harness.aws.AwsAccessKeyCredential;
 import io.harness.aws.AwsConfig;
 import io.harness.aws.CrossAccountAccess;
@@ -244,5 +245,7 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
 
     kryo.register(NexusRequest.class, 1441);
     kryo.register(RepositoryFormat.class, 7204);
+
+    kryo.register(ArtifactoryConfigRequest.class, 1442);
   }
 }
