@@ -88,7 +88,7 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = PRASHANT)
+  @Owner(developers = PRASHANT, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldExecuteSectionChainPlan() {
     PlanExecution httpForkResponse =
@@ -312,7 +312,7 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = ALEXEI)
+  @Owner(developers = ALEXEI, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldExecuteTaskChain() {
     PlanExecution taskChainResponse =
