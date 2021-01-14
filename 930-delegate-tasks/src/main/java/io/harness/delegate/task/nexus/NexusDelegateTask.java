@@ -8,9 +8,11 @@ import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.nexusconnector.NexusConnectorDTO;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.nexus.NexusTaskParams;
+import io.harness.delegate.beans.nexus.NexusTaskParams.TaskType;
 import io.harness.delegate.beans.nexus.NexusTaskResponse;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.exception.InvalidRequestException;
 import io.harness.nexus.NexusClientImpl;
 import io.harness.nexus.NexusRequest;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -48,28 +50,40 @@ public class NexusDelegateTask extends AbstractDelegateRunnableTask {
     final List<EncryptedDataDetail> encryptionDetails = taskParams.getEncryptedDataDetails();
     decryptionService.decrypt(nexusConfig.getAuth().getCredentials(), encryptionDetails);
     final NexusRequest nexusRequest = nexusMapper.toNexusRequest(nexusConfig);
-    ConnectorValidationResult connectorValidationResult;
+    final TaskType taskType = taskParams.getTaskType();
     try {
-      boolean running = nexusClient.isRunning(nexusRequest);
-      if (running) {
-        connectorValidationResult = ConnectorValidationResult.builder()
-                                        .status(ConnectivityStatus.SUCCESS)
-                                        .testedAt(System.currentTimeMillis())
-                                        .delegateId(getDelegateId())
-                                        .build();
-      } else {
-        connectorValidationResult = ConnectorValidationResult.builder()
-                                        .status(ConnectivityStatus.FAILURE)
-                                        .testedAt(System.currentTimeMillis())
-                                        .delegateId(getDelegateId())
-                                        .build();
+      switch (taskType) {
+        case VALIDATE:
+          return validateNexusServer(nexusRequest);
+        default:
+          throw new InvalidRequestException("No task found for " + taskType.name());
       }
+
     } catch (Exception e) {
+      ConnectorValidationResult connectorValidationResult = ConnectorValidationResult.builder()
+                                                                .testedAt(System.currentTimeMillis())
+                                                                .delegateId(getDelegateId())
+                                                                .status(ConnectivityStatus.FAILURE)
+                                                                .errorSummary(e.getMessage())
+                                                                .build();
+      return NexusTaskResponse.builder().connectorValidationResult(connectorValidationResult).build();
+    }
+  }
+
+  private NexusTaskResponse validateNexusServer(NexusRequest nexusRequest) {
+    ConnectorValidationResult connectorValidationResult;
+    boolean running = nexusClient.isRunning(nexusRequest);
+    if (running) {
       connectorValidationResult = ConnectorValidationResult.builder()
+                                      .status(ConnectivityStatus.SUCCESS)
                                       .testedAt(System.currentTimeMillis())
                                       .delegateId(getDelegateId())
+                                      .build();
+    } else {
+      connectorValidationResult = ConnectorValidationResult.builder()
                                       .status(ConnectivityStatus.FAILURE)
-                                      .errorSummary(e.getMessage())
+                                      .testedAt(System.currentTimeMillis())
+                                      .delegateId(getDelegateId())
                                       .build();
     }
     return NexusTaskResponse.builder().connectorValidationResult(connectorValidationResult).build();

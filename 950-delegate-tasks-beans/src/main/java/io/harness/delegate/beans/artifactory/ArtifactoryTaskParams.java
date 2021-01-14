@@ -17,7 +17,10 @@ import lombok.Value;
 @Builder
 public class ArtifactoryTaskParams implements ExecutionCapabilityDemander, TaskParameters {
   ArtifactoryConnectorDTO artifactoryConnectorDTO;
+  TaskType taskType;
   List<EncryptedDataDetail> encryptedDataDetails;
+
+  public enum TaskType { VALIDATE }
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
