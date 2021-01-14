@@ -64,7 +64,9 @@ public class EngineExpressionEvaluator {
    * Add objects/functors to context map and aliases. Context map and aliases can only be updated in this method.
    */
   protected void initialize() {
-    // This method will be overridden by sub-classes.
+    addToContext("regex", new RegexFunctor());
+    addToContext("json", new JsonFunctor());
+    addToContext("xml", new XmlFunctor());
   }
 
   protected final boolean isInitialized() {

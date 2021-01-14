@@ -53,7 +53,7 @@ public class ExpressionEvaluatorServiceTest extends ExpressionServiceTestBase {
   public void shouldEvaluateVariable() {
     ExpressionResponse expressionResponse = expressionEvaulatorServiceBlockingStub.evaluateExpression(
         ExpressionRequest.newBuilder()
-            .addQueries(ExpressionQuery.newBuilder().setJexl("${VAR}").setJsonContext("{\"VAR\":\"VALUE\"}").build())
+            .addQueries(ExpressionQuery.newBuilder().setJexl("<+VAR>").setJsonContext("{\"VAR\":\"VALUE\"}").build())
             .build());
 
     assertThat(expressionResponse).isNotNull();
@@ -67,7 +67,7 @@ public class ExpressionEvaluatorServiceTest extends ExpressionServiceTestBase {
     ExpressionResponse expressionResponse = expressionEvaulatorServiceBlockingStub.evaluateExpression(
         ExpressionRequest.newBuilder()
             .addQueries(ExpressionQuery.newBuilder()
-                            .setJexl("${VAR1.VAR2}")
+                            .setJexl("<+VAR1.VAR2>")
                             .setJsonContext("{\"VAR1\":{\"VAR2\":\"VALUE\"}}")
                             .build())
 
@@ -84,7 +84,7 @@ public class ExpressionEvaluatorServiceTest extends ExpressionServiceTestBase {
     ExpressionResponse expressionResponse = expressionEvaulatorServiceBlockingStub.evaluateExpression(
         ExpressionRequest.newBuilder()
             .addQueries(ExpressionQuery.newBuilder()
-                            .setJexl("${VAR1.VAR2.VAR4}")
+                            .setJexl("<+VAR1.VAR2.VAR4>")
                             .setJsonContext("{\"VAR1\":{\"VAR2\":{\"VAR3\":\"VALUE\",\"VAR4\":\"VALUE4\"}}}")
                             .build())
 
@@ -101,7 +101,7 @@ public class ExpressionEvaluatorServiceTest extends ExpressionServiceTestBase {
     ExpressionResponse expressionResponse = expressionEvaulatorServiceBlockingStub.evaluateExpression(
         ExpressionRequest.newBuilder()
             .addQueries(ExpressionQuery.newBuilder()
-                            .setJexl("${VAR1.VAR2}")
+                            .setJexl("<+VAR1.VAR2>")
                             .setJsonContext("{\"VAR1\":{\"VAR2\":{\"VAR3\":\"VALUE\",\"VAR4\":\"VALUE4\"}}}")
                             .build())
             .build());
@@ -118,7 +118,7 @@ public class ExpressionEvaluatorServiceTest extends ExpressionServiceTestBase {
         ExpressionRequest.newBuilder()
             .addQueries(
                 ExpressionQuery.newBuilder()
-                    .setJexl("${json.select(\"status\",httpResponseBody)}")
+                    .setJexl("<+json.select(\"status\",httpResponseBody)>")
                     .setJsonContext(
                         "{\"httpResponseBody\":\"{ \\\"status\\\" : \\\"200\\\", \\\"message\\\" : \\\"Success\\\" }\"}")
                     .build())
@@ -137,7 +137,7 @@ public class ExpressionEvaluatorServiceTest extends ExpressionServiceTestBase {
         ExpressionRequest.newBuilder()
             .addQueries(
                 ExpressionQuery.newBuilder()
-                    .setJexl("${xml.select(\"/response/status\", httpResponseBody)}")
+                    .setJexl("<+xml.select(\"/response/status\", httpResponseBody)>")
                     .setJsonContext(
                         "{\"httpResponseBody\":\"<response><message>Success</message><status>200</status></response>\"}")
                     .build())
@@ -154,7 +154,7 @@ public class ExpressionEvaluatorServiceTest extends ExpressionServiceTestBase {
     ExpressionResponse expressionResponse = expressionEvaulatorServiceBlockingStub.evaluateExpression(
         ExpressionRequest.newBuilder()
             .addQueries(ExpressionQuery.newBuilder()
-                            .setJexl("${regex.extract(\"[0-9]*\", RPM)}")
+                            .setJexl("<+regex.extract(\"[0-9]*\", RPM)>")
                             .setJsonContext("{\"RPM\":\"build-webservices-3935-0.noarch.rpm\"}")
                             .build())
             .build());
@@ -169,7 +169,7 @@ public class ExpressionEvaluatorServiceTest extends ExpressionServiceTestBase {
   public void shouldThrowStatusRuntimeException() {
     ExpressionRequest expressionRequest =
         ExpressionRequest.newBuilder()
-            .addQueries(ExpressionQuery.newBuilder().setJexl("${VAR}").setJsonContext("VALUE").build())
+            .addQueries(ExpressionQuery.newBuilder().setJexl("<+VAR>").setJsonContext("VALUE").build())
             .build();
     ExpressionResponse expressionResponse =
         expressionEvaulatorServiceBlockingStub.evaluateExpression(expressionRequest);
@@ -182,7 +182,7 @@ public class ExpressionEvaluatorServiceTest extends ExpressionServiceTestBase {
   public void shouldEvaluateStrSubstitution() {
     ExpressionRequest expressionRequest = ExpressionRequest.newBuilder()
                                               .addQueries(ExpressionQuery.newBuilder()
-                                                              .setJexl("Testing ${STRING} substitution")
+                                                              .setJexl("Testing <+STRING> substitution")
                                                               .setJsonContext("{\"STRING\":\"string\"}")
                                                               .build())
                                               .build();
@@ -231,7 +231,7 @@ public class ExpressionEvaluatorServiceTest extends ExpressionServiceTestBase {
     ExpressionResponse expressionResponse = expressionEvaulatorServiceBlockingStub.evaluateExpression(
         ExpressionRequest.newBuilder()
             .addQueries(ExpressionQuery.newBuilder()
-                            .setJexl("${2==2 && 4==4} ${VAR1.VAR2}")
+                            .setJexl("<+2==2 && 4==4> <+VAR1.VAR2>")
                             .setJsonContext("{\"VAR1\":{\"VAR2\":{\"VAR3\":\"VALUE\",\"VAR4\":\"VALUE4\"}}}")
                             .build())
             .build());
@@ -247,12 +247,12 @@ public class ExpressionEvaluatorServiceTest extends ExpressionServiceTestBase {
     ExpressionResponse expressionResponse = expressionEvaulatorServiceBlockingStub.evaluateExpression(
         ExpressionRequest.newBuilder()
             .addQueries(ExpressionQuery.newBuilder()
-                            .setJexl("${HOME}")
+                            .setJexl("<+HOME>")
                             .setJsonContext("{\"VAR1\":{\"VAR2\":{\"VAR3\":\"VALUE\",\"VAR4\":\"VALUE4\"}}}")
                             .build())
             .build());
     assertThat(expressionResponse).isNotNull();
-    assertThat(expressionResponse.getValues(0).getValue()).isEqualTo("${HOME}");
+    assertThat(expressionResponse.getValues(0).getValue()).isEqualTo("<+HOME>");
     assertThat(expressionResponse.getValues(0).getStatusCode()).isEqualTo(SUCCESS);
   }
 
@@ -263,7 +263,7 @@ public class ExpressionEvaluatorServiceTest extends ExpressionServiceTestBase {
     ExpressionResponse expressionResponse = expressionEvaulatorServiceBlockingStub.evaluateExpression(
         ExpressionRequest.newBuilder()
             .addQueries(ExpressionQuery.newBuilder()
-                            .setJexl("hello - ${VAR1.VAR2}")
+                            .setJexl("hello - <+VAR1.VAR2>")
                             .setJsonContext("{\"VAR1\":{\"VAR2\":{\"VAR3\":\"VALUE\",\"VAR4\":\"VALUE4\"}}}")
                             .build())
             .build());

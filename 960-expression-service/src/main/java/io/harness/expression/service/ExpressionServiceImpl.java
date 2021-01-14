@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.lang.String.format;
 
+import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.expression.evaluator.ExpressionServiceEvaluator;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -17,11 +18,11 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ExpressionServiceImpl extends ExpressionEvaulatorServiceGrpc.ExpressionEvaulatorServiceImplBase {
-  private final ExpressionServiceEvaluator expressionEvaluator;
+  private final EngineExpressionEvaluator expressionEvaluator;
   private final ObjectMapper objectMapper;
 
   @Inject
-  public ExpressionServiceImpl(ExpressionServiceEvaluator expressionEvaluator) {
+  public ExpressionServiceImpl(EngineExpressionEvaluator expressionEvaluator) {
     this.expressionEvaluator = expressionEvaluator;
     this.objectMapper = new ObjectMapper();
   }
@@ -44,7 +45,7 @@ public class ExpressionServiceImpl extends ExpressionEvaulatorServiceGrpc.Expres
         String originalExpr = expressionQuery.getJexl();
         Map<String, Object> context = getContextMap(expressionQuery.getJsonContext());
         String evaluatedExpr =
-            expressionEvaluator.substitute(wrapWithExpressionString(originalExpr), context).toString();
+            expressionEvaluator.renderExpression(wrapWithExpressionString(originalExpr), context).toString();
 
         if (!evaluatedExpr.equals(originalExpr)) {
           evaluatedExpr = unWrapExpressionString(evaluatedExpr);
@@ -69,11 +70,11 @@ public class ExpressionServiceImpl extends ExpressionEvaulatorServiceGrpc.Expres
   }
 
   public static String wrapWithExpressionString(String expr) {
-    return expr == null ? null : "${" + expr + "}";
+    return expr == null ? null : "<+" + expr + ">";
   }
 
   public static String unWrapExpressionString(String expr) {
-    if (expr.startsWith("${") && expr.endsWith("}")) {
+    if (expr.startsWith("<+") && expr.endsWith(">")) {
       return expr.substring(2, expr.length() - 1);
     }
     return expr;

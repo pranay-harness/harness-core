@@ -9,6 +9,7 @@ import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.ngpipeline.common.AmbianceHelper;
+import io.harness.plancreator.beans.VariablesOutcome;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
 import io.harness.pms.contracts.steps.StepType;
@@ -16,8 +17,11 @@ import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.tasks.ResponseData;
+import io.harness.yaml.utils.NGVariablesUtils;
 
 import com.google.inject.Inject;
 import java.util.Map;
@@ -68,6 +72,15 @@ public class IntegrationStageStepPMS implements ChildExecutable<IntegrationStage
       Ambiance ambiance, IntegrationStageStepParametersPMS stepParameters, Map<String, ResponseData> responseDataMap) {
     log.info("executed integration stage =[{}]", stepParameters);
 
-    return createStepResponseFromChildResponse(responseDataMap);
+    StepResponse childResponse = createStepResponseFromChildResponse(responseDataMap);
+
+    VariablesOutcome variablesOutcome = new VariablesOutcome();
+    variablesOutcome.putAll(NGVariablesUtils.getMapOfVariables(
+        stepParameters.getVariables(), Integer.parseInt(AmbianceHelper.getExpressionFunctorToken(ambiance))));
+    return StepResponse.builder()
+        .status(childResponse.getStatus())
+        .failureInfo(childResponse.getFailureInfo())
+        .stepOutcome(StepOutcome.builder().name(YAMLFieldNameConstants.VARIABLES).outcome(variablesOutcome).build())
+        .build();
   }
 }

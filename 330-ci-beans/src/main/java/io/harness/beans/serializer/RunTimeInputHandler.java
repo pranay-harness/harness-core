@@ -21,7 +21,7 @@ public class RunTimeInputHandler {
   public static String UNRESOLVED_PARAMETER = "UNRESOLVED_PARAMETER";
   public boolean resolveGitClone(ParameterField<Boolean> cloneRepository) {
     if (cloneRepository == null || cloneRepository.isExpression() || cloneRepository.getValue() == null) {
-      return true;
+      return false;
     } else {
       return (boolean) cloneRepository.fetchFinalValue();
     }
