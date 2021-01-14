@@ -10,4 +10,5 @@ public class ErrorMessageInfo {
   String messageRegex;
   int code;
   String errorCategory;
+  String overriddenMessage;
 }
