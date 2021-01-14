@@ -158,7 +158,7 @@ pipeline:
                         identifier: HttpValidation
                         type: Http
                         spec:
-                          socketTimeoutMillis: 30000
+                          timeout: 30s
                           url: http://httpstat.us/500
               - step:
                   name: http step 1
@@ -181,7 +181,7 @@ pipeline:
                           type: MarkAsSuccess
                   type: Http
                   spec:
-                    socketTimeoutMillis: 1000
+                    timeout: 10m
                     method: GET
                     url: http://httpstat.us/500
             rollbackSteps:
@@ -196,7 +196,7 @@ pipeline:
                   identifier: httpStep4
                   type: Http
                   spec:
-                    socketTimeoutMillis: 1000
+                    timeout: 10s
                     method: GET
                     url: http://httpstat.us/200
     - stage:

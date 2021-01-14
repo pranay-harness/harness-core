@@ -44,7 +44,7 @@ pipeline:
                   identifier: rollout-deployment
                   type: Http
                   spec:
-                    socketTimeoutMillis: 1000
+                    timeout: 100s
                     method: GET
                     url: http://www.mocky.io/v2/5ed11ed8350000b8e1ffa2c5
     - stage:
@@ -73,6 +73,6 @@ pipeline:
                   identifier: http
                   type: Http
                   spec:
-                    socketTimeoutMillis: 1000
+                    timeout: 100s
                     method: GET
                     url: http://www.mocky.io/v2/5ed11ed8350000b8e1ffa2c5

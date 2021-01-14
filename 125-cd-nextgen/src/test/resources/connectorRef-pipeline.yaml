@@ -86,14 +86,14 @@ pipeline:
                         identifier: HttpValidation
                         type: Http
                         spec:
-                          socketTimeoutMillis: 30000
+                          timeout: 300s
                           url: http://httpstat.us/500
               - step:
                   name: http step 1
                   identifier: httpStep1
                   type: Http
                   spec:
-                    socketTimeoutMillis: 1000
+                    timeout: 300s
                     method: GET
                     url: http://httpstat.us/500
             rollbackSteps:
@@ -108,7 +108,7 @@ pipeline:
                   identifier: httpStep4
                   type: Http
                   spec:
-                    socketTimeoutMillis: 1000
+                    timeout: 300s
                     method: GET
                     url: http://httpstat.us/200
     - stage:
@@ -159,5 +159,5 @@ pipeline:
                   identifier: rolloutDeployment
                   type: K8sRollingDeploy
                   spec:
-                    timeout: 120000
+                    timeout: 300s
                     skipDryRun: false
