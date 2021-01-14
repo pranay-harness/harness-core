@@ -8,6 +8,7 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpAuthenticationTy
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernamePasswordDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernameTokenDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
 
@@ -25,14 +26,26 @@ public class GitlabToGitMapper {
     if (authType == GitAuthType.HTTP) {
       final GitlabHttpCredentialsDTO gitlabHttpCredentialsDTO =
           (GitlabHttpCredentialsDTO) gitlabConnectorDTO.getAuthentication().getCredentials();
-      if (gitlabHttpCredentialsDTO.getType() != GitlabHttpAuthenticationType.USERNAME_AND_PASSWORD) {
+      if (gitlabHttpCredentialsDTO.getType() == GitlabHttpAuthenticationType.KERBEROS) {
         throw new InvalidRequestException(
             "Git connector doesn't have configuration for " + gitlabHttpCredentialsDTO.getType());
       }
-      final GitlabUsernamePasswordDTO httpCredentialsSpec =
-          (GitlabUsernamePasswordDTO) gitlabHttpCredentialsDTO.getHttpCredentialsSpec();
-      return gitConfigCreater.getGitConfigForHttp(connectionType, url, httpCredentialsSpec.getUsername(),
-          httpCredentialsSpec.getUsernameRef(), httpCredentialsSpec.getPasswordRef());
+      String username;
+      SecretRefData usernameRef, passwordRef;
+      if (gitlabHttpCredentialsDTO.getType() == GitlabHttpAuthenticationType.USERNAME_AND_PASSWORD) {
+        final GitlabUsernamePasswordDTO httpCredentialsSpec =
+            (GitlabUsernamePasswordDTO) gitlabHttpCredentialsDTO.getHttpCredentialsSpec();
+        username = httpCredentialsSpec.getUsername();
+        usernameRef = httpCredentialsSpec.getUsernameRef();
+        passwordRef = httpCredentialsSpec.getPasswordRef();
+      } else {
+        final GitlabUsernameTokenDTO httpCredentialsSpec =
+            (GitlabUsernameTokenDTO) gitlabHttpCredentialsDTO.getHttpCredentialsSpec();
+        username = httpCredentialsSpec.getUsername();
+        usernameRef = httpCredentialsSpec.getUsernameRef();
+        passwordRef = httpCredentialsSpec.getTokenRef();
+      }
+      return gitConfigCreater.getGitConfigForHttp(connectionType, url, username, usernameRef, passwordRef);
     } else if (authType == GitAuthType.SSH) {
       final GitlabSshCredentialsDTO credentials =
           (GitlabSshCredentialsDTO) gitlabConnectorDTO.getAuthentication().getCredentials();
