@@ -10,9 +10,11 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
+import io.harness.yaml.schema.YamlSchemaIgnoreSubtype;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.beans.ConstructorProperties;
 import java.util.Optional;
 import javax.validation.constraints.Max;
@@ -23,7 +25,9 @@ import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
+@JsonTypeName("liteEngineTask")
 @JsonIgnoreProperties(ignoreUnknown = true)
+@YamlSchemaIgnoreSubtype
 @TypeAlias("liteEngineTaskStepInfo")
 public class LiteEngineTaskStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
