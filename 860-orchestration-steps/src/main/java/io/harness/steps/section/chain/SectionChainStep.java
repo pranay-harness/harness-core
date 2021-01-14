@@ -8,6 +8,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildChainExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.steps.executables.ChildChainExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -74,6 +75,9 @@ public class SectionChainStep implements ChildChainExecutable<SectionChainStepPa
       Status executionStatus = ((StepResponseNotifyData) responseData).getStatus();
       if (executionStatus != Status.SUCCEEDED) {
         responseBuilder.status(executionStatus);
+      }
+      if (StatusUtils.brokeStatuses().contains(executionStatus)) {
+        responseBuilder.failureInfo(((StepResponseNotifyData) responseData).getFailureInfo());
       }
     }
     return responseBuilder.build();

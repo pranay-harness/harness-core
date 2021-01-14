@@ -7,6 +7,7 @@ import io.harness.cdng.pipeline.executions.beans.CDPipelineModuleInfo;
 import io.harness.cdng.pipeline.executions.beans.CDPipelineModuleInfo.CDPipelineModuleInfoBuilder;
 import io.harness.cdng.pipeline.executions.beans.CDStageModuleInfo;
 import io.harness.cdng.pipeline.executions.beans.CDStageModuleInfo.CDStageModuleInfoBuilder;
+import io.harness.cdng.pipeline.executions.beans.InfraExecutionSummary;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.data.structure.EmptyPredicate;
@@ -106,17 +107,18 @@ public class CDNGModuleInfoProvider implements ExecutionSummaryModuleInfoProvide
     if (isServiceNodeAndCompleted(nodeExecutionProto.getNode(), nodeExecutionProto.getStatus())) {
       Optional<ServiceOutcome> serviceOutcome = getServiceOutcome(nodeExecutionProto);
       serviceOutcome.ifPresent(outcome
-          -> cdStageModuleInfoBuilder.serviceInfoList(ServiceExecutionSummary.builder()
-                                                          .identifier(outcome.getIdentifier())
-                                                          .displayName(outcome.getName())
-                                                          .deploymentType(outcome.getType())
-                                                          .artifacts(mapArtifactsOutcomeToSummary(outcome))
-                                                          .build()));
+          -> cdStageModuleInfoBuilder.serviceInfo(ServiceExecutionSummary.builder()
+                                                      .identifier(outcome.getIdentifier())
+                                                      .displayName(outcome.getName())
+                                                      .deploymentType(outcome.getType())
+                                                      .artifacts(mapArtifactsOutcomeToSummary(outcome))
+                                                      .build()));
     }
     if (isInfrastructureNodeAndCompleted(nodeExecutionProto.getNode(), nodeExecutionProto.getStatus())) {
       Optional<EnvironmentOutcome> environmentOutcome = getEnvironmentOutcome(nodeExecutionProto);
-      environmentOutcome.ifPresent(
-          outcome -> cdStageModuleInfoBuilder.infrastructureIdentifiers(outcome.getIdentifier()));
+      environmentOutcome.ifPresent(outcome
+          -> cdStageModuleInfoBuilder.infraExecutionSummary(
+              InfraExecutionSummary.builder().identifier(outcome.getIdentifier()).name(outcome.getName()).build()));
     }
     return cdStageModuleInfoBuilder.build();
   }

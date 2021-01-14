@@ -30,7 +30,7 @@ import java.util.Map;
 
 public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParameters>, K8sStepExecutor {
   public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(ExecutionNodeType.K8S_ROLLING.getName()).build();
+      StepType.newBuilder().setType(ExecutionNodeType.K8S_ROLLING.getYamlType()).build();
   private final String K8S_ROLLING_DEPLOY_COMMAND_NAME = "Rolling Deployment";
 
   @Inject private K8sStepHelper k8sStepHelper;

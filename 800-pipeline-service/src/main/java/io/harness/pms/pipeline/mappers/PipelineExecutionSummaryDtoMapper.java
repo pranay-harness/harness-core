@@ -29,6 +29,7 @@ public class PipelineExecutionSummaryDtoMapper {
         .successfulStagesCount(getStagesCount(layoutNodeDTOMap, startingNodeId, ExecutionStatus.SUCCESS))
         .failedStagesCount(getStagesCount(layoutNodeDTOMap, startingNodeId, ExecutionStatus.FAILED))
         .runningStagesCount(getStagesCount(layoutNodeDTOMap, startingNodeId, ExecutionStatus.RUNNING))
+        .totalStagesCount(getStagesCount(layoutNodeDTOMap, startingNodeId))
         .runSequence(pipelineExecutionSummaryEntity.getRunSequence())
         .build();
   }
@@ -53,5 +54,21 @@ public class PipelineExecutionSummaryDtoMapper {
       return count;
     }
     return count + getStagesCount(layoutNodeDTOMap, nodeDTO.getEdgeLayoutList().getNextIds().get(0), executionStatus);
+  }
+  public int getStagesCount(Map<String, GraphLayoutNodeDTO> layoutNodeDTOMap, String startingNodeId) {
+    if (startingNodeId == null) {
+      return 0;
+    }
+    int count = 0;
+    GraphLayoutNodeDTO nodeDTO = layoutNodeDTOMap.get(startingNodeId);
+    if (!nodeDTO.getNodeType().equals("parallel")) {
+      count++;
+    } else if (nodeDTO.getNodeType().equals("parallel")) {
+      count += nodeDTO.getEdgeLayoutList().getCurrentNodeChildren().size();
+    }
+    if (nodeDTO.getEdgeLayoutList().getNextIds().isEmpty()) {
+      return count;
+    }
+    return count + getStagesCount(layoutNodeDTOMap, nodeDTO.getEdgeLayoutList().getNextIds().get(0));
   }
 }

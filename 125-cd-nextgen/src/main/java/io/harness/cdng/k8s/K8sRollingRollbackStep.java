@@ -31,7 +31,7 @@ import java.util.Map;
 
 public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollbackStepParameters> {
   public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(ExecutionNodeType.K8S_ROLLBACK_ROLLING.getName()).build();
+      StepType.newBuilder().setType(ExecutionNodeType.K8S_ROLLBACK_ROLLING.getYamlType()).build();
 
   @Inject K8sStepHelper k8sStepHelper;
   @Inject private OutcomeService outcomeService;

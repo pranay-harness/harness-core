@@ -54,7 +54,8 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Slf4j
 public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(ExecutionNodeType.SHELL_SCRIPT.name()).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(ExecutionNodeType.SHELL_SCRIPT.getYamlType()).build();
 
   @Inject private KryoSerializer kryoSerializer;
 

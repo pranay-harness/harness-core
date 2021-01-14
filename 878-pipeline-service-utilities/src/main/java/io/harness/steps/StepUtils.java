@@ -58,6 +58,9 @@ public class StepUtils {
       if (!StatusUtils.positiveStatuses().contains(executionStatus)) {
         responseBuilder.status(executionStatus);
       }
+      if (StatusUtils.brokeStatuses().contains(executionStatus)) {
+        responseBuilder.failureInfo(((StepResponseNotifyData) responseData).getFailureInfo());
+      }
     }
     return responseBuilder.build();
   }

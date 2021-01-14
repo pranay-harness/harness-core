@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Slf4j
 public class HttpStep implements TaskExecutable<HttpStepParameters> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(ExecutionNodeType.HTTP.getName()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(ExecutionNodeType.HTTP.getYamlType()).build();
   private static final int socketTimeoutMillis = 10000;
 
   @Inject private KryoSerializer kryoSerializer;
