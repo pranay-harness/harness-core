@@ -10,4 +10,6 @@ enum RepairActionCode {
   MANUAL_INTERVENTION = 2;
   IGNORE = 3;
   END_EXECUTION = 4;
+  MARK_AS_SUCCESS = 5;
+  ON_FAIL = 6;
 }

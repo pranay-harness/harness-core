@@ -268,10 +268,13 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     switch (action.getType()) {
       case IGNORE:
         return RepairActionCode.IGNORE;
+      case MARK_AS_SUCCESS:
+        return RepairActionCode.MARK_AS_SUCCESS;
       case ABORT:
+        return RepairActionCode.END_EXECUTION;
       case STAGE_ROLLBACK:
       case STEP_GROUP_ROLLBACK:
-        return RepairActionCode.END_EXECUTION;
+        return RepairActionCode.ON_FAIL;
       case MANUAL_INTERVENTION:
         return RepairActionCode.MANUAL_INTERVENTION;
       default:

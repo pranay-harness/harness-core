@@ -5,13 +5,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.pms.execution.utils.StatusUtils.retryableStatuses;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.contracts.advisers.AdviseType;
-import io.harness.pms.contracts.advisers.AdviserResponse;
-import io.harness.pms.contracts.advisers.AdviserType;
-import io.harness.pms.contracts.advisers.EndPlanAdvise;
-import io.harness.pms.contracts.advisers.InterventionWaitAdvise;
-import io.harness.pms.contracts.advisers.NextStepAdvise;
-import io.harness.pms.contracts.advisers.RetryAdvise;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.pms.contracts.advisers.*;
+import io.harness.pms.contracts.advisers.NextStepAdvise.Builder;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.sdk.core.adviser.Adviser;
@@ -81,9 +77,20 @@ public class RetryAdviser implements Adviser {
             .setType(AdviseType.END_PLAN)
             .build();
       case IGNORE:
+      case ON_FAIL:
+        Builder builder = NextStepAdvise.newBuilder();
+        if (EmptyPredicate.isNotEmpty(parameters.getNextNodeId())) {
+          builder.setNextNodeId(parameters.getNextNodeId());
+        }
+        return AdviserResponse.newBuilder().setNextStepAdvise(builder.build()).setType(AdviseType.NEXT_STEP).build();
+      case MARK_AS_SUCCESS:
+        MarkSuccessAdvise.Builder markSuccessBuilder = MarkSuccessAdvise.newBuilder();
+        if (EmptyPredicate.isNotEmpty(parameters.getNextNodeId())) {
+          markSuccessBuilder.setNextNodeId(parameters.getNextNodeId());
+        }
         return AdviserResponse.newBuilder()
-            .setNextStepAdvise(NextStepAdvise.newBuilder().setNextNodeId(parameters.getNextNodeId()).build())
-            .setType(AdviseType.NEXT_STEP)
+            .setMarkSuccessAdvise(markSuccessBuilder.build())
+            .setType(AdviseType.MARK_SUCCESS)
             .build();
       default:
         throw new IllegalStateException("Unexpected value: " + parameters.getRepairActionCodeAfterRetry());
