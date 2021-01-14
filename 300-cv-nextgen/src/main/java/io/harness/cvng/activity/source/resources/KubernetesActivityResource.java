@@ -1,9 +1,9 @@
-package io.harness.cvng.activity.resources;
+package io.harness.cvng.activity.source.resources;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.KUBERNETES_RESOURCE;
 
 import io.harness.annotations.ExposeInternalException;
-import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
+import io.harness.cvng.activity.source.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO;
 import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;

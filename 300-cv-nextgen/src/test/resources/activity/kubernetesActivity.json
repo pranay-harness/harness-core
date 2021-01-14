@@ -1,0 +1,54 @@
+{
+  "_id" : "79FTHo5TRzOFHBuy6PsClw",
+  "accountId" : "AQ8xhfNCRtGIUjq5bSM8Fg",
+  "eventType" : "Normal",
+  "kubernetesActivityType" : "INFRASTRUCTURE",
+  "orgIdentifier" : "default",
+  "projectIdentifier" : "Prod_Monitor",
+  "activities" : [
+	{
+	  "message" : "Created pod: manager-d5bf44486-rqpcq",
+	  "activitySourceConfigId" : "wypyHjhGSHO_97P_se2KSQ",
+	  "eventDetails" : "class V1Event {\n    action: null\n    apiVersion: null\n    count: 1\n    eventTime: null\n    firstTimestamp: 2021-01-06T01:49:16.000Z\n    involvedObject: class V1ObjectReference {\n        apiVersion: apps/v1\n        fieldPath: null\n        kind: ReplicaSet\n        name: manager-d5bf44486\n        namespace: manager-prod-63304\n        resourceVersion: 203678977\n        uid: 09803f1b-e1c7-4816-8e93-162c2a33bb21\n    }\n    kind: null\n    lastTimestamp: 2021-01-06T01:49:16.000Z\n    message: Created pod: manager-d5bf44486-rqpcq\n    metadata: class V1ObjectMeta {\n        annotations: null\n        clusterName: null\n        creationTimestamp: 2021-01-06T01:49:16.000Z\n        deletionGracePeriodSeconds: null\n        deletionTimestamp: null\n        finalizers: null\n        generateName: null\n        generation: null\n        labels: null\n        managedFields: null\n        name: manager-d5bf44486.1657817ae4ce5a48\n        namespace: manager-prod-63304\n        ownerReferences: null\n        resourceVersion: 1361481\n        selfLink: /api/v1/namespaces/manager-prod-63304/events/manager-d5bf44486.1657817ae4ce5a48\n        uid: aa51bcb5-a868-492f-a081-c1d141c1a09e\n    }\n    reason: SuccessfulCreate\n    related: null\n    reportingComponent: \n    reportingInstance: \n    series: null\n    source: class V1EventSource {\n        component: replicaset-controller\n        host: null\n    }\n    type: Normal\n}",
+	  "eventType" : "Normal",
+	  "kubernetesActivityType" : "INFRASTRUCTURE",
+	  "serviceIdentifier" : "ManagerProd1",
+	  "environmentIdentifier" : "HarnessProduction",
+	  "name" : "09803f1b-e1c7-4816-8e93-162c2a33bb21"
+	},
+	{
+	  "message" : "pod triggered scale-up: [{https://content.googleapis.com/compute/v1/projects/prod-setup-205416/zones/us-west1-c/instanceGroups/gke-prod-private-usw-prod-manager-onl-dcb1ac25-grp 1->2 (max: 6)}]",
+	  "activitySourceConfigId" : "wypyHjhGSHO_97P_se2KSQ",
+	  "eventDetails" : "class V1Event {\n    action: null\n    apiVersion: null\n    count: 1\n    eventTime: null\n    firstTimestamp: 2021-01-06T01:49:23.000Z\n    involvedObject: class V1ObjectReference {\n        apiVersion: v1\n        fieldPath: null\n        kind: Pod\n        name: manager-d5bf44486-rqpcq\n        namespace: manager-prod-63304\n        resourceVersion: 203678984\n        uid: 1128c9dc-da84-4cb5-a3d4-02dfa5ebfd7c\n    }\n    kind: null\n    lastTimestamp: 2021-01-06T01:49:23.000Z\n    message: pod triggered scale-up: [{https://content.googleapis.com/compute/v1/projects/prod-setup-205416/zones/us-west1-c/instanceGroups/gke-prod-private-usw-prod-manager-onl-dcb1ac25-grp 1->2 (max: 6)}]\n    metadata: class V1ObjectMeta {\n        annotations: null\n        clusterName: null\n        creationTimestamp: 2021-01-06T01:49:23.000Z\n        deletionGracePeriodSeconds: null\n        deletionTimestamp: null\n        finalizers: null\n        generateName: null\n        generation: null\n        labels: null\n        managedFields: null\n        name: manager-d5bf44486-rqpcq.1657817c85484715\n        namespace: manager-prod-63304\n        ownerReferences: null\n        resourceVersion: 1361485\n        selfLink: /api/v1/namespaces/manager-prod-63304/events/manager-d5bf44486-rqpcq.1657817c85484715\n        uid: 062dc4d8-ad12-412b-8ab5-24ec8e6d3825\n    }\n    reason: TriggeredScaleUp\n    related: null\n    reportingComponent: \n    reportingInstance: \n    series: null\n    source: class V1EventSource {\n        component: cluster-autoscaler\n        host: null\n    }\n    type: Normal\n}",
+	  "eventType" : "Normal",
+	  "kubernetesActivityType" : "INFRASTRUCTURE",
+	  "serviceIdentifier" : "ManagerProd1",
+	  "environmentIdentifier" : "HarnessProduction",
+	  "name" : "1128c9dc-da84-4cb5-a3d4-02dfa5ebfd7c"
+	},
+	{
+	  "message" : "Successfully assigned manager-prod-63304/manager-d5bf44486-rqpcq to gke-prod-private-usw-prod-manager-onl-dcb1ac25-xbq9",
+	  "activitySourceConfigId" : "wypyHjhGSHO_97P_se2KSQ",
+	  "eventDetails" : "class V1Event {\n    action: null\n    apiVersion: null\n    count: 1\n    eventTime: null\n    firstTimestamp: 2021-01-06T01:49:53.000Z\n    involvedObject: class V1ObjectReference {\n        apiVersion: v1\n        fieldPath: null\n        kind: Pod\n        name: manager-d5bf44486-rqpcq\n        namespace: manager-prod-63304\n        resourceVersion: 203678984\n        uid: 1128c9dc-da84-4cb5-a3d4-02dfa5ebfd7c\n    }\n    kind: null\n    lastTimestamp: 2021-01-06T01:49:53.000Z\n    message: Successfully assigned manager-prod-63304/manager-d5bf44486-rqpcq to gke-prod-private-usw-prod-manager-onl-dcb1ac25-xbq9\n    metadata: class V1ObjectMeta {\n        annotations: null\n        clusterName: null\n        creationTimestamp: 2021-01-06T01:49:53.000Z\n        deletionGracePeriodSeconds: null\n        deletionTimestamp: null\n        finalizers: null\n        generateName: null\n        generation: null\n        labels: null\n        managedFields: null\n        name: manager-d5bf44486-rqpcq.165781838abed8d6\n        namespace: manager-prod-63304\n        ownerReferences: null\n        resourceVersion: 1361491\n        selfLink: /api/v1/namespaces/manager-prod-63304/events/manager-d5bf44486-rqpcq.165781838abed8d6\n        uid: 37977600-b7f0-4972-a520-0e25fe6bec44\n    }\n    reason: Scheduled\n    related: null\n    reportingComponent: \n    reportingInstance: \n    series: null\n    source: class V1EventSource {\n        component: default-scheduler\n        host: null\n    }\n    type: Normal\n}",
+	  "eventType" : "Normal",
+	  "kubernetesActivityType" : "INFRASTRUCTURE",
+	  "serviceIdentifier" : "ManagerProd1",
+	  "environmentIdentifier" : "HarnessProduction",
+	  "name" : "1128c9dc-da84-4cb5-a3d4-02dfa5ebfd7c"
+	},
+	{
+	  "message" : "Pulling image \"us.gcr.io/platform-205701/harness/saas-openjdk-8u242/manager:63304\"",
+	  "activitySourceConfigId" : "wypyHjhGSHO_97P_se2KSQ",
+	  "eventDetails" : "class V1Event {\n    action: null\n    apiVersion: null\n    count: 1\n    eventTime: null\n    firstTimestamp: 2021-01-06T01:49:56.000Z\n    involvedObject: class V1ObjectReference {\n        apiVersion: v1\n        fieldPath: spec.containers{manager}\n        kind: Pod\n        name: manager-d5bf44486-rqpcq\n        namespace: manager-prod-63304\n        resourceVersion: 203679381\n        uid: 1128c9dc-da84-4cb5-a3d4-02dfa5ebfd7c\n    }\n    kind: null\n    lastTimestamp: 2021-01-06T01:49:56.000Z\n    message: Pulling image \"us.gcr.io/platform-205701/harness/saas-openjdk-8u242/manager:63304\"\n    metadata: class V1ObjectMeta {\n        annotations: null\n        clusterName: null\n        creationTimestamp: 2021-01-06T01:49:56.000Z\n        deletionGracePeriodSeconds: null\n        deletionTimestamp: null\n        finalizers: null\n        generateName: null\n        generation: null\n        labels: null\n        managedFields: null\n        name: manager-d5bf44486-rqpcq.16578184274c1c32\n        namespace: manager-prod-63304\n        ownerReferences: null\n        resourceVersion: 1361509\n        selfLink: /api/v1/namespaces/manager-prod-63304/events/manager-d5bf44486-rqpcq.16578184274c1c32\n        uid: a3c94f7d-4cce-496f-89bd-412e67f387c5\n    }\n    reason: Pulling\n    related: null\n    reportingComponent: \n    reportingInstance: \n    series: null\n    source: class V1EventSource {\n        component: kubelet\n        host: gke-prod-private-usw-prod-manager-onl-dcb1ac25-xbq9\n    }\n    type: Normal\n}",
+	  "eventType" : "Normal",
+	  "kubernetesActivityType" : "INFRASTRUCTURE",
+	  "serviceIdentifier" : "ManagerProd1",
+	  "environmentIdentifier" : "HarnessProduction",
+	  "name" : "1128c9dc-da84-4cb5-a3d4-02dfa5ebfd7c"
+	}
+  ],
+  "className" : "io.harness.cvng.activity.entities.KubernetesActivity",
+  "environmentIdentifier" : "HarnessProduction",
+  "serviceIdentifier" : "ManagerProd1",
+  "type" : "KUBERNETES"
+}

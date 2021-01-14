@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -131,6 +132,10 @@ public abstract class Activity
     Preconditions.checkNotNull(activityName, generateErrorMessageFromParam(ActivityKeys.activityName));
     Preconditions.checkNotNull(activityStartTime, generateErrorMessageFromParam(ActivityKeys.activityStartTime));
     this.validateActivityParams();
+  }
+
+  public List<String> getActivityDetails() {
+    return Lists.newArrayList(activityName);
   }
 
   @Override

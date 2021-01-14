@@ -1,5 +1,7 @@
 package io.harness.cvng.activity.entities;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO;
@@ -10,6 +12,8 @@ import io.harness.mongo.index.FdIndex;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -54,5 +58,14 @@ public class KubernetesActivity extends Activity {
   @Override
   public String getActivityName() {
     return activities.size() + " " + eventType.name() + " kubernetes events";
+  }
+
+  @Override
+  public List<String> getActivityDetails() {
+    List<String> rv = new ArrayList<>();
+    if (isNotEmpty(activities)) {
+      activities.forEach(activity -> rv.add(activity.getEventDetails()));
+    }
+    return rv;
   }
 }

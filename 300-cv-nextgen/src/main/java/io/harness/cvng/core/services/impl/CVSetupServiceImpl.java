@@ -1,6 +1,6 @@
 package io.harness.cvng.core.services.impl;
 
-import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
+import io.harness.cvng.activity.source.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.CVSetupStatusDTO;
