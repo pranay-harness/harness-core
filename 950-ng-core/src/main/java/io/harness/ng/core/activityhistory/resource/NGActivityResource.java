@@ -10,6 +10,7 @@ import io.harness.ng.core.activityhistory.dto.TimeGroupType;
 import io.harness.ng.core.activityhistory.service.EntityActivitySummaryService;
 import io.harness.ng.core.activityhistory.service.NGActivityService;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
@@ -32,6 +33,7 @@ import org.springframework.data.domain.Page;
 @Produces({"application/json", "text/yaml", "text/html"})
 @Consumes({"application/json", "text/yaml", "text/html"})
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
+@NextGenManagerAuth
 public class NGActivityResource {
   public static final String TIME_GROUP_TYPE = "timeGroupType";
   public static final String INCLUDE_CONNECTIVITY_SUMMARY = "includeConnectivitySummary";
