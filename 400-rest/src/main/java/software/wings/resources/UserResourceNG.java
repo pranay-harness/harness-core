@@ -4,6 +4,7 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 
@@ -15,6 +16,7 @@ import io.swagger.annotations.Api;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -81,5 +83,17 @@ public class UserResourceNG {
   public RestResponse<Optional<User>> getUserFromEmail(
       @QueryParam("accountId") String accountId, @QueryParam("emailId") String emailId) {
     return new RestResponse<>(Optional.ofNullable(userService.getUserByEmail(emailId, accountId)));
+  }
+
+  @GET
+  @Path("/user-account")
+  public RestResponse<Boolean> isUserInAccount(
+      @NotNull @QueryParam("accountId") String accountId, @QueryParam("userId") String userId) {
+    try {
+      return new RestResponse<>(userService.get(accountId, userId) != null);
+    } catch (InvalidRequestException ex) {
+      log.error(String.format("User %s does not belong to account %s", userId, accountId), ex);
+      return new RestResponse<>(false);
+    }
   }
 }
