@@ -9,6 +9,8 @@ import io.harness.batch.processing.ccm.CCMJobConstants;
 
 import software.wings.graphql.datafetcher.billing.QLCCMAggregateOperation;
 import software.wings.graphql.datafetcher.billing.QLCCMAggregationFunction;
+import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLSortOrder;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
@@ -83,6 +85,13 @@ public class AnomalyDetectionClusterTimescaleReader extends AnomalyDetectionTime
                                      .value(timeSeriesMetaData.getTestEnd().toEpochMilli())
                                      .build())
                         .build());
+    List<String> instanceType = new ArrayList<>();
+    instanceType.add("K8S_NODE");
+    filtersList.add(
+        QLBillingDataFilter.builder()
+            .instanceType(
+                QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(instanceType.toArray(new String[0])).build())
+            .build());
 
     // groupby
     groupByList.add(QLCCMEntityGroupBy.Cluster);
