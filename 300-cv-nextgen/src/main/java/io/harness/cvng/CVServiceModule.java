@@ -1,9 +1,11 @@
 package io.harness.cvng;
 
 import io.harness.cvng.activity.services.api.ActivityService;
-import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.activity.services.impl.ActivityServiceImpl;
-import io.harness.cvng.activity.services.impl.KubernetesActivitySourceServiceImpl;
+import io.harness.cvng.activity.source.services.api.ActivitySourceService;
+import io.harness.cvng.activity.source.services.api.KubernetesActivitySourceService;
+import io.harness.cvng.activity.source.services.impl.ActivitySourceServiceImpl;
+import io.harness.cvng.activity.source.services.impl.KubernetesActivitySourceServiceImpl;
 import io.harness.cvng.alert.services.AlertRuleAnomalyService;
 import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.alert.services.impl.AlertRuleAnomalyServiceImpl;
@@ -253,6 +255,7 @@ public class CVServiceModule extends AbstractModule {
                   ? verificationConfiguration.getPortalUrl()
                   : verificationConfiguration.getPortalUrl() + "/");
       bind(DeleteEntityByProjectHandler.class).to(DefaultDeleteEntityByProjectHandler.class);
+      bind(ActivitySourceService.class).to(ActivitySourceServiceImpl.class);
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
     }

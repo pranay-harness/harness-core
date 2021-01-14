@@ -1,4 +1,4 @@
-package io.harness.cvng.activity.services.api;
+package io.harness.cvng.activity.source.services.api;
 
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO;

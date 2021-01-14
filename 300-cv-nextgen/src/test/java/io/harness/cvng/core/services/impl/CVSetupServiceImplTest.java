@@ -11,7 +11,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
+import io.harness.cvng.activity.source.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.CVSetupStatusDTO;
 import io.harness.cvng.core.services.api.CVConfigService;

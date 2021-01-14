@@ -1,4 +1,4 @@
-package io.harness.cvng.activity.services.impl;
+package io.harness.cvng.activity.source.services.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -12,7 +12,8 @@ import io.harness.cvng.activity.entities.KubernetesActivity;
 import io.harness.cvng.activity.entities.KubernetesActivity.KubernetesActivityKeys;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.activity.services.api.ActivityService;
-import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
+import io.harness.cvng.activity.source.services.api.ActivitySourceService;
+import io.harness.cvng.activity.source.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.beans.activity.ActivityType;
@@ -43,11 +44,12 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
   @Inject private VerificationManagerService verificationManagerService;
   @Inject private HPersistence hPersistence;
   @Inject private ActivityService activityService;
+  @Inject private ActivitySourceService activitySourceService;
 
   @Override
   public boolean saveKubernetesActivities(
       String accountId, String activitySourceId, List<KubernetesActivityDTO> activities) {
-    ActivitySource activitySource = activityService.getActivitySource(activitySourceId);
+    ActivitySource activitySource = activitySourceService.getActivitySource(activitySourceId);
     Preconditions.checkNotNull(activitySource, "No source found with {}", activitySourceId);
 
     activities.forEach(activity -> {

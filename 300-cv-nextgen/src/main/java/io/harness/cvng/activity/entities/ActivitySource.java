@@ -44,10 +44,12 @@ public abstract class ActivitySource
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("query_idx")
+                 .name("unique_idx")
+                 .unique(true)
                  .field(ActivitySourceKeys.accountId)
                  .field(ActivitySourceKeys.orgIdentifier)
                  .field(ActivitySourceKeys.projectIdentifier)
+                 .field(ActivitySourceKeys.identifier)
                  .build())
         .build();
   }

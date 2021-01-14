@@ -1,7 +1,7 @@
 package io.harness.cvng.activity.jobs;
 
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
-import io.harness.cvng.activity.services.api.KubernetesActivitySourceService;
+import io.harness.cvng.activity.source.services.api.KubernetesActivitySourceService;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 
 import com.google.inject.Inject;

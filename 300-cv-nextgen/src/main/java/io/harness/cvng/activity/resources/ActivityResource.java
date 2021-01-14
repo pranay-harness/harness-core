@@ -10,8 +10,7 @@ import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.beans.activity.ActivityDTO;
-import io.harness.cvng.beans.activity.ActivitySourceDTO;
-import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.annotations.PublicApi;
@@ -25,13 +24,13 @@ import java.time.Instant;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import org.hibernate.validator.constraints.NotEmpty;
 import retrofit2.http.Body;
 
 @Api(ACTIVITY_RESOURCE)
@@ -51,61 +50,6 @@ public class ActivityResource {
   public RestResponse<String> registerActivity(@NotNull @PathParam("webHookToken") String webHookToken,
       @NotNull @QueryParam("accountId") @Valid final String accountId, @Body ActivityDTO activityDTO) {
     return new RestResponse<>(activityService.register(accountId, webHookToken, activityDTO));
-  }
-
-  @POST
-  @Timed
-  @ExceptionMetered
-  @NextGenManagerAuth
-  @Path("/source")
-  @ApiOperation(value = "register a kubernetes event source", nickname = "registerKubernetesSource")
-  public RestResponse<String> registerKubernetesSource(@QueryParam("accountId") @NotNull String accountId,
-      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @Body ActivitySourceDTO activitySourceDTO) {
-    return new RestResponse<>(
-        activityService.saveActivitySource(accountId, orgIdentifier, projectIdentifier, activitySourceDTO));
-  }
-
-  @GET
-  @Timed
-  @ExceptionMetered
-  @NextGenManagerAuth
-  @Path("/source")
-  @ApiOperation(value = "gets a kubernetes event source by identifier", nickname = "getKubernetesSource")
-  public RestResponse<ActivitySourceDTO> getKubernetesSource(@QueryParam("accountId") @NotNull String accountId,
-      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
-      @QueryParam("identifier") @NotNull String identifier) {
-    return new RestResponse<>(
-        activityService.getActivitySource(accountId, orgIdentifier, projectIdentifier, identifier));
-  }
-
-  @GET
-  @Timed
-  @ExceptionMetered
-  @NextGenManagerAuth
-  @Path("/sources")
-  @ApiOperation(value = "lists all kubernetes event sources", nickname = "listKubernetesSources")
-  public RestResponse<PageResponse<ActivitySourceDTO>> listKubernetesSources(
-      @QueryParam("accountId") @NotNull String accountId, @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @QueryParam("offset") @NotNull Integer offset,
-      @QueryParam("pageSize") @NotNull Integer pageSize, @QueryParam("filter") String filter) {
-    return new RestResponse<>(
-        activityService.listActivitySources(accountId, orgIdentifier, projectIdentifier, offset, pageSize, filter));
-  }
-
-  @DELETE
-  @Timed
-  @ExceptionMetered
-  @NextGenManagerAuth
-  @Path("{identifier}")
-  @ApiOperation(value = "deletes a kubernetes event source", nickname = "deleteKubernetesSource")
-  public RestResponse<Boolean> deleteKubernetesSource(@QueryParam("accountId") @NotNull String accountId,
-      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
-      @PathParam("identifier") @NotNull String identifier) {
-    return new RestResponse<>(
-        activityService.deleteActivitySource(accountId, orgIdentifier, projectIdentifier, identifier));
   }
 
   @GET
@@ -168,6 +112,18 @@ public class ActivityResource {
       @NotNull @QueryParam("startTime") Long startTime, @NotNull @QueryParam("endTime") Long endTime) {
     return new RestResponse(activityService.listActivitiesInTimeRange(accountId, orgIdentifier, projectIdentifier,
         environmentIdentifier, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)));
+  }
+
+  @GET
+  @Path("{activityId}/details")
+  @ApiOperation(value = "list all activities between a given time range for an environment, project, org",
+      nickname = "getActivityDetails")
+  public ResponseDTO<List<String>>
+  getActivityDetails(@NotNull @QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @NotEmpty @PathParam("activityId") String activityId) {
+    return activityService.getActivityDetails(accountId, orgIdentifier, projectIdentifier, activityId);
   }
 
   @GET
