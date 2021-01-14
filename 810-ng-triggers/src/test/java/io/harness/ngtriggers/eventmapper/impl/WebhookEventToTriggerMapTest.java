@@ -72,7 +72,8 @@ public class WebhookEventToTriggerMapTest extends CategoryTest {
     response = ParsePayloadResponse.builder().webhookPayloadData(webhookPayloadData).build();
     doReturn(response).when(spyMapper).convertWebhookResponse(event);
 
-    doReturn(null).when(spyMapper).retrieveTriggersConfiguredForRepo(event, "abc.com");
+    doReturn(null).when(spyMapper).retrieveTriggersConfiguredForRepo(
+        event, Repository.builder().link("abc.com").build());
     eventResponse = WebhookEventResponse.builder().message("No Trigger was configured for Repo: abc.com").build();
     when(WebhookEventResponseHelper.toResponse(
              NO_MATCHING_TRIGGER_FOR_REPO, event, null, null, "No Trigger was configured for Repo: abc.com", null))
@@ -86,7 +87,7 @@ public class WebhookEventToTriggerMapTest extends CategoryTest {
     // No enabled trigger found for repo
     doReturn(Arrays.asList(NGTriggerEntity.builder().uuid("abc").identifier("i").enabled(false).build()))
         .when(spyMapper)
-        .retrieveTriggersConfiguredForRepo(event, "abc.com");
+        .retrieveTriggersConfiguredForRepo(event, Repository.builder().link("abc.com").build());
     eventResponse =
         WebhookEventResponse.builder().message("No Trigger configured for Repo was in ENABLED status: abc.com").build();
     when(WebhookEventResponseHelper.toResponse(NO_ENABLED_TRIGGER_FOUND_FOR_REPO, event, null, null,
@@ -101,7 +102,9 @@ public class WebhookEventToTriggerMapTest extends CategoryTest {
     // No trigger matched conditions for repo
     List<NGTriggerEntity> ngTriggerEntities =
         Arrays.asList(NGTriggerEntity.builder().uuid("abc").identifier("i").enabled(true).build());
-    doReturn(ngTriggerEntities).when(spyMapper).retrieveTriggersConfiguredForRepo(event, "abc.com");
+    doReturn(ngTriggerEntities)
+        .when(spyMapper)
+        .retrieveTriggersConfiguredForRepo(event, Repository.builder().link("abc.com").build());
     doReturn(null).when(spyMapper).applyFilters(webhookPayloadData, ngTriggerEntities);
     eventResponse = WebhookEventResponse.builder().message("No Trigger matched conditions for payload event").build();
     when(WebhookEventResponseHelper.toResponse(NO_MATCHING_TRIGGER_FOR_CONDITIONS, event, null, null,

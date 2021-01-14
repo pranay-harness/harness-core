@@ -12,6 +12,7 @@ import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.scm.ParsePayloadResponse;
 import io.harness.ngtriggers.beans.scm.ParsePayloadResponse.ParsePayloadResponseBuilder;
+import io.harness.ngtriggers.beans.scm.Repository;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.beans.source.NGTriggerSpec;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
@@ -27,6 +28,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -54,7 +56,7 @@ public class GitWebhookEventToTriggerMapper implements WebhookEventToTriggerMapp
     WebhookPayloadData webhookPayloadData = parsePayloadResponse.getWebhookPayloadData();
     // 2. Get Trigger for Repo
     List<NGTriggerEntity> triggersForRepo =
-        retrieveTriggersConfiguredForRepo(triggerWebhookEvent, webhookPayloadData.getRepository().getLink());
+        retrieveTriggersConfiguredForRepo(triggerWebhookEvent, webhookPayloadData.getRepository());
     if (isEmpty(triggersForRepo)) {
       log.info("No trigger found for repoUrl:" + webhookPayloadData.getRepository().getLink());
       return WebhookEventMappingResponse.builder()
@@ -112,9 +114,13 @@ public class GitWebhookEventToTriggerMapper implements WebhookEventToTriggerMapp
     return builder.build();
   }
 
-  List<NGTriggerEntity> retrieveTriggersConfiguredForRepo(TriggerWebhookEvent triggerWebhookEvent, String repoUrl) {
+  List<NGTriggerEntity> retrieveTriggersConfiguredForRepo(
+      TriggerWebhookEvent triggerWebhookEvent, Repository repository) {
+    List<String> repoUrls = Arrays.asList(
+        repository.getLink(), repository.getLink() + "/", repository.getHttpURL(), repository.getSshURL());
+
     Page<NGTriggerEntity> triggerPage =
-        ngTriggerService.listWebhookTriggers(triggerWebhookEvent.getAccountId(), repoUrl, false, false);
+        ngTriggerService.listWebhookTriggers(triggerWebhookEvent, repoUrls, false, false);
 
     List<NGTriggerEntity> listOfTriggers = triggerPage.get().collect(Collectors.toList());
     return isEmpty(listOfTriggers) ? Collections.emptyList() : listOfTriggers;

@@ -33,6 +33,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
@@ -215,8 +216,8 @@ public class NGTriggerResource {
       @NotNull @QueryParam("repoURL") String repoURL, @QueryParam("filter") String filterQuery,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("25") int size,
       @QueryParam("sort") List<String> sort, @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
-    Criteria criteria =
-        TriggerFilterHelper.createCriteriaForWebhookTriggerGetList(null, repoURL, searchTerm, false, false);
+    Criteria criteria = TriggerFilterHelper.createCriteriaForWebhookTriggerGetList(
+        null, null, null, Arrays.asList(repoURL), searchTerm, false, false);
     Pageable pageRequest;
     if (EmptyPredicate.isEmpty(sort)) {
       pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, NGTriggerEntityKeys.createdAt));

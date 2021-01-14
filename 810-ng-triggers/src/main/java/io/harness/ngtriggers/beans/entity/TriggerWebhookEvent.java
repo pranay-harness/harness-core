@@ -32,7 +32,9 @@ public class TriggerWebhookEvent implements PersistentEntity, UuidAccess, Persis
   String payload;
   List<HeaderConfig> headers;
   String accountId;
-  @Builder.Default boolean customWebhook = Boolean.FALSE;
+  String orgIdentifier;
+  String projectIdentifier;
+  String sourceRepoType;
   @Builder.Default boolean processing = Boolean.FALSE;
 
   @Builder.Default Integer attemptCount = 0;

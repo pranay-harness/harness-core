@@ -13,6 +13,7 @@ import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventsKeys;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
 
+import java.util.List;
 import lombok.experimental.UtilityClass;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
@@ -49,14 +50,20 @@ public class TriggerFilterHelper {
     return criteria;
   }
 
-  public Criteria createCriteriaForWebhookTriggerGetList(
-      String accountIdentifier, String repoURL, String searchTerm, boolean deleted, boolean enabledOnly) {
+  public Criteria createCriteriaForWebhookTriggerGetList(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, List<String> repoURLs, String searchTerm, boolean deleted, boolean enabledOnly) {
     Criteria criteria = new Criteria();
     if (isNotEmpty(accountIdentifier)) {
       criteria.and(NGTriggerEntityKeys.accountId).is(accountIdentifier);
     }
-    if (isNotEmpty(repoURL)) {
-      criteria.and("metadata.webhook.repoURL").is(repoURL);
+    if (isNotEmpty(orgIdentifier)) {
+      criteria.and(NGTriggerEntityKeys.orgIdentifier).is(orgIdentifier);
+    }
+    if (isNotEmpty(projectIdentifier)) {
+      criteria.and(NGTriggerEntityKeys.projectIdentifier).is(projectIdentifier);
+    }
+    if (isNotEmpty(repoURLs)) {
+      criteria.and("metadata.webhook.repoURL").in(repoURLs);
     }
     criteria.and(NGTriggerEntityKeys.deleted).is(deleted);
     criteria.and(NGTriggerEntityKeys.type).is(NGTriggerType.WEBHOOK);
