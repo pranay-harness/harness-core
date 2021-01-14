@@ -81,8 +81,8 @@ public class DelegateSyncServiceImpl implements DelegateSyncService {
     }
 
     if (taskResponse == null) {
-      throw new InvalidArgumentsException(Pair.of("args",
-          "Task has expired. It wasn't picked up by any delegate or delegate did not have enough time to finish the execution."));
+      throw new InvalidArgumentsException(
+          "Task has expired. It wasn't picked up by any delegate or delegate did not have enough time to finish the execution.");
     }
 
     return (T) kryoSerializer.asInflatedObject(taskResponse.getResponseData());

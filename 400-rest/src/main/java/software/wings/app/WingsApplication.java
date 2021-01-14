@@ -44,6 +44,7 @@ import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.delegate.event.handler.DelegateProfileEventHandler;
 import io.harness.delegate.resources.DelegateTaskResource;
+import io.harness.delegate.task.executioncapability.DelegateCapabilitiesRecordHandler;
 import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.event.EventsModule;
 import io.harness.event.listener.EventListener;
@@ -995,6 +996,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(DeleteAccountHandler.class).registerIterators();
     injector.getInstance(TimeoutEngine.class).registerIterators();
     injector.getInstance(DeletedEntityHandler.class).registerIterators();
+    injector.getInstance(DelegateCapabilitiesRecordHandler.class).registerIterators();
   }
 
   private void registerCronJobs(Injector injector) {

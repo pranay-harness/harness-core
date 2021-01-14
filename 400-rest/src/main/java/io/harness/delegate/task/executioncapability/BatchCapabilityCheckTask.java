@@ -2,14 +2,13 @@ package io.harness.delegate.task.executioncapability;
 
 import static io.harness.capability.CapabilitySubjectPermission.PermissionResult;
 
+import io.harness.capability.CapabilitySubjectPermission;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
-
-import software.wings.delegatetasks.delegatecapability.CapabilityCheckFactory;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -21,7 +20,7 @@ import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
 public class BatchCapabilityCheckTask extends AbstractDelegateRunnableTask {
-  @Inject CapabilityCheckFactory capabilityCheckFactory;
+  @Inject ProtoCapabilityCheckFactory capabilityCheckFactory;
 
   public BatchCapabilityCheckTask(DelegateTaskPackage delegateTaskPackage,
       ILogStreamingTaskClient logStreamingTaskClient, Consumer<DelegateTaskResponse> consumer,
@@ -42,8 +41,8 @@ public class BatchCapabilityCheckTask extends AbstractDelegateRunnableTask {
         ((BatchCapabilityCheckTaskParameters) parameters).getCapabilityCheckDetailsList();
 
     for (CapabilityCheckDetails capabilityCheckDetails : capabilityCheckDetailsList) {
-      CapabilityCheck capabilityCheck =
-          capabilityCheckFactory.obtainCapabilityCheck(capabilityCheckDetails.getCapabilityType());
+      ProtoCapabilityCheck capabilityCheck =
+          capabilityCheckFactory.obtainCapabilityCheck(capabilityCheckDetails.getCapabilityParameters());
 
       if (capabilityCheck == null) {
         log.error("Unknown capability type: {}", capabilityCheckDetails.getCapabilityType());
@@ -51,11 +50,11 @@ public class BatchCapabilityCheckTask extends AbstractDelegateRunnableTask {
             capabilityCheckDetails.toBuilder().permissionResult(PermissionResult.UNCHECKED).build());
         continue;
       }
-      //      TODO: uncomment when method performCapabilityCheckWithProto is added to the interface
-      //      CapabilitySubjectPermission checkResult =
-      //          capabilityCheck.performCapabilityCheckWithProto(capabilityCheckDetails.getCapabilityParameters());
-      // capabilityCheckDetailsResultsList.add(
-      //      capabilityCheckDetails.toBuilder().permissionResult(checkResult.getPermissionResult()).build());
+
+      CapabilitySubjectPermission checkResult =
+          capabilityCheck.performCapabilityCheckWithProto(capabilityCheckDetails.getCapabilityParameters());
+      capabilityCheckDetailsResultsList.add(
+          capabilityCheckDetails.toBuilder().permissionResult(checkResult.getPermissionResult()).build());
     }
 
     return BatchCapabilityCheckTaskResponse.builder()

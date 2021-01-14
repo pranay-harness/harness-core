@@ -6,6 +6,9 @@ import io.harness.ccm.license.CeLicenseType;
 import io.harness.cvng.state.CVNGVerificationTask;
 import io.harness.delegate.beans.executioncapability.KustomizeCapability;
 import io.harness.delegate.task.ListNotifyResponseData;
+import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTaskParameters;
+import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTaskResponse;
+import io.harness.delegate.task.executioncapability.CapabilityCheckDetails;
 import io.harness.perpetualtask.internal.AssignmentTaskResponse;
 import io.harness.redesign.advisers.HttpResponseCodeSwitchAdviserParameters;
 import io.harness.redesign.states.email.EmailStepParameters;
@@ -1737,5 +1740,9 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(CVNGVerificationTask.Status.class, 8117);
     kryo.register(HelmReleaseInfoElement.class, 8118);
     kryo.register(AwsEcsAllPhaseRollbackData.class, 8119);
+
+    kryo.register(BatchCapabilityCheckTaskParameters.class, 8200);
+    kryo.register(BatchCapabilityCheckTaskResponse.class, 8201);
+    kryo.register(CapabilityCheckDetails.class, 8202);
   }
 }
