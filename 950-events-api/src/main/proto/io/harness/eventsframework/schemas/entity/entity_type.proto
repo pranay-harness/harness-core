@@ -14,4 +14,5 @@ enum EntityTypeProtoEnum {
   CV_CONFIG = 7;
   DELEGATES = 8;
   DELEGATE_CONFIGURATIONS = 9;
+  CV_VERIFICATION_JOB = 10;
 }
