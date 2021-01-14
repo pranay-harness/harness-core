@@ -51,10 +51,10 @@ public class UploadToArtifactoryStepInfo implements PluginCompatibleStep {
 
   @Builder
   @ConstructorProperties(
-      {"identifier", "name", "retry", "timeout", "connectorRef", "containerImage", "resources", "target", "sourcePath"})
-  UploadToArtifactoryStepInfo(String identifier, String name, Integer retry, Integer timeout,
-      ParameterField<String> connectorRef, ParameterField<String> containerImage, ContainerResource resources,
-      ParameterField<String> target, ParameterField<String> sourcePath, String pomFile) {
+      {"identifier", "name", "retry", "connectorRef", "containerImage", "resources", "target", "sourcePath"})
+  UploadToArtifactoryStepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
+      ParameterField<String> containerImage, ContainerResource resources, ParameterField<String> target,
+      ParameterField<String> sourcePath) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -81,7 +81,7 @@ public class UploadToArtifactoryStepInfo implements PluginCompatibleStep {
 
   @Override
   public StepType getStepType() {
-    return typeInfo.getStepType();
+    return STEP_TYPE;
   }
 
   @Override
