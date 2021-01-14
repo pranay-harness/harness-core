@@ -18,10 +18,26 @@ message EntityActivityCreateDTO {
     EntityUsageActivityDetailProtoDTO entityUsageDetail = 9;
   }
 
-  message ConnectivityCheckActivityDetailProtoDTO {}
+  message ConnectivityCheckActivityDetailProtoDTO {
+    ConnectorValidationResultProto connectorValidationResult = 1;
+  }
 
   message EntityUsageActivityDetailProtoDTO {
     io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO referredByEntity = 1;
     string activityStatusMessage = 2;
+  }
+
+  message ConnectorValidationResultProto {
+    string status = 1;
+    repeated ErrorDetailProto errors = 2;
+    string errorSummary = 3;
+    int64 testedAt = 4;
+    string delegateId = 5;
+  }
+
+  message ErrorDetailProto {
+    string reason = 1;
+    string message = 2;
+    int32 code = 3;
   }
 }

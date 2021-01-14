@@ -1,7 +1,7 @@
 package io.harness.connector.validator.scmValidators;
 
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 
 import com.google.inject.Singleton;

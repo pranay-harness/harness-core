@@ -2,7 +2,6 @@ package io.harness.connector;
 
 import static io.harness.filter.FilterConstants.CONNECTOR_FILTER;
 
-import io.harness.delegate.beans.connector.ConnectivityStatus;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterPropertiesDTO;

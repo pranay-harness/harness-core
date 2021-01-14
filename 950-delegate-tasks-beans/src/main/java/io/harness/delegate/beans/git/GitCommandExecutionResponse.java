@@ -1,5 +1,6 @@
 package io.harness.delegate.beans.git;
 
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.eraro.ErrorCode;
@@ -18,6 +19,7 @@ public class GitCommandExecutionResponse implements DelegateResponseData {
   private String errorMessage;
   private ErrorCode errorCode;
   private DelegateMetaInfo delegateMetaInfo;
+  private ConnectorValidationResult connectorValidationResult;
 
   public enum GitCommandStatus { SUCCESS, FAILURE }
 }

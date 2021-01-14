@@ -1,7 +1,7 @@
 package io.harness.delegate.task.gcp.response;
 
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.DelegateMetaInfo;
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
 
 import lombok.Builder;
 import lombok.Data;

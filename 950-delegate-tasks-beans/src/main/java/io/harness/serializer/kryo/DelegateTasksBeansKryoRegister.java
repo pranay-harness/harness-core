@@ -62,10 +62,8 @@ import io.harness.delegate.beans.ci.pod.PodParams;
 import io.harness.delegate.beans.ci.pod.SecretVariableDTO;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.delegate.beans.ci.status.BuildStatusPushResponse;
-import io.harness.delegate.beans.connector.ConnectivityStatus;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectionTaskParams;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectionTaskResponse;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
@@ -154,6 +152,7 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectionTaskParams;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectionTaskResponse;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
+import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import io.harness.delegate.beans.executioncapability.AlwaysFalseValidationCapability;
 import io.harness.delegate.beans.executioncapability.AwsRegionCapability;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
@@ -341,7 +340,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(ChartMuseumCapability.class, 19038);
     kryo.register(TaskType.class, 5005);
     kryo.register(CommandExecutionResult.class, 5036);
-    kryo.register(ConnectorValidationResult.class, 19059);
     kryo.register(CustomCommitAttributes.class, 19070);
     kryo.register(DelegateMetaInfo.class, 5372);
     kryo.register(DelegateRetryableException.class, 5521);
@@ -591,10 +589,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AwsCurAttributesDTO.class, 19455);
     kryo.register(CEAwsFeatures.class, 19456);
     kryo.register(DeploymentSlotData.class, 19457);
-    kryo.register(ConnectivityStatus.class, 19458);
     kryo.register(ShellScriptTaskParametersNG.class, 19463);
     kryo.register(ShellScriptTaskResponseNG.class, 19464);
-
     kryo.register(AzureWebAppSlotSetupParameters.class, 19465);
     kryo.register(AzureWebAppRollbackParameters.class, 19466);
     kryo.register(AzureWebAppSlotShiftTrafficParameters.class, 19467);
@@ -636,5 +632,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(NexusConstants.class, 19503);
     kryo.register(NexusTaskParams.TaskType.class, 19504);
     kryo.register(ArtifactoryTaskParams.TaskType.class, 19505);
+    kryo.register(VaultConnectorDTO.class, 19506);
   }
 }

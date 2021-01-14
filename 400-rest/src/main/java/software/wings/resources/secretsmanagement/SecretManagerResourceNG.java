@@ -2,7 +2,7 @@ package software.wings.resources.secretsmanagement;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.beans.SecretManagerConfig;
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.mappers.SecretManagerConfigMapper;
 import io.harness.rest.RestResponse;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;

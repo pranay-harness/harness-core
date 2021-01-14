@@ -2,7 +2,7 @@ package io.harness.ng.core.api.impl;
 
 import static io.harness.remote.client.RestClientUtils.getResponse;
 
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;

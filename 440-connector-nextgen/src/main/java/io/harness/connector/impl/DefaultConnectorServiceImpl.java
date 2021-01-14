@@ -2,26 +2,24 @@ package io.harness.connector.impl;
 
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
+import static io.harness.connector.ConnectivityStatus.FAILURE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.beans.connector.ConnectivityStatus.FAILURE;
-import static io.harness.delegate.beans.connector.ConnectivityStatus.SUCCESS;
 import static io.harness.delegate.beans.connector.ConnectorType.GIT;
 import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 
 import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.SortOrder;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.connector.ConnectorCatalogueResponseDTO;
 import io.harness.connector.ConnectorCategory;
-import io.harness.connector.ConnectorConnectivityDetails;
-import io.harness.connector.ConnectorConnectivityDetails.ConnectorConnectivityDetailsBuilder;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
+import io.harness.connector.ConnectorValidationResult;
+import io.harness.connector.ConnectorValidationResult.ConnectorValidationResultBuilder;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.Connector.ConnectorKeys;
 import io.harness.connector.helper.CatalogueHelper;
@@ -31,8 +29,6 @@ import io.harness.connector.services.ConnectorService;
 import io.harness.connector.stats.ConnectorStatistics;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
-import io.harness.delegate.beans.connector.ConnectorValidationResult.ConnectorValidationResultBuilder;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.errorhandling.NGErrorHelper;
@@ -82,6 +78,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   EntitySetupUsageClient entitySetupUsageClient;
   ConnectorStatisticsHelper connectorStatisticsHelper;
   private NGErrorHelper ngErrorHelper;
+  private ConnectorErrorMessagesHelper connectorErrorMessagesHelper;
 
   @Override
   public Optional<ConnectorResponseDTO> get(
@@ -91,22 +88,6 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     Optional<Connector> connector =
         connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
     return connector.map(connectorMapper::writeDTO);
-  }
-
-  private String createConnectorNotFoundMessage(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    StringBuilder stringBuilder = new StringBuilder(256);
-    stringBuilder.append("No connector exists with the identifier ")
-        .append(connectorIdentifier)
-        .append(" in account ")
-        .append(accountIdentifier);
-    if (isNotBlank(orgIdentifier)) {
-      stringBuilder.append(", organisation ").append(orgIdentifier);
-    }
-    if (isNotBlank(projectIdentifier)) {
-      stringBuilder.append(", project ").append(projectIdentifier);
-    }
-    return stringBuilder.toString();
   }
 
   @Override
@@ -211,7 +192,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       String connectorIdentifier) {
     if (existingConnectorType != typeInTheUpdateRequest) {
       String noConnectorExistsWithTypeMessage = String.format("%s with type %s",
-          createConnectorNotFoundMessage(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier),
+          connectorErrorMessagesHelper.createConnectorNotFoundMessage(
+              accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier),
           typeInTheUpdateRequest);
       throw new InvalidRequestException(noConnectorExistsWithTypeMessage);
     }
@@ -225,8 +207,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     Optional<Connector> existingConnectorOptional =
         connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
     if (!existingConnectorOptional.isPresent()) {
-      throw new InvalidRequestException(
-          createConnectorNotFoundMessage(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
+      throw new InvalidRequestException(connectorErrorMessagesHelper.createConnectorNotFoundMessage(
+          accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
     }
     Connector existingConnector = existingConnectorOptional.get();
     checkThatTheConnectorIsNotUsedByOthers(existingConnector);
@@ -313,20 +295,12 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       ConnectorInfoDTO connectorInfo, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     ConnectorValidationResult validationResult;
     validationResult = validateSafely(connectorInfo, accountIdentifier, orgIdentifier, projectIdentifier);
-    long connectivityTestedAt = System.currentTimeMillis();
-    validationResult.setTestedAt(connectivityTestedAt);
-    setAndSaveNewConnectivityStatusInConnector(
-        connector, validationResult, connectivityTestedAt, connectorDTO.getStatus());
     return validationResult;
   }
 
   public void updateConnectivityDetailOfTheConnector(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String identifier, ConnectorValidationResult connectorValidationResult) {
-    long testingTime = connectorValidationResult.getTestedAt() != 0L ? connectorValidationResult.getTestedAt()
-                                                                     : System.currentTimeMillis();
-    Connector connector = getConnectorWithIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    setAndSaveNewConnectivityStatusInConnector(
-        connector, connectorValidationResult, testingTime, connector.getConnectivityDetails());
+    return;
   }
 
   private Connector getConnectorWithIdentifier(
@@ -339,10 +313,9 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
 
     if (connectorOptional.isPresent()) {
       return connectorOptional.get();
-
     } else {
-      throw new InvalidRequestException(
-          createConnectorNotFoundMessage(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
+      throw new InvalidRequestException(connectorErrorMessagesHelper.createConnectorNotFoundMessage(
+          accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
     }
   }
 
@@ -367,31 +340,6 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       return validationFailureBuilder.build();
     }
     return validationResult;
-  }
-
-  private void setAndSaveNewConnectivityStatusInConnector(Connector connector,
-      ConnectorValidationResult connectorValidationResult, long connectivityTestedAt,
-      ConnectorConnectivityDetails lastStatus) {
-    setLastUpdatedTimeIfNotPresent(connector);
-    if (connectorValidationResult != null) {
-      ConnectorConnectivityDetailsBuilder connectorConnectivityDetailsBuilder =
-          ConnectorConnectivityDetails.builder()
-              .status(connectorValidationResult.getStatus())
-              .lastTestedAt(connectivityTestedAt);
-      if (connectorValidationResult.getStatus() == SUCCESS) {
-        connectorConnectivityDetailsBuilder.lastConnectedAt(connectivityTestedAt);
-      } else {
-        connectorConnectivityDetailsBuilder.lastConnectedAt(lastStatus == null ? 0 : lastStatus.getLastConnectedAt());
-      }
-      connector.setConnectivityDetails(connectorConnectivityDetailsBuilder.build());
-      connectorRepository.save(connector);
-    }
-  }
-
-  private void setLastUpdatedTimeIfNotPresent(Connector connector) {
-    if (connector.getTimeWhenConnectorIsLastUpdated() == null) {
-      connector.setTimeWhenConnectorIsLastUpdated(connector.getCreatedAt());
-    }
   }
 
   @Override

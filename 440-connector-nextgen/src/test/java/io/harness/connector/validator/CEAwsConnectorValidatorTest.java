@@ -2,7 +2,9 @@ package io.harness.connector.validator;
 
 import static io.harness.connector.utils.AWSConnectorTestHelper.createNonEmptyObjectListing;
 import static io.harness.connector.utils.AWSConnectorTestHelper.createReportDefinition;
-import static io.harness.connector.validator.CEAwsConnectorValidator.*;
+import static io.harness.connector.validator.CEAwsConnectorValidator.getCurPolicy;
+import static io.harness.connector.validator.CEAwsConnectorValidator.getEventsPolicy;
+import static io.harness.connector.validator.CEAwsConnectorValidator.getOptimizationPolicy;
 import static io.harness.rule.OwnerRule.UTSAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,9 +14,9 @@ import static org.mockito.Mockito.doReturn;
 import io.harness.CategoryTest;
 import io.harness.aws.AwsClient;
 import io.harness.category.element.UnitTests;
+import io.harness.connector.ConnectivityStatus;
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.utils.AWSConnectorTestHelper;
-import io.harness.delegate.beans.connector.ConnectivityStatus;
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsFeatures;
 import io.harness.remote.CEAwsSetupConfig;
