@@ -1,11 +1,10 @@
-package software.wings.helpers.ext.nexus;
+package io.harness.nexus;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-
-import software.wings.helpers.ext.nexus.model.IndexBrowserTreeViewResponse;
-import software.wings.helpers.ext.nexus.model.Project;
+import io.harness.nexus.model.IndexBrowserTreeViewResponse;
+import io.harness.nexus.model.Project;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Map;

@@ -806,7 +806,6 @@ import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSwapRoutesExecut
 import software.wings.utils.ArtifactType;
 import software.wings.utils.ContainerFamily;
 import software.wings.utils.FileType;
-import software.wings.utils.RepositoryFormat;
 import software.wings.utils.RepositoryType;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
@@ -1471,7 +1470,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(EntityVersion.ChangeType.class, 71110);
     kryo.register(ArtifactStreamSummary.class, 7202);
     kryo.register(AwsCrossAccountAttributes.class, 7203);
-    kryo.register(RepositoryFormat.class, 7204);
     kryo.register(AwsEcsListClusterServicesRequest.class, 7206);
     kryo.register(AwsEcsListClusterServicesResponse.class, 7207);
     kryo.register(Deployment.class, 7208);

@@ -1,4 +1,4 @@
-package software.wings.helpers.ext.nexus.model;
+package io.harness.nexus.model;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 

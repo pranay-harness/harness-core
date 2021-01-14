@@ -52,6 +52,7 @@ java_library(
         "@maven//:com_squareup_okhttp3_okhttp",
         "@maven//:com_squareup_okio_okio",
         "@maven//:com_squareup_retrofit2_converter_jackson",
+        "@maven//:com_squareup_retrofit2_converter_simplexml",
         "@maven//:com_squareup_retrofit2_retrofit",
         "@maven//:commons_codec_commons_codec",
         "@maven//:commons_collections_commons_collections",
@@ -87,6 +88,7 @@ java_library(
         "@maven//:org_powermock_powermock_core",
         "@maven//:org_powermock_powermock_module_junit4",
         "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_sonatype_nexus_plugins_nexus_restlet1x_model",
         "@maven//:org_zeroturnaround_zt_exec",
     ],
 )

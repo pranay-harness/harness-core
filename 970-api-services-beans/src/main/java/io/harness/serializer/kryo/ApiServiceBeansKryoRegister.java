@@ -42,6 +42,7 @@ import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.k8s.model.OidcGrantType;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.nexus.NexusRequest;
 import io.harness.pcf.model.ManifestType;
 import io.harness.provision.TfVarScriptRepositorySource;
 import io.harness.provision.TfVarSource;
@@ -64,6 +65,7 @@ import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 
 import software.wings.settings.SettingVariableTypes;
+import software.wings.utils.RepositoryFormat;
 
 import com.amazonaws.SdkClientException;
 import com.amazonaws.internal.SdkInternalList;
@@ -239,5 +241,8 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(ExecuteCommandResponse.class, 1438);
     kryo.register(AzureAppServiceConnectionStringType.class, 1439);
     kryo.register(AzureAppServiceConfiguration.class, 1440);
+
+    kryo.register(NexusRequest.class, 1441);
+    kryo.register(RepositoryFormat.class, 7204);
   }
 }
