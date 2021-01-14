@@ -205,13 +205,11 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
       outcomes = new LinkedList<>();
     }
     // Handle ArtifactsForkOutcome
-    ArtifactsOutcomeBuilder artifactsBuilder = ArtifactsOutcome.builder();
     List<ArtifactOutcome> artifactOutcomes = outcomes.stream()
                                                  .filter(outcome -> outcome instanceof ArtifactOutcome)
                                                  .map(a -> (ArtifactOutcome) a)
                                                  .collect(toList());
     handleArtifactOutcome(outcomeBuilder, artifactOutcomes, serviceConfig);
-    outcomeBuilder.artifactsResult(artifactsBuilder.build());
 
     // Handle ManifestOutcome
     Optional<Outcome> optionalManifestOutcome =
