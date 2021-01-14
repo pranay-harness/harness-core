@@ -9,7 +9,7 @@ import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
 
@@ -20,7 +20,7 @@ public class InfraVariableCreator {
       return VariableCreationResponse.builder().build();
     }
 
-    Map<String, YamlProperties> yamlPropertiesMap = new HashMap<>();
+    Map<String, YamlProperties> yamlPropertiesMap = new LinkedHashMap<>();
     String infraUUID = infraField.getNode().getUuid();
     yamlPropertiesMap.put(infraUUID, YamlProperties.newBuilder().setFqn(YamlTypes.PIPELINE_INFRASTRUCTURE).build());
 
@@ -31,6 +31,10 @@ public class InfraVariableCreator {
     YamlField envField = infraField.getNode().getField(YamlTypes.ENVIRONMENT_YAML);
     if (envField != null) {
       addVariablesForEnv(envField, yamlPropertiesMap);
+    }
+    YamlField envRefField = infraField.getNode().getField(YamlTypes.ENVIRONMENT_REF);
+    if (envRefField != null) {
+      addFieldToPropertiesMapUnderInfra(envRefField, yamlPropertiesMap);
     }
     return VariableCreationResponse.builder().yamlProperties(yamlPropertiesMap).build();
   }

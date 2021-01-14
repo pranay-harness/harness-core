@@ -25,4 +25,6 @@ public class YAMLFieldNameConstants {
   public final String VARIABLES = "variables";
   public final String TYPE = "type";
   public final String KEY = "key";
+  public final String VALUE = "value";
+  public final String UUID = "uuid";
 }

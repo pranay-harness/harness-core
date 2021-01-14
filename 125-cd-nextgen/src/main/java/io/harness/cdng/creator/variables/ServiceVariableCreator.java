@@ -13,7 +13,7 @@ import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -25,13 +25,18 @@ public class ServiceVariableCreator {
     if (serviceConfigField == null) {
       return VariableCreationResponse.builder().build();
     }
-    Map<String, YamlProperties> yamlPropertiesMap = new HashMap<>();
+    Map<String, YamlProperties> yamlPropertiesMap = new LinkedHashMap<>();
     String serviceUUID = serviceConfigField.getNode().getUuid();
     yamlPropertiesMap.put(serviceUUID, YamlProperties.newBuilder().setFqn(YamlTypes.SERVICE_CONFIG).build());
 
     YamlField serviceYamlNode = serviceConfigField.getNode().getField(YamlTypes.SERVICE_ENTITY);
     if (serviceYamlNode != null) {
       addVariablesForServiceYaml(serviceYamlNode, yamlPropertiesMap);
+    }
+
+    YamlField serviceRefNode = serviceConfigField.getNode().getField(YamlTypes.SERVICE_REF);
+    if (serviceRefNode != null) {
+      addFieldToPropertiesMapUnderService(serviceRefNode, yamlPropertiesMap);
     }
 
     YamlField serviceDefNode = serviceConfigField.getNode().getField(YamlTypes.SERVICE_DEFINITION);
@@ -162,18 +167,12 @@ public class ServiceVariableCreator {
   }
 
   private void addVariablesForGit(YamlField gitNode, Map<String, YamlProperties> yamlPropertiesMap) {
-    YamlField connectorRefNode = gitNode.getNode().getField(YamlTypes.CONNECTOR_REF);
-    if (connectorRefNode != null) {
-      addFieldToPropertiesMapUnderService(connectorRefNode, yamlPropertiesMap);
-    }
-    YamlField branchField = gitNode.getNode().getField(YamlTypes.BRANCH);
-    if (branchField != null) {
-      addFieldToPropertiesMapUnderService(branchField, yamlPropertiesMap);
-    }
-    YamlField commitIDField = gitNode.getNode().getField(YamlTypes.COMMIT_ID);
-    if (commitIDField != null) {
-      addFieldToPropertiesMapUnderService(commitIDField, yamlPropertiesMap);
-    }
+    List<YamlField> fields = gitNode.getNode().fields();
+    fields.forEach(field -> {
+      if (!field.getName().equals(YamlTypes.UUID)) {
+        addFieldToPropertiesMapUnderService(field, yamlPropertiesMap);
+      }
+    });
   }
 
   private void addVariablesForPrimaryArtifact(
@@ -201,22 +200,12 @@ public class ServiceVariableCreator {
 
   private void addVariablesForDockerArtifact(
       YamlField artifactSpecNode, Map<String, YamlProperties> yamlPropertiesMap) {
-    YamlField connectorRefNode = artifactSpecNode.getNode().getField(YamlTypes.CONNECTOR_REF);
-    if (connectorRefNode != null) {
-      addFieldToPropertiesMapUnderService(connectorRefNode, yamlPropertiesMap);
-    }
-    YamlField imagePathField = artifactSpecNode.getNode().getField(YamlTypes.IMAGE_PATH);
-    if (imagePathField != null) {
-      addFieldToPropertiesMapUnderService(imagePathField, yamlPropertiesMap);
-    }
-    YamlField tagField = artifactSpecNode.getNode().getField(YamlTypes.TAG);
-    if (tagField != null) {
-      addFieldToPropertiesMapUnderService(tagField, yamlPropertiesMap);
-    }
-    YamlField tagRegexField = artifactSpecNode.getNode().getField(YamlTypes.TAG_REGEX);
-    if (tagRegexField != null) {
-      addFieldToPropertiesMapUnderService(tagRegexField, yamlPropertiesMap);
-    }
+    List<YamlField> fields = artifactSpecNode.getNode().fields();
+    fields.forEach(field -> {
+      if (!field.getName().equals(YamlTypes.UUID)) {
+        addFieldToPropertiesMapUnderService(field, yamlPropertiesMap);
+      }
+    });
   }
 
   private void addVariablesForArtifactOverrideSets(YamlField fieldNode, Map<String, YamlProperties> yamlPropertiesMap) {

@@ -11,7 +11,6 @@ import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -43,7 +42,7 @@ public class DeploymentStageVariableCreator extends ChildrenVariableCreator {
   public VariableCreationResponse createVariablesForParentNode(VariableCreationContext ctx, YamlField config) {
     YamlNode node = config.getNode();
     String stageUUID = node.getUuid();
-    Map<String, YamlProperties> yamlPropertiesMap = new HashMap<>();
+    Map<String, YamlProperties> yamlPropertiesMap = new LinkedHashMap<>();
     yamlPropertiesMap.put(stageUUID,
         YamlProperties.newBuilder()
             .setLocalName(YAMLFieldNameConstants.STAGE)
