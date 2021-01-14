@@ -25,6 +25,7 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
+import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -59,6 +60,7 @@ import retrofit2.http.Body;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
+@NextGenManagerAuth
 public class ConnectorResource {
   private static final String INCLUDE_ALL_CONNECTORS_ACCESSIBLE = "includeAllConnectorsAvailableAtScope";
   private final ConnectorService connectorService;

@@ -5,6 +5,7 @@ import io.harness.NGResourceFilterConstants;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
+import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
@@ -27,6 +28,7 @@ import org.springframework.data.domain.Page;
 @Produces({"application/json"})
 @Consumes({"application/json"})
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
+@NextGenManagerAuth
 public class EntitySetupUsageResource {
   private static final String REFERRED_ENTITY_FQN = "referredEntityFQN";
   private static final String REFERRED_BY_ENTITY_FQN = "referredByEntityFQN";
