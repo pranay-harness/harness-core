@@ -11,8 +11,8 @@ import io.harness.beans.environment.pod.container.ContainerImageDetails;
 import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.yaml.extended.container.ContainerResource;
-import io.harness.beans.yaml.extended.container.quantity.unit.BinaryQuantityUnit;
 import io.harness.beans.yaml.extended.container.quantity.unit.DecimalQuantityUnit;
+import io.harness.beans.yaml.extended.container.quantity.unit.MemoryQuantityUnit;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.ci.utils.QuantityUtils;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
@@ -26,6 +26,7 @@ import io.harness.util.PortFinder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class CIServiceBuilder {
   public static List<ContainerDefinitionInfo> createServicesContainerDefinition(
@@ -45,7 +46,7 @@ public class CIServiceBuilder {
       if (dependencyElement.getDependencySpecType() instanceof CIServiceInfo) {
         ContainerDefinitionInfo containerDefinitionInfo =
             createServiceContainerDefinition((CIServiceInfo) dependencyElement.getDependencySpecType(), portFinder,
-                serviceIdx, ciExecutionServiceConfig);
+                serviceIdx, ciExecutionServiceConfig, stageElementConfig.getIdentifier());
         if (containerDefinitionInfo != null) {
           containerDefinitionInfos.add(containerDefinitionInfo);
         }
@@ -55,22 +56,34 @@ public class CIServiceBuilder {
     return containerDefinitionInfos;
   }
 
-  private static ContainerDefinitionInfo createServiceContainerDefinition(
-      CIServiceInfo service, PortFinder portFinder, int serviceIdx, CIExecutionServiceConfig ciExecutionServiceConfig) {
+  private static ContainerDefinitionInfo createServiceContainerDefinition(CIServiceInfo service, PortFinder portFinder,
+      int serviceIdx, CIExecutionServiceConfig ciExecutionServiceConfig, String identifier) {
     Integer port = portFinder.getNextPort();
     service.setGrpcPort(port);
 
     String containerName = String.format("%s%d", SERVICE_PREFIX, serviceIdx);
+    String image =
+        RunTimeInputHandler.resolveStringParameter("image", "serviceDependency", identifier, service.getImage(), true);
+
+    String connectorRef = RunTimeInputHandler.resolveStringParameter(
+        "connectorRef", "serviceDependency", identifier, service.getConnectorRef(), true);
+
+    List<String> args =
+        RunTimeInputHandler.resolveListParameter("args", "serviceDependency", identifier, service.getArgs(), false);
+
+    List<String> entrypoint = RunTimeInputHandler.resolveListParameter(
+        "entrypoint", "serviceDependency", identifier, service.getEntrypoint(), false);
+
+    Map<String, String> envVariables = RunTimeInputHandler.resolveMapParameter(
+        "envVariables", "serviceDependency", identifier, service.getEnvVariables(), false);
+
     return ContainerDefinitionInfo.builder()
         .name(containerName)
         .commands(ServiceContainerUtils.getCommand())
-        .args(ServiceContainerUtils.getArguments(
-            service.getIdentifier(), service.getImage(), service.getEntrypoint(), service.getArgs(), port))
-        .envVars(service.getEnvVariables())
-        .containerImageDetails(ContainerImageDetails.builder()
-                                   .imageDetails(getImageInfo(service.getImage()))
-                                   .connectorIdentifier(service.getConnectorRef())
-                                   .build())
+        .args(ServiceContainerUtils.getArguments(service.getIdentifier(), image, entrypoint, args, port))
+        .envVars(envVariables)
+        .containerImageDetails(
+            ContainerImageDetails.builder().imageDetails(getImageInfo(image)).connectorIdentifier(connectorRef).build())
         .containerResourceParams(
             getServiceContainerResource(service.getResources(), ciExecutionServiceConfig, service.getIdentifier()))
         .ports(Collections.singletonList(port))
@@ -94,7 +107,7 @@ public class CIServiceBuilder {
       if (resource.getLimits().getMemory() != null) {
         String memoryQuantity = RunTimeInputHandler.resolveStringParameter(
             "memory", "Service", identifier, resource.getLimits().getMemory(), false);
-        memory = QuantityUtils.getMemoryQuantityValueInUnit(memoryQuantity, BinaryQuantityUnit.Mi);
+        memory = QuantityUtils.getMemoryQuantityValueInUnit(memoryQuantity, MemoryQuantityUnit.Mi);
       }
     }
     return ContainerResourceParams.builder()

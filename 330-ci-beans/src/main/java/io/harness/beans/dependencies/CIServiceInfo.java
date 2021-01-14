@@ -2,6 +2,7 @@ package io.harness.beans.dependencies;
 
 import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -28,12 +29,12 @@ public class CIServiceInfo implements DependencySpecType {
   @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore private String name;
 
   @JsonIgnore private Integer grpcPort;
-  private Map<String, String> envVariables;
-  private List<String> entrypoint;
-  private List<String> args;
+  private ParameterField<Map<String, String>> envVariables;
+  private ParameterField<List<String>> entrypoint;
+  private ParameterField<List<String>> args;
 
-  private String image;
-  private String connectorRef;
+  private ParameterField<String> image;
+  private ParameterField<String> connectorRef;
   private ContainerResource resources;
 
   public CIDependencyType getType() {

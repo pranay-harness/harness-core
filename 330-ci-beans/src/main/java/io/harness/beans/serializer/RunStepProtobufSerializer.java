@@ -45,8 +45,10 @@ public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStep
     if (isNotEmpty(reports)) {
       for (UnitTestReport unitTestReport : reports) {
         if (unitTestReport.getType() == UnitTestReport.Type.JUNIT) {
-          Report report =
-              Report.newBuilder().setType(Report.Type.JUNIT).addAllPaths(resolveJunitReport(unitTestReport)).build();
+          Report report = Report.newBuilder()
+                              .setType(Report.Type.JUNIT)
+                              .addAllPaths(resolveJunitReport(unitTestReport, step.getIdentifier()))
+                              .build();
           runStepBuilder.addReports(report);
         }
       }
@@ -73,8 +75,9 @@ public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStep
         .build();
   }
 
-  public List<String> resolveJunitReport(UnitTestReport unitTestReport) {
+  public List<String> resolveJunitReport(UnitTestReport unitTestReport, String identifier) {
     JunitTestReport junitTestReport = (JunitTestReport) unitTestReport;
-    return junitTestReport.getSpec().getPaths();
+    return RunTimeInputHandler.resolveListParameter(
+        "paths", "run", identifier, junitTestReport.getSpec().getPaths(), false);
   }
 }

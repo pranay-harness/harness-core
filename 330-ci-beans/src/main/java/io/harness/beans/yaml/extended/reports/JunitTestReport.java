@@ -1,5 +1,7 @@
 package io.harness.beans.yaml.extended.reports;
 
+import io.harness.pms.yaml.ParameterField;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -20,6 +22,6 @@ public class JunitTestReport implements UnitTestReport {
   @Builder
   @AllArgsConstructor
   public static class Spec {
-    private List<String> paths;
+    private ParameterField<List<String>> paths;
   }
 }

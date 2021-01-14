@@ -95,6 +95,7 @@ enum StepExecutionStatus {
   RUNNING = 2;
   QUEUED = 3;
   SKIPPED = 4;
+  ABORTED = 5;
 }
 
 message StepMapOutput {

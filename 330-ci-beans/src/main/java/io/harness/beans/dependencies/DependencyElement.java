@@ -5,6 +5,7 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.intfc.WithIdentifier;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -20,6 +21,7 @@ import lombok.NoArgsConstructor;
 public class DependencyElement implements WithIdentifier {
   @EntityIdentifier String identifier;
   @EntityName String name;
+  ParameterField<String> description;
   String type;
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
