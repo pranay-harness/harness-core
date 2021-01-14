@@ -2,6 +2,8 @@ package io.harness.connector;
 
 import static org.mockito.Mockito.mock;
 
+import io.harness.aws.AwsClient;
+import io.harness.aws.AwsClientImpl;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.connector.impl.ConnectorActivityServiceImpl;
 import io.harness.connector.services.ConnectorActivityService;
@@ -16,6 +18,7 @@ import io.harness.ng.core.activityhistory.service.NGActivityService;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.persistence.HPersistence;
+import io.harness.remote.CEAwsSetupConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
@@ -31,12 +34,7 @@ import io.harness.yaml.YamlSdkModule;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.inject.AbstractModule;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
+import com.google.inject.*;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -76,7 +74,7 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
     modules.add(mongoTypeModule(annotations));
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
-    modules.add(new ConnectorModule());
+    modules.add(new ConnectorModule(CEAwsSetupConfig.builder().build()));
     modules.add(KryoModule.getInstance());
     modules.add(YamlSdkModule.getInstance());
     modules.add(new EntitySetupUsageClientModule(
