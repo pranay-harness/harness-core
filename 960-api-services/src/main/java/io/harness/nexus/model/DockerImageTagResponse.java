@@ -1,4 +1,4 @@
-package software.wings.helpers.ext.nexus.model;
+package io.harness.nexus.model;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
@@ -12,6 +12,7 @@ import java.util.List;
  */
 @OwnedBy(CDC)
 @lombok.Data
-public class DockerImageResponse {
-  private List<String> repositories = new ArrayList<>();
+public class DockerImageTagResponse {
+  String name;
+  List<String> tags = new ArrayList();
 }

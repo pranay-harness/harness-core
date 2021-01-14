@@ -1,4 +1,4 @@
-package software.wings.helpers.ext.nexus.model;
+package io.harness.nexus.model;
 
 import java.util.List;
 import lombok.Builder;

@@ -27,6 +27,10 @@ import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
+import io.harness.nexus.NexusRestClient;
+import io.harness.nexus.model.IndexBrowserTreeNode;
+import io.harness.nexus.model.IndexBrowserTreeViewResponse;
+import io.harness.nexus.model.Project;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.stream.StreamUtils;
 
@@ -37,9 +41,6 @@ import software.wings.common.AlphanumComparator;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
 import software.wings.helpers.ext.artifactory.FolderPath;
 import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.helpers.ext.nexus.model.IndexBrowserTreeNode;
-import software.wings.helpers.ext.nexus.model.IndexBrowserTreeViewResponse;
-import software.wings.helpers.ext.nexus.model.Project;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.RepositoryFormat;
 

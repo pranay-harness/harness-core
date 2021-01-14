@@ -1,18 +1,15 @@
-package software.wings.helpers.ext.nexus.model;
+package io.harness.nexus.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import lombok.Builder;
 
-/**
- * Created by sgurubelli on 11/17/17.
- */
 @lombok.Data
 @Builder
-public class RepositoryRequest {
+public class Nexus3Request {
   private String action;
   private String method;
-  @JsonProperty("data") private List<RequestData> data;
+  @JsonProperty("data") private List<Nexus3RequestData> data;
   private String type;
   private int tid;
 }

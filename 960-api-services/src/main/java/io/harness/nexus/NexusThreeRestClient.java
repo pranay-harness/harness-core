@@ -1,18 +1,17 @@
-package software.wings.helpers.ext.nexus;
+package io.harness.nexus;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-
-import software.wings.helpers.ext.nexus.model.DockerImageResponse;
-import software.wings.helpers.ext.nexus.model.DockerImageTagResponse;
-import software.wings.helpers.ext.nexus.model.Nexus3AssetResponse;
-import software.wings.helpers.ext.nexus.model.Nexus3ComponentResponse;
-import software.wings.helpers.ext.nexus.model.Nexus3Repository;
-import software.wings.helpers.ext.nexus.model.Nexus3Request;
-import software.wings.helpers.ext.nexus.model.Nexus3Response;
-import software.wings.helpers.ext.nexus.model.RepositoryRequest;
-import software.wings.helpers.ext.nexus.model.RepositoryResponse;
+import io.harness.nexus.model.DockerImageResponse;
+import io.harness.nexus.model.DockerImageTagResponse;
+import io.harness.nexus.model.Nexus3AssetResponse;
+import io.harness.nexus.model.Nexus3ComponentResponse;
+import io.harness.nexus.model.Nexus3Repository;
+import io.harness.nexus.model.Nexus3Request;
+import io.harness.nexus.model.Nexus3Response;
+import io.harness.nexus.model.RepositoryRequest;
+import io.harness.nexus.model.RepositoryResponse;
 
 import java.util.List;
 import retrofit2.Call;

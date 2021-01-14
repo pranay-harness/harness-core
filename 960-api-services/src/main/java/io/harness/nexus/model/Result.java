@@ -1,4 +1,4 @@
-package software.wings.helpers.ext.nexus.model;
+package io.harness.nexus.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.ArrayList;
