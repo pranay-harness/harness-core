@@ -8,6 +8,7 @@ import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationTy
 import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubSshCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
 
@@ -25,13 +26,23 @@ public class GithubToGitMapper {
     if (authType == GitAuthType.HTTP) {
       final GithubHttpCredentialsDTO credentials =
           (GithubHttpCredentialsDTO) githubConnectorDTO.getAuthentication().getCredentials();
-      if (credentials.getType() != GithubHttpAuthenticationType.USERNAME_AND_PASSWORD) {
-        throw new InvalidRequestException("Git connector doesn't have configuration for " + credentials.getType());
+      String username;
+      SecretRefData usernameRef, passwordRef;
+      if (credentials.getType() == GithubHttpAuthenticationType.USERNAME_AND_PASSWORD) {
+        final GithubUsernamePasswordDTO httpCredentialsSpec =
+            (GithubUsernamePasswordDTO) credentials.getHttpCredentialsSpec();
+        username = httpCredentialsSpec.getUsername();
+        usernameRef = httpCredentialsSpec.getUsernameRef();
+        passwordRef = httpCredentialsSpec.getPasswordRef();
+      } else {
+        final GithubUsernameTokenDTO githubUsernameTokenDTO =
+            (GithubUsernameTokenDTO) credentials.getHttpCredentialsSpec();
+        username = githubUsernameTokenDTO.getUsername();
+        usernameRef = githubUsernameTokenDTO.getUsernameRef();
+        passwordRef = githubUsernameTokenDTO.getTokenRef();
       }
-      final GithubUsernamePasswordDTO httpCredentialsSpec =
-          (GithubUsernamePasswordDTO) credentials.getHttpCredentialsSpec();
-      return gitConfigCreater.getGitConfigForHttp(connectionType, url, httpCredentialsSpec.getUsername(),
-          httpCredentialsSpec.getUsernameRef(), httpCredentialsSpec.getPasswordRef());
+      return gitConfigCreater.getGitConfigForHttp(connectionType, url, username, usernameRef, passwordRef);
+
     } else if (authType == GitAuthType.SSH) {
       final GithubSshCredentialsDTO credentials =
           (GithubSshCredentialsDTO) githubConnectorDTO.getAuthentication().getCredentials();
