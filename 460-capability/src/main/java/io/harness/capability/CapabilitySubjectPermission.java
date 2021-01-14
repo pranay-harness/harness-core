@@ -5,6 +5,7 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UuidAware;
 
 import com.google.common.collect.ImmutableList;
 import java.util.Date;
@@ -20,7 +21,7 @@ import org.mongodb.morphia.annotations.Id;
 @Builder
 @FieldNameConstants(innerTypeName = "CapabilitySubjectPermissionKeys")
 @Entity(value = "capabilitySubjectPermission", noClassnameStored = true)
-public final class CapabilitySubjectPermission implements PersistentEntity {
+public final class CapabilitySubjectPermission implements PersistentEntity, UuidAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

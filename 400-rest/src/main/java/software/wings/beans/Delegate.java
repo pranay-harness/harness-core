@@ -3,6 +3,7 @@ package software.wings.beans;
 import static java.time.Duration.ofDays;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.persistence.AccountAccess;
@@ -32,7 +33,7 @@ import org.mongodb.morphia.annotations.Transient;
 @FieldNameConstants(innerTypeName = "DelegateKeys")
 @Entity(value = "delegates", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
+public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess, PersistentRegularIterable {
   public static final Duration TTL = ofDays(30);
 
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
@@ -79,9 +80,28 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, Ac
   private long profileExecutedAt;
   private boolean sampleDelegate;
 
+  @FdIndex Long capabilitiesCheckNextIteration;
+
   @FdTtlIndex private Date validUntil;
 
   @SchemaIgnore private List<String> keywords;
+
+  @Override
+  public void updateNextIteration(String fieldName, long nextIteration) {
+    if (DelegateKeys.capabilitiesCheckNextIteration.equals(fieldName)) {
+      this.capabilitiesCheckNextIteration = nextIteration;
+      return;
+    }
+    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    if (DelegateKeys.capabilitiesCheckNextIteration.equals(fieldName)) {
+      return this.capabilitiesCheckNextIteration;
+    }
+    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
 
   public enum Status { ENABLED, WAITING_FOR_APPROVAL, @Deprecated DISABLED, DELETED }
 }

@@ -2,6 +2,7 @@ package io.harness.delegate.task.executioncapability;
 
 import static io.harness.capability.CapabilitySubjectPermission.PermissionResult;
 
+import io.harness.capability.CapabilityParameters;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 
 import lombok.Builder;
@@ -14,7 +15,8 @@ public class CapabilityCheckDetails {
   private String capabilityId;
   private String delegateId;
   private CapabilityType capabilityType;
-  // TODO uncomment when class is visible here
-  // private CapabilityParameters capabilityParameters;
+  private CapabilityParameters capabilityParameters;
+  private long maxValidityPeriod;
+  private long revalidateAfterPeriod;
   private PermissionResult permissionResult;
 }

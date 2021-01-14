@@ -15,6 +15,7 @@ public class DelegateServiceRegistrars {
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(OrchestrationRegistrars.kryoRegistrars)
           .addAll(DelegateServiceBeansRegistrars.kryoRegistrars)
+          .addAll(CapabilityRegistrars.kryoRegistrars)
           .add(DelegateServiceKryoRegister.class)
           .add(RbacCoreKryoRegistrar.class)
           .build();

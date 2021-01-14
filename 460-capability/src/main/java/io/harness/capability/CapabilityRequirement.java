@@ -25,6 +25,21 @@ public final class CapabilityRequirement implements PersistentEntity {
   // later be checked against other entities, we should specify which types of entities that the
   // capability should be checked against.
 
+  /**
+   * Amount of millis saying for how long the current capability check should be considered as valid. This amount
+   * should be added to the system time after every capability re-validation and used to update the corresponding field
+   * in
+   * {@link io.harness.capability.CapabilitySubjectPermission}
+   */
+  private long maxValidityPeriod;
+
+  /**
+   * Amount of millis saying after how how much time the current capability check should be revalidated again. This
+   * amount should be added to the system time after every capability re-validation and used to update the corresponding
+   * field in {@link io.harness.capability.CapabilitySubjectPermission}
+   */
+  private long revalidateAfterPeriod;
+
   // when the capability was last used
   @FdTtlIndex private Date validUntil;
 

@@ -17,6 +17,7 @@ public class OrchestrationStepsModuleRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(OrchestrationRegistrars.kryoRegistrars)
+          .addAll(CapabilityRegistrars.kryoRegistrars)
           .add(OrchestrationStepsKryoRegistrar.class)
           .add(YamlKryoRegistrar.class)
           .add(NGCoreBeansKryoRegistrar.class)
