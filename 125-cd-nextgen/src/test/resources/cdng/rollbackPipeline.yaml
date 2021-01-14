@@ -48,7 +48,7 @@ pipeline:
                   identifier: httpStep1
                   type: Http
                   spec:
-                    socketTimeoutMillis: 1000
+                    timeout: 100s
                     method: GET
                     url: https://www.google.com/
               - stepGroup:
@@ -60,7 +60,7 @@ pipeline:
                         identifier: httpStep5
                         type: Http
                         spec:
-                          socketTimeoutMillis: 1000
+                          timeout: 100s
                           method: GET
                           url: https://www.google.com/
                   rollbackSteps:
@@ -69,7 +69,7 @@ pipeline:
                         identifier: httpStep5
                         type: Http
                         spec:
-                          socketTimeoutMillis: 1000
+                          timeout: 100s
                           method: GET
                           url: https://www.google.com/
               - stepGroup:
@@ -81,7 +81,7 @@ pipeline:
                         identifier: httpStep6
                         type: Http
                         spec:
-                          socketTimeoutMillis: 1000
+                          timeout: 100s
                           method: GET
                           url: https://www.google.com/
                   rollbackSteps:
@@ -90,7 +90,7 @@ pipeline:
                         identifier: httpStep7
                         type: Http
                         spec:
-                          socketTimeoutMillis: 1000
+                          timeout: 100s
                           method: GET
                           url: https://www.google.com/
                     - step:
@@ -98,7 +98,7 @@ pipeline:
                         identifier: httpStep8
                         type: Http
                         spec:
-                          socketTimeoutMillis: 1000
+                          timeout: 100s
                           method: GET
                           url: https://www.google.com/
               - stepGroup:
@@ -110,7 +110,7 @@ pipeline:
                         identifier: httpStep9
                         type: Http
                         spec:
-                          socketTimeoutMillis: 1000
+                          timeout: 100s
                           method: GET
                           url: https://www.google.com/
               - parallel:
@@ -119,7 +119,7 @@ pipeline:
                       identifier: httpStep10
                       type: Http
                       spec:
-                        socketTimeoutMillis: 1000
+                        timeout: 100s
                         method: GET
                         url: fadsfa
                   - stepGroup:
@@ -131,7 +131,7 @@ pipeline:
                             identifier: httpStep11
                             type: Http
                             spec:
-                              socketTimeoutMillis: 1000
+                              timeout: 100s
                               method: GET
                               url: fadsfa
                       rollbackSteps:
@@ -140,7 +140,7 @@ pipeline:
                             identifier: httpStep12
                             type: Http
                             spec:
-                              socketTimeoutMillis: 1000
+                              timeout: 100s
                               method: GET
                               url: https://www.google.com/
                   - stepGroup:
@@ -152,7 +152,7 @@ pipeline:
                             identifier: httpStep12
                             type: Http
                             spec:
-                              socketTimeoutMillis: 1000
+                              timeout: 100s
                               method: GET
                               url: fadsfa
               - step:
@@ -160,7 +160,7 @@ pipeline:
                   identifier: httpStep2
                   type: Http
                   spec:
-                    socketTimeoutMillis: 1000
+                    timeout: 100s
                     method: GET
                     url: https://www.google.com/
             rollbackSteps:
@@ -169,7 +169,7 @@ pipeline:
                   identifier: httpStep3
                   type: Http
                   spec:
-                    socketTimeoutMillis: 1000
+                    timeout: 100s
                     method: GET
                     url: https://www.google.com/
               - step:
@@ -177,6 +177,6 @@ pipeline:
                   identifier: httpStep4
                   type: Http
                   spec:
-                    socketTimeoutMillis: 1000
+                    timeout: 100s
                     method: GET
                     url: https://www.google.com/

@@ -5,11 +5,15 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTaskType;
+import io.harness.common.NGTimeConversionHelper;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.http.HttpStepResponse;
 import io.harness.delegate.task.http.HttpTaskParametersNg;
+import io.harness.delegate.task.http.HttpTaskParametersNg.HttpTaskParametersNgBuilder;
 import io.harness.executions.steps.ExecutionNodeType;
+import io.harness.http.HttpHeaderConfig;
 import io.harness.http.HttpOutcome;
 import io.harness.http.HttpStepParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -29,6 +33,7 @@ import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
@@ -46,20 +51,24 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
 
   @Override
   public TaskRequest obtainTask(Ambiance ambiance, HttpStepParameters stepParameters, StepInputPackage inputPackage) {
-    HttpTaskParametersNg httpTaskParametersNg = HttpTaskParametersNg.builder()
-                                                    .url(stepParameters.getUrl())
-                                                    .body(stepParameters.getRequestBody())
-                                                    .requestHeader(stepParameters.getRequestHeaders())
-                                                    .method(stepParameters.getMethod())
-                                                    .socketTimeoutMillis(socketTimeoutMillis)
-                                                    .build();
+    HttpTaskParametersNgBuilder httpTaskParametersNgBuilder = HttpTaskParametersNg.builder()
+                                                                  .url(stepParameters.getUrl().getValue())
+                                                                  .body(stepParameters.getRequestBody().getValue())
+                                                                  .method(stepParameters.getMethod().getValue())
+                                                                  .socketTimeoutMillis(socketTimeoutMillis);
 
-    final TaskData taskData = TaskData.builder()
-                                  .async(true)
-                                  .timeout(TaskData.DEFAULT_ASYNC_CALL_TIMEOUT)
-                                  .taskType(NGTaskType.HTTP_TASK_NG.name())
-                                  .parameters(new Object[] {httpTaskParametersNg})
-                                  .build();
+    if (EmptyPredicate.isNotEmpty(stepParameters.getHeaders())) {
+      httpTaskParametersNgBuilder.requestHeader(stepParameters.getHeaders().stream().collect(
+          Collectors.toMap(HttpHeaderConfig::getKey, HttpHeaderConfig::getValue)));
+    }
+
+    final TaskData taskData =
+        TaskData.builder()
+            .async(true)
+            .timeout(NGTimeConversionHelper.convertTimeStringToMilliseconds(stepParameters.getTimeout().getValue()))
+            .taskType(NGTaskType.HTTP_TASK_NG.name())
+            .parameters(new Object[] {httpTaskParametersNgBuilder.build()})
+            .build();
     return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer);
   }
 
@@ -82,8 +91,8 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
       HttpStepResponse httpStepResponse = (HttpStepResponse) notifyResponseData;
 
       HttpOutcome executionData = HttpOutcome.builder()
-                                      .httpUrl(stepParameters.getUrl())
-                                      .httpMethod(stepParameters.getMethod())
+                                      .httpUrl(stepParameters.getUrl().getValue())
+                                      .httpMethod(stepParameters.getMethod().getValue())
                                       .httpResponseCode(httpStepResponse.getHttpResponseCode())
                                       .httpResponseBody(httpStepResponse.getHttpResponseBody())
                                       .status(httpStepResponse.getCommandExecutionStatus())
