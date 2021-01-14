@@ -1,6 +1,13 @@
 package io.harness.ngtriggers.mapper;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.ngtriggers.Constants.X_BIT_BUCKET_EVENT;
+import static io.harness.ngtriggers.Constants.X_GIT_HUB_EVENT;
+import static io.harness.ngtriggers.Constants.X_GIT_LAB_EVENT;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.BITBUCKET;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.CUSTOM;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.GITHUB;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.GITLAB;
 
 import static java.time.temporal.ChronoUnit.DAYS;
 
@@ -23,7 +30,9 @@ import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata;
 import io.harness.ngtriggers.beans.source.NGTriggerSource;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
+import io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
+import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
 import io.harness.repositories.ng.core.spring.TriggerEventHistoryRepository;
 import io.harness.yaml.utils.YamlPipelineUtils;
 
@@ -37,6 +46,7 @@ import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +60,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class NGTriggerElementMapper {
   public static final int DAYS_BEFORE_CURRENT_DATE = 6;
   private TriggerEventHistoryRepository triggerEventHistoryRepository;
+  private WebhookEventPayloadParser webhookEventPayloadParser;
 
   public NGTriggerConfig toTriggerConfig(String yaml) {
     try {
@@ -124,9 +135,28 @@ public class NGTriggerElementMapper {
         .build();
   }
 
-  public TriggerWebhookEvent toNGTriggerWebhookEvent(
-      String accountIdentifier, String payload, List<HeaderConfig> headerConfigs) {
-    return TriggerWebhookEvent.builder().accountId(accountIdentifier).headers(headerConfigs).payload(payload).build();
+  public TriggerWebhookEvent toNGTriggerWebhookEvent(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String payload, List<HeaderConfig> headerConfigs) {
+    WebhookSourceRepo webhookSourceRepo = null;
+    Set<String> headerKeys =
+        headerConfigs.stream().map(headerConfig -> headerConfig.getKey()).collect(Collectors.toSet());
+    if (webhookEventPayloadParser.containsHeaderKey(headerKeys, X_GIT_HUB_EVENT)) {
+      webhookSourceRepo = GITHUB;
+    } else if (webhookEventPayloadParser.containsHeaderKey(headerKeys, X_GIT_LAB_EVENT)) {
+      webhookSourceRepo = GITLAB;
+    } else if (webhookEventPayloadParser.containsHeaderKey(headerKeys, X_BIT_BUCKET_EVENT)) {
+      webhookSourceRepo = BITBUCKET;
+    } else {
+      webhookSourceRepo = CUSTOM;
+    }
+    return TriggerWebhookEvent.builder()
+        .accountId(accountIdentifier)
+        .orgIdentifier(orgIdentifier)
+        .projectIdentifier(projectIdentifier)
+        .sourceRepoType(webhookSourceRepo.name())
+        .headers(headerConfigs)
+        .payload(payload)
+        .build();
   }
 
   public NGTriggerDetailsResponseDTO toNGTriggerDetailsResponseDTO(

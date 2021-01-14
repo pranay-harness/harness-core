@@ -79,14 +79,16 @@ public class NGTriggerWebhookConfigResource {
   @ApiOperation(value = "accept webhook event", nickname = "webhookEndpoint")
   @PublicApi
   public ResponseDTO<String> processWebhookEvent(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier, @NotNull String eventPayload,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, @NotNull String eventPayload,
       @Context HttpHeaders httpHeaders) {
     List<HeaderConfig> headerConfigs = new ArrayList<>();
     httpHeaders.getRequestHeaders().forEach(
         (k, v) -> headerConfigs.add(HeaderConfig.builder().key(k).values(v).build()));
 
-    TriggerWebhookEvent eventEntity =
-        ngTriggerElementMapper.toNGTriggerWebhookEvent(accountIdentifier, eventPayload, headerConfigs);
+    TriggerWebhookEvent eventEntity = ngTriggerElementMapper.toNGTriggerWebhookEvent(
+        accountIdentifier, orgIdentifier, projectIdentifier, eventPayload, headerConfigs);
     TriggerWebhookEvent newEvent = ngTriggerService.addEventToQueue(eventEntity);
     return ResponseDTO.newResponse(newEvent.getUuid());
   }

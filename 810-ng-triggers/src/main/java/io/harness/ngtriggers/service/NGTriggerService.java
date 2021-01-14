@@ -3,6 +3,7 @@ package io.harness.ngtriggers.service;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,7 +22,7 @@ public interface NGTriggerService {
   Page<NGTriggerEntity> list(Criteria criteria, Pageable pageable);
 
   Page<NGTriggerEntity> listWebhookTriggers(
-      String accountIdentifier, String repoUrl, boolean isDeleted, boolean enabledOnly);
+      TriggerWebhookEvent triggerWebhookEvent, List<String> repoUrls, boolean isDeleted, boolean enabledOnly);
 
   boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String targetIdentifier,
       String identifier, Long version);

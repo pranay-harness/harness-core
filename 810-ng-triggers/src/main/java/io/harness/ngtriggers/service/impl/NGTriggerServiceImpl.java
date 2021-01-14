@@ -16,6 +16,7 @@ import io.harness.repositories.ng.core.spring.TriggerWebhookEventRepository;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.client.result.UpdateResult;
+import java.util.List;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -84,9 +85,10 @@ public class NGTriggerServiceImpl implements NGTriggerService {
 
   @Override
   public Page<NGTriggerEntity> listWebhookTriggers(
-      String accountIdentifier, String repoUrl, boolean isDeleted, boolean enabledOnly) {
-    return list(
-        TriggerFilterHelper.createCriteriaForWebhookTriggerGetList(accountIdentifier, repoUrl, "", false, enabledOnly),
+      TriggerWebhookEvent triggerWebhookEvent, List<String> repoUrls, boolean isDeleted, boolean enabledOnly) {
+    return list(TriggerFilterHelper.createCriteriaForWebhookTriggerGetList(triggerWebhookEvent.getAccountId(),
+                    triggerWebhookEvent.getOrgIdentifier(), triggerWebhookEvent.getProjectIdentifier(), repoUrls, "",
+                    false, enabledOnly),
         Pageable.unpaged());
   }
 
