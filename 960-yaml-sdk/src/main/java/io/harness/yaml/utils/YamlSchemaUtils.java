@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.EntityType;
 import io.harness.packages.HarnessPackages;
+import io.harness.yaml.schema.YamlSchemaIgnoreSubtype;
 import io.harness.yaml.schema.YamlSchemaRoot;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
@@ -148,6 +149,7 @@ public class YamlSchemaUtils {
     Set<Class<?>> subTypesOf = reflections.getSubTypesOf((Class<Object>) field.getType());
     return subTypesOf.stream()
         .filter(c -> c.getAnnotation(JsonTypeName.class) != null)
+        .filter(c -> c.getAnnotation(YamlSchemaIgnoreSubtype.class) == null)
         .map(aClass
             -> SubtypeClassMap.builder()
                    .subtypeEnum(aClass.getAnnotation(JsonTypeName.class).value())
