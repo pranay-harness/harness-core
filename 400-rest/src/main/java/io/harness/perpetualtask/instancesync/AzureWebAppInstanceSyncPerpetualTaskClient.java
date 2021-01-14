@@ -90,7 +90,6 @@ public class AzureWebAppInstanceSyncPerpetualTaskClient implements PerpetualTask
                   .async(false)
                   .taskType(TaskType.AZURE_APP_SERVICE_TASK.name())
                   .parameters(new Object[] {request})
-                  .timeout(System.currentTimeMillis() + TaskData.DELEGATE_QUEUE_TIMEOUT)
                   .build())
         .build();
   }

@@ -6,6 +6,7 @@ import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_I
 import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
 import static software.wings.service.InstanceSyncConstants.NAMESPACE;
 import static software.wings.service.InstanceSyncConstants.RELEASE_NAME;
+import static software.wings.service.InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES;
 import static software.wings.sm.states.k8s.K8sStateHelper.fetchTagsFromK8sCloudProvider;
 import static software.wings.sm.states.k8s.K8sStateHelper.fetchTagsFromK8sTaskParams;
 import static software.wings.utils.Utils.emptyIfNull;
@@ -45,6 +46,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -136,7 +138,7 @@ public class ContainerInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
                   .async(false)
                   .taskType(TaskType.CONTAINER_VALIDATION.name())
                   .parameters(new Object[] {null, null, delegateTaskParams})
-                  .timeout(System.currentTimeMillis() + TaskData.DELEGATE_QUEUE_TIMEOUT)
+                  .timeout(TimeUnit.MINUTES.toMillis(VALIDATION_TIMEOUT_MINUTES))
                   .build())
         .accountId(taskData.getAccountId())
         .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, taskData.getAppId())
@@ -170,7 +172,7 @@ public class ContainerInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
                   .async(false)
                   .taskType(TaskType.K8S_COMMAND_TASK.name())
                   .parameters(new Object[] {delegateTaskParams})
-                  .timeout(System.currentTimeMillis() + TaskData.DELEGATE_QUEUE_TIMEOUT)
+                  .timeout(TimeUnit.MINUTES.toMillis(VALIDATION_TIMEOUT_MINUTES))
                   .build())
         .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, taskData.getEnvId())
         .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, taskData.getEnvType())

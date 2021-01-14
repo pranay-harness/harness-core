@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
 import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
+import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
@@ -31,6 +32,7 @@ import com.google.protobuf.Message;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -90,7 +92,7 @@ public class SpotinstAmiInstanceSyncPerpetualTaskClient implements PerpetualTask
                                                 .spotinstEncryptionDetails(perpetualTaskData.spotinstEncryptedData)
                                                 .spotInstTaskParameters(spotinstParams)
                                                 .build()})
-                  .timeout(System.currentTimeMillis() + TaskData.DELEGATE_QUEUE_TIMEOUT)
+                  .timeout(TimeUnit.SECONDS.toMillis(TIMEOUT_SECONDS))
                   .build())
         .build();
   }

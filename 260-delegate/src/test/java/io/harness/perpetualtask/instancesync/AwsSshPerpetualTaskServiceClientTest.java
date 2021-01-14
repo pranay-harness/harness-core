@@ -35,6 +35,7 @@ import software.wings.service.intfc.security.SecretManager;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -97,12 +98,9 @@ public class AwsSshPerpetualTaskServiceClientTest extends WingsBaseTest {
                                                                .region("us-east-1")
                                                                .filters(new ArrayList<>())
                                                                .build()})
-                                 .timeout(validationTask.getData().getTimeout())
+                                 .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
                                  .build())
                        .build());
-    assertThat(validationTask.getData().getTimeout())
-        .isLessThanOrEqualTo(System.currentTimeMillis() + TaskData.DELEGATE_QUEUE_TIMEOUT);
-    assertThat(validationTask.getData().getTimeout()).isGreaterThanOrEqualTo(System.currentTimeMillis());
   }
 
   private void prepareTaskData(AwsConfig awsConfig) {

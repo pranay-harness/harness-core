@@ -32,6 +32,7 @@ import software.wings.service.intfc.security.SecretManager;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.junit.Test;
@@ -78,8 +79,7 @@ public class AwsLambdaInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
                                           .loadAliases(true)
                                           .build();
 
-    final DelegateTask validationTask = client.getValidationTask(getClientContext(), ACCOUNT_ID);
-    assertThat(validationTask)
+    assertThat(client.getValidationTask(getClientContext(), ACCOUNT_ID))
         .isEqualTo(DelegateTask.builder()
                        .accountId(ACCOUNT_ID)
                        .tags(singletonList("tag"))
@@ -87,13 +87,9 @@ public class AwsLambdaInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
                                  .async(false)
                                  .taskType(TaskType.AWS_LAMBDA_TASK.name())
                                  .parameters(new Object[] {request})
-                                 .timeout(validationTask.getData().getTimeout())
+                                 .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
                                  .build())
                        .build());
-
-    assertThat(validationTask.getData().getTimeout())
-        .isLessThanOrEqualTo(System.currentTimeMillis() + TaskData.DELEGATE_QUEUE_TIMEOUT);
-    assertThat(validationTask.getData().getTimeout()).isGreaterThanOrEqualTo(System.currentTimeMillis());
   }
 
   private PerpetualTaskClientContext getClientContext() {

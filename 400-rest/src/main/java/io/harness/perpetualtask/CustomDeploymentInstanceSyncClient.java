@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
@@ -103,7 +104,7 @@ public class CustomDeploymentInstanceSyncClient implements PerpetualTaskServiceC
                   .async(true)
                   .parameters(new Object[] {taskParameters})
                   .taskType(TaskType.SHELL_SCRIPT_PROVISION_TASK.name())
-                  .timeout(System.currentTimeMillis() + TaskData.DELEGATE_QUEUE_TIMEOUT)
+                  .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
                   .build())
         .build();
   }
