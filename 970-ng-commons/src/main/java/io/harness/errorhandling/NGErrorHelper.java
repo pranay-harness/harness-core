@@ -25,6 +25,7 @@ public class NGErrorHelper {
   private static Map<String, ErrorMessageInfo> errorMessageToErrorMap = new HashMap<>();
   private static boolean isInitialized;
   public static final String ERROR_MESSAGE_FILE = "/error_messages.properties";
+  private static final String DONT_OVERRIDE_STRING = "DONT_OVERRIDE";
 
   public static void intializeErrorMessageMap() {
     if (!isInitialized) {
@@ -54,11 +55,16 @@ public class NGErrorHelper {
       String errorMessage = errorDetailsList[0];
       String errorReason = errorDetailsList[1];
       String errorCategory = errorDetailsList[2];
+      String ovverideMessage = null;
+      if (errorDetailsList.length == 4) {
+        ovverideMessage = errorDetailsList[3];
+      }
       ErrorMessageInfo errorDetail = ErrorMessageInfo.builder()
                                          .code(errorCode)
                                          .messageRegex(errorMessage)
                                          .reason(errorReason)
                                          .errorCategory(errorCategory)
+                                         .overriddenMessage(ovverideMessage)
                                          .build();
       errorCodeToErrorMap.put(errorCode, errorDetail);
       errorMessageToErrorMap.put(errorMessage, errorDetail);
@@ -76,7 +82,7 @@ public class NGErrorHelper {
           ErrorMessageInfo savedErrorDetail = errorMessageToErrorMap.get(errorRegex);
           return ErrorDetail.builder()
               .reason(savedErrorDetail.getReason())
-              .message(errorMessage)
+              .message(getOveriddenMessageOrActualMessage(errorMessage, savedErrorDetail.getOverriddenMessage()))
               .code(savedErrorDetail.getCode())
               .build();
         }
@@ -124,11 +130,19 @@ public class NGErrorHelper {
         Pattern errorPattern = getPattern(errorRegex);
         if (errorPattern.matcher(errorMessage).matches()) {
           ErrorMessageInfo savedErrorDetail = errorMessageToErrorMap.get(errorRegex);
-          return String.format("%s (%s)", savedErrorDetail.getErrorCategory(), errorMessage);
+          return String.format("%s (%s)", savedErrorDetail.getErrorCategory(),
+              getOveriddenMessageOrActualMessage(errorMessage, savedErrorDetail.getOverriddenMessage()));
         }
       }
     }
     return String.format("%s (%s)", "Error Encountered", errorMessage);
+  }
+
+  private String getOveriddenMessageOrActualMessage(String errorMessage, String overriddenMessage) {
+    if (overriddenMessage == null) {
+      return errorMessage;
+    }
+    return overriddenMessage;
   }
 
   public String createErrorSummary(String errorCategory, String errorMessage) {
