@@ -1,7 +1,6 @@
 package io.harness.expression.app;
 
 import io.harness.expression.EngineExpressionEvaluator;
-import io.harness.expression.evaluator.ExpressionServiceEvaluator;
 
 import com.google.inject.AbstractModule;
 

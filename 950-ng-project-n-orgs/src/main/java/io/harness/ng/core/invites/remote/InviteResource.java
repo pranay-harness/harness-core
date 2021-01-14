@@ -24,6 +24,7 @@ import io.harness.ng.core.invites.dto.InviteDTO;
 import io.harness.ng.core.invites.entities.Invite;
 import io.harness.ng.core.invites.entities.Invite.InviteKeys;
 import io.harness.ng.core.user.services.api.NgUserService;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.utils.PageUtils;
 
 import com.google.common.collect.ImmutableList;
@@ -77,6 +78,7 @@ public class InviteResource {
 
   @GET
   @ApiOperation(value = "Get all invites for the queried project/organization", nickname = "getInvites")
+  @NextGenManagerAuth
   public ResponseDTO<PageResponse<InviteDTO>> getInvites(
       @QueryParam("accountIdentifier") @NotNull String accountIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
@@ -104,6 +106,7 @@ public class InviteResource {
 
   @POST
   @ApiOperation(value = "Add a new invite for the specified project/organization", nickname = "sendInvite")
+  @NextGenManagerAuth
   public ResponseDTO<List<InviteOperationResponse>> createInvitations(
       @QueryParam("accountIdentifier") @NotNull String accountIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
@@ -171,6 +174,7 @@ public class InviteResource {
   @PUT
   @Path("/{inviteId}")
   @ApiOperation(value = "Resend invite mail", nickname = "updateInvite")
+  @NextGenManagerAuth
   public ResponseDTO<Optional<InviteDTO>> updateInvite(@PathParam("inviteId") @NotNull String inviteId,
       @NotNull @Valid InviteDTO inviteDTO, @QueryParam("accountIdentifier") String accountIdentifier) {
     NGAccess ngAccess = BaseNGAccess.builder().accountIdentifier(accountIdentifier).build();
@@ -184,6 +188,7 @@ public class InviteResource {
   @Path("/{inviteId}")
   @Consumes()
   @ApiOperation(value = "Delete a invite for the specified project/organization", nickname = "deleteInvite")
+  @NextGenManagerAuth
   public ResponseDTO<Optional<InviteDTO>> delete(
       @PathParam("inviteId") @NotNull String inviteId, @QueryParam("accountIdentifier") String accountIdentifier) {
     Optional<Invite> inviteOptional = invitesService.deleteInvite(inviteId);

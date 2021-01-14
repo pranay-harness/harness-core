@@ -1,6 +1,5 @@
 package io.harness.expression.evaluator;
 
-import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.JsonFunctor;
 import io.harness.expression.RegexFunctor;

@@ -10,6 +10,7 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.dto.secrets.SecretRequestWrapper;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
 import io.harness.secretmanagerclient.SecretType;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.serializer.JsonUtils;
 
 import com.google.inject.Inject;
@@ -45,6 +46,7 @@ import org.hibernate.validator.constraints.NotEmpty;
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@NextGenManagerAuth
 public class NGSecretResourceV2 {
   private final SecretCrudService ngSecretService;
 
