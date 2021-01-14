@@ -1,7 +1,10 @@
 {
   "type": "object",
   "properties": {
-    "type": {
+    "cpu": {
+      "type": "string"
+    },
+    "memory": {
       "type": "string"
     }
   },

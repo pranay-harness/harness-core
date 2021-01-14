@@ -70,6 +70,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>960-yaml-sdk</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>990-commons-test</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -139,6 +144,25 @@
                         <goals>
                             <goal>java</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>software.wings</groupId>
+                <artifactId>899-yaml-schema-plugin</artifactId>
+                <version>0.0.1-SNAPSHOT</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <phase>compile</phase>
+                        <configuration>
+                            <rootClasses>
+                                <rootClass>io.harness.beans.stages.IntegrationStageConfig</rootClass>
+                                <rootClass>io.harness.beans.steps.CIStepInfo</rootClass>
+                            </rootClasses>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

@@ -5,7 +5,6 @@ import io.harness.data.validator.EntityIdentifier;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
@@ -20,7 +19,6 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
-@JsonTypeName("Service")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("ciServiceInfo")
 public class CIServiceInfo implements DependencySpecType {

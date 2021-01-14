@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "discriminator": "type",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "JUnit"
+      ]
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

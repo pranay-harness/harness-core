@@ -10,7 +10,7 @@
       ],
       "properties": {
         "tag": {
-          "$ref": "#/definitions/ParameterFieldString"
+          "type": "string"
         }
       }
     }

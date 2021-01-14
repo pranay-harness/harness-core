@@ -5,6 +5,7 @@ import io.harness.data.validator.EntityName;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 
+import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -23,8 +24,8 @@ public class StepGroupElementConfig {
   @NotNull @EntityIdentifier String identifier;
   @EntityName String name;
 
-  List<FailureStrategyConfig> failureStrategies;
+  @ApiModelProperty(hidden = true) List<FailureStrategyConfig> failureStrategies;
 
   @NotNull List<ExecutionWrapperConfig> steps;
-  List<ExecutionWrapperConfig> rollbackSteps;
+  @ApiModelProperty(hidden = true) List<ExecutionWrapperConfig> rollbackSteps;
 }

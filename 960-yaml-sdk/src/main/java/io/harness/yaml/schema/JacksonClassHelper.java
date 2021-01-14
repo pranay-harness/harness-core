@@ -2,6 +2,8 @@ package io.harness.yaml.schema;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import static java.lang.String.format;
+
 import io.harness.validation.OneOfField;
 import io.harness.validation.OneOfFields;
 import io.harness.yaml.YamlSchemaTypes;
@@ -16,15 +18,20 @@ import io.harness.yaml.utils.YamlSchemaUtils;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.google.common.annotations.VisibleForTesting;
+import io.swagger.annotations.ApiModelProperty;
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class JacksonClassHelper {
   /**
    * @param clazz                         Class which will be traversed.
@@ -33,16 +40,27 @@ public class JacksonClassHelper {
    */
   public void getRequiredMappings(
       Class<?> clazz, Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap) {
-    if (swaggerDefinitionsMetaInfoMap.containsKey(YamlSchemaUtils.getSwaggerName(clazz))) {
+    String swaggerClassName = YamlSchemaUtils.getSwaggerName(clazz);
+    if (swaggerDefinitionsMetaInfoMap.containsKey(swaggerClassName)) {
       return;
     }
     Set<FieldSubtypeData> fieldSubtypeDataList = new HashSet<>();
     Set<PossibleFieldTypes> possibleFieldTypesSet = new HashSet<>();
     // Instantiating so that we don't get into infinite loop.
-    swaggerDefinitionsMetaInfoMap.put(YamlSchemaUtils.getSwaggerName(clazz), null);
+    swaggerDefinitionsMetaInfoMap.put(swaggerClassName, null);
+
     for (Field declaredField : clazz.getDeclaredFields()) {
-      if (checkIfClassShouldBeTraveresed(declaredField)) {
+      if (checkIfClassShouldBeTraversed(declaredField)) {
         getRequiredMappings(declaredField.getType(), swaggerDefinitionsMetaInfoMap);
+      }
+      if (checkIfClassIsCollection(declaredField)) {
+        ParameterizedType collectionType = (ParameterizedType) declaredField.getGenericType();
+        Class<?> collectionTypeClass = (Class<?>) collectionType.getActualTypeArguments()[0];
+        getRequiredMappings(collectionTypeClass, swaggerDefinitionsMetaInfoMap);
+      }
+      Class<?> aClass = getAlternativeClassType(declaredField);
+      if (aClass != null) {
+        getRequiredMappings(aClass, swaggerDefinitionsMetaInfoMap);
       }
       // Field types
       processFieldTypeSet(possibleFieldTypesSet, declaredField);
@@ -56,7 +74,7 @@ public class JacksonClassHelper {
                                                                .subtypeClassMap(fieldSubtypeDataList)
                                                                .fieldPossibleTypes(possibleFieldTypesSet)
                                                                .build();
-    swaggerDefinitionsMetaInfoMap.put(YamlSchemaUtils.getSwaggerName(clazz), definitionsMetaInfo);
+    swaggerDefinitionsMetaInfoMap.put(swaggerClassName, definitionsMetaInfo);
   }
 
   private void processFieldTypeSet(Set<PossibleFieldTypes> possibleFieldTypesSet, Field declaredField) {
@@ -72,12 +90,16 @@ public class JacksonClassHelper {
 
   private void processSubtypeMappings(Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap,
       Set<FieldSubtypeData> fieldSubtypeDataList, Field declaredField) {
-    final Set<SubtypeClassMap> mapOfSubtypes = getMapOfSubtypes(declaredField);
-    if (!isEmpty(mapOfSubtypes)) {
-      for (JsonSubTypes.Type subtype : Objects.requireNonNull(getJsonSubTypes(declaredField)).value()) {
-        getRequiredMappings(subtype.value(), swaggerDefinitionsMetaInfoMap);
-      }
-      FieldSubtypeData fieldSubtypeData = getFieldSubtypeData(declaredField, mapOfSubtypes);
+    Set<SubtypeClassMap> mapOfSubtypes = getMapOfSubtypes(declaredField);
+    if (isEmpty(mapOfSubtypes)) {
+      return;
+    }
+    for (SubtypeClassMap subtype : mapOfSubtypes) {
+      getRequiredMappings(subtype.getSubTypeClass(), swaggerDefinitionsMetaInfoMap);
+    }
+    // Subtype mappings.
+    FieldSubtypeData fieldSubtypeData = YamlSchemaUtils.getFieldSubtypeData(declaredField, mapOfSubtypes);
+    if (fieldSubtypeData != null) {
       fieldSubtypeDataList.add(fieldSubtypeData);
     }
   }
@@ -112,18 +134,23 @@ public class JacksonClassHelper {
     return OneOfMapping.builder().oneOfFieldNames(oneOfFields).nullable(oneOfField.nullable()).build();
   }
 
-  private FieldSubtypeData getFieldSubtypeData(Field declaredField, Set<SubtypeClassMap> mapOfSubtypes) {
-    final JsonTypeInfo annotation = declaredField.getAnnotation(JsonTypeInfo.class);
-    final JsonTypeInfo.As include = annotation.include();
-    return FieldSubtypeData.builder()
-        .fieldName(YamlSchemaUtils.getFieldName(declaredField))
-        .subtypesMapping(mapOfSubtypes)
-        .discriminatorType(include)
-        .discriminatorName(getDiscriminator(declaredField))
-        .build();
+  private Class<?> getAlternativeClassType(Field declaredField) {
+    ApiModelProperty annotation = declaredField.getAnnotation(ApiModelProperty.class);
+    if (annotation != null && !annotation.hidden()) {
+      String dataType = annotation.dataType();
+      try {
+        ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+        return Class.forName(dataType, false, contextClassLoader);
+      } catch (ClassNotFoundException e) {
+        log.debug(format("dataType: %s is defined in different module, outside of class path", dataType), e);
+        // class is defined in different module, outside of this modules class path
+        return null;
+      }
+    }
+    return null;
   }
 
-  private boolean checkIfClassShouldBeTraveresed(Field declaredField) {
+  private boolean checkIfClassShouldBeTraversed(Field declaredField) {
     // Generating only for harness classes hence checking if package is software.wings or io.harness.
     return !declaredField.getType().isPrimitive() && !declaredField.getType().isEnum()
         && (declaredField.getType().getCanonicalName().startsWith("io.harness")
@@ -131,32 +158,19 @@ public class JacksonClassHelper {
   }
 
   private Set<SubtypeClassMap> getMapOfSubtypes(Field field) {
-    JsonSubTypes annotation = getJsonSubTypes(field);
+    JsonSubTypes annotation = YamlSchemaUtils.getJsonSubTypes(field);
     if (annotation == null) {
       return null;
     }
     return Arrays.stream(annotation.value())
+        .filter(Objects::nonNull)
         .map(jsonSubType
             -> SubtypeClassMap.builder()
                    .subtypeEnum(jsonSubType.name())
                    .subTypeDefinitionKey(YamlSchemaUtils.getSwaggerName(jsonSubType.value()))
+                   .subTypeClass(jsonSubType.value())
                    .build())
         .collect(Collectors.toSet());
-  }
-
-  /**
-   * @param field field for which subtypes are required
-   * @return
-   */
-  private JsonSubTypes getJsonSubTypes(Field field) {
-    JsonSubTypes annotation = field.getAnnotation(JsonSubTypes.class);
-    if (annotation == null || isEmpty(annotation.value())) {
-      annotation = field.getType().getAnnotation(JsonSubTypes.class);
-    }
-    if (annotation == null || isEmpty(annotation.value())) {
-      return null;
-    }
-    return annotation;
   }
 
   /**
@@ -164,10 +178,14 @@ public class JacksonClassHelper {
    * @return the value of field which helps in discriminating field's subtypes.
    */
   private String getDiscriminator(Field field) {
-    // explore possibility if it is present over the class and in the declaration.
-    if (field.getAnnotation(JsonTypeInfo.class) != null) {
-      return field.getAnnotation(JsonTypeInfo.class).property();
+    JsonTypeInfo jsonTypeInfo = YamlSchemaUtils.getJsonTypeInfo(field);
+    if (jsonTypeInfo != null) {
+      return jsonTypeInfo.property();
     }
     return null;
+  }
+
+  private boolean checkIfClassIsCollection(Field declaredField) {
+    return Collection.class.isAssignableFrom(declaredField.getType());
   }
 }

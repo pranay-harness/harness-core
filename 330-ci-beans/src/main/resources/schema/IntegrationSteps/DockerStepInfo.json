@@ -1,0 +1,60 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/CIStepInfo"
+    },
+    {
+      "type": "object",
+      "required": [
+        "connectorRef",
+        "repo",
+        "tags"
+      ],
+      "properties": {
+        "buildArgs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "connectorRef": {
+          "type": "string"
+        },
+        "context": {
+          "type": "string"
+        },
+        "dockerfile": {
+          "type": "string"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "repo": {
+          "type": "string"
+        },
+        "resources": {
+          "$ref": "#/definitions/ContainerResource"
+        },
+        "retry": {
+          "type": "integer",
+          "format": "int32",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "target": {
+          "type": "string"
+        }
+      }
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

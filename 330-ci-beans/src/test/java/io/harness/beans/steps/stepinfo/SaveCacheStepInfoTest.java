@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Scanner;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -34,6 +35,7 @@ public class SaveCacheStepInfoTest extends CiBeansTestBase {
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
+  @Ignore("todo:: this step is deprecated")
   public void shouldDeserializeSaveCacheStep() throws IOException {
     StepElement stepElement = YamlPipelineUtils.read(yamlString, StepElement.class);
     SaveCacheStepInfo saveCacheStepInfo = (SaveCacheStepInfo) stepElement.getStepSpecType();

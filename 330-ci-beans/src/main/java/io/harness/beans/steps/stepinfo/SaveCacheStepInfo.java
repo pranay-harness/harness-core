@@ -1,5 +1,10 @@
 package io.harness.beans.steps.stepinfo;
 
+import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
+import static io.harness.common.SwaggerConstants.STRING_LIST_CLASSPATH;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.list;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
+
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
@@ -7,13 +12,11 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
-
-import software.wings.jersey.JsonViews;
+import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.annotation.JsonView;
+import io.swagger.annotations.ApiModelProperty;
 import java.beans.ConstructorProperties;
 import java.util.List;
 import java.util.Optional;
@@ -25,13 +28,11 @@ import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@JsonTypeName("SaveCache")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("saveCacheStepInfo")
 public class SaveCacheStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
-  @JsonView(JsonViews.Internal.class)
-  @NotNull
+  @JsonIgnore
   public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.SAVE_CACHE).build();
   @JsonIgnore
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.SAVE_CACHE.name()).build();
@@ -40,8 +41,11 @@ public class SaveCacheStepInfo implements CIStepInfo {
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
 
-  @NotNull private ParameterField<String> key;
-  @NotNull private ParameterField<List<String>> paths;
+  @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> key;
+  @NotNull
+  @YamlSchemaTypes(value = {list, string}, defaultType = list)
+  @ApiModelProperty(dataType = STRING_LIST_CLASSPATH)
+  private ParameterField<List<String>> paths;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "key", "paths"})

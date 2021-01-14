@@ -435,6 +435,7 @@ java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
     resources = [
+        "//330-ci-beans/src/main/resources:resource",
     ],
     visibility = ["//visibility:public"],
     deps = [

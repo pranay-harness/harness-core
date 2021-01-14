@@ -7,12 +7,8 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 
-import software.wings.jersey.JsonViews;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.annotation.JsonView;
 import java.beans.ConstructorProperties;
 import java.util.Optional;
 import javax.validation.constraints.Max;
@@ -23,17 +19,13 @@ import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@JsonTypeName("GitClone")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("gitCloneStepInfo")
 public class GitCloneStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
   public static final int DEFAULT_TIMEOUT = 1200;
 
-  @JsonView(JsonViews.Internal.class)
-  @JsonIgnore
-  @NotNull
-  public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.GIT_CLONE).build();
+  @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.GIT_CLONE).build();
 
   @JsonIgnore
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.GIT_CLONE.name()).build();

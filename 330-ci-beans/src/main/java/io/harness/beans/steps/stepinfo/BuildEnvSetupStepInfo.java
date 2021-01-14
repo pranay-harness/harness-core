@@ -8,12 +8,8 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 
-import software.wings.jersey.JsonViews;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.annotation.JsonView;
 import java.beans.ConstructorProperties;
 import java.util.Optional;
 import javax.validation.constraints.Max;
@@ -24,17 +20,15 @@ import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@JsonTypeName("setupEnv")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("buildEnvSetupStepInfo")
 public class BuildEnvSetupStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
 
-  @JsonView(JsonViews.Internal.class)
-  @NotNull
-  public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.SETUP_ENV).build();
+  @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.SETUP_ENV).build();
   @JsonIgnore
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.SETUP_ENV.name()).build();
+
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;

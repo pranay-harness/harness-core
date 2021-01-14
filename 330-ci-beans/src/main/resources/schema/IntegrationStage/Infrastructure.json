@@ -1,14 +1,13 @@
 {
   "type": "object",
+  "discriminator": "type",
   "properties": {
-    "parameters": {
-      "type": "string"
-    },
-    "validatorType": {
+    "type": {
       "type": "string",
       "enum": [
-        "ALLOWED_VALUES",
-        "REGEX"
+        "KubernetesDirect",
+        "KubernetesGcp",
+        "UseFromStage"
       ]
     }
   },

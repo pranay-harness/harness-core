@@ -20,7 +20,7 @@
           ],
           "properties": {
             "branch": {
-              "$ref": "#/definitions/ParameterFieldString"
+              "type": "string"
             }
           }
         }
@@ -34,9 +34,6 @@
         "type"
       ],
       "properties": {
-        "spec": {
-          "$ref": "#/definitions/BuildSpec"
-        },
         "type": {
           "type": "string",
           "enum": [
@@ -45,7 +42,41 @@
           ]
         }
       },
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "branch"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/BranchBuildSpec"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "tag"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/TagBuildSpec"
+              }
+            }
+          }
+        }
+      ]
     },
     "BuildSpec": {
       "type": "object",
@@ -68,45 +99,13 @@
       ],
       "properties": {
         "build": {
-          "$ref": "#/definitions/ParameterFieldBuild"
+          "$ref": "#/definitions/Build"
         },
         "connectorRef": {
           "type": "string"
         },
         "repoName": {
           "type": "string"
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "FailureStrategyActionConfig": {
-      "type": "object",
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "FailureStrategyConfig": {
-      "type": "object",
-      "required": [
-        "onFailure"
-      ],
-      "properties": {
-        "onFailure": {
-          "$ref": "#/definitions/OnFailureConfig"
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "InputSetValidator": {
-      "type": "object",
-      "properties": {
-        "parameters": {
-          "type": "string"
-        },
-        "validatorType": {
-          "type": "string",
-          "enum": [
-            "ALLOWED_VALUES",
-            "REGEX"
-          ]
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -144,34 +143,6 @@
           ]
         },
         "value": {
-          "$ref": "#/definitions/ParameterFieldObject"
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "OnFailureConfig": {
-      "type": "object",
-      "required": [
-        "action",
-        "errors"
-      ],
-      "properties": {
-        "action": {
-          "$ref": "#/definitions/FailureStrategyActionConfig"
-        },
-        "errors": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "OrchestrationFieldType": {
-      "type": "object",
-      "properties": {
-        "type": {
           "type": "string"
         }
       },
@@ -188,126 +159,6 @@
           "items": {
             "$ref": "#/definitions/StageElementWrapperConfig"
           }
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "ParameterField": {
-      "type": "object",
-      "properties": {
-        "expression": {
-          "type": "boolean"
-        },
-        "expressionValue": {
-          "type": "string"
-        },
-        "inputSetValidator": {
-          "$ref": "#/definitions/InputSetValidator"
-        },
-        "jsonResponseField": {
-          "type": "boolean"
-        },
-        "responseField": {
-          "type": "string"
-        },
-        "type": {
-          "$ref": "#/definitions/OrchestrationFieldType"
-        },
-        "typeString": {
-          "type": "boolean"
-        },
-        "value": {
-          "type": "object"
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "ParameterFieldBuild": {
-      "type": "object",
-      "properties": {
-        "expression": {
-          "type": "boolean"
-        },
-        "expressionValue": {
-          "type": "string"
-        },
-        "inputSetValidator": {
-          "$ref": "#/definitions/InputSetValidator"
-        },
-        "jsonResponseField": {
-          "type": "boolean"
-        },
-        "responseField": {
-          "type": "string"
-        },
-        "type": {
-          "$ref": "#/definitions/OrchestrationFieldType"
-        },
-        "typeString": {
-          "type": "boolean"
-        },
-        "value": {
-          "$ref": "#/definitions/Build"
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "ParameterFieldObject": {
-      "type": "object",
-      "properties": {
-        "expression": {
-          "type": "boolean"
-        },
-        "expressionValue": {
-          "type": "string"
-        },
-        "inputSetValidator": {
-          "$ref": "#/definitions/InputSetValidator"
-        },
-        "jsonResponseField": {
-          "type": "boolean"
-        },
-        "responseField": {
-          "type": "string"
-        },
-        "type": {
-          "$ref": "#/definitions/OrchestrationFieldType"
-        },
-        "typeString": {
-          "type": "boolean"
-        },
-        "value": {
-          "type": "object"
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "ParameterFieldString": {
-      "type": "object",
-      "properties": {
-        "expression": {
-          "type": "boolean"
-        },
-        "expressionValue": {
-          "type": "string"
-        },
-        "inputSetValidator": {
-          "$ref": "#/definitions/InputSetValidator"
-        },
-        "jsonResponseField": {
-          "type": "boolean"
-        },
-        "responseField": {
-          "type": "string"
-        },
-        "type": {
-          "$ref": "#/definitions/OrchestrationFieldType"
-        },
-        "typeString": {
-          "type": "boolean"
-        },
-        "value": {
-          "type": "string"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -368,18 +219,11 @@
     "StageElementConfig": {
       "type": "object",
       "required": [
-        "failureStrategies",
         "identifier"
       ],
       "properties": {
         "description": {
           "type": "string"
-        },
-        "failureStrategies": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/FailureStrategyConfig"
-          }
         },
         "identifier": {
           "type": "string"
@@ -430,7 +274,7 @@
           ],
           "properties": {
             "tag": {
-              "$ref": "#/definitions/ParameterFieldString"
+              "type": "string"
             }
           }
         }

@@ -188,7 +188,7 @@ public class YamlSchemaGenerator {
     outputNode.with(SchemaConstants.DEFINITIONS_NODE).setAll(modifiedNode);
   }
 
-  private void convertSwaggerToJsonSchema(Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap,
+  public void convertSwaggerToJsonSchema(Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap,
       ObjectMapper mapper, String name, ObjectNode value) {
     value.put(SchemaConstants.SCHEMA_NODE, SchemaConstants.JSON_SCHEMA_7);
     if (swaggerDefinitionsMetaInfoMap.containsKey(name)) {
@@ -363,7 +363,7 @@ public class YamlSchemaGenerator {
     propertiesNode.remove(fieldName);
   }
 
-  private void removeUnwantedNodes(JsonNode objectNode, String unwantedNode) {
+  public void removeUnwantedNodes(JsonNode objectNode, String unwantedNode) {
     if (objectNode.isArray()) {
       final Iterator<JsonNode> elements = objectNode.elements();
       while (elements.hasNext()) {
@@ -396,7 +396,7 @@ public class YamlSchemaGenerator {
    *                          Adds conditional block to the single definition.
    *                          Currently only handled for {@link JsonTypeInfo.As#EXTERNAL_PROPERTY}
    */
-  private void addConditionalBlock(
+  public void addConditionalBlock(
       ObjectMapper mapper, List<ObjectNode> allOfNodeContents, FieldSubtypeData fieldSubtypeData) {
     final List<SubtypeClassMap> fieldSubtypeDataList = new ArrayList<>(fieldSubtypeData.getSubtypesMapping());
     fieldSubtypeDataList.sort(new SubtypeClassMapComparator());

@@ -10,7 +10,7 @@
       ],
       "properties": {
         "branch": {
-          "$ref": "#/definitions/ParameterFieldString"
+          "type": "string"
         }
       }
     }

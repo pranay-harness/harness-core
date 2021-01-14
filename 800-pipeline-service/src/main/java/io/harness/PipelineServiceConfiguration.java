@@ -55,6 +55,8 @@ public class PipelineServiceConfiguration extends Configuration {
   private String managerTarget;
   private String managerAuthority;
   private ScmConnectionConfig scmConnectionConfig;
+  private ServiceHttpClientConfig ciManagerClientConfig;
+  private String ciManagerServiceSecret;
 
   public PipelineServiceConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();

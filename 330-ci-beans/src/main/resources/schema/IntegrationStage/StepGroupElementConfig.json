@@ -1,0 +1,37 @@
+{
+  "type": "object",
+  "required": [
+    "identifier",
+    "steps"
+  ],
+  "properties": {
+    "failureStrategies": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/FailureStrategyConfig"
+      }
+    },
+    "identifier": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "rollbackSteps": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ExecutionWrapperConfig"
+      }
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ExecutionWrapperConfig"
+      }
+    },
+    "uuid": {
+      "type": "string"
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

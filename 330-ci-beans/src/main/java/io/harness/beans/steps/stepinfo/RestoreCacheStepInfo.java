@@ -1,5 +1,7 @@
 package io.harness.beans.steps.stepinfo;
 
+import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
+
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
@@ -8,12 +10,9 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
 
-import software.wings.jersey.JsonViews;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.annotation.JsonView;
+import io.swagger.annotations.ApiModelProperty;
 import java.beans.ConstructorProperties;
 import java.util.Optional;
 import javax.validation.constraints.Max;
@@ -24,13 +23,11 @@ import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@JsonTypeName("RestoreCache")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("restoreCacheStepInfo")
 public class RestoreCacheStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
-  @JsonView(JsonViews.Internal.class)
-  @NotNull
+  @JsonIgnore
   public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.RESTORE_CACHE).build();
 
   @JsonIgnore
@@ -40,7 +37,7 @@ public class RestoreCacheStepInfo implements CIStepInfo {
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
 
-  @NotNull private ParameterField<String> key;
+  @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> key;
   private ParameterField<Boolean> failIfNotExist;
 
   @Builder

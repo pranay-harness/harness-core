@@ -13,7 +13,6 @@ import io.harness.yaml.extended.ci.codebase.CodeBase;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.beans.ConstructorProperties;
 import java.util.Optional;
 import javax.validation.constraints.Max;
@@ -24,7 +23,6 @@ import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@JsonTypeName("liteEngineTask")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("liteEngineTaskStepInfo")
 public class LiteEngineTaskStepInfo implements CIStepInfo {

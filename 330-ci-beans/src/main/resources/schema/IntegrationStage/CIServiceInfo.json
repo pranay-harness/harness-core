@@ -1,0 +1,50 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/DependencySpecType"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "connectorRef": {
+          "type": "string"
+        },
+        "entrypoint": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "envVariables": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "grpcPort": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "image": {
+          "type": "string"
+        },
+        "resources": {
+          "$ref": "#/definitions/ContainerResource"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "Service"
+          ]
+        }
+      }
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

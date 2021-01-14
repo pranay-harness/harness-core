@@ -1,5 +1,7 @@
 package io.harness.beans.steps.stepinfo;
 
+import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
+
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
@@ -12,6 +14,7 @@ import io.harness.pms.yaml.ParameterField;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.swagger.annotations.ApiModelProperty;
 import java.beans.ConstructorProperties;
 import java.util.Optional;
 import javax.validation.constraints.Max;
@@ -29,9 +32,7 @@ public class UploadToArtifactoryStepInfo implements PluginCompatibleStep {
   public static final int DEFAULT_RETRY = 1;
 
   @JsonIgnore
-  @NotNull
   public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.UPLOAD_ARTIFACTORY).build();
-
   @JsonIgnore
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(CIStepInfoType.UPLOAD_ARTIFACTORY.name()).build();
@@ -40,13 +41,13 @@ public class UploadToArtifactoryStepInfo implements PluginCompatibleStep {
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
 
-  @NotNull private ParameterField<String> connectorRef;
+  @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
   @JsonIgnore @NotNull private ParameterField<String> containerImage;
   private ContainerResource resources;
 
   // plugin settings
-  @NotNull private ParameterField<String> target;
-  @NotNull private ParameterField<String> sourcePath;
+  @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> target;
+  @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> sourcePath;
 
   @Builder
   @ConstructorProperties(

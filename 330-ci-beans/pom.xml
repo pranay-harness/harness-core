@@ -87,6 +87,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>960-yaml-sdk</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>ciengine-proto</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

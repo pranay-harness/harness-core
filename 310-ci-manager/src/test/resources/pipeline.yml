@@ -34,13 +34,6 @@ pipeline:
             value: org.runTimeValSecret
         execution:
           steps:
-            - step:
-                identifier: GitClone
-                type: GitClone
-                spec:
-                  gitConnector: gitGlobal
-                  path: portal
-                  branch: master
             - parallel:
                 - step:
                     identifier: runLint
@@ -74,21 +67,3 @@ pipeline:
                   goals: echo "Running test"
                   buildTool: maven
                   language: java
-            - step:
-                identifier: uploadArtifact
-                type: PublishArtifacts
-                spec:
-                  publishArtifacts:
-                    - dockerFile: Dockerfile
-                      context: workspace
-                      image: ui
-                      tag: 1.0.0
-                      buildArguments:
-                        - key : key1
-                          value: value1
-                        - key: key2
-                          value: value2
-                      gcr:
-                        type: GCR
-                        location: eu.gcr.io/harness/ui:latest
-                        connectorRef: myDockerRepoConnector

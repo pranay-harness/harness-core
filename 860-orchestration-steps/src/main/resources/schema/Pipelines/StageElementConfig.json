@@ -1,18 +1,11 @@
 {
   "type": "object",
   "required": [
-    "failureStrategies",
     "identifier"
   ],
   "properties": {
     "description": {
       "type": "string"
-    },
-    "failureStrategies": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/FailureStrategyConfig"
-      }
     },
     "identifier": {
       "type": "string"

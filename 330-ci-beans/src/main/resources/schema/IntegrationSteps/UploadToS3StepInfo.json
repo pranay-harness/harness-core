@@ -1,0 +1,45 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/CIStepInfo"
+    },
+    {
+      "type": "object",
+      "required": [
+        "bucket",
+        "connectorRef",
+        "sourcePath"
+      ],
+      "properties": {
+        "bucket": {
+          "type": "string"
+        },
+        "connectorRef": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        },
+        "resources": {
+          "$ref": "#/definitions/ContainerResource"
+        },
+        "retry": {
+          "type": "integer",
+          "format": "int32",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "sourcePath": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        }
+      }
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
