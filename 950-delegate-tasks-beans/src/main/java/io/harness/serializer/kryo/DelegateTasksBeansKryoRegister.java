@@ -124,6 +124,12 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetails
 import io.harness.delegate.beans.connector.k8Connector.KubernetesOpenIdConnectDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesServiceAccountDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
+import io.harness.delegate.beans.connector.nexusconnector.NexusAuthCredentialsDTO;
+import io.harness.delegate.beans.connector.nexusconnector.NexusAuthType;
+import io.harness.delegate.beans.connector.nexusconnector.NexusAuthenticationDTO;
+import io.harness.delegate.beans.connector.nexusconnector.NexusConnectorDTO;
+import io.harness.delegate.beans.connector.nexusconnector.NexusConstants;
+import io.harness.delegate.beans.connector.nexusconnector.NexusUsernamePasswordAuthDTO;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.CustomCommitAttributes;
@@ -622,5 +628,13 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(ArtifactoryTaskResponse.class, 19495);
     kryo.register(NexusTaskParams.class, 19496);
     kryo.register(ArtifactoryTaskParams.class, 19497);
+    kryo.register(NexusConnectorDTO.class, 19498);
+    kryo.register(NexusAuthenticationDTO.class, 19499);
+    kryo.register(NexusAuthType.class, 19500);
+    kryo.register(NexusUsernamePasswordAuthDTO.class, 19501);
+    kryo.register(NexusAuthCredentialsDTO.class, 19502);
+    kryo.register(NexusConstants.class, 19503);
+    kryo.register(NexusTaskParams.TaskType.class, 19504);
+    kryo.register(ArtifactoryTaskParams.TaskType.class, 19505);
   }
 }

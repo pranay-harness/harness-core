@@ -1,8 +1,14 @@
 package io.harness.connector.validator;
 
-import io.harness.delegate.beans.connector.ConnectivityStatus;
+import static io.harness.delegate.beans.nexus.NexusTaskParams.TaskType.VALIDATE;
+
+import static software.wings.beans.TaskType.NG_NEXUS_TASK;
+
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.delegate.beans.connector.nexusconnector.NexusConnectorDTO;
+import io.harness.delegate.beans.nexus.NexusTaskParams;
+import io.harness.delegate.beans.nexus.NexusTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 
 import com.google.inject.Singleton;
@@ -12,18 +18,26 @@ public class NexusConnectorValidator extends AbstractConnectorValidator {
   @Override
   public <T extends ConnectorConfigDTO> TaskParameters getTaskParameters(
       T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    return null;
+    NexusConnectorDTO connectorDTO = (NexusConnectorDTO) connectorConfig;
+
+    return NexusTaskParams.builder()
+        .taskType(VALIDATE)
+        .nexusConnectorDTO(connectorDTO)
+        .encryptedDataDetails(super.getEncryptionDetail(
+            connectorDTO.getAuth().getCredentials(), accountIdentifier, orgIdentifier, projectIdentifier))
+        .build();
   }
 
   @Override
   public String getTaskType() {
-    return null;
+    return NG_NEXUS_TASK.name();
   }
 
   @Override
   public ConnectorValidationResult validate(
       ConnectorConfigDTO connectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    // making always true.
-    return ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build();
+    NexusTaskResponse responseData =
+        (NexusTaskResponse) super.validateConnector(connectorDTO, accountIdentifier, orgIdentifier, projectIdentifier);
+    return responseData.getConnectorValidationResult();
   }
 }

@@ -18,6 +18,9 @@ import lombok.Value;
 public class NexusTaskParams implements ExecutionCapabilityDemander, TaskParameters {
   NexusConnectorDTO nexusConnectorDTO;
   List<EncryptedDataDetail> encryptedDataDetails;
+  TaskType taskType;
+
+  public enum TaskType { VALIDATE }
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

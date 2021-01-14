@@ -59,6 +59,7 @@ import io.harness.delegate.task.MailSenderDelegateTask;
 import io.harness.delegate.task.MicrosoftTeamsSenderDelegateTask;
 import io.harness.delegate.task.PagerDutySenderDelegateTask;
 import io.harness.delegate.task.SlackSenderDelegateTask;
+import io.harness.delegate.task.artifactory.ArtifactoryDelegateTask;
 import io.harness.delegate.task.artifacts.ArtifactSourceDelegateRequest;
 import io.harness.delegate.task.artifacts.DelegateArtifactTaskHandler;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
@@ -86,6 +87,7 @@ import io.harness.delegate.task.k8s.K8sTaskNG;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.k8s.KubernetesTestConnectionDelegateTask;
 import io.harness.delegate.task.k8s.KubernetesTestConnectionDelegateTask.KubernetesValidationHandler;
+import io.harness.delegate.task.nexus.NexusDelegateTask;
 import io.harness.delegate.task.shell.ShellScriptTaskNG;
 import io.harness.delegate.task.stepstatus.StepStatusTask;
 import io.harness.delegatetasks.DeleteSecretTask;
@@ -1197,6 +1199,8 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.NOTIFY_PAGERDUTY).toInstance(PagerDutySenderDelegateTask.class);
     mapBinder.addBinding(TaskType.NOTIFY_MICROSOFTTEAMS).toInstance(MicrosoftTeamsSenderDelegateTask.class);
     mapBinder.addBinding(TaskType.SHELL_SCRIPT_TASK_NG).toInstance(ShellScriptTaskNG.class);
+    mapBinder.addBinding(TaskType.NG_NEXUS_TASK).toInstance(NexusDelegateTask.class);
+    mapBinder.addBinding(TaskType.NG_ARTIFACTORY_TASK).toInstance(ArtifactoryDelegateTask.class);
   }
 
   private void registerSecretManagementBindings() {

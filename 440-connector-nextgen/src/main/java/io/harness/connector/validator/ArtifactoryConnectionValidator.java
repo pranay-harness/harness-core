@@ -1,8 +1,14 @@
 package io.harness.connector.validator;
 
-import io.harness.delegate.beans.connector.ConnectivityStatus;
+import static io.harness.delegate.beans.artifactory.ArtifactoryTaskParams.TaskType.VALIDATE;
+
+import static software.wings.beans.TaskType.NG_ARTIFACTORY_TASK;
+
+import io.harness.delegate.beans.artifactory.ArtifactoryTaskParams;
+import io.harness.delegate.beans.artifactory.ArtifactoryTaskResponse;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorValidationResult;
+import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConnectorDTO;
 import io.harness.delegate.task.TaskParameters;
 
 import com.google.inject.Singleton;
@@ -14,17 +20,26 @@ public class ArtifactoryConnectionValidator extends AbstractConnectorValidator {
   @Override
   public <T extends ConnectorConfigDTO> TaskParameters getTaskParameters(
       T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    return null;
+    ArtifactoryConnectorDTO connectorDTO = (ArtifactoryConnectorDTO) connectorConfig;
+
+    return ArtifactoryTaskParams.builder()
+        .taskType(VALIDATE)
+        .artifactoryConnectorDTO(connectorDTO)
+        .encryptedDataDetails(super.getEncryptionDetail(
+            connectorDTO.getAuth().getCredentials(), accountIdentifier, orgIdentifier, projectIdentifier))
+        .build();
   }
 
   @Override
   public String getTaskType() {
-    return null;
+    return NG_ARTIFACTORY_TASK.name();
   }
 
   @Override
   public ConnectorValidationResult validate(
       ConnectorConfigDTO connectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    return ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build();
+    ArtifactoryTaskResponse responseData = (ArtifactoryTaskResponse) super.validateConnector(
+        connectorDTO, accountIdentifier, orgIdentifier, projectIdentifier);
+    return responseData.getConnectorValidationResult();
   }
 }
