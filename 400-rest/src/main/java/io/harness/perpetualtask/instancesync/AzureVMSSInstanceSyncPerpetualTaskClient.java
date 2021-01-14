@@ -82,7 +82,6 @@ public class AzureVMSSInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
                   .async(false)
                   .taskType(TaskType.AZURE_VMSS_COMMAND_TASK.name())
                   .parameters(new Object[] {request})
-                  .timeout(System.currentTimeMillis() + TaskData.DELEGATE_QUEUE_TIMEOUT)
                   .build())
         .build();
   }

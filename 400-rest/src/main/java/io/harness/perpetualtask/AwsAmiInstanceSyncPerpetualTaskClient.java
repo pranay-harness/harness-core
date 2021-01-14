@@ -19,6 +19,7 @@ import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
+import software.wings.service.InstanceSyncConstants;
 import software.wings.service.impl.aws.model.AwsAsgListInstancesRequest;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
@@ -29,6 +30,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -76,7 +78,7 @@ public class AwsAmiInstanceSyncPerpetualTaskClient implements PerpetualTaskServi
                                                 .region(perpetualTaskData.getRegion())
                                                 .autoScalingGroupName(perpetualTaskData.getAsgName())
                                                 .build()})
-                  .timeout(System.currentTimeMillis() + TaskData.DELEGATE_QUEUE_TIMEOUT)
+                  .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
                   .build())
         .build();
   }

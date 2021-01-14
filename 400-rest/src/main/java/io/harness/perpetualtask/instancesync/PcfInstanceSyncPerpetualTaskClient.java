@@ -90,7 +90,7 @@ public class PcfInstanceSyncPerpetualTaskClient implements PerpetualTaskServiceC
                                                 .timeoutIntervalInMin((int) TimeUnit.SECONDS.toMinutes(TIMEOUT_SECONDS))
                                                 .build(),
                       encryptionDetails})
-                  .timeout(System.currentTimeMillis() + TaskData.DELEGATE_QUEUE_TIMEOUT)
+                  .timeout(TimeUnit.SECONDS.toMillis(TIMEOUT_SECONDS))
                   .build())
         .build();
   }
