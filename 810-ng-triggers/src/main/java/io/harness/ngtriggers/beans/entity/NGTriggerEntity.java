@@ -50,7 +50,7 @@ public class NGTriggerEntity {
                 .build(),
             CompoundMongoIndex.builder()
                 .name("unique_accountId_organizationIdentifier_projectIdentifier_identifier")
-                .unique(true)
+                .unique(false)
                 .field(NGTriggerEntityKeys.accountId)
                 .field(NGTriggerEntityKeys.orgIdentifier)
                 .field(NGTriggerEntityKeys.projectIdentifier)
