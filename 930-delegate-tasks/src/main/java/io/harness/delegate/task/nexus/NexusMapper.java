@@ -5,13 +5,14 @@ import io.harness.delegate.beans.connector.nexusconnector.NexusConnectorDTO;
 import io.harness.delegate.beans.connector.nexusconnector.NexusUsernamePasswordAuthDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.nexus.NexusRequest;
+import io.harness.nexus.NexusRequest.NexusRequestBuilder;
 
 import com.google.inject.Singleton;
 
 @Singleton
 public class NexusMapper {
   public NexusRequest toNexusRequest(NexusConnectorDTO nexusConnectorDTO) {
-    final NexusRequest.NexusRequestBuilder nexusRequestBuilder =
+    final NexusRequestBuilder nexusRequestBuilder =
         NexusRequest.builder()
             .nexusUrl(nexusConnectorDTO.getNexusServerUrl())
             // Setting as false since we are not taking this in yaml as of now.
