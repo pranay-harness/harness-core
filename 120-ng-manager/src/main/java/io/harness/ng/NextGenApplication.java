@@ -29,6 +29,7 @@ import io.harness.ng.core.exceptionmappers.NotFoundExceptionMapper;
 import io.harness.ng.core.exceptionmappers.OptimisticLockingFailureExceptionMapper;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.invites.ext.mail.EmailNotificationListener;
+import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.PmsSdkConfiguration;
@@ -44,6 +45,7 @@ import io.harness.registrars.NGExecutionEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationAdviserRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.security.JWTAuthenticationFilter;
+import io.harness.security.UserPrincipalVerificationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
@@ -325,6 +327,9 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
       serviceToSecretMapping.put(
           CI_MANAGER.getServiceId(), configuration.getNextGenConfig().getNgManagerServiceSecret());
       environment.jersey().register(new JWTAuthenticationFilter(predicate, null, serviceToSecretMapping));
+
+      environment.jersey().register(
+          new UserPrincipalVerificationFilter(predicate, injector.getInstance(NgUserService.class)));
     }
   }
 }

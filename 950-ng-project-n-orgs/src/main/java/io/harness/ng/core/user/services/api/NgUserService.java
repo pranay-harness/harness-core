@@ -31,4 +31,6 @@ public interface NgUserService {
   List<User> getUsersByIds(List<String> userIds);
 
   UserProjectMap createUserProjectMap(UserProjectMap userProjectMap);
+
+  boolean isUserInAccount(String accountId, String userId);
 }

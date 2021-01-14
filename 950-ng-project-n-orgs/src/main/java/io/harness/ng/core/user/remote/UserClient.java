@@ -24,6 +24,7 @@ public interface UserClient {
   String USERS_API = "ng/users";
   String USERNAME_API = "ng/users/usernames";
   String USER_BATCH_LIST_API = "ng/users/batch";
+  String USER_IN_ACCOUNT_VERIFICATION = "ng/users/user-account";
 
   @GET(USERS_SEARCH_API)
   Call<RestResponse<PageResponse<User>>> list(@Query(value = "accountId") String accountId,
@@ -38,4 +39,8 @@ public interface UserClient {
       @Query(value = "accountId") String accountId, @Query(value = "emailId") String email);
 
   @POST(USER_BATCH_LIST_API) Call<RestResponse<List<User>>> getUsersByIds(@Body List<String> userIds);
+
+  @GET(USER_IN_ACCOUNT_VERIFICATION)
+  Call<RestResponse<Boolean>> isUserInAccount(
+      @Query(value = "accountId") String accountId, @Query(value = "userId") String userId);
 }
