@@ -177,7 +177,7 @@ public class NextGenModule extends AbstractModule {
     install(new CoreModule());
     install(new InviteModule(this.appConfig.getServiceHttpClientConfig(),
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
-    install(new ConnectorModule());
+    install(new ConnectorModule(this.appConfig.getCeAwsSetupConfig()));
     install(new GitSyncModule());
     install(new DefaultOrganizationModule());
     install(new NGAggregateModule());

@@ -2,6 +2,14 @@
 
 CONFIG_FILE=/opt/harness/config.yml
 
+replace_key_value () {
+  CONFIG_KEY="$1";
+  CONFIG_VALUE="$2";
+  if [[ "" != "$CONFIG_VALUE" ]]; then
+    yq write -i $CONFIG_FILE $CONFIG_KEY $CONFIG_VALUE
+  fi
+}
+
 yq delete -i $CONFIG_FILE server.applicationConnectors[0]
 yq write -i $CONFIG_FILE server.adminConnectors "[]"
 
@@ -149,3 +157,9 @@ fi
 if [[ "" != "$PMS_AUTHORITY" ]]; then
   yq write -i $CONFIG_FILE pmsGrpcClientConfig.authority $PMS_AUTHORITY
 fi
+
+replace_key_value ceAwsSetupConfig.accessKey $CE_AWS_ACCESS_KEY
+
+replace_key_value ceAwsSetupConfig.secretKey $CE_AWS_SECRET_KEY
+
+replace_key_value ceAwsSetupConfig.destinationBucket $CE_AWS_DESTINATION_BUCKET
