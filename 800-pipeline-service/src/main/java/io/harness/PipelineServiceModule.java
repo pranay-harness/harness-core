@@ -30,6 +30,8 @@ import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetServiceImpl;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
+import io.harness.pms.pipeline.service.PMSYamlSchemaService;
+import io.harness.pms.pipeline.service.PMSYamlSchemaServiceImpl;
 import io.harness.pms.plan.creation.NodeTypeLookupService;
 import io.harness.pms.plan.creation.NodeTypeLookupServiceImpl;
 import io.harness.pms.plan.execution.mapper.PipelineExecutionFilterPropertiesMapper;
@@ -46,6 +48,7 @@ import io.harness.serializer.PipelineServiceModuleRegistrars;
 import io.harness.service.PmsDelegateServiceDriverModule;
 import io.harness.springdata.SpringPersistenceModule;
 import io.harness.time.TimeModule;
+import io.harness.yaml.schema.client.YamlSchemaClientModule;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -125,11 +128,14 @@ public class PipelineServiceModule extends AbstractModule {
         configuration.getNgManagerServiceSecret(), MANAGER.getServiceId()));
     install(new ProjectManagementClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), MANAGER.getServiceId()));
+    install(new YamlSchemaClientModule(
+        configuration.getCiManagerClientConfig(), configuration.getCiManagerServiceSecret(), "PipelineService"));
 
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);
     bind(PMSInputSetService.class).to(PMSInputSetServiceImpl.class);
     bind(PMSExecutionService.class).to(PMSExecutionServiceImpl.class);
+    bind(PMSYamlSchemaService.class).to(PMSYamlSchemaServiceImpl.class);
 
     bind(StepTypeLookupService.class).to(StepTypeLookupServiceImpl.class);
     bind(NodeTypeLookupService.class).to(NodeTypeLookupServiceImpl.class);

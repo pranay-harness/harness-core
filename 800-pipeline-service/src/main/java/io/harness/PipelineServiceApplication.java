@@ -43,6 +43,8 @@ import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 import io.harness.waiter.ProgressUpdateService;
+import io.harness.yaml.YamlSdkConfiguration;
+import io.harness.yaml.YamlSdkInitHelper;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -157,7 +159,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
 
     registerPmsSdk(appConfig, injector);
-
+    registerYamlSdk(injector);
     MaintenanceController.forceMaintenance(false);
   }
 
@@ -247,5 +249,14 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     //    environment.jersey().register(injector.getInstance(CharsetResponseFilter.class));
     //    environment.jersey().register(injector.getInstance(CorrelationFilter.class));
     //    environment.jersey().register(injector.getInstance(EtagFilter.class));
+  }
+
+  private void registerYamlSdk(Injector injector) {
+    YamlSdkConfiguration yamlSdkConfiguration = YamlSdkConfiguration.builder()
+                                                    .requireSchemaInit(true)
+                                                    .requireSnippetInit(true)
+                                                    .requireValidatorInit(false)
+                                                    .build();
+    YamlSdkInitHelper.initialize(injector, yamlSdkConfiguration);
   }
 }

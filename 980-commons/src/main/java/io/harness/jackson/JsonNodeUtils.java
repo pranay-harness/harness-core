@@ -8,12 +8,30 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class JsonNodeUtils {
+  public static JsonNode merge(JsonNode mainNode, JsonNode updateNode) {
+    Iterator<String> fieldNames = updateNode.fieldNames();
+    while (fieldNames.hasNext()) {
+      String fieldName = fieldNames.next();
+      JsonNode jsonNode = mainNode.get(fieldName);
+      if (jsonNode != null && jsonNode.isObject()) {
+        merge(jsonNode, updateNode.get(fieldName));
+      } else {
+        if (mainNode instanceof ObjectNode) {
+          JsonNode value = updateNode.get(fieldName);
+          ((ObjectNode) mainNode).set(fieldName, value);
+        }
+      }
+    }
+    return mainNode;
+  }
+
   public static JsonNode deletePropertiesInJsonNode(ObjectNode jsonNode, String... properties) {
     if (isEmpty(properties) || jsonNode == null) {
       return jsonNode;

@@ -28,8 +28,8 @@ public class StepElementConfig {
   @EntityIdentifier String identifier;
   @EntityName String name;
   String description;
-  Timeout timeout;
-  List<FailureStrategyConfig> failureStrategies;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) Timeout timeout;
+  @ApiModelProperty(hidden = true) List<FailureStrategyConfig> failureStrategies;
 
   String type;
   @JsonProperty("spec")

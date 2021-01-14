@@ -61,6 +61,14 @@ if [[ "" != "$NG_MANAGER_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE ngManagerServiceSecret $NG_MANAGER_SERVICE_SECRET
 fi
 
+if [[ "" != "$CI_MANAGER_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE ciManagerClientConfig.baseUrl $CI_MANAGER_BASE_URL
+fi
+
+if [[ "" != "$CI_MANAGER_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE ciManagerServiceSecret $CI_MANAGER_SERVICE_SECRET
+fi
+
 if [[ "" != "$NG_MANAGER_TARGET" ]]; then
   yq write -i $CONFIG_FILE grpcClientConfigs.cd.target $NG_MANAGER_TARGET
 fi

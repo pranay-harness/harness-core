@@ -1,5 +1,10 @@
 package io.harness.beans.steps.stepinfo;
 
+import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
+import static io.harness.common.SwaggerConstants.STRING_LIST_CLASSPATH;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.list;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
+
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
@@ -8,13 +13,12 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
-
-import software.wings.jersey.JsonViews;
+import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.annotation.JsonView;
+import io.swagger.annotations.ApiModelProperty;
 import java.beans.ConstructorProperties;
 import java.util.List;
 import java.util.Optional;
@@ -32,8 +36,7 @@ import org.springframework.data.annotation.TypeAlias;
 public class SaveCacheS3StepInfo implements PluginCompatibleStep {
   public static final int DEFAULT_RETRY = 1;
 
-  @JsonView(JsonViews.Internal.class)
-  @NotNull
+  @JsonIgnore
   public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.SAVE_CACHE_S3).build();
   @JsonIgnore
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.SAVE_CACHE_S3.name()).build();
@@ -42,17 +45,20 @@ public class SaveCacheS3StepInfo implements PluginCompatibleStep {
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
 
-  @NotNull private ParameterField<String> connectorRef;
+  @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
   @JsonIgnore @NotNull private ParameterField<String> containerImage;
   private ContainerResource resources;
 
   // plugin settings
-  private ParameterField<String> endpoint;
-  @NotNull private ParameterField<String> key;
-  @NotNull private ParameterField<String> bucket;
-  @NotNull private ParameterField<List<String>> sourcePaths;
-  private ParameterField<String> target;
-  private ParameterField<String> region;
+  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> endpoint;
+  @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> key;
+  @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> bucket;
+  @NotNull
+  @YamlSchemaTypes(value = {list, string}, defaultType = list)
+  @ApiModelProperty(dataType = STRING_LIST_CLASSPATH)
+  private ParameterField<List<String>> sourcePaths;
+  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> target;
+  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> region;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "containerImage", "resources", "endpoint",

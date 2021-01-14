@@ -1,0 +1,53 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/CIStepInfo"
+    },
+    {
+      "type": "object",
+      "required": [
+        "command",
+        "image"
+      ],
+      "properties": {
+        "command": {
+          "type": "string"
+        },
+        "connectorRef": {
+          "type": "string"
+        },
+        "envVariables": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "image": {
+          "type": "string"
+        },
+        "outputVariables": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/UnitTestReport"
+          }
+        },
+        "resources": {
+          "$ref": "#/definitions/ContainerResource"
+        },
+        "retry": {
+          "type": "integer",
+          "format": "int32",
+          "minimum": 0,
+          "maximum": 5
+        }
+      }
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

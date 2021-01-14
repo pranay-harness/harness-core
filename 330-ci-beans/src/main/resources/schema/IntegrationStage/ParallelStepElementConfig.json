@@ -1,17 +1,13 @@
 {
   "type": "object",
   "required": [
-    "action",
-    "errors"
+    "sections"
   ],
   "properties": {
-    "action": {
-      "$ref": "#/definitions/FailureStrategyActionConfig"
-    },
-    "errors": {
+    "sections": {
       "type": "array",
       "items": {
-        "type": "string"
+        "$ref": "#/definitions/ExecutionWrapperConfig"
       }
     }
   },

@@ -6,7 +6,7 @@
   ],
   "properties": {
     "build": {
-      "$ref": "#/definitions/ParameterFieldBuild"
+      "$ref": "#/definitions/Build"
     },
     "connectorRef": {
       "type": "string"

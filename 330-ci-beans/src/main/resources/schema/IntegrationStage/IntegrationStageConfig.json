@@ -1,0 +1,49 @@
+{
+  "type": "object",
+  "properties": {
+    "cloneCodebase": {
+      "type": "string"
+    },
+    "execution": {
+      "$ref": "#/definitions/ExecutionElementConfig"
+    },
+    "infrastructure": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/K8sDirectInfraYaml"
+        },
+        {
+          "$ref": "#/definitions/K8sGCPInfraYaml"
+        },
+        {
+          "$ref": "#/definitions/UseFromStageInfraYaml"
+        }
+      ]
+    },
+    "serviceDependencies": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/DependencyElement"
+      }
+    },
+    "sharedPaths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "skipCondition": {
+      "type": "string"
+    },
+    "uuid": {
+      "type": "string"
+    },
+    "variables": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/NGVariable"
+      }
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

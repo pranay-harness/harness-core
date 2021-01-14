@@ -20,6 +20,7 @@ import java.util.Objects;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -35,6 +36,7 @@ public class PublishStepInfoTest extends CiBeansTestBase {
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
+  @Ignore("todo:: this step is deprecated")
   public void testPublishStepConversion() throws IOException {
     StepElement stepElement = YamlPipelineUtils.read(yamlString, StepElement.class);
     PublishStepInfo publishStepInfo = (PublishStepInfo) stepElement.getStepSpecType();

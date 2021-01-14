@@ -34,7 +34,11 @@ public enum EntityType {
   @JsonProperty(EntityTypeConstants.DELEGATE_CONFIGURATIONS)
   DELEGATE_CONFIGURATIONS(ModuleType.CORE, EntityTypeConstants.DELEGATE_CONFIGURATIONS, IdentifierRef.class),
   @JsonProperty(EntityTypeConstants.CV_VERIFICATION_JOB)
-  CV_VERIFICATION_JOB(ModuleType.CV, EntityTypeConstants.CV_VERIFICATION_JOB, IdentifierRef.class);
+  CV_VERIFICATION_JOB(ModuleType.CV, EntityTypeConstants.CV_VERIFICATION_JOB, IdentifierRef.class),
+  @JsonProperty(EntityTypeConstants.INTEGRATION_STAGE)
+  INTEGRATION_STAGE(ModuleType.CI, EntityTypeConstants.INTEGRATION_STAGE, IdentifierRef.class),
+  @JsonProperty(EntityTypeConstants.INTEGRATION_STEPS)
+  INTEGRATION_STEPS(ModuleType.CI, EntityTypeConstants.INTEGRATION_STEPS, IdentifierRef.class);
 
   private final ModuleType moduleType;
   String yamlName;

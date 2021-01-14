@@ -1,5 +1,6 @@
 package io.harness.beans.yaml.extended.infrastrucutre;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -15,9 +16,9 @@ import org.springframework.data.annotation.TypeAlias;
 public interface Infrastructure {
   @TypeAlias("infrastructure_type")
   enum Type {
-    KUBERNETES_DIRECT("KubernetesDirect"),
-    KUBERNETES_GCP("KubernetesGcp"),
-    USE_FROM_STAGE("UseFromStage");
+    @JsonProperty("KubernetesDirect") KUBERNETES_DIRECT("KubernetesDirect"),
+    @JsonProperty("KubernetesGcp") KUBERNETES_GCP("KubernetesGcp"),
+    @JsonProperty("UseFromStage") USE_FROM_STAGE("UseFromStage");
 
     private final String yamlName;
 

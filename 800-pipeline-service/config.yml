@@ -49,6 +49,13 @@ grpcClientConfigs:
     target: localhost:12301
     authority: localhost
 
+ciManagerClientConfig:
+  baseUrl: http://localhost:4457/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+ciManagerServiceSecret: "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM"
+
+
 managerTarget: localhost:9880
 managerAuthority: localhost
 managerServiceSecret: "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM"

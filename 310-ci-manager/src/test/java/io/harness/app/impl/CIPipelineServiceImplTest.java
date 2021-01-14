@@ -107,7 +107,7 @@ public class CIPipelineServiceImplTest extends CIManagerTest {
     assertThat(execution).isNotNull();
 
     // Assert testIntelligence spec
-    StepElement stepElement = (StepElement) execution.getSteps().get(4);
+    StepElement stepElement = (StepElement) execution.getSteps().get(3);
     assertThat(stepElement.getType()).isEqualTo("TestIntelligence");
     assertThat(stepElement.getIdentifier()).isEqualTo("runUnitTestsIntelligently");
     TestIntelligenceStepInfo testIntelligenceStepInfo = (TestIntelligenceStepInfo) stepElement.getStepSpecType();
@@ -115,7 +115,7 @@ public class CIPipelineServiceImplTest extends CIManagerTest {
     assertThat(testIntelligenceStepInfo.getBuildTool()).isEqualTo("maven");
     assertThat(testIntelligenceStepInfo.getLanguage()).isEqualTo("java");
 
-    assertThat(execution.getSteps()).hasSize(6);
+    assertThat(execution.getSteps()).hasSize(4);
   }
 
   @Test

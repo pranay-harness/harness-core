@@ -18,6 +18,7 @@ import com.google.inject.Singleton;
 import io.grpc.stub.StreamObserver;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -101,5 +102,10 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
     pmsSdkInstanceRepository.findAll().forEach(
         instance -> instances.put(instance.getName(), instance.getSupportedStepTypes()));
     return instances;
+  }
+  public Set<String> getInstanceNames() {
+    Set<String> instanceNames = new HashSet<>();
+    pmsSdkInstanceRepository.findAll().forEach(instance -> instanceNames.add(instance.getName()));
+    return instanceNames;
   }
 }

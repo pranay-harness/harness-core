@@ -58,6 +58,8 @@ import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 import io.harness.waiter.ProgressUpdateService;
+import io.harness.yaml.YamlSdkConfiguration;
+import io.harness.yaml.YamlSdkInitHelper;
 
 import ci.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -244,6 +246,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     registerExecutionPlanCreators(injector);
     registerQueueListeners(injector, configuration);
     registerStores(configuration, injector);
+    registerYamlSdk(injector);
     scheduleJobs(injector);
     log.info("Starting app done");
     MaintenanceController.forceMaintenance(false);
@@ -384,5 +387,14 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
           AuthorizationServiceHeader.DEFAULT.getServiceId(), configuration.getNgManagerServiceSecret());
       environment.jersey().register(new JWTAuthenticationFilter(predicate, null, serviceToSecretMapping));
     }
+  }
+
+  private void registerYamlSdk(Injector injector) {
+    YamlSdkConfiguration yamlSdkConfiguration = YamlSdkConfiguration.builder()
+                                                    .requireSchemaInit(true)
+                                                    .requireSnippetInit(true)
+                                                    .requireValidatorInit(false)
+                                                    .build();
+    YamlSdkInitHelper.initialize(injector, yamlSdkConfiguration);
   }
 }

@@ -1,0 +1,18 @@
+{
+  "type": "object",
+  "properties": {
+    "parallel": {
+      "$ref": "#/definitions/ParallelStepElementConfig"
+    },
+    "step": {
+      "$ref": "#/definitions/StepElementConfig"
+    },
+    "stepGroup": {
+      "$ref": "#/definitions/StepGroupElementConfig"
+    },
+    "uuid": {
+      "type": "string"
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

@@ -28,7 +28,7 @@ public class StageElementConfig {
   @EntityName String name;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> description;
 
-  @NotNull List<FailureStrategyConfig> failureStrategies;
+  @ApiModelProperty(hidden = true) List<FailureStrategyConfig> failureStrategies;
 
   String type;
   @JsonProperty("spec")

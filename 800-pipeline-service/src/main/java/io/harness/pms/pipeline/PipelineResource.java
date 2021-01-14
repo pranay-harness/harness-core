@@ -4,9 +4,11 @@ import static java.lang.Long.parseLong;
 import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 
+import io.harness.EntityType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.encryption.Scope;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filter.dto.FilterPropertiesDTO;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -19,6 +21,7 @@ import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
 import io.harness.pms.pipeline.mappers.PMSPipelineFilterHelper;
 import io.harness.pms.pipeline.mappers.PipelineExecutionSummaryDtoMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
+import io.harness.pms.pipeline.service.PMSYamlSchemaService;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionDetailDTO;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionFilterPropertiesDTO;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionSummaryDTO;
@@ -27,6 +30,7 @@ import io.harness.pms.variables.VariableMergeServiceResponse;
 import io.harness.serializer.JsonUtils;
 import io.harness.utils.PageUtils;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -41,6 +45,8 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.NotSupportedException;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -71,6 +77,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class PipelineResource {
   private final PMSPipelineService pmsPipelineService;
   private final PMSExecutionService pmsExecutionService;
+  private PMSYamlSchemaService pmsYamlSchemaService;
 
   @POST
   @ApiOperation(value = "Create a Pipeline", nickname = "createPipeline")
@@ -272,5 +279,21 @@ public class PipelineResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
     return pmsExecutionService.getInputsetYaml(accountId, orgId, projectId, planExecutionId);
+  }
+
+  @GET
+  @Path("/yaml-schema")
+  @ApiOperation(value = "Get Yaml Schema", nickname = "getYamlSchema")
+  public ResponseDTO<JsonNode> getYamlSchema(@QueryParam("entityType") @NotNull EntityType entityType,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @QueryParam("scope") Scope scope) {
+    if (entityType != EntityType.PIPELINES) {
+      throw new NotSupportedException(String.format("Entity type %s is not supported", entityType.getYamlName()));
+    }
+    JsonNode schema = pmsYamlSchemaService.getPipelineYamlSchema(orgIdentifier, projectIdentifier, scope);
+    if (schema == null) {
+      throw new NotFoundException(String.format("No schema found for entity type %s ", entityType.getYamlName()));
+    }
+    return ResponseDTO.newResponse(schema);
   }
 }

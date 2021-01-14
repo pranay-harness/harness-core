@@ -1,0 +1,696 @@
+{
+  "type": "object",
+  "required": [
+    "identifier"
+  ],
+  "discriminator": "type",
+  "properties": {
+    "identifier": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "retry": {
+      "type": "integer",
+      "format": "int32"
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "CIStepInfo": {
+      "type": "object",
+      "required": [
+        "identifier"
+      ],
+      "discriminator": "type",
+      "properties": {
+        "identifier": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "retry": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ContainerResource": {
+      "type": "object",
+      "required": [
+        "limits"
+      ],
+      "properties": {
+        "limits": {
+          "$ref": "#/definitions/Limits"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "DockerStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CIStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "connectorRef",
+            "repo",
+            "tags"
+          ],
+          "properties": {
+            "buildArgs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "context": {
+              "type": "string"
+            },
+            "dockerfile": {
+              "type": "string"
+            },
+            "labels": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "repo": {
+              "type": "string"
+            },
+            "resources": {
+              "$ref": "#/definitions/ContainerResource"
+            },
+            "retry": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0,
+              "maximum": 5
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "target": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ECRStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CIStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "account",
+            "connectorRef",
+            "imageName",
+            "region",
+            "tags"
+          ],
+          "properties": {
+            "account": {
+              "type": "string"
+            },
+            "buildArgs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "context": {
+              "type": "string"
+            },
+            "dockerfile": {
+              "type": "string"
+            },
+            "imageName": {
+              "type": "string"
+            },
+            "labels": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "region": {
+              "type": "string"
+            },
+            "resources": {
+              "$ref": "#/definitions/ContainerResource"
+            },
+            "retry": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0,
+              "maximum": 5
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "target": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "GCRStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CIStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "connectorRef",
+            "host",
+            "imageName",
+            "projectID",
+            "tags"
+          ],
+          "properties": {
+            "buildArgs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "context": {
+              "type": "string"
+            },
+            "dockerfile": {
+              "type": "string"
+            },
+            "host": {
+              "type": "string"
+            },
+            "imageName": {
+              "type": "string"
+            },
+            "labels": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "projectID": {
+              "type": "string"
+            },
+            "resources": {
+              "$ref": "#/definitions/ContainerResource"
+            },
+            "retry": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0,
+              "maximum": 5
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "target": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "JunitTestReport": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/UnitTestReport"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "spec": {
+              "$ref": "#/definitions/Spec"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "Limits": {
+      "type": "object",
+      "properties": {
+        "cpu": {
+          "type": "string"
+        },
+        "memory": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "PluginStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CIStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "image"
+          ],
+          "properties": {
+            "connectorRef": {
+              "type": "string"
+            },
+            "image": {
+              "type": "string"
+            },
+            "resources": {
+              "$ref": "#/definitions/ContainerResource"
+            },
+            "retry": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0,
+              "maximum": 5
+            },
+            "settings": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "RestoreCacheGCSStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CIStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "bucket",
+            "connectorRef",
+            "key"
+          ],
+          "properties": {
+            "bucket": {
+              "type": "string"
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "key": {
+              "type": "string"
+            },
+            "resources": {
+              "$ref": "#/definitions/ContainerResource"
+            },
+            "retry": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0,
+              "maximum": 5
+            },
+            "target": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "RestoreCacheS3StepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CIStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "bucket",
+            "connectorRef",
+            "key"
+          ],
+          "properties": {
+            "bucket": {
+              "type": "string"
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "endpoint": {
+              "type": "string"
+            },
+            "key": {
+              "type": "string"
+            },
+            "region": {
+              "type": "string"
+            },
+            "resources": {
+              "$ref": "#/definitions/ContainerResource"
+            },
+            "retry": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0,
+              "maximum": 5
+            },
+            "target": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "RunStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CIStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "command",
+            "image"
+          ],
+          "properties": {
+            "command": {
+              "type": "string"
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "envVariables": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "image": {
+              "type": "string"
+            },
+            "outputVariables": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "reports": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/UnitTestReport"
+              }
+            },
+            "resources": {
+              "$ref": "#/definitions/ContainerResource"
+            },
+            "retry": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0,
+              "maximum": 5
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "SaveCacheGCSStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CIStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "bucket",
+            "connectorRef",
+            "key",
+            "sourcePaths"
+          ],
+          "properties": {
+            "bucket": {
+              "type": "string"
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "key": {
+              "type": "string"
+            },
+            "resources": {
+              "$ref": "#/definitions/ContainerResource"
+            },
+            "retry": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0,
+              "maximum": 5
+            },
+            "sourcePaths": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "target": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "SaveCacheS3StepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CIStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "bucket",
+            "connectorRef",
+            "key",
+            "sourcePaths"
+          ],
+          "properties": {
+            "bucket": {
+              "type": "string"
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "endpoint": {
+              "type": "string"
+            },
+            "key": {
+              "type": "string"
+            },
+            "region": {
+              "type": "string"
+            },
+            "resources": {
+              "$ref": "#/definitions/ContainerResource"
+            },
+            "retry": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0,
+              "maximum": 5
+            },
+            "sourcePaths": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "target": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "Spec": {
+      "type": "object",
+      "properties": {
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "UnitTestReport": {
+      "type": "object",
+      "discriminator": "type",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "JUnit"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "UploadToArtifactoryStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CIStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "connectorRef",
+            "sourcePath",
+            "target"
+          ],
+          "properties": {
+            "connectorRef": {
+              "type": "string"
+            },
+            "resources": {
+              "$ref": "#/definitions/ContainerResource"
+            },
+            "retry": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0,
+              "maximum": 5
+            },
+            "sourcePath": {
+              "type": "string"
+            },
+            "target": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "UploadToGCSStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CIStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "bucket",
+            "connectorRef",
+            "sourcePath",
+            "target"
+          ],
+          "properties": {
+            "bucket": {
+              "type": "string"
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "resources": {
+              "$ref": "#/definitions/ContainerResource"
+            },
+            "retry": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0,
+              "maximum": 5
+            },
+            "sourcePath": {
+              "type": "string"
+            },
+            "target": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "UploadToS3StepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CIStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "bucket",
+            "connectorRef",
+            "sourcePath"
+          ],
+          "properties": {
+            "bucket": {
+              "type": "string"
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "endpoint": {
+              "type": "string"
+            },
+            "region": {
+              "type": "string"
+            },
+            "resources": {
+              "$ref": "#/definitions/ContainerResource"
+            },
+            "retry": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0,
+              "maximum": 5
+            },
+            "sourcePath": {
+              "type": "string"
+            },
+            "target": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  }
+}

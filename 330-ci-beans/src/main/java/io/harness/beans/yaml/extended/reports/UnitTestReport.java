@@ -1,5 +1,6 @@
 package io.harness.beans.yaml.extended.reports;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -10,7 +11,7 @@ import org.springframework.data.annotation.TypeAlias;
 public interface UnitTestReport {
   @TypeAlias("unit_test_report_type")
   enum Type {
-    JUNIT("JUnit");
+    @JsonProperty("JUnit") JUNIT("JUnit");
 
     private final String yamlName;
 

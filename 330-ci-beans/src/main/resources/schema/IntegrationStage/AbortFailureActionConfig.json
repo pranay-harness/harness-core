@@ -1,0 +1,11 @@
+{
+  "allOf": [
+    {
+      "$ref": "#/definitions/FailureStrategyActionConfig"
+    },
+    {
+      "type": "object"
+    }
+  ],
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

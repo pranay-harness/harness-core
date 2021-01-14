@@ -8,11 +8,8 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 
-import software.wings.jersey.JsonViews;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.annotation.JsonView;
 import java.beans.ConstructorProperties;
 import java.util.Optional;
 import javax.validation.constraints.Max;
@@ -30,8 +27,7 @@ public class TestIntelligenceStepInfo implements CIStepInfo {
   // Keeping the timeout to a day as its a test step and might take lot of time
   public static final int DEFAULT_TIMEOUT = 60 * 60 * 24; // 24 hour;
 
-  @JsonView(JsonViews.Internal.class)
-  @NotNull
+  @JsonIgnore
   public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.TEST_INTELLIGENCE).build();
 
   @JsonIgnore

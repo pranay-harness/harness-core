@@ -19,4 +19,8 @@ public class SubtypeClassMap {
    * The definition key to which $ref will point.
    */
   String subTypeDefinitionKey;
+  /**
+   * Type of the class of this subtype
+   */
+  Class<?> subTypeClass;
 }

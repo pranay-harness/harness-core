@@ -2,8 +2,10 @@ package io.harness.app;
 
 import io.harness.CIExecutionServiceModule;
 import io.harness.app.impl.CIBuildInfoServiceImpl;
+import io.harness.app.impl.CIYamlSchemaServiceImpl;
 import io.harness.app.impl.YAMLToObjectImpl;
 import io.harness.app.intfc.CIBuildInfoService;
+import io.harness.app.intfc.CIYamlSchemaService;
 import io.harness.app.intfc.YAMLToObject;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
@@ -85,6 +87,7 @@ public class CIManagerServiceModule extends AbstractModule {
     bind(NGPipelineService.class).to(NGPipelineServiceImpl.class);
     bind(CIBuildInfoService.class).to(CIBuildInfoServiceImpl.class);
     bind(BuildNumberService.class).to(BuildNumberServiceImpl.class);
+    bind(CIYamlSchemaService.class).to(CIYamlSchemaServiceImpl.class).in(Singleton.class);
 
     // Keeping it to 1 thread to start with. Assuming executor service is used only to
     // serve health checks. If it's being used for other tasks also, max pool size should be increased.
