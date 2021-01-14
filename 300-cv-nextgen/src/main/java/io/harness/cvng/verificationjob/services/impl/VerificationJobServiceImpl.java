@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.NextGenService;
+import io.harness.cvng.core.services.api.CVEventService;
 import io.harness.cvng.verificationjob.beans.HealthVerificationJobDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
@@ -31,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 public class VerificationJobServiceImpl implements VerificationJobService {
   @Inject private HPersistence hPersistence;
   @Inject private NextGenService nextGenService;
+  @Inject private CVEventService cvEventService;
 
   @Override
   @Nullable
@@ -53,12 +55,18 @@ public class VerificationJobServiceImpl implements VerificationJobService {
     verificationJob.validate();
     // TODO: Keeping it simple for now. find a better way to save if more fields are added to verification Job. This can
     // potentially override them.
-    hPersistence.save(verificationJob);
+    save(verificationJob);
   }
 
   @Override
   public void save(VerificationJob verificationJob) {
     hPersistence.save(verificationJob);
+    sendScopedCreateEvent(verificationJob);
+  }
+
+  private void sendScopedCreateEvent(VerificationJob verificationJob) {
+    cvEventService.sendVerificationJobEnvironmentCreateEvent(verificationJob);
+    cvEventService.sendVerificationJobServiceCreateEvent(verificationJob);
   }
 
   @Override
@@ -107,9 +115,16 @@ public class VerificationJobServiceImpl implements VerificationJobService {
 
   @Override
   public void delete(String accountId, String identifier) {
+    VerificationJob verificationJob = getVerificationJob(accountId, identifier);
+    sendScopedDeleteEvent(verificationJob);
     hPersistence.delete(hPersistence.createQuery(VerificationJob.class)
                             .filter(VerificationJobKeys.accountId, accountId)
                             .filter(VerificationJobKeys.identifier, identifier));
+  }
+
+  private void sendScopedDeleteEvent(VerificationJob verificationJob) {
+    cvEventService.sendVerificationJobEnvironmentDeleteEvent(verificationJob);
+    cvEventService.sendVerificationJobServiceDeleteEvent(verificationJob);
   }
 
   @Override

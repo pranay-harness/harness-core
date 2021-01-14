@@ -6,6 +6,7 @@ import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import io.harness.beans.IdentifierRef;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVEventService;
+import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.AbstractProducer;
 import io.harness.eventsframework.api.ProducerShutdownException;
@@ -54,7 +55,7 @@ public class CVEventServiceImpl implements CVEventService {
   @Override
   public void sendConnectorDeleteEvent(CVConfig cvConfig) {
     IdentifierRef identifierRef = getIdentifierRef(cvConfig, cvConfig.getConnectorIdentifier());
-    String cvConfigConnectorFQN = getCvConfigFQNFromIdentifierRef(identifierRef);
+    String cvConfigConnectorFQN = getFullyQualifiedIdentifierFromIdentifierRef(identifierRef);
     String cvConfigFQN = getCVConfigFullyQualifiedName(cvConfig, cvConfig.getIdentifier());
 
     try {
@@ -92,7 +93,7 @@ public class CVEventServiceImpl implements CVEventService {
   @Override
   public void sendServiceDeleteEvent(CVConfig cvConfig) {
     IdentifierRef identifierRef = getIdentifierRef(cvConfig, cvConfig.getServiceIdentifier());
-    String cvConfigServiceFQN = getCvConfigFQNFromIdentifierRef(identifierRef);
+    String cvConfigServiceFQN = getFullyQualifiedIdentifierFromIdentifierRef(identifierRef);
     String cvConfigFQN = getCVConfigFullyQualifiedName(cvConfig, cvConfig.getIdentifier());
 
     try {
@@ -131,7 +132,7 @@ public class CVEventServiceImpl implements CVEventService {
   @Override
   public void sendEnvironmentDeleteEvent(CVConfig cvConfig) {
     IdentifierRef identifierRef = getIdentifierRef(cvConfig, cvConfig.getEnvIdentifier());
-    String cvConfigEnvironmentFQN = getCvConfigFQNFromIdentifierRef(identifierRef);
+    String cvConfigEnvironmentFQN = getFullyQualifiedIdentifierFromIdentifierRef(identifierRef);
     String cvConfigFQN = getCVConfigFullyQualifiedName(cvConfig, cvConfig.getIdentifier());
 
     try {
@@ -142,6 +143,99 @@ public class CVEventServiceImpl implements CVEventService {
       log.error(ENTITY_REFERENCE_LOG_PREFIX
               + "The entity reference was not deleted when the CV Config [{}] was deleted from [{}] with the exception [{}] ",
           cvConfigFQN, cvConfigEnvironmentFQN, ex.getMessage());
+      throw new IllegalStateException(ex);
+    }
+  }
+
+  @Override
+  public void sendVerificationJobEnvironmentCreateEvent(VerificationJob verificationJob) {
+    String verificationJobEnvironmentFQN = null;
+    if (!verificationJob.getEnvIdentifierRuntimeParam().isRuntimeParam()) {
+      verificationJobEnvironmentFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+          verificationJob.getAccountId(), verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier(),
+          verificationJob.getEnvIdentifier());
+    }
+    String verificationJobFQN = getFullyQualifiedIdentifierForVerificationJob(verificationJob);
+    IdentifierRefProtoDTO verificationJobReference = getIdentifierRefProtoDTOFromVerificationJob(verificationJob);
+    IdentifierRef identifierRef = getIdentifierRefVerificationJob(verificationJob, verificationJob.getEnvIdentifier());
+    IdentifierRefProtoDTO verificationJobReferenceEnvironment =
+        getIdentifierRefProtoDTOFromIdentifierRef(identifierRef);
+    EntitySetupUsageCreateDTO environmentEntityReferenceDTO = getEntitySetupUsageCreateDTO(verificationJob,
+        verificationJobReference, verificationJobReferenceEnvironment, EntityTypeProtoEnum.ENVIRONMENT);
+
+    try {
+      sendEventWithMessageForCreation(verificationJob, environmentEntityReferenceDTO);
+
+    } catch (Exception ex) {
+      log.info(ENTITY_REFERENCE_LOG_PREFIX
+              + "The entity reference was not created when the Verification Job [{}] was created from [{}] environment",
+          verificationJobFQN, verificationJobEnvironmentFQN);
+      throw new IllegalStateException(ex);
+    }
+  }
+
+  @Override
+  public void sendVerificationJobServiceCreateEvent(VerificationJob verificationJob) {
+    String verificationJobServiceFQN = null;
+    if (!verificationJob.getServiceIdentifierRuntimeParam().isRuntimeParam()) {
+      verificationJobServiceFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+          verificationJob.getAccountId(), verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier(),
+          verificationJob.getServiceIdentifier());
+    }
+    String verificationJobFQN = getFullyQualifiedIdentifierForVerificationJob(verificationJob);
+    IdentifierRefProtoDTO verificationJobReference = getIdentifierRefProtoDTOFromVerificationJob(verificationJob);
+    IdentifierRef identifierRef =
+        getIdentifierRefVerificationJob(verificationJob, verificationJob.getServiceIdentifier());
+    IdentifierRefProtoDTO verificationJobReferenceService = getIdentifierRefProtoDTOFromIdentifierRef(identifierRef);
+    EntitySetupUsageCreateDTO serviceEntityReferenceDTO = getEntitySetupUsageCreateDTO(
+        verificationJob, verificationJobReference, verificationJobReferenceService, EntityTypeProtoEnum.SERVICE);
+
+    try {
+      sendEventWithMessageForCreation(verificationJob, serviceEntityReferenceDTO);
+
+    } catch (Exception ex) {
+      log.info(ENTITY_REFERENCE_LOG_PREFIX
+              + "The entity reference was not created when the Verification Job [{}] was created from [{}] service",
+          verificationJobFQN, verificationJobServiceFQN);
+      throw new IllegalStateException(ex);
+    }
+  }
+
+  @Override
+  public void sendVerificationJobEnvironmentDeleteEvent(VerificationJob verificationJob) {
+    IdentifierRef identifierRef = getIdentifierRefVerificationJob(verificationJob, verificationJob.getEnvIdentifier());
+    String verificationJobEnvironmentFQN = getFullyQualifiedIdentifierFromIdentifierRef(identifierRef);
+    String verificationJobFQN = getVerificationJobFullyQualifiedName(verificationJob, verificationJob.getIdentifier());
+
+    try {
+      DeleteSetupUsageDTO deleteSetupUsageDTO =
+          getDeleteSetupUsageDTO(verificationJob, verificationJobEnvironmentFQN, verificationJobFQN);
+
+      sendEventWithMessageForDeletion(verificationJob, deleteSetupUsageDTO);
+    } catch (Exception ex) {
+      log.error(ENTITY_REFERENCE_LOG_PREFIX
+              + "The entity reference was not deleted when the Verification Job [{}] was deleted from [{}] with the exception [{}] ",
+          verificationJobFQN, verificationJobEnvironmentFQN, ex.getMessage());
+      throw new IllegalStateException(ex);
+    }
+  }
+
+  @Override
+  public void sendVerificationJobServiceDeleteEvent(VerificationJob verificationJob) {
+    IdentifierRef identifierRef =
+        getIdentifierRefVerificationJob(verificationJob, verificationJob.getServiceIdentifier());
+    String verificationJobEnvironmentFQN = getFullyQualifiedIdentifierFromIdentifierRef(identifierRef);
+    String verificationJobFQN = getVerificationJobFullyQualifiedName(verificationJob, verificationJob.getIdentifier());
+
+    try {
+      DeleteSetupUsageDTO deleteSetupUsageDTO =
+          getDeleteSetupUsageDTO(verificationJob, verificationJobEnvironmentFQN, verificationJobFQN);
+
+      sendEventWithMessageForDeletion(verificationJob, deleteSetupUsageDTO);
+    } catch (Exception ex) {
+      log.error(ENTITY_REFERENCE_LOG_PREFIX
+              + "The entity reference was not deleted when the Verification Job [{}] was deleted from [{}] with the exception [{}] ",
+          verificationJobFQN, verificationJobEnvironmentFQN, ex.getMessage());
       throw new IllegalStateException(ex);
     }
   }
@@ -168,6 +262,28 @@ public class CVEventServiceImpl implements CVEventService {
             .build());
   }
 
+  private void sendEventWithMessageForDeletion(VerificationJob verificationJob, DeleteSetupUsageDTO deleteSetupUsageDTO)
+      throws ProducerShutdownException {
+    eventProducer.send(
+        Message.newBuilder()
+            .putAllMetadata(ImmutableMap.of("accountId", verificationJob.getAccountId(),
+                EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY,
+                EventsFrameworkMetadataConstants.ACTION, EventsFrameworkMetadataConstants.DELETE_ACTION))
+            .setData(deleteSetupUsageDTO.toByteString())
+            .build());
+  }
+
+  private void sendEventWithMessageForCreation(VerificationJob verificationJob,
+      EntitySetupUsageCreateDTO connectorEntityReferenceDTO) throws ProducerShutdownException {
+    eventProducer.send(
+        Message.newBuilder()
+            .putAllMetadata(ImmutableMap.of("accountId", verificationJob.getAccountId(),
+                EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY,
+                EventsFrameworkMetadataConstants.ACTION, EventsFrameworkMetadataConstants.CREATE_ACTION))
+            .setData(connectorEntityReferenceDTO.toByteString())
+            .build());
+  }
+
   private IdentifierRefProtoDTO getIdentifierRefProtoDTOFromIdentifierRef(IdentifierRef identifierRef) {
     return identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(identifierRef.getAccountIdentifier(),
         identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier());
@@ -178,9 +294,24 @@ public class CVEventServiceImpl implements CVEventService {
         cvConfig.getProjectIdentifier(), cvConfig.getIdentifier());
   }
 
+  private IdentifierRefProtoDTO getIdentifierRefProtoDTOFromVerificationJob(VerificationJob verificationJob) {
+    return identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(verificationJob.getAccountId(),
+        verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier(), verificationJob.getIdentifier());
+  }
+
+  private String getFullyQualifiedIdentifierForVerificationJob(VerificationJob verificationJob) {
+    return FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(verificationJob.getAccountId(),
+        verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier(), verificationJob.getIdentifier());
+  }
+
   private IdentifierRef getIdentifierRef(CVConfig cvConfig, String scopedIdentifier) {
     return IdentifierRefHelper.getIdentifierRef(
         scopedIdentifier, cvConfig.getAccountId(), cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier());
+  }
+
+  private IdentifierRef getIdentifierRefVerificationJob(VerificationJob verificationJob, String scopedIdentifier) {
+    return IdentifierRefHelper.getIdentifierRef(scopedIdentifier, verificationJob.getAccountId(),
+        verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier());
   }
 
   private String getCVConfigFullyQualifiedName(CVConfig cvConfig, String scopedIdentifier) {
@@ -188,7 +319,12 @@ public class CVEventServiceImpl implements CVEventService {
         cvConfig.getAccountId(), cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier(), scopedIdentifier);
   }
 
-  private String getCvConfigFQNFromIdentifierRef(IdentifierRef identifierRef) {
+  private String getVerificationJobFullyQualifiedName(VerificationJob verificationJob, String scopedIdentifier) {
+    return FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(verificationJob.getAccountId(),
+        verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier(), scopedIdentifier);
+  }
+
+  private String getFullyQualifiedIdentifierFromIdentifierRef(IdentifierRef identifierRef) {
     return FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(identifierRef.getAccountIdentifier(),
         identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier());
   }
@@ -197,6 +333,16 @@ public class CVEventServiceImpl implements CVEventService {
   private DeleteSetupUsageDTO getDeleteSetupUsageDTO(CVConfig cvConfig, String cvConfigScopedFQN, String cvConfigFQN) {
     return DeleteSetupUsageDTO.newBuilder()
         .setAccountIdentifier(cvConfig.getAccountId())
+        .setReferredByEntityFQN(cvConfigFQN)
+        .setReferredEntityFQN(cvConfigScopedFQN)
+        .build();
+  }
+
+  @NotNull
+  private DeleteSetupUsageDTO getDeleteSetupUsageDTO(
+      VerificationJob verificationJob, String cvConfigScopedFQN, String cvConfigFQN) {
+    return DeleteSetupUsageDTO.newBuilder()
+        .setAccountIdentifier(verificationJob.getAccountId())
         .setReferredByEntityFQN(cvConfigFQN)
         .setReferredEntityFQN(cvConfigScopedFQN)
         .build();
@@ -218,6 +364,28 @@ public class CVEventServiceImpl implements CVEventService {
     return EntitySetupUsageCreateDTO.newBuilder()
         .setAccountIdentifier(cvConfig.getAccountId())
         .setReferredByEntity(configDetails)
+        .setReferredEntity(scopedManagerDetails)
+        .build();
+  }
+
+  @NotNull
+  private EntitySetupUsageCreateDTO getEntitySetupUsageCreateDTO(VerificationJob verificationJob,
+      IdentifierRefProtoDTO verificationJobReference, IdentifierRefProtoDTO verificationJobReferenceEnvironment,
+      EntityTypeProtoEnum typeProtoEnum) {
+    EntityDetailProtoDTO verificationJobDetails = EntityDetailProtoDTO.newBuilder()
+                                                      .setIdentifierRef(verificationJobReference)
+                                                      .setType(EntityTypeProtoEnum.CV_VERIFICATION_JOB)
+                                                      .setName(verificationJob.getJobName())
+                                                      .build();
+
+    EntityDetailProtoDTO scopedManagerDetails = EntityDetailProtoDTO.newBuilder()
+                                                    .setIdentifierRef(verificationJobReferenceEnvironment)
+                                                    .setType(typeProtoEnum)
+                                                    .build();
+
+    return EntitySetupUsageCreateDTO.newBuilder()
+        .setAccountIdentifier(verificationJob.getAccountId())
+        .setReferredByEntity(verificationJobDetails)
         .setReferredEntity(scopedManagerDetails)
         .build();
   }

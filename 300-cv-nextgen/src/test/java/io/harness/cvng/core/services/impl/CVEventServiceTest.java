@@ -2,6 +2,7 @@ package io.harness.cvng.core.services.impl;
 
 import static io.harness.EntityType.CONNECTORS;
 import static io.harness.EntityType.CV_CONFIG;
+import static io.harness.EntityType.CV_VERIFICATION_JOB;
 import static io.harness.EntityType.ENVIRONMENT;
 import static io.harness.EntityType.SERVICE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -16,9 +17,14 @@ import io.harness.CvNextGenTest;
 import io.harness.beans.IdentifierRef;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.models.VerificationType;
+import io.harness.cvng.verificationjob.beans.Sensitivity;
+import io.harness.cvng.verificationjob.beans.TestVerificationJobDTO;
+import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
+import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.eventsframework.api.AbstractProducer;
 import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
@@ -30,6 +36,7 @@ import io.harness.rule.Owner;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 import io.harness.utils.IdentifierRefHelper;
 
+import com.google.common.collect.Lists;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.StringValue;
 import org.junit.Test;
@@ -248,6 +255,160 @@ public class CVEventServiceTest extends CvNextGenTest {
             cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier(), cvConfig.getEnvIdentifier()));
   }
 
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldSendVerificationJobEnvironmentCreateEvent()
+      throws ProducerShutdownException, InvalidProtocolBufferException {
+    String accountId = generateUuid();
+    String accountIdentifier = generateUuid();
+    String orgIdentifier = generateUuid();
+    String projectIdentifier = generateUuid();
+    String identifier = generateUuid();
+
+    VerificationJob verificationJob = createVerificationJobDTOWithoutRuntimeParams().getVerificationJob();
+    verificationJob.setAccountId(accountId);
+
+    IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(verificationJob.getEnvIdentifier(),
+        verificationJob.getAccountId(), verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier());
+
+    IdentifierRefProtoDTO verificationJobReference = IdentifierRefProtoDTO.newBuilder()
+                                                         .setAccountIdentifier(StringValue.of(accountIdentifier))
+                                                         .setOrgIdentifier(StringValue.of(orgIdentifier))
+                                                         .setProjectIdentifier(StringValue.of(projectIdentifier))
+                                                         .setIdentifier(StringValue.of(identifier))
+                                                         .build();
+
+    when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(verificationJob.getAccountId(),
+             verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier(),
+             verificationJob.getIdentifier()))
+        .thenReturn(verificationJobReference);
+
+    when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(identifierRef.getAccountIdentifier(),
+             identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier()))
+        .thenReturn(verificationJobReference);
+
+    eventService.sendVerificationJobEnvironmentCreateEvent(verificationJob);
+
+    ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
+
+    verify(eventProducer, times(1)).send(argumentCaptor.capture());
+
+    EntitySetupUsageCreateDTO entityReferenceDTO =
+        EntitySetupUsageCreateDTO.parseFrom(argumentCaptor.getValue().getData());
+
+    assertThat(entityReferenceDTO).isNotNull();
+    assertThat(entityReferenceDTO.getReferredEntity().getType().toString()).isEqualTo(ENVIRONMENT.name());
+    assertThat(entityReferenceDTO.getReferredByEntity().getType().toString()).isEqualTo(CV_VERIFICATION_JOB.name());
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldSendVerificationJobServiceCreateEvent()
+      throws ProducerShutdownException, InvalidProtocolBufferException {
+    String accountId = generateUuid();
+    String accountIdentifier = generateUuid();
+    String orgIdentifier = generateUuid();
+    String projectIdentifier = generateUuid();
+    String identifier = generateUuid();
+
+    VerificationJob verificationJob = createVerificationJobDTOWithoutRuntimeParams().getVerificationJob();
+    verificationJob.setAccountId(accountId);
+
+    IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(verificationJob.getServiceIdentifier(),
+        verificationJob.getAccountId(), verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier());
+
+    IdentifierRefProtoDTO verificationJobReference = IdentifierRefProtoDTO.newBuilder()
+                                                         .setAccountIdentifier(StringValue.of(accountIdentifier))
+                                                         .setOrgIdentifier(StringValue.of(orgIdentifier))
+                                                         .setProjectIdentifier(StringValue.of(projectIdentifier))
+                                                         .setIdentifier(StringValue.of(identifier))
+                                                         .build();
+
+    when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(verificationJob.getAccountId(),
+             verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier(),
+             verificationJob.getIdentifier()))
+        .thenReturn(verificationJobReference);
+
+    when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(identifierRef.getAccountIdentifier(),
+             identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier()))
+        .thenReturn(verificationJobReference);
+
+    eventService.sendVerificationJobServiceCreateEvent(verificationJob);
+
+    ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
+
+    verify(eventProducer, times(1)).send(argumentCaptor.capture());
+
+    EntitySetupUsageCreateDTO entityReferenceDTO =
+        EntitySetupUsageCreateDTO.parseFrom(argumentCaptor.getValue().getData());
+
+    assertThat(entityReferenceDTO).isNotNull();
+    assertThat(entityReferenceDTO.getReferredEntity().getType().toString()).isEqualTo(SERVICE.name());
+    assertThat(entityReferenceDTO.getReferredByEntity().getType().toString()).isEqualTo(CV_VERIFICATION_JOB.name());
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldSendVerificationJobEnvironmentDeleteEvent()
+      throws ProducerShutdownException, InvalidProtocolBufferException {
+    String accountId = generateUuid();
+
+    VerificationJob verificationJob = createVerificationJobDTOWithoutRuntimeParams().getVerificationJob();
+    verificationJob.setAccountId(accountId);
+
+    eventService.sendVerificationJobEnvironmentDeleteEvent(verificationJob);
+
+    ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
+
+    verify(eventProducer, times(1)).send(argumentCaptor.capture());
+
+    DeleteSetupUsageDTO deleteSetupUsageDTO = DeleteSetupUsageDTO.parseFrom(argumentCaptor.getValue().getData());
+
+    assertThat(deleteSetupUsageDTO).isNotNull();
+    assertThat(deleteSetupUsageDTO.getAccountIdentifier()).isEqualTo(verificationJob.getAccountId());
+    assertThat(deleteSetupUsageDTO.getReferredByEntityFQN())
+        .isEqualTo(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(verificationJob.getAccountId(),
+            verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier(),
+            verificationJob.getIdentifier()));
+    assertThat(deleteSetupUsageDTO.getReferredEntityFQN())
+        .isEqualTo(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(verificationJob.getAccountId(),
+            verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier(),
+            verificationJob.getEnvIdentifier()));
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldSendVerificationJobServiceDeleteEvent()
+      throws ProducerShutdownException, InvalidProtocolBufferException {
+    String accountId = generateUuid();
+
+    VerificationJob verificationJob = createVerificationJobDTOWithoutRuntimeParams().getVerificationJob();
+    verificationJob.setAccountId(accountId);
+
+    eventService.sendVerificationJobServiceDeleteEvent(verificationJob);
+
+    ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
+
+    verify(eventProducer, times(1)).send(argumentCaptor.capture());
+
+    DeleteSetupUsageDTO deleteSetupUsageDTO = DeleteSetupUsageDTO.parseFrom(argumentCaptor.getValue().getData());
+
+    assertThat(deleteSetupUsageDTO).isNotNull();
+    assertThat(deleteSetupUsageDTO.getAccountIdentifier()).isEqualTo(verificationJob.getAccountId());
+    assertThat(deleteSetupUsageDTO.getReferredByEntityFQN())
+        .isEqualTo(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(verificationJob.getAccountId(),
+            verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier(),
+            verificationJob.getIdentifier()));
+    assertThat(deleteSetupUsageDTO.getReferredEntityFQN())
+        .isEqualTo(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(verificationJob.getAccountId(),
+            verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier(),
+            verificationJob.getServiceIdentifier()));
+  }
+
   private CVConfig createCVConfig() {
     String serviceInstanceIdentifier = generateUuid();
 
@@ -281,5 +442,30 @@ public class CVEventServiceTest extends CvNextGenTest {
     cvConfig.setProductName(productName);
     cvConfig.setIdentifier(monitoringSourceIdentifier);
     cvConfig.setMonitoringSourceName(monitoringSourceName);
+  }
+
+  private VerificationJobDTO createVerificationJobDTO() {
+    TestVerificationJobDTO testVerificationJobDTO = new TestVerificationJobDTO();
+    testVerificationJobDTO.setActivitySourceIdentifier(generateUuid());
+    testVerificationJobDTO.setIdentifier(generateUuid());
+    testVerificationJobDTO.setJobName(generateUuid());
+    testVerificationJobDTO.setDataSources(Lists.newArrayList(DataSourceType.APP_DYNAMICS));
+    testVerificationJobDTO.setBaselineVerificationJobInstanceId(null);
+    testVerificationJobDTO.setSensitivity(Sensitivity.MEDIUM.name());
+    testVerificationJobDTO.setServiceIdentifier(generateUuid());
+    testVerificationJobDTO.setEnvIdentifier(generateUuid());
+    testVerificationJobDTO.setBaselineVerificationJobInstanceId(generateUuid());
+    testVerificationJobDTO.setDuration("15m");
+    testVerificationJobDTO.setProjectIdentifier(generateUuid());
+    testVerificationJobDTO.setOrgIdentifier(generateUuid());
+    return testVerificationJobDTO;
+  }
+
+  private VerificationJobDTO createVerificationJobDTOWithoutRuntimeParams() {
+    TestVerificationJobDTO testVerificationJobDTO = (TestVerificationJobDTO) createVerificationJobDTO();
+    testVerificationJobDTO.setEnvIdentifier("testEnv");
+    testVerificationJobDTO.setServiceIdentifier("testSer");
+    testVerificationJobDTO.setJobName("job-Name");
+    return testVerificationJobDTO;
   }
 }

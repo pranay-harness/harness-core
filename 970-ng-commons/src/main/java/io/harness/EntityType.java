@@ -32,7 +32,9 @@ public enum EntityType {
   @JsonProperty(EntityTypeConstants.DELEGATES)
   DELEGATES(ModuleType.CORE, EntityTypeConstants.DELEGATES, IdentifierRef.class),
   @JsonProperty(EntityTypeConstants.DELEGATE_CONFIGURATIONS)
-  DELEGATE_CONFIGURATIONS(ModuleType.CORE, EntityTypeConstants.DELEGATE_CONFIGURATIONS, IdentifierRef.class);
+  DELEGATE_CONFIGURATIONS(ModuleType.CORE, EntityTypeConstants.DELEGATE_CONFIGURATIONS, IdentifierRef.class),
+  @JsonProperty(EntityTypeConstants.CV_VERIFICATION_JOB)
+  CV_VERIFICATION_JOB(ModuleType.CV, EntityTypeConstants.CV_VERIFICATION_JOB, IdentifierRef.class);
 
   private final ModuleType moduleType;
   String yamlName;

@@ -9,12 +9,15 @@ import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.NextGenService;
+import io.harness.cvng.core.services.api.CVEventService;
 import io.harness.cvng.verificationjob.beans.Sensitivity;
 import io.harness.cvng.verificationjob.beans.TestVerificationJobDTO;
 import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
@@ -24,6 +27,7 @@ import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.Lists;
@@ -34,12 +38,16 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class VerificationJobServiceImplTest extends CvNextGenTest {
   @Mock private NextGenService nextGenService;
+  @Mock private CVEventService cvEventService;
+  @Inject private HPersistence hPersistence;
   @Inject private VerificationJobService verificationJobService;
+
   private String identifier;
   private String accountId;
   @Before
@@ -48,6 +56,7 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     identifier = "test-verification-harness";
     accountId = generateUuid();
     FieldUtils.writeField(verificationJobService, "nextGenService", nextGenService, true);
+    FieldUtils.writeField(verificationJobService, "cvEventService", cvEventService, true);
   }
 
   @Test
@@ -117,6 +126,10 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     verificationJobService.delete(accountId, verificationJobDTO.getIdentifier());
     assertThat(verificationJobService.getVerificationJobDTO(accountId, verificationJobDTO.getIdentifier()))
         .isEqualTo(null);
+
+    ArgumentCaptor<VerificationJob> argumentCaptor = ArgumentCaptor.forClass(VerificationJob.class);
+    verify(cvEventService, times(1)).sendVerificationJobServiceDeleteEvent(argumentCaptor.capture());
+    verify(cvEventService, times(1)).sendVerificationJobEnvironmentDeleteEvent(argumentCaptor.capture());
   }
 
   @Test
@@ -261,6 +274,7 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
 
   private VerificationJobDTO createDTOWithRuntimeParams() {
     TestVerificationJobDTO testVerificationJobDTO = (TestVerificationJobDTO) createDTO();
+    testVerificationJobDTO.setIdentifier(identifier);
     testVerificationJobDTO.setEnvIdentifier("${envIdentifier}");
     testVerificationJobDTO.setServiceIdentifier("${serviceIdentifier}");
     testVerificationJobDTO.setJobName("job-Name");
@@ -269,6 +283,7 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
 
   private VerificationJobDTO createDTOWithoutRuntimeParams() {
     TestVerificationJobDTO testVerificationJobDTO = (TestVerificationJobDTO) createDTO();
+    testVerificationJobDTO.setIdentifier(identifier);
     testVerificationJobDTO.setEnvIdentifier("testEnv");
     testVerificationJobDTO.setServiceIdentifier("testSer");
     testVerificationJobDTO.setJobName("job-Name");
@@ -299,10 +314,38 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     assertThat(doesAVerificationJobExists).isTrue();
   }
 
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testSaveVerificationJob() {
+    String orgIdentifier = "orgIdentifier";
+    String projectIdentifier = "projectIdentifier";
+    String serviceIdentifier = "serviceIdentifier";
+
+    VerificationJob verificationJob =
+        createVerificationJob(orgIdentifier, projectIdentifier, serviceIdentifier, VerificationJobType.HEALTH);
+
+    verificationJobService.save(verificationJob);
+
+    VerificationJob retrieveVerificationJob = hPersistence.get(VerificationJob.class, verificationJob.getUuid());
+    assertThat(retrieveVerificationJob).isNotNull();
+    assertThat(retrieveVerificationJob.getOrgIdentifier()).isEqualTo("orgIdentifier");
+    assertThat(retrieveVerificationJob.getProjectIdentifier()).isEqualTo("projectIdentifier");
+    assertThat(retrieveVerificationJob.getServiceIdentifier()).isEqualTo("serviceIdentifier");
+    assertThat(retrieveVerificationJob.getJobName()).isEqualTo("job-name");
+    assertThat(retrieveVerificationJob.getDuration()).isEqualTo(Duration.ZERO);
+
+    ArgumentCaptor<VerificationJob> argumentCaptor = ArgumentCaptor.forClass(VerificationJob.class);
+    verify(cvEventService, times(1)).sendVerificationJobServiceCreateEvent(argumentCaptor.capture());
+    verify(cvEventService, times(1)).sendVerificationJobEnvironmentCreateEvent(argumentCaptor.capture());
+  }
+
   private VerificationJob createVerificationJob(
       String orgIdentifier, String projectIdentifier, String serviceIdentifier, VerificationJobType type) {
     HealthVerificationJob verificationJob = new HealthVerificationJob();
     verificationJob.setAccountId(accountId);
+    verificationJob.setJobName("job-name");
+    verificationJob.setIdentifier(generateUuid());
     verificationJob.setOrgIdentifier(orgIdentifier);
     verificationJob.setProjectIdentifier(projectIdentifier);
     verificationJob.setServiceIdentifier(serviceIdentifier, false);

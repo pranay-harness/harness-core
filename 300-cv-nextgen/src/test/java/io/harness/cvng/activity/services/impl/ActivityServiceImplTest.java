@@ -797,6 +797,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     KubernetesActivity kubernetesActivity = getKubernetesActivity();
     realVerificationJobService.save(HealthVerificationJob.builder()
                                         .accountId(accountId)
+                                        .jobName("job-name")
                                         .orgIdentifier(kubernetesActivity.getOrgIdentifier())
                                         .projectIdentifier(kubernetesActivity.getProjectIdentifier())
                                         .envIdentifier(RuntimeParameter.builder()
@@ -827,8 +828,10 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     HealthVerificationJob healthVerificationJob =
         HealthVerificationJob.builder()
             .accountId(accountId)
+            .jobName("job-name")
             .orgIdentifier(kubernetesActivity.getOrgIdentifier())
             .projectIdentifier(kubernetesActivity.getProjectIdentifier())
+            .identifier(generateUuid())
             .envIdentifier(RuntimeParameter.builder()
                                .isRuntimeParam(false)
                                .value(kubernetesActivity.getEnvironmentIdentifier())
@@ -865,6 +868,7 @@ public class ActivityServiceImplTest extends CvNextGenTest {
     HealthVerificationJob healthVerificationJob =
         HealthVerificationJob.builder()
             .accountId(accountId)
+            .jobName("job-name")
             .orgIdentifier(kubernetesActivity.getOrgIdentifier())
             .projectIdentifier(kubernetesActivity.getProjectIdentifier())
             .envIdentifier(RuntimeParameter.builder()
