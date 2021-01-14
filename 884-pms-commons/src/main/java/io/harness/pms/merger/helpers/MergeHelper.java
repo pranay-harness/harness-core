@@ -1,6 +1,7 @@
 package io.harness.pms.merger.helpers;
 
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import io.harness.common.NGExpressionUtils;
 import io.harness.data.structure.EmptyPredicate;
@@ -120,6 +121,10 @@ public class MergeHelper {
 
   private String sanitizeInputSet(String pipelineYaml, String runtimeInput, boolean isInputSet) throws IOException {
     String templateYaml = MergeHelper.createTemplateFromPipeline(pipelineYaml);
+
+    if (templateYaml == null) {
+      return EMPTY;
+    }
 
     // Strip off inputSet top key from yaml.
     // when its false, its runtimeInput (may be coming from trigger)
