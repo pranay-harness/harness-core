@@ -112,22 +112,47 @@ public class YamlUtils {
   private void injectUuidInObjectWithLeafValues(JsonNode node) {
     ObjectNode objectNode = (ObjectNode) node;
     objectNode.put(YamlNode.UUID_FIELD_NAME, generateUuid());
+    boolean isIdentifierPresent = false;
+    Entry<String, JsonNode> nameField = null;
     for (Iterator<Entry<String, JsonNode>> it = objectNode.fields(); it.hasNext();) {
       Entry<String, JsonNode> field = it.next();
       if (field.getValue().isValueNode()) {
         switch (field.getKey()) {
-          case YamlNode.UUID_FIELD_NAME:
           case YamlNode.IDENTIFIER_FIELD_NAME:
+            isIdentifierPresent = true;
+            break;
+          case YamlNode.NAME_FIELD_NAME:
+            nameField = field;
+            break;
+          case YamlNode.UUID_FIELD_NAME:
           case YamlNode.TYPE_FIELD_NAME:
             break;
           default:
             objectNode.put(field.getKey(), generateUuid());
             break;
         }
+      } else if (checkIfNodeIsArrayWithPrimitiveTypes(field.getValue())) {
+        objectNode.put(field.getKey(), generateUuid());
       } else {
         injectUuidWithLeafUuid(field.getValue());
       }
     }
+    if (isIdentifierPresent && nameField != null) {
+      objectNode.put(nameField.getKey(), generateUuid());
+    }
+  }
+
+  private boolean checkIfNodeIsArrayWithPrimitiveTypes(JsonNode jsonNode) {
+    if (jsonNode.isArray()) {
+      ArrayNode arrayNode = (ArrayNode) jsonNode;
+      for (Iterator<JsonNode> it = arrayNode.elements(); it.hasNext();) {
+        if (!it.next().isValueNode()) {
+          return false;
+        }
+      }
+      return true;
+    }
+    return false;
   }
 
   public String injectUuid(String content) throws IOException {
