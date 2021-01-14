@@ -2,7 +2,7 @@ package io.harness.beans.yaml.extended.container.quantity;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.beans.yaml.extended.container.quantity.unit.BinaryQuantityUnit;
+import io.harness.beans.yaml.extended.container.quantity.unit.MemoryQuantityUnit;
 import io.harness.exception.InvalidArgumentsException;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -15,10 +15,10 @@ import org.apache.commons.lang3.tuple.Pair;
 @Data
 @Builder
 public class MemoryQuantity {
-  private static final String PARTS_REGEX = "[GM]i";
+  private static final String PARTS_REGEX = "[GM][i]?";
 
   private String numericValue;
-  private BinaryQuantityUnit unit;
+  private MemoryQuantityUnit unit;
 
   @JsonCreator
   public static MemoryQuantity fromString(String quantity) {
@@ -26,13 +26,14 @@ public class MemoryQuantity {
       if (isEmpty(quantity)) {
         return null;
       }
+
       String[] parts = quantity.split(PARTS_REGEX);
       String numericValue = parts[0];
       String suffix = quantity.substring(parts[0].length());
-      BinaryQuantityUnit unit = Stream.of(BinaryQuantityUnit.values())
+      MemoryQuantityUnit unit = Stream.of(MemoryQuantityUnit.values())
                                     .filter(quantityUnit -> quantityUnit.getSuffix().equals(suffix))
                                     .findFirst()
-                                    .orElse(BinaryQuantityUnit.unitless);
+                                    .orElse(MemoryQuantityUnit.unitless);
 
       return MemoryQuantity.builder().numericValue(numericValue).unit(unit).build();
     } catch (NumberFormatException e) {

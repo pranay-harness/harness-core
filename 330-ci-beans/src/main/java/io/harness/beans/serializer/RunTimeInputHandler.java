@@ -10,6 +10,7 @@ import io.harness.exception.ngexception.CIStageExecutionUserException;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.extended.ci.codebase.Build;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
@@ -167,7 +168,7 @@ public class RunTimeInputHandler {
       } else {
         log.warn(format("Failed to resolve optional field %s in step type %s with identifier %s", fieldName, stepType,
             stepIdentifier));
-        return null;
+        return new ArrayList<>();
       }
     }
 

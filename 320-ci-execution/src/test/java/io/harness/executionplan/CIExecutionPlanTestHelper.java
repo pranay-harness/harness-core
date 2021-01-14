@@ -429,9 +429,9 @@ public class CIExecutionPlanTestHelper {
         .dependencySpecType(
             CIServiceInfo.builder()
                 .identifier(SERVICE_ID)
-                .args(Collections.singletonList(SERVICE_ARGS))
-                .entrypoint(Collections.singletonList(SERVICE_ENTRYPOINT))
-                .image(SERVICE_IMAGE)
+                .args(ParameterField.createValueField(Collections.singletonList(SERVICE_ARGS)))
+                .entrypoint(ParameterField.createValueField(Collections.singletonList(SERVICE_ENTRYPOINT)))
+                .image(ParameterField.createValueField(SERVICE_IMAGE))
                 .resources(ContainerResource.builder()
                                .limits(ContainerResource.Limits.builder()
                                            .cpu(ParameterField.createValueField(SERVICE_LIMIT_CPU_STRING))

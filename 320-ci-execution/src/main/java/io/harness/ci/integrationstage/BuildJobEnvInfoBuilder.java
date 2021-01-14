@@ -32,8 +32,8 @@ import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.TestIntelligenceStepInfo;
 import io.harness.beans.steps.stepinfo.publish.artifact.Artifact;
 import io.harness.beans.yaml.extended.container.ContainerResource;
-import io.harness.beans.yaml.extended.container.quantity.unit.BinaryQuantityUnit;
 import io.harness.beans.yaml.extended.container.quantity.unit.DecimalQuantityUnit;
+import io.harness.beans.yaml.extended.container.quantity.unit.MemoryQuantityUnit;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.ci.utils.QuantityUtils;
@@ -627,7 +627,7 @@ public class BuildJobEnvInfoBuilder {
     if (resource != null && resource.getLimits() != null && resource.getLimits().getMemory() != null) {
       String memoryLimitMemoryQuantity =
           resolveStringParameter("memory", stepType, stepId, resource.getLimits().getMemory(), false);
-      memoryLimit = QuantityUtils.getMemoryQuantityValueInUnit(memoryLimitMemoryQuantity, BinaryQuantityUnit.Mi);
+      memoryLimit = QuantityUtils.getMemoryQuantityValueInUnit(memoryLimitMemoryQuantity, MemoryQuantityUnit.Mi);
     }
     return memoryLimit;
   }
