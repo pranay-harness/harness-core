@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.lang.String.format;
 
 import io.harness.expression.EngineExpressionEvaluator;
-import io.harness.expression.evaluator.ExpressionServiceEvaluator;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

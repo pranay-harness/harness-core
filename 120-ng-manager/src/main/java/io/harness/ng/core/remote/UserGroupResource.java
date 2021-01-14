@@ -17,6 +17,7 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.dto.UserGroupDTO;
 import io.harness.ng.core.entities.UserGroup;
 import io.harness.ng.core.utils.UserGroupMapper;
+import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -49,6 +50,7 @@ import org.springframework.data.domain.Page;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
+@NextGenManagerAuth
 public class UserGroupResource {
   private final UserGroupService userGroupService;
 

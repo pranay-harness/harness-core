@@ -11,6 +11,7 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.invites.dto.RoleDTO;
 import io.harness.ng.core.invites.entities.Role;
+import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
@@ -41,6 +42,7 @@ import lombok.AllArgsConstructor;
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 @OwnedBy(HarnessTeam.PL)
+@NextGenManagerAuth
 public class RolesResource {
   @GET
   @ApiOperation(value = "Get all roles for the queried project", nickname = "getRoles")
