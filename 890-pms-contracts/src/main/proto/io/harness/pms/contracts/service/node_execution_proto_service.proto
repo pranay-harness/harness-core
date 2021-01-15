@@ -24,7 +24,6 @@ service NodeExecutionProtoService {
   rpc handleFacilitatorResponse(FacilitatorResponseRequest) returns (FacilitatorResponseResponse);
   rpc handleAdviserResponse(AdviserResponseRequest) returns (AdviserResponseResponse);
   rpc handleEventError(EventErrorRequest) returns (EventErrorResponse);
-  rpc abortExecution(AbortExecutionRequest) returns (AbortExecutionResponse);
 }
 
 message QueueNodeExecutionRequest {
@@ -99,10 +98,3 @@ message EventErrorRequest {
 }
 
 message EventErrorResponse {}
-
-message AbortExecutionRequest {
-  execution.NodeExecutionProto nodeExecution = 1;
-  execution.Status status = 2;
-}
-
-message AbortExecutionResponse {}

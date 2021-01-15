@@ -18,7 +18,6 @@ import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
-import io.harness.pms.execution.AbortNodeExecutionEventData;
 import io.harness.pms.execution.AdviseNodeExecutionEventData;
 import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.execution.ResumeNodeExecutionEventData;
@@ -31,7 +30,6 @@ import io.harness.pms.sdk.core.facilitator.FacilitatorResponse;
 import io.harness.pms.sdk.core.facilitator.FacilitatorResponseMapper;
 import io.harness.pms.sdk.core.registries.AdviserRegistry;
 import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
-import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
@@ -49,7 +47,6 @@ import lombok.extern.slf4j.Slf4j;
 public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent> {
   @Inject private FacilitatorRegistry facilitatorRegistry;
   @Inject private AdviserRegistry adviserRegistry;
-  @Inject private StepRegistry stepRegistry;
   @Inject private PmsNodeExecutionService pmsNodeExecutionService;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private ExecutableProcessorFactory executableProcessorFactory;
@@ -78,9 +75,6 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
           break;
         case ADVISE:
           handled = adviseExecution(event);
-          break;
-        case ABORT:
-          handled = abortExecution(event);
           break;
         default:
           throw new UnsupportedOperationException("NodeExecution Event Has no handler" + event.getEventType());
@@ -220,18 +214,6 @@ public class NodeExecutionEventListener extends QueueListener<NodeExecutionEvent
     } catch (Exception ex) {
       log.error("Error while advising execution", ex);
       pmsNodeExecutionService.handleEventError(event.getEventType(), event.getNotifyId(), constructFailureInfo(ex));
-      return false;
-    }
-  }
-
-  private boolean abortExecution(NodeExecutionEvent event) {
-    try {
-      AbortNodeExecutionEventData eventData = (AbortNodeExecutionEventData) event.getEventData();
-      pmsNodeExecutionService.abortExecution(event.getNodeExecution(), eventData.getFinalStatus());
-      return true;
-    } catch (Exception e) {
-      log.error("Error while aborting execution : {}", e.getMessage());
-      pmsNodeExecutionService.handleEventError(event.getEventType(), event.getNotifyId(), constructFailureInfo(e));
       return false;
     }
   }

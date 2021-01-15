@@ -1,7 +1,6 @@
 package io.harness.pms.sdk.execution;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.ALEXEI;
 import static io.harness.rule.OwnerRule.GARVIT;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -17,7 +16,6 @@ import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc;
 import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc.NodeExecutionProtoServiceBlockingStub;
 import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc.NodeExecutionProtoServiceImplBase;
 import io.harness.pms.contracts.plan.PlanNodeProto;
-import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.sdk.PmsSdkTestBase;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
@@ -88,26 +86,6 @@ public class NodeExecutionEventTest extends PmsSdkTestBase {
                                                                .build())
                                                   .build())
                                .build()))
-        .doesNotThrowAnyException();
-  }
-
-  @Test
-  @Owner(developers = ALEXEI)
-  @Category(UnitTests.class)
-  public void shouldAbort() {
-    assertThatCode(
-        ()
-            -> eventListener.onMessage(
-                NodeExecutionEvent.builder()
-                    .eventType(NodeExecutionEventType.ABORT)
-                    .nodeExecution(
-                        NodeExecutionProto.newBuilder()
-                            .setUuid(NODE_EXECUTION_ID)
-                            .setNode(PlanNodeProto.newBuilder()
-                                         .setStepType(StepType.newBuilder().setType("ABORTABLE_STEP").build())
-                                         .build())
-                            .build())
-                    .build()))
         .doesNotThrowAnyException();
   }
 }
