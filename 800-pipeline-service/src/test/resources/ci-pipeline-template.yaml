@@ -1,0 +1,39 @@
+pipeline:
+  identifier: Vistaar_Pipeline_2
+  variables:
+  - name: name2
+    value: <+input>
+  stages:
+  - stage:
+      identifier: Test_Build_and_Push
+      spec:
+        execution:
+          steps:
+          - step:
+              identifier: Run_Unit_Tests
+              spec:
+                command: <+input>
+          - step:
+              identifier: Build_and_push_image_to_DockerHub
+              spec:
+                repo: <+input>
+        infrastructure:
+          spec:
+            namespace: <+input>
+  - stage:
+      identifier: Run_Integration_Test
+      spec:
+        execution:
+          steps:
+          - step:
+              identifier: test_connection_to_server
+              spec:
+                command: <+input>
+        serviceDependencies:
+        - identifier: runhelloworldserver
+          spec:
+            image: <+input>
+  properties:
+    ci:
+      codebase:
+        build: <+input>
