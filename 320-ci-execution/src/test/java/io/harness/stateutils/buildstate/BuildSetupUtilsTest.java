@@ -1,5 +1,6 @@
 package io.harness.stateutils.buildstate;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.executionplan.CIExecutionPlanTestHelper.GIT_CONNECTOR;
 import static io.harness.rule.OwnerRule.HARSH;
 
@@ -70,8 +71,11 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
     setupAbstractions.put("accountId", "account");
     setupAbstractions.put("projectIdentifier", "project");
     setupAbstractions.put("orgIdentifier", "org");
-    ExecutionMetadata executionMetadata =
-        ExecutionMetadata.newBuilder().setRunSequence(buildID).setPipelineIdentifier("pipeline").build();
+    ExecutionMetadata executionMetadata = ExecutionMetadata.newBuilder()
+                                              .setExecutionUuid(generateUuid())
+                                              .setRunSequence(buildID)
+                                              .setPipelineIdentifier("pipeline")
+                                              .build();
     Ambiance ambiance =
         Ambiance.newBuilder().putAllSetupAbstractions(setupAbstractions).setMetadata(executionMetadata).build();
 
@@ -112,8 +116,11 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
     setupAbstractions.put("accountId", "account");
     setupAbstractions.put("projectIdentifier", "project");
     setupAbstractions.put("orgIdentifier", "org");
-    ExecutionMetadata executionMetadata =
-        ExecutionMetadata.newBuilder().setRunSequence(buildID).setPipelineIdentifier("pipeline").build();
+    ExecutionMetadata executionMetadata = ExecutionMetadata.newBuilder()
+                                              .setExecutionUuid(generateUuid())
+                                              .setRunSequence(buildID)
+                                              .setPipelineIdentifier("pipeline")
+                                              .build();
     Ambiance ambiance =
         Ambiance.newBuilder().putAllSetupAbstractions(setupAbstractions).setMetadata(executionMetadata).build();
 

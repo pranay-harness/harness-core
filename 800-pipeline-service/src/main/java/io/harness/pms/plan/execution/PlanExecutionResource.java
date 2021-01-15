@@ -1,5 +1,6 @@
 package io.harness.pms.plan.execution;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 
 import io.harness.NGCommonEntityConstants;
@@ -407,6 +408,7 @@ public class PlanExecutionResource {
         new HashMap<>(ImmutableMap.of("accountId", "kmpySmUISimoRrJL6NL73w", "orgIdentifier", "harness",
             "projectIdentifier", "pipeline", "expressionFunctorToken", "12345")),
         ExecutionMetadata.newBuilder()
+            .setExecutionUuid(generateUuid())
             .setRunSequence(0)
             .setTriggerInfo(ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).build())
             .build());

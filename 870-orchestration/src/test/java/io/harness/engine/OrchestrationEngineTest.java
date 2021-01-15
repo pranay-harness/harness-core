@@ -75,8 +75,11 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
   private static final ExecutionTriggerInfo triggerInfo =
       ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).setTriggeredBy(triggeredBy).build();
 
-  private static final ExecutionMetadata metadata =
-      ExecutionMetadata.newBuilder().setRunSequence(0).setTriggerInfo(triggerInfo).build();
+  private static final ExecutionMetadata metadata = ExecutionMetadata.newBuilder()
+                                                        .setExecutionUuid(generateUuid())
+                                                        .setRunSequence(0)
+                                                        .setTriggerInfo(triggerInfo)
+                                                        .build();
 
   @Before
   public void setUp() {

@@ -1,6 +1,7 @@
 package io.harness.pms.triggers.webhook.helpers;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.INVALID_RUNTIME_INPUT_YAML;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.TARGET_EXECUTION_REQUESTED;
@@ -147,6 +148,7 @@ public class TriggerWebhookExecutionHelper {
 
       ExecutionMetadata.Builder executionMetaDataBuilder =
           ExecutionMetadata.newBuilder()
+              .setExecutionUuid(generateUuid())
               .setTriggerInfo(triggerInfo)
               .setRunSequence(pipelineEntityToExecute.get().getRunSequence())
               .setTriggerPayload(triggerPayload)

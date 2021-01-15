@@ -13,4 +13,5 @@ message ExecutionMetadata {
   io.harness.pms.contracts.triggers.TriggerPayload triggerPayload = 3;
   string pipelineIdentifier = 4;
   string inputSetYaml = 5;
+  string executionUuid = 6;
 }

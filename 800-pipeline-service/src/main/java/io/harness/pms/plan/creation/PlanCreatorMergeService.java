@@ -1,5 +1,7 @@
 package io.harness.pms.plan.creation;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
 import static java.lang.String.format;
 
 import io.harness.data.structure.EmptyPredicate;
@@ -51,7 +53,7 @@ public class PlanCreatorMergeService {
   }
 
   public PlanCreationBlobResponse createPlan(@NotNull String content) throws IOException {
-    return createPlan(content, ExecutionMetadata.newBuilder().build());
+    return createPlan(content, ExecutionMetadata.newBuilder().setExecutionUuid(generateUuid()).build());
   }
 
   public PlanCreationBlobResponse createPlan(@NotNull String content, ExecutionMetadata metadata) throws IOException {
