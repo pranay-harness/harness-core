@@ -32,10 +32,7 @@
           }
         },
         "reports": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/UnitTestReport"
-          }
+          "$ref": "#/definitions/UnitTestReport"
         },
         "resources": {
           "$ref": "#/definitions/ContainerResource"

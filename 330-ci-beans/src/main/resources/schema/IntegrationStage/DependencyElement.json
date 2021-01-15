@@ -4,6 +4,9 @@
     "identifier"
   ],
   "properties": {
+    "description": {
+      "type": "string"
+    },
     "identifier": {
       "type": "string"
     },

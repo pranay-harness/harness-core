@@ -4,8 +4,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
-import io.harness.beans.yaml.extended.reports.JunitTestReport;
+import io.harness.beans.yaml.extended.reports.JUnitTestReport;
 import io.harness.beans.yaml.extended.reports.UnitTestReport;
+import io.harness.beans.yaml.extended.reports.UnitTestReportType;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.plancreator.steps.StepElementConfig;
@@ -41,16 +42,14 @@ public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStep
     }
     runStepBuilder.setContainerPort(port);
 
-    List<UnitTestReport> reports = runStepInfo.getReports();
-    if (isNotEmpty(reports)) {
-      for (UnitTestReport unitTestReport : reports) {
-        if (unitTestReport.getType() == UnitTestReport.Type.JUNIT) {
-          Report report = Report.newBuilder()
-                              .setType(Report.Type.JUNIT)
-                              .addAllPaths(resolveJunitReport(unitTestReport, step.getIdentifier()))
-                              .build();
-          runStepBuilder.addReports(report);
-        }
+    UnitTestReport reports = runStepInfo.getReports();
+    if (reports != null) {
+      if (reports.getType() == UnitTestReportType.JUNIT) {
+        Report report = Report.newBuilder()
+                            .setType(Report.Type.JUNIT)
+                            .addAllPaths(resolveJunitReport(reports, step.getIdentifier()))
+                            .build();
+        runStepBuilder.addReports(report);
       }
     }
 
@@ -76,8 +75,7 @@ public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStep
   }
 
   public List<String> resolveJunitReport(UnitTestReport unitTestReport, String identifier) {
-    JunitTestReport junitTestReport = (JunitTestReport) unitTestReport;
-    return RunTimeInputHandler.resolveListParameter(
-        "paths", "run", identifier, junitTestReport.getSpec().getPaths(), false);
+    JUnitTestReport junitTestReport = (JUnitTestReport) unitTestReport.getSpec();
+    return RunTimeInputHandler.resolveListParameter("paths", "run", identifier, junitTestReport.getPaths(), false);
   }
 }

@@ -54,7 +54,7 @@ public class RunStepInfo implements CIStepInfo {
   @YamlSchemaTypes(value = {map, string}, defaultType = map)
   @ApiModelProperty(dataType = STRING_MAP_CLASSPATH)
   private ParameterField<Map<String, String>> envVariables;
-  private List<UnitTestReport> reports;
+  private UnitTestReport reports;
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> image;
   @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
   private ContainerResource resources;
@@ -63,7 +63,7 @@ public class RunStepInfo implements CIStepInfo {
   @ConstructorProperties({"identifier", "name", "retry", "command", "outputVariables", "reports", "envVariables",
       "image", "connectorRef", "resources"})
   public RunStepInfo(String identifier, String name, Integer retry, ParameterField<String> command,
-      ParameterField<List<String>> outputVariables, List<UnitTestReport> reports,
+      ParameterField<List<String>> outputVariables, UnitTestReport reports,
       ParameterField<Map<String, String>> envVariables, ParameterField<String> image,
       ParameterField<String> connectorRef, ContainerResource resources) {
     this.identifier = identifier;

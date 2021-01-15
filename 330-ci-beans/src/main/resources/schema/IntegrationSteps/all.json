@@ -246,16 +246,19 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "JunitTestReport": {
+    "JUnitTestReport": {
       "allOf": [
         {
-          "$ref": "#/definitions/UnitTestReport"
+          "$ref": "#/definitions/UnitTestReportSpec"
         },
         {
           "type": "object",
           "properties": {
-            "spec": {
-              "$ref": "#/definitions/Spec"
+            "paths": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           }
         }
@@ -429,10 +432,7 @@
               }
             },
             "reports": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/UnitTestReport"
-              }
+              "$ref": "#/definitions/UnitTestReport"
             },
             "resources": {
               "$ref": "#/definitions/ContainerResource"
@@ -546,22 +546,12 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "Spec": {
-      "type": "object",
-      "properties": {
-        "paths": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
     "UnitTestReport": {
       "type": "object",
-      "discriminator": "type",
       "properties": {
+        "spec": {
+          "$ref": "#/definitions/UnitTestReportSpec"
+        },
         "type": {
           "type": "string",
           "enum": [
@@ -569,6 +559,10 @@
           ]
         }
       },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "UnitTestReportSpec": {
+      "type": "object",
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "UploadToArtifactoryStepInfo": {

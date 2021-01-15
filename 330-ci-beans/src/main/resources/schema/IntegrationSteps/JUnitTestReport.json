@@ -1,13 +1,16 @@
 {
   "allOf": [
     {
-      "$ref": "#/definitions/UnitTestReport"
+      "$ref": "#/definitions/UnitTestReportSpec"
     },
     {
       "type": "object",
       "properties": {
-        "spec": {
-          "$ref": "#/definitions/Spec"
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     }

@@ -37,12 +37,6 @@
     },
     "uuid": {
       "type": "string"
-    },
-    "variables": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/NGVariable"
-      }
     }
   },
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -67,25 +61,58 @@
           "type": "object",
           "properties": {
             "args": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "array"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
             },
             "connectorRef": {
               "type": "string"
             },
             "entrypoint": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "array"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ]
             },
             "envVariables": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                }
+              ]
             },
             "grpcPort": {
               "type": "integer",
@@ -126,6 +153,9 @@
         "identifier"
       ],
       "properties": {
+        "description": {
+          "type": "string"
+        },
         "identifier": {
           "type": "string"
         },
@@ -282,12 +312,6 @@
         },
         "uuid": {
           "type": "string"
-        },
-        "variables": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/NGVariable"
-          }
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -378,35 +402,6 @@
           "type": "object"
         }
       ],
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "NGVariable": {
-      "type": "object",
-      "properties": {
-        "description": {
-          "type": "string"
-        },
-        "metadata": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "required": {
-          "type": "boolean"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "String",
-            "Number",
-            "Secret"
-          ]
-        },
-        "value": {
-          "type": "string"
-        }
-      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "OnFailureConfig": {
