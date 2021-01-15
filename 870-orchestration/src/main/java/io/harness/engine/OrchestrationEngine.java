@@ -533,7 +533,8 @@ public class OrchestrationEngine {
 
   public void handleAdvise(String nodeExecutionId, Status status, AdviserResponse adviserResponse) {
     NodeExecution updatedNodeExecution = nodeExecutionService.updateStatusWithOps(nodeExecutionId, status, ops -> {
-      if (AdviseTypeUtils.isWaitingAdviseType(adviserResponse.getType())) {
+      if (AdviseTypeUtils.isWaitingAdviseType(adviserResponse.getType())
+          || AdviseTypeUtils.isTerminalAdviseTypes(adviserResponse.getType())) {
         ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis());
       }
     });

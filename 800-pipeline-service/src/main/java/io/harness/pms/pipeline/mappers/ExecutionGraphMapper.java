@@ -26,6 +26,7 @@ public class ExecutionGraphMapper {
         .baseFqn(basefqn)
         .outcomes(graphVertex.getOutcomes())
         .startTs(graphVertex.getStartTs())
+        .endTs(graphVertex.getEndTs())
         .identifier(graphVertex.getIdentifier())
         .status(ExecutionStatus.getExecutionStatus(graphVertex.getStatus()))
         .stepType(graphVertex.getStepType())
