@@ -11,7 +11,6 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
-import io.harness.pms.contracts.plan.AbortExecutionRequest;
 import io.harness.pms.contracts.plan.AccumulateResponsesRequest;
 import io.harness.pms.contracts.plan.AccumulateResponsesResponse;
 import io.harness.pms.contracts.plan.AddExecutableResponseRequest;
@@ -149,11 +148,5 @@ public class PmsNodeExecutionServiceGrpcImpl implements PmsNodeExecutionService 
       return null;
     }
     return JsonOrchestrationUtils.asObject(stepParameters, step.getStepParametersClass());
-  }
-
-  @Override
-  public void abortExecution(NodeExecutionProto nodeExecution, Status finalStatus) {
-    nodeExecutionProtoServiceBlockingStub.abortExecution(
-        AbortExecutionRequest.newBuilder().setNodeExecution(nodeExecution).setStatus(finalStatus).build());
   }
 }

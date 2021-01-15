@@ -9,5 +9,4 @@ enum NodeExecutionEventType {
   START = 1;
   RESUME = 2;
   ADVISE = 3;
-  ABORT = 4;
 }
