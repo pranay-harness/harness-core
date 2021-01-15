@@ -65,6 +65,8 @@ import io.harness.serializer.spring.converters.steps.StepTypeReadConverter;
 import io.harness.serializer.spring.converters.steps.StepTypeWriteConverter;
 import io.harness.serializer.spring.converters.sweepingoutput.SweepingOutputReadMongoConverter;
 import io.harness.serializer.spring.converters.sweepingoutput.SweepingOutputWriteMongoConverter;
+import io.harness.serializer.spring.converters.timeout.obtainment.TimeoutObtainmentReadConverter;
+import io.harness.serializer.spring.converters.timeout.obtainment.TimeoutObtainmentWriteConverter;
 import io.harness.serializer.spring.converters.triggers.ExecutionTriggerInfoReadConverter;
 import io.harness.serializer.spring.converters.triggers.ExecutionTriggerInfoWriteConverter;
 import io.harness.serializer.spring.converters.triggers.TriggeredByReadConverter;
@@ -134,5 +136,6 @@ public class OrchestrationRegistrars {
       LayoutNodeInfoWriteConverter.class, ExecutionTriggerInfoReadConverter.class,
       ExecutionTriggerInfoWriteConverter.class, TriggeredByReadConverter.class, TriggeredByWriteConverter.class,
       ExecutionMetadataReadConverter.class, ExecutionMetadataWriteConverter.class, TriggerPayloadReadConverter.class,
-      TriggerPayloadWriteConverter.class, SkipInfoReadConverter.class, SkipInfoWriteConverter.class);
+      TriggerPayloadWriteConverter.class, SkipInfoReadConverter.class, SkipInfoWriteConverter.class,
+      TimeoutObtainmentReadConverter.class, TimeoutObtainmentWriteConverter.class);
 }

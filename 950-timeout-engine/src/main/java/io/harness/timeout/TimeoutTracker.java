@@ -3,6 +3,7 @@ package io.harness.timeout;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.timeout.contracts.Dimension;
 
 @OwnedBy(CDC)
 public interface TimeoutTracker {

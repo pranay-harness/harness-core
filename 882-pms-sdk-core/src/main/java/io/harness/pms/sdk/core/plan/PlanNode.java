@@ -6,6 +6,7 @@ import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.timeout.contracts.TimeoutObtainment;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -30,6 +31,7 @@ public class PlanNode {
   // Hooks
   @Singular List<AdviserObtainment> adviserObtainments;
   @Singular List<FacilitatorObtainment> facilitatorObtainments;
+  @Singular List<TimeoutObtainment> timeoutObtainments;
 
   // Skip
   boolean skipExpressionChain;
