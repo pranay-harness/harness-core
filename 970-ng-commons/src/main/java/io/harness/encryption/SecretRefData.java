@@ -11,7 +11,6 @@ import io.harness.exception.UnexpectedException;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.utils.IdentifierRefHelper;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonValue;
 import java.lang.reflect.Field;
@@ -34,7 +33,6 @@ public class SecretRefData {
   public static final String SECRET_DELIMINITER = "\\.";
   public static final String SECRET_DOT_DELIMINITER = ".";
 
-  @JsonCreator
   public SecretRefData(String secretRefConfigString) {
     if (isBlank(secretRefConfigString)) {
       return;
