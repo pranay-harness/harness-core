@@ -31,6 +31,7 @@ public class PipelineExecutionSummaryDtoMapper {
         .runningStagesCount(getStagesCount(layoutNodeDTOMap, startingNodeId, ExecutionStatus.RUNNING))
         .totalStagesCount(getStagesCount(layoutNodeDTOMap, startingNodeId))
         .runSequence(pipelineExecutionSummaryEntity.getRunSequence())
+        .tags(pipelineExecutionSummaryEntity.getTags())
         .build();
   }
 

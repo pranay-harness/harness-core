@@ -146,7 +146,16 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
 
   @Override
   public NodeExecution save(NodeExecution nodeExecution) {
-    return nodeExecution.getVersion() == null ? mongoTemplate.insert(nodeExecution) : mongoTemplate.save(nodeExecution);
+    if (nodeExecution.getVersion() == null) {
+      eventEmitter.emitEvent(OrchestrationEvent.builder()
+                                 .ambiance(nodeExecution.getAmbiance())
+                                 .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
+                                 .eventType(OrchestrationEventType.NODE_EXECUTION_START)
+                                 .build());
+      return mongoTemplate.insert(nodeExecution);
+    } else {
+      return mongoTemplate.save(nodeExecution);
+    }
   }
 
   @Override

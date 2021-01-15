@@ -8,14 +8,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
-import io.harness.engine.interrupts.InterruptHelper;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.InterruptEffect;
-import io.harness.pms.contracts.execution.events.OrchestrationEventType;
-import io.harness.pms.sdk.core.events.OrchestrationEvent;
 
 import com.google.inject.Inject;
 
@@ -32,10 +29,6 @@ public class ResumeStepStatusUpdate implements StepStatusUpdate {
     if (resumePlan) {
       PlanExecution planExecution = planExecutionService.get(stepStatusUpdateInfo.getPlanExecutionId());
       planExecutionService.updateStatus(planExecution.getUuid(), RUNNING);
-      eventEmitter.emitEvent(OrchestrationEvent.builder()
-                                 .ambiance(InterruptHelper.buildFromPlanExecution(planExecution))
-                                 .eventType(OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE)
-                                 .build());
     }
   }
 

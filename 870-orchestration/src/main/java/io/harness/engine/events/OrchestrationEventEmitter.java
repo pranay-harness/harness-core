@@ -30,7 +30,7 @@ public class OrchestrationEventEmitter {
       subject.registerAll(handlers);
       subject.handleEventSync(event);
       if (stepTypeLookupService == null || event.getNodeExecutionProto() == null) {
-        orchestrationEventQueue.send(event);
+        orchestrationEventQueue.send(Collections.singletonList(PmsConstants.INTERNAL_SERVICE_NAME), event);
       } else {
         String serviceName = event.getNodeExecutionProto().getNode().getServiceName();
         orchestrationEventQueue.send(Collections.singletonList(serviceName), event);

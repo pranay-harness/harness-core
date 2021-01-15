@@ -6,14 +6,18 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.events.OrchestrationEventEmitter;
+import io.harness.engine.interrupts.InterruptHelper;
 import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.plan.Plan;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.utils.StatusUtils;
+import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.repositories.PlanExecutionRepository;
 
 import com.google.inject.Inject;
@@ -31,6 +35,7 @@ import org.springframework.data.mongodb.core.query.Update;
 public class PlanExecutionServiceImpl implements PlanExecutionService {
   @Inject private PlanExecutionRepository planExecutionRepository;
   @Inject private MongoTemplate mongoTemplate;
+  @Inject private OrchestrationEventEmitter eventEmitter;
 
   @Override
   public PlanExecution save(PlanExecution planExecution) {
@@ -60,6 +65,8 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
         query, updateOps, new FindAndModifyOptions().upsert(false).returnNew(true), PlanExecution.class);
     if (updated == null) {
       log.warn("Cannot update execution status for the PlanExecution {} with {}", planExecutionId, status);
+    } else {
+      emitEvent(updated);
     }
     return updated;
   }
@@ -100,5 +107,12 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
   @Override
   public void onStepStatusUpdate(StepStatusUpdateInfo stepStatusUpdateInfo) {
     log.info("State Status Update Callback Fired : {}", stepStatusUpdateInfo);
+  }
+
+  private void emitEvent(PlanExecution planExecution) {
+    eventEmitter.emitEvent(OrchestrationEvent.builder()
+                               .ambiance(InterruptHelper.buildFromPlanExecution(planExecution))
+                               .eventType(OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE)
+                               .build());
   }
 }
