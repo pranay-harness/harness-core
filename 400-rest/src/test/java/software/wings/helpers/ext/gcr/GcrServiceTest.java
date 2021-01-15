@@ -11,38 +11,34 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+import io.harness.artifacts.beans.BuildDetailsInternal;
+import io.harness.artifacts.gcr.beans.GcpInternalConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.GcpConfig;
-import software.wings.beans.TaskType;
-import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.service.impl.GcpHelperService;
+import software.wings.service.mappers.artifact.GcpConfigToInternalMapper;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.collect.Lists;
-import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.Mockito;
 
 public class GcrServiceTest extends WingsBaseTest {
-  GcpHelperService gcpHelperService = Mockito.mock(GcpHelperService.class);
-  GcrServiceImpl gcrService = spy(new GcrServiceImpl(gcpHelperService));
+  GcrServiceImpl gcrService = spy(new GcrServiceImpl());
   @Rule public WireMockRule wireMockRule = new WireMockRule(wireMockConfig().port(9881));
   private static final String url = "localhost:9881";
+  String basicAuthHeader = "auth";
+  GcpInternalConfig gcpInternalConfig = GcpConfigToInternalMapper.toGcpInternalConfig(url, basicAuthHeader);
 
   @Before
   public void setUp() {
-    Mockito.when(gcpHelperService.getDefaultCredentialsAccessToken(TaskType.GCP_TASK)).thenReturn("auth");
     wireMockRule.stubFor(WireMock.get(WireMock.urlEqualTo("/v2/someImage/tags/list"))
                              .withHeader("Authorization", equalTo("auth"))
                              .willReturn(aResponse().withStatus(200).withBody(
@@ -53,43 +49,31 @@ public class GcrServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
-  public void shouldGetBuilds() throws IOException {
-    List<BuildDetails> actual = gcrService.getBuilds(GcpConfig.builder().useDelegate(true).build(), null,
-        ArtifactStreamAttributes.builder().imageName("someImage").registryHostName(url).build(), 100);
+  public void shouldGetBuilds() {
+    List<BuildDetailsInternal> actual = gcrService.getBuilds(gcpInternalConfig, "someImage", 100);
     assertThat(actual).hasSize(3);
-    assertThat(actual.stream().map(BuildDetails::getNumber).collect(Collectors.toList()))
+    assertThat(actual.stream().map(BuildDetailsInternal::getNumber).collect(Collectors.toList()))
         .isEqualTo(Lists.newArrayList("latest", "v1", "v2"));
 
-    assertThatThrownBy(
-        ()
-            -> gcrService.getBuilds(GcpConfig.builder().useDelegate(true).build(), null,
-                ArtifactStreamAttributes.builder().imageName("doesNotExist").registryHostName(url).build(), 100))
+    gcrService.getBuilds(GcpConfigToInternalMapper.toGcpInternalConfig(url, basicAuthHeader), "someImage", 100);
+    assertThatThrownBy(() -> gcrService.getBuilds(gcpInternalConfig, "doesNotExist", 100))
         .isInstanceOf(WingsException.class);
   }
 
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
-  public void testVerifyImageName() throws IOException {
-    assertThat(gcrService.verifyImageName(GcpConfig.builder().useDelegate(true).build(), null,
-                   ArtifactStreamAttributes.builder().imageName("someImage").registryHostName(url).build()))
-        .isTrue();
-    assertThatThrownBy(
-        ()
-            -> gcrService.verifyImageName(GcpConfig.builder().useDelegate(true).build(), null,
-                ArtifactStreamAttributes.builder().imageName("doesNotExist").registryHostName(url).build()))
+  public void testVerifyImageName() {
+    assertThat(gcrService.verifyImageName(gcpInternalConfig, "someImage")).isTrue();
+    assertThatThrownBy(() -> gcrService.verifyImageName(gcpInternalConfig, "doesNotExist"))
         .isInstanceOf(WingsException.class);
   }
 
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
-  public void testValidateCredentials() throws IOException {
-    assertThat(gcrService.validateCredentials(GcpConfig.builder().useDelegate(true).build(), null,
-                   ArtifactStreamAttributes.builder().imageName("someImage").registryHostName(url).build()))
-        .isTrue();
-    assertThat(gcrService.validateCredentials(GcpConfig.builder().useDelegate(true).build(), null,
-                   ArtifactStreamAttributes.builder().imageName("doesNotExist").registryHostName(url).build()))
-        .isFalse();
+  public void testValidateCredentials() {
+    assertThat(gcrService.validateCredentials(gcpInternalConfig, "someImage")).isTrue();
+    assertThat(gcrService.validateCredentials(gcpInternalConfig, "doesNotExist")).isFalse();
   }
 }

@@ -5,31 +5,20 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 
-import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
-
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.artifact.ArtifactMetadataKeys;
+import io.harness.artifacts.beans.BuildDetailsInternal;
+import io.harness.artifacts.comparator.BuildDetailsInternalComparatorAscending;
+import io.harness.artifacts.gcr.beans.GcpInternalConfig;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArtifactServerException;
-import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
-import io.harness.security.encryption.EncryptedDataDetail;
 
-import software.wings.beans.GcpConfig;
-import software.wings.beans.TaskType;
-import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
-import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.common.BuildDetailsComparatorAscending;
-import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.service.impl.GcpHelperService;
-
-import com.google.api.client.auth.oauth2.TokenResponseException;
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
 import java.util.HashMap;
@@ -37,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -50,14 +38,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 @Singleton
 @Slf4j
 public class GcrServiceImpl implements GcrService {
-  private GcpHelperService gcpHelperService;
-
   private static final int CONNECT_TIMEOUT = 5; // TODO:: read from config
-
-  @Inject
-  public GcrServiceImpl(GcpHelperService gcpHelperService) {
-    this.gcpHelperService = gcpHelperService;
-  }
 
   private GcrRestClient getGcrRestClient(String registryHostName) {
     String url = getUrl(registryHostName);
@@ -78,16 +59,13 @@ public class GcrServiceImpl implements GcrService {
   }
 
   @Override
-  public List<BuildDetails> getBuilds(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
-      ArtifactStreamAttributes artifactStreamAttributes, int maxNumberOfBuilds) {
-    String imageName = artifactStreamAttributes.getImageName();
+  public List<BuildDetailsInternal> getBuilds(GcpInternalConfig gcpConfig, String imageName, int maxNumberOfBuilds) {
     try {
-      Response<GcrImageTagResponse> response =
-          getGcrRestClient(artifactStreamAttributes.getRegistryHostName())
-              .listImageTags(getBasicAuthHeader(gcpConfig, encryptionDetails), imageName)
-              .execute();
+      Response<GcrImageTagResponse> response = getGcrRestClient(gcpConfig.getGcrHostName())
+                                                   .listImageTags(gcpConfig.getBasicAuthHeader(), imageName)
+                                                   .execute();
       checkValidImage(imageName, response);
-      return processBuildResponse(artifactStreamAttributes, response.body());
+      return processBuildResponse(gcpConfig.getGcrHostName(), imageName, response.body());
     } catch (IOException e) {
       throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER, e).addParam("message", ExceptionUtils.getMessage(e));
     }
@@ -100,41 +78,40 @@ public class GcrServiceImpl implements GcrService {
     }
   }
 
-  private List<BuildDetails> processBuildResponse(
-      ArtifactStreamAttributes artifactStreamAttributes, GcrImageTagResponse dockerImageTagResponse) {
+  private List<BuildDetailsInternal> processBuildResponse(
+      String gcrUrl, String imageName, GcrImageTagResponse dockerImageTagResponse) {
     if (dockerImageTagResponse != null && dockerImageTagResponse.getTags() != null) {
-      String imageName = artifactStreamAttributes.getRegistryHostName() + "/" + artifactStreamAttributes.getImageName();
-      List<BuildDetails> buildDetails =
+      List<BuildDetailsInternal> buildDetails =
           dockerImageTagResponse.getTags()
               .stream()
               .map(tag -> {
                 Map<String, String> metadata = new HashMap();
-                metadata.put(ArtifactMetadataKeys.image, imageName + ":" + tag);
-                metadata.put(ArtifactMetadataKeys.tag, tag);
-                return aBuildDetails().withNumber(tag).withMetadata(metadata).withUiDisplayName("Tag# " + tag).build();
+                metadata.put(ArtifactMetadataKeys.IMAGE, gcrUrl + "/" + imageName + ":" + tag);
+                metadata.put(ArtifactMetadataKeys.TAG, tag);
+                return BuildDetailsInternal.builder()
+                    .uiDisplayName("Tag# " + tag)
+                    .number(tag)
+                    .metadata(metadata)
+                    .build();
               })
               .collect(toList());
       // Sorting at build tag for docker artifacts.
-      return buildDetails.stream().sorted(new BuildDetailsComparatorAscending()).collect(toList());
+      return buildDetails.stream().sorted(new BuildDetailsInternalComparatorAscending()).collect(toList());
     }
     return emptyList();
   }
 
   @Override
-  public BuildDetails getLastSuccessfulBuild(
-      GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String imageName) {
+  public BuildDetailsInternal getLastSuccessfulBuild(GcpInternalConfig gcpConfig, String imageName) {
     return null;
   }
 
   @Override
-  public boolean verifyImageName(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
-      ArtifactStreamAttributes artifactStreamAttributes) {
+  public boolean verifyImageName(GcpInternalConfig gcpConfig, String imageName) {
     try {
-      String imageName = artifactStreamAttributes.getImageName();
-      Response<GcrImageTagResponse> response =
-          getGcrRestClient(artifactStreamAttributes.getRegistryHostName())
-              .listImageTags(getBasicAuthHeader(gcpConfig, encryptionDetails), imageName)
-              .execute();
+      Response<GcrImageTagResponse> response = getGcrRestClient(gcpConfig.getGcrHostName())
+                                                   .listImageTags(gcpConfig.getBasicAuthHeader(), imageName)
+                                                   .execute();
       if (!isSuccessful(response)) {
         return validateImageName(imageName);
       }
@@ -153,36 +130,13 @@ public class GcrServiceImpl implements GcrService {
   }
 
   @Override
-  public boolean validateCredentials(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
-      ArtifactStreamAttributes artifactStreamAttributes) {
+  public boolean validateCredentials(GcpInternalConfig gcpConfig, String imageName) {
     try {
-      GcrRestClient registryRestClient = getGcrRestClient(artifactStreamAttributes.getRegistryHostName());
-      String basicAuthHeader = getBasicAuthHeader(gcpConfig, encryptionDetails);
-      Response response =
-          registryRestClient.listImageTags(basicAuthHeader, artifactStreamAttributes.getImageName()).execute();
+      GcrRestClient registryRestClient = getGcrRestClient(gcpConfig.getGcrHostName());
+      Response response = registryRestClient.listImageTags(gcpConfig.getBasicAuthHeader(), imageName).execute();
       return isSuccessful(response);
     } catch (IOException e) {
       throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER, e).addParam("message", ExceptionUtils.getMessage(e));
-    }
-  }
-
-  private String getBasicAuthHeader(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails)
-      throws IOException {
-    if (gcpConfig.isUseDelegate()) {
-      return gcpHelperService.getDefaultCredentialsAccessToken(TaskType.GCP_TASK);
-    }
-    GoogleCredential gc = gcpHelperService.getGoogleCredential(gcpConfig, encryptionDetails, false);
-
-    try {
-      if (gc.refreshToken()) {
-        return Credentials.basic("_token", gc.getAccessToken());
-      } else {
-        String msg = "Could not refresh token for google cloud provider";
-        log.warn(msg);
-        throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER).addParam("message", msg);
-      }
-    } catch (TokenResponseException e) {
-      throw new InvalidRequestException("Failed to refresh token: " + e.getMessage(), e);
     }
   }
 

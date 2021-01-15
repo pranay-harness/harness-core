@@ -16,30 +16,49 @@ import software.wings.helpers.ext.gcr.GcrService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.intfc.GcrBuildService;
+import software.wings.service.mappers.artifact.ArtifactConfigMapper;
+import software.wings.service.mappers.artifact.GcpConfigToInternalMapper;
 import software.wings.utils.ArtifactType;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by brett on 8/2/17
  */
 @OwnedBy(CDC)
 @Singleton
+@Slf4j
 public class GcrBuildServiceImpl implements GcrBuildService {
   @Inject private GcrService gcrService;
+  @Inject private GcpHelperService gcpHelperService;
 
   @Override
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.GCR.name());
-    return wrapNewBuildsWithLabels(gcrService.getBuilds(gcpConfig, encryptionDetails, artifactStreamAttributes, 50),
-        artifactStreamAttributes, gcpConfig);
+    try {
+      List<BuildDetails> builds = wrapNewBuildsWithLabels(
+          gcrService
+              .getBuilds(GcpConfigToInternalMapper.toGcpInternalConfig(artifactStreamAttributes.getRegistryHostName(),
+                             gcpHelperService.getBasicAuthHeader(gcpConfig, encryptionDetails)),
+                  artifactStreamAttributes.getImageName(), 50)
+              .stream()
+              .map(ArtifactConfigMapper::toBuildDetails)
+              .collect(Collectors.toList()),
+          artifactStreamAttributes, gcpConfig);
+      return builds;
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return null;
   }
 
   @Override
@@ -81,7 +100,15 @@ public class GcrBuildServiceImpl implements GcrBuildService {
   @Override
   public boolean validateArtifactSource(GcpConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes) {
-    return gcrService.verifyImageName(config, encryptionDetails, artifactStreamAttributes);
+    try {
+      return gcrService.verifyImageName(
+          GcpConfigToInternalMapper.toGcpInternalConfig(artifactStreamAttributes.getRegistryHostName(),
+              gcpHelperService.getBasicAuthHeader(config, encryptionDetails)),
+          artifactStreamAttributes.getImageName());
+    } catch (IOException e) {
+      log.error("Could not verify Artifact source", e);
+    }
+    return false;
   }
 
   @Override

@@ -3,11 +3,8 @@ package software.wings.helpers.ext.gcr;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.security.encryption.EncryptedDataDetail;
-
-import software.wings.beans.GcpConfig;
-import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.helpers.ext.jenkins.BuildDetails;
+import io.harness.artifacts.beans.BuildDetailsInternal;
+import io.harness.artifacts.gcr.beans.GcpInternalConfig;
 
 import java.util.List;
 
@@ -23,25 +20,22 @@ public interface GcrService {
    * @param maxNumberOfBuilds the max number of builds
    * @return the builds
    */
-  List<BuildDetails> getBuilds(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
-      ArtifactStreamAttributes artifactStreamAttributes, int maxNumberOfBuilds);
+  List<BuildDetailsInternal> getBuilds(GcpInternalConfig gcpConfig, String imageName, int maxNumberOfBuilds);
 
   /**
    * Gets last successful build.
    *
    * @param gcpConfig the gcr config
-   * @return the last successful build
+   * @return the last successful build`
    */
-  BuildDetails getLastSuccessfulBuild(
-      GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, String imageName);
+  BuildDetailsInternal getLastSuccessfulBuild(GcpInternalConfig gcpConfig, String imageName);
 
   /**
    * Validates the Image
    *
    * @param gcpConfig
    */
-  boolean verifyImageName(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
-      ArtifactStreamAttributes artifactStreamAttributes);
+  boolean verifyImageName(GcpInternalConfig gcpConfig, String imageName);
 
   /**
    * Validate the credentials
@@ -49,6 +43,5 @@ public interface GcrService {
    * @param gcpConfig
    * @return
    */
-  boolean validateCredentials(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails,
-      ArtifactStreamAttributes artifactStreamAttributes);
+  boolean validateCredentials(GcpInternalConfig gcpConfig, String imageName);
 }
