@@ -50,6 +50,7 @@ public class PlanNodeProtoMapper {
             .addAllRebObjects(CollectionUtils.emptyIfNull(node.getRefObjects()))
             .addAllAdviserObtainments(CollectionUtils.emptyIfNull(node.getAdviserObtainments()))
             .addAllFacilitatorObtainments(CollectionUtils.emptyIfNull(node.getFacilitatorObtainments()))
+            .addAllTimeoutObtainments(CollectionUtils.emptyIfNull(node.getTimeoutObtainments()))
             .setSkipExpressionChain(node.isSkipExpressionChain())
             .setSkipType(node.getSkipGraphType());
     if (node.getSkipCondition() != null) {

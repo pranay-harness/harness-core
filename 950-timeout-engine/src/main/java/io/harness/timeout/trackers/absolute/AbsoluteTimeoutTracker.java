@@ -3,9 +3,9 @@ package io.harness.timeout.trackers.absolute;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.timeout.Dimension;
 import io.harness.timeout.TimeoutTracker;
 import io.harness.timeout.TimeoutTrackerState;
+import io.harness.timeout.contracts.Dimension;
 
 import org.springframework.data.annotation.TypeAlias;
 

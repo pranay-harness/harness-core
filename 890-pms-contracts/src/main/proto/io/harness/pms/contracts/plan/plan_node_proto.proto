@@ -9,6 +9,7 @@ import "io/harness/pms/contracts/facilitators/facilitators.proto";
 import "io/harness/pms/contracts/steps/step_type.proto";
 import "io/harness/pms/contracts/steps/skip_type.proto";
 import "io/harness/pms/contracts/refobjects/ref_objects.proto";
+import "io/harness/timeout/contracts/timeouts.proto";
 
 message PlanNodeProto {
   string uuid = 1;
@@ -24,4 +25,5 @@ message PlanNodeProto {
   io.harness.pms.contracts.steps.SkipType skipType = 11;
   string skipCondition = 12;
   string serviceName = 13;
+  repeated io.harness.timeout.contracts.TimeoutObtainment timeoutObtainments = 14;
 }
