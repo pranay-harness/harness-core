@@ -85,7 +85,7 @@ public class InvitesServiceImpl implements InvitesService {
     this.ngUserService = ngUserService;
     this.invitesRepository = invitesRepository;
     this.transactionTemplate = transactionTemplate;
-    verificationBaseUrl = baseURL + "invites/verify?token=%s&accountId=%s";
+    verificationBaseUrl = baseURL + "ng/api/invites/verify?token=%s&accountId=%s";
     MongoClientURI uri = new MongoClientURI(mongoConfig.getUri());
     useMongoTransactions = uri.getHosts().size() > 2;
   }
@@ -249,7 +249,7 @@ public class InvitesServiceImpl implements InvitesService {
   public Optional<Invite> verify(String jwtToken) {
     Optional<String> inviteIdOptional = getInviteIdFromToken(jwtToken);
     if (!inviteIdOptional.isPresent()) {
-      throw new InvalidArgumentsException("invalid token. verification failed");
+      throw new InvalidArgumentsException("Invalid token. verification failed");
     }
     Optional<Invite> inviteOptional = get(inviteIdOptional.get());
 

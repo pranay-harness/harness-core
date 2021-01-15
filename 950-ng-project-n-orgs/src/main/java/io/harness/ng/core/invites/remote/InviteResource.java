@@ -7,13 +7,11 @@ import static io.harness.utils.PageUtils.getNGPageResponse;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
-import io.harness.ng.core.Status;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -29,6 +27,7 @@ import io.harness.utils.PageUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -49,7 +48,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -70,11 +68,13 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
 public class InviteResource {
-  private static final String PROJECT_URL_FORMAT = "/organizations/%s/projects/%s";
-  private static final String ORG_URL_FORMAT = "/organizations/%s";
-  private static final String SIGN_UP_URL = "/#/login";
+  private static final String PROJECT_URL_FORMAT = "ng/#/account/%s/projects/%s/orgs/%s/details";
+  private static final String ORG_URL_FORMAT = "ng/#/account/%s/admin/organizations/%s";
+  private static final String SIGN_UP_URL = "#/login";
+  private static final String INVALID_TOKEN_REDIRECT_URL = "ng/#/error?code=400&message=Invalid%20Token.%20Try%20again";
   private final InvitesService invitesService;
   private final NgUserService ngUserService;
+  @Named("baseUrl") private String BASE_URL;
 
   @GET
   @ApiOperation(value = "Get all invites for the queried project/organization", nickname = "getInvites")
@@ -146,27 +146,30 @@ public class InviteResource {
   public Response verify(
       @QueryParam("token") @NotNull String jwtToken, @QueryParam("accountIdentifier") String accountIdentifier) {
     Optional<Invite> inviteOpt = invitesService.verify(jwtToken);
+    URI redirectURI = null;
     if (inviteOpt.isPresent()) {
       Invite invite = inviteOpt.get();
-      //      TODO @Ankush when user signup, check if he has any pending approved invites
-      URI redirectURI = getRedirectURI(invite);
-      return Response.seeOther(redirectURI).build();
+
+      // TODO @Ankush when user signup, check if he has any pending approved invites
+      redirectURI = getRedirectURI(invite);
+    } else {
+      redirectURI = URI.create(BASE_URL + INVALID_TOKEN_REDIRECT_URL);
     }
-    FailureDTO failureDto = FailureDTO.toBody(Status.FAILURE, ErrorCode.INVALID_REQUEST, "Bad Request", null);
-    return Response.status(Response.Status.BAD_REQUEST).entity(failureDto).type(MediaType.APPLICATION_JSON).build();
+    return Response.seeOther(redirectURI).build();
   }
 
   private URI getRedirectURI(Invite invite) {
     URI redirectURI;
     if (Boolean.TRUE.equals(invite.getDeleted())) {
       if (invite.getProjectIdentifier() == null) {
-        redirectURI = URI.create(String.format(ORG_URL_FORMAT, invite.getOrgIdentifier()));
+        redirectURI = URI.create(
+            String.format(BASE_URL + ORG_URL_FORMAT, invite.getAccountIdentifier(), invite.getOrgIdentifier()));
       } else {
-        redirectURI =
-            URI.create(String.format(PROJECT_URL_FORMAT, invite.getOrgIdentifier(), invite.getProjectIdentifier()));
+        redirectURI = URI.create(String.format(BASE_URL + PROJECT_URL_FORMAT, invite.getAccountIdentifier(),
+            invite.getProjectIdentifier(), invite.getOrgIdentifier()));
       }
     } else {
-      redirectURI = URI.create(SIGN_UP_URL);
+      redirectURI = URI.create(BASE_URL + SIGN_UP_URL);
     }
     return redirectURI;
   }

@@ -137,6 +137,8 @@ pmsGrpcClientConfig:
 
 shouldConfigureWithPMS: false
 
+ngManagerPublicBaseUrl: http://localhost:7457/
+
 ceAwsSetupConfig:
   accessKey: ce_aws_accessKey_placeholder
   secretKey: ce_aws_secretKey_placeholder

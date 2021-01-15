@@ -61,7 +61,7 @@ public class InviteResourceTest extends CategoryTest {
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
     MongoConfig mongoConfig = MongoConfig.builder().uri("mongodb://localhost:27017/ng-harness").build();
-    inviteResource = new InviteResource(invitesService, ngUserService);
+    inviteResource = new InviteResource(invitesService, ngUserService, "http://qa.harness.io/");
     invite = Invite.builder()
                  .accountIdentifier(accountIdentifier)
                  .orgIdentifier(orgIdentifiier)
@@ -134,7 +134,7 @@ public class InviteResourceTest extends CategoryTest {
     String jwtToken = randomAlphabetic(20);
     when(invitesService.verify(jwtToken)).thenReturn(Optional.empty());
     Response response = inviteResource.verify(jwtToken, accountIdentifier);
-    assertThat(response.getStatus()).isEqualTo(BAD_REQUEST.getStatusCode());
+    assertThat(response.getStatus()).isEqualTo(303);
   }
 
   @Test
