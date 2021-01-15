@@ -300,6 +300,11 @@ public class ConnectorServiceImpl implements ConnectorService {
   @Override
   public void updateConnectivityDetailOfTheConnector(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String identifier, ConnectorValidationResult connectorValidationResult) {
+    if (connectorValidationResult == null) {
+      log.info("Got null validation result for the {}",
+          String.format(CONNECTOR_STRING, identifier, accountIdentifier, orgIdentifier, projectIdentifier));
+      return;
+    }
     long testingTime = connectorValidationResult.getTestedAt() != 0L ? connectorValidationResult.getTestedAt()
                                                                      : System.currentTimeMillis();
     Connector connector = getConnectorWithIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, identifier);

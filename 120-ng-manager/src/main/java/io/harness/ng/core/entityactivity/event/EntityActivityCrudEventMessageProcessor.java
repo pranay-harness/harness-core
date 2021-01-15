@@ -38,20 +38,25 @@ public class EntityActivityCrudEventMessageProcessor implements MessageProcessor
     String messageId = message.getId();
     log.info("Processing the activity crud event with the id {}", messageId);
     Map<String, String> metadataMap = message.getMessage().getMetadataMap();
-    if (metadataMap.containsKey(EventsFrameworkMetadataConstants.ACTION)) {
-      switch (metadataMap.get(EventsFrameworkMetadataConstants.ACTION)) {
-        case EventsFrameworkMetadataConstants.CREATE_ACTION:
-          EntityActivityCreateDTO entityActivityProtoDTO = getEntityActivityCreateDTO(message);
-          NGActivityDTO ngActivityDTO = entityActivityProtoToRestDTOMapper.toRestDTO(entityActivityProtoDTO);
-          processCreateAction(ngActivityDTO);
-          saveConnectivityCheckResultInConnectorRecords(ngActivityDTO);
-          return true;
-        default:
-          log.info("Invalid action type: {}", metadataMap.get(EventsFrameworkMetadataConstants.ACTION));
+    try {
+      if (metadataMap.containsKey(EventsFrameworkMetadataConstants.ACTION)) {
+        switch (metadataMap.get(EventsFrameworkMetadataConstants.ACTION)) {
+          case EventsFrameworkMetadataConstants.CREATE_ACTION:
+            EntityActivityCreateDTO entityActivityProtoDTO = getEntityActivityCreateDTO(message);
+            NGActivityDTO ngActivityDTO = entityActivityProtoToRestDTOMapper.toRestDTO(entityActivityProtoDTO);
+            processCreateAction(ngActivityDTO);
+            saveConnectivityCheckResultInConnectorRecords(ngActivityDTO);
+            return true;
+          default:
+            log.info("Invalid action type: {}", metadataMap.get(EventsFrameworkMetadataConstants.ACTION));
+        }
       }
+      log.info("Completed processing the activity crud event with the id {}", messageId);
+      return true;
+    } catch (Exception ex) {
+      log.info("Error processing the activity crud event with the id {}", messageId, ex);
     }
-    log.info("Completed processing the activity crud event with the id {}", messageId);
-    return true;
+    return false;
   }
 
   private void saveConnectivityCheckResultInConnectorRecords(NGActivityDTO ngActivityDTO) {
