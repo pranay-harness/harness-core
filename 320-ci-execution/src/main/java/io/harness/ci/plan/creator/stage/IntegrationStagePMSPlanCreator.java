@@ -114,7 +114,7 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
       PlanCreationContext ctx, StageElementConfig stageElementConfig, List<String> childrenNodeIds) {
     BuildStatusUpdateParameter buildStatusUpdateParameter = obtainBuildStatusUpdateParameter(ctx, stageElementConfig);
     StepParameters stepParameters = IntegrationStageStepParametersPMS.getStepParameters(
-        stageElementConfig, childrenNodeIds.get(0), buildStatusUpdateParameter);
+        stageElementConfig, childrenNodeIds.get(0), buildStatusUpdateParameter, ctx);
 
     return PlanNode.builder()
         .uuid(stageElementConfig.getUuid())

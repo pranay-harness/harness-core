@@ -2,10 +2,17 @@ package io.harness.beans.stages;
 
 import io.harness.beans.dependencies.DependencyElement;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
+import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure.Type;
+import io.harness.beans.yaml.extended.infrastrucutre.UseFromStageInfraYaml;
+import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.plancreator.stages.stage.StageElementConfig;
+import io.harness.pms.plan.creation.PlanCreatorUtils;
+import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.YamlField;
+import io.harness.pms.yaml.YamlUtils;
 import io.harness.yaml.core.variables.NGVariable;
 
 import java.util.List;
@@ -31,25 +38,46 @@ public class IntegrationStageStepParametersPMS implements StepParameters {
   String childNodeID;
 
   public static IntegrationStageStepParametersPMS getStepParameters(StageElementConfig stageElementConfig,
-      String childNodeID, BuildStatusUpdateParameter buildStatusUpdateParameter) {
+      String childNodeID, BuildStatusUpdateParameter buildStatusUpdateParameter, PlanCreationContext ctx) {
     if (stageElementConfig == null) {
       return IntegrationStageStepParametersPMS.builder().childNodeID(childNodeID).build();
     }
     IntegrationStageConfig integrationStageConfig = (IntegrationStageConfig) stageElementConfig.getStageType();
+
+    Infrastructure infrastructure = integrationStageConfig.getInfrastructure();
+    if (integrationStageConfig.getInfrastructure().getType() == Type.USE_FROM_STAGE) {
+      UseFromStageInfraYaml useFromStageInfraYaml = (UseFromStageInfraYaml) integrationStageConfig.getInfrastructure();
+      if (useFromStageInfraYaml.getUseFromStage() != null) {
+        YamlField yamlField = ctx.getCurrentField();
+        String identifier = useFromStageInfraYaml.getUseFromStage();
+        IntegrationStage integrationStage = getIntegrationStageConfig(yamlField, identifier);
+        infrastructure = integrationStage.getInfrastructure();
+      }
+    }
 
     return IntegrationStageStepParametersPMS.builder()
         .identifier(stageElementConfig.getIdentifier())
         .name(stageElementConfig.getName())
         .buildStatusUpdateParameter(buildStatusUpdateParameter)
         .description(stageElementConfig.getDescription())
-        .infrastructure(integrationStageConfig.getInfrastructure())
+        .infrastructure(infrastructure)
         .dependencies(integrationStageConfig.getServiceDependencies())
         .type(stageElementConfig.getType())
         .skipCondition(integrationStageConfig.getSkipCondition())
-        .variables(integrationStageConfig.getVariables())
+        .variables(stageElementConfig.getVariables())
         .childNodeID(childNodeID)
         .sharedPaths(integrationStageConfig.getSharedPaths())
         .enableCloneRepo(integrationStageConfig.getCloneCodebase())
         .build();
+  }
+
+  private static IntegrationStage getIntegrationStageConfig(YamlField yamlField, String identifier) {
+    try {
+      YamlField stageYamlField = PlanCreatorUtils.getStageConfig(yamlField, identifier);
+      return YamlUtils.read(stageYamlField.getNode().toString(), IntegrationStage.class);
+    } catch (Exception ex) {
+      throw new CIStageExecutionException(
+          "Failed to deserialize IntegrationStage for use from stage identifier: " + identifier, ex);
+    }
   }
 }

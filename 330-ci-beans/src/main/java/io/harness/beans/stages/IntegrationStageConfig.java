@@ -8,7 +8,6 @@ import io.harness.common.SwaggerConstants;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.plancreator.stages.stage.StageInfoConfig;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.yaml.core.variables.NGVariable;
 import io.harness.yaml.schema.YamlSchemaRoot;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -30,7 +29,6 @@ import org.springframework.data.annotation.TypeAlias;
 @YamlSchemaRoot(EntityType.INTEGRATION_STAGE)
 public class IntegrationStageConfig implements StageInfoConfig {
   String uuid;
-  List<NGVariable> variables;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH) private ParameterField<List<String>> sharedPaths;
   ExecutionElementConfig execution;
   @JsonTypeInfo(
