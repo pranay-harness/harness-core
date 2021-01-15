@@ -51,7 +51,8 @@ public class NGPipelinePlanCreator extends ChildrenPlanCreator<PipelineInfoConfi
     String name = config.getName() != null ? config.getName() : config.getIdentifier();
     YamlNode stagesYamlNode = Preconditions.checkNotNull(ctx.getCurrentField().getNode().getField("stages")).getNode();
 
-    StepParameters stepParameters = PipelineSetupStepParameters.getStepParameters(config, stagesYamlNode.getUuid());
+    StepParameters stepParameters =
+        PipelineSetupStepParameters.getStepParameters(ctx, config, stagesYamlNode.getUuid());
 
     return PlanNode.builder()
         .uuid(config.getUuid())

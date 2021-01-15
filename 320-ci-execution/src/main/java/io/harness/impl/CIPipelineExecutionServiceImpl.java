@@ -1,6 +1,7 @@
 package io.harness.impl;
 
 import static io.harness.beans.executionargs.ExecutionArgs.EXEC_ARGS;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 
@@ -60,6 +61,7 @@ public class CIPipelineExecutionServiceImpl implements CIPipelineExecutionServic
       log.info("Started pipeline execution from execution source: {}", ciExecutionArgs.getExecutionSource().getType());
       PlanExecution planExecution = orchestrationService.startExecution(plan, setupAbstractions,
           ExecutionMetadata.newBuilder()
+              .setExecutionUuid(generateUuid())
               .setRunSequence(0)
               .setTriggerInfo(ExecutionTriggerInfo.newBuilder()
                                   .setTriggeredBy(TriggeredBy.newBuilder()

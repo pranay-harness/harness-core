@@ -1,5 +1,7 @@
 package io.harness.pms.plan.execution;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.OrchestrationService;
@@ -46,6 +48,7 @@ public class PipelineExecuteHelper {
 
     String pipelineYaml;
     ExecutionMetadata.Builder executionMetadataBuilder = ExecutionMetadata.newBuilder()
+                                                             .setExecutionUuid(generateUuid())
                                                              .setTriggerInfo(triggerInfo)
                                                              .setRunSequence(pipelineEntity.get().getRunSequence());
 
@@ -70,6 +73,7 @@ public class PipelineExecuteHelper {
     }
 
     ExecutionMetadata.Builder executionMetadataBuilder = ExecutionMetadata.newBuilder()
+                                                             .setExecutionUuid(generateUuid())
                                                              .setTriggerInfo(triggerInfo)
                                                              .setRunSequence(pipelineEntity.get().getRunSequence());
     String mergedRuntimeInputYaml = validateAndMergeHelper.getMergeInputSetFromPipelineTemplate(

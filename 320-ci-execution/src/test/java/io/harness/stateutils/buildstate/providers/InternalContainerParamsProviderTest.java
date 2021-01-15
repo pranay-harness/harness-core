@@ -7,6 +7,7 @@ import static io.harness.common.CIExecutionConstants.SETUP_ADDON_ARGS;
 import static io.harness.common.CIExecutionConstants.SETUP_ADDON_CONTAINER_NAME;
 import static io.harness.common.CIExecutionConstants.TI_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.common.CIExecutionConstants.TI_SERVICE_TOKEN_VARIABLE;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,8 +55,11 @@ public class InternalContainerParamsProviderTest extends CIExecutionTest {
     setupAbstractions.put("accountId", "account");
     setupAbstractions.put("projectIdentifier", "project");
     setupAbstractions.put("orgIdentifier", "org");
-    ExecutionMetadata executionMetadata =
-        ExecutionMetadata.newBuilder().setRunSequence(buildID).setPipelineIdentifier("pipeline").build();
+    ExecutionMetadata executionMetadata = ExecutionMetadata.newBuilder()
+                                              .setExecutionUuid(generateUuid())
+                                              .setRunSequence(buildID)
+                                              .setPipelineIdentifier("pipeline")
+                                              .build();
     Ambiance ambiance =
         Ambiance.newBuilder().putAllSetupAbstractions(setupAbstractions).setMetadata(executionMetadata).build();
     K8PodDetails k8PodDetails = K8PodDetails.builder().stageID("stage").build();

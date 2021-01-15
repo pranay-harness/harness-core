@@ -53,8 +53,11 @@ public class AbortAllInterruptHandlerTest extends WingsBaseTest {
   private static final ExecutionTriggerInfo triggerInfo =
       ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).setTriggeredBy(embeddedUser).build();
 
-  private static final ExecutionMetadata metadata =
-      ExecutionMetadata.newBuilder().setRunSequence(0).setTriggerInfo(triggerInfo).build();
+  private static final ExecutionMetadata metadata = ExecutionMetadata.newBuilder()
+                                                        .setExecutionUuid(generateUuid())
+                                                        .setRunSequence(0)
+                                                        .setTriggerInfo(triggerInfo)
+                                                        .build();
 
   @Before
   public void setUp() {
