@@ -75,6 +75,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.configuration.DeployMode;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.AvailableDelegateSizes;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateConfiguration;
@@ -86,6 +87,7 @@ import io.harness.delegate.beans.DelegateProgressData;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
+import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskAbortEvent;
 import io.harness.delegate.beans.DelegateTaskEvent;
@@ -140,6 +142,7 @@ import io.harness.persistence.UuidAware;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.selection.log.BatchDelegateSelectionLog;
+import io.harness.serializer.JsonUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateCallbackService;
@@ -249,6 +252,7 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -3668,6 +3672,21 @@ public class DelegateServiceImpl implements DelegateService {
     if (numDelegates > delegatesFeature.getMaxUsageAllowedForAccount(accountId)) {
       sendEmailAboutDelegatesOverUsage(accountId, numDelegates);
     }
+  }
+
+  @Override
+  public List<DelegateSizeDetails> fetchAvailableSizes() {
+    try {
+      InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("delegatesizes/sizes.json");
+      String fileContent = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+      AvailableDelegateSizes availableDelegateSizes = JsonUtils.asObject(fileContent, AvailableDelegateSizes.class);
+
+      return availableDelegateSizes.getAvailableSizes();
+    } catch (Exception e) {
+      log.error("Unexpected exception occurred while trying read available delegate sizes from resource file.");
+    }
+
+    return null;
   }
 
   private Optional<String> selectDelegateToRetain(String accountId) {

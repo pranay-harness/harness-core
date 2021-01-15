@@ -34,6 +34,8 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateApproval;
+import io.harness.delegate.beans.DelegateSize;
+import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 
@@ -57,6 +59,7 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -90,17 +93,18 @@ public class DelegateSetupResourceTest {
   }
 
   @ClassRule
-  public final ResourceTestRule RESOURCES = ResourceTestRule.builder()
-                                                .instance(new DelegateSetupResource(delegateService,
-                                                    delegateScopeService, downloadTokenService, subdomainUrlHelper))
-                                                .instance(new AbstractBinder() {
-                                                  @Override
-                                                  protected void configure() {
-                                                    bind(httpServletRequest).to(HttpServletRequest.class);
-                                                  }
-                                                })
-                                                .type(WingsExceptionMapper.class)
-                                                .build();
+  public static final ResourceTestRule RESOURCES =
+      ResourceTestRule.builder()
+          .instance(new DelegateSetupResource(
+              delegateService, delegateScopeService, downloadTokenService, subdomainUrlHelper))
+          .instance(new AbstractBinder() {
+            @Override
+            protected void configure() {
+              bind(httpServletRequest).to(HttpServletRequest.class);
+            }
+          })
+          .type(WingsExceptionMapper.class)
+          .build();
 
   @Test
   @Owner(developers = ROHITKARELIA)
@@ -182,6 +186,29 @@ public class DelegateSetupResourceTest {
                                                     .get(new GenericType<RestResponse<DelegateStatus>>() {});
     verify(delegateService, atLeastOnce()).getDelegateStatusWithScalingGroups(ACCOUNT_ID);
     assertThat(restResponse.getResource().getScalingGroups()).isEqualTo(scalingGroups);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldFetchDelegateSizes() {
+    List<DelegateSizeDetails> delegateSizes = Collections.singletonList(DelegateSizeDetails.builder()
+                                                                            .size(DelegateSize.EXTRA_SMALL)
+                                                                            .replicas(1)
+                                                                            .taskLimit(25)
+                                                                            .cpu(0.5)
+                                                                            .disk(10)
+                                                                            .ram(1024)
+                                                                            .build());
+    when(delegateService.fetchAvailableSizes()).thenReturn(delegateSizes);
+    RestResponse<List<DelegateSizeDetails>> restResponse =
+        RESOURCES.client()
+            .target("/setup/delegates/delegate-sizes?accountId=" + ACCOUNT_ID)
+            .request()
+            .get(new GenericType<RestResponse<List<DelegateSizeDetails>>>() {});
+    verify(delegateService, atLeastOnce()).fetchAvailableSizes();
+    assertThat(restResponse.getResource().size()).isEqualTo(1);
+    assertThat(restResponse.getResource()).isEqualTo(delegateSizes);
   }
 
   @Test

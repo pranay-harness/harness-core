@@ -1,0 +1,28 @@
+{
+  "availableSizes" : [
+    {
+      "size" : "EXTRA_SMALL",
+      "taskLimit" : "50",
+      "replicas" : "1",
+      "ram" : "500",
+      "cpu" : "0.5",
+      "disk" : "0"
+    },
+    {
+      "size" : "SMALL",
+      "taskLimit" : "100",
+      "replicas" : "2",
+      "ram" : "1024",
+      "cpu" : "1",
+      "disk" : "0"
+    },
+    {
+      "size" : "MEDIUM",
+      "taskLimit" : "200",
+      "replicas" : "4",
+      "ram" : "2048",
+      "cpu" : "2",
+      "disk" : "0"
+    }
+  ]
+}
