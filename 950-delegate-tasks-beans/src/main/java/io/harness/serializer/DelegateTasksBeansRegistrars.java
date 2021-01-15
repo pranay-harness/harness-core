@@ -12,12 +12,14 @@ public class DelegateTasksBeansRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(ApiServiceBeansRegistrars.kryoRegistrars)
+          .addAll(PersistenceRegistrars.kryoRegistrars)
           .add(DelegateTasksBeansKryoRegister.class)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(ApiServiceBeansRegistrars.morphiaRegistrars)
+          .addAll(PersistenceRegistrars.morphiaRegistrars)
           .add(DelegateTasksBeansMorphiaRegistrar.class)
           .build();
 }

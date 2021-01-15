@@ -303,6 +303,20 @@ import io.harness.delegate.task.stepstatus.StepMapOutput;
 import io.harness.delegate.task.stepstatus.StepStatus;
 import io.harness.delegate.task.stepstatus.StepStatusTaskParameters;
 import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
+import io.harness.ng.core.dto.secrets.KerberosConfigDTO;
+import io.harness.ng.core.dto.secrets.SSHAuthDTO;
+import io.harness.ng.core.dto.secrets.SSHConfigDTO;
+import io.harness.ng.core.dto.secrets.SSHCredentialType;
+import io.harness.ng.core.dto.secrets.SSHKeyPathCredentialDTO;
+import io.harness.ng.core.dto.secrets.SSHKeyReferenceCredentialDTO;
+import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
+import io.harness.ng.core.dto.secrets.SSHPasswordCredentialDTO;
+import io.harness.ng.core.dto.secrets.TGTGenerationMethod;
+import io.harness.ng.core.dto.secrets.TGTKeyTabFilePathSpecDTO;
+import io.harness.ng.core.dto.secrets.TGTPasswordSpecDTO;
+import io.harness.secretmanagerclient.SSHAuthScheme;
+import io.harness.secretmanagerclient.SecretType;
+import io.harness.secretmanagerclient.ValueType;
 import io.harness.serializer.KryoRegistrar;
 
 import software.wings.beans.TaskType;
@@ -633,5 +647,20 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(NexusTaskParams.TaskType.class, 19504);
     kryo.register(ArtifactoryTaskParams.TaskType.class, 19505);
     kryo.register(VaultConnectorDTO.class, 19506);
+
+    kryo.register(SecretType.class, 543214);
+    kryo.register(ValueType.class, 543215);
+    kryo.register(SSHKeySpecDTO.class, 543222);
+    kryo.register(SSHAuthScheme.class, 543223);
+    kryo.register(SSHConfigDTO.class, 543224);
+    kryo.register(TGTGenerationMethod.class, 543226);
+    kryo.register(TGTPasswordSpecDTO.class, 543227);
+    kryo.register(SSHCredentialType.class, 543228);
+    kryo.register(TGTKeyTabFilePathSpecDTO.class, 543229);
+    kryo.register(SSHKeyReferenceCredentialDTO.class, 543230);
+    kryo.register(SSHPasswordCredentialDTO.class, 543231);
+    kryo.register(SSHKeyPathCredentialDTO.class, 543232);
+    kryo.register(KerberosConfigDTO.class, 543233);
+    kryo.register(SSHAuthDTO.class, 543234);
   }
 }
