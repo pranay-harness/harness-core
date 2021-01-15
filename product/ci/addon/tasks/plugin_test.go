@@ -32,6 +32,7 @@ func TestPluginSuccess(t *testing.T) {
 		timeoutSecs:       5,
 		numRetries:        numRetries,
 		log:               log.Sugar(),
+		addonLogger:       log.Sugar(),
 		cmdContextFactory: cmdFactory,
 		procWriter:        &buf,
 	}
@@ -69,6 +70,7 @@ func TestPluginNonZeroStatus(t *testing.T) {
 		timeoutSecs:       5,
 		numRetries:        numRetries,
 		log:               log.Sugar(),
+		addonLogger:       log.Sugar(),
 		cmdContextFactory: cmdFactory,
 		procWriter:        &buf,
 	}
@@ -105,7 +107,7 @@ func TestPluginTaskCreate(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	executor := NewPluginTask(step, nil, log.Sugar(), &buf)
+	executor := NewPluginTask(step, nil, log.Sugar(), &buf, log.Sugar())
 	assert.NotNil(t, executor)
 }
 
@@ -130,7 +132,7 @@ func TestPluginEntrypointErr(t *testing.T) {
 	defer func() { getImgMetadata = oldImgMetadata }()
 
 	var buf bytes.Buffer
-	executor := NewPluginTask(step, nil, log.Sugar(), &buf)
+	executor := NewPluginTask(step, nil, log.Sugar(), &buf, log.Sugar())
 	_, err := executor.Run(ctx)
 	assert.NotNil(t, err)
 }
@@ -156,7 +158,7 @@ func TestPluginEmptyEntrypointErr(t *testing.T) {
 	defer func() { getImgMetadata = oldImgMetadata }()
 
 	var buf bytes.Buffer
-	executor := NewPluginTask(step, nil, log.Sugar(), &buf)
+	executor := NewPluginTask(step, nil, log.Sugar(), &buf, log.Sugar())
 	_, err := executor.Run(ctx)
 	assert.NotNil(t, err)
 }
@@ -181,6 +183,7 @@ func TestPluginWithJEXlErr(t *testing.T) {
 		timeoutSecs:       5,
 		numRetries:        numRetries,
 		log:               log.Sugar(),
+		addonLogger:       log.Sugar(),
 		cmdContextFactory: cmdFactory,
 		procWriter:        &buf,
 	}
@@ -226,6 +229,7 @@ func TestPluginWithJEXlSuccess(t *testing.T) {
 		timeoutSecs:       5,
 		numRetries:        numRetries,
 		log:               log.Sugar(),
+		addonLogger:       log.Sugar(),
 		cmdContextFactory: cmdFactory,
 		procWriter:        &buf,
 	}

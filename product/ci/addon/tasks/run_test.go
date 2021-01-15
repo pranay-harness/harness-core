@@ -42,6 +42,7 @@ func TestExecuteSuccess(t *testing.T) {
 		numRetries:        numRetries,
 		tmpFilePath:       "/tmp",
 		log:               log.Sugar(),
+		addonLogger:       log.Sugar(),
 		fs:                fs,
 		cmdContextFactory: cmdFactory,
 		procWriter:        &buf,
@@ -85,6 +86,7 @@ func TestExecuteSuccess_WithReports(t *testing.T) {
 		numRetries:        numRetries,
 		tmpFilePath:       "/tmp",
 		log:               log.Sugar(),
+		addonLogger:       log.Sugar(),
 		fs:                fs,
 		reports:           reports,
 		cmdContextFactory: cmdFactory,
@@ -183,6 +185,7 @@ func TestExecuteFailure_WithReports(t *testing.T) {
 		numRetries:        numRetries,
 		tmpFilePath:       "/tmp",
 		log:               log.Sugar(),
+		addonLogger:       log.Sugar(),
 		fs:                fs,
 		reports:           reports,
 		cmdContextFactory: cmdFactory,
@@ -273,6 +276,7 @@ func TestExecuteNonZeroStatus(t *testing.T) {
 		numRetries:        numRetries,
 		tmpFilePath:       "/tmp",
 		log:               log.Sugar(),
+		addonLogger:       log.Sugar(),
 		fs:                fs,
 		cmdContextFactory: cmdFactory,
 		procWriter:        &buf,
@@ -325,6 +329,7 @@ func TestExecuteSuccessWithOutput(t *testing.T) {
 		envVarOutputs:     []string{"abc", "abc1"},
 		tmpFilePath:       "/tmp",
 		log:               log.Sugar(),
+		addonLogger:       log.Sugar(),
 		fs:                fs,
 		cmdContextFactory: cmdFactory,
 		procWriter:        &buf,
@@ -372,6 +377,7 @@ func TestExecuteErrorWithOutput(t *testing.T) {
 		envVarOutputs:     []string{"abc", "abc1"},
 		tmpFilePath:       "/tmp",
 		log:               log.Sugar(),
+		addonLogger:       log.Sugar(),
 		fs:                fs,
 		cmdContextFactory: cmdFactory,
 		procWriter:        &buf,
@@ -403,6 +409,6 @@ func TestRunTaskCreate(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	executor := NewRunTask(step, tmpPath, log.Sugar(), &buf)
+	executor := NewRunTask(step, tmpPath, log.Sugar(), &buf, log.Sugar())
 	assert.NotNil(t, executor)
 }

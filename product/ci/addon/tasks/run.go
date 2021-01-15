@@ -57,13 +57,15 @@ type runTask struct {
 	tmpFilePath       string
 	reports           []*pb.Report
 	log               *zap.SugaredLogger
+	addonLogger       *zap.SugaredLogger
 	procWriter        io.Writer
 	fs                filesystem.FileSystem
 	cmdContextFactory exec.CmdContextFactory
 }
 
 // NewRunTask creates a run step executor
-func NewRunTask(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogger, w io.Writer) RunTask {
+func NewRunTask(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogger, w io.Writer,
+	addonLogger *zap.SugaredLogger) RunTask {
 	r := step.GetRun()
 	fs := filesystem.NewOSFileSystem(log)
 
@@ -89,6 +91,7 @@ func NewRunTask(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogger, w
 		log:               log,
 		fs:                fs,
 		procWriter:        w,
+		addonLogger:       addonLogger,
 	}
 }
 
@@ -184,7 +187,7 @@ func (e *runTask) execute(ctx context.Context, retryCount int32) (map[string]str
 		stepOutput = outputVars
 	}
 
-	e.log.Infow(
+	e.addonLogger.Infow(
 		"Successfully executed run step",
 		"arguments", cmdToExecute,
 		"output", stepOutput,
@@ -202,7 +205,7 @@ func (e *runTask) getScript(outputVarFile string) string {
 	command := fmt.Sprintf("set -e\n %s %s", e.command, outputVarCmd)
 	logCmd, err := getLoggableCmd(command)
 	if err != nil {
-		e.log.Warn("failed to parse command using mvdan/sh. ", "command", command, zap.Error(err))
+		e.addonLogger.Warn("failed to parse command using mvdan/sh. ", "command", command, zap.Error(err))
 		return fmt.Sprintf("echo '---%s'\n%s", command, command)
 	}
 	return logCmd

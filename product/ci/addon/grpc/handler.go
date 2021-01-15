@@ -54,14 +54,14 @@ func (h *handler) ExecuteStep(ctx context.Context, in *pb.ExecuteStepRequest) (*
 
 	switch x := in.GetStep().GetStep().(type) {
 	case *enginepb.UnitStep_Run:
-		stepOutput, numRetries, err := newRunTask(in.GetStep(), in.GetTmpFilePath(), rl.BaseLogger, rl.Writer).Run(ctx)
+		stepOutput, numRetries, err := newRunTask(in.GetStep(), in.GetTmpFilePath(), rl.BaseLogger, rl.Writer, h.log).Run(ctx)
 		response := &pb.ExecuteStepResponse{
 			Output:     stepOutput,
 			NumRetries: numRetries,
 		}
 		return response, err
 	case *enginepb.UnitStep_Plugin:
-		numRetries, err := newPluginTask(in.GetStep(), in.GetPrevStepOutputs(), rl.BaseLogger, rl.Writer).Run(ctx)
+		numRetries, err := newPluginTask(in.GetStep(), in.GetPrevStepOutputs(), rl.BaseLogger, rl.Writer, h.log).Run(ctx)
 		response := &pb.ExecuteStepResponse{
 			NumRetries: numRetries,
 		}

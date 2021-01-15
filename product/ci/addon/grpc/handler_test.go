@@ -87,7 +87,7 @@ func TestExecuteRunStep(t *testing.T) {
 
 	oldRunTask := newRunTask
 	defer func() { newRunTask = oldRunTask }()
-	newRunTask = func(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogger, w io.Writer) tasks.RunTask {
+	newRunTask = func(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogger, w io.Writer, addonLogger *zap.SugaredLogger) tasks.RunTask {
 		return mockStep
 	}
 
@@ -124,7 +124,7 @@ func TestExecutePluginStep(t *testing.T) {
 
 	oldPluginTask := newPluginTask
 	defer func() { newPluginTask = oldPluginTask }()
-	newPluginTask = func(step *pb.UnitStep, so map[string]*pb.StepOutput, log *zap.SugaredLogger, w io.Writer) tasks.PluginTask {
+	newPluginTask = func(step *pb.UnitStep, so map[string]*pb.StepOutput, log *zap.SugaredLogger, w io.Writer, addonLogger *zap.SugaredLogger) tasks.PluginTask {
 		return mockStep
 	}
 
