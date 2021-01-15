@@ -19,6 +19,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.DelegateApproval;
+import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.k8s.KubernetesConvention;
 import io.harness.logging.AccountLogContext;
@@ -196,6 +197,17 @@ public class DelegateSetupResource {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateService.getProfileResult(accountId, delegateId));
+    }
+  }
+
+  @GET
+  @Path("delegate-sizes")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = MANAGE_DELEGATES)
+  public RestResponse<List<DelegateSizeDetails>> delegateSizes(@QueryParam("accountId") @NotEmpty String accountId) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      return new RestResponse<>(delegateService.fetchAvailableSizes());
     }
   }
 

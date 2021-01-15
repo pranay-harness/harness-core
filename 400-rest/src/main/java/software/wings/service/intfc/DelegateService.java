@@ -12,6 +12,7 @@ import io.harness.delegate.beans.DelegateProgressData;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
+import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.beans.DelegateTaskAbortEvent;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -162,4 +163,6 @@ public interface DelegateService extends OwnedByAccount {
   CEDelegateStatus validateCEDelegate(String accountId, String delegateName);
 
   void convertToExecutionCapability(DelegateTask task);
+
+  List<DelegateSizeDetails> fetchAvailableSizes();
 }

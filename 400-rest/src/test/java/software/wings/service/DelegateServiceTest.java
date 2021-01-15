@@ -86,6 +86,8 @@ import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateScripts;
+import io.harness.delegate.beans.DelegateSize;
+import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
@@ -2609,6 +2611,40 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     assertThat(selectorsCapabilityList.get(0).getSelectorOrigin()).isEqualTo(TASK_CATEGORY_MAP);
     assertThat(selectorsCapabilityList.get(0).getSelectors()).isEqualTo(sampleMap.getSelectors());
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testFetchAvailableSizes() {
+    List<DelegateSizeDetails> delegateSizeDetails = delegateService.fetchAvailableSizes();
+    assertThat(delegateSizeDetails).isNotNull();
+    assertThat(delegateSizeDetails).hasSize(3);
+    assertThat(delegateSizeDetails)
+        .containsExactlyInAnyOrder(DelegateSizeDetails.builder()
+                                       .size(DelegateSize.EXTRA_SMALL)
+                                       .taskLimit(50)
+                                       .replicas(1)
+                                       .ram(500)
+                                       .cpu(0.5)
+                                       .disk(0)
+                                       .build(),
+            DelegateSizeDetails.builder()
+                .size(DelegateSize.SMALL)
+                .taskLimit(100)
+                .replicas(2)
+                .ram(1024)
+                .cpu(1)
+                .disk(0)
+                .build(),
+            DelegateSizeDetails.builder()
+                .size(DelegateSize.MEDIUM)
+                .taskLimit(200)
+                .replicas(4)
+                .ram(2048)
+                .cpu(2)
+                .disk(0)
+                .build());
   }
 
   private DelegateTask saveDelegateTask(boolean async, Set<String> validatingTaskIds, DelegateTask.Status status) {
