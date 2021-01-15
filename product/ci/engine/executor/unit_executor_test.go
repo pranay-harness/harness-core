@@ -193,7 +193,9 @@ func TestStepRunSuccess(t *testing.T) {
 
 	outputKey := "foo"
 	outputVal := "bar"
-	o := &output.StepOutput{Output: map[string]string{outputKey: outputVal}}
+
+	o := &output.StepOutput{}
+	o.Output.Variables = map[string]string{outputKey: outputVal}
 	retries := int32(3)
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
@@ -217,7 +219,7 @@ func TestStepRunSuccess(t *testing.T) {
 	e := NewUnitExecutor(tmpFilePath, log.Sugar())
 	ret, err := e.Run(ctx, stepProto, nil, accountID)
 	assert.Equal(t, err, nil)
-	assert.Equal(t, ret.Output[outputKey], outputVal)
+	assert.Equal(t, ret.Output.Variables[outputKey], outputVal)
 }
 
 func TestStepPluginSuccess(t *testing.T) {
@@ -341,9 +343,9 @@ func TestStepSaveCacheSuccess(t *testing.T) {
 		CallbackToken: callbackToken,
 		TaskId:        taskID,
 	}
-	o := &output.StepOutput{
-		Output: map[string]string{"key": key},
-	}
+
+	o := &output.StepOutput{}
+	o.Output.Variables = map[string]string{"key": key}
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	mockStep := msteps.NewMockSaveCacheStep(ctrl)

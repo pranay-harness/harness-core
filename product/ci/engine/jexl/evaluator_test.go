@@ -57,7 +57,10 @@ func TestEvaluateJEXLErr(t *testing.T) {
 	stepO := make(map[string]string)
 	stepO[envVar1] = envVal1
 	stepO[envVar2] = envVal2
-	so[stepID] = &output.StepOutput{Output: stepO}
+
+	o := &output.StepOutput{}
+	o.Output.Variables = stepO
+	so[stepID] = o
 
 	expr1 := fmt.Sprintf("<+%s.output.%s>", stepID, envVar1)
 	expr2 := fmt.Sprintf("<+%s.output.%s>", stepID, envVar2)
@@ -133,7 +136,10 @@ func TestEvaluateJEXLClientCreateErr(t *testing.T) {
 	stepO := make(map[string]string)
 	stepO[envVar1] = envVal1
 	stepO[envVar2] = envVal2
-	so[stepID] = &output.StepOutput{Output: stepO}
+
+	o := &output.StepOutput{}
+	o.Output.Variables = stepO
+	so[stepID] = o
 
 	oldClient := newExpressionEvalClient
 	defer func() { newExpressionEvalClient = oldClient }()
@@ -172,7 +178,10 @@ func TestEvaluateJEXLSuccess(t *testing.T) {
 	stepO := make(map[string]string)
 	stepO[envVar1] = envVal1
 	stepO[envVar2] = envVal2
-	so[stepID] = &output.StepOutput{Output: stepO}
+
+	o := &output.StepOutput{}
+	o.Output.Variables = stepO
+	so[stepID] = o
 
 	c := &mockClient{
 		response: &pb.ExpressionResponse{
@@ -232,7 +241,10 @@ func TestEvaluateJEXLServerErr(t *testing.T) {
 	stepO := make(map[string]string)
 	stepO[envVar1] = envVal1
 	stepO[envVar2] = envVal2
-	so[stepID] = &output.StepOutput{Output: stepO}
+
+	o := &output.StepOutput{}
+	o.Output.Variables = stepO
+	so[stepID] = o
 
 	c := &mockClient{
 		response: nil,
@@ -278,7 +290,10 @@ func TestEvaluateJEXLInvalidExpression(t *testing.T) {
 	stepO := make(map[string]string)
 	stepO[envVar1] = envVal1
 	stepO[envVar2] = envVal2
-	so[stepID] = &output.StepOutput{Output: stepO}
+
+	o := &output.StepOutput{}
+	o.Output.Variables = stepO
+	so[stepID] = o
 
 	c := &mockClient{
 		response: &pb.ExpressionResponse{

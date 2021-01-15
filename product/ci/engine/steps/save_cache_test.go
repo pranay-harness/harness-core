@@ -246,7 +246,7 @@ func TestSaveCacheRunWithUploadSuccess(t *testing.T) {
 	mockMinio.EXPECT().UploadWithOpts(ctx, key, filePath, gomock.Any(), true, gomock.Any()).Return(nil)
 	o, err := s.Run(ctx)
 	assert.Equal(t, err, nil)
-	assert.Equal(t, o.Output, map[string]string{outputKey: key})
+	assert.Equal(t, o.Output.Variables, map[string]string{outputKey: key})
 }
 
 func TestSaveCacheRunWithSameKeyExists(t *testing.T) {
@@ -296,7 +296,7 @@ func TestSaveCacheRunWithSameKeyExists(t *testing.T) {
 	mockMinio.EXPECT().Stat(key).Return("", metadata, nil)
 	o, err := s.Run(ctx)
 	assert.Equal(t, err, nil)
-	assert.Equal(t, o.Output, map[string]string{outputKey: key})
+	assert.Equal(t, o.Output.Variables, map[string]string{outputKey: key})
 }
 
 func TestSaveCacheResolveJEXL(t *testing.T) {

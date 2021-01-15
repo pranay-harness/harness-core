@@ -10,5 +10,7 @@ type StageOutput map[string]*StepOutput
 
 // StepOutput is the format for output/outcomes for a step
 type StepOutput struct {
-	Output map[string]string `json:"output.outputVariables"`
+	Output struct {
+		Variables map[string]string `json:"outputVariables"`
+	} `json:"output"`
 }
