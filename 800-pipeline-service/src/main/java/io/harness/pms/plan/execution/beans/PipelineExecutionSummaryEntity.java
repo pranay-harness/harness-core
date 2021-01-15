@@ -4,6 +4,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdUniqueIndex;
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -16,10 +17,13 @@ import io.harness.pms.plan.execution.beans.dto.GraphLayoutNodeDTO;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -53,7 +57,7 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
   private ExecutionStatus status;
 
   private String inputSetYaml;
-  private Map<String, String> tags;
+  @Singular @Size(max = 128) List<NGTag> tags;
 
   @Builder.Default private Map<String, org.bson.Document> moduleInfo = new HashMap<>();
   @Builder.Default private Map<String, GraphLayoutNodeDTO> layoutNodeMap = new HashMap<>();

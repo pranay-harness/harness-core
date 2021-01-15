@@ -88,7 +88,10 @@ public class ParallelPlanCreator extends ChildrenPlanCreator<YamlField> {
     YamlField nextSibling =
         ctx.getCurrentField().getNode().nextSiblingFromParentArray(YAMLFieldNameConstants.PARALLEL, possibleSiblings);
 
-    List<YamlField> children = getDependencyNodeIdsList(ctx);
+    List<YamlField> children = getStageChildFields(ctx);
+    if (children.isEmpty()) {
+      return GraphLayoutResponse.builder().build();
+    }
     List<String> childrenUuids =
         children.stream().map(YamlField::getNode).map(YamlNode::getUuid).collect(Collectors.toList());
     EdgeLayoutList.Builder stagesEdgesBuilder = EdgeLayoutList.newBuilder().addAllCurrentNodeChildren(childrenUuids);
@@ -136,13 +139,7 @@ public class ParallelPlanCreator extends ChildrenPlanCreator<YamlField> {
 
   @VisibleForTesting
   List<YamlField> getDependencyNodeIdsList(PlanCreationContext planCreationContext) {
-    List<YamlField> childYamlFields = Optional.of(planCreationContext.getCurrentField().getNode().asArray())
-                                          .orElse(Collections.emptyList())
-                                          .stream()
-                                          .map(el -> el.getField(YAMLFieldNameConstants.STAGE))
-                                          .filter(Objects::nonNull)
-                                          .collect(Collectors.toList());
-
+    List<YamlField> childYamlFields = getStageChildFields(planCreationContext);
     if (childYamlFields.isEmpty()) {
       List<YamlNode> yamlNodes =
           Optional.of(planCreationContext.getCurrentField().getNode().asArray()).orElse(Collections.emptyList());
@@ -158,5 +155,14 @@ public class ParallelPlanCreator extends ChildrenPlanCreator<YamlField> {
       });
     }
     return childYamlFields;
+  }
+
+  private List<YamlField> getStageChildFields(PlanCreationContext planCreationContext) {
+    return Optional.of(planCreationContext.getCurrentField().getNode().asArray())
+        .orElse(Collections.emptyList())
+        .stream()
+        .map(el -> el.getField(YAMLFieldNameConstants.STAGE))
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
   }
 }
