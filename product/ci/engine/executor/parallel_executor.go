@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	statuspb "github.com/wings-software/portal/910-delegate-task-grpc-service/src/main/proto/io/harness/task/service"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
@@ -12,6 +13,13 @@ import (
 )
 
 //go:generate mockgen -source parallel_executor.go -package=executor -destination mocks/parallel_executor_mock.go ParallelExecutor
+
+type stepStatus int
+
+const (
+	pending stepStatus = iota
+	completed
+)
 
 // ParallelExecutor represents an interface to execute a parallel step
 type ParallelExecutor interface {
@@ -49,12 +57,14 @@ func (e *parallelExecutor) Run(ctx context.Context, ps *pb.ParallelStep, so outp
 		return nil, err
 	}
 
+	stepStatusByID := make(map[string]stepStatus)
 	// Figure out the run step tasks to run in parallel
 	numSteps := len(ps.GetSteps())
 	tasks := make(chan *pb.UnitStep, numSteps)
 	results := make(chan unitStepResponse, numSteps)
 	for _, step := range ps.GetSteps() {
 		s := step
+		stepStatusByID[s.GetId()] = pending
 		go func() {
 			stepOutput, err := e.unitExecutor.Run(ctx, s, so, accountID)
 			results <- unitStepResponse{
@@ -70,13 +80,15 @@ func (e *parallelExecutor) Run(ctx context.Context, ps *pb.ParallelStep, so outp
 	// Evaluate the parallel step results
 	for i := 0; i < numSteps; i++ {
 		result := <-results
+		stepStatusByID[result.stepID] = completed
 		if result.err != nil {
 			e.log.Errorw(
 				"failed to execute parallel step",
-				"step_id", ps.GetId(),
+				"step_id", result.stepID,
 				"elapsed_time_ms", utils.TimeSince(start),
 				zap.Error(result.err),
 			)
+			e.sendAbortToPendingSteps(ctx, stepStatusByID, ps.GetSteps(), start, accountID)
 			return nil, result.err
 		}
 
@@ -84,11 +96,39 @@ func (e *parallelExecutor) Run(ctx context.Context, ps *pb.ParallelStep, so outp
 	}
 
 	e.log.Infow(
-		"Successfully executed parallel step",
-		"step_id", ps.GetId(),
-		"elapsed_time_ms", utils.TimeSince(start),
+		"Successfully executed parallel step", "elapsed_time_ms", utils.TimeSince(start),
 	)
 	return stepOutputByID, nil
+}
+
+// Sends the abort stepStatus to all the pending steps.
+func (e *parallelExecutor) sendAbortToPendingSteps(ctx context.Context, stepStatusByID map[string]stepStatus, steps []*pb.UnitStep,
+	startTime time.Time, accountID string) error {
+	stepByID := make(map[string]*pb.UnitStep)
+	for _, s := range steps {
+		stepByID[s.GetId()] = s
+	}
+
+	for stepID, status := range stepStatusByID {
+		step, ok := stepByID[stepID]
+		if !ok {
+			e.log.Warnw("Step not present for ID. This should not happen", "step_id", stepID)
+			continue
+		}
+		if status == pending {
+			callbackToken := step.GetCallbackToken()
+			taskID := step.GetTaskId()
+			stepID := step.GetId()
+
+			err := sendStepStatus(ctx, stepID, accountID, callbackToken, taskID, int32(1), time.Since(startTime),
+				statuspb.StepExecutionStatus_ABORTED, "", nil, e.log)
+			if err != nil {
+				e.log.Errorw("Failed to send abort step stepStatus to pending step in parallel section", "step_id", stepID, zap.Error(err))
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // Validates parallel step

@@ -45,13 +45,14 @@ type pluginTask struct {
 	image             string
 	prevStepOutputs   map[string]*pb.StepOutput
 	log               *zap.SugaredLogger
+	addonLogger       *zap.SugaredLogger
 	procWriter        io.Writer
 	cmdContextFactory exec.CmdContextFactory
 }
 
 // NewPluginTask creates a plugin step executor
 func NewPluginTask(step *pb.UnitStep, prevStepOutputs map[string]*pb.StepOutput,
-	log *zap.SugaredLogger, w io.Writer) PluginTask {
+	log *zap.SugaredLogger, w io.Writer, addonLogger *zap.SugaredLogger) PluginTask {
 	r := step.GetPlugin()
 	timeoutSecs := r.GetContext().GetExecutionTimeoutSecs()
 	if timeoutSecs == 0 {
@@ -72,6 +73,7 @@ func NewPluginTask(step *pb.UnitStep, prevStepOutputs map[string]*pb.StepOutput,
 		cmdContextFactory: exec.OsCommandContextGracefulWithLog(log),
 		log:               log,
 		procWriter:        w,
+		addonLogger:       addonLogger,
 	}
 }
 
@@ -153,7 +155,7 @@ func (e *pluginTask) execute(ctx context.Context, retryCount int32) error {
 		return err
 	}
 
-	e.log.Infow(
+	e.addonLogger.Infow(
 		"Successfully executed plugin",
 		"arguments", commands,
 		"elapsed_time_ms", utils.TimeSince(start),
