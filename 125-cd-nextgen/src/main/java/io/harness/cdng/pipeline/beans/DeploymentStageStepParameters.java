@@ -39,7 +39,7 @@ public class DeploymentStageStepParameters implements StepParameters {
         .failureStrategies(config.getFailureStrategies())
         .type(config.getType())
         .skipCondition(stageType.getSkipCondition())
-        .originalVariables(stageType.getVariables())
+        .originalVariables(config.getVariables())
         .childNodeID(childNodeID)
         .build();
   }

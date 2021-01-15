@@ -35,6 +35,7 @@ import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.beans.yaml.extended.container.quantity.unit.DecimalQuantityUnit;
 import io.harness.beans.yaml.extended.container.quantity.unit.MemoryQuantityUnit;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
+import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure.Type;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.ci.utils.QuantityUtils;
 import io.harness.common.CICommonPodConstants;
@@ -70,7 +71,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-
 @Singleton
 @Slf4j
 public class BuildJobEnvInfoBuilder {
@@ -102,7 +102,8 @@ public class BuildJobEnvInfoBuilder {
     }
 
     Infrastructure infrastructure = integrationStage.getInfrastructure();
-    if (infrastructure.getType() == Infrastructure.Type.KUBERNETES_DIRECT) {
+    if (infrastructure.getType() == Infrastructure.Type.KUBERNETES_DIRECT
+        || infrastructure.getType() == Type.USE_FROM_STAGE) {
       return K8BuildJobEnvInfo.builder()
           .podsSetupInfo(getCIPodsSetupInfo(stageElementConfig, ciExecutionArgs, steps, isFirstPod, podName))
           .workDir(CICommonPodConstants.STEP_EXEC_WORKING_DIR)
@@ -399,11 +400,11 @@ public class BuildJobEnvInfoBuilder {
 
   private List<SecretNGVariable> getSecretVariables(StageElementConfig stageElementConfig) {
     IntegrationStageConfig integrationStageConfig = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
-    if (isEmpty(integrationStageConfig.getVariables())) {
+    if (isEmpty(stageElementConfig.getVariables())) {
       return Collections.emptyList();
     }
 
-    return integrationStageConfig.getVariables()
+    return stageElementConfig.getVariables()
         .stream()
         .filter(variable -> variable.getType() == NGVariableType.SECRET)
         .map(customVariable -> (SecretNGVariable) customVariable)
@@ -589,11 +590,11 @@ public class BuildJobEnvInfoBuilder {
   private Map<String, String> getEnvVariables(StageElementConfig stageElementConfig) {
     IntegrationStageConfig integrationStageConfig = IntegrationStageUtils.getIntegrationStageConfig(stageElementConfig);
 
-    if (isEmpty(integrationStageConfig.getVariables())) {
+    if (isEmpty(stageElementConfig.getVariables())) {
       return Collections.emptyMap();
     }
 
-    return integrationStageConfig.getVariables()
+    return stageElementConfig.getVariables()
         .stream()
         .filter(customVariables -> customVariables.getType() == NGVariableType.STRING)
         .map(customVariable -> (StringNGVariable) customVariable)

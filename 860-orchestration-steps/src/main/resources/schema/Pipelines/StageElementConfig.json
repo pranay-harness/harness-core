@@ -24,6 +24,12 @@
     },
     "uuid": {
       "type": "string"
+    },
+    "variables": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/NGVariable"
+      }
     }
   },
   "$schema": "http://json-schema.org/draft-07/schema#"
