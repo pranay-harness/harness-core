@@ -54,8 +54,7 @@ public class ConnectorHeartbeatPerpetualTaskExecutor implements PerpetualTaskExe
     ConnectorValidationHandler connectorValidationHandler =
         connectorTypeToConnectorValidationHandlerMap.get(connectorInfoDTO.getConnectorType().toString());
     if (connectorValidationHandler == null) {
-      throw new UnsupportedOperationException(
-          "The connector validation handler is not registered for the connector type "
+      log.info("The connector validation handler is not registered for the connector type "
           + connectorInfoDTO.getConnectorType());
     }
     ConnectorValidationResult connectorValidationResult = connectorValidationHandler.validate(
