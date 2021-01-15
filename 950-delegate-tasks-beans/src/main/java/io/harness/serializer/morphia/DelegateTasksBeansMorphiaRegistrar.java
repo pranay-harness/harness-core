@@ -27,6 +27,7 @@ import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstSwapRoutesTaskParameters;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
+import io.harness.ng.core.models.Secret;
 
 import java.util.Set;
 
@@ -36,6 +37,7 @@ public class DelegateTasksBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(HDelegateTask.class);
     set.add(ExecutionCapabilityDemander.class);
     set.add(ExecutionCapability.class);
+    set.add(Secret.class);
   }
 
   @Override
