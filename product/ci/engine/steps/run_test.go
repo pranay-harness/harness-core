@@ -175,7 +175,7 @@ func TestRunExecuteSuccess(t *testing.T) {
 	executor := NewRunStep(step, tmpPath, nil, log.Sugar())
 	o, n, err := executor.Run(ctx)
 	assert.Nil(t, err)
-	assert.Equal(t, o.Output[outputKey], outputVal)
+	assert.Equal(t, o.Output.Variables[outputKey], outputVal)
 	assert.Equal(t, n, numRetries)
 }
 

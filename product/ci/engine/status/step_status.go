@@ -65,7 +65,7 @@ func getRequestArg(stepID, accountID, callbackToken, taskID string, numRetries i
 	status pb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) *pb.SendTaskStatusRequest {
 	var stepOutputMap map[string]string
 	if stepOutput != nil {
-		stepOutputMap = stepOutput.Output
+		stepOutputMap = stepOutput.Output.Variables
 	}
 	req := &pb.SendTaskStatusRequest{
 		AccountId: &delegatepb.AccountId{

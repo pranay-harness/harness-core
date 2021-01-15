@@ -157,9 +157,8 @@ func (s *saveCacheStep) Run(ctx context.Context) (*output.StepOutput, error) {
 		"key", s.key,
 		"elapsed_time_ms", utils.TimeSince(start),
 	)
-	o := &output.StepOutput{
-		Output: map[string]string{outputKey: s.key},
-	}
+	o := &output.StepOutput{}
+	o.Output.Variables = map[string]string{outputKey: s.key}
 	return o, nil
 }
 

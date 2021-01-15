@@ -179,9 +179,16 @@ func TestStageSuccess(t *testing.T) {
 	outputVal1 := "step1"
 	outputVal2 := "step2"
 	outputVal3 := "step3"
-	stepOutput1 := &output.StepOutput{Output: map[string]string{outputKey: outputVal1}}
-	stepOutput2 := &output.StepOutput{Output: map[string]string{outputKey: outputVal2}}
-	stepOutput3 := &output.StepOutput{Output: map[string]string{outputKey: outputVal3}}
+
+	stepOutput1 := &output.StepOutput{}
+	stepOutput1.Output.Variables = map[string]string{outputKey: outputVal1}
+
+	stepOutput2 := &output.StepOutput{}
+	stepOutput2.Output.Variables = map[string]string{outputKey: outputVal2}
+
+	stepOutput3 := &output.StepOutput{}
+	stepOutput3.Output.Variables = map[string]string{outputKey: outputVal3}
+
 	psOutput := map[string]*output.StepOutput{"step1": stepOutput1, "step2": stepOutput2}
 
 	step1 := getTestRunStep("step1", `echo step1`, []string{}, uint32(8000))

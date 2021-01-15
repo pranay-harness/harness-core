@@ -124,7 +124,9 @@ func (e *runStep) execute(ctx context.Context) (*output.StepOutput, int32, error
 		return nil, int32(1), err
 	}
 	e.log.Infow("Successfully executed step", "elapsed_time_ms", utils.TimeSince(st))
-	return &output.StepOutput{Output: ret.GetOutput()}, ret.GetNumRetries(), nil
+	stepOutput := &output.StepOutput{}
+	stepOutput.Output.Variables = ret.GetOutput()
+	return stepOutput, ret.GetNumRetries(), nil
 }
 
 func (e *runStep) getExecuteStepArg() *addonpb.ExecuteStepRequest {
