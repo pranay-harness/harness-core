@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_CLOUD_PROVIDER;
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
@@ -18,6 +19,7 @@ import software.wings.service.impl.gcp.GcpCredentialsHelperService;
 import software.wings.service.impl.gcp.GcpHttpTransportHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 
+import com.google.api.client.auth.oauth2.TokenResponseException;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
@@ -35,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 
@@ -225,6 +228,26 @@ public class GcpHelperService {
     } catch (IOException | NullPointerException e) {
       log.error(taskType.name() + " - Failed to get projectId due to: ", e);
       throw new InvalidRequestException("Can not retrieve project-id from from cluster meta");
+    }
+  }
+
+  public String getBasicAuthHeader(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails)
+      throws IOException {
+    if (gcpConfig.isUseDelegate()) {
+      return getDefaultCredentialsAccessToken(TaskType.GCP_TASK);
+    }
+    GoogleCredential gc = getGoogleCredential(gcpConfig, encryptionDetails, false);
+
+    try {
+      if (gc.refreshToken()) {
+        return Credentials.basic("_token", gc.getAccessToken());
+      } else {
+        String msg = "Could not refresh token for google cloud provider";
+        log.warn(msg);
+        throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER).addParam("message", msg);
+      }
+    } catch (TokenResponseException e) {
+      throw new InvalidRequestException("407 Proxy Authentication Required");
     }
   }
 
