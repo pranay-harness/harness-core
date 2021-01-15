@@ -51,7 +51,7 @@ public class RunTimeInputHandler {
 
   public String resolveStringParameter(String fieldName, String stepType, String stepIdentifier,
       ParameterField<String> parameterField, boolean isMandatory) {
-    if (parameterField == null || parameterField.getValue() == null) {
+    if (parameterField == null) {
       if (isMandatory) {
         throw new CIStageExecutionUserException(
             format("Failed to resolve mandatory field %s in step type %s with identifier %s", fieldName, stepType,
@@ -62,7 +62,7 @@ public class RunTimeInputHandler {
     }
 
     // It only checks input set pattern. Variable can be resolved on lite engine.
-    if (matchesInputSetPattern(parameterField.getValue())) {
+    if (parameterField.isExpression() && matchesInputSetPattern(parameterField.getExpressionValue())) {
       if (isMandatory) {
         throw new CIStageExecutionUserException(
             format("Failed to resolve mandatory field %s in step type %s with identifier %s", fieldName, stepType,
@@ -74,7 +74,7 @@ public class RunTimeInputHandler {
       }
     }
 
-    return parameterField.getValue();
+    return (String) parameterField.fetchFinalValue();
   }
 
   public SecretRefData resolveSecretRefWithDefaultValue(String fieldName, String stepType, String stepIdentifier,
@@ -94,7 +94,7 @@ public class RunTimeInputHandler {
 
   public String resolveStringParameterWithDefaultValue(String fieldName, String stepType, String stepIdentifier,
       ParameterField<String> parameterField, boolean isMandatory, String defaultValue) {
-    if (parameterField == null || parameterField.getValue() == null) {
+    if (parameterField == null) {
       if (isMandatory && isEmpty(defaultValue)) {
         throw new CIStageExecutionUserException(
             format("Failed to resolve mandatory field %s in step type %s with identifier %s", fieldName, stepType,
@@ -108,7 +108,7 @@ public class RunTimeInputHandler {
     }
 
     // It only checks input set pattern. Variable can be resolved on lite engine.
-    if (matchesInputSetPattern(parameterField.getValue())) {
+    if (parameterField.isExpression() && matchesInputSetPattern(parameterField.getExpressionValue())) {
       if (isMandatory && isEmpty(defaultValue)) {
         throw new CIStageExecutionUserException(
             format("Failed to resolve mandatory field %s in step type %s with identifier %s", fieldName, stepType,
@@ -120,7 +120,7 @@ public class RunTimeInputHandler {
       }
     }
 
-    return parameterField.getValue();
+    return (String) parameterField.fetchFinalValue();
   }
 
   public Map<String, String> resolveMapParameter(String fieldName, String stepType, String stepIdentifier,
