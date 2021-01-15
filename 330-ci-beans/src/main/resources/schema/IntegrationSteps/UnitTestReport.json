@@ -1,7 +1,9 @@
 {
   "type": "object",
-  "discriminator": "type",
   "properties": {
+    "spec": {
+      "$ref": "#/definitions/UnitTestReportSpec"
+    },
     "type": {
       "type": "string",
       "enum": [

@@ -63,10 +63,10 @@ pipeline:
                     connectorRef: gcrConnector
                     command: some command or commands
                     reports:
-                      - type: JUnit
-                        spec:
-                          paths:
-                            - rspec.xml
+                      type: JUnit
+                      spec:
+                        paths:
+                          - rspec.xml
                     envVariables:
                       key: value1
                       key2: val2
