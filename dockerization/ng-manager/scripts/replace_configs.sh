@@ -158,6 +158,10 @@ if [[ "" != "$PMS_AUTHORITY" ]]; then
   yq write -i $CONFIG_FILE pmsGrpcClientConfig.authority $PMS_AUTHORITY
 fi
 
+if [[ "" != "$NG_MANAGER_PUBLIC_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE ngManagerPublicBaseUrl $NG_MANAGER_PUBLIC_BASE_URL
+fi
+
 replace_key_value ceAwsSetupConfig.accessKey $CE_AWS_ACCESS_KEY
 
 replace_key_value ceAwsSetupConfig.secretKey $CE_AWS_SECRET_KEY
