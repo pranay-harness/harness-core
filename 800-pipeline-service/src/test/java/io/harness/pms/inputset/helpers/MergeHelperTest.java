@@ -221,4 +221,32 @@ public class MergeHelperTest extends CategoryTest {
     String mergedYaml = mergeInputSetIntoPipeline(yamlWithRuntime, runtimeInput, false);
     assertThat(mergedYaml.replace("\"", "")).isEqualTo(fullYaml);
   }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testMergeOnCIPipelineYaml() throws IOException {
+    ClassLoader classLoader = getClass().getClassLoader();
+    String fullYamlFile = "ci-pipeline-with-reports.yaml";
+    String fullYaml =
+        Resources.toString(Objects.requireNonNull(classLoader.getResource(fullYamlFile)), StandardCharsets.UTF_8);
+    String templateOfFull = createTemplateFromPipeline(fullYaml);
+    assertThat(templateOfFull).isNull();
+
+    String yamlWithRuntimeFile = "ci-pipeline-runtime-input.yaml";
+    String yamlWithRuntime = Resources.toString(
+        Objects.requireNonNull(classLoader.getResource(yamlWithRuntimeFile)), StandardCharsets.UTF_8);
+    String template = createTemplateFromPipeline(yamlWithRuntime);
+
+    String templateFile = "ci-pipeline-template.yaml";
+    String templateActual =
+        Resources.toString(Objects.requireNonNull(classLoader.getResource(templateFile)), StandardCharsets.UTF_8);
+    assertThat(template.replace("\"", "")).isEqualTo(templateActual);
+
+    String runtimeInputFile = "ci-runtime-input-yaml.yaml";
+    String runtimeInput =
+        Resources.toString(Objects.requireNonNull(classLoader.getResource(runtimeInputFile)), StandardCharsets.UTF_8);
+    String mergedYaml = mergeInputSetIntoPipeline(yamlWithRuntime, runtimeInput, false);
+    assertThat(mergedYaml.replace("\"", "")).isEqualTo(fullYaml);
+  }
 }

@@ -1,5 +1,6 @@
 package io.harness.pms.merger.helpers;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.merger.PipelineYamlConfig;
 import io.harness.pms.merger.fqn.FQN;
@@ -122,30 +123,28 @@ public class FQNUtils {
   }
 
   private void generateFQNMapFromListOfMultipleKeyMaps(ArrayNode list, FQN baseFQN, Map<FQN, Object> res) {
+    String uuidKey = getUuidKey(list);
+    if (EmptyPredicate.isEmpty(uuidKey)) {
+      res.put(baseFQN, list);
+      return;
+    }
     list.forEach(element -> {
-      FQN currFQN;
-      if (element.has(YAMLFieldNameConstants.NAME)) {
-        currFQN = FQN.duplicateAndAddNode(baseFQN,
-            FQNNode.builder()
-                .nodeType(FQNNode.NodeType.UUID)
-                .uuidKey(YAMLFieldNameConstants.NAME)
-                .uuidValue(element.get(YAMLFieldNameConstants.NAME).asText())
-                .build());
+      FQN currFQN = FQN.duplicateAndAddNode(baseFQN,
+          FQNNode.builder()
+              .nodeType(FQNNode.NodeType.UUID)
+              .uuidKey(uuidKey)
+              .uuidValue(element.get(uuidKey).asText())
+              .build());
+      if (uuidKey.equals(YAMLFieldNameConstants.IDENTIFIER)) {
+        generateFQNMap(element, currFQN, res);
       } else {
-        currFQN = FQN.duplicateAndAddNode(baseFQN,
-            FQNNode.builder()
-                .nodeType(FQNNode.NodeType.UUID)
-                .uuidKey(YAMLFieldNameConstants.KEY)
-                .uuidValue(element.get(YAMLFieldNameConstants.KEY).asText())
-                .build());
-      }
-
-      Set<String> fieldNames = new LinkedHashSet<>();
-      element.fieldNames().forEachRemaining(fieldNames::add);
-      for (String key : fieldNames) {
-        FQN finalFQN =
-            FQN.duplicateAndAddNode(currFQN, FQNNode.builder().nodeType(FQNNode.NodeType.KEY).key(key).build());
-        res.put(finalFQN, element.get(key));
+        Set<String> fieldNames = new LinkedHashSet<>();
+        element.fieldNames().forEachRemaining(fieldNames::add);
+        for (String key : fieldNames) {
+          FQN finalFQN =
+              FQN.duplicateAndAddNode(currFQN, FQNNode.builder().nodeType(FQNNode.NodeType.KEY).key(key).build());
+          res.put(finalFQN, element.get(key));
+        }
       }
     });
   }
@@ -260,44 +259,63 @@ public class FQNUtils {
   private void generateYamlMapFromListOfMultipleKeyMaps(
       ArrayNode list, FQN baseFQN, Map<FQN, Object> fqnMap, Map<String, Object> res, String topKey) {
     List<Object> topKeyList = new ArrayList<>();
+    String uuidKey = getUuidKey(list);
+    if (EmptyPredicate.isEmpty(uuidKey)) {
+      if (fqnMap.containsKey(baseFQN)) {
+        topKeyList.add(list);
+        res.put(topKey, topKeyList);
+      }
+      return;
+    }
     list.forEach(element -> {
-      Map<String, Object> tempMap = new LinkedHashMap<>();
-      FQN currFQN;
-      if (element.has(YAMLFieldNameConstants.NAME)) {
-        currFQN = FQN.duplicateAndAddNode(baseFQN,
-            FQNNode.builder()
-                .nodeType(FQNNode.NodeType.UUID)
-                .uuidKey(YAMLFieldNameConstants.NAME)
-                .uuidValue(element.get(YAMLFieldNameConstants.NAME).asText())
-                .build());
-      } else {
-        currFQN = FQN.duplicateAndAddNode(baseFQN,
-            FQNNode.builder()
-                .nodeType(FQNNode.NodeType.UUID)
-                .uuidKey(YAMLFieldNameConstants.KEY)
-                .uuidValue(element.get(YAMLFieldNameConstants.KEY).asText())
-                .build());
-      }
-
-      Set<String> fieldNames = new LinkedHashSet<>();
-      element.fieldNames().forEachRemaining(fieldNames::add);
-      for (String key : fieldNames) {
-        FQN finalFQN =
-            FQN.duplicateAndAddNode(currFQN, FQNNode.builder().nodeType(FQNNode.NodeType.KEY).key(key).build());
-        if (fqnMap.containsKey(finalFQN)) {
-          tempMap.put(key, fqnMap.get(finalFQN));
+      FQN currFQN = FQN.duplicateAndAddNode(baseFQN,
+          FQNNode.builder()
+              .nodeType(FQNNode.NodeType.UUID)
+              .uuidKey(uuidKey)
+              .uuidValue(element.get(uuidKey).asText())
+              .build());
+      Map<String, Object> tempRes = new LinkedHashMap<>();
+      if (uuidKey.equals(YAMLFieldNameConstants.IDENTIFIER)) {
+        generateYamlMap(fqnMap, currFQN, element, tempRes, topKey);
+        if (tempRes.containsKey(topKey)) {
+          topKeyList.add(tempRes.get(topKey));
         }
-      }
-      if (!tempMap.isEmpty()) {
-        Map<String, Object> newTempMap = new LinkedHashMap<>();
-        newTempMap.put(YAMLFieldNameConstants.NAME, element.get(YAMLFieldNameConstants.NAME));
-        newTempMap.putAll(tempMap);
-        topKeyList.add(newTempMap);
+      } else {
+        Map<String, Object> tempMap = new LinkedHashMap<>();
+        Set<String> fieldNames = new LinkedHashSet<>();
+        element.fieldNames().forEachRemaining(fieldNames::add);
+        for (String key : fieldNames) {
+          FQN finalFQN =
+              FQN.duplicateAndAddNode(currFQN, FQNNode.builder().nodeType(FQNNode.NodeType.KEY).key(key).build());
+          if (fqnMap.containsKey(finalFQN)) {
+            tempMap.put(key, fqnMap.get(finalFQN));
+          }
+        }
+        if (!tempMap.isEmpty()) {
+          Map<String, Object> newTempMap = new LinkedHashMap<>();
+          newTempMap.put(uuidKey, element.get(uuidKey));
+          newTempMap.putAll(tempMap);
+          topKeyList.add(newTempMap);
+        }
       }
     });
     if (!topKeyList.isEmpty()) {
       res.put(topKey, topKeyList);
     }
+  }
+
+  private String getUuidKey(ArrayNode list) {
+    JsonNode element = list.get(0);
+    if (element.has(YAMLFieldNameConstants.IDENTIFIER)) {
+      return YAMLFieldNameConstants.IDENTIFIER;
+    }
+    if (element.has(YAMLFieldNameConstants.NAME)) {
+      return YAMLFieldNameConstants.NAME;
+    }
+    if (element.has(YAMLFieldNameConstants.KEY)) {
+      return YAMLFieldNameConstants.KEY;
+    }
+    return "";
   }
 
   public JsonNode getObject(PipelineYamlConfig config, FQN baseFQN) {
