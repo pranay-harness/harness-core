@@ -33,6 +33,7 @@ import io.harness.repositories.ng.core.spring.SecretRepository;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.SSHAuthScheme;
 import io.harness.secretmanagerclient.SecretType;
+import io.harness.secretmanagerclient.services.SshKeySpecDTOHelper;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.service.DelegateGrpcClientWrapper;
 
@@ -49,6 +50,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class NGSecretServiceV2ImplTest extends CategoryTest {
   private SecretRepository secretRepository;
   private SecretManagerClientService secretManagerClientService;
+  private SshKeySpecDTOHelper sshKeySpecDTOHelper;
   private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   private NGSecretServiceV2Impl secretServiceV2;
   private NGSecretServiceV2Impl secretServiceV2Spy;
@@ -58,8 +60,9 @@ public class NGSecretServiceV2ImplTest extends CategoryTest {
     secretRepository = mock(SecretRepository.class);
     secretManagerClientService = mock(SecretManagerClientService.class);
     delegateGrpcClientWrapper = mock(DelegateGrpcClientWrapper.class);
-    secretServiceV2 =
-        new NGSecretServiceV2Impl(secretRepository, secretManagerClientService, delegateGrpcClientWrapper);
+    sshKeySpecDTOHelper = mock(SshKeySpecDTOHelper.class);
+    secretServiceV2 = new NGSecretServiceV2Impl(
+        secretRepository, secretManagerClientService, delegateGrpcClientWrapper, sshKeySpecDTOHelper);
     secretServiceV2Spy = spy(secretServiceV2);
   }
 

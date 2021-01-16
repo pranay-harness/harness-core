@@ -8,9 +8,14 @@ import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.k8s.KubernetesContainerService;
+import io.harness.logging.CommandExecutionStatus;
+import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.shell.ExecuteCommandResponse;
 import io.harness.shell.ScriptProcessExecutor;
+import io.harness.shell.ScriptSshExecutor;
 import io.harness.shell.ShellExecutorConfig;
+import io.harness.shell.SshSessionConfig;
+import io.harness.shell.SshSessionManager;
 
 import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;
@@ -23,8 +28,11 @@ public class ShellScriptTaskNG extends AbstractDelegateRunnableTask {
   public static final String COMMAND_UNIT = "Execute";
 
   @Inject private ShellExecutorFactoryNG shellExecutorFactory;
+  @Inject private SshExecutorFactoryNG sshExecutorFactoryNG;
   @Inject private KubernetesContainerService kubernetesContainerService;
   @Inject private ContainerDeploymentDelegateBaseHelper containerDeploymentDelegateBaseHelper;
+  @Inject private SecretDecryptionService secretDecryptionService;
+  @Inject private SshSessionConfigMapper sshSessionConfigMapper;
 
   public ShellScriptTaskNG(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
       Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
@@ -51,8 +59,36 @@ public class ShellScriptTaskNG extends AbstractDelegateRunnableTask {
       ExecuteCommandResponse executeCommandResponse =
           executor.executeCommandString(taskParameters.getScript(), taskParameters.getOutputVars());
       return ShellScriptTaskResponseNG.builder().executeCommandResponse(executeCommandResponse).build();
+    } else {
+      try {
+        SshSessionConfig sshSessionConfig = getSshSessionConfig(taskParameters);
+        ScriptSshExecutor executor =
+            sshExecutorFactoryNG.getExecutor(sshSessionConfig, this.getLogStreamingTaskClient());
+        ExecuteCommandResponse executeCommandResponse =
+            executor.executeCommandString(taskParameters.getScript(), taskParameters.getOutputVars());
+        return ShellScriptTaskResponseNG.builder().executeCommandResponse(executeCommandResponse).build();
+      } catch (Exception e) {
+        log.error("Bash Script Failed to execute.", e);
+        return ShellScriptTaskResponseNG.builder()
+            .status(CommandExecutionStatus.FAILURE)
+            .errorMessage("Bash Script Failed to execute. Reason: " + e.getMessage())
+            .build();
+      } finally {
+        SshSessionManager.evictAndDisconnectCachedSession(taskParameters.getExecutionId(), taskParameters.getHost());
+      }
     }
-    return ShellScriptTaskResponseNG.builder().build();
+  }
+
+  private SshSessionConfig getSshSessionConfig(ShellScriptTaskParametersNG taskParameters) {
+    SshSessionConfig sshSessionConfig = sshSessionConfigMapper.getSSHSessionConfig(
+        taskParameters.getSshKeySpecDTO(), taskParameters.getEncryptionDetails());
+
+    sshSessionConfig.setAccountId(taskParameters.getAccountId());
+    sshSessionConfig.setExecutionId(taskParameters.getExecutionId());
+    sshSessionConfig.setHost(taskParameters.getHost());
+    sshSessionConfig.setWorkingDirectory(taskParameters.getWorkingDirectory());
+    sshSessionConfig.setCommandUnitName(COMMAND_UNIT);
+    return sshSessionConfig;
   }
 
   private ShellExecutorConfig getShellExecutorConfig(ShellScriptTaskParametersNG taskParameters) {
