@@ -1,7 +1,10 @@
 package io.harness.connector.validator.scmValidators;
 
+import static io.harness.delegate.beans.connector.scm.GitConnectionType.ACCOUNT;
+
 import static software.wings.beans.TaskType.NG_GIT_COMMAND;
 
+import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.validator.AbstractConnectorValidator;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
@@ -78,6 +81,13 @@ public abstract class AbstractGitConnector extends AbstractConnectorValidator {
   public ConnectorValidationResult validate(
       ConnectorConfigDTO connectorConfigDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     final GitConfigDTO gitConfig = getGitConfigFromConnectorConfig(connectorConfigDTO);
+    // No validation for account level git connector.
+    if (gitConfig.getGitConnectionType() == ACCOUNT) {
+      return ConnectorValidationResult.builder()
+          .status(ConnectivityStatus.SUCCESS)
+          .testedAt(System.currentTimeMillis())
+          .build();
+    }
     validateFieldsPresent(gitConfig);
     GitCommandExecutionResponse gitCommandExecutionResponse = (GitCommandExecutionResponse) super.validateConnector(
         gitConfig, accountIdentifier, orgIdentifier, projectIdentifier);
