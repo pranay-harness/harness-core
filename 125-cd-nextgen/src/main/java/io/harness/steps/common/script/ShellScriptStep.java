@@ -8,18 +8,26 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.IdentifierRef;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.shell.ShellScriptTaskNG;
 import io.harness.delegate.task.shell.ShellScriptTaskParametersNG;
+import io.harness.delegate.task.shell.ShellScriptTaskParametersNG.ShellScriptTaskParametersNGBuilder;
 import io.harness.delegate.task.shell.ShellScriptTaskResponseNG;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.ng.core.NGAccess;
+import io.harness.ng.core.api.SecretCrudService;
+import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
+import io.harness.ng.core.dto.secrets.SecretDTOV2;
+import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
@@ -32,11 +40,14 @@ import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
+import io.harness.secretmanagerclient.services.SshKeySpecDTOHelper;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 import io.harness.shell.ScriptType;
 import io.harness.shell.ShellExecutionData;
 import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
+import io.harness.utils.IdentifierRefHelper;
 import io.harness.yaml.core.variables.NGVariable;
 
 import software.wings.beans.TaskType;
@@ -48,6 +59,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
@@ -58,6 +70,8 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
       StepType.newBuilder().setType(ExecutionNodeType.SHELL_SCRIPT.getYamlType()).build();
 
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private SecretCrudService secretCrudService;
+  @Inject private SshKeySpecDTOHelper sshKeySpecDTOHelper;
 
   @Override
   public Class<ShellScriptStepParameters> getStepParametersClass() {
@@ -67,63 +81,36 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
   @Override
   public TaskRequest obtainTask(
       Ambiance ambiance, ShellScriptStepParameters stepParameters, StepInputPackage inputPackage) {
-    //    TODO: initialize later as needed
-    //    String username = null;
-    //    String keyPath = null;
-    //    boolean keyless = false;
-    //    Integer port = null;
-    //    AccessType accessType = null;
-    //    AuthenticationScheme authenticationScheme = null;
-    //    String keyName = null;
-    //    List<EncryptedDataDetail> winrmEdd = emptyList();
-    //    List<EncryptedDataDetail> keyEncryptionDetails = emptyList();
-    //    KerberosConfig kerberosConfig = null;
-
     ScriptType scriptType = stepParameters.getShell().getScriptType();
+    ShellScriptTaskParametersNGBuilder taskParametersNGBuilder = ShellScriptTaskParametersNG.builder();
 
-    //        TODO: execute on delegate
-    //        if (!stepParameters.isExecuteOnDelegate()) {
-    //          if (connectionType == software.wings.sm.states.ShellScriptState.ConnectionType.SSH) {
-    //            String sshKeyRef = stepParameters.getSshKeyRef();
-    //            if (isEmpty(sshKeyRef)) {
-    //              throw new ShellScriptException("Valid SSH Connection Attribute not provided in Shell Script Step",
-    //                      ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
-    //            }
-    //
-    //        SettingAttribute keySettingAttribute = settingsService.get(sshKeyRef);
-    //        if (keySettingAttribute == null) {
-    //          keySettingAttribute = settingsService.getSettingAttributeByName(getAccountId(ambiance), sshKeyRef);
-    //        }
-    //
-    //        if (keySettingAttribute == null) {
-    //          throw new ShellScriptException("SSH Connection Attribute provided in Shell Script Step not found",
-    //                  ErrorCode.SSH_CONNECTION_ERROR, Level.ERROR, WingsException.USER);
-    //        }
-    //        hostConnectionAttributes = (HostConnectionAttributes) keySettingAttribute.getValue();
-    //        username = ((HostConnectionAttributes) keySettingAttribute.getValue()).getUserName();
-    //        keyPath = ((HostConnectionAttributes) keySettingAttribute.getValue()).getKeyPath();
-    //        keyless = ((HostConnectionAttributes) keySettingAttribute.getValue()).isKeyless();
-    //        port = ((HostConnectionAttributes) keySettingAttribute.getValue()).getSshPort();
-    //        if (port == null) {
-    //          port = 22;
-    //        }
-    //        accessType = ((HostConnectionAttributes) keySettingAttribute.getValue()).getAccessType();
-    //        authenticationScheme = ((HostConnectionAttributes)
-    //        keySettingAttribute.getValue()).getAuthenticationScheme(); kerberosConfig = hostConnectionAttributes !=
-    //        null ? hostConnectionAttributes.getKerberosConfig() : null; keyName = keySettingAttribute.getUuid();
-    //        keyEncryptionDetails = secretManager.getEncryptionDetails(
-    //                (EncryptableSetting) keySettingAttribute.getValue(), getAppId(ambiance),
-    //                ambiance.getPlanExecutionId());
-    //
-    //      } else if (connectionType == software.wings.sm.states.ShellScriptState.ConnectionType.WINRM) {
-    //        winRmConnectionAttributes =
-    //                setupWinrmCredentials(ambiance, ((ShellScriptStepParameters)
-    //                stepParameters).getConnectionAttributes());
-    //        username = winRmConnectionAttributes.getUsername();
-    //        winrmEdd = secretManager.getEncryptionDetails(
-    //                winRmConnectionAttributes, getAppId(ambiance), ambiance.getPlanExecutionId());
-    //      }
-    //    }
+    if (!stepParameters.onDelegate.getValue()) {
+      ExecutionTarget executionTarget = stepParameters.getExecutionTarget();
+      if (executionTarget == null) {
+        throw new InvalidRequestException("Execution Target can't be empty with on delegate set to false");
+      }
+      String sshKeyRef = executionTarget.getConnectorRef().getValue();
+
+      IdentifierRef identifierRef =
+          IdentifierRefHelper.getIdentifierRef(sshKeyRef, AmbianceHelper.getAccountId(ambiance),
+              AmbianceHelper.getOrgIdentifier(ambiance), AmbianceHelper.getProjectIdentifier(ambiance));
+      Optional<SecretResponseWrapper> secretResponseWrapper =
+          secretCrudService.get(identifierRef.getAccountIdentifier(), identifierRef.getOrgIdentifier(),
+              identifierRef.getProjectIdentifier(), identifierRef.getIdentifier());
+      if (!secretResponseWrapper.isPresent()) {
+        throw new InvalidRequestException("No secret configured with identifier: " + sshKeyRef);
+      }
+      SecretDTOV2 secret = secretResponseWrapper.get().getSecret();
+
+      SSHKeySpecDTO secretSpec = (SSHKeySpecDTO) secret.getSpec();
+      NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
+      List<EncryptedDataDetail> sshKeyEncryptionDetails =
+          sshKeySpecDTOHelper.getSSHKeyEncryptionDetails(secretSpec, ngAccess);
+
+      taskParametersNGBuilder.sshKeySpecDTO(secretSpec)
+          .encryptionDetails(sshKeyEncryptionDetails)
+          .host(executionTarget.getHost().getValue());
+    }
 
     String workingDirectory = getWorkingDirectory(stepParameters, scriptType);
     Map<String, String> environmentVariables = getEnvironmentVariables(stepParameters.getEnvironmentVariables());
@@ -141,8 +128,7 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
     // }
 
     ShellScriptTaskParametersNG taskParameters =
-        ShellScriptTaskParametersNG.builder()
-            .accountId(AmbianceHelper.getAccountId(ambiance))
+        taskParametersNGBuilder.accountId(AmbianceHelper.getAccountId(ambiance))
             .executeOnDelegate(stepParameters.onDelegate.getValue())
             .environmentVariables(environmentVariables)
             .executionId(AmbianceUtils.obtainCurrentRuntimeId(ambiance))
@@ -187,8 +173,8 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
   }
 
   private String getWorkingDirectory(ShellScriptStepParameters stepParameters, ScriptType scriptType) {
-    if (stepParameters.getExecutionTarget() != null
-        && stepParameters.getExecutionTarget().getWorkingDirectory() != null) {
+    if (stepParameters.getExecutionTarget() != null && stepParameters.getExecutionTarget().getWorkingDirectory() != null
+        && EmptyPredicate.isNotEmpty(stepParameters.getExecutionTarget().getWorkingDirectory().getValue())) {
       return stepParameters.getExecutionTarget().getWorkingDirectory().getValue();
     }
     String commandPath = null;

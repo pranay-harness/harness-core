@@ -2,6 +2,8 @@ package io.harness.delegate.task.shell;
 
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
+import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.shell.ScriptType;
 
 import java.util.List;
@@ -21,4 +23,9 @@ public class ShellScriptTaskParametersNG implements TaskParameters {
   Map<String, String> environmentVariables;
   ScriptType scriptType;
   K8sInfraDelegateConfig k8sInfraDelegateConfig;
+
+  // Target Host Specific fields
+  SSHKeySpecDTO sshKeySpecDTO;
+  List<EncryptedDataDetail> encryptionDetails;
+  String host;
 }

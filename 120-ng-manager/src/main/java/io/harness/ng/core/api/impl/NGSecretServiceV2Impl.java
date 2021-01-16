@@ -2,8 +2,6 @@ package io.harness.ng.core.api.impl;
 
 import static io.harness.exception.WingsException.USER_SRE;
 
-import static java.util.Collections.emptyList;
-
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
@@ -12,15 +10,8 @@ import io.harness.delegate.beans.secrets.SSHConfigValidationTaskResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.api.NGSecretServiceV2;
-import io.harness.ng.core.dto.secrets.KerberosConfigDTO;
-import io.harness.ng.core.dto.secrets.SSHConfigDTO;
-import io.harness.ng.core.dto.secrets.SSHKeyPathCredentialDTO;
-import io.harness.ng.core.dto.secrets.SSHKeyReferenceCredentialDTO;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
-import io.harness.ng.core.dto.secrets.SSHPasswordCredentialDTO;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
-import io.harness.ng.core.dto.secrets.TGTKeyTabFilePathSpecDTO;
-import io.harness.ng.core.dto.secrets.TGTPasswordSpecDTO;
 import io.harness.ng.core.models.Secret;
 import io.harness.ng.core.models.Secret.SecretKeys;
 import io.harness.ng.core.remote.SSHKeyValidationMetadata;
@@ -28,6 +19,7 @@ import io.harness.ng.core.remote.SecretValidationMetaData;
 import io.harness.ng.core.remote.SecretValidationResultDTO;
 import io.harness.repositories.ng.core.spring.SecretRepository;
 import io.harness.secretmanagerclient.SecretType;
+import io.harness.secretmanagerclient.services.SshKeySpecDTOHelper;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.service.DelegateGrpcClientWrapper;
@@ -52,6 +44,7 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
   private final SecretRepository secretRepository;
   private final SecretManagerClientService secretManagerClientService;
   private final DelegateGrpcClientWrapper delegateGrpcClientWrapper;
+  private final SshKeySpecDTOHelper sshKeySpecDTOHelper;
 
   @Override
   public Optional<Secret> get(
@@ -110,7 +103,8 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
                                       .orgIdentifier(orgIdentifier)
                                       .projectIdentifier(projectIdentifier)
                                       .build();
-      List<EncryptedDataDetail> encryptionDetails = getSSHKeyEncryptionDetails(secretSpecDTO, baseNGAccess);
+      List<EncryptedDataDetail> encryptionDetails =
+          sshKeySpecDTOHelper.getSSHKeyEncryptionDetails(secretSpecDTO, baseNGAccess);
       DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
                                                     .accountId(accountIdentifier)
                                                     .taskType("NG_SSH_VALIDATION")
@@ -136,50 +130,6 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
       }
     }
     return SecretValidationResultDTO.builder().success(false).message("Validation failed.").build();
-  }
-
-  private List<EncryptedDataDetail> getSSHKeyEncryptionDetails(SSHKeySpecDTO secretSpecDTO, BaseNGAccess baseNGAccess) {
-    switch (secretSpecDTO.getAuth().getAuthScheme()) {
-      case SSH:
-        SSHConfigDTO sshConfigDTO = (SSHConfigDTO) secretSpecDTO.getAuth().getSpec();
-        return getSSHEncryptionDetails(sshConfigDTO, baseNGAccess);
-      case Kerberos:
-        KerberosConfigDTO kerberosConfigDTO = (KerberosConfigDTO) secretSpecDTO.getAuth().getSpec();
-        return getKerberosEncryptionDetails(kerberosConfigDTO, baseNGAccess);
-      default:
-        return emptyList();
-    }
-  }
-
-  List<EncryptedDataDetail> getSSHEncryptionDetails(SSHConfigDTO sshConfigDTO, BaseNGAccess baseNGAccess) {
-    switch (sshConfigDTO.getCredentialType()) {
-      case Password:
-        SSHPasswordCredentialDTO sshPasswordCredentialDTO = (SSHPasswordCredentialDTO) sshConfigDTO.getSpec();
-        return secretManagerClientService.getEncryptionDetails(baseNGAccess, sshPasswordCredentialDTO);
-      case KeyReference:
-        SSHKeyReferenceCredentialDTO sshKeyReferenceCredentialDTO =
-            (SSHKeyReferenceCredentialDTO) sshConfigDTO.getSpec();
-        return secretManagerClientService.getEncryptionDetails(baseNGAccess, sshKeyReferenceCredentialDTO);
-      case KeyPath:
-        SSHKeyPathCredentialDTO sshKeyPathCredentialDTO = (SSHKeyPathCredentialDTO) sshConfigDTO.getSpec();
-        return secretManagerClientService.getEncryptionDetails(baseNGAccess, sshKeyPathCredentialDTO);
-      default:
-        return emptyList();
-    }
-  }
-
-  private List<EncryptedDataDetail> getKerberosEncryptionDetails(
-      KerberosConfigDTO kerberosConfigDTO, BaseNGAccess baseNGAccess) {
-    switch (kerberosConfigDTO.getTgtGenerationMethod()) {
-      case Password:
-        TGTPasswordSpecDTO tgtPasswordSpecDTO = (TGTPasswordSpecDTO) kerberosConfigDTO.getSpec();
-        return secretManagerClientService.getEncryptionDetails(baseNGAccess, tgtPasswordSpecDTO);
-      case KeyTabFilePath:
-        TGTKeyTabFilePathSpecDTO tgtKeyTabFilePathSpecDTO = (TGTKeyTabFilePathSpecDTO) kerberosConfigDTO.getSpec();
-        return secretManagerClientService.getEncryptionDetails(baseNGAccess, tgtKeyTabFilePathSpecDTO);
-      default:
-        return emptyList();
-    }
   }
 
   @Override
