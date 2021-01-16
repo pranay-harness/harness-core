@@ -9,12 +9,14 @@ import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceTaskType;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskResponse;
 import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppRollbackParameters;
-import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppRollbackResponse;
+import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploymentData;
+import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotSetupResponse;
 
 import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServiceDockerDeploymentContext;
 import software.wings.delegatetasks.azure.appservice.webapp.AbstractAzureWebAppTaskHandler;
 
 import com.google.inject.Singleton;
+import java.util.List;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,7 +40,14 @@ public class AzureWebAppRollbackTaskHandler extends AbstractAzureWebAppTaskHandl
       rollbackUpdateSlotTrafficWeight(preDeploymentData, azureWebClientContext, logStreamingTaskClient);
     }
 
-    return AzureWebAppRollbackResponse.builder().build();
+    List<AzureAppDeploymentData> azureAppDeploymentData = azureAppServiceDeploymentService.fetchDeploymentData(
+        azureWebClientContext, rollbackParameters.getPreDeploymentData().getSlotName());
+
+    markExecutionAsSuccess(azureAppServiceTaskParameters, logStreamingTaskClient);
+    return AzureWebAppSlotSetupResponse.builder()
+        .azureAppDeploymentData(azureAppDeploymentData)
+        .preDeploymentData(preDeploymentData)
+        .build();
   }
 
   private void rollbackSetupSlot(AzureAppServicePreDeploymentData preDeploymentData,

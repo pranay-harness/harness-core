@@ -12,7 +12,7 @@ import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppSwapS
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSwapSlotsResponse;
 
 import software.wings.beans.Activity;
-import software.wings.beans.command.AzureVMSSDummyCommandUnit;
+import software.wings.beans.command.AzureWebAppCommandUnit;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.service.impl.azure.manager.AzureTaskExecutionRequest;
@@ -104,13 +104,8 @@ public class AzureWebAppSlotSwap extends AbstractAzureAppServiceState {
 
   @Override
   protected List<CommandUnit> commandUnits() {
-    return ImmutableList.of(new AzureVMSSDummyCommandUnit(AzureConstants.SLOT_SWAP));
-  }
-
-  @NotNull
-  @Override
-  protected String errorMessageTag() {
-    return "Azure App Service swap slot failed";
+    return ImmutableList.of(new AzureWebAppCommandUnit(AzureConstants.SLOT_SWAP),
+        new AzureWebAppCommandUnit(AzureConstants.DEPLOYMENT_STATUS));
   }
 
   private AzureWebAppSwapSlotsParameters buildSlotSwapParams(

@@ -85,6 +85,7 @@ import io.harness.delegate.beans.connector.awsconnector.AwsTaskParams;
 import io.harness.delegate.beans.connector.awsconnector.AwsTaskType;
 import io.harness.delegate.beans.connector.awsconnector.AwsValidateTaskResponse;
 import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
+import io.harness.delegate.beans.connector.azureconnector.AzureContainerRegistryConnectorDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.AwsCurAttributesDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsFeatures;
@@ -662,5 +663,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(SSHKeyPathCredentialDTO.class, 543232);
     kryo.register(KerberosConfigDTO.class, 543233);
     kryo.register(SSHAuthDTO.class, 543234);
+    kryo.register(AzureContainerRegistryConnectorDTO.class, 19507);
   }
 }

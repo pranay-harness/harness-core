@@ -15,6 +15,7 @@ import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceS
 import io.harness.delegate.beans.azure.registry.AzureRegistry;
 import io.harness.delegate.beans.azure.registry.AzureRegistryFactory;
 import io.harness.delegate.beans.azure.registry.AzureRegistryType;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.task.azure.AzureTaskResponse;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters;
@@ -78,12 +79,13 @@ public class AzureSecretHelper {
   }
 
   private void decryptAzureWebAppSlotSetupParameters(AzureWebAppSlotSetupParameters azureAppServiceTaskParameters) {
+    List<EncryptedDataDetail> encryptedDataDetails = azureAppServiceTaskParameters.getEncryptedDataDetails();
     AzureRegistryType azureRegistryType = azureAppServiceTaskParameters.getAzureRegistryType();
     AzureRegistry azureRegistry = AzureRegistryFactory.getAzureRegistry(azureRegistryType);
-    Optional<DecryptableEntity> authCredentialsDTO =
-        azureRegistry.getAuthCredentialsDTO(azureAppServiceTaskParameters.getConnectorConfigDTO());
-    authCredentialsDTO.ifPresent(decryptedEntity
-        -> secretDecryptionService.decrypt(decryptedEntity, azureAppServiceTaskParameters.getEncryptedDataDetails()));
+    ConnectorConfigDTO connectorConfigDTO = azureAppServiceTaskParameters.getConnectorConfigDTO();
+    Optional<DecryptableEntity> authCredentialsDTO = azureRegistry.getAuthCredentialsDTO(connectorConfigDTO);
+    authCredentialsDTO.ifPresent(credentials -> secretDecryptionService.decrypt(credentials, encryptedDataDetails));
+
     decryptSettings(azureAppServiceTaskParameters.getAppSettings());
     decryptSettings(azureAppServiceTaskParameters.getConnSettings());
   }

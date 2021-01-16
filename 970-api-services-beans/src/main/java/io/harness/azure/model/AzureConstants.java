@@ -179,4 +179,6 @@ public interface AzureConstants {
   // App Service Manifest Utils
   Pattern IS_SETTING_SECRET_REGEX =
       Pattern.compile("^\\$\\{secrets\\.getValue\\(['\"]+(?<secretName>[^~!@#$%^&*'\"/?<>,;.]+)['\"]+\\)}$");
+  String SECRET_REF_FIELS_NAME = "passwordRef";
+  Pattern HTTPS_OR_HTTP_PREFIX_REGEX = Pattern.compile("^(https?)://.*$");
 }

@@ -11,6 +11,7 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.FeatureName;
@@ -40,7 +41,7 @@ import software.wings.beans.infrastructure.instance.info.AzureWebAppInstanceInfo
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.key.deployment.AzureWebAppDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
-import software.wings.service.AzureVMSSInstanceSyncPerpetualTaskCreator;
+import software.wings.service.AzureWebAppInstanceSyncPerpetualTaskCreator;
 import software.wings.service.InstanceSyncPerpetualTaskCreator;
 import software.wings.service.intfc.azure.manager.AzureAppServiceManager;
 import software.wings.sm.PhaseStepExecutionSummary;
@@ -70,7 +71,7 @@ import org.jetbrains.annotations.Nullable;
 @Singleton
 public class AzureWebAppInstanceHandler extends InstanceHandler implements InstanceSyncByPerpetualTaskHandler {
   @Inject private AzureAppServiceManager azureAppServiceManager;
-  @Inject private AzureVMSSInstanceSyncPerpetualTaskCreator perpetualTaskCreator;
+  @Inject private AzureWebAppInstanceSyncPerpetualTaskCreator perpetualTaskCreator;
 
   @Override
   public void syncInstances(String appId, String infraMappingId, InstanceSyncFlow instanceSyncFlow) {
@@ -107,7 +108,8 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
         InstanceInfo instanceInfo = instance.getInstanceInfo();
         if (instanceInfo instanceof AzureWebAppInstanceInfo) {
           AzureWebAppInstanceInfo azureWebAppInstanceInfo = (AzureWebAppInstanceInfo) instanceInfo;
-          appNameToInstancesMap.put(getAppNameAndSlotNameKey(azureWebAppInstanceInfo), instance);
+          Optional<String> appNameAndSlotNameKey = getAppNameAndSlotNameKey(azureWebAppInstanceInfo);
+          appNameAndSlotNameKey.ifPresent(key -> appNameToInstancesMap.put(key, instance));
         }
       });
     }
@@ -175,7 +177,13 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
 
     Map<String, AzureAppDeploymentData> latestSlotWebAppInstances =
         deploymentData.stream().collect(Collectors.toMap(AzureAppDeploymentData::getInstanceId, Function.identity()));
-    String appNameAndSlotNameKey = getAppNameAndSlotNameKey(deploymentData.get(0));
+    AzureAppDeploymentData azureAppDeploymentData = deploymentData.get(0);
+    String appNameAndSlotNameKey =
+        getAppNameAndSlotNameKey(azureAppDeploymentData)
+            .orElseThrow(
+                ()
+                    -> new InvalidRequestException(format(
+                        "Invalid deployment data passed for Azure Web App deployment: [%s]", azureAppDeploymentData)));
 
     Multimap<String, Instance> appNameAndSlotNameToInstancesInDbMap =
         getCurrentInstancesInDb(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
@@ -223,17 +231,17 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
       return emptyMap();
     }
 
-    Map<String, Instance> vmIdToInstanceMap = new HashMap<>();
+    Map<String, Instance> instanceIdToInstanceMap = new HashMap<>();
     currentInstancesInDb.forEach(instance -> {
       if (instance != null) {
         InstanceInfo instanceInfo = instance.getInstanceInfo();
         if (instanceInfo instanceof AzureWebAppInstanceInfo) {
           AzureWebAppInstanceInfo azureWebAppInstanceInfo = (AzureWebAppInstanceInfo) instanceInfo;
-          vmIdToInstanceMap.put(azureWebAppInstanceInfo.getInstanceId(), instance);
+          instanceIdToInstanceMap.put(azureWebAppInstanceInfo.getInstanceId(), instance);
         }
       }
     });
-    return vmIdToInstanceMap;
+    return instanceIdToInstanceMap;
   }
 
   private void deleteOldInstances(
@@ -405,12 +413,18 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
   }
 
   @NotNull
-  private String getAppNameAndSlotNameKey(AzureWebAppInstanceInfo azureWebAppInstanceInfo) {
-    return format("%s_%s", azureWebAppInstanceInfo.getAppName(), azureWebAppInstanceInfo.getSlotName());
+  private Optional<String> getAppNameAndSlotNameKey(AzureWebAppInstanceInfo azureWebAppInstanceInfo) {
+    if (isBlank(azureWebAppInstanceInfo.getAppName()) || isBlank(azureWebAppInstanceInfo.getSlotName())) {
+      return Optional.empty();
+    }
+    return Optional.of(format("%s_%s", azureWebAppInstanceInfo.getAppName(), azureWebAppInstanceInfo.getSlotName()));
   }
 
   @NotNull
-  private String getAppNameAndSlotNameKey(AzureAppDeploymentData azureAppDeploymentData) {
-    return format("%s_%s", azureAppDeploymentData.getAppName(), azureAppDeploymentData.getDeploySlot());
+  private Optional<String> getAppNameAndSlotNameKey(AzureAppDeploymentData azureAppDeploymentData) {
+    if (isBlank(azureAppDeploymentData.getAppName()) || isBlank(azureAppDeploymentData.getDeploySlot())) {
+      return Optional.empty();
+    }
+    return Optional.of(format("%s_%s", azureAppDeploymentData.getAppName(), azureAppDeploymentData.getDeploySlot()));
   }
 }

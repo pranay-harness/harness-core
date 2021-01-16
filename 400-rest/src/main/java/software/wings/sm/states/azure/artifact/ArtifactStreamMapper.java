@@ -7,6 +7,7 @@ import io.harness.delegate.beans.azure.registry.AzureRegistryType;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.exception.InvalidRequestException;
 
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
@@ -41,6 +42,7 @@ public abstract class ArtifactStreamMapper {
   public abstract ConnectorConfigDTO getConnectorDTO();
   public abstract AzureRegistryType getAzureRegistryType();
   public abstract Optional<DecryptableEntity> getConnectorDTOAuthCredentials(ConnectorConfigDTO connectorConfigDTO);
+  public abstract Optional<EncryptableSetting> getEncryptableSetting();
 
   public String getFullImageName() {
     return artifact.getMetadata().get("image");

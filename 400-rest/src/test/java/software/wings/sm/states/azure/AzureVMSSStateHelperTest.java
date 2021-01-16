@@ -21,7 +21,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.beans.DecryptableEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.ExecutionStatus;
@@ -31,10 +30,6 @@ import io.harness.delegate.beans.azure.AzureConfigDTO;
 import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthType;
-import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceApplicationSettingDTO;
-import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceAzureSettingValue;
-import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceHarnessSettingSecretRef;
-import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceHarnessSettingSecretValue;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploymentData;
 import io.harness.delegate.task.azure.response.AzureVMInstanceData;
@@ -95,7 +90,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -540,19 +534,6 @@ public class AzureVMSSStateHelperTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = OwnerRule.IVAN)
-  @Category(UnitTests.class)
-  public void testGetConnectorAuthEncryptedDataDetails() {
-    DecryptableEntity mockDecryptableEntity = mock(DecryptableEntity.class);
-    doReturn(Collections.emptyList()).when(ngSecretService).getEncryptionDetails(any(), any());
-
-    List<EncryptedDataDetail> connectorAuthEncryptedDataDetails =
-        azureVMSSStateHelper.getNgEncryptedDataDetails("accountId", mockDecryptableEntity);
-
-    assertThat(connectorAuthEncryptedDataDetails).isNotNull();
-  }
-
-  @Test
   @Owner(developers = OwnerRule.ANIL)
   @Category(UnitTests.class)
   public void testPopulateAzureAppServiceData() {
@@ -588,6 +569,8 @@ public class AzureVMSSStateHelperTest extends WingsBaseTest {
     when(settingsService.get(computeProviderSettingId)).thenReturn(settingAttribute);
     when(settingAttribute.getValue()).thenReturn(AzureConfig.builder().accountId(accountId).build());
     when(context.fetchInfraMappingId()).thenReturn(infraMappingId);
+    when(context.renderExpression(resourceGroup)).thenReturn(resourceGroup);
+    when(context.renderExpression(subscriptionId)).thenReturn(subscriptionId);
     when(infrastructureMappingService.get(appId, infraMappingId)).thenReturn(webAppInfrastructureMapping);
 
     AzureAppServiceStateData azureAppServiceStateData = azureVMSSStateHelper.populateAzureAppServiceData(context);
@@ -1067,40 +1050,5 @@ public class AzureVMSSStateHelperTest extends WingsBaseTest {
 
     ArtifactStreamMapper artifactStreamMapper = azureVMSSStateHelper.getConnectorMapper(artifact);
     assertThat(artifactStreamMapper).isInstanceOf(DockerArtifactStreamMapper.class);
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.TMACARI)
-  @Category(UnitTests.class)
-  public void testEncryptAzureAppServiceSettingDTOsUnsupportedEncryption() {
-    Map<String, AzureAppServiceApplicationSettingDTO> settings =
-        Collections.singletonMap("azureAppServiceApplicationSettingDTO",
-            AzureAppServiceApplicationSettingDTO.builder()
-                .value(AzureAppServiceAzureSettingValue.builder().build())
-                .build());
-
-    assertThatThrownBy(() -> azureVMSSStateHelper.encryptAzureAppServiceSettingDTOs(settings, "accountId"))
-        .hasMessageContaining("Unsupported encryption on manager for Azure App Service setting value type")
-        .isInstanceOf(InvalidRequestException.class);
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.TMACARI)
-  @Category(UnitTests.class)
-  public void testEncryptAzureAppServiceSettingDTOs() {
-    AzureAppServiceHarnessSettingSecretRef secretRef = AzureAppServiceHarnessSettingSecretRef.builder().build();
-    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
-    AzureAppServiceHarnessSettingSecretValue secretValue =
-        AzureAppServiceHarnessSettingSecretValue.builder()
-            .settingSecretRef(AzureAppServiceHarnessSettingSecretRef.builder().build())
-            .build();
-    Map<String, AzureAppServiceApplicationSettingDTO> settings =
-        Collections.singletonMap("azureAppServiceApplicationSettingDTO",
-            AzureAppServiceApplicationSettingDTO.builder().value(secretValue).build());
-
-    doReturn(encryptedDataDetails).when(azureVMSSStateHelper).getNgEncryptedDataDetails("accountId", secretRef);
-
-    azureVMSSStateHelper.encryptAzureAppServiceSettingDTOs(settings, "accountId");
-    assertThat(secretValue.getEncryptedDataDetails()).isEqualTo(encryptedDataDetails);
   }
 }

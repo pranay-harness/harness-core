@@ -29,6 +29,7 @@ public class AzureWebAppSlotSwapTaskHandler extends AbstractAzureWebAppTaskHandl
 
     swapSlots(slotSwapParameters, webClientContext, logStreamingTaskClient);
 
+    markExecutionAsSuccess(azureAppServiceTaskParameters, logStreamingTaskClient);
     return AzureWebAppSwapSlotsResponse.builder().preDeploymentData(slotSwapParameters.getPreDeploymentData()).build();
   }
 

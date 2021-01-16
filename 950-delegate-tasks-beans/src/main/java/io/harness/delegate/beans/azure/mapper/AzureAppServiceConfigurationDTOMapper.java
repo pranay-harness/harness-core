@@ -94,7 +94,7 @@ public class AzureAppServiceConfigurationDTOMapper {
     if (azureAppServiceSettingValue instanceof AzureAppServiceHarnessSettingSecretValue) {
       char[] decryptedValue = ((AzureAppServiceHarnessSettingSecretValue) azureAppServiceSettingValue)
                                   .getSettingSecretRef()
-                                  .getSecretRef()
+                                  .getPasswordRef()
                                   .getDecryptedValue();
       return new String(decryptedValue);
     } else if (azureAppServiceSettingValue instanceof AzureAppServiceHarnessSettingValue) {
@@ -121,11 +121,6 @@ public class AzureAppServiceConfigurationDTOMapper {
       throw new IllegalArgumentException("Application setting name can't be null or empty");
     }
 
-    if (isBlank(value)) {
-      throw new IllegalArgumentException(
-          format("Application setting value can't be null or empty, setting name: %s ", name));
-    }
-
     AzureAppServiceSettingValue appSettingValue = buildAzureAppServiceSettingValue(value, type);
 
     return AzureAppServiceApplicationSettingDTO.builder()
@@ -147,11 +142,6 @@ public class AzureAppServiceConfigurationDTOMapper {
     String value = connectionString.getValue();
     if (isBlank(name)) {
       throw new IllegalArgumentException("Connection string name can't be null or empty");
-    }
-
-    if (isBlank(value)) {
-      throw new IllegalArgumentException(
-          format("Connection string value can't be null or empty, string name: %s", name));
     }
 
     AzureAppServiceSettingValue connectionStringValue = buildAzureAppServiceSettingValue(value, type);
@@ -194,7 +184,7 @@ public class AzureAppServiceConfigurationDTOMapper {
     } else if (HARNESS_SETTING_SECRET == type) {
       SecretRefData secretRefData = new SecretRefData(settingValueOrRef, Scope.ACCOUNT, null);
       AzureAppServiceHarnessSettingSecretRef settingSecretRef =
-          AzureAppServiceHarnessSettingSecretRef.builder().secretRef(secretRefData).build();
+          AzureAppServiceHarnessSettingSecretRef.builder().passwordRef(secretRefData).build();
       return AzureAppServiceHarnessSettingSecretValue.builder().settingSecretRef(settingSecretRef).build();
     } else if (AZURE_SETTING == type) {
       return AzureAppServiceAzureSettingValue.builder().decryptedValue(settingValueOrRef).build();

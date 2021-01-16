@@ -13,12 +13,12 @@ public abstract class AbstractAzureWebAppTaskHandler extends AbstractAzureAppSer
   @Inject protected AzureAppServiceDeploymentService azureAppServiceDeploymentService;
 
   protected AzureWebClientContext buildAzureWebClientContext(
-      AzureAppServiceTaskParameters azureWebAppSlotSetupParameters, AzureConfig azureConfig) {
+      AzureAppServiceTaskParameters appServiceTaskParameters, AzureConfig azureConfig) {
     return AzureWebClientContext.builder()
         .azureConfig(azureConfig)
-        .appName(azureWebAppSlotSetupParameters.getAppName())
-        .subscriptionId(azureWebAppSlotSetupParameters.getSubscriptionId())
-        .resourceGroupName(azureWebAppSlotSetupParameters.getResourceGroupName())
+        .appName(appServiceTaskParameters.getAppName())
+        .subscriptionId(appServiceTaskParameters.getSubscriptionId())
+        .resourceGroupName(appServiceTaskParameters.getResourceGroupName())
         .build();
   }
 }

@@ -61,6 +61,9 @@ public class AzureAppServiceSlotSetupExecutionData
 
   @Override
   public AzureAppServiceSlotSetupExecutionSummary getStepExecutionSummary() {
-    return AzureAppServiceSlotSetupExecutionSummary.builder().build();
+    return AzureAppServiceSlotSetupExecutionSummary.builder()
+        .newSlotName(deploySlotName)
+        .newAppName(appServiceName)
+        .build();
   }
 }

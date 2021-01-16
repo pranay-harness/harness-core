@@ -15,8 +15,6 @@ import static io.harness.azure.model.AzureConstants.WEB_APP_INSTANCE_STATUS_RUNN
 import static io.harness.azure.model.AzureConstants.WEB_APP_NAME_BLANK_ERROR_MSG;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceSettingValueType.AZURE_SETTING;
-import static io.harness.eraro.ErrorCode.AZURE_SERVICE_EXCEPTION;
-import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
@@ -51,7 +49,6 @@ import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentDat
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData.AzureAppServicePreDeploymentDataBuilder;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploymentData;
-import io.harness.exception.AzureServiceException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.LogCallback;
 
@@ -266,8 +263,9 @@ public class AzureAppServiceDeploymentService {
 
       containerLogCallback.saveExecutionLog("Deployment slot container settings updated successfully", INFO, SUCCESS);
     } catch (Exception ex) {
-      containerLogCallback.saveExecutionLog("Failed to update Container settings", ERROR, FAILURE);
-      throw new AzureServiceException(ex.getMessage(), AZURE_SERVICE_EXCEPTION, USER);
+      containerLogCallback.saveExecutionLog(
+          String.format("Failed to update Container settings - [%s]", ex.getMessage()), ERROR, FAILURE);
+      throw ex;
     }
   }
 
@@ -411,21 +409,27 @@ public class AzureAppServiceDeploymentService {
 
     AzureAppServicePreDeploymentDataBuilder preDeploymentDataBuilder = AzureAppServicePreDeploymentData.builder();
 
-    saveApplicationSettings(
-        azureWebClientContext, slotName, userAddedAppSettings, preDeploymentDataBuilder, logCallback);
-    saveConnectionStrings(azureWebClientContext, slotName, userAddedConnStrings, preDeploymentDataBuilder, logCallback);
-    saveDockerSettings(azureWebClientContext, slotName, preDeploymentDataBuilder, logCallback);
-    saveTrafficWeight(azureWebClientContext, slotName, preDeploymentDataBuilder, logCallback);
-
-    logCallback.saveExecutionLog(
-        String.format("All configurations saved successfully for slot - [%s] of App Service - [%s]", slotName,
-            azureWebClientContext.getAppName()),
-        INFO, SUCCESS);
-
-    return preDeploymentDataBuilder.slotName(slotName)
-        .appName(azureWebClientContext.getAppName())
-        .failedTaskType(AzureAppServiceTaskParameters.AzureAppServiceTaskType.SLOT_SWAP)
-        .build();
+    try {
+      saveApplicationSettings(
+          azureWebClientContext, slotName, userAddedAppSettings, preDeploymentDataBuilder, logCallback);
+      saveConnectionStrings(
+          azureWebClientContext, slotName, userAddedConnStrings, preDeploymentDataBuilder, logCallback);
+      saveDockerSettings(azureWebClientContext, slotName, preDeploymentDataBuilder, logCallback);
+      saveTrafficWeight(azureWebClientContext, slotName, preDeploymentDataBuilder, logCallback);
+      logCallback.saveExecutionLog(
+          String.format("All configurations saved successfully for slot - [%s] of App Service - [%s]", slotName,
+              azureWebClientContext.getAppName()),
+          INFO, SUCCESS);
+      return preDeploymentDataBuilder.slotName(slotName)
+          .appName(azureWebClientContext.getAppName())
+          .failedTaskType(AzureAppServiceTaskParameters.AzureAppServiceTaskType.SLOT_SWAP)
+          .build();
+    } catch (Exception exception) {
+      logCallback.saveExecutionLog(
+          String.format("Failed to save the deployment slot existing configurations - [%s]", exception.getMessage()),
+          ERROR, FAILURE);
+      throw exception;
+    }
   }
 
   private void saveApplicationSettings(AzureWebClientContext azureWebClientContext, String slotName,

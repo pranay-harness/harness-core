@@ -256,7 +256,7 @@ public class WorkflowServiceHelper {
   public static final String AZURE_WEBAPP_SLOT_SWAP = "Swap Slot";
   public static final String AZURE_WEBAPP_SLOT_ROLLBACK = "Slot Rollback";
   public static final String AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT = "Shift Traffic to Slot";
-  public static final String AZURE_WEBAPP_SLOT_TRAFFIC = "Slot Traffic";
+  public static final String AZURE_WEBAPP_SLOT_TRAFFIC = "Traffic %";
   public static final String AZURE_WEBAPP_SLOT_ROUTE = "Swap Deployment Slots";
   public static final String KUBERNETES_SERVICE_SETUP_BLUEGREEN = "Blue/Green Service Setup";
   public static final String INFRA_ROUTE_PCF = "infra.pcf.route";

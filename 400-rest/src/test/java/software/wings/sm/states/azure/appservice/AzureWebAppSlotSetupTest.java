@@ -9,6 +9,7 @@ import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.sm.states.azure.appservices.AzureWebAppSlotSetup.APP_SERVICE_SLOT_SETUP;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
@@ -22,6 +23,7 @@ import static org.mockito.Mockito.verify;
 import io.harness.azure.model.AzureAppServiceConfiguration;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.EncryptedData;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.azure.registry.AzureRegistryType;
@@ -30,6 +32,7 @@ import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploymentData;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotSetupResponse;
+import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -44,9 +47,14 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureWebAppInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.CommandUnit;
+import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -78,6 +86,7 @@ import org.mockito.Spy;
 
 public class AzureWebAppSlotSetupTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
+  @Mock private SecretManager secretManager;
   @Mock private AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
   @Spy @InjectMocks private AzureAppServiceManifestUtils azureAppServiceManifestUtils;
   @Spy @InjectMocks private AzureVMSSStateHelper azureVMSSStateHelper;
@@ -103,6 +112,8 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
     String envId = "envId";
     String activityId = "activityId";
     String delegateResult = "Done";
+    String appServiceName = "app-service";
+    String slotName = "stage";
 
     Application app = Application.Builder.anApplication().uuid(appId).build();
     Environment env = Environment.Builder.anEnvironment().uuid(envId).build();
@@ -118,8 +129,8 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     ManagerExecutionLogCallback managerExecutionLogCallback = mock(ManagerExecutionLogCallback.class);
 
-    doReturn("app-service").when(context).renderExpression("${webapp}");
-    doReturn("stage").when(context).renderExpression("${slot}");
+    doReturn(appServiceName).when(context).renderExpression("${webapp}");
+    doReturn(slotName).when(context).renderExpression("${slot}");
 
     AzureAppServiceStateData appServiceStateData = AzureAppServiceStateData.builder()
                                                        .application(app)
@@ -162,6 +173,15 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
         .renderExpression("jdbc:sqlxxxxxxxx//INNOWAVE-99\\SQLEXPRESS01;databaseName=EDS");
 
     doReturn(azureAppServiceConfiguration).when(azureAppServiceManifestUtils).getAzureAppServiceConfiguration(any());
+    doReturn(Collections.singletonList(EncryptedDataDetail.builder().build()))
+        .when(secretManager)
+        .getEncryptionDetails(any(), anyString(), anyString());
+    doReturn(EncryptedData.builder().uuid("encrypted-data-uuid").build())
+        .when(secretManager)
+        .getSecretMappedToAppByName(anyString(), anyString(), anyString(), anyString());
+
+    mockArtifactoryData(artifact, context);
+
     state.setAppService("${webapp}");
     state.setDeploymentSlot("${slot}");
 
@@ -177,18 +197,43 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
         (AzureAppServiceSlotSetupExecutionData) result.getStateExecutionData();
     assertThat(stateExecutionData.equals(new AzureAppServiceSlotSetupExecutionData())).isFalse();
     assertThat(stateExecutionData.getActivityId()).isEqualTo(activityId);
-    assertThat(stateExecutionData.getAppServiceName()).isEqualTo("app-service");
-    assertThat(stateExecutionData.getDeploySlotName()).isEqualTo("stage");
+    assertThat(stateExecutionData.getAppServiceName()).isEqualTo(appServiceName);
+    assertThat(stateExecutionData.getDeploySlotName()).isEqualTo(slotName);
     assertThat(stateExecutionData.getAppServiceSlotSetupTimeOut()).isNotNull();
     assertThat(stateExecutionData.getInfrastructureMappingId()).isEqualTo("infraId");
 
     AzureAppServiceSlotSetupExecutionSummary stepExecutionSummary = stateExecutionData.getStepExecutionSummary();
     assertThat(stepExecutionSummary.equals(AzureAppServiceSlotSetupExecutionSummary.builder().build())).isFalse();
     assertThat(stateExecutionData.getStepExecutionSummary().toString()).isNotNull();
+    assertThat(stateExecutionData.getAppServiceName()).isEqualTo(appServiceName);
+    assertThat(stateExecutionData.getDeploySlotName()).isEqualTo(slotName);
 
     assertThat(stateExecutionData.getExecutionDetails()).isNotEmpty();
     assertThat(stateExecutionData.getExecutionSummary()).isNotEmpty();
     assertThat(stateExecutionData.getStepExecutionSummary()).isNotNull();
+  }
+
+  private void mockArtifactoryData(Artifact artifact, ExecutionContextImpl context) {
+    String accountId = "accountId";
+    ArtifactoryConfig artifactoryConfig = ArtifactoryConfig.builder()
+                                              .encryptedPassword("secret")
+                                              .artifactoryUrl("artifactory-url")
+                                              .username("username")
+                                              .accountId(accountId)
+                                              .build();
+    SettingAttribute serverSetting = SettingAttribute.Builder.aSettingAttribute().withValue(artifactoryConfig).build();
+
+    ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder().build();
+    artifactStreamAttributes.setArtifactStreamType(ArtifactStreamType.ARTIFACTORY.name());
+    artifactStreamAttributes.setServerSetting(serverSetting);
+
+    ArtifactStreamMapper artifactStreamMapper =
+        ArtifactStreamMapper.getArtifactStreamMapper(artifact, artifactStreamAttributes);
+    doReturn(artifactStreamMapper).when(azureVMSSStateHelper).getConnectorMapper(artifact);
+
+    doReturn(Collections.singletonList(EncryptedDataDetail.builder().build()))
+        .when(azureVMSSStateHelper)
+        .getEncryptedDataDetails(context, artifactoryConfig);
   }
 
   private String getAppSettingsJSON() {
@@ -245,7 +290,6 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
     List<EncryptedDataDetail> encryptedDataDetailList = new ArrayList<>();
     EncryptedDataDetail mockEncryptedDataDetail = mock(EncryptedDataDetail.class);
     encryptedDataDetailList.add(mockEncryptedDataDetail);
-    doReturn(encryptedDataDetailList).when(azureVMSSStateHelper).getNgEncryptedDataDetails(anyString(), any());
   }
 
   @Test
@@ -262,8 +306,7 @@ public class AzureWebAppSlotSetupTest extends WingsBaseTest {
     doReturn(managerExecutionLogCallback).when(azureVMSSStateHelper).getExecutionLogCallback(activity);
     doThrow(Exception.class).when(azureVMSSStateHelper).populateAzureAppServiceData(eq(context));
 
-    ExecutionResponse response = state.execute(context);
-    assertThat(response.getExecutionStatus()).isEqualTo(FAILED);
+    assertThatThrownBy(() -> state.execute(context)).isInstanceOf(InvalidRequestException.class);
   }
 
   @Test

@@ -1,5 +1,6 @@
 package software.wings.sm.states.azure;
 
+import static io.harness.azure.model.AzureConstants.SECRET_REF_FIELS_NAME;
 import static io.harness.azure.model.AzureConstants.STEADY_STATE_TIMEOUT_REGEX;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -21,7 +22,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
 import io.harness.azure.model.AzureAppServiceConnectionString;
-import io.harness.beans.DecryptableEntity;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
@@ -36,7 +36,6 @@ import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceApplica
 import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceConnectionStringDTO;
 import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceSettingDTO;
 import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceAzureSettingValue;
-import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceHarnessSettingSecretRef;
 import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceHarnessSettingSecretValue;
 import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceSettingValue;
 import io.harness.delegate.beans.azure.mapper.AzureAppServiceConfigurationDTOMapper;
@@ -50,8 +49,6 @@ import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
-import io.harness.ng.core.BaseNGAccess;
-import io.harness.ng.core.NGAccess;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.annotation.EncryptableSetting;
@@ -483,6 +480,10 @@ public class AzureVMSSStateHelper {
         (EncryptableSetting) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
   }
 
+  public List<EncryptedDataDetail> getEncryptedDataDetails(ExecutionContext context, EncryptableSetting setting) {
+    return secretManager.getEncryptionDetails(setting, context.getAppId(), context.getWorkflowExecutionId());
+  }
+
   private List<EncryptedDataDetail> getServiceVariableEncryptedDataDetails(
       ExecutionContext context, final String passwordSecretTextName, final String envId) {
     String appId = context.getAppId();
@@ -513,6 +514,13 @@ public class AzureVMSSStateHelper {
     }
   }
 
+  public void updateEncryptedDataDetailSecretFieldName(
+      List<EncryptedDataDetail> encryptedDataDetails, String secretFieldName) {
+    for (EncryptedDataDetail encryptedDataDetail : encryptedDataDetails) {
+      encryptedDataDetail.setFieldName(secretFieldName);
+    }
+  }
+
   public String getVMSSIdFromName(
       String subscriptionId, String resourceGroupName, String newVirtualMachineScaleSetName) {
     return isNotBlank(newVirtualMachineScaleSetName)
@@ -540,8 +548,8 @@ public class AzureVMSSStateHelper {
         .serviceId(serviceId)
         .environment(environment)
         .azureConfig(azureConfig)
-        .resourceGroup(infrastructureMapping.getResourceGroup())
-        .subscriptionId(infrastructureMapping.getSubscriptionId())
+        .resourceGroup(context.renderExpression(infrastructureMapping.getResourceGroup()))
+        .subscriptionId(context.renderExpression(infrastructureMapping.getSubscriptionId()))
         .infrastructureMapping(infrastructureMapping)
         .azureEncryptedDataDetails(encryptionDetails)
         .currentUser(workflowStandardParams.getCurrentUser())
@@ -557,16 +565,6 @@ public class AzureVMSSStateHelper {
     artifactStreamAttributes.setMetadataOnly(artifactStream.isMetadataOnly());
     artifactStreamAttributes.setArtifactStreamType(artifactStream.getArtifactStreamType());
     return ArtifactStreamMapper.getArtifactStreamMapper(artifact, artifactStreamAttributes);
-  }
-
-  public List<EncryptedDataDetail> getNgEncryptedDataDetails(
-      final String accountId, DecryptableEntity connectorAuthCredentials) {
-    NGAccess ngAccess = buildNgAccess(accountId);
-    return ngSecretService.getEncryptionDetails(ngAccess, connectorAuthCredentials);
-  }
-
-  private NGAccess buildNgAccess(final String accountId) {
-    return BaseNGAccess.builder().accountIdentifier(accountId).build();
   }
 
   public List<AzureAppServiceApplicationSettingDTO> createAppSettingDTOs(
@@ -590,7 +588,7 @@ public class AzureVMSSStateHelper {
   }
 
   public <T extends AzureAppServiceSettingDTO> void encryptAzureAppServiceSettingDTOs(
-      @NotNull Map<String, T> settings, final String accountId) {
+      ExecutionContext context, @NotNull Map<String, T> settings, final String envId) {
     settings.values().forEach(appServiceSetting -> {
       log.info("Checking for encryption Harness setting: {}", appServiceSetting.getName());
       AzureAppServiceSettingValue setting = appServiceSetting.getValue();
@@ -603,15 +601,39 @@ public class AzureVMSSStateHelper {
         log.info("Encrypting Harness setting: {}", appServiceSetting.getName());
         AzureAppServiceHarnessSettingSecretValue harnessSettingSecretValue =
             (AzureAppServiceHarnessSettingSecretValue) setting;
-        encryptSettingByNGSecretService(accountId, harnessSettingSecretValue);
+
+        String secretIdentifier =
+            ((AzureAppServiceHarnessSettingSecretValue) setting).getSettingSecretRef().getPasswordRef().getIdentifier();
+        List<EncryptedDataDetail> encryptedDataDetails =
+            getServiceVariableEncryptedDataDetails(context, secretIdentifier, envId);
+        updateEncryptedDataDetailSecretFieldName(encryptedDataDetails, SECRET_REF_FIELS_NAME);
+        harnessSettingSecretValue.setEncryptedDataDetails(encryptedDataDetails);
       }
     });
   }
 
-  private void encryptSettingByNGSecretService(
-      String accountId, AzureAppServiceHarnessSettingSecretValue harnessSettingSecretValue) {
-    AzureAppServiceHarnessSettingSecretRef settingSecretRef = harnessSettingSecretValue.getSettingSecretRef();
-    List<EncryptedDataDetail> encryptedDataDetails = getNgEncryptedDataDetails(accountId, settingSecretRef);
-    harnessSettingSecretValue.setEncryptedDataDetails(encryptedDataDetails);
+  public void validateAppSettings(List<AzureAppServiceApplicationSetting> appSettings) {
+    appSettings.forEach(appSetting -> {
+      String name = appSetting.getName();
+      if (isBlank(name)) {
+        throw new InvalidRequestException("Application setting name cannot be empty or null");
+      }
+      if (isBlank(appSetting.getValue())) {
+        throw new InvalidRequestException(format("Application setting value cannot be empty or null for [%s]", name));
+      }
+    });
+  }
+
+  public void validateConnStrings(List<AzureAppServiceConnectionString> connStrings) {
+    connStrings.forEach(connString -> {
+      String name = connString.getName();
+      if (isBlank(name)) {
+        throw new InvalidRequestException("Connection string name cannot be empty or null");
+      }
+
+      if (isBlank(connString.getValue())) {
+        throw new InvalidRequestException(format("Connection string value cannot be empty or null for [%s]", name));
+      }
+    });
   }
 }
