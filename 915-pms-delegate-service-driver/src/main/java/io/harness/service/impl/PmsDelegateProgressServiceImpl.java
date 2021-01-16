@@ -71,7 +71,7 @@ public class PmsDelegateProgressServiceImpl implements DelegateProgressService {
       return true;
     }
     boolean deleteSuccessful = false;
-    Query query = query(where(DelegateTaskProgressResponseKeys.uuid).in(responsesToBeDeleted));
+    Query query = query(where("_id").in(responsesToBeDeleted));
     DeleteResult deleteResult =
         persistence.remove(query, morphiaCustomCollectionNames.get(DelegateTaskProgressResponse.class));
 
