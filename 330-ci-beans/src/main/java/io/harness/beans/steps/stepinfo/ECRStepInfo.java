@@ -40,7 +40,8 @@ public class ECRStepInfo implements PluginCompatibleStep {
   public static final int DEFAULT_RETRY = 1;
 
   @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.ECR).build();
-  @JsonIgnore public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.ECR.name()).build();
+  @JsonIgnore
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.ECR.getDisplayName()).build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;

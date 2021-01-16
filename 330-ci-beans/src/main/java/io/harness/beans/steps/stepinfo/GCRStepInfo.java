@@ -39,7 +39,8 @@ import org.springframework.data.annotation.TypeAlias;
 public class GCRStepInfo implements PluginCompatibleStep {
   public static final int DEFAULT_RETRY = 1;
   @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.GCR).build();
-  @JsonIgnore public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.GCR.name()).build();
+  @JsonIgnore
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.GCR.getDisplayName()).build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;

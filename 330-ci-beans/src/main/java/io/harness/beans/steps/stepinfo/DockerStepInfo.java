@@ -42,7 +42,8 @@ public class DockerStepInfo implements PluginCompatibleStep {
   @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.DOCKER).build();
 
   @JsonIgnore
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.DOCKER.name()).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(CIStepInfoType.DOCKER.getDisplayName()).build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;

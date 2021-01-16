@@ -35,7 +35,8 @@ public class UploadToGCSStepInfo implements PluginCompatibleStep {
   @JsonIgnore
   public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.UPLOAD_GCS).build();
   @JsonIgnore
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.UPLOAD_GCS.name()).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(CIStepInfoType.UPLOAD_GCS.getDisplayName()).build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;

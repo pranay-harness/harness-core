@@ -27,7 +27,8 @@ public class BuildEnvSetupStepInfo implements CIStepInfo {
 
   @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.SETUP_ENV).build();
   @JsonIgnore
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.SETUP_ENV.name()).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(CIStepInfoType.SETUP_ENV.getDisplayName()).build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;

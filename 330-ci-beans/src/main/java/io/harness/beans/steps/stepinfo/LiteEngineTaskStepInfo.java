@@ -38,7 +38,7 @@ public class LiteEngineTaskStepInfo implements CIStepInfo {
   public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.LITE_ENGINE_TASK).build();
   @JsonIgnore
   public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(CIStepInfoType.LITE_ENGINE_TASK.name()).build();
+      StepType.newBuilder().setType(CIStepInfoType.LITE_ENGINE_TASK.getDisplayName()).build();
 
   @JsonIgnore @Builder.Default int timeout = DEFAULT_TIMEOUT;
   @NotNull @EntityIdentifier private String identifier;

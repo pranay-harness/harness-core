@@ -39,7 +39,8 @@ public class SaveCacheS3StepInfo implements PluginCompatibleStep {
   @JsonIgnore
   public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.SAVE_CACHE_S3).build();
   @JsonIgnore
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.SAVE_CACHE_S3.name()).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(CIStepInfoType.SAVE_CACHE_S3.getDisplayName()).build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;

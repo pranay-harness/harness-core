@@ -35,7 +35,7 @@ public class UploadToArtifactoryStepInfo implements PluginCompatibleStep {
   public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.UPLOAD_ARTIFACTORY).build();
   @JsonIgnore
   public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(CIStepInfoType.UPLOAD_ARTIFACTORY.name()).build();
+      StepType.newBuilder().setType(CIStepInfoType.UPLOAD_ARTIFACTORY.getDisplayName()).build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;

@@ -28,7 +28,8 @@ public class GitCloneStepInfo implements CIStepInfo {
   @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.GIT_CLONE).build();
 
   @JsonIgnore
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.GIT_CLONE.name()).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(CIStepInfoType.GIT_CLONE.getDisplayName()).build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;
