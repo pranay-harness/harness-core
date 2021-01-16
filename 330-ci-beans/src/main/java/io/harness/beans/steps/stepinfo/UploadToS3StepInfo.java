@@ -33,7 +33,8 @@ public class UploadToS3StepInfo implements PluginCompatibleStep {
 
   @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.UPLOAD_S3).build();
   @JsonIgnore
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.UPLOAD_S3.name()).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(CIStepInfoType.UPLOAD_S3.getDisplayName()).build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;

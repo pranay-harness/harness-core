@@ -29,7 +29,7 @@ public class BuildStepInfo implements CIStepInfo {
 
   @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.BUILD).build();
   @JsonIgnore
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.BUILD.name()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.BUILD.getDisplayName()).build();
 
   @JsonIgnore @Builder.Default int timeout = DEFAULT_TIMEOUT;
 

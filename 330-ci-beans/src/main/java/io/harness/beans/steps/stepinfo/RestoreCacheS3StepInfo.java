@@ -36,7 +36,7 @@ public class RestoreCacheS3StepInfo implements PluginCompatibleStep {
 
   @JsonIgnore
   public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(CIStepInfoType.RESTORE_CACHE_S3.name()).build();
+      StepType.newBuilder().setType(CIStepInfoType.RESTORE_CACHE_S3.getDisplayName()).build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;

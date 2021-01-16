@@ -35,7 +35,7 @@ public class RestoreCacheGCSStepInfo implements PluginCompatibleStep {
   public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.RESTORE_CACHE_GCS).build();
   @JsonIgnore
   public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(CIStepInfoType.RESTORE_CACHE_GCS.name()).build();
+      StepType.newBuilder().setType(CIStepInfoType.RESTORE_CACHE_GCS.getDisplayName()).build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;

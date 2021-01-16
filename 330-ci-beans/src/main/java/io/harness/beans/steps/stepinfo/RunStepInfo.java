@@ -41,7 +41,8 @@ public class RunStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 1;
 
   @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.RUN).build();
-  @JsonIgnore public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.RUN.name()).build();
+  @JsonIgnore
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.RUN.getDisplayName()).build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;
