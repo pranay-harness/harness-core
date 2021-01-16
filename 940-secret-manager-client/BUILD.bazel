@@ -35,9 +35,6 @@ java_library(
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
-    resources = [
-        "//940-secret-manager-client/src/main/resources:resource",
-    ],
     visibility = ["//visibility:public"],
     deps = [
         "maven_deps",

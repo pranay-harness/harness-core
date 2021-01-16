@@ -208,7 +208,6 @@ public class NotificationApplication extends Application<NotificationConfigurati
           || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NotificationMicroserviceAuth.class)
               != null;
       Map<String, String> serviceToSecretMapping = new HashMap<>();
-      serviceToSecretMapping.put("IdentityService", configuration.getNotificationSecrets().getManagerServiceSecret());
       serviceToSecretMapping.put(AuthorizationServiceHeader.DEFAULT.getServiceId(),
           configuration.getNotificationSecrets().getManagerServiceSecret());
       environment.jersey().register(new JWTAuthenticationFilter(predicate, null, serviceToSecretMapping));

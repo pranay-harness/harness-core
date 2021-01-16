@@ -121,3 +121,7 @@ fi
 if [[ "" != "$TI_SERVICE_GLOBAL_TOKEN" ]]; then
   yq write -i $CONFIG_FILE tiServiceConfig.globalToken "$TI_SERVICE_GLOBAL_TOKEN"
 fi
+
+if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
+  yq write -i $CONFIG_FILE ngManagerServiceSecret "$NEXT_GEN_MANAGER_SECRET"
+fi
