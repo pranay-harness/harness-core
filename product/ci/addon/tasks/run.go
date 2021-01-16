@@ -4,20 +4,23 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
 	"time"
 
+	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/pkg/errors"
 	"github.com/wings-software/portal/product/ci/addon/testreports"
 	"github.com/wings-software/portal/product/ci/addon/testreports/junit"
 	"github.com/wings-software/portal/product/ci/common/external"
-	"github.com/wings-software/portal/product/ci/ti-service/types"
+	grpcclient "github.com/wings-software/portal/product/ci/engine/grpc/client"
 
 	"github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/utils"
+	"github.com/wings-software/portal/product/ci/engine/consts"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 	"mvdan.cc/sh/v3/syntax"
@@ -30,16 +33,12 @@ const (
 	defaultNumRetries  int32         = 1
 	outputEnvSuffix    string        = ".out"
 	cmdExitWaitTime    time.Duration = time.Duration(0)
+	batchSize                        = 100
 )
 
 var (
-	getTIClient   = external.GetTiHTTPClient
-	getOrgId      = external.GetOrgId
-	getProjectId  = external.GetProjectId
-	getPipelineId = external.GetPipelineId
-	getBuildId    = external.GetBuildId
-	getStageId    = external.GetStageId
-	newJunit      = junit.New
+	getTIClient = external.GetTiHTTPClient
+	newJunit    = junit.New
 )
 
 // RunTask represents interface to execute a run step
@@ -271,54 +270,46 @@ func (r *runTask) collectTestReports(ctx context.Context) error {
 		var rep testreports.TestReporter
 		var err error
 
-		org, err := getOrgId()
-		if err != nil {
-			return err
-		}
-		project, err := getProjectId()
-		if err != nil {
-			return err
-		}
-		pipeline, err := getPipelineId()
-		if err != nil {
-			return err
-		}
-		build, err := getBuildId()
-		if err != nil {
-			return err
-		}
-		stage, err := getStageId()
-		if err != nil {
-			return err
-		}
-
-		reportStr := ""
-		x := report.GetType()
+		x := report.GetType() // pass in report type in proto when other reports are reqd
 		switch x {
 		case pb.Report_UNKNOWN:
 			return errors.New("report type is unknown")
 		case pb.Report_JUNIT:
 			rep = newJunit(report.GetPaths(), r.log)
-			reportStr = "junit"
 		}
 
-		var tests []*types.TestCase
+		var tests []string
 		testc, _ := rep.GetTests(ctx)
 		for t := range testc {
-			tests = append(tests, t)
+			jt, _ := json.Marshal(t)
+			tests = append(tests, string(jt))
 		}
 
-		// Create TI service client
-		client, err := getTIClient()
-		if err != nil {
-			r.log.Errorw("could not create client to TI service", zap.Error(err))
-			return err
+		// Create TI proxy client (lite engine)
+		client, err := grpcclient.NewTiProxyClient(consts.LiteEnginePort, r.log)
+		stream, err := client.Client().WriteTests(ctx, grpc_retry.Disable())
+		var curr []string
+		for _, t := range tests {
+			curr = append(curr, t)
+			if len(curr)%batchSize == 0 {
+				in := &pb.WriteTestsRequest{StepId: r.id, Tests: curr}
+				if serr := stream.Send(in); serr != nil {
+					r.log.Errorw("write tests RPC failed", zap.Error(serr))
+				}
+				curr = []string{} // ignore RPC failures, try to write whatever you can
+			}
+		}
+		if len(curr) > 0 {
+			in := &pb.WriteTestsRequest{StepId: r.id, Tests: curr}
+			if serr := stream.Send(in); serr != nil {
+				r.log.Errorw("write tests RPC failed", zap.Error(serr))
+			}
+			curr = []string{}
 		}
 
-		// Write tests to TI service
-		err = client.Write(ctx, org, project, pipeline, build, stage, r.id, reportStr, tests)
+		// Close the stream and receive result
+		_, err = stream.CloseAndRecv()
 		if err != nil {
-			r.log.Errorw("could not write tests to TI service", zap.Error(err))
 			return err
 		}
 	}
