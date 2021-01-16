@@ -4,6 +4,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.expression.ExpressionReflectionUtils.NestedAnnotationResolver;
 
 import java.util.Collections;
 import java.util.List;
@@ -14,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class AzureTaskParameters implements TaskParameters, ExecutionCapabilityDemander {
+public class AzureTaskParameters implements TaskParameters, ExecutionCapabilityDemander, NestedAnnotationResolver {
   private String appId;
   private String accountId;
   private String activityId;

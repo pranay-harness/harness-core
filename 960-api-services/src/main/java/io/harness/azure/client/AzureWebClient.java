@@ -4,7 +4,6 @@ import io.harness.azure.context.AzureClientContext;
 import io.harness.azure.context.AzureWebClientContext;
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
 import io.harness.azure.model.AzureAppServiceConnectionString;
-import io.harness.azure.model.AzureAppServiceDockerSetting;
 import io.harness.azure.model.WebAppHostingOS;
 
 import com.microsoft.azure.management.appservice.DeploymentSlot;
@@ -175,7 +174,7 @@ public interface AzureWebClient {
    * @param dockerSettings
    */
   void updateDeploymentSlotDockerSettings(
-      AzureWebClientContext context, String slotName, Map<String, AzureAppServiceDockerSetting> dockerSettings);
+      AzureWebClientContext context, String slotName, Map<String, AzureAppServiceApplicationSetting> dockerSettings);
 
   /**
    * List deployment slot docker settings.
@@ -184,7 +183,7 @@ public interface AzureWebClient {
    * @param slotName
    * @return
    */
-  Map<String, AzureAppServiceDockerSetting> listDeploymentSlotDockerSettings(
+  Map<String, AzureAppServiceApplicationSetting> listDeploymentSlotDockerSettings(
       AzureWebClientContext azureWebClientContext, String slotName);
 
   /**

@@ -15,8 +15,6 @@ import io.harness.azure.model.AzureAppServiceConnectionString;
 import io.harness.azure.model.AzureConstants;
 import io.harness.azure.utility.AzureResourceUtility;
 import io.harness.beans.ExecutionStatus;
-import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceApplicationSettingDTO;
-import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceConnectionStringDTO;
 import io.harness.delegate.beans.azure.registry.AzureRegistryType;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
@@ -51,8 +49,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -217,7 +213,7 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
   private AzureWebAppSlotSetupParameters buildSlotSetupParams(
       ExecutionContext context, AzureAppServiceStateData azureAppServiceStateData, Activity activity) {
     AzureWebAppSlotSetupParametersBuilder slotSetupParametersBuilder = AzureWebAppSlotSetupParameters.builder();
-    provideAppServiceSettings(context, azureAppServiceStateData, slotSetupParametersBuilder);
+    provideAppServiceSettings(context, slotSetupParametersBuilder);
     provideRegistryDetails(context, azureAppServiceStateData, slotSetupParametersBuilder);
 
     String appServiceName = context.renderExpression(appService);
@@ -236,11 +232,8 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
         .build();
   }
 
-  private void provideAppServiceSettings(ExecutionContext context, AzureAppServiceStateData azureAppServiceStateData,
-      AzureWebAppSlotSetupParametersBuilder slotSetupParametersBuilder) {
-    Map<String, AzureAppServiceApplicationSettingDTO> applicationSettingMap = new HashMap<>();
-    Map<String, AzureAppServiceConnectionStringDTO> connectionStringMap = new HashMap<>();
-
+  private void provideAppServiceSettings(
+      ExecutionContext context, AzureWebAppSlotSetupParametersBuilder slotSetupParametersBuilder) {
     AzureAppServiceConfiguration appServiceConfiguration =
         azureAppServiceManifestUtils.getAzureAppServiceConfiguration(context);
     List<AzureAppServiceApplicationSetting> appSettings = appServiceConfiguration.getAppSettings();
@@ -249,39 +242,8 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
     azureVMSSStateHelper.validateAppSettings(appSettings);
     azureVMSSStateHelper.validateConnStrings(connStrings);
 
-    List<AzureAppServiceApplicationSettingDTO> appSettingDTOs = getAppSettingDTOs(context, appSettings);
-    List<AzureAppServiceConnectionStringDTO> connStringDTOs = getConnStringDTOs(context, connStrings);
-
-    if (isNotEmpty(appSettingDTOs)) {
-      applicationSettingMap = appSettingDTOs.stream().collect(
-          Collectors.toMap(AzureAppServiceApplicationSettingDTO::getName, Function.identity()));
-    }
-    if (isNotEmpty(connStringDTOs)) {
-      connectionStringMap = connStringDTOs.stream().collect(
-          Collectors.toMap(AzureAppServiceConnectionStringDTO::getName, Function.identity()));
-    }
-
-    String envId = azureAppServiceStateData.getEnvironment().getUuid();
-    azureVMSSStateHelper.encryptAzureAppServiceSettingDTOs(context, applicationSettingMap, envId);
-    azureVMSSStateHelper.encryptAzureAppServiceSettingDTOs(context, connectionStringMap, envId);
-    slotSetupParametersBuilder.appSettings(applicationSettingMap);
-    slotSetupParametersBuilder.connSettings(connectionStringMap);
-  }
-
-  private List<AzureAppServiceApplicationSettingDTO> getAppSettingDTOs(
-      ExecutionContext context, List<AzureAppServiceApplicationSetting> appSettings) {
-    ImmutableList<String> appSettingSecretsImmutableList =
-        azureAppServiceManifestUtils.getAppSettingSecretsImmutableList(appSettings);
-    azureAppServiceManifestUtils.renderAppSettings(context, appSettings, appSettingSecretsImmutableList);
-    return azureVMSSStateHelper.createAppSettingDTOs(appSettings, appSettingSecretsImmutableList);
-  }
-
-  private List<AzureAppServiceConnectionStringDTO> getConnStringDTOs(
-      ExecutionContext context, List<AzureAppServiceConnectionString> connStrings) {
-    ImmutableList<String> connStringSecretsImmutableList =
-        azureAppServiceManifestUtils.getConnStringSecretsImmutableList(connStrings);
-    azureAppServiceManifestUtils.renderConnStrings(context, connStrings, connStringSecretsImmutableList);
-    return azureVMSSStateHelper.createConnStringDTOs(connStrings, connStringSecretsImmutableList);
+    slotSetupParametersBuilder.applicationSettings(appSettings);
+    slotSetupParametersBuilder.connectionStrings(connStrings);
   }
 
   private void provideRegistryDetails(ExecutionContext context, AzureAppServiceStateData azureAppServiceStateData,

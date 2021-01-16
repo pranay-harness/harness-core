@@ -2,7 +2,7 @@ package io.harness.delegate.beans.azure.appservicesettings;
 
 import static io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceSettingConstants.APPLICATION_SETTING_JSON_TYPE;
 
-import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceSettingValue;
+import io.harness.security.encryption.EncryptedRecord;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -24,7 +24,8 @@ import lombok.experimental.FieldDefaults;
 @ApiModel("AzureAppServiceApplicationSetting")
 public class AzureAppServiceApplicationSettingDTO extends AzureAppServiceSettingDTO {
   @Builder
-  public AzureAppServiceApplicationSettingDTO(String name, AzureAppServiceSettingValue value, boolean sticky) {
-    super(name, value, sticky);
+  public AzureAppServiceApplicationSettingDTO(
+      String name, String value, boolean sticky, EncryptedRecord encryptedRecord, String accountId) {
+    super(name, value, sticky, encryptedRecord, accountId);
   }
 }

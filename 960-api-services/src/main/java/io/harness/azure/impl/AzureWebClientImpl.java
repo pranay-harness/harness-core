@@ -18,7 +18,6 @@ import io.harness.azure.context.AzureClientContext;
 import io.harness.azure.context.AzureWebClientContext;
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
 import io.harness.azure.model.AzureAppServiceConnectionString;
-import io.harness.azure.model.AzureAppServiceDockerSetting;
 import io.harness.azure.model.WebAppHostingOS;
 import io.harness.azure.utility.AzureResourceUtility;
 
@@ -242,10 +241,10 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
     Map<String, AppSetting> appSettings = deploymentSlot.getAppSettings();
 
     return appSettings.values().stream().collect(
-        Collectors.toMap(AppSetting::key, this::buildAzureAppServiceApplicationSettings));
+        Collectors.toMap(AppSetting::key, this::buildAzureAppServiceApplicationSetting));
   }
 
-  public AzureAppServiceApplicationSetting buildAzureAppServiceApplicationSettings(AppSetting appSetting) {
+  public AzureAppServiceApplicationSetting buildAzureAppServiceApplicationSetting(AppSetting appSetting) {
     return AzureAppServiceApplicationSetting.builder()
         .name(appSetting.key())
         .value(appSetting.value())
@@ -313,8 +312,8 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
   }
 
   @Override
-  public void updateDeploymentSlotDockerSettings(
-      AzureWebClientContext context, final String slotName, Map<String, AzureAppServiceDockerSetting> dockerSettings) {
+  public void updateDeploymentSlotDockerSettings(AzureWebClientContext context, final String slotName,
+      Map<String, AzureAppServiceApplicationSetting> dockerSettings) {
     if (dockerSettings.isEmpty()) {
       log.info("Docker settings list is empty, slotName: {}, context: {}", slotName, context);
       return;
@@ -330,7 +329,7 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
     update.apply();
   }
 
-  private void validateDockerSettings(Map<String, AzureAppServiceDockerSetting> dockerSettings) {
+  private void validateDockerSettings(Map<String, AzureAppServiceApplicationSetting> dockerSettings) {
     dockerSettings.values().forEach(dockerSetting -> {
       String dockerSettingName = dockerSetting.getName();
       if (!AzureResourceUtility.DOCKER_REGISTRY_PROPERTY_NAMES.contains(dockerSettingName)) {
@@ -340,7 +339,7 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
   }
 
   @Override
-  public Map<String, AzureAppServiceDockerSetting> listDeploymentSlotDockerSettings(
+  public Map<String, AzureAppServiceApplicationSetting> listDeploymentSlotDockerSettings(
       AzureWebClientContext context, String slotName) {
     DeploymentSlot deploymentSlot = getDeploymentSlot(context, slotName);
     Map<String, AppSetting> appSettings = deploymentSlot.getAppSettings();
@@ -348,15 +347,7 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
     return appSettings.values()
         .stream()
         .filter(appSetting -> AzureResourceUtility.DOCKER_REGISTRY_PROPERTY_NAMES.contains(appSetting.key()))
-        .collect(Collectors.toMap(AppSetting::key, this::buildAzureAppServiceDockerSetting));
-  }
-
-  public AzureAppServiceDockerSetting buildAzureAppServiceDockerSetting(AppSetting appSetting) {
-    return AzureAppServiceDockerSetting.builder()
-        .name(appSetting.key())
-        .value(appSetting.value())
-        .sticky(appSetting.sticky())
-        .build();
+        .collect(Collectors.toMap(AppSetting::key, this::buildAzureAppServiceApplicationSetting));
   }
 
   @Override

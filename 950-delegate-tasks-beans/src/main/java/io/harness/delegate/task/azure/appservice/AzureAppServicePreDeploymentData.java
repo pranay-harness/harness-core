@@ -2,7 +2,6 @@ package io.harness.delegate.task.azure.appservice;
 
 import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceApplicationSettingDTO;
 import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceConnectionStringDTO;
-import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceDockerSettingDTO;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceTaskType;
 
 import java.util.Map;
@@ -19,7 +18,7 @@ public class AzureAppServicePreDeploymentData {
   private Map<String, AzureAppServiceApplicationSettingDTO> appSettingsToAdd;
   private Map<String, AzureAppServiceConnectionStringDTO> connStringsToRemove;
   private Map<String, AzureAppServiceConnectionStringDTO> connStringsToAdd;
-  private Map<String, AzureAppServiceDockerSettingDTO> dockerSettingsToAdd;
+  private Map<String, AzureAppServiceApplicationSettingDTO> dockerSettingsToAdd;
   private String imageNameAndTag;
   private AzureAppServiceTaskType failedTaskType;
 }

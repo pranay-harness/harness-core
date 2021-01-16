@@ -1,5 +1,7 @@
 package software.wings.service.impl.azure.manager;
 
+import static io.harness.expression.Expression.ALLOW_SECRETS;
+
 import io.harness.delegate.beans.azure.AzureConfigDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -7,6 +9,7 @@ import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.Cd1ApplicationAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.azure.AzureTaskParameters;
+import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -25,7 +28,7 @@ public class AzureTaskExecutionRequest
     implements TaskParameters, ExecutionCapabilityDemander, ActivityAccess, Cd1ApplicationAccess {
   private AzureConfigDTO azureConfigDTO;
   private List<EncryptedDataDetail> azureConfigEncryptionDetails;
-  private AzureTaskParameters azureTaskParameters;
+  @Expression(ALLOW_SECRETS) private AzureTaskParameters azureTaskParameters;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

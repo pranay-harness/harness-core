@@ -10,6 +10,7 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 import io.harness.azure.model.AzureConstants;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.data.algorithm.HashGenerator;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.exception.InvalidRequestException;
@@ -31,6 +32,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionContext;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
 import software.wings.sm.states.azure.AzureSweepingOutputServiceHelper;
@@ -109,6 +111,7 @@ public abstract class AbstractAzureAppServiceState extends State {
       AzureAppServiceStateData azureAppServiceStateData, AzureTaskExecutionRequest executionRequest) {
     StateExecutionData stateExecutionData = buildPreStateExecutionData(activity, context, azureAppServiceStateData);
     Application application = azureAppServiceStateData.getApplication();
+    int expressionFunctorToken = HashGenerator.generateIntegerHash();
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(application.getAccountId())
@@ -119,6 +122,7 @@ public abstract class AbstractAzureAppServiceState extends State {
                       .taskType(TaskType.AZURE_APP_SERVICE_TASK.name())
                       .parameters(new Object[] {executionRequest})
                       .timeout(MINUTES.toMillis(getTimeoutMillis(context)))
+                      .expressionFunctorToken(expressionFunctorToken)
                       .build())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, azureAppServiceStateData.getEnvironment().getUuid())
             .setupAbstraction(
@@ -128,6 +132,13 @@ public abstract class AbstractAzureAppServiceState extends State {
             .setupAbstraction(
                 Cd1SetupFields.SERVICE_ID_FIELD, azureAppServiceStateData.getInfrastructureMapping().getServiceId())
             .build();
+    StateExecutionContext stateExecutionContext = StateExecutionContext.builder()
+                                                      .stateExecutionData(stateExecutionData)
+                                                      .adoptDelegateDecryption(true)
+                                                      .expressionFunctorToken(expressionFunctorToken)
+                                                      .build();
+    renderDelegateTask(context, delegateTask, stateExecutionContext);
+
     delegateService.queueTask(delegateTask);
     return stateExecutionData;
   }

@@ -1,12 +1,9 @@
 package software.wings.sm.states.azure;
 
-import static io.harness.azure.model.AzureConstants.SECRET_REF_FIELS_NAME;
 import static io.harness.azure.model.AzureConstants.STEADY_STATE_TIMEOUT_REGEX;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.azure.AzureVMAuthType.SSH_PUBLIC_KEY;
-import static io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceSettingValueType.HARNESS_SETTING;
-import static io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceSettingValueType.HARNESS_SETTING_SECRET;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -32,13 +29,6 @@ import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthType;
 import io.harness.delegate.beans.azure.GalleryImageDefinitionDTO;
-import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceApplicationSettingDTO;
-import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceConnectionStringDTO;
-import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceSettingDTO;
-import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceAzureSettingValue;
-import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceHarnessSettingSecretValue;
-import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceSettingValue;
-import io.harness.delegate.beans.azure.mapper.AzureAppServiceConfigurationDTOMapper;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploymentData;
 import io.harness.delegate.task.azure.response.AzureVMInstanceData;
@@ -81,7 +71,6 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.NGSecretService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.InstanceStatusSummary;
@@ -91,15 +80,12 @@ import software.wings.sm.states.azure.appservices.AzureAppServiceStateData;
 import software.wings.sm.states.azure.artifact.ArtifactStreamMapper;
 import software.wings.utils.ServiceVersionConvention;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
@@ -116,7 +102,6 @@ public class AzureVMSSStateHelper {
   @Inject private SecretManager secretManager;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private LogService logService;
-  @Inject private NGSecretService ngSecretService;
 
   public boolean isBlueGreenWorkflow(ExecutionContext context) {
     return BLUE_GREEN == context.getOrchestrationWorkflowType();
@@ -567,51 +552,6 @@ public class AzureVMSSStateHelper {
     return ArtifactStreamMapper.getArtifactStreamMapper(artifact, artifactStreamAttributes);
   }
 
-  public List<AzureAppServiceApplicationSettingDTO> createAppSettingDTOs(
-      List<AzureAppServiceApplicationSetting> appSettings, ImmutableList<String> appSettingSecretsImmutableList) {
-    return appSettings.stream()
-        .map(appSetting
-            -> appSettingSecretsImmutableList.contains(appSetting.getName())
-                ? AzureAppServiceConfigurationDTOMapper.toApplicationSettingDTO(appSetting, HARNESS_SETTING_SECRET)
-                : AzureAppServiceConfigurationDTOMapper.toApplicationSettingDTO(appSetting, HARNESS_SETTING))
-        .collect(Collectors.toList());
-  }
-
-  public List<AzureAppServiceConnectionStringDTO> createConnStringDTOs(
-      List<AzureAppServiceConnectionString> connStrings, ImmutableList<String> connStringSecretsImmutableList) {
-    return connStrings.stream()
-        .map(connSetting
-            -> connStringSecretsImmutableList.contains(connSetting.getName())
-                ? AzureAppServiceConfigurationDTOMapper.toConnectionSettingDTO(connSetting, HARNESS_SETTING_SECRET)
-                : AzureAppServiceConfigurationDTOMapper.toConnectionSettingDTO(connSetting, HARNESS_SETTING))
-        .collect(Collectors.toList());
-  }
-
-  public <T extends AzureAppServiceSettingDTO> void encryptAzureAppServiceSettingDTOs(
-      ExecutionContext context, @NotNull Map<String, T> settings, final String envId) {
-    settings.values().forEach(appServiceSetting -> {
-      log.info("Checking for encryption Harness setting: {}", appServiceSetting.getName());
-      AzureAppServiceSettingValue setting = appServiceSetting.getValue();
-      if (setting instanceof AzureAppServiceAzureSettingValue) {
-        throw new InvalidRequestException(format(
-            "Unsupported encryption on manager for Azure App Service setting value type: [%s]", setting.getClass()));
-      }
-
-      if (setting instanceof AzureAppServiceHarnessSettingSecretValue) {
-        log.info("Encrypting Harness setting: {}", appServiceSetting.getName());
-        AzureAppServiceHarnessSettingSecretValue harnessSettingSecretValue =
-            (AzureAppServiceHarnessSettingSecretValue) setting;
-
-        String secretIdentifier =
-            ((AzureAppServiceHarnessSettingSecretValue) setting).getSettingSecretRef().getPasswordRef().getIdentifier();
-        List<EncryptedDataDetail> encryptedDataDetails =
-            getServiceVariableEncryptedDataDetails(context, secretIdentifier, envId);
-        updateEncryptedDataDetailSecretFieldName(encryptedDataDetails, SECRET_REF_FIELS_NAME);
-        harnessSettingSecretValue.setEncryptedDataDetails(encryptedDataDetails);
-      }
-    });
-  }
-
   public void validateAppSettings(List<AzureAppServiceApplicationSetting> appSettings) {
     appSettings.forEach(appSetting -> {
       String name = appSetting.getName();
@@ -633,6 +573,10 @@ public class AzureVMSSStateHelper {
 
       if (isBlank(connString.getValue())) {
         throw new InvalidRequestException(format("Connection string value cannot be empty or null for [%s]", name));
+      }
+
+      if (connString.getType() == null) {
+        throw new InvalidRequestException("Connection string type cannot be null");
       }
     });
   }
