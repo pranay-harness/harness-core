@@ -1,6 +1,5 @@
 package software.wings.security;
 
-import static io.harness.AuthorizationServiceHeader.BEARER;
 import static io.harness.AuthorizationServiceHeader.DEFAULT;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -260,7 +259,6 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   private Map<String, String> getServiceToSecretMapping() {
     Map<String, String> mapping = new HashMap<>();
     mapping.put(DEFAULT.getServiceId(), secretManager.getJWTSecret(JWT_CATEGORY.NEXT_GEN_MANAGER_SECRET));
-    mapping.put(BEARER.getServiceId(), secretManager.getJWTSecret(JWT_CATEGORY.AUTH_SECRET));
     return mapping;
   }
 
