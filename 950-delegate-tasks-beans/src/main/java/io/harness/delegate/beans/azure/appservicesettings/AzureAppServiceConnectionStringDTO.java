@@ -3,7 +3,7 @@ package io.harness.delegate.beans.azure.appservicesettings;
 import static io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceSettingConstants.CONNECTION_SETTING_JSON_TYPE;
 
 import io.harness.azure.model.AzureAppServiceConnectionStringType;
-import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceSettingValue;
+import io.harness.security.encryption.EncryptedRecord;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -28,9 +28,9 @@ public class AzureAppServiceConnectionStringDTO extends AzureAppServiceSettingDT
   @NotNull AzureAppServiceConnectionStringType type;
 
   @Builder
-  public AzureAppServiceConnectionStringDTO(
-      String name, AzureAppServiceSettingValue value, boolean sticky, AzureAppServiceConnectionStringType type) {
-    super(name, value, sticky);
+  public AzureAppServiceConnectionStringDTO(String name, String value, boolean sticky,
+      AzureAppServiceConnectionStringType type, EncryptedRecord encryptedRecord, String accountId) {
+    super(name, value, sticky, encryptedRecord, accountId);
     this.type = type;
   }
 }

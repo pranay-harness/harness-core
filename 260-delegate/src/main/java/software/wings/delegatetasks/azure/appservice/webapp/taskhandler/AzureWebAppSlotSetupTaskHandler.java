@@ -10,10 +10,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.azure.context.AzureWebClientContext;
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
 import io.harness.azure.model.AzureAppServiceConnectionString;
-import io.harness.azure.model.AzureAppServiceDockerSetting;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.utility.AzureResourceUtility;
-import io.harness.delegate.beans.azure.mapper.AzureAppServiceConfigurationDTOMapper;
 import io.harness.delegate.beans.azure.registry.AzureRegistry;
 import io.harness.delegate.beans.azure.registry.AzureRegistryFactory;
 import io.harness.delegate.beans.azure.registry.AzureRegistryType;
@@ -36,6 +34,8 @@ import com.microsoft.azure.management.containerregistry.AccessKeyType;
 import com.microsoft.azure.management.containerregistry.RegistryCredentials;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -85,14 +85,16 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
     ConnectorConfigDTO connectorConfigDTO = azureWebAppSlotSetupParameters.getConnectorConfigDTO();
     AzureRegistryType azureRegistryType = azureWebAppSlotSetupParameters.getAzureRegistryType();
 
-    Map<String, AzureAppServiceApplicationSetting> appSettingsToAdd =
-        AzureAppServiceConfigurationDTOMapper.getAzureAppServiceAppSettings(
-            azureWebAppSlotSetupParameters.getAppSettings());
-    Map<String, AzureAppServiceConnectionString> connSettingsToAdd =
-        AzureAppServiceConfigurationDTOMapper.getAzureAppServiceConnStrings(
-            azureWebAppSlotSetupParameters.getConnSettings());
+    List<AzureAppServiceApplicationSetting> applicationSettings =
+        azureWebAppSlotSetupParameters.getApplicationSettings();
+    Map<String, AzureAppServiceApplicationSetting> appSettingsToAdd = applicationSettings.stream().collect(
+        Collectors.toMap(AzureAppServiceApplicationSetting::getName, Function.identity()));
 
-    Map<String, AzureAppServiceDockerSetting> dockerSettings =
+    List<AzureAppServiceConnectionString> connectionStrings = azureWebAppSlotSetupParameters.getConnectionStrings();
+    Map<String, AzureAppServiceConnectionString> connSettingsToAdd = connectionStrings.stream().collect(
+        Collectors.toMap(AzureAppServiceConnectionString::getName, Function.identity()));
+
+    Map<String, AzureAppServiceApplicationSetting> dockerSettings =
         getAzureAppServiceDockerSettings(connectorConfigDTO, azureRegistryType, azureConfig);
 
     String imagePathAndTag = AzureResourceUtility.getDockerImageFullNameAndTag(
@@ -110,10 +112,11 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
         .build();
   }
 
-  private Map<String, AzureAppServiceDockerSetting> getAzureAppServiceDockerSettings(
+  private Map<String, AzureAppServiceApplicationSetting> getAzureAppServiceDockerSettings(
       ConnectorConfigDTO connectorConfigDTO, AzureRegistryType azureRegistryType, AzureConfig azureConfig) {
     AzureRegistry azureRegistry = AzureRegistryFactory.getAzureRegistry(azureRegistryType);
-    Map<String, AzureAppServiceDockerSetting> dockerSettings = azureRegistry.getContainerSettings(connectorConfigDTO);
+    Map<String, AzureAppServiceApplicationSetting> dockerSettings =
+        azureRegistry.getContainerSettings(connectorConfigDTO);
 
     if (AzureRegistryType.ACR == azureRegistryType) {
       RegistryCredentials registryCredentials = azureAppServiceDeploymentService.getContainerRegistryCredentials(
@@ -125,19 +128,19 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
   }
 
   private void updateACRDockerSettingByCredentials(
-      Map<String, AzureAppServiceDockerSetting> dockerSettings, RegistryCredentials registryCredentials) {
+      Map<String, AzureAppServiceApplicationSetting> dockerSettings, RegistryCredentials registryCredentials) {
     String username = getACRUsername(registryCredentials);
     String accessKey = getACRAccessKey(registryCredentials);
 
     dockerSettings.put(DOCKER_REGISTRY_SERVER_USERNAME_PROPERTY_NAME,
-        AzureAppServiceDockerSetting.builder()
+        AzureAppServiceApplicationSetting.builder()
             .name(DOCKER_REGISTRY_SERVER_USERNAME_PROPERTY_NAME)
             .sticky(false)
             .value(username)
             .build());
 
     dockerSettings.put(DOCKER_REGISTRY_SERVER_SECRET_PROPERTY_NAME,
-        AzureAppServiceDockerSetting.builder()
+        AzureAppServiceApplicationSetting.builder()
             .name(DOCKER_REGISTRY_SERVER_SECRET_PROPERTY_NAME)
             .sticky(false)
             .value(accessKey)

@@ -23,15 +23,8 @@ import io.harness.delegate.beans.azure.AzureVMAuthType;
 import io.harness.delegate.beans.azure.GalleryImageDefinitionDTO;
 import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceApplicationSettingDTO;
 import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceConnectionStringDTO;
-import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceDockerSettingDTO;
 import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceSettingConstants;
 import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceSettingDTO;
-import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceAzureSettingValue;
-import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceHarnessSettingSecretRef;
-import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceHarnessSettingSecretValue;
-import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceHarnessSettingValue;
-import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceSettingValue;
-import io.harness.delegate.beans.azure.appservicesettings.value.AzureAppServiceSettingValueType;
 import io.harness.delegate.beans.azure.registry.AzureRegistryType;
 import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
 import io.harness.delegate.beans.ci.CIClusterType;
@@ -613,9 +606,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AzureRegistryType.class, 19469);
     kryo.register(AzureAppServiceApplicationSettingDTO.class, 19470);
     kryo.register(AzureAppServiceConnectionStringDTO.class, 19471);
-    kryo.register(AzureAppServiceSettingValue.class, 19472);
-    kryo.register(AzureAppServiceHarnessSettingValue.class, 19473);
-    kryo.register(AzureAppServiceHarnessSettingSecretValue.class, 19474);
     kryo.register(AzureWebAppSlotSetupResponse.class, 19475);
     kryo.register(AzureAppServicePreDeploymentData.class, 19476);
     kryo.register(AzureWebAppRollbackResponse.class, 19477);
@@ -623,9 +613,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AzureAppDeploymentData.class, 19479);
     kryo.register(AzureWebAppSlotShiftTrafficResponse.class, 19480);
     kryo.register(AzureWebAppSwapSlotsResponse.class, 19481);
-    kryo.register(AzureAppServiceSettingValueType.class, 19482);
-    kryo.register(AzureAppServiceHarnessSettingSecretRef.class, 19483);
-    kryo.register(AzureAppServiceDockerSettingDTO.class, 19484);
     kryo.register(AzureAppServiceSettingConstants.class, 19485);
     kryo.register(AzureAppServiceSettingDTO.class, 19486);
     kryo.register(ArtifactoryConnectorDTO.class, 19487);
@@ -634,7 +621,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(ArtifactoryAuthType.class, 19490);
     kryo.register(ArtifactoryConstants.class, 19491);
     kryo.register(ArtifactoryUsernamePasswordAuthDTO.class, 19492);
-    kryo.register(AzureAppServiceAzureSettingValue.class, 19493);
     kryo.register(NexusTaskResponse.class, 19494);
     kryo.register(ArtifactoryTaskResponse.class, 19495);
     kryo.register(NexusTaskParams.class, 19496);
@@ -648,7 +634,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(NexusTaskParams.TaskType.class, 19504);
     kryo.register(ArtifactoryTaskParams.TaskType.class, 19505);
     kryo.register(VaultConnectorDTO.class, 19506);
-
+    kryo.register(AzureContainerRegistryConnectorDTO.class, 19507);
     kryo.register(SecretType.class, 543214);
     kryo.register(ValueType.class, 543215);
     kryo.register(SSHKeySpecDTO.class, 543222);
@@ -663,6 +649,5 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(SSHKeyPathCredentialDTO.class, 543232);
     kryo.register(KerberosConfigDTO.class, 543233);
     kryo.register(SSHAuthDTO.class, 543234);
-    kryo.register(AzureContainerRegistryConnectorDTO.class, 19507);
   }
 }

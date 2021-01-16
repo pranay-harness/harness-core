@@ -71,7 +71,7 @@ public class AzureWebAppRollbackTaskHandler extends AbstractAzureWebAppTaskHandl
             preDeploymentData.getConnStringsToAdd()))
         .connSettingsToRemove(AzureAppServiceConfigurationDTOMapper.getAzureAppServiceConnStrings(
             preDeploymentData.getConnStringsToRemove()))
-        .dockerSettings(AzureAppServiceConfigurationDTOMapper.getAzureAppServiceDockerSettings(
+        .dockerSettings(AzureAppServiceConfigurationDTOMapper.getAzureAppServiceAppSettings(
             preDeploymentData.getDockerSettingsToAdd()))
         .imagePathAndTag(preDeploymentData.getImageNameAndTag())
         .slotName(preDeploymentData.getSlotName())

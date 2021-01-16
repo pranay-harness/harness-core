@@ -7,7 +7,7 @@ import static io.harness.azure.model.AzureConstants.DOCKER_REGISTRY_URL_BLANK_VA
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.azure.model.AzureAppServiceDockerSetting;
+import io.harness.azure.model.AzureAppServiceApplicationSetting;
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.exception.InvalidArgumentsException;
@@ -19,28 +19,29 @@ import java.util.Optional;
 public abstract class AzureRegistry {
   public abstract Optional<DecryptableEntity> getAuthCredentialsDTO(ConnectorConfigDTO connectorConfigDTO);
 
-  public abstract Map<String, AzureAppServiceDockerSetting> getContainerSettings(ConnectorConfigDTO connectorConfigDTO);
+  public abstract Map<String, AzureAppServiceApplicationSetting> getContainerSettings(
+      ConnectorConfigDTO connectorConfigDTO);
 
-  protected Map<String, AzureAppServiceDockerSetting> populateDockerSettingMap(
+  protected Map<String, AzureAppServiceApplicationSetting> populateDockerSettingMap(
       String dockerRegistryUrl, String userName, String decryptedSecret) {
-    Map<String, AzureAppServiceDockerSetting> dockerSettings = new HashMap<>();
+    Map<String, AzureAppServiceApplicationSetting> dockerSettings = new HashMap<>();
 
     dockerSettings.put(DOCKER_REGISTRY_SERVER_URL_PROPERTY_NAME,
-        AzureAppServiceDockerSetting.builder()
+        AzureAppServiceApplicationSetting.builder()
             .name(DOCKER_REGISTRY_SERVER_URL_PROPERTY_NAME)
             .sticky(false)
             .value(dockerRegistryUrl)
             .build());
 
     dockerSettings.put(DOCKER_REGISTRY_SERVER_USERNAME_PROPERTY_NAME,
-        AzureAppServiceDockerSetting.builder()
+        AzureAppServiceApplicationSetting.builder()
             .name(DOCKER_REGISTRY_SERVER_USERNAME_PROPERTY_NAME)
             .sticky(false)
             .value(userName)
             .build());
 
     dockerSettings.put(DOCKER_REGISTRY_SERVER_SECRET_PROPERTY_NAME,
-        AzureAppServiceDockerSetting.builder()
+        AzureAppServiceApplicationSetting.builder()
             .name(DOCKER_REGISTRY_SERVER_SECRET_PROPERTY_NAME)
             .sticky(false)
             .value(decryptedSecret)
@@ -48,11 +49,11 @@ public abstract class AzureRegistry {
     return dockerSettings;
   }
 
-  protected Map<String, AzureAppServiceDockerSetting> populateDockerSettingMap(String dockerRegistryUrl) {
-    Map<String, AzureAppServiceDockerSetting> dockerSettings = new HashMap<>();
+  protected Map<String, AzureAppServiceApplicationSetting> populateDockerSettingMap(String dockerRegistryUrl) {
+    Map<String, AzureAppServiceApplicationSetting> dockerSettings = new HashMap<>();
 
     dockerSettings.put(DOCKER_REGISTRY_SERVER_URL_PROPERTY_NAME,
-        AzureAppServiceDockerSetting.builder()
+        AzureAppServiceApplicationSetting.builder()
             .name(DOCKER_REGISTRY_SERVER_URL_PROPERTY_NAME)
             .sticky(false)
             .value(dockerRegistryUrl)

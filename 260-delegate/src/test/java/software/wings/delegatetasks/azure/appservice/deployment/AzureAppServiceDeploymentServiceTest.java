@@ -31,7 +31,6 @@ import io.harness.azure.context.AzureContainerRegistryClientContext;
 import io.harness.azure.context.AzureWebClientContext;
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
 import io.harness.azure.model.AzureAppServiceConnectionString;
-import io.harness.azure.model.AzureAppServiceDockerSetting;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureConstants;
 import io.harness.category.element.UnitTests;
@@ -115,8 +114,8 @@ public class AzureAppServiceDeploymentServiceTest extends WingsBaseTest {
         Collections.singletonMap("appSetting1", getConnectionSettings("connSetting1"));
     Map<String, AzureAppServiceConnectionString> connSettingsToRemove =
         Collections.singletonMap("appSetting1", getConnectionSettings("connSetting1"));
-    Map<String, AzureAppServiceDockerSetting> dockerSettings = Collections.singletonMap("dockerSetting1",
-        AzureAppServiceDockerSetting.builder().name("dockerSetting1").value("dockerSetting1value").build());
+    Map<String, AzureAppServiceApplicationSetting> dockerSettings = Collections.singletonMap("dockerSetting1",
+        AzureAppServiceApplicationSetting.builder().name("dockerSetting1").value("dockerSetting1value").build());
 
     AzureAppServiceDockerDeploymentContext azureAppServiceDockerDeploymentContext =
         AzureAppServiceDockerDeploymentContext.builder()
@@ -361,7 +360,7 @@ public class AzureAppServiceDeploymentServiceTest extends WingsBaseTest {
         .when(mockAzureWebClient)
         .listDeploymentSlotConnectionStrings(azureWebClientContext, SLOT_NAME);
 
-    Map<String, AzureAppServiceDockerSetting> dockerSettingsNeedBeUpdatedInRollback = new HashMap<>();
+    Map<String, AzureAppServiceApplicationSetting> dockerSettingsNeedBeUpdatedInRollback = new HashMap<>();
     doReturn(dockerSettingsNeedBeUpdatedInRollback)
         .when(mockAzureWebClient)
         .listDeploymentSlotDockerSettings(azureWebClientContext, SLOT_NAME);
