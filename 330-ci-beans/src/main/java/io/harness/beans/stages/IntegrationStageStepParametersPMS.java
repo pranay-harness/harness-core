@@ -50,7 +50,7 @@ public class IntegrationStageStepParametersPMS implements StepParameters {
       if (useFromStageInfraYaml.getUseFromStage() != null) {
         YamlField yamlField = ctx.getCurrentField();
         String identifier = useFromStageInfraYaml.getUseFromStage();
-        IntegrationStage integrationStage = getIntegrationStageConfig(yamlField, identifier);
+        IntegrationStageConfig integrationStage = getIntegrationStageConfig(yamlField, identifier);
         infrastructure = integrationStage.getInfrastructure();
       }
     }
@@ -71,10 +71,13 @@ public class IntegrationStageStepParametersPMS implements StepParameters {
         .build();
   }
 
-  private static IntegrationStage getIntegrationStageConfig(YamlField yamlField, String identifier) {
+  private static IntegrationStageConfig getIntegrationStageConfig(YamlField yamlField, String identifier) {
     try {
       YamlField stageYamlField = PlanCreatorUtils.getStageConfig(yamlField, identifier);
-      return YamlUtils.read(stageYamlField.getNode().toString(), IntegrationStage.class);
+      StageElementConfig stageElementConfig =
+          YamlUtils.read(YamlUtils.writeYamlString(stageYamlField), StageElementConfig.class);
+      return (IntegrationStageConfig) stageElementConfig.getStageType();
+
     } catch (Exception ex) {
       throw new CIStageExecutionException(
           "Failed to deserialize IntegrationStage for use from stage identifier: " + identifier, ex);
