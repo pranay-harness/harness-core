@@ -7,7 +7,6 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
-import io.harness.delegate.beans.DelegateSyncTaskResponse.DelegateSyncTaskResponseKeys;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.service.intfc.DelegateSyncService;
 import io.harness.tasks.BinaryResponseData;
@@ -39,8 +38,8 @@ public class PmsDelegateSyncServiceImpl implements DelegateSyncService {
   public void run() {
     try {
       if (isNotEmpty(syncTaskWaitMap)) {
-        Query query = query(where(DelegateSyncTaskResponseKeys.uuid).in(syncTaskWaitMap.keySet()));
-        query.fields().include(DelegateSyncTaskResponseKeys.uuid);
+        Query query = query(where("_id").in(syncTaskWaitMap.keySet()));
+        query.fields().include("_id");
         List<String> completedSyncTasks =
             persistence.find(query, String.class, morphiaCustomCollectionNames.get(DelegateSyncTaskResponse.class));
         for (String taskId : completedSyncTasks) {
@@ -61,7 +60,7 @@ public class PmsDelegateSyncServiceImpl implements DelegateSyncService {
   @Override
   public BinaryResponseData waitForTask(String taskId, String description, Duration timeout) {
     DelegateSyncTaskResponse taskResponse;
-    Query query = query(where(DelegateSyncTaskResponseKeys.uuid).is(taskId));
+    Query query = query(where("_id").is(taskId));
     String collectionName = morphiaCustomCollectionNames.get(DelegateSyncTaskResponse.class);
     try {
       log.info("Executing sync task");
