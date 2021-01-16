@@ -2,16 +2,24 @@ package software.wings.sm.states.azure.appservices;
 
 import static software.wings.sm.StateType.AZURE_WEBAPP_SLOT_ROLLBACK;
 
+import io.harness.azure.model.AzureConstants;
+import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
 import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppRollbackParameters;
 
 import software.wings.beans.Activity;
+import software.wings.beans.command.AzureWebAppCommandUnit;
+import software.wings.beans.command.CommandUnit;
 import software.wings.service.impl.azure.manager.AzureTaskExecutionRequest;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionResponse;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,9 +57,11 @@ public class AzureWebAppSlotRollback extends AzureWebAppSlotSetup {
         .appId(azureAppServiceStateData.getApplication().getAppId())
         .commandName(APP_SERVICE_SLOT_SETUP)
         .activityId(activity.getUuid())
+        .appName(contextElement.getWebApp())
         .subscriptionId(azureAppServiceStateData.getSubscriptionId())
         .resourceGroupName(azureAppServiceStateData.getResourceGroup())
         .preDeploymentData(contextElement.getPreDeploymentData())
+        .timeoutIntervalInMin(contextElement.getAppServiceSlotSetupTimeOut())
         .build();
   }
 
@@ -103,5 +113,20 @@ public class AzureWebAppSlotRollback extends AzureWebAppSlotSetup {
   @Override
   public Map<String, String> validateFields() {
     return Collections.emptyMap();
+  }
+
+  @Override
+  protected ExecutionResponse processDelegateResponse(
+      AzureTaskExecutionResponse executionResponse, ExecutionContext context, ExecutionStatus executionStatus) {
+    return prepareExecutionResponse(executionResponse, context, executionStatus);
+  }
+
+  @Override
+  protected List<CommandUnit> commandUnits() {
+    return ImmutableList.of(new AzureWebAppCommandUnit(AzureConstants.STOP_DEPLOYMENT_SLOT),
+        new AzureWebAppCommandUnit(AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONFIGURATION_SETTINGS),
+        new AzureWebAppCommandUnit(AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONTAINER_SETTINGS),
+        new AzureWebAppCommandUnit(AzureConstants.START_DEPLOYMENT_SLOT),
+        new AzureWebAppCommandUnit(AzureConstants.DEPLOYMENT_STATUS));
   }
 }

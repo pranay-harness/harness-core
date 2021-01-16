@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.azure.appservice;
 
-import static io.harness.azure.model.AzureConstants.DEPLOYMENT_ERROR;
+import static io.harness.azure.model.AzureConstants.DEPLOYMENT_STATUS;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.LogLevel.ERROR;
 
@@ -8,6 +8,7 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 
 import io.harness.azure.model.AzureConfig;
+import io.harness.azure.model.AzureConstants;
 import io.harness.azure.utility.AzureResourceUtility;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
@@ -17,6 +18,7 @@ import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlot
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
+import io.harness.logging.LogLevel;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -77,11 +79,22 @@ public abstract class AbstractAzureAppServiceTaskHandler {
 
   protected void logErrorMsg(AzureAppServiceTaskParameters azureAppServiceTaskParameters,
       ILogStreamingTaskClient logStreamingTaskClient, Exception ex, String message) {
-    LogCallback logCallback = logStreamingTaskClient.obtainLogCallback(DEPLOYMENT_ERROR);
+    LogCallback logCallback = logStreamingTaskClient.obtainLogCallback(DEPLOYMENT_STATUS);
     logCallback.saveExecutionLog(message, ERROR, FAILURE);
     log.error(format("Exception: [%s] while processing azure app service task: [%s].", message,
                   azureAppServiceTaskParameters.getCommandType().name()),
         ex);
+  }
+
+  protected void markExecutionAsSuccess(
+      AzureAppServiceTaskParameters azureAppServiceTaskParameters, ILogStreamingTaskClient logStreamingTaskClient) {
+    if (azureAppServiceTaskParameters.isSyncTask()) {
+      return;
+    }
+    LogCallback logCallback = logStreamingTaskClient.obtainLogCallback(AzureConstants.DEPLOYMENT_STATUS);
+    logCallback.saveExecutionLog(String.format("The following task - [%s] completed successfully",
+                                     azureAppServiceTaskParameters.getCommandType().name()),
+        LogLevel.INFO, CommandExecutionStatus.SUCCESS);
   }
 
   protected abstract AzureAppServiceTaskResponse executeTaskInternal(

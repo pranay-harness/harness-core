@@ -56,7 +56,7 @@ public class AzureAppServiceConfigurationDTOMapperTest extends WingsBaseTest {
                     .value(AzureAppServiceHarnessSettingSecretValue.builder()
                                .settingSecretRef(
                                    AzureAppServiceHarnessSettingSecretRef.builder()
-                                       .secretRef(new SecretRefData("HARNESS_SECRET_APP_SETTING_IDENTIFIER",
+                                       .passwordRef(new SecretRefData("HARNESS_SECRET_APP_SETTING_IDENTIFIER",
                                            Scope.ACCOUNT, "HARNESS_SECRET_APP_SETTING_DECRYPTED_VALUE".toCharArray()))
                                        .build())
                                .encryptedDataDetails(Collections.emptyList())
@@ -122,7 +122,7 @@ public class AzureAppServiceConfigurationDTOMapperTest extends WingsBaseTest {
                     .value(AzureAppServiceHarnessSettingSecretValue.builder()
                                .settingSecretRef(
                                    AzureAppServiceHarnessSettingSecretRef.builder()
-                                       .secretRef(new SecretRefData("HARNESS_SECRET_CONN_SETTING_IDENTIFIER",
+                                       .passwordRef(new SecretRefData("HARNESS_SECRET_CONN_SETTING_IDENTIFIER",
                                            Scope.ACCOUNT, "HARNESS_SECRET_CONN_SETTING_DECRYPTED_VALUE".toCharArray()))
                                        .build())
                                .encryptedDataDetails(Collections.emptyList())
@@ -193,7 +193,7 @@ public class AzureAppServiceConfigurationDTOMapperTest extends WingsBaseTest {
                     .name("HARNESS_SECRET_DOCKER_SETTING_NAME")
                     .value(AzureAppServiceHarnessSettingSecretValue.builder()
                                .settingSecretRef(AzureAppServiceHarnessSettingSecretRef.builder()
-                                                     .secretRef(new SecretRefData(
+                                                     .passwordRef(new SecretRefData(
                                                          "HARNESS_SECRET_DOCKER_SETTING_IDENTIFIER", Scope.ACCOUNT,
                                                          "HARNESS_SECRET_DOCKER_SETTING_DECRYPTED_VALUE".toCharArray()))
                                                      .build())
@@ -266,7 +266,7 @@ public class AzureAppServiceConfigurationDTOMapperTest extends WingsBaseTest {
         ((AzureAppServiceHarnessSettingSecretValue) azureAppServiceSettingValue).getSettingSecretRef();
     assertThat(settingSecretRef).isNotNull();
 
-    SecretRefData secretRef = settingSecretRef.getSecretRef();
+    SecretRefData secretRef = settingSecretRef.getPasswordRef();
     assertThat(secretRef).isNotNull();
     assertThat(secretRef.getIdentifier()).isEqualTo("settingValue");
   }

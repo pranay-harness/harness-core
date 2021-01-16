@@ -264,21 +264,21 @@ public class AzureWebClientImpl extends AzureClient implements AzureWebClient {
 
   @Override
   public void updateDeploymentSlotConnectionStrings(AzureWebClientContext context, final String slotName,
-      Map<String, AzureAppServiceConnectionString> connectionSettings) {
-    if (connectionSettings.isEmpty()) {
+      Map<String, AzureAppServiceConnectionString> connectionStrings) {
+    if (connectionStrings.isEmpty()) {
       log.info("Slot connection settings list is empty, slotName: {}, context: {}", slotName, context);
       return;
     }
 
     DeploymentSlot deploymentSlot = getDeploymentSlot(context, slotName);
     DeploymentSlot.Update update = deploymentSlot.update();
-    connectionSettings.values().forEach(connectionSetting -> {
-      String name = connectionSetting.getName();
-      String value = connectionSetting.getValue();
-      boolean sticky = connectionSetting.isSticky();
-      ConnectionStringType type = ConnectionStringType.fromString(connectionSetting.getType().getValue());
+    connectionStrings.values().forEach(connString -> {
+      String name = connString.getName();
+      String value = connString.getValue();
+      boolean sticky = connString.isSticky();
+      ConnectionStringType type = ConnectionStringType.fromString(connString.getType().getValue());
 
-      update.withConnectionString(name, value, type).withAppSettingStickiness(name, sticky);
+      update.withConnectionString(name, value, type).withConnectionStringStickiness(name, sticky);
     });
     update.apply();
   }

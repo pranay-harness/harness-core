@@ -10,7 +10,7 @@ import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppSlotS
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotShiftTrafficResponse;
 
 import software.wings.beans.Activity;
-import software.wings.beans.command.AzureVMSSDummyCommandUnit;
+import software.wings.beans.command.AzureWebAppCommandUnit;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.service.impl.azure.manager.AzureTaskExecutionRequest;
@@ -85,7 +85,8 @@ public class AzureWebAppSlotShiftTraffic extends AbstractAzureAppServiceState {
 
   @Override
   protected List<CommandUnit> commandUnits() {
-    return ImmutableList.of(new AzureVMSSDummyCommandUnit(AzureConstants.SLOT_TRAFFIC_WEIGHT));
+    return ImmutableList.of(new AzureWebAppCommandUnit(AzureConstants.SLOT_TRAFFIC_WEIGHT),
+        new AzureWebAppCommandUnit(AzureConstants.DEPLOYMENT_STATUS));
   }
 
   @NotNull
@@ -97,12 +98,6 @@ public class AzureWebAppSlotShiftTraffic extends AbstractAzureAppServiceState {
   @Override
   protected String commandType() {
     return APP_SERVICE_SLOT_TRAFFIC_SHIFT;
-  }
-
-  @NotNull
-  @Override
-  protected String errorMessageTag() {
-    return "Azure App Service traffic shift failed";
   }
 
   private AzureWebAppSlotShiftTrafficParameters buildTrafficShiftParams(

@@ -10,6 +10,7 @@ import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryUsern
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.ArtifactoryConfig;
@@ -48,5 +49,10 @@ public class ArtifactoryArtifactStreamMapper extends ArtifactStreamMapper {
   public Optional<DecryptableEntity> getConnectorDTOAuthCredentials(ConnectorConfigDTO connectorConfigDTO) {
     ArtifactoryConnectorDTO artifactoryConnectorDTO = (ArtifactoryConnectorDTO) connectorConfigDTO;
     return Optional.ofNullable(artifactoryConnectorDTO.getAuth().getCredentials());
+  }
+
+  @Override
+  public Optional<EncryptableSetting> getEncryptableSetting() {
+    return Optional.ofNullable((ArtifactoryConfig) artifactStreamAttributes.getServerSetting().getValue());
   }
 }

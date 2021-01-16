@@ -63,6 +63,7 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
       List<AzureAppDeploymentData> azureAppDeploymentData = azureAppServiceDeploymentService.fetchDeploymentData(
           azureWebClientContext, azureWebAppSlotSetupParameters.getSlotName());
 
+      markExecutionAsSuccess(azureAppServiceTaskParameters, logStreamingTaskClient);
       return AzureWebAppSlotSetupResponse.builder()
           .azureAppDeploymentData(azureAppDeploymentData)
           .preDeploymentData(azureAppServicePreDeploymentData)

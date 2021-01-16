@@ -7,6 +7,7 @@ import static io.harness.rule.OwnerRule.ANIL;
 import static software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement.SWEEPING_OUTPUT_APP_SERVICE;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
@@ -96,8 +97,7 @@ public class AzureWebAppSlotSwapTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testSwapSlotExecuteFailure() {
     ExecutionContextImpl mockContext = initializeMockSetup(false, true, false);
-    ExecutionResponse response = state.execute(mockContext);
-    assertThat(response.getExecutionStatus()).isEqualTo(FAILED);
+    assertThatThrownBy(() -> state.execute(mockContext)).isInstanceOf(InvalidRequestException.class);
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -121,8 +121,9 @@ public class AzureWebAppSlotSwapTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testSwapSlotAbsenceOfContextElement() {
     ExecutionContextImpl mockContext = initializeMockSetup(true, false, false);
-    ExecutionResponse failedResponse = state.execute(mockContext);
-    assertThat(failedResponse.getExecutionStatus()).isEqualTo(FAILED);
+    assertThatThrownBy(() -> state.execute(mockContext))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Did not find Setup element of class AzureAppServiceSlotSetupContextElement");
   }
 
   @Test

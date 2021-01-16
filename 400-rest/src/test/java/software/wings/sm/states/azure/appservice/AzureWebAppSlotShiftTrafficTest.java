@@ -7,6 +7,7 @@ import static io.harness.rule.OwnerRule.ANIL;
 import static software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement.SWEEPING_OUTPUT_APP_SERVICE;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyListOf;
@@ -24,6 +25,7 @@ import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotShiftTrafficResponse;
+import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -84,8 +86,7 @@ public class AzureWebAppSlotShiftTrafficTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testSlotTrafficShiftExecuteFailure() {
     ExecutionContextImpl mockContext = initializeMockSetup(false, true);
-    ExecutionResponse response = state.execute(mockContext);
-    assertThat(response.getExecutionStatus()).isEqualTo(FAILED);
+    assertThatThrownBy(() -> state.execute(mockContext)).isInstanceOf(InvalidRequestException.class);
   }
 
   @Test
@@ -93,8 +94,9 @@ public class AzureWebAppSlotShiftTrafficTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testSlotTrafficShiftAbsenceOfContextElement() {
     ExecutionContextImpl mockContext = initializeMockSetup(true, false);
-    ExecutionResponse failedResponse = state.execute(mockContext);
-    assertThat(failedResponse.getExecutionStatus()).isEqualTo(FAILED);
+    assertThatThrownBy(() -> state.execute(mockContext))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Did not find Setup element of class AzureAppServiceSlotSetupContextElement");
   }
 
   @Test

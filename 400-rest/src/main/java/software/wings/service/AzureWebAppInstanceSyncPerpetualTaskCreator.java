@@ -9,6 +9,7 @@ import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 
 import static java.lang.String.format;
 
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
@@ -29,10 +30,12 @@ import com.google.inject.Inject;
 import com.google.protobuf.util.Durations;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import org.apache.commons.lang3.StringUtils;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AzureWebAppInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpetualTaskCreator {
@@ -44,18 +47,21 @@ public class AzureWebAppInstanceSyncPerpetualTaskCreator implements InstanceSync
 
   @Override
   public List<String> createPerpetualTasks(InfrastructureMapping infrastructureMapping) {
-    Set<AzureWebAppInstanceInfo> webAppInstancesInfo =
-        getWebAppInstancesInfo(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
-    return createPerpetualTasks(webAppInstancesInfo, infrastructureMapping);
+    Set<String> webAppsDeploymentKeys =
+        getWebAppsDeploymentKeys(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
+    return createPerpetualTasks(webAppsDeploymentKeys, infrastructureMapping);
   }
 
-  private Set<AzureWebAppInstanceInfo> getWebAppInstancesInfo(String appId, String infraMappingId) {
+  private Set<String> getWebAppsDeploymentKeys(String appId, String infraMappingId) {
     List<Instance> instances = instanceService.getInstancesForAppAndInframapping(appId, infraMappingId);
     return emptyIfNull(instances)
         .stream()
         .map(Instance::getInstanceInfo)
         .filter(AzureWebAppInstanceInfo.class ::isInstance)
         .map(AzureWebAppInstanceInfo.class ::cast)
+        .map(instanceInfo -> getWebAppDeploymentKey(instanceInfo.getAppName(), instanceInfo.getSlotName()))
+        .filter(Optional::isPresent)
+        .map(Optional::get)
         .collect(Collectors.toSet());
   }
 
@@ -65,45 +71,44 @@ public class AzureWebAppInstanceSyncPerpetualTaskCreator implements InstanceSync
     List<AzureWebAppDeploymentKey> newWebAppInstancesDeploymentKeys =
         deploymentSummaries.stream().map(DeploymentSummary::getAzureWebAppDeploymentKey).collect(Collectors.toList());
 
-    Set<String> existingWebAppInstances =
+    Set<String> existingWebAppDeploymentKeys =
         existingPerpetualTasks.stream()
             .map(task -> task.getClientContext().getClientParams())
-            .map(params -> format("%s_%s", params.get(APP_NAME), params.get(SLOT_NAME)))
+            .map(params -> getWebAppDeploymentKey(params.get(APP_NAME), params.get(SLOT_NAME)))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
             .collect(Collectors.toSet());
 
-    Set<String> newWebAppInstances = deploymentSummaries.stream()
-                                         .map(DeploymentSummary::getAzureWebAppDeploymentKey)
-                                         .map(AzureWebAppDeploymentKey::getKey)
-                                         .collect(Collectors.toSet());
+    Set<String> newWebAppDeploymentKeys = deploymentSummaries.stream()
+                                              .map(DeploymentSummary::getAzureWebAppDeploymentKey)
+                                              .map(AzureWebAppDeploymentKey::getKey)
+                                              .collect(Collectors.toSet());
 
-    Sets.SetView<String> newDeployedWebAppInstances = Sets.difference(newWebAppInstances, existingWebAppInstances);
+    Sets.SetView<String> newDeployedWebAppDeploymentKeys =
+        Sets.difference(newWebAppDeploymentKeys, existingWebAppDeploymentKeys);
 
-    Set<AzureWebAppInstanceInfo> webAppInstancesInfo =
+    Set<String> webAppsDeploymentKeys =
         newWebAppInstancesDeploymentKeys.stream()
-            .filter(newDeployedWebAppKey -> newDeployedWebAppInstances.contains(newDeployedWebAppKey.getKey()))
-            .map(deploymentKey
-                -> AzureWebAppInstanceInfo.builder()
-                       .appName(deploymentKey.getAppName())
-                       .slotName(deploymentKey.getSlotName())
-                       .build())
+            .filter(newDeployedWebAppKey -> newDeployedWebAppDeploymentKeys.contains(newDeployedWebAppKey.getKey()))
+            .map(AzureWebAppDeploymentKey::getKey)
             .collect(Collectors.toSet());
 
-    return createPerpetualTasks(webAppInstancesInfo, infrastructureMapping);
+    return createPerpetualTasks(webAppsDeploymentKeys, infrastructureMapping);
   }
 
   private List<String> createPerpetualTasks(
-      Set<AzureWebAppInstanceInfo> webAppInstancesInfo, InfrastructureMapping infrastructureMapping) {
+      Set<String> webAppsDeploymentKeys, InfrastructureMapping infrastructureMapping) {
     String appId = infrastructureMapping.getAppId();
     String infraMappingId = infrastructureMapping.getUuid();
     String accountId = infrastructureMapping.getAccountId();
 
-    return webAppInstancesInfo.stream()
-        .map(azureWebAppInstanceInfo
+    return webAppsDeploymentKeys.stream()
+        .map(webAppDeploymentKey
             -> AzureWebAppInstanceSyncPerpetualTaskClientParams.builder()
                    .appId(appId)
                    .infraMappingId(infraMappingId)
-                   .appName(azureWebAppInstanceInfo.getAppName())
-                   .slotName(azureWebAppInstanceInfo.getSlotName())
+                   .appName(getWebAppName(webAppDeploymentKey))
+                   .slotName(getWebAppSlotName(webAppDeploymentKey))
                    .build())
         .map(params -> create(accountId, params))
         .collect(Collectors.toList());
@@ -123,5 +128,30 @@ public class AzureWebAppInstanceSyncPerpetualTaskCreator implements InstanceSync
 
     return perpetualTaskService.createTask(
         PerpetualTaskType.AZURE_WEB_APP_INSTANCE_SYNC, accountId, clientContext, schedule, false, "");
+  }
+
+  private Optional<String> getWebAppDeploymentKey(String appName, String slotName) {
+    if (StringUtils.isBlank(appName) || StringUtils.isBlank(slotName)) {
+      return Optional.empty();
+    }
+    return Optional.of(format("%s_%s", appName, slotName));
+  }
+
+  private String getWebAppSlotName(String webAppDeploymentKey) {
+    String[] appAndSlotName = webAppDeploymentKey.split("_");
+    if (appAndSlotName.length != 2) {
+      throw new InvalidArgumentsException(format("Invalid web app deployment key: [%s]", webAppDeploymentKey));
+    }
+
+    return appAndSlotName[1];
+  }
+
+  private String getWebAppName(String webAppDeploymentKey) {
+    String[] appAndSlotName = webAppDeploymentKey.split("_");
+    if (appAndSlotName.length != 2) {
+      throw new InvalidArgumentsException(format("Invalid web app deployment key: [%s]", webAppDeploymentKey));
+    }
+
+    return appAndSlotName[0];
   }
 }

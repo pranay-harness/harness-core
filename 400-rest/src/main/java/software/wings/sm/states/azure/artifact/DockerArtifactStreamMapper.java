@@ -13,6 +13,7 @@ import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -20,6 +21,8 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import java.util.Optional;
 
 public class DockerArtifactStreamMapper extends ArtifactStreamMapper {
+  private static final String PUBLIC_DOCKER_REGISTER_URL = "https://index.docker.io";
+
   public DockerArtifactStreamMapper(Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes) {
     super(artifact, artifactStreamAttributes);
   }
@@ -27,7 +30,6 @@ public class DockerArtifactStreamMapper extends ArtifactStreamMapper {
   public ConnectorConfigDTO getConnectorDTO() {
     DockerConfig dockerConfig = (DockerConfig) artifactStreamAttributes.getServerSetting().getValue();
     String dockerUserName = dockerConfig.getUsername();
-    String dockerRegistryUrl = dockerConfig.fetchRegistryUrl();
     String passwordSecretRef = dockerConfig.getEncryptedPassword();
     SecretRefData secretRefData = new SecretRefData(passwordSecretRef, Scope.ACCOUNT, null);
 
@@ -35,7 +37,10 @@ public class DockerArtifactStreamMapper extends ArtifactStreamMapper {
         DockerUserNamePasswordDTO.builder().username(dockerUserName).passwordRef(secretRefData).build();
     DockerAuthenticationDTO dockerAuthenticationDTO =
         DockerAuthenticationDTO.builder().authType(USER_PASSWORD).credentials(dockerUserNamePasswordDTO).build();
-    return DockerConnectorDTO.builder().dockerRegistryUrl(dockerRegistryUrl).auth(dockerAuthenticationDTO).build();
+    return DockerConnectorDTO.builder()
+        .dockerRegistryUrl(PUBLIC_DOCKER_REGISTER_URL)
+        .auth(dockerAuthenticationDTO)
+        .build();
   }
 
   public AzureRegistryType getAzureRegistryType() {
@@ -53,5 +58,15 @@ public class DockerArtifactStreamMapper extends ArtifactStreamMapper {
   public Optional<DecryptableEntity> getConnectorDTOAuthCredentials(ConnectorConfigDTO connectorConfigDTO) {
     DockerConnectorDTO dockerConnectorDTO = (DockerConnectorDTO) connectorConfigDTO;
     return Optional.ofNullable(dockerConnectorDTO.getAuth().getCredentials());
+  }
+
+  @Override
+  public Optional<EncryptableSetting> getEncryptableSetting() {
+    return Optional.ofNullable((DockerConfig) artifactStreamAttributes.getServerSetting().getValue());
+  }
+
+  @Override
+  public String getFullImageName() {
+    return artifact.getArtifactSourceName();
   }
 }

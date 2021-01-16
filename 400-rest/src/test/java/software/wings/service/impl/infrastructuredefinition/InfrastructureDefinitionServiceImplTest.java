@@ -6,6 +6,7 @@ import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
 import static io.harness.beans.SearchFilter.Operator.OR;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.DINESH;
 import static io.harness.rule.OwnerRule.GEORGE;
@@ -96,6 +97,8 @@ import software.wings.infra.AwsInstanceInfrastructure.AwsInstanceInfrastructureK
 import software.wings.infra.AwsLambdaInfrastructure;
 import software.wings.infra.AwsLambdaInfrastructure.AwsLambdaInfrastructureKeys;
 import software.wings.infra.AzureInstanceInfrastructure;
+import software.wings.infra.AzureWebAppInfra;
+import software.wings.infra.AzureWebAppInfra.AzureWebAppInfraKeys;
 import software.wings.infra.CustomInfrastructure;
 import software.wings.infra.DirectKubernetesInfrastructure;
 import software.wings.infra.GoogleKubernetesEngine;
@@ -435,6 +438,23 @@ public class InfrastructureDefinitionServiceImplTest extends WingsBaseTest {
     assertThat(infrastructureDefinitionService.getDeploymentTypeCloudProviderOptions().size()
         == DeploymentType.values().length)
         .isTrue();
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testValidateAzureWebAppInfraWithProvisioner() {
+    AzureWebAppInfra infra = AzureWebAppInfra.builder().build();
+    Map<String, String> expressions = new HashMap<>();
+    infra.setExpressions(expressions);
+    assertThatThrownBy(() -> infrastructureDefinitionService.validateAzureWebAppInfraWithProvisioner(infra));
+
+    expressions.put(AzureWebAppInfraKeys.resourceGroup, "testResourceGroup");
+    assertThatThrownBy(() -> infrastructureDefinitionService.validateAzureWebAppInfraWithProvisioner(infra))
+        .hasMessage("Subscription Id is required");
+
+    expressions.put(AzureWebAppInfraKeys.subscriptionId, "subcription-id");
+    infrastructureDefinitionService.validateAzureWebAppInfraWithProvisioner(infra);
   }
 
   @Test

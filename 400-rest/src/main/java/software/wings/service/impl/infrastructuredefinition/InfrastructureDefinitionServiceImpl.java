@@ -134,6 +134,7 @@ import software.wings.infra.AwsLambdaInfrastructure.AwsLambdaInfrastructureKeys;
 import software.wings.infra.AzureInstanceInfrastructure;
 import software.wings.infra.AzureVMSSInfra;
 import software.wings.infra.AzureWebAppInfra;
+import software.wings.infra.AzureWebAppInfra.AzureWebAppInfraKeys;
 import software.wings.infra.CloudProviderInfrastructure;
 import software.wings.infra.CustomInfrastructure;
 import software.wings.infra.DirectKubernetesInfrastructure;
@@ -616,6 +617,19 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       validatePhysicalInfraWithProvisioner((PhysicalInfra) infra);
     } else if (infra instanceof AwsEcsInfrastructure) {
       validateAwsEcsInfraWithProvisioner((AwsEcsInfrastructure) infra);
+    } else if (infra instanceof AzureWebAppInfra) {
+      validateAzureWebAppInfraWithProvisioner((AzureWebAppInfra) infra);
+    }
+  }
+
+  @VisibleForTesting
+  public void validateAzureWebAppInfraWithProvisioner(AzureWebAppInfra infra) {
+    Map<String, String> expressions = infra.getExpressions();
+    if (isEmpty(expressions.get(AzureWebAppInfraKeys.subscriptionId))) {
+      throw new InvalidRequestException("Subscription Id is required");
+    }
+    if (isEmpty(expressions.get(AzureWebAppInfraKeys.resourceGroup))) {
+      throw new InvalidRequestException("Resource Group is required");
     }
   }
 

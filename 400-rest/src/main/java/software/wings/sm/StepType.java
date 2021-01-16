@@ -539,8 +539,8 @@ public enum StepType {
       asList(PhaseType.ROLLBACK)),
   TERRAFORM_PROVISION(ApplyTerraformProvisionState.class, WorkflowServiceHelper.TERRAFORM_PROVISION,
       asList(INFRASTRUCTURE_PROVISIONER), asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE),
-      Lists.newArrayList(
-          DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA, DeploymentType.CUSTOM),
+      Lists.newArrayList(DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA,
+          DeploymentType.CUSTOM, DeploymentType.AZURE_WEBAPP),
       asList(PhaseType.NON_ROLLBACK)),
   TERRAFORM_APPLY(ApplyTerraformState.class, WorkflowServiceHelper.TERRAFORM_APPLY, asList(INFRASTRUCTURE_PROVISIONER),
       asList(PhaseStepType.values()), asList(DeploymentType.values()),

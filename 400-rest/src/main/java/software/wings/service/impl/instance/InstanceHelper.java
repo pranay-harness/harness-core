@@ -7,6 +7,7 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.AZURE_INFRA;
+import static software.wings.beans.InfrastructureMappingType.AZURE_WEBAPP;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM;
 import static software.wings.service.InstanceSyncConstants.HARNESS_ACCOUNT_ID;
@@ -54,6 +55,7 @@ import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.Instance.InstanceBuilder;
 import software.wings.beans.infrastructure.instance.ManualSyncJob;
 import software.wings.beans.infrastructure.instance.info.AzureVMSSInstanceInfo;
+import software.wings.beans.infrastructure.instance.info.AzureWebAppInstanceInfo;
 import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInfo;
@@ -412,6 +414,10 @@ public class InstanceHelper {
       instanceInfo = AzureVMSSInstanceInfo.builder().host(host.getHostName()).build();
     }
 
+    if (AZURE_WEBAPP.name().equals(infraMappingType)) {
+      instanceInfo = AzureWebAppInstanceInfo.builder().host(host.getHostName()).build();
+    }
+
     if (AWS_SSH.getName().equals(infraMappingType)) {
       instanceInfo = Ec2InstanceInfo.builder()
                          .ec2Instance(host.getEc2Instance())
@@ -479,7 +485,9 @@ public class InstanceHelper {
         || deploymentSummary.getAwsCodeDeployDeploymentKey() != null
         || deploymentSummary.getSpotinstAmiDeploymentKey() != null
         || deploymentSummary.getAwsLambdaDeploymentKey() != null
-        || deploymentSummary.getAzureVMSSDeploymentKey() != null || deploymentSummary.getCustomDeploymentKey() != null;
+        || deploymentSummary.getAzureVMSSDeploymentKey() != null
+        || deploymentSummary.getAzureWebAppDeploymentKey() != null
+        || deploymentSummary.getCustomDeploymentKey() != null;
   }
 
   private void processDeploymentSummaries(
@@ -552,6 +560,8 @@ public class InstanceHelper {
       case AZURE_VMSS_ROLLBACK:
       case AZURE_VMSS_SWITCH_ROUTES:
       case AZURE_VMSS_SWITCH_ROLLBACK:
+      case AZURE_WEBAPP_SLOT_SETUP:
+      case AZURE_WEBAPP_SLOT_ROLLBACK:
       case CUSTOM_DEPLOYMENT_PHASE_STEP:
         return true;
       default:
