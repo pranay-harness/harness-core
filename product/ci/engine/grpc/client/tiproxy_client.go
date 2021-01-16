@@ -10,9 +10,9 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-//go:generate mockgen -source logproxy_client.go -package=grpcclient -destination mocks/logproxy_client_mock.go LogProxyClient
+//go:generate mockgen -source tiproxy_client.go -package=grpcclient -destination mocks/tiproxy_client_mock.go TiProxyClient
 
-// LogProxyClient implements a GRPC client to communicate with CI log proxy service (hosted on same port as lite engine)
+// TiProxyClient implements a GRPC client to communicate with CI TI proxy service (hosted on same port as lite engine)
 type TiProxyClient interface {
 	CloseConn() error
 	Client() pb.TiProxyClient

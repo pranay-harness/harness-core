@@ -285,6 +285,10 @@ func (r *runTask) collectTestReports(ctx context.Context) error {
 			tests = append(tests, string(jt))
 		}
 
+		if len(tests) == 0 {
+			return nil // We're not erroring even if we can't find any tests to report
+		}
+
 		// Create TI proxy client (lite engine)
 		client, err := grpcclient.NewTiProxyClient(consts.LiteEnginePort, r.log)
 		stream, err := client.Client().WriteTests(ctx, grpc_retry.Disable())

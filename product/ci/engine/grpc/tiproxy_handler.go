@@ -31,7 +31,7 @@ func NewTiProxyHandler(log *zap.SugaredLogger) pb.TiProxyServer {
 	return &tiProxyHandler{log}
 }
 
-// UploadUsingLink uploads using the link generated above.
+// WriteTests writes tests to the TI service.
 func (h *tiProxyHandler) WriteTests(stream pb.TiProxy_WriteTestsServer) error {
 	var err error
 	tc, err := remoteTiClient()
