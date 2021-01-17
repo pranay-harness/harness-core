@@ -2,6 +2,7 @@ package io.harness.cdng.creator.variables;
 
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.pms.contracts.plan.YamlProperties;
+import io.harness.pms.sdk.core.pipeline.variables.VariableCreatorHelper;
 import io.harness.pms.sdk.core.variables.ChildrenVariableCreator;
 import io.harness.pms.sdk.core.variables.beans.VariableCreationContext;
 import io.harness.pms.sdk.core.variables.beans.VariableCreationResponse;
@@ -34,6 +35,11 @@ public class DeploymentStageVariableCreator extends ChildrenVariableCreator {
         config.getNode().getField(YAMLFieldNameConstants.SPEC).getNode().getField(YAMLFieldNameConstants.EXECUTION);
     responseMap.put(executionField.getNode().getUuid(),
         VariableCreationResponse.builder().dependency(executionField.getNode().getUuid(), executionField).build());
+
+    YamlField variablesField = config.getNode().getField(YAMLFieldNameConstants.VARIABLES);
+    VariableCreationResponse variablesResponse =
+        VariableCreatorHelper.createVariableResponseForVariables(variablesField, YAMLFieldNameConstants.STAGE);
+    responseMap.put(variablesField.getNode().getUuid(), variablesResponse);
 
     return responseMap;
   }

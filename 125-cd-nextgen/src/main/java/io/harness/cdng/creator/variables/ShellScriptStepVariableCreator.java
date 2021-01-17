@@ -5,6 +5,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.pms.contracts.plan.YamlProperties;
 import io.harness.pms.sdk.core.pipeline.variables.GenericStepVariableCreator;
+import io.harness.pms.sdk.core.pipeline.variables.VariableCreatorHelper;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -44,6 +45,12 @@ public class ShellScriptStepVariableCreator extends GenericStepVariableCreator {
     YamlField executionTargetField = specField.getNode().getField(YamlTypes.EXECUTION_TARGET);
     if (executionTargetField != null) {
       addVariablesForExecutionTargetField(executionTargetField, yamlPropertiesMap);
+    }
+
+    YamlField environmentVariablesField = specField.getNode().getField(YamlTypes.ENVIRONMENT_VARIABLES);
+    if (environmentVariablesField != null) {
+      VariableCreatorHelper.addVariablesForVariables(
+          environmentVariablesField, yamlPropertiesMap, YAMLFieldNameConstants.STEP);
     }
   }
 
