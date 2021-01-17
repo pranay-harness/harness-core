@@ -131,7 +131,7 @@ func (e *unitExecutor) skipStep(ctx context.Context, step *pb.UnitStep, so outpu
 	}
 
 	e.log.Infow("Evaluating skip condition", "condition", skipCondition)
-	ret, err := evaluateJEXL(ctx, step.GetId(), []string{skipCondition}, so, e.log)
+	ret, err := evaluateJEXL(ctx, step.GetId(), []string{skipCondition}, so, true, e.log)
 	if err != nil {
 		return false, errors.Wrap(err, fmt.Sprintf("failed to evalue skip condition: %s", skipCondition))
 	}

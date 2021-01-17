@@ -110,8 +110,8 @@ func (e *pluginTask) resolveEnvJEXL(ctx context.Context) (map[string]string, err
 
 	resolvedEnvVarMap := make(map[string]string)
 	for k, v := range envVarMap {
-		if v, ok := resolvedExprs[v]; ok {
-			resolvedEnvVarMap[k] = v
+		if resolvedVal, ok := resolvedExprs[v]; ok {
+			resolvedEnvVarMap[k] = resolvedVal
 		} else {
 			resolvedEnvVarMap[k] = v
 		}

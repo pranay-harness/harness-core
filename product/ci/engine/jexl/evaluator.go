@@ -32,11 +32,13 @@ var (
 )
 
 // EvaluateJEXL evaluates list of JEXL expressions based on outputs. It does nothing if expression is not JEXL.
+// It only sends the expressions which matches jexl expression regex to expression service
+// If force is set to true, it force evaulates all the expressions.
 // Returns a map with key as JEXL expression and value as evaluated value of JEXL expression
-func EvaluateJEXL(ctx context.Context, stepID string, expressions []string, o output.StageOutput, log *zap.SugaredLogger) (
-	map[string]string, error) {
+func EvaluateJEXL(ctx context.Context, stepID string, expressions []string, o output.StageOutput,
+	force bool, log *zap.SugaredLogger) (map[string]string, error) {
 	start := time.Now()
-	arg, err := getRequestArg(stepID, expressions, o, log)
+	arg, err := getRequestArg(stepID, expressions, o, force, log)
 	if err != nil {
 		log.Errorw(
 			"Failed to create arguments for JEXL evaluation",
@@ -85,8 +87,8 @@ func EvaluateJEXL(ctx context.Context, stepID string, expressions []string, o ou
 }
 
 // getRequestArg returns arguments for expression service request to evaluate JEXL expression
-func getRequestArg(stepID string, expressions []string, o output.StageOutput, log *zap.SugaredLogger) (
-	*pb.ExpressionRequest, error) {
+func getRequestArg(stepID string, expressions []string, o output.StageOutput, force bool,
+	log *zap.SugaredLogger) (*pb.ExpressionRequest, error) {
 	data, err := json.Marshal(o)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to marshal stage output")
@@ -95,7 +97,7 @@ func getRequestArg(stepID string, expressions []string, o output.StageOutput, lo
 
 	var queries []*pb.ExpressionQuery
 	for _, expression := range expressions {
-		if !jexlexpr.IsJEXL(expression) {
+		if !force && !jexlexpr.IsJEXL(expression) {
 			continue
 		}
 
