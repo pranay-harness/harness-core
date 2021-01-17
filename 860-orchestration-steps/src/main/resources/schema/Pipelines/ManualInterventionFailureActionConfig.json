@@ -1,13 +1,14 @@
 {
   "allOf": [
     {
-      "$ref": "#/definitions/Infrastructure"
+      "$ref": "#/definitions/FailureStrategyActionConfig"
     },
     {
       "type": "object",
       "properties": {
         "spec": {
-          "$ref": "#/definitions/K8sDirectInfraYamlSpec"
+          "readOnly": true,
+          "$ref": "#/definitions/ManualFailureSpecConfig"
         }
       }
     }

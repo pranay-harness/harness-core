@@ -1,11 +1,13 @@
 package io.harness.app.impl;
 
 import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.PROPERTIES_NODE;
 
 import io.harness.EntityType;
 import io.harness.app.intfc.CIYamlSchemaService;
 import io.harness.encryption.Scope;
 import io.harness.jackson.JsonNodeUtils;
+import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
@@ -22,6 +24,7 @@ import com.google.inject.Inject;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import lombok.AllArgsConstructor;
@@ -47,6 +50,11 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
     JsonNode jsonNode = mergedDefinitions.get(StepElementConfig.class.getSimpleName());
     modifyStepElementSchema((ObjectNode) jsonNode);
 
+    jsonNode = mergedDefinitions.get(ParallelStepElementConfig.class.getSimpleName());
+    if (jsonNode.isObject()) {
+      flattenParallelStepElementConfig((ObjectNode) jsonNode);
+    }
+    removeUnwantedNodes(mergedDefinitions);
     return ((ObjectNode) integrationStageSchema).set(DEFINITIONS_NODE, mergedDefinitions);
   }
 
@@ -61,5 +69,23 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
         STEP_ELEMENT_CONFIG, SwaggerDefinitionsMetaInfo.builder().subtypeClassMap(classFieldSubtypeData).build());
     yamlSchemaGenerator.convertSwaggerToJsonSchema(
         swaggerDefinitionsMetaInfoMap, mapper, STEP_ELEMENT_CONFIG, jsonNode);
+  }
+
+  private void flattenParallelStepElementConfig(ObjectNode objectNode) {
+    JsonNode sections = objectNode.get(PROPERTIES_NODE).get("sections");
+    if (sections.isObject()) {
+      objectNode.setAll((ObjectNode) sections);
+    }
+  }
+
+  private void removeUnwantedNodes(JsonNode definitions) {
+    if (definitions.isObject()) {
+      Iterator<JsonNode> elements = definitions.elements();
+      while (elements.hasNext()) {
+        JsonNode jsonNode = elements.next();
+        yamlSchemaGenerator.removeUnwantedNodes(jsonNode, "rollbackSteps");
+        yamlSchemaGenerator.removeUnwantedNodes(jsonNode, "failureStrategies");
+      }
+    }
   }
 }

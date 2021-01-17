@@ -2,7 +2,7 @@
   "type": "object",
   "properties": {
     "cloneCodebase": {
-      "type": "string"
+      "type": "boolean"
     },
     "execution": {
       "$ref": "#/definitions/ExecutionElementConfig"
@@ -11,9 +11,6 @@
       "oneOf": [
         {
           "$ref": "#/definitions/K8sDirectInfraYaml"
-        },
-        {
-          "$ref": "#/definitions/K8sGCPInfraYaml"
         },
         {
           "$ref": "#/definitions/UseFromStageInfraYaml"
@@ -27,10 +24,20 @@
       }
     },
     "sharedPaths": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
+      "oneOf": [
+        {
+          "type": "array"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
     },
     "skipCondition": {
       "type": "string"
@@ -266,7 +273,6 @@
           "type": "string",
           "enum": [
             "KubernetesDirect",
-            "KubernetesGcp",
             "UseFromStage"
           ]
         }
@@ -277,7 +283,7 @@
       "type": "object",
       "properties": {
         "cloneCodebase": {
-          "type": "string"
+          "type": "boolean"
         },
         "execution": {
           "$ref": "#/definitions/ExecutionElementConfig"
@@ -286,9 +292,6 @@
           "oneOf": [
             {
               "$ref": "#/definitions/K8sDirectInfraYaml"
-            },
-            {
-              "$ref": "#/definitions/K8sGCPInfraYaml"
             },
             {
               "$ref": "#/definitions/UseFromStageInfraYaml"
@@ -302,10 +305,20 @@
           }
         },
         "sharedPaths": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "oneOf": [
+            {
+              "type": "array"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
         },
         "skipCondition": {
           "type": "string"
@@ -325,27 +338,23 @@
           "type": "object",
           "properties": {
             "spec": {
-              "$ref": "#/definitions/Spec"
+              "$ref": "#/definitions/K8sDirectInfraYamlSpec"
             }
           }
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "K8sGCPInfraYaml": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/Infrastructure"
+    "K8sDirectInfraYamlSpec": {
+      "type": "object",
+      "properties": {
+        "connectorRef": {
+          "type": "string"
         },
-        {
-          "type": "object",
-          "properties": {
-            "spec": {
-              "$ref": "#/definitions/Spec"
-            }
-          }
+        "namespace": {
+          "type": "string"
         }
-      ],
+      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "Limits": {
@@ -563,26 +572,6 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "Spec": {
-      "type": "object",
-      "required": [
-        "clusterName",
-        "connectorRef",
-        "namespace"
-      ],
-      "properties": {
-        "clusterName": {
-          "type": "string"
-        },
-        "connectorRef": {
-          "type": "string"
-        },
-        "namespace": {
-          "type": "string"
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
     "StageRollbackFailureActionConfig": {
       "allOf": [
         {
@@ -597,14 +586,14 @@
     "StepElementConfig": {
       "type": "object",
       "properties": {
-        "delegateSelectors": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
         "description": {
           "type": "string"
+        },
+        "failureStrategies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FailureStrategyConfig"
+          }
         },
         "identifier": {
           "type": "string"
@@ -622,9 +611,6 @@
           "type": "string"
         },
         "type": {
-          "type": "string"
-        },
-        "uuid": {
           "type": "string"
         }
       },

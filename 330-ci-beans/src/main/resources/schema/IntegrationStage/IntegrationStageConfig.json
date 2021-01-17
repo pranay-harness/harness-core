@@ -2,7 +2,7 @@
   "type": "object",
   "properties": {
     "cloneCodebase": {
-      "type": "string"
+      "type": "boolean"
     },
     "execution": {
       "$ref": "#/definitions/ExecutionElementConfig"
@@ -11,9 +11,6 @@
       "oneOf": [
         {
           "$ref": "#/definitions/K8sDirectInfraYaml"
-        },
-        {
-          "$ref": "#/definitions/K8sGCPInfraYaml"
         },
         {
           "$ref": "#/definitions/UseFromStageInfraYaml"
@@ -27,10 +24,20 @@
       }
     },
     "sharedPaths": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
+      "oneOf": [
+        {
+          "type": "array"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
     },
     "skipCondition": {
       "type": "string"

@@ -24,12 +24,12 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @TypeAlias("stageElementConfig")
 public class StageElementConfig {
-  String uuid;
+  @ApiModelProperty(hidden = true) String uuid;
   @NotNull @EntityIdentifier String identifier;
   @EntityName String name;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> description;
 
-  @ApiModelProperty(hidden = true) List<FailureStrategyConfig> failureStrategies;
+  List<FailureStrategyConfig> failureStrategies;
   List<NGVariable> variables;
   String type;
   @JsonProperty("spec")

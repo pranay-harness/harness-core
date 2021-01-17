@@ -33,9 +33,9 @@ public interface CIStepInfo extends StepSpecType, GenericStepInfo {
   long DEFAULT_TIMEOUT = Duration.ofHours(2).getSeconds();
 
   @JsonIgnore TypeInfo getNonYamlInfo();
-  int getRetry();
-  String getName();
-
+  @JsonIgnore int getRetry();
+  @JsonIgnore String getName();
+  @JsonIgnore String getIdentifier();
   @JsonIgnore
   default long getDefaultTimeout() {
     return DEFAULT_TIMEOUT;

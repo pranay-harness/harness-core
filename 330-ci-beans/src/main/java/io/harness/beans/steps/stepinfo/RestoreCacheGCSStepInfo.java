@@ -37,7 +37,7 @@ public class RestoreCacheGCSStepInfo implements PluginCompatibleStep {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(CIStepInfoType.RESTORE_CACHE_GCS.getDisplayName()).build();
 
-  @NotNull @EntityIdentifier private String identifier;
+  @ApiModelProperty(hidden = true) @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
 

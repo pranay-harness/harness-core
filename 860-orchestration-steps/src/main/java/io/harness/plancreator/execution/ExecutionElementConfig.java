@@ -11,7 +11,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("executionElementConfig")
 public class ExecutionElementConfig {
-  String uuid;
+  @ApiModelProperty(hidden = true) String uuid;
   @NotEmpty List<ExecutionWrapperConfig> steps;
-  @ApiModelProperty(hidden = true) List<ExecutionWrapperConfig> rollbackSteps;
+  List<ExecutionWrapperConfig> rollbackSteps;
 }

@@ -25,7 +25,7 @@ import org.springframework.data.annotation.TypeAlias;
 @AllArgsConstructor
 @TypeAlias("pipelineInfoConfig")
 public class PipelineInfoConfig {
-  String uuid;
+  @ApiModelProperty(hidden = true) String uuid;
   @NotNull @EntityName String name;
   @NotNull @EntityIdentifier String identifier;
 
