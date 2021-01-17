@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.lang.String.format;
 
 import io.harness.beans.IdentifierRef;
+import io.harness.delegate.beans.ci.pod.SSHKeyDetails;
 import io.harness.delegate.beans.ci.pod.SecretVariableDTO;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.encryption.SecretRefData;
@@ -15,8 +16,13 @@ import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.exception.ngexception.CIStageExecutionUserException;
 import io.harness.network.SafeHttpCall;
 import io.harness.ng.core.NGAccess;
+import io.harness.ng.core.dto.secrets.SSHConfigDTO;
+import io.harness.ng.core.dto.secrets.SSHCredentialType;
+import io.harness.ng.core.dto.secrets.SSHKeyReferenceCredentialDTO;
+import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
+import io.harness.secretmanagerclient.SSHAuthScheme;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.secrets.remote.SecretNGManagerClient;
@@ -32,12 +38,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
-public class SecretVariableUtils {
+public class SecretUtils {
   private final SecretNGManagerClient secretNGManagerClient;
   private final SecretManagerClientService secretManagerClientService;
 
   @Inject
-  public SecretVariableUtils(
+  public SecretUtils(
       SecretNGManagerClient secretNGManagerClient, SecretManagerClientService secretManagerClientService) {
     this.secretNGManagerClient = secretNGManagerClient;
     this.secretManagerClientService = secretManagerClientService;
@@ -85,6 +91,48 @@ public class SecretVariableUtils {
       default:
         throw new InvalidArgumentsException(format("Unsupported secret type [%s]", type), WingsException.USER);
     }
+  }
+
+  public SSHKeyDetails getSshKey(NGAccess ngAccess, SecretRefData secretRefData) {
+    String secretIdentifier = null;
+    if (secretRefData != null) {
+      secretIdentifier = secretRefData.getIdentifier();
+    }
+
+    if (secretIdentifier == null) {
+      log.warn("Failed to resolve secret variable, secretIdentifier is null");
+      return null;
+    }
+
+    log.info("Getting ssh key details for secret ref [{}]", secretIdentifier);
+    IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(secretRefData.toSecretRefStringValue(),
+        ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
+
+    SecretDTOV2 secretDTOV2 = getSecret(identifierRef);
+    if (secretDTOV2.getType() != SecretType.SSHKey) {
+      throw new CIStageExecutionUserException(format("Secret id:[%s] type should be SSHKey", secretIdentifier));
+    }
+    SSHKeySpecDTO spec = (SSHKeySpecDTO) secretDTOV2.getSpec();
+    if (spec.getAuth().getAuthScheme() != SSHAuthScheme.SSH) {
+      throw new CIStageExecutionUserException(
+          format("Secret id:[%s] auth scheme type should be SSH", secretIdentifier));
+    }
+    SSHConfigDTO sshConfigDTO = (SSHConfigDTO) spec.getAuth().getSpec();
+    if (sshConfigDTO.getCredentialType() != SSHCredentialType.KeyReference) {
+      throw new CIStageExecutionUserException(
+          format("Secret id:[%s] credential type should be KeyReference", secretIdentifier));
+    }
+    SSHKeyReferenceCredentialDTO credentialSpecDTO = (SSHKeyReferenceCredentialDTO) sshConfigDTO.getSpec();
+
+    log.info(
+        "Getting secret encryption details for secret type:[{}] ref:[{}]", secretDTOV2.getType(), secretIdentifier);
+    List<EncryptedDataDetail> encryptionDetails =
+        secretManagerClientService.getEncryptionDetails(ngAccess, credentialSpecDTO);
+    if (isEmpty(encryptionDetails)) {
+      throw new InvalidArgumentsException("Secret encrypted details can't be empty or null", WingsException.USER);
+    }
+
+    return SSHKeyDetails.builder().encryptedDataDetails(encryptionDetails).sshKeyReference(credentialSpecDTO).build();
   }
 
   private SecretDTOV2 getSecret(IdentifierRef identifierRef) {

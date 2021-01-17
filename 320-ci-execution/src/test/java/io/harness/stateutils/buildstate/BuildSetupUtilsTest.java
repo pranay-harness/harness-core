@@ -43,7 +43,7 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Inject private K8BuildSetupUtils k8BuildSetupUtils;
   @Mock private ConnectorUtils connectorUtils;
-  @Mock private SecretVariableUtils secretVariableUtils;
+  @Mock private SecretUtils secretUtils;
   @Mock private PmsEngineExpressionService pmsEngineExpressionService;
   @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Mock CILogServiceUtils logServiceUtils;
@@ -54,7 +54,7 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
   @Before
   public void setUp() {
     on(buildSetupUtils).set("k8BuildSetupUtils", k8BuildSetupUtils);
-    on(k8BuildSetupUtils).set("secretVariableUtils", secretVariableUtils);
+    on(k8BuildSetupUtils).set("secretVariableUtils", secretUtils);
     on(k8BuildSetupUtils).set("connectorUtils", connectorUtils);
     on(k8BuildSetupUtils).set("executionSweepingOutputResolver", executionSweepingOutputResolver);
     on(k8BuildSetupUtils).set("logServiceUtils", logServiceUtils);
@@ -85,8 +85,7 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
     when(connectorUtils.getConnectorDetailsWithConversionInfo(any(), any()))
         .thenReturn(ConnectorDetails.builder().identifier("connectorId").build());
 
-    when(secretVariableUtils.getSecretVariableDetails(any(), any()))
-        .thenReturn(SecretVariableDetails.builder().build());
+    when(secretUtils.getSecretVariableDetails(any(), any())).thenReturn(SecretVariableDetails.builder().build());
     LogServiceConfig logServiceConfig = LogServiceConfig.builder().baseUrl("endpoint").globalToken("token").build();
     when(logServiceUtils.getLogServiceConfig()).thenReturn(logServiceConfig);
     when(logServiceUtils.getLogServiceToken(any())).thenReturn("token");
@@ -130,8 +129,7 @@ public class BuildSetupUtilsTest extends CIExecutionTest {
     when(connectorUtils.getConnectorDetailsWithConversionInfo(any(), any()))
         .thenReturn(ConnectorDetails.builder().identifier("connectorId").build());
 
-    when(secretVariableUtils.getSecretVariableDetails(any(), any()))
-        .thenReturn(SecretVariableDetails.builder().build());
+    when(secretUtils.getSecretVariableDetails(any(), any())).thenReturn(SecretVariableDetails.builder().build());
     LogServiceConfig logServiceConfig = LogServiceConfig.builder().baseUrl("endpoint").globalToken("token").build();
     when(logServiceUtils.getLogServiceConfig()).thenReturn(logServiceConfig);
     when(logServiceUtils.getLogServiceToken(any())).thenReturn("token");

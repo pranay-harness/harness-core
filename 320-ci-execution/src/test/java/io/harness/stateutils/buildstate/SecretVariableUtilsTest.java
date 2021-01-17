@@ -43,7 +43,7 @@ import retrofit2.Response;
 public class SecretVariableUtilsTest extends CIExecutionTest {
   @Mock private SecretNGManagerClient secretNGManagerClient;
   @Mock private SecretManagerClientService secretManagerClientService;
-  @InjectMocks SecretVariableUtils secretVariableUtils;
+  @InjectMocks SecretUtils secretUtils;
 
   private NGAccess ngAccess;
   private static final String PROJ_ID = "projectId";
@@ -88,8 +88,7 @@ public class SecretVariableUtilsTest extends CIExecutionTest {
     when(secretManagerClientService.getEncryptionDetails(any(), any()))
         .thenReturn(Collections.singletonList(EncryptedDataDetail.builder().build()));
 
-    SecretVariableDetails secretVariableDetails =
-        secretVariableUtils.getSecretVariableDetails(ngAccess, secretVariableText);
+    SecretVariableDetails secretVariableDetails = secretUtils.getSecretVariableDetails(ngAccess, secretVariableText);
     assertThat(secretVariableDetails)
         .isEqualTo(SecretVariableDetails.builder()
                        .secretVariableDTO(
@@ -115,8 +114,7 @@ public class SecretVariableUtilsTest extends CIExecutionTest {
     when(secretManagerClientService.getEncryptionDetails(any(), any()))
         .thenReturn(Collections.singletonList(EncryptedDataDetail.builder().build()));
 
-    SecretVariableDetails secretVariableDetails =
-        secretVariableUtils.getSecretVariableDetails(ngAccess, secretVariableFile);
+    SecretVariableDetails secretVariableDetails = secretUtils.getSecretVariableDetails(ngAccess, secretVariableFile);
 
     assertThat(secretVariableDetails)
         .isEqualTo(SecretVariableDetails.builder()
@@ -144,9 +142,9 @@ public class SecretVariableUtilsTest extends CIExecutionTest {
     when(secretManagerClientService.getEncryptionDetails(any(), any()))
         .thenReturn(Collections.singletonList(EncryptedDataDetail.builder().build()));
 
-    assertThatThrownBy(() -> secretVariableUtils.getSecretVariableDetails(ngAccess, secretVariableFile))
+    assertThatThrownBy(() -> secretUtils.getSecretVariableDetails(ngAccess, secretVariableFile))
         .isInstanceOf(CIStageExecutionUserException.class);
-    assertThatThrownBy(() -> secretVariableUtils.getSecretVariableDetails(ngAccess, secretVariableFile))
+    assertThatThrownBy(() -> secretUtils.getSecretVariableDetails(ngAccess, secretVariableFile))
         .isInstanceOf(CIStageExecutionException.class);
   }
 }
