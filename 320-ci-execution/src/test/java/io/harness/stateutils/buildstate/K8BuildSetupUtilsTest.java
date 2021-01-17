@@ -75,7 +75,7 @@ import retrofit2.Response;
 public class K8BuildSetupUtilsTest extends CIExecutionTest {
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Inject private K8BuildSetupUtils k8BuildSetupUtils;
-  @Inject private SecretVariableUtils secretVariableUtils;
+  @Inject private SecretUtils secretUtils;
 
   @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Mock private SecretManagerClientService secretManagerClientService;
@@ -87,9 +87,9 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
   @Before
   public void setUp() {
     on(k8BuildSetupUtils).set("connectorUtils", connectorUtils);
-    on(secretVariableUtils).set("secretNGManagerClient", secretNGManagerClient);
-    on(secretVariableUtils).set("secretManagerClientService", secretManagerClientService);
-    on(k8BuildSetupUtils).set("secretVariableUtils", secretVariableUtils);
+    on(secretUtils).set("secretNGManagerClient", secretNGManagerClient);
+    on(secretUtils).set("secretManagerClientService", secretManagerClientService);
+    on(k8BuildSetupUtils).set("secretUtils", secretUtils);
     on(k8BuildSetupUtils).set("executionSweepingOutputResolver", executionSweepingOutputResolver);
     on(k8BuildSetupUtils).set("logServiceUtils", logServiceUtils);
     on(k8BuildSetupUtils).set("tiServiceUtils", tiServiceUtils);
