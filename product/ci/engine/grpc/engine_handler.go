@@ -86,7 +86,7 @@ func (h *engineHandler) EvaluateJEXL(ctx context.Context, in *pb.EvaluateJEXLReq
 		so[stepID] = o
 	}
 
-	result, err := evaluateJEXL(ctx, in.GetStepId(), in.GetExpressions(), so, h.log)
+	result, err := evaluateJEXL(ctx, in.GetStepId(), in.GetExpressions(), so, false, h.log)
 	if err != nil {
 		h.log.Errorw("failed to evaluate expression", "request_arg", in.String(), zap.Error(err))
 		return &pb.EvaluateJEXLResponse{}, err

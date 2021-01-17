@@ -92,7 +92,7 @@ func (e *runStep) validate() error {
 func (e *runStep) resolveJEXL(ctx context.Context) error {
 	// JEXL expressions are only present in run step command
 	cmd := e.command
-	resolvedExprs, err := evaluateJEXL(ctx, e.id, []string{cmd}, e.stageOutput, e.log)
+	resolvedExprs, err := evaluateJEXL(ctx, e.id, []string{cmd}, e.stageOutput, false, e.log)
 	if err != nil {
 		return err
 	}
