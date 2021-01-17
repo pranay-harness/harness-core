@@ -1,14 +1,14 @@
 {
   "type": "object",
   "properties": {
-    "delegateSelectors": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
     "description": {
       "type": "string"
+    },
+    "failureStrategies": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/FailureStrategyConfig"
+      }
     },
     "identifier": {
       "type": "string"
@@ -26,9 +26,6 @@
       "type": "string"
     },
     "type": {
-      "type": "string"
-    },
-    "uuid": {
       "type": "string"
     }
   },

@@ -7,6 +7,12 @@
     "description": {
       "type": "string"
     },
+    "failureStrategies": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/FailureStrategyConfig"
+      }
+    },
     "identifier": {
       "type": "string"
     },
@@ -20,9 +26,6 @@
       "$ref": "#/definitions/StageInfoConfig"
     },
     "type": {
-      "type": "string"
-    },
-    "uuid": {
       "type": "string"
     },
     "variables": {

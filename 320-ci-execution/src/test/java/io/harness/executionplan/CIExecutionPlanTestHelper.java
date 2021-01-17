@@ -66,6 +66,7 @@ import io.harness.beans.yaml.extended.container.Container;
 import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
+import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml.K8sDirectInfraYamlSpec;
 import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.common.CIExecutionConstants;
 import io.harness.connector.ConnectorDTO;
@@ -881,8 +882,7 @@ public class CIExecutionPlanTestHelper {
   public Infrastructure getInfrastructure() {
     return K8sDirectInfraYaml.builder()
         .type(Infrastructure.Type.KUBERNETES_DIRECT)
-        .spec(
-            K8sDirectInfraYaml.Spec.builder().connectorRef("testKubernetesCluster").namespace("testNamespace").build())
+        .spec(K8sDirectInfraYamlSpec.builder().connectorRef("testKubernetesCluster").namespace("testNamespace").build())
         .build();
   }
   public StageElement getIntegrationStageElement() {

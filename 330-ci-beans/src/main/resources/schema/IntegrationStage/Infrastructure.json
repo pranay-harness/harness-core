@@ -6,7 +6,6 @@
       "type": "string",
       "enum": [
         "KubernetesDirect",
-        "KubernetesGcp",
         "UseFromStage"
       ]
     }

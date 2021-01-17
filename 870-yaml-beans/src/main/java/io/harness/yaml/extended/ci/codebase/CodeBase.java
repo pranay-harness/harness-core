@@ -1,6 +1,9 @@
 package io.harness.yaml.extended.ci.codebase;
 
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
+
 import io.harness.pms.yaml.ParameterField;
+import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModelProperty;
@@ -16,5 +19,8 @@ import org.springframework.data.annotation.TypeAlias;
 public class CodeBase {
   @NotNull String connectorRef;
   String repoName;
-  @ApiModelProperty(dataType = "io.harness.yaml.extended.ci.codebase.Build") @NotNull ParameterField<Build> build;
+  @YamlSchemaTypes(value = {string})
+  @ApiModelProperty(dataType = "io.harness.yaml.extended.ci.codebase.Build")
+  @NotNull
+  ParameterField<Build> build;
 }

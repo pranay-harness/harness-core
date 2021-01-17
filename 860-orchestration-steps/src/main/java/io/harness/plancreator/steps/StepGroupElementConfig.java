@@ -20,12 +20,12 @@ import org.springframework.data.annotation.TypeAlias;
 @AllArgsConstructor
 @TypeAlias("stepGroupElementConfig")
 public class StepGroupElementConfig {
-  String uuid;
+  @ApiModelProperty(hidden = true) String uuid;
   @NotNull @EntityIdentifier String identifier;
   @EntityName String name;
 
-  @ApiModelProperty(hidden = true) List<FailureStrategyConfig> failureStrategies;
+  List<FailureStrategyConfig> failureStrategies;
 
   @NotNull List<ExecutionWrapperConfig> steps;
-  @ApiModelProperty(hidden = true) List<ExecutionWrapperConfig> rollbackSteps;
+  List<ExecutionWrapperConfig> rollbackSteps;
 }

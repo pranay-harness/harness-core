@@ -15,13 +15,13 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("k8sDirectInfraYaml")
 public class K8sDirectInfraYaml implements Infrastructure {
   @Builder.Default private Type type = Type.KUBERNETES_DIRECT;
-  private Spec spec;
+  private K8sDirectInfraYamlSpec spec;
 
   @Data
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor
-  public static class Spec {
+  public static class K8sDirectInfraYamlSpec {
     private String connectorRef;
     private String namespace;
   }

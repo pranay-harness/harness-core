@@ -24,12 +24,12 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @TypeAlias("stepElementConfig")
 public class StepElementConfig {
-  String uuid;
+  @ApiModelProperty(hidden = true) String uuid;
   @EntityIdentifier String identifier;
   @EntityName String name;
   String description;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) Timeout timeout;
-  @ApiModelProperty(hidden = true) List<FailureStrategyConfig> failureStrategies;
+  List<FailureStrategyConfig> failureStrategies;
 
   String type;
   @JsonProperty("spec")
@@ -37,7 +37,7 @@ public class StepElementConfig {
   StepSpecType stepSpecType;
 
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH) ParameterField<List<String>> delegateSelectors;
+  @ApiModelProperty(hidden = true) ParameterField<List<String>> delegateSelectors;
 
   @Builder
   public StepElementConfig(String uuid, String identifier, String name, String description, Timeout timeout,

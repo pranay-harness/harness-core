@@ -23,12 +23,6 @@
         "resources": {
           "$ref": "#/definitions/ContainerResource"
         },
-        "retry": {
-          "type": "integer",
-          "format": "int32",
-          "minimum": 0,
-          "maximum": 5
-        },
         "target": {
           "type": "string"
         }

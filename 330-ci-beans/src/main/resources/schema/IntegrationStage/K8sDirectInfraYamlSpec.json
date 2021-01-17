@@ -1,14 +1,6 @@
 {
   "type": "object",
-  "required": [
-    "clusterName",
-    "connectorRef",
-    "namespace"
-  ],
   "properties": {
-    "clusterName": {
-      "type": "string"
-    },
     "connectorRef": {
       "type": "string"
     },
