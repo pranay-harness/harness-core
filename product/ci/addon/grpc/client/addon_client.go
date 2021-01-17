@@ -15,7 +15,7 @@ import (
 
 const (
 	backoffTime = 100 * time.Millisecond
-	maxRetries  = 20 // Max retry time of 2 seconds
+	maxRetries  = 1000 // Max retry time of 100 seconds
 )
 
 //AddonClient implements a GRPC client to communicate with CI addon
