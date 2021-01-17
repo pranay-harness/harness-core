@@ -363,7 +363,7 @@ public class BuildJobEnvInfoBuilder {
     Map<String, String> envVarMap = new HashMap<>();
     envVarMap.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
     Map<String, String> settings =
-        resolveMapParameter("settings", "Plugin", identifier, pluginStepInfo.getSettings(), true);
+        resolveMapParameter("settings", "Plugin", identifier, pluginStepInfo.getSettings(), false);
     if (!isEmpty(settings)) {
       for (Map.Entry<String, String> entry : settings.entrySet()) {
         String key = PLUGIN_ENV_PREFIX + entry.getKey().toUpperCase();
