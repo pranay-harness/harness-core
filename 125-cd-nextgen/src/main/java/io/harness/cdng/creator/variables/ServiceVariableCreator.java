@@ -6,11 +6,11 @@ import io.harness.cdng.service.beans.ServiceSpecType;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.plan.YamlProperties;
+import io.harness.pms.sdk.core.pipeline.variables.VariableCreatorHelper;
 import io.harness.pms.sdk.core.variables.beans.VariableCreationResponse;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.pms.yaml.YamlUtils;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -36,7 +36,7 @@ public class ServiceVariableCreator {
 
     YamlField serviceRefNode = serviceConfigField.getNode().getField(YamlTypes.SERVICE_REF);
     if (serviceRefNode != null) {
-      addFieldToPropertiesMapUnderService(serviceRefNode, yamlPropertiesMap);
+      VariableCreatorHelper.addFieldToPropertiesMap(serviceRefNode, yamlPropertiesMap, YamlTypes.SERVICE_CONFIG);
     }
 
     YamlField serviceDefNode = serviceConfigField.getNode().getField(YamlTypes.SERVICE_DEFINITION);
@@ -49,11 +49,11 @@ public class ServiceVariableCreator {
   private void addVariablesForServiceYaml(YamlField serviceYamlNode, Map<String, YamlProperties> yamlPropertiesMap) {
     YamlField nameField = serviceYamlNode.getNode().getField(YAMLFieldNameConstants.NAME);
     if (nameField != null) {
-      addFieldToPropertiesMapUnderService(nameField, yamlPropertiesMap);
+      VariableCreatorHelper.addFieldToPropertiesMap(nameField, yamlPropertiesMap, YamlTypes.SERVICE_CONFIG);
     }
     YamlField descriptionField = serviceYamlNode.getNode().getField(YAMLFieldNameConstants.DESCRIPTION);
     if (descriptionField != null) {
-      addFieldToPropertiesMapUnderService(descriptionField, yamlPropertiesMap);
+      VariableCreatorHelper.addFieldToPropertiesMap(descriptionField, yamlPropertiesMap, YamlTypes.SERVICE_CONFIG);
     }
   }
 
@@ -90,6 +90,16 @@ public class ServiceVariableCreator {
     YamlField manifestOverrideSetsNode = serviceSpecNode.getNode().getField(YamlTypes.MANIFEST_OVERRIDE_SETS);
     if (manifestOverrideSetsNode != null) {
       addVariablesForManifestOverrideSets(manifestOverrideSetsNode, yamlPropertiesMap);
+    }
+
+    YamlField variablesField = serviceSpecNode.getNode().getField(YAMLFieldNameConstants.VARIABLES);
+    if (variablesField != null) {
+      VariableCreatorHelper.addVariablesForVariables(variablesField, yamlPropertiesMap, YamlTypes.SERVICE_CONFIG);
+    }
+
+    YamlField variableOverrideSetsField = serviceSpecNode.getNode().getField(YamlTypes.VARIABLE_OVERRIDE_SETS);
+    if (variableOverrideSetsField != null) {
+      addVariablesForVariableOverrideSets(variableOverrideSetsField, yamlPropertiesMap);
     }
   }
 
@@ -170,7 +180,7 @@ public class ServiceVariableCreator {
     List<YamlField> fields = gitNode.getNode().fields();
     fields.forEach(field -> {
       if (!field.getName().equals(YamlTypes.UUID)) {
-        addFieldToPropertiesMapUnderService(field, yamlPropertiesMap);
+        VariableCreatorHelper.addFieldToPropertiesMap(field, yamlPropertiesMap, YamlTypes.SERVICE_CONFIG);
       }
     });
   }
@@ -203,7 +213,7 @@ public class ServiceVariableCreator {
     List<YamlField> fields = artifactSpecNode.getNode().fields();
     fields.forEach(field -> {
       if (!field.getName().equals(YamlTypes.UUID)) {
-        addFieldToPropertiesMapUnderService(field, yamlPropertiesMap);
+        VariableCreatorHelper.addFieldToPropertiesMap(field, yamlPropertiesMap, YamlTypes.SERVICE_CONFIG);
       }
     });
   }
@@ -240,10 +250,16 @@ public class ServiceVariableCreator {
     });
   }
 
-  private void addFieldToPropertiesMapUnderService(YamlField fieldNode, Map<String, YamlProperties> yamlPropertiesMap) {
-    String fqn = YamlUtils.getFullyQualifiedName(fieldNode.getNode());
-    String localName = YamlUtils.getQualifiedNameTillGivenField(fieldNode.getNode(), YamlTypes.SERVICE_CONFIG);
-    yamlPropertiesMap.put(fieldNode.getNode().getCurrJsonNode().textValue(),
-        YamlProperties.newBuilder().setLocalName(localName).setFqn(fqn).build());
+  private void addVariablesForVariableOverrideSets(YamlField fieldNode, Map<String, YamlProperties> yamlPropertiesMap) {
+    List<YamlNode> overrideNodes = fieldNode.getNode().asArray();
+    overrideNodes.forEach(yamlNode -> {
+      YamlField field = yamlNode.getField(YamlTypes.OVERRIDE_SET);
+      if (field != null) {
+        YamlField variablesField = field.getNode().getField(YAMLFieldNameConstants.VARIABLES);
+        if (variablesField != null) {
+          VariableCreatorHelper.addVariablesForVariables(variablesField, yamlPropertiesMap, YamlTypes.SERVICE_CONFIG);
+        }
+      }
+    });
   }
 }

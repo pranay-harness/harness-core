@@ -60,6 +60,11 @@ public class PipelineVariableCreator extends ChildrenVariableCreator {
       yamlPropertiesMap.put(descriptionField.getNode().getCurrJsonNode().textValue(),
           YamlProperties.newBuilder().setLocalName(descriptionFQN).setFqn(descriptionFQN).build());
     }
+    YamlField variablesField = yamlNode.getField(YAMLFieldNameConstants.VARIABLES);
+    if (variablesField != null) {
+      VariableCreatorHelper.addVariablesForVariables(
+          variablesField, yamlPropertiesMap, YAMLFieldNameConstants.PIPELINE);
+    }
   }
 
   @Override

@@ -248,6 +248,8 @@ public class YamlUtils {
     if (parentNode.getParentNode() != null && parentNode.getParentNode().isArray()) {
       if (yamlNode.getIdentifier() != null) {
         return yamlNode.getIdentifier();
+      } else if (parentNode.getName() != null) {
+        return parentNode.getName();
       } else {
         return "";
       }

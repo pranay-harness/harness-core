@@ -39,7 +39,7 @@ public interface YamlTypes {
   String SERVICE_USE_FROM_STAGE_OVERRIDES = "overrides";
   String STAGE_OVERRIDES_CONFIG = "stageOverrides";
   String PATH_CONNECTOR = VisitorParentPathUtils.PATH_CONNECTOR;
-  String VARIABLE_OVERRIDE_SETS = "variableOverrideSets";
+  String VARIABLE_OVERRIDE_SETS = "variablesOverrideSets";
   String CONNECTOR_REF = "connectorRef";
   String TAG = "tag";
   String TAG_REGEX = "tagRegex";
