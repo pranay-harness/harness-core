@@ -1,6 +1,7 @@
 package io.harness.execution.export;
 
 import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.VIKAS_S;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -45,6 +46,7 @@ import java.util.Map;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -58,6 +60,14 @@ public class ExportExecutionsResourceServiceTest extends CategoryTest {
   private static final String ACCOUNT_ID = "aid";
   private static final String REQUEST_ID = "rid";
 
+  private final String validId = "valid_uid";
+  private final String invalidId = "invalid_uid";
+  private final UserGroup validUserGroup = UserGroup.builder().uuid(validId).build();
+  private final List<String> listWithAllValidUserGroupIds = Collections.singletonList(validId);
+  private final List<String> listWithOnlyInvalidGroupIds = Collections.singletonList(invalidId);
+  private final List<String> listWithBothInvalidAndValidGroupIds = Arrays.asList(invalidId, validId);
+  private final List<UserGroup> validUsers = Arrays.asList(validUserGroup);
+
   @Mock private ExportExecutionsRequestService exportExecutionsRequestService;
   @Mock private ExportExecutionsFileService exportExecutionsFileService;
   @Mock private ExportExecutionsRequestHelper exportExecutionsRequestHelper;
@@ -66,6 +76,16 @@ public class ExportExecutionsResourceServiceTest extends CategoryTest {
   @Inject @InjectMocks private ExportExecutionsResourceService exportExecutionsResourceService;
 
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
+
+  @Before
+  public void setup() {
+    when(limitConfigurationService.getOrDefault(eq(ACCOUNT_ID), eq(ActionType.EXPORT_EXECUTIONS_REQUEST)))
+        .thenReturn(new ConfiguredLimit(ACCOUNT_ID, new StaticLimit(25), ActionType.EXPORT_EXECUTIONS_REQUEST));
+    when(exportExecutionsRequestService.getTotalRequestsInLastDay(ACCOUNT_ID)).thenReturn(5L);
+    when(userGroupService.fetchUserGroupNamesFromIds(listWithOnlyInvalidGroupIds)).thenReturn(Collections.emptyList());
+    when(userGroupService.fetchUserGroupNamesFromIds(listWithAllValidUserGroupIds)).thenReturn(validUsers);
+    when(userGroupService.fetchUserGroupNamesFromIds(listWithBothInvalidAndValidGroupIds)).thenReturn(validUsers);
+  }
 
   @Test
   @Owner(developers = GARVIT)
@@ -77,57 +97,73 @@ public class ExportExecutionsResourceServiceTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = GARVIT)
+  @Owner(developers = VIKAS_S)
   @Category(UnitTests.class)
-  public void testExport() {
+  public void testWhenNotifyOnlyTriggeringUserIsTrue() {
     Query<WorkflowExecution> query = mock(Query.class);
-
-    String validId = "valid_uid";
-    String invalidId = "invalid_uid";
-    UserGroup validUserGroup = UserGroup.builder().uuid(validId).build();
-    List<String> listWithAllValidUserGroupIds = Collections.singletonList(validId);
-    List<String> listWithOnlyInvalidGroupIds = Collections.singletonList(invalidId);
-    List<String> listWithBothInvalidAndValidGroupIds = Arrays.asList(invalidId, validId);
-    List<UserGroup> validUsers = Arrays.asList(validUserGroup);
-
-    ExportExecutionsUserParams userParams = ExportExecutionsUserParams.builder()
-                                                .notifyOnlyTriggeringUser(false)
-                                                .userGroupIds(listWithAllValidUserGroupIds)
-                                                .build();
-
-    when(limitConfigurationService.getOrDefault(eq(ACCOUNT_ID), eq(ActionType.EXPORT_EXECUTIONS_REQUEST)))
-        .thenReturn(new ConfiguredLimit(ACCOUNT_ID, new StaticLimit(25), ActionType.EXPORT_EXECUTIONS_REQUEST));
-    when(exportExecutionsRequestService.getTotalRequestsInLastDay(ACCOUNT_ID)).thenReturn(5L);
-    when(userGroupService.fetchUserGroupNamesFromIds(listWithOnlyInvalidGroupIds)).thenReturn(Collections.emptyList());
-    when(userGroupService.fetchUserGroupNamesFromIds(listWithAllValidUserGroupIds)).thenReturn(validUsers);
-    when(userGroupService.fetchUserGroupNamesFromIds(listWithBothInvalidAndValidGroupIds)).thenReturn(validUsers);
-
-    exportExecutionsResourceService.export(ACCOUNT_ID, query, userParams);
+    // With notifyOnlyTriggeringUser true and userGroupIds not set export should work.
+    ExportExecutionsUserParams userParamsWithGroupIdsNotSet =
+        ExportExecutionsUserParams.builder().notifyOnlyTriggeringUser(true).build();
+    exportExecutionsResourceService.export(ACCOUNT_ID, query, userParamsWithGroupIdsNotSet);
     verify(exportExecutionsRequestService, times(1))
-        .queueExportExecutionRequest(eq(ACCOUNT_ID), eq(query), eq(userParams));
+        .queueExportExecutionRequest(eq(ACCOUNT_ID), eq(query), eq(userParamsWithGroupIdsNotSet));
     verify(exportExecutionsRequestService, times(1)).get(eq(ACCOUNT_ID), anyString());
     verify(exportExecutionsRequestHelper, times(1)).prepareSummary(any());
 
-    assertThatThrownBy(() -> exportExecutionsResourceService.export(ACCOUNT_ID, query, null))
+    // With notifyOnlyTriggeringUser true and not empty userGroupIds InvalidRequestException should be thrown
+    // even if all group Ids are valid.
+    ExportExecutionsUserParams userParamsWithValidUserIds = ExportExecutionsUserParams.builder()
+                                                                .notifyOnlyTriggeringUser(true)
+                                                                .userGroupIds(listWithAllValidUserGroupIds)
+                                                                .build();
+    assertThatThrownBy(() -> exportExecutionsResourceService.export(ACCOUNT_ID, null, userParamsWithValidUserIds))
         .isInstanceOf(InvalidRequestException.class);
 
-    // Providing both notifyOnlyTriggeringUser and userGroupIds in ExportExecutionsUserParams should throw exception.
-    ExportExecutionsUserParams invalidUserParams = ExportExecutionsUserParams.builder()
-                                                       .notifyOnlyTriggeringUser(true)
-                                                       .userGroupIds(listWithAllValidUserGroupIds)
-                                                       .build();
-    assertThatThrownBy(() -> exportExecutionsResourceService.export(ACCOUNT_ID, null, invalidUserParams))
+    // With notifyOnlyTriggeringUser true and not empty userGroupIds InvalidRequestException should be thrown
+    // even if all group Ids are mix of valid and invalid.
+    ExportExecutionsUserParams userParamsWithBothValidAndInvalidUserIds =
+        ExportExecutionsUserParams.builder()
+            .notifyOnlyTriggeringUser(true)
+            .userGroupIds(listWithBothInvalidAndValidGroupIds)
+            .build();
+    assertThatThrownBy(
+        () -> exportExecutionsResourceService.export(ACCOUNT_ID, null, userParamsWithBothValidAndInvalidUserIds))
         .isInstanceOf(InvalidRequestException.class);
+  }
 
-    // InvalidRequestException should be thrown if all Provided groups are invalid.
-    ExportExecutionsUserParams userParams1 = ExportExecutionsUserParams.builder()
-                                                 .notifyOnlyTriggeringUser(false)
-                                                 .userGroupIds(listWithOnlyInvalidGroupIds)
-                                                 .build();
-    assertThatThrownBy(() -> exportExecutionsResourceService.export(ACCOUNT_ID, query, userParams1))
-        .isInstanceOf(InvalidRequestException.class);
+  @Test
+  @Owner(developers = VIKAS_S)
+  @Category(UnitTests.class)
+  public void testWhenNotifyOnlyTriggeringUserIsFalse() {
+    Query<WorkflowExecution> query = mock(Query.class);
 
-    // InvalidRequestException should be thrown if a subset of Provided groups are invalid.
+    // With both notifyOnlyTriggeringUser and empty userGroupIds export should work.
+    ExportExecutionsUserParams userParamsWithEmptyGroupIds =
+        ExportExecutionsUserParams.builder().notifyOnlyTriggeringUser(false).build();
+    exportExecutionsResourceService.export(ACCOUNT_ID, query, userParamsWithEmptyGroupIds);
+    verify(exportExecutionsRequestService, times(1))
+        .queueExportExecutionRequest(eq(ACCOUNT_ID), eq(query), eq(userParamsWithEmptyGroupIds));
+    verify(exportExecutionsRequestService, times(1)).get(eq(ACCOUNT_ID), anyString());
+    verify(exportExecutionsRequestHelper, times(1)).prepareSummary(any());
+
+    // With notifyOnlyTriggeringUser false and not empty userGroupIds export should work.
+    ExportExecutionsUserParams userParamsWithValidUserIds = ExportExecutionsUserParams.builder()
+                                                                .notifyOnlyTriggeringUser(false)
+                                                                .userGroupIds(listWithAllValidUserGroupIds)
+                                                                .build();
+    exportExecutionsResourceService.export(ACCOUNT_ID, query, userParamsWithValidUserIds);
+    verify(exportExecutionsRequestService, times(1))
+        .queueExportExecutionRequest(eq(ACCOUNT_ID), eq(query), eq(userParamsWithValidUserIds));
+    verify(exportExecutionsRequestService, times(2)).get(eq(ACCOUNT_ID), anyString());
+    verify(exportExecutionsRequestHelper, times(2)).prepareSummary(any());
+  }
+
+  // InvalidRequestException should be thrown if a subset of Provided groups Ids are invalid.
+  @Test
+  @Owner(developers = VIKAS_S)
+  @Category(UnitTests.class)
+  public void exportExecutionSomeInvalidGroupIdsTest() {
+    Query<WorkflowExecution> query = mock(Query.class);
     ExportExecutionsUserParams userParamsWithValidAndInvalidUsers =
         ExportExecutionsUserParams.builder()
             .notifyOnlyTriggeringUser(false)
@@ -136,15 +172,50 @@ public class ExportExecutionsResourceServiceTest extends CategoryTest {
     assertThatThrownBy(
         () -> exportExecutionsResourceService.export(ACCOUNT_ID, query, userParamsWithValidAndInvalidUsers))
         .isInstanceOf(InvalidRequestException.class);
+  }
+
+  // InvalidRequestException should be thrown if all Provided group Ids are invalid.
+  @Test
+  @Owner(developers = VIKAS_S)
+  @Category(UnitTests.class)
+  public void exportExecutionAllInvalidGroupIdsTest() {
+    Query<WorkflowExecution> query = mock(Query.class);
+    ExportExecutionsUserParams userParams1 = ExportExecutionsUserParams.builder()
+                                                 .notifyOnlyTriggeringUser(false)
+                                                 .userGroupIds(listWithOnlyInvalidGroupIds)
+                                                 .build();
+    assertThatThrownBy(() -> exportExecutionsResourceService.export(ACCOUNT_ID, query, userParams1))
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testExport() {
+    Query<WorkflowExecution> query = mock(Query.class);
+    ExportExecutionsUserParams userParams = ExportExecutionsUserParams.builder()
+                                                .notifyOnlyTriggeringUser(false)
+                                                .userGroupIds(listWithAllValidUserGroupIds)
+                                                .build();
 
     exportExecutionsResourceService.export(ACCOUNT_ID, query, userParams);
-    verify(exportExecutionsRequestService, times(2))
+    verify(exportExecutionsRequestService, times(1))
         .queueExportExecutionRequest(eq(ACCOUNT_ID), eq(query), eq(userParams));
-    verify(exportExecutionsRequestService, times(2)).get(eq(ACCOUNT_ID), anyString());
-    verify(exportExecutionsRequestHelper, times(2)).prepareSummary(any());
+    verify(exportExecutionsRequestService, times(1)).get(eq(ACCOUNT_ID), anyString());
+    verify(exportExecutionsRequestHelper, times(1)).prepareSummary(any());
+  }
 
-    // InvalidRequestException should be thrown if number of export executions requests from this account
-    // exceed configured its daily limit.
+  // InvalidRequestException should be thrown if number of export executions requests from this account
+  // exceed configured its daily limit.
+  @Test
+  @Owner(developers = VIKAS_S)
+  @Category(UnitTests.class)
+  public void exportExecutionLimitTest() {
+    Query<WorkflowExecution> query = mock(Query.class);
+    ExportExecutionsUserParams userParams = ExportExecutionsUserParams.builder()
+                                                .notifyOnlyTriggeringUser(false)
+                                                .userGroupIds(listWithAllValidUserGroupIds)
+                                                .build();
     when(exportExecutionsRequestService.getTotalRequestsInLastDay(ACCOUNT_ID)).thenReturn(25L);
     assertThatThrownBy(() -> exportExecutionsResourceService.export(ACCOUNT_ID, query, userParams))
         .isInstanceOf(InvalidRequestException.class);
