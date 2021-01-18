@@ -44,6 +44,7 @@ import io.harness.cvng.verificationjob.entities.VerificationJobInstance.Executio
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceKeys;
 import io.harness.cvng.verificationjob.jobs.DeletePerpetualTasksHandler;
 import io.harness.cvng.verificationjob.jobs.ProcessQueuedVerificationJobInstanceHandler;
+import io.harness.cvng.verificationjob.jobs.VerificationJobInstanceTimeoutHandler;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
@@ -251,6 +252,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     createConsumerThreadsToListenToEvents(injector);
     registerCVNGSchemaMigrationIterator(injector);
     registerActivityIterator(injector);
+    registerVerificationJobInstanceTimeoutIterator(injector);
     log.info("Leaving startup maintenance mode");
     MaintenanceController.forceMaintenance(false);
 
@@ -340,6 +342,30 @@ public class VerificationApplication extends Application<VerificationConfigurati
     injector.injectMembers(analysisOrchestrationIterator);
     workflowVerificationExecutor.scheduleWithFixedDelay(
         () -> analysisOrchestrationIterator.process(), 0, 20, TimeUnit.SECONDS);
+  }
+
+  private void registerVerificationJobInstanceTimeoutIterator(Injector injector) {
+    ScheduledThreadPoolExecutor scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(
+        2, new ThreadFactoryBuilder().setNameFormat("verificationJobInstance-timeout-iterator").build());
+    Handler<VerificationJobInstance> handler = injector.getInstance(VerificationJobInstanceTimeoutHandler.class);
+    PersistenceIterator persistenceIterator =
+        MongoPersistenceIterator.<VerificationJobInstance, MorphiaFilterExpander<VerificationJobInstance>>builder()
+            .mode(PersistenceIterator.ProcessMode.PUMP)
+            .clazz(VerificationJobInstance.class)
+            .fieldName(VerificationJobInstanceKeys.timeoutTaskIteration)
+            .targetInterval(ofMinutes(1))
+            .acceptableNoAlertDelay(ofMinutes(1))
+            .executorService(scheduledThreadPoolExecutor)
+            .semaphore(new Semaphore(1))
+            .handler(handler)
+            .schedulingType(REGULAR)
+            .filterExpander(query
+                -> query.field(VerificationJobInstanceKeys.executionStatus).in(ExecutionStatus.nonFinalStatuses()))
+            .redistribute(true)
+            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
+            .build();
+    injector.injectMembers(persistenceIterator);
+    scheduledThreadPoolExecutor.scheduleWithFixedDelay(() -> persistenceIterator.process(), 0, 1, TimeUnit.MINUTES);
   }
 
   private void registerDataCollectionTaskIterator(Injector injector) {

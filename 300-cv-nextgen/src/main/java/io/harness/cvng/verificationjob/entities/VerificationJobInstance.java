@@ -62,7 +62,7 @@ public class VerificationJobInstance
                  .build())
         .build();
   }
-
+  private static final Duration TIMEOUT = Duration.ofMinutes(30);
   public static final String VERIFICATION_JOB_TYPE_KEY =
       String.format("%s.%s", VerificationJobInstanceKeys.resolvedJob, VerificationJobKeys.type);
   public static String PROJECT_IDENTIFIER_KEY =
@@ -88,6 +88,7 @@ public class VerificationJobInstance
   @FdIndex private Long dataCollectionTaskIteration;
   @FdIndex private Long analysisOrchestrationIteration;
   @FdIndex private Long deletePerpetualTaskIteration;
+  @FdIndex private Long timeoutTaskIteration;
 
   // TODO: Refactor and Split into separate job instances
 
@@ -126,6 +127,10 @@ public class VerificationJobInstance
       this.deletePerpetualTaskIteration = nextIteration;
       return;
     }
+    if (VerificationJobInstanceKeys.timeoutTaskIteration.equals(fieldName)) {
+      this.timeoutTaskIteration = nextIteration;
+      return;
+    }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
@@ -139,6 +144,9 @@ public class VerificationJobInstance
     }
     if (VerificationJobInstanceKeys.deletePerpetualTaskIteration.equals(fieldName)) {
       return this.deletePerpetualTaskIteration;
+    }
+    if (VerificationJobInstanceKeys.timeoutTaskIteration.equals(fieldName)) {
+      return this.timeoutTaskIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
@@ -232,7 +240,9 @@ public class VerificationJobInstance
     FAILED,
     SUCCESS,
     TIMEOUT;
-
+    public static List<ExecutionStatus> nonFinalStatuses() {
+      return Lists.newArrayList(QUEUED, RUNNING);
+    }
     public static List<ExecutionStatus> finalStatuses() {
       return Lists.newArrayList(SUCCESS, FAILED, TIMEOUT);
     }
@@ -289,5 +299,11 @@ public class VerificationJobInstance
 
   private boolean isFinalStatus() {
     return ExecutionStatus.finalStatuses().contains(executionStatus);
+  }
+
+  public boolean isExecutionTimedOut(Instant now) {
+    Instant cutoff =
+        Collections.max(Arrays.asList(Instant.ofEpochMilli(createdAt).plus(TIMEOUT), getEndTime().plus(TIMEOUT)));
+    return now.isAfter(cutoff);
   }
 }

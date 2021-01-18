@@ -76,6 +76,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -980,6 +981,62 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTest {
       assertThat(resolvedJob.getEnvIdentifier()).isEqualTo("e1");
       assertThat(resolvedJob.getServiceIdentifier()).isEqualTo("s1");
     }
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testMarkTimedOutIfNoProgress_currentTimeAfterTimeOut() throws IllegalAccessException {
+    VerificationJobInstance verificationJobInstance = createVerificationJobInstance();
+    clock = Clock.fixed(verificationJobInstance.getEndTime().plus(Duration.ofMinutes(31)), ZoneOffset.UTC);
+    FieldUtils.writeField(verificationJobInstanceService, "clock", clock, true);
+    verificationJobInstance.setCreatedAt(verificationJobInstance.getStartTime().toEpochMilli());
+    verificationJobInstanceService.markTimedOutIfNoProgress(verificationJobInstance);
+    VerificationJobInstance updated =
+        verificationJobInstanceService.getVerificationJobInstance(verificationJobInstance.getUuid());
+    assertThat(updated.getExecutionStatus()).isEqualTo(ExecutionStatus.TIMEOUT);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testMarkTimedOutIfNoProgress_currentTimeBeforeTimeout() throws IllegalAccessException {
+    VerificationJobInstance verificationJobInstance = createVerificationJobInstance();
+    clock = Clock.fixed(verificationJobInstance.getEndTime().plus(Duration.ofMinutes(29)), ZoneOffset.UTC);
+    FieldUtils.writeField(verificationJobInstanceService, "clock", clock, true);
+    verificationJobInstance.setCreatedAt(verificationJobInstance.getStartTime().toEpochMilli());
+    verificationJobInstanceService.markTimedOutIfNoProgress(verificationJobInstance);
+    VerificationJobInstance updated =
+        verificationJobInstanceService.getVerificationJobInstance(verificationJobInstance.getUuid());
+    assertThat(updated.getExecutionStatus()).isEqualTo(ExecutionStatus.QUEUED);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testMarkTimedOutIfNoProgress_endTimeIsInThePastQueued() throws IllegalAccessException {
+    VerificationJobInstance verificationJobInstance = createVerificationJobInstance();
+    clock = Clock.fixed(verificationJobInstance.getEndTime().plus(Duration.ofDays(1)), ZoneOffset.UTC);
+    FieldUtils.writeField(verificationJobInstanceService, "clock", clock, true);
+    verificationJobInstance.setCreatedAt(clock.instant().minus(20, ChronoUnit.MINUTES).toEpochMilli());
+    verificationJobInstanceService.markTimedOutIfNoProgress(verificationJobInstance);
+    VerificationJobInstance updated =
+        verificationJobInstanceService.getVerificationJobInstance(verificationJobInstance.getUuid());
+    assertThat(updated.getExecutionStatus()).isEqualTo(ExecutionStatus.QUEUED);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testMarkTimedOutIfNoProgress_endTimeIsInThePastWithCreatedAtTimeout() throws IllegalAccessException {
+    VerificationJobInstance verificationJobInstance = createVerificationJobInstance();
+    clock = Clock.fixed(verificationJobInstance.getEndTime().plus(Duration.ofDays(1)), ZoneOffset.UTC);
+    FieldUtils.writeField(verificationJobInstanceService, "clock", clock, true);
+    verificationJobInstance.setCreatedAt(clock.instant().minus(31, ChronoUnit.MINUTES).toEpochMilli());
+    verificationJobInstanceService.markTimedOutIfNoProgress(verificationJobInstance);
+    VerificationJobInstance updated =
+        verificationJobInstanceService.getVerificationJobInstance(verificationJobInstance.getUuid());
+    assertThat(updated.getExecutionStatus()).isEqualTo(ExecutionStatus.TIMEOUT);
   }
 
   private VerificationJobDTO newCanaryVerificationJobDTO() {
