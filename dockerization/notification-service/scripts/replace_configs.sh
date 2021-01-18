@@ -92,3 +92,7 @@ fi
 if [[ "" != "$RBAC_URL" ]]; then
   yq write -i $CONFIG_FILE rbacServiceConfig.baseUrl "$RBAC_URL"
 fi
+
+if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
+  yq write -i $CONFIG_FILE secrets.managerServiceSecret "$NEXT_GEN_MANAGER_SECRET"
+fi

@@ -209,6 +209,10 @@ if [[ "" != "$jwtNextGenManagerSecret" ]]; then
   yq write -i $CONFIG_FILE portal.jwtNextGenManagerSecret "$jwtNextGenManagerSecret"
 fi
 
+if [[ "" != "$jwtNextGenManagerSecret" ]]; then
+  yq write -i $CONFIG_FILE cvngClientConfig.cvNgServiceSecret "$jwtNextGenManagerSecret"
+fi
+
 if [[ "" != "$FEATURES" ]]; then
   yq write -i $CONFIG_FILE featuresEnabled "$FEATURES"
 fi
@@ -748,4 +752,3 @@ fi
 if [[ "" != "$NG_MANAGER_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE ngManagerServiceHttpClientConfig.baseUrl "$NG_MANAGER_BASE_URL"
 fi
-
