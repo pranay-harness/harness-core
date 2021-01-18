@@ -1435,7 +1435,7 @@ public class DelegateServiceImpl implements DelegateService {
       } else {
         version = EMPTY_VERSION;
       }
-      boolean isCiEnabled = featureFlagService.isGlobalEnabled(NEXT_GEN_ENABLED);
+      boolean isCiEnabled = featureFlagService.isEnabled(NEXT_GEN_ENABLED, accountId);
       ImmutableMap<String, String> scriptParams =
           getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry.builder()
                                              .accountId(accountId)
