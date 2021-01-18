@@ -83,8 +83,8 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
     appNameAndSlotNameToInstancesInDbMap.keys().forEach(appNameAndSlotName -> {
       Map<String, AzureAppDeploymentData> latestSlotWebAppInstances =
           getLatestSlotWebAppInstances(infrastructureMapping, appId, appNameAndSlotName);
-      syncInstances(appNameAndSlotNameToInstancesInDbMap.get(appNameAndSlotName), latestSlotWebAppInstances, null,
-          infrastructureMapping, instanceSyncFlow);
+      syncInstances(appNameAndSlotNameToInstancesInDbMap.get(appNameAndSlotName), latestSlotWebAppInstances, false,
+          null, infrastructureMapping, instanceSyncFlow);
     });
   }
 
@@ -158,7 +158,7 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
         DeploymentSummary eligibleDeploymentSummary =
             getEligibleDeploymentSummary(deploymentSummaries, appNameAndSlotName);
 
-        syncInstances(appNameAndSlotNameToInstanceInDbMap.get(appNameAndSlotName), latestSlotWebAppInstances,
+        syncInstances(appNameAndSlotNameToInstanceInDbMap.get(appNameAndSlotName), latestSlotWebAppInstances, rollback,
             eligibleDeploymentSummary, infrastructureMapping, InstanceSyncFlow.NEW_DEPLOYMENT);
       });
     }
@@ -189,13 +189,14 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
         getCurrentInstancesInDb(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
     Collection<Instance> currentInstancesInDb = appNameAndSlotNameToInstancesInDbMap.get(appNameAndSlotNameKey);
 
-    syncInstances(currentInstancesInDb, latestSlotWebAppInstances, null,
+    syncInstances(currentInstancesInDb, latestSlotWebAppInstances, false, null,
         (AzureWebAppInfrastructureMapping) infrastructureMapping, InstanceSyncFlow.PERPETUAL_TASK);
   }
 
   private void syncInstances(Collection<Instance> currentInstancesInDb,
-      Map<String, AzureAppDeploymentData> latestSlotWebAppInstances, DeploymentSummary deploymentSummary,
-      AzureWebAppInfrastructureMapping infrastructureMapping, InstanceSyncFlow instanceSyncFlow) {
+      Map<String, AzureAppDeploymentData> latestSlotWebAppInstances, boolean rollback,
+      DeploymentSummary deploymentSummary, AzureWebAppInfrastructureMapping infrastructureMapping,
+      InstanceSyncFlow instanceSyncFlow) {
     if (!canUpdateInstancesInDb(instanceSyncFlow, infrastructureMapping.getAccountId())) {
       return;
     }
@@ -210,7 +211,7 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
     }
 
     Optional<DeploymentSummary> deploymentSummaryOp =
-        getDeploymentSummary(deploymentSummary, latestSlotWebAppInstancesInDb, currentInstancesInDb);
+        getDeploymentSummary(deploymentSummary, latestSlotWebAppInstancesInDb, currentInstancesInDb, rollback);
     if (!deploymentSummaryOp.isPresent()) {
       log.warn("Couldn't find an instance from a previous deployment for inframapping: [{}]",
           infrastructureMapping.getUuid());
@@ -262,12 +263,13 @@ public class AzureWebAppInstanceHandler extends InstanceHandler implements Insta
   }
 
   public Optional<DeploymentSummary> getDeploymentSummary(DeploymentSummary deploymentSummary,
-      Map<String, Instance> latestSlotWebAppInstancesInDb, Collection<Instance> currentInstancesInDb) {
+      Map<String, Instance> latestSlotWebAppInstancesInDb, Collection<Instance> currentInstancesInDb,
+      boolean rollback) {
     if (deploymentSummary == null && isNotEmpty(latestSlotWebAppInstancesInDb)) {
       Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(currentInstancesInDb);
       return instanceWithExecutionInfoOptional.map(this::getDeploymentSummaryFromPrevious);
     } else {
-      return Optional.of(getDeploymentSummaryForInstanceCreation(deploymentSummary, false));
+      return Optional.of(getDeploymentSummaryForInstanceCreation(deploymentSummary, rollback));
     }
   }
 

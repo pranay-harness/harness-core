@@ -65,7 +65,10 @@ public class AzureWebAppSlotSetupTaskHandlerTest extends WingsBaseTest {
     AzureAppServicePreDeploymentData appServicePreDeploymentData = buildAzureAppServicePreDeploymentData();
     AzureAppDeploymentData azureAppDeploymentData = buildAzureAppDeploymentData();
 
-    doNothing().when(azureAppServiceDeploymentService).deployDockerImage(any());
+    doNothing().when(azureAppServiceDeploymentService).deployDockerImage(any(), any());
+    doReturn(AzureAppServicePreDeploymentData.builder())
+        .when(azureAppServiceDeploymentService)
+        .getDefaultPreDeploymentDataBuilder(any(), any());
 
     doReturn(appServicePreDeploymentData)
         .when(azureAppServiceDeploymentService)

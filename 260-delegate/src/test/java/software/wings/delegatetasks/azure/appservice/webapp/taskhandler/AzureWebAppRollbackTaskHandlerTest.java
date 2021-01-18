@@ -22,6 +22,7 @@ import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.delegatetasks.azure.appservice.deployment.AzureAppServiceDeploymentService;
+import software.wings.delegatetasks.azure.appservice.webapp.AppServiceDeploymentProgress;
 
 import java.util.Collections;
 import org.junit.Before;
@@ -68,7 +69,7 @@ public class AzureWebAppRollbackTaskHandlerTest extends WingsBaseTest {
   }
 
   private void mockDeployDockerImage() {
-    doNothing().when(azureAppServiceDeploymentService).deployDockerImage(any());
+    doNothing().when(azureAppServiceDeploymentService).deployDockerImage(any(), any());
   }
 
   private void mockRerouteProductionSlotTraffic() {
@@ -102,6 +103,7 @@ public class AzureWebAppRollbackTaskHandlerTest extends WingsBaseTest {
         .appName(APP_NAME)
         .slotName(SLOT_NAME)
         .imageNameAndTag("imageNameAndTag")
+        .deploymentProgressMarker(AppServiceDeploymentProgress.STOP_SLOT.name())
         .build();
   }
 

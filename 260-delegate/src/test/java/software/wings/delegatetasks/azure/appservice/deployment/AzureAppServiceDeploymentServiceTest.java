@@ -9,7 +9,6 @@ import static io.harness.azure.model.AzureConstants.START_DEPLOYMENT_SLOT;
 import static io.harness.azure.model.AzureConstants.STOP_DEPLOYMENT_SLOT;
 import static io.harness.azure.model.AzureConstants.WEB_APP_INSTANCE_STATUS_RUNNING;
 import static io.harness.azure.model.AzureConstants.WEB_APP_NAME_BLANK_ERROR_MSG;
-import static io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceTaskType.SLOT_SWAP;
 import static io.harness.rule.OwnerRule.TMACARI;
 
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -138,7 +137,8 @@ public class AzureAppServiceDeploymentServiceTest extends WingsBaseTest {
         .when(mockAzureWebClient)
         .getDeploymentSlotByName(azureWebClientContext, SLOT_NAME);
 
-    azureAppServiceDeploymentService.deployDockerImage(azureAppServiceDockerDeploymentContext);
+    azureAppServiceDeploymentService.deployDockerImage(
+        azureAppServiceDockerDeploymentContext, AzureAppServicePreDeploymentData.builder().build());
 
     verify(slotSteadyStateChecker, times(1))
         .waitUntilCompleteWithTimeout(
@@ -181,7 +181,8 @@ public class AzureAppServiceDeploymentServiceTest extends WingsBaseTest {
         .when(mockAzureWebClient)
         .getDeploymentSlotByName(azureWebClientContext, SLOT_NAME);
 
-    azureAppServiceDeploymentService.deployDockerImage(azureAppServiceDockerDeploymentContext);
+    azureAppServiceDeploymentService.deployDockerImage(
+        azureAppServiceDockerDeploymentContext, AzureAppServicePreDeploymentData.builder().build());
 
     verify(slotSteadyStateChecker, times(1))
         .waitUntilCompleteWithTimeout(
@@ -209,7 +210,9 @@ public class AzureAppServiceDeploymentServiceTest extends WingsBaseTest {
     doReturn(Optional.empty()).when(mockAzureWebClient).getDeploymentSlotByName(azureWebClientContext, SLOT_NAME);
 
     assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(() -> azureAppServiceDeploymentService.deployDockerImage(azureAppServiceDockerDeploymentContext))
+        .isThrownBy(()
+                        -> azureAppServiceDeploymentService.deployDockerImage(
+                            azureAppServiceDockerDeploymentContext, AzureAppServicePreDeploymentData.builder().build()))
         .withMessageContaining(IMAGE_AND_TAG_BLANK_ERROR_MSG);
   }
 
@@ -231,7 +234,9 @@ public class AzureAppServiceDeploymentServiceTest extends WingsBaseTest {
     doReturn(Optional.empty()).when(mockAzureWebClient).getDeploymentSlotByName(azureWebClientContext, SLOT_NAME);
 
     assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(() -> azureAppServiceDeploymentService.deployDockerImage(azureAppServiceDockerDeploymentContext))
+        .isThrownBy(()
+                        -> azureAppServiceDeploymentService.deployDockerImage(
+                            azureAppServiceDockerDeploymentContext, AzureAppServicePreDeploymentData.builder().build()))
         .withMessageContaining(SLOT_NAME_BLANK_ERROR_MSG);
   }
 
@@ -254,30 +259,10 @@ public class AzureAppServiceDeploymentServiceTest extends WingsBaseTest {
     doReturn(Optional.empty()).when(mockAzureWebClient).getDeploymentSlotByName(azureWebClientContext, SLOT_NAME);
 
     assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(() -> azureAppServiceDeploymentService.deployDockerImage(azureAppServiceDockerDeploymentContext))
+        .isThrownBy(()
+                        -> azureAppServiceDeploymentService.deployDockerImage(
+                            azureAppServiceDockerDeploymentContext, AzureAppServicePreDeploymentData.builder().build()))
         .withMessageContaining(WEB_APP_NAME_BLANK_ERROR_MSG);
-  }
-
-  @Test
-  @Owner(developers = TMACARI)
-  @Category(UnitTests.class)
-  public void testDeployDockerImageNoDeploymentSlot() {
-    AzureWebClientContext azureWebClientContext = getAzureWebClientContext();
-    AzureAppServiceDockerDeploymentContext azureAppServiceDockerDeploymentContext =
-        AzureAppServiceDockerDeploymentContext.builder()
-            .imagePathAndTag(IMAGE_AND_TAG)
-            .slotName(SLOT_NAME)
-            .steadyStateTimeoutInMin(1)
-            .logStreamingTaskClient(mockLogStreamingTaskClient)
-            .dockerSettings(new HashMap<>())
-            .azureWebClientContext(azureWebClientContext)
-            .build();
-
-    doReturn(Optional.empty()).when(mockAzureWebClient).getDeploymentSlotByName(azureWebClientContext, SLOT_NAME);
-
-    assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(() -> azureAppServiceDeploymentService.deployDockerImage(azureAppServiceDockerDeploymentContext))
-        .withMessageContaining("Unable to find deployment slot with name");
   }
 
   @Test
@@ -392,7 +377,6 @@ public class AzureAppServiceDeploymentServiceTest extends WingsBaseTest {
     Assertions.assertThat(azureAppServicePreDeploymentData.getAppName()).isEqualTo(APP_NAME);
     Assertions.assertThat(azureAppServicePreDeploymentData.getImageNameAndTag()).isEqualTo(IMAGE_AND_TAG);
     Assertions.assertThat(azureAppServicePreDeploymentData.getTrafficWeight()).isEqualTo(2);
-    Assertions.assertThat(azureAppServicePreDeploymentData.getFailedTaskType()).isEqualTo(SLOT_SWAP);
   }
 
   @Test

@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.azure;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import io.harness.azure.model.AzureConfig;
@@ -14,6 +16,7 @@ import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.task.azure.AzureTaskResponse;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters;
+import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceTaskType;
 import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppRollbackParameters;
 import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppSlotSetupParameters;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotSetupResponse;
@@ -59,14 +62,12 @@ public class AzureSecretHelper {
   }
 
   public void decryptAzureAppServiceTaskParameters(AzureAppServiceTaskParameters azureAppServiceTaskParameters) {
-    if (AzureAppServiceTaskParameters.AzureAppServiceTaskType.SLOT_SETUP
-            == azureAppServiceTaskParameters.getCommandType()
+    if (AzureAppServiceTaskType.SLOT_SETUP == azureAppServiceTaskParameters.getCommandType()
         && azureAppServiceTaskParameters instanceof AzureWebAppSlotSetupParameters) {
       decryptAzureWebAppSlotSetupParameters((AzureWebAppSlotSetupParameters) azureAppServiceTaskParameters);
     }
 
-    if (AzureAppServiceTaskParameters.AzureAppServiceTaskType.SLOT_ROLLBACK
-            == azureAppServiceTaskParameters.getCommandType()
+    if (AzureAppServiceTaskType.SLOT_ROLLBACK == azureAppServiceTaskParameters.getCommandType()
         && azureAppServiceTaskParameters instanceof AzureWebAppRollbackParameters) {
       decryptAzureWebAppRollbackParameters((AzureWebAppRollbackParameters) azureAppServiceTaskParameters);
     }
@@ -91,6 +92,9 @@ public class AzureSecretHelper {
   }
 
   private <T extends AzureAppServiceSettingDTO> void decryptSettings(Map<String, T> settings) {
+    if (isEmpty(settings)) {
+      return;
+    }
     settings.values().forEach(this::decryptEncryptedRecordByLocalEncryptor);
   }
 
@@ -103,8 +107,10 @@ public class AzureSecretHelper {
     setting.setValue(new String(secretValue));
   }
 
-  public void encryptAzureTaskResponseParams(AzureTaskResponse azureTaskResponse, final String accountId) {
-    if (azureTaskResponse instanceof AzureWebAppSlotSetupResponse) {
+  public void encryptAzureTaskResponseParams(
+      AzureTaskResponse azureTaskResponse, final String accountId, AzureAppServiceTaskType commandType) {
+    if ((azureTaskResponse instanceof AzureWebAppSlotSetupResponse)
+        && AzureAppServiceTaskType.SLOT_SETUP == commandType) {
       encryptAzureWebAppSlotSetupResponseParams((AzureWebAppSlotSetupResponse) azureTaskResponse, accountId);
     }
   }
@@ -120,6 +126,9 @@ public class AzureSecretHelper {
   }
 
   private <T extends AzureAppServiceSettingDTO> void encryptSettings(Map<String, T> settings, final String accountId) {
+    if (isEmpty(settings)) {
+      return;
+    }
     settings.values().forEach(appServiceSetting -> {
       log.info("Encrypt Azure App service setting by local encryptor, name: {}", appServiceSetting.getName());
       encryptRecordByLocalEncryptor(appServiceSetting, accountId);

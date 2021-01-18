@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.azure.appservice.webapp.taskhandler;
 
 import static io.harness.azure.model.AzureConstants.SHIFT_TRAFFIC_SLOT_NAME_BLANK_ERROR_MSG;
-import static io.harness.azure.model.AzureConstants.SLOT_TRAFFIC_WEIGHT;
+import static io.harness.azure.model.AzureConstants.SLOT_TRAFFIC_PERCENTAGE;
 import static io.harness.azure.model.AzureConstants.TRAFFIC_WEIGHT_IN_PERCENTAGE_INVALID_ERROR_MSG;
 import static io.harness.azure.model.AzureConstants.WEB_APP_NAME_BLANK_ERROR_MSG;
 import static io.harness.rule.OwnerRule.IVAN;
@@ -20,6 +20,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
+import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskResponse;
 import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppSlotShiftTrafficParameters;
 import io.harness.exception.InvalidArgumentsException;
@@ -132,10 +133,11 @@ public class AzureWebAppSlotShiftTrafficTaskHandlerTest extends WingsBaseTest {
         .resourceGroupName("resourceGroupName")
         .subscriptionId("subscriptionId")
         .timeoutIntervalInMin(15)
-        .commandName(SLOT_TRAFFIC_WEIGHT)
+        .commandName(SLOT_TRAFFIC_PERCENTAGE)
         .webAppName("webAppName")
         .deploymentSlot(SHIFT_TRAFFIC_SLOT_NAME)
         .trafficWeightInPercentage(TRAFFIC_WEIGHT_IN_PERCENTAGE)
+        .preDeploymentData(AzureAppServicePreDeploymentData.builder().build())
         .build();
   }
 

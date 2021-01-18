@@ -127,6 +127,7 @@ public class AzureWebAppSlotRollback extends AzureWebAppSlotSetup {
         new AzureWebAppCommandUnit(AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONFIGURATION_SETTINGS),
         new AzureWebAppCommandUnit(AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONTAINER_SETTINGS),
         new AzureWebAppCommandUnit(AzureConstants.START_DEPLOYMENT_SLOT),
+        new AzureWebAppCommandUnit(AzureConstants.SLOT_TRAFFIC_PERCENTAGE),
         new AzureWebAppCommandUnit(AzureConstants.DEPLOYMENT_STATUS));
   }
 }

@@ -86,7 +86,7 @@ public abstract class AbstractAzureAppServiceTaskHandler {
         ex);
   }
 
-  protected void markExecutionAsSuccess(
+  protected void markDeploymentStatusAsSuccess(
       AzureAppServiceTaskParameters azureAppServiceTaskParameters, ILogStreamingTaskClient logStreamingTaskClient) {
     if (azureAppServiceTaskParameters.isSyncTask()) {
       return;

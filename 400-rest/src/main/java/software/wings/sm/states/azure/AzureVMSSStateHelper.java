@@ -2,6 +2,7 @@ package software.wings.sm.states.azure;
 
 import static io.harness.azure.model.AzureConstants.STEADY_STATE_TIMEOUT_REGEX;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.azure.AzureVMAuthType.SSH_PUBLIC_KEY;
 import static io.harness.exception.WingsException.USER;
@@ -83,9 +84,12 @@ import software.wings.utils.ServiceVersionConvention;
 import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
@@ -553,6 +557,18 @@ public class AzureVMSSStateHelper {
   }
 
   public void validateAppSettings(List<AzureAppServiceApplicationSetting> appSettings) {
+    if (isEmpty(appSettings)) {
+      return;
+    }
+    List<String> appSettingNames =
+        appSettings.stream().map(AzureAppServiceApplicationSetting::getName).collect(Collectors.toList());
+    Set<String> duplicateAppSettingNames = getDuplicateItems(appSettingNames);
+
+    if (isNotEmpty(duplicateAppSettingNames)) {
+      String duplicateAppSettingNamesStr = String.join(",", duplicateAppSettingNames);
+      throw new InvalidRequestException(format("Duplicate application string names [%s]", duplicateAppSettingNamesStr));
+    }
+
     appSettings.forEach(appSetting -> {
       String name = appSetting.getName();
       if (isBlank(name)) {
@@ -565,6 +581,18 @@ public class AzureVMSSStateHelper {
   }
 
   public void validateConnStrings(List<AzureAppServiceConnectionString> connStrings) {
+    if (isEmpty(connStrings)) {
+      return;
+    }
+    List<String> connStringNames =
+        connStrings.stream().map(AzureAppServiceConnectionString::getName).collect(Collectors.toList());
+    Set<String> duplicateConnStringNames = getDuplicateItems(connStringNames);
+
+    if (isNotEmpty(duplicateConnStringNames)) {
+      String duplicateConnStringNamesStr = String.join(",", duplicateConnStringNames);
+      throw new InvalidRequestException(format("Duplicate connection string names [%s]", duplicateConnStringNamesStr));
+    }
+
     connStrings.forEach(connString -> {
       String name = connString.getName();
       if (isBlank(name)) {
@@ -579,5 +607,11 @@ public class AzureVMSSStateHelper {
         throw new InvalidRequestException("Connection string type cannot be null");
       }
     });
+  }
+
+  @NotNull
+  private <T> Set<T> getDuplicateItems(List<T> listItems) {
+    Set<T> tempItemsSet = new HashSet<>();
+    return listItems.stream().filter(item -> !tempItemsSet.add(item)).collect(Collectors.toSet());
   }
 }
