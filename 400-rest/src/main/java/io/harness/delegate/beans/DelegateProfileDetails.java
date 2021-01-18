@@ -23,4 +23,6 @@ public class DelegateProfileDetails {
 
   private EmbeddedUserDetails createdBy;
   private EmbeddedUserDetails lastUpdatedBy;
+
+  private String identifier;
 }

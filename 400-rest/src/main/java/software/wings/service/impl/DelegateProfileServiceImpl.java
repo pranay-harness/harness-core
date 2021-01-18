@@ -28,11 +28,13 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.account.AccountCrudObserver;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import io.fabric8.utils.Strings;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -58,7 +60,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AuditServiceHelper auditServiceHelper;
 
-  @Getter private Subject<DelegateProfileObserver> delegateProfileSubject = new Subject<>();
+  @Getter private final Subject<DelegateProfileObserver> delegateProfileSubject = new Subject<>();
 
   private LoadingCache<ImmutablePair<String, String>, DelegateProfile> delegateProfilesCache =
       CacheBuilder.newBuilder()
@@ -170,6 +172,11 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
   @Override
   public DelegateProfile add(DelegateProfile delegateProfile) {
+    if (Strings.isNotBlank(delegateProfile.getIdentifier())
+        && !isValidIdentifier(delegateProfile.getAccountId(), delegateProfile.getIdentifier())) {
+      throw new InvalidRequestException("The identifier is invalid. Could not add delegate profile.");
+    }
+
     wingsPersistence.save(delegateProfile);
     log.info("Added delegate profile: {}", delegateProfile.getUuid());
     auditServiceHelper.reportForAuditingUsingAccountId(
@@ -250,5 +257,15 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
         .description(PRIMARY_PROFILE_DESCRIPTION)
         .primary(true)
         .build();
+  }
+
+  @VisibleForTesting
+  public boolean isValidIdentifier(String accountId, String proposedIdentifier) {
+    Query<DelegateProfile> result = wingsPersistence.createQuery(DelegateProfile.class)
+                                        .filter(DelegateKeys.accountId, accountId)
+                                        .field(DelegateProfileKeys.identifier)
+                                        .equalIgnoreCase(proposedIdentifier);
+
+    return result.get() == null;
   }
 }

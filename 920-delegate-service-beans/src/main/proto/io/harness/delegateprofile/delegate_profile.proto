@@ -48,6 +48,7 @@ message DelegateProfileGrpc {
   repeated ProfileScopingRule scoping_rules = 9;
   EmbeddedUserDetails createdBy = 10;
   EmbeddedUserDetails lastUpdatedBy = 11;
+  string identifier = 12;
 }
 
 message DelegateProfilePageResponseGrpc {

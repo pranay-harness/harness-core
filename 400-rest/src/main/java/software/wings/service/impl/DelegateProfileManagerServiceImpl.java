@@ -298,6 +298,10 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
       delegateProfileGrpcBuilder.addAllScopingRules(convert(delegateProfile.getScopingRules()));
     }
 
+    if (isNotBlank(delegateProfile.getIdentifier())) {
+      delegateProfileGrpcBuilder.setIdentifier(delegateProfile.getIdentifier());
+    }
+
     return delegateProfileGrpcBuilder.build();
   }
 
@@ -387,6 +391,10 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
                          .serviceIds(extractScopingEntityIds(grpcScopingRule.getScopingEntitiesMap(), SERVICE_ID_FIELD))
                          .build())
               .collect(Collectors.toList()));
+    }
+
+    if (isNotBlank(delegateProfileGrpc.getIdentifier())) {
+      delegateProfileDetailsBuilder.identifier(delegateProfileGrpc.getIdentifier());
     }
 
     return delegateProfileDetailsBuilder.build();
