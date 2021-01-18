@@ -4,6 +4,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.interrupts.InterruptPackage;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterDTO;
@@ -16,9 +17,12 @@ import io.harness.pms.plan.execution.beans.dto.PipelineExecutionFilterProperties
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 import io.harness.service.GraphGenerationService;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.Optional;
+import java.io.IOException;
+import java.util.*;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -101,6 +105,36 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
     }
     if (piplineFilter.getStatus() != null) {
       criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.status).is(piplineFilter.getStatus());
+    }
+    if (piplineFilter.getModuleProperties() != null) {
+      try {
+        processNode(convertBsonToJsonNode(piplineFilter.getModuleProperties()), "moduleInfo", criteria);
+      } catch (IOException e) {
+        throw new InvalidArgumentsException(
+            "converstion error : bson object to JacksonNode may be due to corrupted data");
+      }
+    }
+  }
+
+  private JsonNode convertBsonToJsonNode(org.bson.Document bsonDocument) throws IOException {
+    return new ObjectMapper().readTree(bsonDocument.toJson());
+  }
+
+  private void processNode(JsonNode jsonNode, String parentPath, Criteria criteria) {
+    if (jsonNode.isValueNode()) {
+      criteria.and(parentPath).is(jsonNode.asText());
+    } else if (jsonNode.isArray()) {
+      List<String> valueList = new ArrayList<>();
+      for (JsonNode arrayItem : jsonNode) {
+        valueList.add(arrayItem.textValue());
+      }
+      criteria.and(parentPath).in(valueList);
+    } else if (jsonNode.isObject()) {
+      Iterator<Map.Entry<String, JsonNode>> fields = jsonNode.fields();
+      while (fields.hasNext()) {
+        Map.Entry<String, JsonNode> jsonField = fields.next();
+        processNode(jsonField.getValue(), String.join(".", parentPath, jsonField.getKey()), criteria);
+      }
     }
   }
 
