@@ -1,10 +1,10 @@
 package software.wings.sm.states.spotinst;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.spotinst.model.ElastiGroup;
 
 import software.wings.api.ExecutionDataValue;
-import software.wings.beans.EnvironmentType;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.sm.StateExecutionData;
 

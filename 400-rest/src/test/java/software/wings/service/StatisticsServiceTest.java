@@ -1,5 +1,7 @@
 package software.wings.service;
 
+import static io.harness.beans.EnvironmentType.NON_PROD;
+import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
@@ -10,8 +12,6 @@ import static io.harness.rule.OwnerRule.SRINIVAS;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
-import static software.wings.beans.EnvironmentType.NON_PROD;
-import static software.wings.beans.EnvironmentType.PROD;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -27,6 +27,7 @@ import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.category.element.UnitTests;
@@ -36,7 +37,6 @@ import io.harness.rule.Owner;
 import software.wings.WingsBaseTest;
 import software.wings.api.ServiceElement;
 import software.wings.beans.ElementExecutionSummary;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.stats.DeploymentStatistics;
 import software.wings.beans.stats.DeploymentStatistics.AggregatedDayStats;

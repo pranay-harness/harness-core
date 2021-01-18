@@ -1,6 +1,6 @@
 package software.wings.graphql.schema.query;
 
-import software.wings.beans.EnvironmentType;
+import io.harness.beans.EnvironmentType;
 
 import graphql.schema.DataFetchingFieldSelectionSet;
 import lombok.AccessLevel;

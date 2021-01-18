@@ -52,6 +52,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
@@ -60,7 +61,6 @@ import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;

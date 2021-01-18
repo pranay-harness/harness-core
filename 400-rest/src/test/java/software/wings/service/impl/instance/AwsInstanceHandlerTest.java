@@ -43,6 +43,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -55,7 +56,6 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;

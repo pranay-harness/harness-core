@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -17,7 +18,6 @@ import static io.harness.rule.OwnerRule.SRINIVAS;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.beans.EnvironmentType.PROD;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
@@ -64,6 +64,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -86,7 +87,6 @@ import software.wings.beans.EntityType;
 import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.Notification;
 import software.wings.beans.PhysicalInfrastructureMapping;

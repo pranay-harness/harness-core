@@ -1,11 +1,11 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.rule.OwnerRule.SATYAM;
 
 import static software.wings.api.PhaseStepExecutionData.PhaseStepExecutionDataBuilder.aPhaseStepExecutionData;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.EnvironmentType.PROD;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;

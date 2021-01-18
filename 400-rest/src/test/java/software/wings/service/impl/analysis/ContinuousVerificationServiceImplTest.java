@@ -28,6 +28,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.beans.DelegateTask;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -43,7 +44,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;

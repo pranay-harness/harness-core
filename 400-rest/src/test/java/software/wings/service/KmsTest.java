@@ -34,6 +34,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.MigrateSecretTask;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
@@ -75,7 +76,6 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.EntityType;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.Event;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;

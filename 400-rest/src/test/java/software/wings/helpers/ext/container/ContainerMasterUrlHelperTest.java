@@ -17,6 +17,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.rule.Owner;
@@ -27,7 +28,6 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.KubernetesClusterConfig;

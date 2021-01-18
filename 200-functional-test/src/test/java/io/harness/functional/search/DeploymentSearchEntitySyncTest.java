@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.UTKARSH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.FunctionalTests;
 import io.harness.ff.FeatureFlagService;
@@ -21,7 +22,6 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;

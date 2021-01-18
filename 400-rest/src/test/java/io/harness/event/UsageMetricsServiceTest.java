@@ -1,5 +1,7 @@
 package io.harness.event;
 
+import static io.harness.beans.EnvironmentType.NON_PROD;
+import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.SOWMYA;
@@ -7,8 +9,6 @@ import static io.harness.rule.OwnerRule.SOWMYA;
 import static software.wings.beans.AccountStatus.ACTIVE;
 import static software.wings.beans.AccountType.COMMUNITY;
 import static software.wings.beans.AccountType.PAID;
-import static software.wings.beans.EnvironmentType.NON_PROD;
-import static software.wings.beans.EnvironmentType.PROD;
 import static software.wings.common.VerificationConstants.CV_META_DATA;
 import static software.wings.common.VerificationConstants.VERIFICATION_PROVIDER_TYPE_LOG;
 import static software.wings.common.VerificationConstants.VERIFICATION_PROVIDER_TYPE_METRIC;
@@ -21,6 +21,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.category.element.UnitTests;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.model.GenericEvent;
@@ -32,7 +33,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Account.Builder;
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.LicenseInfo;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.UsageMetricsHandler;

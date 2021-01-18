@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -8,7 +9,6 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.beans.EnvironmentType.ALL;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.PRIMARY_SERVICE_NAME_EXPRESSION;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.STAGE_SERVICE_NAME_EXPRESSION;
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;

@@ -49,6 +49,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static wiremock.com.google.common.collect.Lists.newArrayList;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.spotinst.response.SpotInstListElastigroupInstancesResponse;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
@@ -62,7 +63,6 @@ import software.wings.api.SpotinstAmiDeploymentInfo;
 import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;

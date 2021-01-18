@@ -1,18 +1,18 @@
 package io.harness.generator;
 
+import static io.harness.beans.EnvironmentType.NON_PROD;
+import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.govern.Switch.unhandled;
 
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.EnvironmentType.NON_PROD;
-import static software.wings.beans.EnvironmentType.PROD;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.OwnerManager.Owners;
 
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
-import software.wings.beans.EnvironmentType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.EnvironmentService;
 

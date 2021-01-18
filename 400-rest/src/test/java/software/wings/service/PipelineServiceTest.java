@@ -63,6 +63,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -85,7 +86,6 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.EntityType;
 import software.wings.beans.EnvSummary;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;

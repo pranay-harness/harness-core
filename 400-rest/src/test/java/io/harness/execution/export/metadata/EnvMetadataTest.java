@@ -6,11 +6,11 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.beans.EnvironmentType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import software.wings.beans.EnvSummary;
-import software.wings.beans.EnvironmentType;
 
 import java.util.Collections;
 import org.junit.Test;

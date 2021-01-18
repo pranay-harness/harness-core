@@ -3,12 +3,12 @@ package io.harness.event.usagemetrics;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.event.timeseries.processor.EventProcessor;
 
 import software.wings.api.DeploymentTimeSeriesEvent;
 import software.wings.beans.EnvSummary;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.PipelineExecution.Builder;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.WorkflowExecution;

@@ -1,6 +1,7 @@
 package software.wings.sm.states.pcf;
 
-import software.wings.beans.EnvironmentType;
+import io.harness.beans.EnvironmentType;
+
 import software.wings.beans.TaskType;
 
 import java.util.List;

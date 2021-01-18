@@ -7,13 +7,13 @@ import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 import static software.wings.security.PermissionAttribute.ResourceType.ENVIRONMENT;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.Service;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;

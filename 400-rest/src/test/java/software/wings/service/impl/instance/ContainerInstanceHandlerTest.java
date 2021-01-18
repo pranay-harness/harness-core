@@ -49,6 +49,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
@@ -71,7 +72,6 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.InfrastructureMapping;

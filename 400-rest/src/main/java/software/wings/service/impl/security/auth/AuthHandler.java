@@ -52,6 +52,7 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -61,7 +62,6 @@ import software.wings.beans.Account;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.Base;
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Pipeline;

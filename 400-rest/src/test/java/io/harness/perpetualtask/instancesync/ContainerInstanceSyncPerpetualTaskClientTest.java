@@ -18,6 +18,7 @@ import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.beans.DelegateTask;
+import io.harness.beans.EnvironmentType;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.TaskData;
@@ -34,7 +35,6 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;

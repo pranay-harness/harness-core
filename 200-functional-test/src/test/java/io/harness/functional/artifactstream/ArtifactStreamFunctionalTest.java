@@ -8,6 +8,7 @@ import static software.wings.beans.template.artifactsource.CustomRepositoryMappi
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.SecretText;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -25,7 +26,6 @@ import io.harness.testframework.framework.utils.SecretsUtils;
 import io.harness.testframework.restutils.SecretsRestUtils;
 
 import software.wings.beans.Application;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;

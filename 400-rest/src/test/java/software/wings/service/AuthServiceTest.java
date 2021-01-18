@@ -38,6 +38,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
@@ -58,7 +59,6 @@ import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.AuthToken;
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;

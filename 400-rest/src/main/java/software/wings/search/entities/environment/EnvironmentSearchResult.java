@@ -3,9 +3,9 @@ package software.wings.search.entities.environment;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EnvironmentType;
 import io.harness.data.structure.EmptyPredicate;
 
-import software.wings.beans.EnvironmentType;
 import software.wings.search.entities.related.audit.RelatedAuditView;
 import software.wings.search.entities.related.deployment.RelatedDeploymentView;
 import software.wings.search.framework.EntityInfo;

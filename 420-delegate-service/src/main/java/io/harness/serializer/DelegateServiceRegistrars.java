@@ -1,6 +1,7 @@
 package io.harness.serializer;
 
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.serializer.kryo.CommonEntitiesKryoRegistrar;
 import io.harness.serializer.kryo.DelegateServiceKryoRegister;
 import io.harness.serializer.kryo.RbacCoreKryoRegistrar;
 import io.harness.serializer.morphia.CommonEntitiesMorphiaRegister;
@@ -17,6 +18,7 @@ public class DelegateServiceRegistrars {
           .addAll(DelegateServiceBeansRegistrars.kryoRegistrars)
           .addAll(CapabilityRegistrars.kryoRegistrars)
           .add(DelegateServiceKryoRegister.class)
+          .add(CommonEntitiesKryoRegistrar.class)
           .add(RbacCoreKryoRegistrar.class)
           .build();
 

@@ -16,6 +16,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -52,7 +53,6 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;

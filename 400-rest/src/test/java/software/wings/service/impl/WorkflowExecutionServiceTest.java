@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.EnvironmentType.NON_PROD;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -17,7 +18,6 @@ import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
-import static software.wings.beans.EnvironmentType.NON_PROD;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;

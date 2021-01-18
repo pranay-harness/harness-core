@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.EnvironmentType;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;

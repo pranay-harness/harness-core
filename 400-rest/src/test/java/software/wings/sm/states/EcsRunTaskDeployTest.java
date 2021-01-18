@@ -24,6 +24,7 @@ import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.beans.DelegateTask;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
@@ -41,7 +42,6 @@ import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;

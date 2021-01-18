@@ -5,11 +5,11 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.CatalogNames.BASTION_HOST_ATTRIBUTES;
 import static software.wings.beans.CatalogNames.CONNECTION_ATTRIBUTES;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.PublicApi;
 
 import software.wings.beans.CatalogNames;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.ExecutionCredential.ExecutionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;

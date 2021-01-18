@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.EnvironmentType;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.Field;
 import io.harness.persistence.AccountAccess;

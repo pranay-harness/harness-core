@@ -18,13 +18,13 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.EnvironmentType;
 import software.wings.service.impl.event.timeseries.TimeSeriesEventInfo;
 import software.wings.utils.WingsTestConstants;
 

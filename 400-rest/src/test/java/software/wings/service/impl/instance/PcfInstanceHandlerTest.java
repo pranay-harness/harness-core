@@ -44,6 +44,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.logging.CommandExecutionStatus;
@@ -55,7 +56,6 @@ import software.wings.api.PcfDeploymentInfo;
 import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PcfConfig;

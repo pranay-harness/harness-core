@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
@@ -11,7 +12,6 @@ import static io.harness.rule.OwnerRule.TMACARI;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.EnvironmentType.PROD;
 import static software.wings.beans.InstanceUnitType.COUNT;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;

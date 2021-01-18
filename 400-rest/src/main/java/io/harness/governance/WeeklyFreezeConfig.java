@@ -1,6 +1,7 @@
 package io.harness.governance;
 
-import software.wings.beans.EnvironmentType;
+import io.harness.beans.EnvironmentType;
+
 import software.wings.resources.stats.model.WeeklyRange;
 
 import com.fasterxml.jackson.annotation.JsonProperty;

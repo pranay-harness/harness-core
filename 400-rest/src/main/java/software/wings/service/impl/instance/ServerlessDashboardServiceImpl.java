@@ -19,6 +19,7 @@ import static org.mongodb.morphia.aggregation.Projection.projection;
 import static org.mongodb.morphia.query.Sort.ascending;
 import static org.mongodb.morphia.query.Sort.descending;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageResponse;
 import io.harness.exception.GeneralException;
 import io.harness.exception.NoResultFoundException;
@@ -27,7 +28,6 @@ import io.harness.persistence.HPersistence;
 
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.User;
 import software.wings.beans.infrastructure.instance.InvocationCount;

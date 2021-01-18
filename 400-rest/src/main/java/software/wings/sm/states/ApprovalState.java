@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.ExecutionStatus.ABORTED;
 import static io.harness.beans.ExecutionStatus.EXPIRED;
 import static io.harness.beans.ExecutionStatus.FAILED;
@@ -20,7 +21,6 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.beans.EnvironmentType.ALL;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_EXPIRED_NOTIFICATION;

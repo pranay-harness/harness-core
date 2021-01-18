@@ -36,6 +36,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -67,7 +68,6 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;

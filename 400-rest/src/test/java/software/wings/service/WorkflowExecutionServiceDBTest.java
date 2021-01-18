@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.beans.EnvironmentType.NON_PROD;
 import static io.harness.beans.ExecutionStatus.PAUSED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
@@ -18,7 +19,6 @@ import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.CountsByStatuses.Builder.aCountsByStatuses;
 import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.EntityType.SERVICE;
-import static software.wings.beans.EnvironmentType.NON_PROD;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructPipeline;

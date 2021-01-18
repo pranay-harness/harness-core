@@ -1,11 +1,11 @@
 package software.wings.service;
 
+import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAGHU;
 
-import static software.wings.beans.EnvironmentType.PROD;
 import static software.wings.beans.command.CleanupSshCommandUnit.CLEANUP_UNIT;
 import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.COMMAND;
 import static software.wings.beans.command.CommandUnitType.EXEC;
