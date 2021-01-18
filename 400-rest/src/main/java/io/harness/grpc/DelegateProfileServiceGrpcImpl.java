@@ -269,6 +269,10 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
               .collect(Collectors.toList()));
     }
 
+    if (isNotBlank(delegateProfile.getIdentifier())) {
+      delegateProfileGrpcBuilder.setIdentifier(delegateProfile.getIdentifier());
+    }
+
     return delegateProfileGrpcBuilder.build();
   }
 
@@ -315,6 +319,10 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
                          .scopingEntities(convertGrpcScopes(grpcScopingRule.getScopingEntitiesMap()))
                          .build())
               .collect(Collectors.toList()));
+    }
+
+    if (isNotEmpty(delegateProfileGrpc.getIdentifier())) {
+      delegateProfileBuilder.identifier(delegateProfileGrpc.getIdentifier());
     }
 
     return delegateProfileBuilder.build();

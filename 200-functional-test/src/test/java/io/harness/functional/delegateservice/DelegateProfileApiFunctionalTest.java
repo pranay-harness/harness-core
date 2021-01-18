@@ -23,6 +23,7 @@ import software.wings.dl.WingsPersistence;
 
 import com.google.inject.Inject;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import javax.ws.rs.core.GenericType;
 import lombok.extern.slf4j.Slf4j;
@@ -31,14 +32,19 @@ import org.junit.experimental.categories.Category;
 
 @Slf4j
 public class DelegateProfileApiFunctionalTest extends AbstractFunctionalTest {
+  private static final String TEST_DELEGATE_PROFILE_IDENTIFIER = generateUuid();
+
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
   @Owner(developers = MARKO)
   @Category(FunctionalTests.class)
   public void testUpdateProfileScopingRules() {
-    String delegateProfileId =
-        wingsPersistence.save(DelegateProfile.builder().accountId(getAccount().getUuid()).name(generateUuid()).build());
+    String delegateProfileId = wingsPersistence.save(DelegateProfile.builder()
+                                                         .accountId(getAccount().getUuid())
+                                                         .name(generateUuid())
+                                                         .identifier(generateUuid())
+                                                         .build());
 
     // Update scoping rules
     RestResponse<DelegateProfileDetails> updateScopingRulesRestResponse =
@@ -47,16 +53,16 @@ public class DelegateProfileApiFunctionalTest extends AbstractFunctionalTest {
             .oauth2(bearerToken)
             .pathParam(DelegateKeys.delegateProfileId, delegateProfileId)
             .queryParam(DelegateKeys.accountId, getAccount().getUuid())
-            .body(
-                ScopingRules.builder()
-                    .scopingRuleDetails(Arrays.asList(ScopingRuleDetails.builder()
-                                                          .description("")
-                                                          .applicationId("appId")
-                                                          .environmentTypeId("envType1")
-                                                          .environmentIds(new HashSet<>(Arrays.asList("env1", "env2")))
-                                                          .serviceIds(new HashSet<>(Arrays.asList("srv1", "srv2")))
-                                                          .build()))
-                    .build())
+            .body(ScopingRules.builder()
+                      .scopingRuleDetails(
+                          Collections.singletonList(ScopingRuleDetails.builder()
+                                                        .description("")
+                                                        .applicationId("appId")
+                                                        .environmentTypeId("envType1")
+                                                        .environmentIds(new HashSet<>(Arrays.asList("env1", "env2")))
+                                                        .serviceIds(new HashSet<>(Arrays.asList("srv1", "srv2")))
+                                                        .build()))
+                      .build())
             .put("/delegate-profiles/v2/{delegateProfileId}/scoping-rules")
             .as(new GenericType<RestResponse<DelegateProfileDetails>>() {}.getType());
 
@@ -82,8 +88,11 @@ public class DelegateProfileApiFunctionalTest extends AbstractFunctionalTest {
   @Owner(developers = VUK)
   @Category(FunctionalTests.class)
   public void testGetProfile() {
-    String delegateProfileId =
-        wingsPersistence.save(DelegateProfile.builder().accountId(getAccount().getUuid()).name(generateUuid()).build());
+    String delegateProfileId = wingsPersistence.save(DelegateProfile.builder()
+                                                         .accountId(getAccount().getUuid())
+                                                         .name(generateUuid())
+                                                         .identifier(generateUuid())
+                                                         .build());
 
     // Get profile
     RestResponse<DelegateProfileDetails> getProfileRestResponse =
@@ -104,20 +113,23 @@ public class DelegateProfileApiFunctionalTest extends AbstractFunctionalTest {
   @Owner(developers = VUK)
   @Category(FunctionalTests.class)
   public void testUpdateDelegateProfile() {
-    String delegateProfileId =
-        wingsPersistence.save(DelegateProfile.builder().accountId(getAccount().getUuid()).name(generateUuid()).build());
+    String delegateProfileId = wingsPersistence.save(DelegateProfile.builder()
+                                                         .accountId(getAccount().getUuid())
+                                                         .name(generateUuid())
+                                                         .identifier(generateUuid())
+                                                         .build());
 
     // Update profile
     DelegateProfileDetails delegateProfileDetails =
         DelegateProfileDetails.builder().accountId(getAccount().getUuid()).name(generateUuid()).build();
     delegateProfileDetails.setScopingRules(
-        Arrays.asList(ScopingRuleDetails.builder()
-                          .description("")
-                          .applicationId("appId")
-                          .environmentTypeId("envTypeId")
-                          .environmentIds(new HashSet<>(Arrays.asList("env1", "env2")))
-                          .serviceIds(new HashSet<>(Arrays.asList("srv1", "srv2")))
-                          .build()));
+        Collections.singletonList(ScopingRuleDetails.builder()
+                                      .description("")
+                                      .applicationId("appId")
+                                      .environmentTypeId("envTypeId")
+                                      .environmentIds(new HashSet<>(Arrays.asList("env1", "env2")))
+                                      .serviceIds(new HashSet<>(Arrays.asList("srv1", "srv2")))
+                                      .build()));
     delegateProfileDetails.setSelectors(Arrays.asList("selector1", "selector2"));
 
     RestResponse<DelegateProfileDetails> updateProfileRestResponse =
@@ -157,15 +169,16 @@ public class DelegateProfileApiFunctionalTest extends AbstractFunctionalTest {
                                                         .uuid(generateUuid())
                                                         .accountId(getAccount().getUuid())
                                                         .name(generateUuid())
+                                                        .identifier(TEST_DELEGATE_PROFILE_IDENTIFIER)
                                                         .build();
     delegateProfileDetails.setScopingRules(
-        Arrays.asList(ScopingRuleDetails.builder()
-                          .description("")
-                          .applicationId("appId")
-                          .environmentTypeId("envTypeId")
-                          .environmentIds(new HashSet<>(Arrays.asList("env1", "env2")))
-                          .serviceIds(new HashSet<>(Arrays.asList("srv1", "srv2")))
-                          .build()));
+        Collections.singletonList(ScopingRuleDetails.builder()
+                                      .description("")
+                                      .applicationId("appId")
+                                      .environmentTypeId("envTypeId")
+                                      .environmentIds(new HashSet<>(Arrays.asList("env1", "env2")))
+                                      .serviceIds(new HashSet<>(Arrays.asList("srv1", "srv2")))
+                                      .build()));
     delegateProfileDetails.setSelectors(Arrays.asList("selector1", "selector2"));
 
     RestResponse<DelegateProfileDetails> addProfileRestResponse =
@@ -193,14 +206,18 @@ public class DelegateProfileApiFunctionalTest extends AbstractFunctionalTest {
     assertThat(addProfileRestResponse.getResource().getScopingRules().get(0).getServiceIds())
         .containsExactlyInAnyOrder("srv1", "srv2");
     assertThat(addProfileRestResponse.getResource().getSelectors()).containsExactlyInAnyOrder("selector1", "selector2");
+    assertThat(addProfileRestResponse.getResource().getIdentifier()).isEqualTo(TEST_DELEGATE_PROFILE_IDENTIFIER);
   }
 
   @Test
   @Owner(developers = VUK)
   @Category(FunctionalTests.class)
   public void testUpdateProfileSelectors() {
-    String delegateProfileId =
-        wingsPersistence.save(DelegateProfile.builder().accountId(getAccount().getUuid()).name(generateUuid()).build());
+    String delegateProfileId = wingsPersistence.save(DelegateProfile.builder()
+                                                         .accountId(getAccount().getUuid())
+                                                         .name(generateUuid())
+                                                         .identifier(generateUuid())
+                                                         .build());
 
     // Update Selectors
     RestResponse<DelegateProfileDetails> updateSelectorsRestResponse =
@@ -225,8 +242,12 @@ public class DelegateProfileApiFunctionalTest extends AbstractFunctionalTest {
   @Owner(developers = SANJA)
   @Category(FunctionalTests.class)
   public void testDeleteProfile() {
-    String delegateProfileId =
-        wingsPersistence.save(DelegateProfile.builder().accountId(getAccount().getUuid()).name(generateUuid()).build());
+    String delegateProfileId = wingsPersistence.save(DelegateProfile.builder()
+                                                         .accountId(getAccount().getUuid())
+                                                         .name(generateUuid())
+                                                         .identifier(generateUuid())
+                                                         .build());
+
     Setup.portal()
         .auth()
         .oauth2(bearerToken)
@@ -243,12 +264,24 @@ public class DelegateProfileApiFunctionalTest extends AbstractFunctionalTest {
   @Owner(developers = SANJA)
   @Category(FunctionalTests.class)
   public void testListDelegateProfiles() {
-    wingsPersistence.save(
-        DelegateProfile.builder().accountId(getAccount().getUuid()).name(generateUuid()).description("test1").build());
-    String delegateProfileId2 = wingsPersistence.save(
-        DelegateProfile.builder().accountId(getAccount().getUuid()).name(generateUuid()).description("test2").build());
-    String delegateProfileId3 = wingsPersistence.save(
-        DelegateProfile.builder().accountId(getAccount().getUuid()).name(generateUuid()).description("test3").build());
+    wingsPersistence.save(DelegateProfile.builder()
+                              .accountId(getAccount().getUuid())
+                              .name(generateUuid())
+                              .identifier(generateUuid())
+                              .description("test1")
+                              .build());
+    wingsPersistence.save(DelegateProfile.builder()
+                              .accountId(getAccount().getUuid())
+                              .name(generateUuid())
+                              .identifier(generateUuid())
+                              .description("test2")
+                              .build());
+    wingsPersistence.save(DelegateProfile.builder()
+                              .accountId(getAccount().getUuid())
+                              .name(generateUuid())
+                              .identifier(generateUuid())
+                              .description("test3")
+                              .build());
     // Get profile list
     RestResponse<PageResponse<DelegateProfileDetails>> listRestResponse =
         Setup.portal()
