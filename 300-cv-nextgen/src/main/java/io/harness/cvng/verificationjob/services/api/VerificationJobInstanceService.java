@@ -48,4 +48,5 @@ public interface VerificationJobInstanceService {
       Instant endTimeBefore);
   List<CVConfig> getCVConfigsForVerificationJob(VerificationJob verificationJob);
   void resetVerificationJobPerpetualTasks(CVConfig cvConfig);
+  void markTimedOutIfNoProgress(VerificationJobInstance verificationJobInstance);
 }

@@ -293,6 +293,26 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   }
 
   @Override
+  public void markTimedOutIfNoProgress(VerificationJobInstance verificationJobInstance) {
+    Preconditions.checkNotNull(verificationJobInstance);
+    Preconditions.checkState(ExecutionStatus.nonFinalStatuses().contains(verificationJobInstance.getExecutionStatus()),
+        "executionStatus should be non final status");
+    if (verificationJobInstance.isExecutionTimedOut(clock.instant())) {
+      log.error("VerificationJobInstance timed out {}", verificationJobInstance);
+      // TODO: add telemetry and alerting
+      UpdateOperations<VerificationJobInstance> updateOperations =
+          hPersistence.createUpdateOperations(VerificationJobInstance.class)
+              .set(VerificationJobInstanceKeys.executionStatus, ExecutionStatus.TIMEOUT);
+      Query<VerificationJobInstance> query =
+          hPersistence.createQuery(VerificationJobInstance.class)
+              .filter(VerificationJobInstanceKeys.uuid, verificationJobInstance.getUuid())
+              .field(VerificationJobInstanceKeys.executionStatus)
+              .in(ExecutionStatus.nonFinalStatuses()); // To avoid any race condition.
+      hPersistence.update(query, updateOperations);
+    }
+  }
+
+  @Override
   public void createDataCollectionTasks(VerificationJobInstance verificationJobInstance) {
     VerificationJob verificationJob = verificationJobInstance.getResolvedJob();
     Preconditions.checkNotNull(verificationJob);
