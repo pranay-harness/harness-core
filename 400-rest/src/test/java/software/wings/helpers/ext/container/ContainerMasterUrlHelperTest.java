@@ -6,9 +6,11 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
@@ -24,6 +26,8 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
+import software.wings.beans.Environment;
+import software.wings.beans.EnvironmentType;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.KubernetesClusterConfig;
@@ -33,6 +37,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.MasterUrlFetchTaskParameter;
 import software.wings.service.intfc.ContainerService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.settings.SettingValue;
 import software.wings.sm.ExecutionContext;
 import software.wings.utils.WingsTestConstants;
@@ -48,6 +53,7 @@ public class ContainerMasterUrlHelperTest extends WingsBaseTest {
   @Mock private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private ContainerService containerService;
+  @Mock private EnvironmentService environmentService;
   @InjectMocks private ContainerMasterUrlHelper masterUrlHelper;
 
   private static final String MASTER_URL = "http://master-url";
@@ -55,6 +61,9 @@ public class ContainerMasterUrlHelperTest extends WingsBaseTest {
   public void setUp() throws Exception {
     doReturn(containerService).when(delegateProxyFactory).get(eq(ContainerService.class), any(SyncTaskContext.class));
     doReturn(MASTER_URL).when(containerService).fetchMasterUrl(any(MasterUrlFetchTaskParameter.class));
+    Environment environment = new Environment();
+    environment.setEnvironmentType(EnvironmentType.PROD);
+    doReturn(environment).when(environmentService).get(anyString(), anyString());
   }
 
   @Test
@@ -75,8 +84,10 @@ public class ContainerMasterUrlHelperTest extends WingsBaseTest {
             SyncTaskContext.builder()
                 .accountId(ACCOUNT_ID)
                 .envId(ENV_ID)
+                .envType(EnvironmentType.PROD)
                 .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
                 .infrastructureMappingId(WingsTestConstants.INFRA_MAPPING_ID)
+                .serviceId(SERVICE_ID)
                 .appId(WingsTestConstants.APP_ID)
                 .infraStructureDefinitionId(WingsTestConstants.INFRA_DEFINITION_ID)
                 .infrastructureMappingId(WingsTestConstants.INFRA_MAPPING_ID)
@@ -147,8 +158,10 @@ public class ContainerMasterUrlHelperTest extends WingsBaseTest {
             SyncTaskContext.builder()
                 .accountId(ACCOUNT_ID)
                 .envId(ENV_ID)
+                .envType(EnvironmentType.PROD)
                 .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
                 .infrastructureMappingId(WingsTestConstants.INFRA_MAPPING_ID)
+                .serviceId(SERVICE_ID)
                 .appId(WingsTestConstants.APP_ID)
                 .infraStructureDefinitionId(WingsTestConstants.INFRA_DEFINITION_ID)
                 .infrastructureMappingId(WingsTestConstants.INFRA_MAPPING_ID)
@@ -205,6 +218,7 @@ public class ContainerMasterUrlHelperTest extends WingsBaseTest {
     infrastructureMapping.setAppId(WingsTestConstants.APP_ID);
     infrastructureMapping.setEnvId(WingsTestConstants.ENV_ID);
     infrastructureMapping.setUuid(WingsTestConstants.INFRA_MAPPING_ID);
+    infrastructureMapping.setServiceId(SERVICE_ID);
     infrastructureMapping.setInfrastructureDefinitionId(WingsTestConstants.INFRA_DEFINITION_ID);
     return infrastructureMapping;
   }

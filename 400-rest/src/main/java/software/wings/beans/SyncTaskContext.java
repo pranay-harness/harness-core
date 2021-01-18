@@ -10,7 +10,9 @@ public class SyncTaskContext {
   private String accountId;
   private String appId;
   private String envId;
+  private EnvironmentType envType;
   private String infrastructureMappingId;
+  private String serviceId;
   private String infraStructureDefinitionId;
   private long timeout;
   private List<String> tags;
