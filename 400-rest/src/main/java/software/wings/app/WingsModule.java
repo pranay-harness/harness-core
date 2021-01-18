@@ -47,6 +47,7 @@ import io.harness.cf.ApiException;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.client.api.CfClient;
 import io.harness.cf.client.api.CfClientException;
+import io.harness.cf.client.api.exception.CFException;
 import io.harness.config.PipelineConfig;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.cvng.CVNextGenCommonsServiceModule;
@@ -1537,7 +1538,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
 
     try {
       return new CfClient(apiKey);
-    } catch (CfClientException | ApiException e) {
+    } catch (CfClientException | ApiException | CFException e) {
       log.error("Failed to initialize the CF client, {}", e.getMessage());
     }
     return null;
