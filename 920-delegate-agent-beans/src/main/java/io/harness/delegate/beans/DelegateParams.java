@@ -13,6 +13,7 @@ public class DelegateParams {
   String delegateId;
   String accountId;
   String sessionIdentifier;
+  String delegateSize;
   String ip;
   String hostName;
   String delegateName;

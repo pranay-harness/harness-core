@@ -1847,10 +1847,20 @@ public class DelegateServiceImpl implements DelegateService {
 
     log.info("Registering delegate for Hostname: {} IP: {}", delegateParams.getHostName(), delegateParams.getIp());
 
+    DelegateSizeDetails sizeDetails = null;
+    if (isNotBlank(delegateParams.getDelegateSize())) {
+      sizeDetails = fetchAvailableSizes()
+                        .stream()
+                        .filter(size -> size.getSize().name().equals(delegateParams.getDelegateSize()))
+                        .findFirst()
+                        .orElse(null);
+    }
+
     Delegate delegate = Delegate.builder()
                             .uuid(delegateParams.getDelegateId())
                             .accountId(delegateParams.getAccountId())
                             .sessionIdentifier(delegateParams.getSessionIdentifier())
+                            .sizeDetails(sizeDetails)
                             .description(delegateParams.getDescription())
                             .ip(delegateParams.getIp())
                             .hostName(delegateParams.getHostName())

@@ -265,6 +265,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       "Duplicate delegate with same delegateId:%s and connectionId:%s exists";
 
   private final String delegateSessionIdentifier = System.getenv().get("DELEGATE_SESSION_IDENTIFIER");
+  private final String delegateSize = System.getenv().get("DELEGATE_SIZE");
 
   public static final String JAVA_VERSION = "java.version";
 
@@ -444,6 +445,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                           .ip(getLocalHostAddress())
                                           .accountId(accountId)
                                           .sessionIdentifier(delegateSessionIdentifier)
+                                          .delegateSize(delegateSize)
                                           .hostName(HOST_NAME)
                                           .delegateName(delegateName)
                                           .delegateGroupName(DELEGATE_GROUP_NAME)

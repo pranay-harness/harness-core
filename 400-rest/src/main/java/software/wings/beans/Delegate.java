@@ -3,6 +3,7 @@ package software.wings.beans;
 import static java.time.Duration.ofDays;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
@@ -44,6 +45,9 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, Ac
   // Will be used for NG to uniquely identify the delegate during the installation process, together with the accountId.
   // It will be populated by the backend and will be available as a property in the delegate installation files.
   @FdIndex private String sessionIdentifier;
+
+  // Will be used for NG to hold delegate size details
+  private DelegateSizeDetails sizeDetails;
 
   @Default private Status status = Status.ENABLED;
   private String description;
