@@ -5,6 +5,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.notification.SmtpConfig;
+import io.harness.security.encryption.EncryptedDataDetail;
 
 import java.util.Collections;
 import java.util.List;
@@ -19,6 +20,7 @@ public class MailTaskParams implements TaskParameters, ExecutionCapabilityDemand
   String body;
   String notificationId;
   SmtpConfig smtpConfig;
+  List<EncryptedDataDetail> encryptionDetails;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

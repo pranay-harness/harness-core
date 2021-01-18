@@ -16,6 +16,7 @@ import io.harness.notification.modules.NotificationPersistenceModule;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.NotificationRegistrars;
 import io.harness.serializer.NotificationSenderRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.version.VersionModule;
@@ -74,7 +75,7 @@ public class NotificationModule extends AbstractModule {
       @Singleton
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-            .addAll(NotificationSenderRegistrars.kryoRegistrars)
+            .addAll(NotificationRegistrars.kryoRegistrars)
             .build();
       }
 

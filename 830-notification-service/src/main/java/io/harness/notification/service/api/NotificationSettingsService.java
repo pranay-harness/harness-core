@@ -3,6 +3,7 @@ package io.harness.notification.service.api;
 import io.harness.notification.NotificationChannelType;
 import io.harness.notification.SmtpConfig;
 import io.harness.notification.entities.NotificationSetting;
+import io.harness.notification.remote.SmtpConfigResponse;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,4 +16,6 @@ public interface NotificationSettingsService {
   Optional<SmtpConfig> getSmtpConfig(String accountId);
   NotificationSetting setSendNotificationViaDelegate(String accountId, boolean sendNotificationViaDelegate);
   NotificationSetting setSmtpConfig(String accountId, SmtpConfig smtpConfig);
+
+  SmtpConfigResponse getSmtpConfigResponse(String accountId);
 }

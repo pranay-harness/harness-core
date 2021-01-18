@@ -25,10 +25,8 @@ import org.apache.commons.mail.HtmlEmail;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class MailSenderImpl {
-  private SmtpConfig smtpConfig;
-
   public NotificationProcessingResponse send(
-      List<String> emailIds, String subject, String body, String notificationId) {
+      List<String> emailIds, String subject, String body, String notificationId, SmtpConfig smtpConfig) {
     try {
       if (Objects.isNull(stripToNull(body))) {
         log.error("No email body available. Aborting notification request {}", notificationId);

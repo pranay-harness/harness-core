@@ -6,6 +6,7 @@ import io.harness.delegate.beans.NotificationTaskResponse;
 import io.harness.delegate.beans.PagerDutyTaskParams;
 import io.harness.delegate.beans.SlackTaskParams;
 import io.harness.notification.beans.NotificationProcessingResponse;
+import io.harness.notification.remote.SmtpConfigResponse;
 import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -25,5 +26,6 @@ public class NotificationSenderKryoRegistrar implements KryoRegistrar {
     kryo.register(NotificationTaskResponse.class, 55216);
     kryo.register(NotificationProcessingResponse.class, 55217);
     kryo.register(Severity.class, 55218);
+    kryo.register(SmtpConfigResponse.class, 55219);
   }
 }
