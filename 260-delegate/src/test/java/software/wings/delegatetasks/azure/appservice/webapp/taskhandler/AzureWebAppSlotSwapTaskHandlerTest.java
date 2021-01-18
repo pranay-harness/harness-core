@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.azure.appservice.webapp.taskhandler;
 
-import static io.harness.azure.model.AzureConstants.SLOT_TRAFFIC_WEIGHT;
+import static io.harness.azure.model.AzureConstants.SLOT_TRAFFIC_PERCENTAGE;
 import static io.harness.azure.model.AzureConstants.SOURCE_SLOT_NAME_BLANK_ERROR_MSG;
 import static io.harness.azure.model.AzureConstants.TARGET_SLOT_NAME_BLANK_ERROR_MSG;
 import static io.harness.azure.model.AzureConstants.WEB_APP_NAME_BLANK_ERROR_MSG;
@@ -20,6 +20,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
+import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskResponse;
 import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppSwapSlotsParameters;
 import io.harness.exception.InvalidArgumentsException;
@@ -129,10 +130,11 @@ public class AzureWebAppSlotSwapTaskHandlerTest extends WingsBaseTest {
         .subscriptionId(SUBSCRIPTION_ID)
         .resourceGroupName(RESOURCE_GROUP_NAME)
         .timeoutIntervalInMin(15)
-        .commandName(SLOT_TRAFFIC_WEIGHT)
+        .commandName(SLOT_TRAFFIC_PERCENTAGE)
         .webAppName(WEB_APP_NAME)
         .sourceSlotName(SOURCE_SLOT_NAME)
         .targetSlotName(TARGET_SLOT_NAME)
+        .preDeploymentData(AzureAppServicePreDeploymentData.builder().build())
         .build();
   }
 

@@ -54,16 +54,19 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
         buildAzureWebClientContext(azureWebAppSlotSetupParameters, azureConfig);
     AzureAppServiceDockerDeploymentContext dockerDeploymentContext = toAzureAppServiceDockerDeploymentContext(
         azureWebAppSlotSetupParameters, azureWebClientContext, azureConfig, logStreamingTaskClient);
-
     AzureAppServicePreDeploymentData azureAppServicePreDeploymentData =
-        getAzureAppServicePreDeploymentData(dockerDeploymentContext);
+        azureAppServiceDeploymentService
+            .getDefaultPreDeploymentDataBuilder(
+                azureWebAppSlotSetupParameters.getAppName(), azureWebAppSlotSetupParameters.getSlotName())
+            .build();
 
     try {
-      azureAppServiceDeploymentService.deployDockerImage(dockerDeploymentContext);
+      azureAppServicePreDeploymentData = getAzureAppServicePreDeploymentData(dockerDeploymentContext);
+      azureAppServiceDeploymentService.deployDockerImage(dockerDeploymentContext, azureAppServicePreDeploymentData);
       List<AzureAppDeploymentData> azureAppDeploymentData = azureAppServiceDeploymentService.fetchDeploymentData(
           azureWebClientContext, azureWebAppSlotSetupParameters.getSlotName());
+      markDeploymentStatusAsSuccess(azureAppServiceTaskParameters, logStreamingTaskClient);
 
-      markExecutionAsSuccess(azureAppServiceTaskParameters, logStreamingTaskClient);
       return AzureWebAppSlotSetupResponse.builder()
           .azureAppDeploymentData(azureAppDeploymentData)
           .preDeploymentData(azureAppServicePreDeploymentData)
@@ -71,7 +74,6 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
     } catch (Exception ex) {
       String message = AzureResourceUtility.getAzureCloudExceptionMessage(ex);
       logErrorMsg(azureAppServiceTaskParameters, logStreamingTaskClient, ex, message);
-      updatePreDeploymentData(azureAppServicePreDeploymentData);
       return AzureWebAppSlotSetupResponse.builder()
           .errorMsg(message)
           .preDeploymentData(azureAppServicePreDeploymentData)
@@ -180,10 +182,5 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
     Map<String, AzureAppServiceConnectionString> userAddedConnSettings = dockerDeploymentContext.getConnSettingsToAdd();
     return azureAppServiceDeploymentService.getAzureAppServicePreDeploymentData(azureWebClientContext, slotName,
         userAddedAppSettings, userAddedConnSettings, dockerDeploymentContext.getLogStreamingTaskClient());
-  }
-
-  private void updatePreDeploymentData(AzureAppServicePreDeploymentData azureAppServicePreDeploymentData) {
-    azureAppServicePreDeploymentData.setFailedTaskType(
-        AzureAppServiceTaskParameters.AzureAppServiceTaskType.SLOT_SETUP);
   }
 }

@@ -85,7 +85,7 @@ public class AzureWebAppSlotShiftTraffic extends AbstractAzureAppServiceState {
 
   @Override
   protected List<CommandUnit> commandUnits() {
-    return ImmutableList.of(new AzureWebAppCommandUnit(AzureConstants.SLOT_TRAFFIC_WEIGHT),
+    return ImmutableList.of(new AzureWebAppCommandUnit(AzureConstants.SLOT_TRAFFIC_PERCENTAGE),
         new AzureWebAppCommandUnit(AzureConstants.DEPLOYMENT_STATUS));
   }
 

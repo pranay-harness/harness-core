@@ -48,7 +48,7 @@ public interface AzureConstants {
   String DOWN_SCALE_COMMAND_UNIT = "Downscale Virtual Machine Scale Set";
   String DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT = "Downscale wait for steady state";
   String CREATE_NEW_VMSS_COMMAND_UNIT = "Create New Virtual Machine Scale Set";
-  String DEPLOYMENT_STATUS = "Final Deployment status";
+  String DEPLOYMENT_STATUS = "Deployment status";
   String DEPLOYMENT_ERROR = "Failed Deployment status";
   String DELETE_NEW_VMSS = "Delete New Virtual Machine Scale Set";
   String AZURE_VMSS_SWAP_BACKEND_POOL = "Swap VMSS Backend Pool";
@@ -162,7 +162,7 @@ public interface AzureConstants {
   String UPDATE_DEPLOYMENT_SLOT_CONFIGURATION_SETTINGS = "Update Slot Configuration Settings";
   String UPDATE_DEPLOYMENT_SLOT_CONTAINER_SETTINGS = "Update Slot Container Settings";
   String START_DEPLOYMENT_SLOT = "Start Slot";
-  String SLOT_TRAFFIC_WEIGHT = "Update Slot Traffic Percentage";
+  String SLOT_TRAFFIC_PERCENTAGE = "Update Slot Traffic Percentage";
   String SLOT_SWAP = "Swap Slots";
   long SLOT_STARTING_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
   long SLOT_STOPPING_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);

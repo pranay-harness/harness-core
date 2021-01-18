@@ -22,6 +22,7 @@ import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentDat
 import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppSlotSetupParameters;
 import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppSlotSetupParameters.AzureWebAppSlotSetupParametersBuilder;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotSetupResponse;
+import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.api.InstanceElement;
@@ -151,6 +152,20 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
   @Override
   protected ExecutionResponse processDelegateResponse(
       AzureTaskExecutionResponse executionResponse, ExecutionContext context, ExecutionStatus executionStatus) {
+    if (executionResponse.getAzureTaskResponse() == null) {
+      // There is no need to save context element and do rollback for the cases
+      // when some error happens before starting slot setup on delegate side.
+      // Errors could be thrown during decryption slot setup params, collecting pre-deployment data or building docker
+      // context and we don't need do rollback, just investigate error.
+      log.error("Slot setup response is empty, error happens before starting slot setup, executionStatus {}",
+          executionStatus);
+      if (executionStatus.equals(ExecutionStatus.FAILED)) {
+        return prepareExecutionResponse(executionResponse, context, executionStatus);
+      } else {
+        // Unexpected behaviour, here execution status should be FAILED, explore logs
+        throw new InvalidRequestException("Unable to start slot setup step");
+      }
+    }
     saveContextElementToSweepingOutput(executionResponse, context);
     return prepareExecutionResponse(executionResponse, context, executionStatus);
   }

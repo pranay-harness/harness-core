@@ -16,6 +16,7 @@ import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlot
 import io.harness.exception.InvalidArgumentsException;
 
 import software.wings.delegatetasks.azure.appservice.webapp.AbstractAzureWebAppTaskHandler;
+import software.wings.delegatetasks.azure.appservice.webapp.AppServiceDeploymentProgress;
 
 public class AzureWebAppSlotShiftTrafficTaskHandler extends AbstractAzureWebAppTaskHandler {
   @Override
@@ -29,7 +30,7 @@ public class AzureWebAppSlotShiftTrafficTaskHandler extends AbstractAzureWebAppT
 
     updateSlotTrafficWeight(slotShiftTrafficParameters, webClientContext, logStreamingTaskClient);
 
-    markExecutionAsSuccess(azureAppServiceTaskParameters, logStreamingTaskClient);
+    markDeploymentStatusAsSuccess(azureAppServiceTaskParameters, logStreamingTaskClient);
     return AzureWebAppSlotShiftTrafficResponse.builder()
         .preDeploymentData(slotShiftTrafficParameters.getPreDeploymentData())
         .build();
@@ -46,8 +47,8 @@ public class AzureWebAppSlotShiftTrafficTaskHandler extends AbstractAzureWebAppT
       throw new InvalidArgumentsException(SHIFT_TRAFFIC_SLOT_NAME_BLANK_ERROR_MSG);
     }
 
-    double trafficWeightInPercentage = slotShiftTrafficParameters.getTrafficWeightInPercentage();
-    if (trafficWeightInPercentage > 100.0 || trafficWeightInPercentage < 0) {
+    double trafficPercent = slotShiftTrafficParameters.getTrafficWeightInPercentage();
+    if (trafficPercent > 100.0 || trafficPercent < 0) {
       throw new InvalidArgumentsException(TRAFFIC_WEIGHT_IN_PERCENTAGE_INVALID_ERROR_MSG);
     }
   }
@@ -56,7 +57,8 @@ public class AzureWebAppSlotShiftTrafficTaskHandler extends AbstractAzureWebAppT
       AzureWebClientContext webClientContext, ILogStreamingTaskClient logStreamingTaskClient) {
     String shiftTrafficSlotName = slotShiftTrafficParameters.getDeploymentSlot();
     double trafficWeightInPercentage = slotShiftTrafficParameters.getTrafficWeightInPercentage();
-
+    slotShiftTrafficParameters.getPreDeploymentData().setDeploymentProgressMarker(
+        AppServiceDeploymentProgress.UPDATE_TRAFFIC_PERCENT.name());
     azureAppServiceDeploymentService.rerouteProductionSlotTraffic(
         webClientContext, shiftTrafficSlotName, trafficWeightInPercentage, logStreamingTaskClient);
   }

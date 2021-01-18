@@ -14,6 +14,7 @@ public class AzureAppServicePreDeploymentData {
   private String appName;
   private String slotName;
   private double trafficWeight;
+  private String deploymentProgressMarker;
   private Map<String, AzureAppServiceApplicationSettingDTO> appSettingsToRemove;
   private Map<String, AzureAppServiceApplicationSettingDTO> appSettingsToAdd;
   private Map<String, AzureAppServiceConnectionStringDTO> connStringsToRemove;
