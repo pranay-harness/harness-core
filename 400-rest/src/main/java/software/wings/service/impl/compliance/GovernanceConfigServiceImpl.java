@@ -3,8 +3,18 @@ package software.wings.service.impl.compliance;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.FeatureName;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.event.handler.impl.segment.SegmentHelper;
 import io.harness.event.model.EventType;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
+import io.harness.governance.BlackoutWindowFilterType;
+import io.harness.governance.CustomAppFilter;
+import io.harness.governance.EnvironmentFilter.EnvironmentFilterType;
+import io.harness.governance.GovernanceFreezeConfig;
+import io.harness.governance.TimeRangeBasedFreezeConfig;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 
@@ -26,6 +36,10 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.segment.analytics.messages.TrackMessage;
 import com.segment.analytics.messages.TrackMessage.Builder;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +58,7 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
   @Inject private AccountService accountService;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private SegmentHelper segmentHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public GovernanceConfig get(String accountId) {
@@ -86,6 +101,10 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
         log.error("ThreadLocal User is null when trying to update governance config. accountId={}", accountId);
       }
 
+      if (featureFlagService.isEnabled(FeatureName.TIME_RANGE_FREEZE_GOVERNANCE_DEV, accountId)) {
+        validateDeploymentFreezeInput(governanceConfig.getTimeRangeBasedFreezeConfigs());
+      }
+
       GovernanceConfig updatedSetting =
           wingsPersistence.findAndModify(query, updateOperations, WingsPersistence.upsertReturnNewOptions);
       auditDeploymentFreeze(accountId, oldSetting, updatedSetting);
@@ -101,6 +120,40 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
 
       return updatedSetting;
     }
+  }
+
+  private void validateDeploymentFreezeInput(List<TimeRangeBasedFreezeConfig> timeRangeBasedFreezeConfigs) {
+    if (EmptyPredicate.isEmpty(timeRangeBasedFreezeConfigs)) {
+      return;
+    }
+
+    Set<String> freezeNameSet = new HashSet<>();
+    timeRangeBasedFreezeConfigs.stream().map(GovernanceFreezeConfig::getName).filter(Objects::nonNull).forEach(name -> {
+      if (freezeNameSet.contains(name)) {
+        throw new InvalidRequestException(
+            String.format("Duplicate Deployment Freeze name %s found.", name), WingsException.USER);
+      }
+      freezeNameSet.add(name);
+    });
+    timeRangeBasedFreezeConfigs.stream()
+        .filter(freeze -> EmptyPredicate.isNotEmpty(freeze.getAppSelections()))
+        .forEach(deploymentFreeze -> {
+          if (deploymentFreeze.getAppSelections().stream().anyMatch(appSelection
+                  -> appSelection.getFilterType() != BlackoutWindowFilterType.CUSTOM
+                      && appSelection.getEnvSelection().getFilterType() == EnvironmentFilterType.CUSTOM)) {
+            throw new InvalidRequestException(
+                "Environment filter type can be CUSTOM only when Application Filter type is CUSTOM");
+          }
+          if (deploymentFreeze.getAppSelections()
+                  .stream()
+                  .filter(selection -> selection.getFilterType() == BlackoutWindowFilterType.CUSTOM)
+                  .anyMatch(appSelection
+                      -> appSelection.getEnvSelection().getFilterType() == EnvironmentFilterType.CUSTOM
+                          && ((CustomAppFilter) appSelection).getApps().size() != 1)) {
+            throw new InvalidRequestException(
+                "Application filter should have exactly one app when environment filter type is CUSTOM");
+          }
+        });
   }
 
   private void auditDeploymentFreeze(String accountId, GovernanceConfig oldConfig, GovernanceConfig updatedConfig) {

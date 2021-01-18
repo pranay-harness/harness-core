@@ -31,8 +31,11 @@ public class TimeRangeBasedFreezeConfig extends GovernanceFreezeConfig {
   public TimeRangeBasedFreezeConfig(@JsonProperty("freezeForAllApps") boolean freezeForAllApps,
       @JsonProperty("appIds") List<String> appIds,
       @JsonProperty("environmentTypes") List<EnvironmentType> environmentTypes,
-      @JsonProperty("timeRange") TimeRange timeRange) {
-    super(freezeForAllApps, appIds, environmentTypes);
+      @JsonProperty("timeRange") TimeRange timeRange, @JsonProperty("name") String name,
+      @JsonProperty("description") String description, @JsonProperty("applicable") boolean applicable,
+      @JsonProperty("appSelections") List<ApplicationFilter> appSelections,
+      @JsonProperty("userGroups") List<String> userGroups) {
+    super(freezeForAllApps, appIds, environmentTypes, name, description, applicable, appSelections, userGroups);
     this.timeRange = Objects.requireNonNull(timeRange, "time-range not provided for deployment freeze");
 
     if (timeRange.getFrom() > timeRange.getTo()) {
