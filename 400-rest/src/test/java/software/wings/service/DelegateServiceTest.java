@@ -720,8 +720,20 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldRegisterDelegateParams() {
     String accountId = generateUuid();
+
+    DelegateSizeDetails sizeDetails = DelegateSizeDetails.builder()
+                                          .size(DelegateSize.EXTRA_SMALL)
+                                          .label("Extra Small")
+                                          .replicas(1)
+                                          .taskLimit(50)
+                                          .cpu(0.5)
+                                          .ram(500)
+                                          .build();
+
     DelegateParams params = DelegateParams.builder()
                                 .accountId(accountId)
+                                .sessionIdentifier("sessionId")
+                                .delegateSize(DelegateSize.EXTRA_SMALL.name())
                                 .hostName(HOST_NAME)
                                 .description(DESCRIPTION)
                                 .delegateType(DOCKER_DELEGATE)
@@ -741,6 +753,8 @@ public class DelegateServiceTest extends WingsBaseTest {
     Delegate delegateFromDb = delegateService.get(accountId, registerResponse.getDelegateId(), true);
 
     assertThat(delegateFromDb.getAccountId()).isEqualTo(params.getAccountId());
+    assertThat(delegateFromDb.getSessionIdentifier()).isEqualTo(params.getSessionIdentifier());
+    assertThat(delegateFromDb.getSizeDetails()).isEqualTo(sizeDetails);
     assertThat(delegateFromDb.getHostName()).isEqualTo(params.getHostName());
     assertThat(delegateFromDb.getDescription()).isEqualTo(params.getDescription());
     assertThat(delegateFromDb.getDelegateType()).isEqualTo(params.getDelegateType());
