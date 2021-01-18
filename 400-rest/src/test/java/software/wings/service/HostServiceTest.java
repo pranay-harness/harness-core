@@ -3,6 +3,7 @@ package software.wings.service;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.shell.AccessType.USER_PASSWORD;
 
@@ -11,18 +12,24 @@ import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnect
 import static software.wings.beans.HostConnectionCredential.HostConnectionCredentialBuilder.aHostConnectionCredential;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
+import static software.wings.beans.infrastructure.Host.HostKeys;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;
 import static software.wings.utils.WingsTestConstants.HOST_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
+import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.PUBLIC_DNS;
+import static software.wings.utils.WingsTestConstants.SERVICE_TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
+import static software.wings.utils.WingsTestConstants.UUID;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyCollection;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -48,9 +55,11 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.utils.HostCsvFileHelper;
 import software.wings.utils.WingsTestConstants;
 
+import com.amazonaws.services.ec2.model.Instance;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.util.List;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -210,6 +219,43 @@ public class HostServiceTest extends WingsBaseTest {
     verify(hostQueryEnd).hasAnyOf(asList(HOST_ID));
     assertThat(hosts.get(0)).isInstanceOf(Host.class);
     assertThat(hosts.get(0).getUuid()).isEqualTo(HOST_ID);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testSaveHost() {
+    Host host = getCleanHost();
+    doReturn(host).when(wingsPersistence).saveAndGet(Host.class, host);
+    Host savedHost = hostService.saveHost(host);
+    verify(wingsPersistence).saveAndGet(Host.class, host);
+    assertThat(savedHost).isEqualTo(host);
+
+    Host host1 = getCleanHost();
+    host1.setUuid(UUID);
+    Instance aInstance = new Instance().withInstanceId("A");
+    host1.setEc2Instance(aInstance);
+    doReturn(host1).when(hostQuery).get();
+
+    Host host2 = getCleanHost();
+    host2.setUuid(UUID);
+    Instance bInstance = new Instance().withInstanceId("B");
+    host2.setEc2Instance(bInstance);
+    savedHost = hostService.saveHost(host2);
+    assertThat(savedHost.getEc2Instance().getInstanceId()).isEqualTo("B");
+    verify(wingsPersistence).updateField(Host.class, UUID, HostKeys.ec2Instance, bInstance);
+  }
+
+  @NotNull
+  private Host getCleanHost() {
+    return aHost()
+        .withServiceTemplateId(SERVICE_TEMPLATE_ID)
+        .withHostName(HOST_NAME)
+        .withPublicDns(PUBLIC_DNS)
+        .withAppId(APP_ID)
+        .withEnvId(ENV_ID)
+        .withInfraMappingId(INFRA_MAPPING_ID)
+        .build();
   }
 
   /**
