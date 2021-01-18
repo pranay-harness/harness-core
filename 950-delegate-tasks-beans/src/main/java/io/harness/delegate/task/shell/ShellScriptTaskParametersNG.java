@@ -1,7 +1,10 @@
 package io.harness.delegate.task.shell;
 
+import static io.harness.expression.Expression.ALLOW_SECRETS;
+
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
+import io.harness.expression.Expression;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.shell.ScriptType;
@@ -15,7 +18,7 @@ import lombok.Value;
 @Builder
 public class ShellScriptTaskParametersNG implements TaskParameters {
   boolean executeOnDelegate;
-  String script;
+  @Expression(ALLOW_SECRETS) String script;
   List<String> outputVars;
   String accountId;
   String executionId;
