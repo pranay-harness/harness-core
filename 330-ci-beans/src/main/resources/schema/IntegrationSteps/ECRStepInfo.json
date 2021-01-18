@@ -17,8 +17,8 @@
           "type": "string"
         },
         "buildArgs": {
-          "type": "array",
-          "items": {
+          "type": "object",
+          "additionalProperties": {
             "type": "string"
           }
         },

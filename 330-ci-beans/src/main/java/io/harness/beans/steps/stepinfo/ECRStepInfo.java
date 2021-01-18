@@ -64,9 +64,9 @@ public class ECRStepInfo implements PluginCompatibleStep {
   @YamlSchemaTypes(value = {map, string}, defaultType = map)
   @ApiModelProperty(dataType = STRING_MAP_CLASSPATH)
   private ParameterField<Map<String, String>> labels;
-  @YamlSchemaTypes(value = {list, string}, defaultType = list)
-  @ApiModelProperty(dataType = STRING_LIST_CLASSPATH)
-  private ParameterField<List<String>> buildArgs;
+  @YamlSchemaTypes(value = {map, string}, defaultType = map)
+  @ApiModelProperty(dataType = STRING_MAP_CLASSPATH)
+  private ParameterField<Map<String, String>> buildArgs;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "containerImage", "resources", "account",
@@ -75,7 +75,7 @@ public class ECRStepInfo implements PluginCompatibleStep {
       ParameterField<String> containerImage, ContainerResource resources, ParameterField<String> account,
       ParameterField<String> region, ParameterField<String> imageName, ParameterField<List<String>> tags,
       ParameterField<String> context, ParameterField<String> dockerfile, ParameterField<String> target,
-      ParameterField<Map<String, String>> labels, ParameterField<List<String>> buildArgs) {
+      ParameterField<Map<String, String>> labels, ParameterField<Map<String, String>> buildArgs) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
