@@ -146,11 +146,11 @@ public class SecretUtils {
 
     } catch (IOException e) {
       log.error(format("Unable to get secret information : [%s] with scope: [%s]", identifierRef.getIdentifier(),
-          identifierRef.getScope()));
+                    identifierRef.getScope()),
+          e);
 
       throw new CIStageExecutionException(format("Unable to get secret information : [%s] with scope: [%s]",
-                                              identifierRef.getIdentifier(), identifierRef.getScope()),
-          e);
+          identifierRef.getIdentifier(), identifierRef.getScope()));
     }
 
     if (secretResponseWrapper == null) {

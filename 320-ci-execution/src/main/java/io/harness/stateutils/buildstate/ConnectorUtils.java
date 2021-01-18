@@ -377,10 +377,10 @@ public class ConnectorUtils {
 
     } catch (Exception e) {
       log.error(format("Unable to get connector information : [%s] with scope: [%s]", connectorRef.getIdentifier(),
-          connectorRef.getScope()));
-      throw new CIStageExecutionException(format("Unable to get connector information : [%s] with scope: [%s]",
-                                              connectorRef.getIdentifier(), connectorRef.getScope()),
+                    connectorRef.getScope()),
           e);
+      throw new CIStageExecutionException(format("Unable to get connector information : [%s] with scope: [%s]",
+          connectorRef.getIdentifier(), connectorRef.getScope()));
     }
 
     if (!connectorDTO.isPresent()) {
@@ -414,8 +414,9 @@ public class ConnectorUtils {
         return ((BitbucketUsernameTokenApiAccessDTO) gitConfigDTO.getApiAccess().getSpec()).getUsername();
       }
     } catch (Exception ex) {
+      log.error(format("Unable to get username information from api access for identifier %s", identifier), ex);
       throw new CIStageExecutionException(
-          format("Unable to get username information from api access for identifier %s", identifier), ex);
+          format("Unable to get username information from api access for identifier %s", identifier));
     }
     throw new CIStageExecutionException(
         format("Unable to get username information from api access for identifier %s", identifier));
