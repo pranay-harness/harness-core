@@ -194,10 +194,10 @@ public class DelegateSetupResourceTest {
   public void shouldFetchDelegateSizes() {
     List<DelegateSizeDetails> delegateSizes = Collections.singletonList(DelegateSizeDetails.builder()
                                                                             .size(DelegateSize.EXTRA_SMALL)
+                                                                            .label("Extra Small")
                                                                             .replicas(1)
                                                                             .taskLimit(25)
                                                                             .cpu(0.5)
-                                                                            .disk(10)
                                                                             .ram(1024)
                                                                             .build());
     when(delegateService.fetchAvailableSizes()).thenReturn(delegateSizes);
