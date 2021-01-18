@@ -8,6 +8,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -18,7 +19,6 @@ import io.harness.queue.QueuePublisher;
 
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityKeys;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.Log;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.Command.CommandKeys;

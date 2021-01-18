@@ -1,5 +1,6 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pcf.model.PcfConstants.INSTANCE_PLACEHOLDER_TOKEN_DEPRECATED;
 import static io.harness.pcf.model.PcfConstants.LEGACY_NAME_PCF_MANIFEST;
@@ -12,7 +13,6 @@ import static io.harness.rule.OwnerRule.TMACARI;
 
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.EnvironmentType.PROD;
 import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.TaskType.COMMAND;
 import static software.wings.beans.appmanifest.StoreType.Local;

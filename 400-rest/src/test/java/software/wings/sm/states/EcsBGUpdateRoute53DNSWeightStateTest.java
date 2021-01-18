@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -9,7 +10,6 @@ import static software.wings.api.DeploymentType.ECS;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.EnvironmentType.PROD;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;

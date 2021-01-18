@@ -1,12 +1,12 @@
 package software.wings.beans;
 
+import static io.harness.beans.EnvironmentType.NON_PROD;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.TriggeredBy.triggeredBy;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.rule.OwnerRule.VGLIJIN;
 
 import static software.wings.beans.Activity.Type.Verification;
-import static software.wings.beans.EnvironmentType.NON_PROD;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;

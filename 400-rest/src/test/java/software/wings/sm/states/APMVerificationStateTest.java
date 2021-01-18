@@ -22,6 +22,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
@@ -33,7 +34,6 @@ import software.wings.api.HostElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.beans.APMVerificationConfig;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.apm.APMMetricInfo;
 import software.wings.service.impl.apm.CustomAPMDataCollectionInfo;

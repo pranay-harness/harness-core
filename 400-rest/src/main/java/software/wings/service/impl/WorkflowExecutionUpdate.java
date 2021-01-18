@@ -13,6 +13,7 @@ import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -28,7 +29,6 @@ import io.harness.waiter.WaitNotifyEngine;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.EnvSummary;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.WorkflowExecution;

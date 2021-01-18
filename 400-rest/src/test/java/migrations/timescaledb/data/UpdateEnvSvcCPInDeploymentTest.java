@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.event.usagemetrics.UsageMetricsTestUtils.UsageMetricsTestKeys;
@@ -19,7 +20,6 @@ import io.harness.timescaledb.TimeScaleDBService;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.EnvSummary;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.PipelineExecution.Builder;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.WorkflowExecution;

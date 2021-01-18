@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.EnvironmentType.NON_PROD;
+import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
@@ -16,8 +18,6 @@ import static io.harness.rule.OwnerRule.VUK;
 
 import static software.wings.beans.Delegate.Status.ENABLED;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.EnvironmentType.NON_PROD;
-import static software.wings.beans.EnvironmentType.PROD;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.service.impl.AssignDelegateServiceImpl.BLACKLIST_TTL;
 import static software.wings.service.impl.AssignDelegateServiceImpl.ERROR_MESSAGE;

@@ -40,6 +40,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.beans.EnvironmentType;
 import io.harness.cache.HarnessCacheManager;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
@@ -56,7 +57,6 @@ import software.wings.beans.Application;
 import software.wings.beans.AuthToken;
 import software.wings.beans.Base;
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.User;

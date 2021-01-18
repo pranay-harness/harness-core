@@ -5,6 +5,7 @@ import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.BEFORE;
 
 import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unified;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.budget.entities.ApplicationBudgetScope;
 import io.harness.ccm.budget.entities.Budget;
@@ -26,7 +27,6 @@ import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
-import software.wings.beans.EnvironmentType;
 import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.billing.CloudBillingHelper;
 import software.wings.graphql.datafetcher.billing.QLBillingAmountData;

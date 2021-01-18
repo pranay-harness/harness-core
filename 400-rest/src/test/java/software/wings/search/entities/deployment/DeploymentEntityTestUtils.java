@@ -1,8 +1,7 @@
 package software.wings.search.entities.deployment;
 
+import static io.harness.beans.EnvironmentType.NON_PROD;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-
-import static software.wings.beans.EnvironmentType.NON_PROD;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;

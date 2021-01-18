@@ -4,9 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.EnvironmentType;
 
 import software.wings.beans.EntityType;
-import software.wings.beans.EnvironmentType;
 import software.wings.search.entities.related.audit.RelatedAuditView;
 import software.wings.search.entities.related.deployment.RelatedDeploymentView;
 import software.wings.search.framework.EntityBaseView;

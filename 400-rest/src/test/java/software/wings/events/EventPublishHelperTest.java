@@ -30,6 +30,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse.PageResponseBuilder;
@@ -46,7 +47,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
 import software.wings.beans.EntityType;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;

@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.EnvironmentType.NON_PROD;
+import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.PAUSED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
@@ -10,8 +12,6 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 import static software.wings.api.CloudProviderType.PCF;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
-import static software.wings.beans.EnvironmentType.NON_PROD;
-import static software.wings.beans.EnvironmentType.PROD;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.execution.RollbackType.AUTO;

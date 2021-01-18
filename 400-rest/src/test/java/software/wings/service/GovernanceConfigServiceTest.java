@@ -12,6 +12,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -20,7 +21,6 @@ import io.harness.governance.WeeklyFreezeConfig;
 import io.harness.rule.Owner;
 
 import software.wings.beans.Account;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.Event;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.User;

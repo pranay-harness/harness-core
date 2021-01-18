@@ -1,5 +1,8 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.EnvironmentType.ALL;
+import static io.harness.beans.EnvironmentType.NON_PROD;
+import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -7,9 +10,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.time.EpochUtils.PST_ZONE_ID;
 import static io.harness.validation.Validator.notNullCheck;
 
-import static software.wings.beans.EnvironmentType.ALL;
-import static software.wings.beans.EnvironmentType.NON_PROD;
-import static software.wings.beans.EnvironmentType.PROD;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 
 import static java.util.Comparator.comparing;
@@ -17,11 +17,11 @@ import static java.util.Comparator.reverseOrder;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.time.EpochUtils;
 
 import software.wings.beans.ElementExecutionSummary;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.stats.DeploymentStatistics;
 import software.wings.beans.stats.DeploymentStatistics.AggregatedDayStats;

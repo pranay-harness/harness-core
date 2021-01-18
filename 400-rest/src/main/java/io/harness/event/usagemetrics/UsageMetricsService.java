@@ -11,6 +11,7 @@ import static io.harness.event.model.EventConstants.VERIFICATION_STATE_TYPE;
 import static java.util.function.Function.identity;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -19,7 +20,6 @@ import io.harness.metrics.HarnessMetricRegistry;
 
 import software.wings.beans.Account;
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;

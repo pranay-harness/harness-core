@@ -4,9 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EnvironmentType;
 
 import software.wings.beans.EnvSummary;
-import software.wings.beans.EnvironmentType;
 
 import java.util.List;
 import lombok.Builder;

@@ -6,6 +6,7 @@ import static software.wings.beans.security.UserGroup.DEFAULT_ACCOUNT_ADMIN_USER
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.functional.WorkflowUtils;
 import io.harness.generator.AccountGenerator;
@@ -27,7 +28,6 @@ import software.wings.beans.AccountType;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.LicenseUpdateInfo;
 import software.wings.beans.SettingAttribute;

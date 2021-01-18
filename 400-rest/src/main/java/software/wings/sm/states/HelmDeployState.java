@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -11,7 +12,6 @@ import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.beans.EnvironmentType.ALL;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.TaskType.HELM_COMMAND_TASK;
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;

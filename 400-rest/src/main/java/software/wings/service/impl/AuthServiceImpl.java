@@ -31,6 +31,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EnvironmentType;
 import io.harness.cache.HarnessCacheManager;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.entity.ServiceSecretKey.ServiceType;
@@ -53,7 +54,6 @@ import software.wings.beans.Application;
 import software.wings.beans.AuthToken;
 import software.wings.beans.AuthToken.AuthTokenKeys;
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.Event;
 import software.wings.beans.Permission;
 import software.wings.beans.Pipeline;

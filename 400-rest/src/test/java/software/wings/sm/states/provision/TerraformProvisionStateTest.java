@@ -1,5 +1,6 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.SweepingOutputInstance.Scope;
 import static io.harness.beans.SweepingOutputInstance.builder;
 import static io.harness.context.ContextElementType.TERRAFORM_INHERIT_PLAN;
@@ -12,7 +13,6 @@ import static io.harness.rule.OwnerRule.YOGESH;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.beans.EnvironmentType.ALL;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -51,6 +51,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.FileMetadata;
@@ -79,7 +80,6 @@ import software.wings.api.terraform.TfVarGitSource;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.InfrastructureProvisioner;

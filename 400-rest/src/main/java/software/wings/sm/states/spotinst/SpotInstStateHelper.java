@@ -18,6 +18,7 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.beans.DelegateTask;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.SweepingOutputInstance;
@@ -50,7 +51,6 @@ import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SpotInstConfig;
 import software.wings.beans.TaskType;

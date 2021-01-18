@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher;
 
 import static software.wings.beans.Account.Builder.anAccount;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.ccm.cluster.ClusterRecordService;
@@ -19,7 +20,6 @@ import software.wings.beans.Application.Builder;
 import software.wings.beans.BuildWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.HarnessTagLink;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.PhysicalDataCenterConfig;

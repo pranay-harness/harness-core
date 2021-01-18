@@ -4,9 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.govern.Switch.unhandled;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EnvironmentType;
 
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentType;
 import software.wings.graphql.datafetcher.user.UserController;
 import software.wings.graphql.schema.type.QLEnvironment.QLEnvironmentBuilder;
 import software.wings.graphql.schema.type.QLEnvironmentType;

@@ -3,8 +3,8 @@ package software.wings.security;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EnvironmentType;
 
-import software.wings.beans.EnvironmentType;
 import software.wings.security.PermissionAttribute.Action;
 
 import java.util.Map;

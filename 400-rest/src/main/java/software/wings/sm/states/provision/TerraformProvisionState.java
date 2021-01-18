@@ -1,5 +1,6 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
@@ -32,7 +33,6 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.beans.EnvironmentType.ALL;
 import static software.wings.beans.TaskType.TERRAFORM_PROVISION_TASK;
 import static software.wings.beans.delegation.TerraformProvisionParameters.TIMEOUT_IN_MINUTES;
 import static software.wings.utils.Utils.splitCommaSeparatedFilePath;

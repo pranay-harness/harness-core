@@ -6,12 +6,12 @@ import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.beans.EnvironmentType;
 import io.harness.category.element.UnitTests;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
 import io.harness.governance.WeeklyFreezeConfig;
 import io.harness.rule.Owner;
 
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.governance.GovernanceConfig;
 
 import java.util.Calendar;

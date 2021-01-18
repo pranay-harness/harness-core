@@ -45,6 +45,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
 import io.harness.category.element.UnitTests;
@@ -62,7 +63,6 @@ import software.wings.api.ServiceElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.Variable;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.template.TemplateUtils;

@@ -27,6 +27,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
@@ -40,7 +41,6 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.VariableOverrideYaml;
 import software.wings.beans.Environment.Yaml;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;

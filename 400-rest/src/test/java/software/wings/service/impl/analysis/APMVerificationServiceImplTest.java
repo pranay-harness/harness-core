@@ -22,6 +22,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.beans.DelegateTask;
+import io.harness.beans.EnvironmentType;
 import io.harness.category.element.UnitTests;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.VerificationOperationException;
@@ -39,7 +40,6 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PrometheusConfig;

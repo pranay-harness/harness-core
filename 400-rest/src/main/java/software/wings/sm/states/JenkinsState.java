@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
@@ -12,7 +13,6 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.beans.EnvironmentType.ALL;
 
 import static java.util.stream.Collectors.toMap;
 

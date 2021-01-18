@@ -2,6 +2,7 @@ package software.wings.beans.infrastructure.instance;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.EnvironmentType;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.Field;
@@ -13,7 +14,6 @@ import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
 
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.infrastructure.instance.info.ServerlessInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.AwsLambdaInstanceKey;

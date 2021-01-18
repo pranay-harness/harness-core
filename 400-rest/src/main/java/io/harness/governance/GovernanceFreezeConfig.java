@@ -2,9 +2,8 @@ package io.harness.governance;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.data.structure.CollectionUtils;
-
-import software.wings.beans.EnvironmentType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;

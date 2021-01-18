@@ -11,6 +11,7 @@ import static java.util.Collections.emptySet;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -28,7 +29,6 @@ import software.wings.beans.Base;
 import software.wings.beans.EntityReference;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.User;

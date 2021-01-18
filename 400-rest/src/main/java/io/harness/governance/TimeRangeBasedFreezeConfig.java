@@ -1,9 +1,9 @@
 package io.harness.governance;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 
-import software.wings.beans.EnvironmentType;
 import software.wings.resources.stats.model.TimeRange;
 
 import com.fasterxml.jackson.annotation.JsonProperty;

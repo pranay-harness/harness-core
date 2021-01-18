@@ -1,5 +1,6 @@
 package software.wings.sm.states.customdeployment;
 
+import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.SweepingOutputInstance.Scope.WORKFLOW;
@@ -8,7 +9,6 @@ import static io.harness.rule.OwnerRule.YOGESH;
 
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.EnvironmentType.PROD;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.sm.states.customdeployment.InstanceFetchState.OUTPUT_PATH_KEY;

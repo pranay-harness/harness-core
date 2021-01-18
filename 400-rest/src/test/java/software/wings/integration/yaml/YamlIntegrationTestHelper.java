@@ -16,6 +16,7 @@ import static software.wings.settings.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.exception.GitConnectionDelegateException;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -27,7 +28,6 @@ import software.wings.beans.Application;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.ConnectionType;

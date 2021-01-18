@@ -1,6 +1,7 @@
 package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.beans.TriggeredBy.triggeredBy;
@@ -15,7 +16,6 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.beans.EnvironmentType.ALL;
 import static software.wings.beans.ServiceVariable.Type.TEXT;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;

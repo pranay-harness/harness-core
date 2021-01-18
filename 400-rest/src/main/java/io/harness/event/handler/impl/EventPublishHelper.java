@@ -32,6 +32,7 @@ import static software.wings.beans.security.UserGroup.DEFAULT_READ_ONLY_USER_GRO
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -50,7 +51,6 @@ import software.wings.beans.AccountType;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.EntityType;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.TechStack;
 import software.wings.beans.User;

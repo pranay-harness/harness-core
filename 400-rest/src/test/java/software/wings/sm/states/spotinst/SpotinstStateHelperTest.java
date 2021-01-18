@@ -1,5 +1,6 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.beans.OrchestrationWorkflowType.BASIC;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static io.harness.beans.OrchestrationWorkflowType.CANARY;
@@ -12,7 +13,6 @@ import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.EnvironmentType.PROD;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.TaskType.SPOTINST_COMMAND_TASK;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
