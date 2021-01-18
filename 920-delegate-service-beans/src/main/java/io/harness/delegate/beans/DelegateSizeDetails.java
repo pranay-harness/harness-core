@@ -9,6 +9,7 @@ import lombok.Value;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DelegateSizeDetails {
   private DelegateSize size;
+  private String label;
   private int taskLimit;
   private int replicas;
 
@@ -21,9 +22,4 @@ public class DelegateSizeDetails {
    * Number of CPUs
    */
   private double cpu;
-
-  /**
-   * Amount of disk space in GBs
-   */
-  private int disk;
 }

@@ -2619,31 +2619,39 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void testFetchAvailableSizes() {
     List<DelegateSizeDetails> delegateSizeDetails = delegateService.fetchAvailableSizes();
     assertThat(delegateSizeDetails).isNotNull();
-    assertThat(delegateSizeDetails).hasSize(3);
+    assertThat(delegateSizeDetails).hasSize(4);
     assertThat(delegateSizeDetails)
         .containsExactlyInAnyOrder(DelegateSizeDetails.builder()
                                        .size(DelegateSize.EXTRA_SMALL)
+                                       .label("Extra Small")
                                        .taskLimit(50)
                                        .replicas(1)
                                        .ram(500)
                                        .cpu(0.5)
-                                       .disk(0)
                                        .build(),
             DelegateSizeDetails.builder()
                 .size(DelegateSize.SMALL)
+                .label("Small")
                 .taskLimit(100)
                 .replicas(2)
                 .ram(1024)
                 .cpu(1)
-                .disk(0)
                 .build(),
             DelegateSizeDetails.builder()
                 .size(DelegateSize.MEDIUM)
+                .label("Medium")
                 .taskLimit(200)
                 .replicas(4)
                 .ram(2048)
                 .cpu(2)
-                .disk(0)
+                .build(),
+            DelegateSizeDetails.builder()
+                .size(DelegateSize.LARGE)
+                .label("Large")
+                .taskLimit(400)
+                .replicas(8)
+                .ram(4096)
+                .cpu(4)
                 .build());
   }
 
