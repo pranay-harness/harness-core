@@ -55,6 +55,8 @@ public class NotificationCoreModule extends AbstractModule {
     install(new UserClientModule(appConfig.getServiceHttpClientConfig(),
         appConfig.getNotificationSecrets().getManagerServiceSecret(), "NotificationService"));
     bind(ChannelService.class).to(ChannelServiceImpl.class);
+    install(new SmtpConfigClientModule(
+        appConfig.getServiceHttpClientConfig(), appConfig.getNotificationSecrets().getManagerServiceSecret()));
     bind(NotificationSettingsService.class).to(NotificationSettingsServiceImpl.class);
     bind(SeedDataPopulaterService.class).to(SeedDataPopulaterServiceImpl.class);
     bind(ChannelService.class).annotatedWith(Names.named(MAILSERVICE)).to(MailServiceImpl.class);

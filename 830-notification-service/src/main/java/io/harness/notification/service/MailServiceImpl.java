@@ -17,6 +17,7 @@ import io.harness.notification.NotificationChannelType;
 import io.harness.notification.SmtpConfig;
 import io.harness.notification.beans.NotificationProcessingResponse;
 import io.harness.notification.exception.NotificationException;
+import io.harness.notification.remote.SmtpConfigResponse;
 import io.harness.notification.remote.dto.EmailSettingDTO;
 import io.harness.notification.remote.dto.NotificationSettingDTO;
 import io.harness.notification.service.api.ChannelService;
@@ -124,26 +125,27 @@ public class MailServiceImpl implements ChannelService {
   private NotificationProcessingResponse send(
       List<String> emailIds, String subject, String body, String notificationId, String accountId) {
     NotificationProcessingResponse notificationProcessingResponse = null;
-    if (notificationSettingsService.getSendNotificationViaDelegate(accountId)) {
+    SmtpConfigResponse smtpConfigResponse = notificationSettingsService.getSmtpConfigResponse(accountId);
+    if (notificationSettingsService.getSendNotificationViaDelegate(accountId) || Objects.nonNull(smtpConfigResponse)) {
       DelegateTaskRequest delegateTaskRequest =
           DelegateTaskRequest.builder()
               .accountId(accountId)
               .taskType("NOTIFY_MAIL")
-              .taskParameters(
-                  MailTaskParams.builder()
-                      .notificationId(notificationId)
-                      .subject(subject)
-                      .body(body)
-                      .emailIds(emailIds)
-                      .smtpConfig(notificationSettingsService.getSmtpConfig(accountId).orElse(smtpConfigDefault))
-                      .build())
+              .taskParameters(MailTaskParams.builder()
+                                  .notificationId(notificationId)
+                                  .subject(subject)
+                                  .body(body)
+                                  .emailIds(emailIds)
+                                  .smtpConfig(smtpConfigResponse.getSmtpConfig())
+                                  .encryptionDetails(smtpConfigResponse.getEncryptionDetails())
+                                  .build())
               .executionTimeout(Duration.ofMinutes(1L))
               .build();
       NotificationTaskResponse notificationTaskResponse =
           (NotificationTaskResponse) delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
       notificationProcessingResponse = notificationTaskResponse.getProcessingResponse();
     } else {
-      notificationProcessingResponse = mailSender.send(emailIds, subject, body, notificationId);
+      notificationProcessingResponse = mailSender.send(emailIds, subject, body, notificationId, smtpConfigDefault);
     }
     log.info(NotificationProcessingResponse.isNotificationResquestFailed(notificationProcessingResponse)
             ? "Notification request {} sent"

@@ -10,6 +10,8 @@ import io.harness.ng.core.user.remote.UserClient;
 import io.harness.notification.NotificationChannelType;
 import io.harness.notification.SmtpConfig;
 import io.harness.notification.entities.NotificationSetting;
+import io.harness.notification.remote.SmtpConfigClient;
+import io.harness.notification.remote.SmtpConfigResponse;
 import io.harness.notification.remote.UserGroupClient;
 import io.harness.notification.repositories.NotificationSettingRepository;
 import io.harness.notification.service.api.NotificationSettingsService;
@@ -32,6 +34,7 @@ public class NotificationSettingsServiceImpl implements NotificationSettingsServ
   private final UserGroupClient userGroupClient;
   private final UserClient userClient;
   private final NotificationSettingRepository notificationSettingRepository;
+  private final SmtpConfigClient smtpConfigClient;
 
   private List<UserGroupDTO> getUserGroups(List<String> userGroupIds) {
     if (isEmpty(userGroupIds)) {
@@ -95,6 +98,17 @@ public class NotificationSettingsServiceImpl implements NotificationSettingsServ
     Optional<NotificationSetting> notificationSettingOptional =
         notificationSettingRepository.findByAccountId(accountId);
     return Optional.ofNullable(notificationSettingOptional.map(NotificationSetting::getSmtpConfig).orElse(null));
+  }
+
+  @Override
+  public SmtpConfigResponse getSmtpConfigResponse(String accountId) {
+    SmtpConfigResponse smtpConfigResponse = null;
+    try {
+      smtpConfigResponse = RestClientUtils.getResponse(smtpConfigClient.getSmtpConfig(accountId));
+    } catch (Exception ex) {
+      log.error("Rest call for getting smtp config failed: ", ex);
+    }
+    return smtpConfigResponse;
   }
 
   @Override

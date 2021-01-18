@@ -11,7 +11,7 @@ import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
-import io.harness.notification.channeldetails.PagerDutyChannel;
+import io.harness.notification.channeldetails.EmailChannel;
 import io.harness.notification.module.NotificationClientApplicationModule;
 import io.harness.notification.notificationclient.NotificationClientImpl;
 import io.harness.queue.QueueListenerController;
@@ -20,7 +20,6 @@ import io.harness.remote.NGObjectMapperHelper;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import io.dropwizard.Application;
@@ -73,14 +72,14 @@ public class NotificationClientApplication extends Application<NotificationClien
     Injector injector = Guice.createInjector(
         new NotificationClientApplicationModule(appConfig), new MetricRegistryModule(metricRegistry));
     NotificationClientImpl notificationClient = injector.getInstance(NotificationClientImpl.class);
-    //    notificationClient.sendNotificationAsync(EmailChannel.builder()
-    //                                                 .accountId("kmpySmUISimoRrJL6NL73w")
-    //                                                 .recipients(Collections.emptyList())
-    //                                                 .team(Team.CD)
-    //                                                 .templateId("email_test")
-    //                                                 .templateData(Collections.emptyMap())
-    //                                                 .userGroupIds(Collections.emptyList())
-    //                                                 .build());
+    notificationClient.sendNotificationAsync(EmailChannel.builder()
+                                                 .accountId("kmpySmUISimoRrJL6NL73w")
+                                                 .recipients(Collections.singletonList("ankush.shaw@harness.io"))
+                                                 .team(Team.CD)
+                                                 .templateId("email_test")
+                                                 .templateData(Collections.emptyMap())
+                                                 .userGroupIds(Collections.emptyList())
+                                                 .build());
     //
     //    notificationClient.sendNotificationAsync(SlackChannel.builder()
     //                                                 .accountId("kmpySmUISimoRrJL6NL73w")
@@ -91,17 +90,17 @@ public class NotificationClientApplication extends Application<NotificationClien
     //                                                 .userGroupIds(Collections.emptyList())
     //                                                 .build());
 
-    NotificationResult result = notificationClient.sendNotificationAsync(
-        PagerDutyChannel.builder()
-            .accountId("kmpySmUISimoRrJL6NL73w")
-            .pagerDutyIntegrationKeys(Collections.emptyList())
-            .team(Team.CD)
-            .templateId("pd_vanilla")
-            .templateData(ImmutableMap.of(
-                "message", "this is test plain message", "link_href", "www.google.com", "link_text", "Google"))
-            .userGroupIds(Collections.emptyList())
-            .build());
-    log.info("Result {}", result.getNotificationId());
+    //    NotificationResult result = notificationClient.sendNotificationAsync(
+    //        PagerDutyChannel.builder()
+    //            .accountId("kmpySmUISimoRrJL6NL73w")
+    //            .pagerDutyIntegrationKeys(Collections.emptyList())
+    //            .team(Team.CD)
+    //            .templateId("pd_vanilla")
+    //            .templateData(ImmutableMap.of(
+    //                "message", "this is test plain message", "link_href", "www.google.com", "link_text", "Google"))
+    //            .userGroupIds(Collections.emptyList())
+    //            .build());
+    //    log.info("Result {}", result.getNotificationId());
 
     //    notificationClient.sendNotificationAsync(MSTeamChannel.builder()
     //                                                 .accountId("kmpySmUISimoRrJL6NL73w")

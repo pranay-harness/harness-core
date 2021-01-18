@@ -16,6 +16,8 @@ public class NotificationRegistrars {
           .addAll(NotificationClientRegistrars.kryoRegistrars)
           .addAll(ProjectAndOrgRegistrars.kryoRegistrars)
           .addAll(WaitEngineRegistrars.kryoRegistrars)
+          .addAll(SMCoreRegistrars.kryoRegistrars)
+          .addAll(ApiServiceBeansRegistrars.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
