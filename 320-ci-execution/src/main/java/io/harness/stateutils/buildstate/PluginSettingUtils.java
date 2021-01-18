@@ -114,10 +114,10 @@ public class PluginSettingUtils {
       setOptionalEnvironmentVariable(map, PLUGIN_TARGET, target);
     }
 
-    List<String> buildArgs =
-        resolveListParameter("buildArgs", "BuildAndPushGCR", identifier, stepInfo.getBuildArgs(), false);
+    Map<String, String> buildArgs =
+        resolveMapParameter("buildArgs", "BuildAndPushGCR", identifier, stepInfo.getBuildArgs(), false);
     if (isNotEmpty(buildArgs)) {
-      setOptionalEnvironmentVariable(map, PLUGIN_BUILD_ARGS, listToStringSlice(buildArgs));
+      setOptionalEnvironmentVariable(map, PLUGIN_BUILD_ARGS, mapToStringSlice(buildArgs));
     }
 
     Map<String, String> labels =
@@ -160,10 +160,10 @@ public class PluginSettingUtils {
       setOptionalEnvironmentVariable(map, PLUGIN_TARGET, target);
     }
 
-    List<String> buildArgs =
-        resolveListParameter("buildArgs", "BuildAndPushECR", identifier, stepInfo.getBuildArgs(), false);
+    Map<String, String> buildArgs =
+        resolveMapParameter("buildArgs", "BuildAndPushECR", identifier, stepInfo.getBuildArgs(), false);
     if (isNotEmpty(buildArgs)) {
-      setOptionalEnvironmentVariable(map, PLUGIN_BUILD_ARGS, listToStringSlice(buildArgs));
+      setOptionalEnvironmentVariable(map, PLUGIN_BUILD_ARGS, mapToStringSlice(buildArgs));
     }
 
     Map<String, String> labels =
@@ -197,9 +197,10 @@ public class PluginSettingUtils {
       setOptionalEnvironmentVariable(map, PLUGIN_TARGET, target);
     }
 
-    List<String> buildArgs = resolveListParameter("buildArgs", "DockerHub", identifier, stepInfo.getBuildArgs(), false);
+    Map<String, String> buildArgs =
+        resolveMapParameter("buildArgs", "DockerHub", identifier, stepInfo.getBuildArgs(), false);
     if (isNotEmpty(buildArgs)) {
-      setOptionalEnvironmentVariable(map, PLUGIN_BUILD_ARGS, listToStringSlice(buildArgs));
+      setOptionalEnvironmentVariable(map, PLUGIN_BUILD_ARGS, mapToStringSlice(buildArgs));
     }
 
     Map<String, String> labels = resolveMapParameter("labels", "DockerHub", identifier, stepInfo.getLabels(), false);

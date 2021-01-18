@@ -176,8 +176,8 @@ pipeline:
                       - 1.0
                     context:  # (optional) Either a path to a directory containing a Dockerfile, or a url to a git repository.
                     buildArgs: # (optional) build arguments, which are environment variables accessible only during the build process
-                      - arg1
-                      - arg2
+                      arg1: value1
+                      arg2: value2
                     labels: # (optional)
                       key1: value1
                       key2: value2
@@ -205,8 +205,8 @@ pipeline:
                       key1: value1
                       key2: value2
                     buildArgs: # (optional) build arguments, which are environment variables accessible only during the build process
-                      - arg1
-                      - arg2
+                      arg1: value1
+                      arg2: value2
                     target: someTarget # (optional) Build the specified stage as defined inside the Dockerfile
                     resources:
                       limits:
@@ -228,8 +228,8 @@ pipeline:
                       - 1.0
                     context:  # (optional) Either a path to a directory containing a Dockerfile, or a url to a git repository.
                     buildArgs: # (optional) build arguments, which are environment variables accessible only during the build process
-                      - arg1
-                      - arg2
+                      arg1: value1
+                      arg2: value2
                     labels: # (optional)
                       key1: value1
                       key2: value2

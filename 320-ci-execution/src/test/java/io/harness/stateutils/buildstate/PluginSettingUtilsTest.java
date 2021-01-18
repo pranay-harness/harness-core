@@ -50,17 +50,18 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldGetGCRStepInfoEnvVariables() {
-    GCRStepInfo gcrStepInfo = GCRStepInfo.builder()
-                                  .host(ParameterField.createValueField("gcr.io/"))
-                                  .projectID(ParameterField.createValueField("/ci"))
-                                  .imageName(ParameterField.createValueField("harness"))
-                                  .tags(ParameterField.createValueField(asList("tag1", "tag2")))
-                                  .dockerfile(ParameterField.createValueField("Dockerfile"))
-                                  .context(ParameterField.createValueField("context"))
-                                  .target(ParameterField.createValueField("target"))
-                                  .buildArgs(ParameterField.createValueField(asList("arg1", "arg2")))
-                                  .labels(ParameterField.createValueField(Collections.singletonMap("label", "label1")))
-                                  .build();
+    GCRStepInfo gcrStepInfo =
+        GCRStepInfo.builder()
+            .host(ParameterField.createValueField("gcr.io/"))
+            .projectID(ParameterField.createValueField("/ci"))
+            .imageName(ParameterField.createValueField("harness"))
+            .tags(ParameterField.createValueField(asList("tag1", "tag2")))
+            .dockerfile(ParameterField.createValueField("Dockerfile"))
+            .context(ParameterField.createValueField("context"))
+            .target(ParameterField.createValueField("target"))
+            .buildArgs(ParameterField.createValueField(Collections.singletonMap("arg1", "value1")))
+            .labels(ParameterField.createValueField(Collections.singletonMap("label", "label1")))
+            .build();
 
     Map<String, String> expected = new HashMap<>();
     expected.put("PLUGIN_REGISTRY", "gcr.io/ci");
@@ -69,7 +70,7 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_DOCKERFILE", "Dockerfile");
     expected.put("PLUGIN_CONTEXT", "context");
     expected.put("PLUGIN_TARGET", "target");
-    expected.put("PLUGIN_BUILD_ARGS", "arg1,arg2");
+    expected.put("PLUGIN_BUILD_ARGS", "arg1=value1");
     expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
     Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(gcrStepInfo, "identifier");
     assertThat(actual).isEqualTo(expected);
@@ -79,17 +80,18 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldGetECRStepInfoStepEnvVariables() {
-    ECRStepInfo ecrStepInfo = ECRStepInfo.builder()
-                                  .account(ParameterField.createValueField("6874654867"))
-                                  .region(ParameterField.createValueField("eu-central-1"))
-                                  .imageName(ParameterField.createValueField("harness"))
-                                  .tags(ParameterField.createValueField(asList("tag1", "tag2")))
-                                  .dockerfile(ParameterField.createValueField("Dockerfile"))
-                                  .context(ParameterField.createValueField("context"))
-                                  .target(ParameterField.createValueField("target"))
-                                  .buildArgs(ParameterField.createValueField(asList("arg1", "arg2")))
-                                  .labels(ParameterField.createValueField(Collections.singletonMap("label", "label1")))
-                                  .build();
+    ECRStepInfo ecrStepInfo =
+        ECRStepInfo.builder()
+            .account(ParameterField.createValueField("6874654867"))
+            .region(ParameterField.createValueField("eu-central-1"))
+            .imageName(ParameterField.createValueField("harness"))
+            .tags(ParameterField.createValueField(asList("tag1", "tag2")))
+            .dockerfile(ParameterField.createValueField("Dockerfile"))
+            .context(ParameterField.createValueField("context"))
+            .target(ParameterField.createValueField("target"))
+            .buildArgs(ParameterField.createValueField(Collections.singletonMap("arg1", "value1")))
+            .labels(ParameterField.createValueField(Collections.singletonMap("label", "label1")))
+            .build();
 
     Map<String, String> expected = new HashMap<>();
     expected.put("PLUGIN_REGISTRY", "6874654867.dkr.ecr.eu-central-1.amazonaws.com");
@@ -98,7 +100,7 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_DOCKERFILE", "Dockerfile");
     expected.put("PLUGIN_CONTEXT", "context");
     expected.put("PLUGIN_TARGET", "target");
-    expected.put("PLUGIN_BUILD_ARGS", "arg1,arg2");
+    expected.put("PLUGIN_BUILD_ARGS", "arg1=value1");
     expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
     Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(ecrStepInfo, "identifier");
     assertThat(actual).isEqualTo(expected);
@@ -114,7 +116,7 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
             .dockerfile(ParameterField.createValueField("Dockerfile"))
             .context(ParameterField.createValueField("context"))
             .target(ParameterField.createValueField("target"))
-            .buildArgs(ParameterField.createValueField(asList("arg1", "arg2")))
+            .buildArgs(ParameterField.createValueField(Collections.singletonMap("arg1", "value1")))
             .labels(ParameterField.createValueField(Collections.singletonMap("label", "label1")))
             .build();
 
@@ -124,7 +126,7 @@ public class PluginSettingUtilsTest extends CIExecutionTest {
     expected.put("PLUGIN_DOCKERFILE", "Dockerfile");
     expected.put("PLUGIN_CONTEXT", "context");
     expected.put("PLUGIN_TARGET", "target");
-    expected.put("PLUGIN_BUILD_ARGS", "arg1,arg2");
+    expected.put("PLUGIN_BUILD_ARGS", "arg1=value1");
     expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
     Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(dockerStepInfo, "identifier");
     assertThat(actual).isEqualTo(expected);
