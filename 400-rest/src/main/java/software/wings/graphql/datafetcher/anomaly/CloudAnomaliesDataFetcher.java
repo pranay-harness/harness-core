@@ -12,6 +12,7 @@ import software.wings.graphql.schema.type.aggregation.anomaly.QLAnomalyData;
 import software.wings.graphql.schema.type.aggregation.anomaly.QLAnomalyData.QLAnomalyDataBuilder;
 import software.wings.graphql.schema.type.aggregation.anomaly.QLAnomalyDataList;
 import software.wings.graphql.schema.type.aggregation.anomaly.QLAnomalyDataList.QLAnomalyDataListBuilder;
+import software.wings.graphql.schema.type.aggregation.anomaly.QLAnomalyFeedback;
 import software.wings.graphql.schema.type.aggregation.anomaly.QLEntityInfo;
 import software.wings.graphql.schema.type.aggregation.anomaly.QLEntityInfo.QLEntityInfoBuilder;
 import software.wings.security.PermissionAttribute;
@@ -125,6 +126,9 @@ public class CloudAnomaliesDataFetcher extends AbstractAnomalyDataFetcher<CloudB
             break;
           case AWS_SERVICE:
             entityDataBuilder.awsService(resultSet.getString(field.getFieldName()));
+            break;
+          case FEED_BACK:
+            anomalyBuilder.userFeedback(QLAnomalyFeedback.valueOf(resultSet.getString(field.getFieldName())));
             break;
           case TIME_GRANULARITY:
           case AWS_USAGE_TYPE:

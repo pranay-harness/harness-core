@@ -303,7 +303,10 @@ public class AnomalyDataQueryBuilder {
   private void convertCloudGroupByAndAddToFilter(List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupBy) {
     List<CloudEntityGroupBy> entityGroupBy = getCloudGroupByEntity(groupBy);
     for (CloudEntityGroupBy singleGroupBy : entityGroupBy) {
-      filters.add(convertGroupByToFilter(singleGroupBy));
+      CloudBillingFilter ConvertedGroupBy = convertGroupByToFilter(singleGroupBy);
+      if (ConvertedGroupBy != null) {
+        filters.add(ConvertedGroupBy);
+      }
     }
   }
   protected List<CloudEntityGroupBy> getCloudGroupByEntity(List<CloudBillingGroupBy> groupBy) {
@@ -317,7 +320,6 @@ public class AnomalyDataQueryBuilder {
   private CloudBillingFilter convertGroupByToFilter(CloudEntityGroupBy groupBy) {
     CloudBillingFilter filter = new CloudBillingFilter();
     String[] values = new String[] {""};
-    // TODO: support all relavant groupby
     switch (groupBy) {
       // --- GCP ---
       case projectId:
@@ -342,7 +344,7 @@ public class AnomalyDataQueryBuilder {
                               .build());
         break;
       case sku:
-        break;
+        return null;
       // -- aws --
       case awsLinkedAccount:
         filter.setAwsLinkedAccount(CloudBillingIdFilter.builder()
@@ -381,7 +383,7 @@ public class AnomalyDataQueryBuilder {
         cloudFilter = AnomaliesFilter.convertFromCloudBillingFilter(filter);
         selectQuery.addCondition(cloudFilter.toCondition());
       } catch (Exception e) {
-        log.info("Not adding filter since it is not valid ");
+        log.error("Not adding filter since it is not valid , Exception :{}", e);
       }
     }
   }

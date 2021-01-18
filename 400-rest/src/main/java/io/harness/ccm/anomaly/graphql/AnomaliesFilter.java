@@ -32,7 +32,9 @@ public interface AnomaliesFilter extends Filter {
     }
 
     // --- gcp ---
-
+    if (filter.getProduct() != null) {
+      return convertFromCloudBillingFilter(filter.getProduct());
+    }
     if (filter.getProject() != null) {
       return convertFromCloudBillingFilter(filter.getProject());
     }
