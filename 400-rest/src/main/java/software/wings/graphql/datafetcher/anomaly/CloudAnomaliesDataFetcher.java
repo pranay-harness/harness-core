@@ -128,7 +128,11 @@ public class CloudAnomaliesDataFetcher extends AbstractAnomalyDataFetcher<CloudB
             entityDataBuilder.awsService(resultSet.getString(field.getFieldName()));
             break;
           case FEED_BACK:
-            anomalyBuilder.userFeedback(QLAnomalyFeedback.valueOf(resultSet.getString(field.getFieldName())));
+            if (resultSet.getString(field.getFieldName()) != null) {
+              anomalyBuilder.userFeedback(QLAnomalyFeedback.valueOf(resultSet.getString(field.getFieldName())));
+            } else {
+              anomalyBuilder.userFeedback(QLAnomalyFeedback.NOT_RESPONDED);
+            }
             break;
           case TIME_GRANULARITY:
           case AWS_USAGE_TYPE:
