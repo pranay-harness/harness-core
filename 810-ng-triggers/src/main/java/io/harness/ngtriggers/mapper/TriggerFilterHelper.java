@@ -2,6 +2,7 @@ package io.harness.ngtriggers.mapper;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import static java.util.Collections.emptyList;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.NGResourceFilterConstants;
@@ -12,6 +13,7 @@ import io.harness.ngtriggers.beans.entity.TriggerEventHistory.TriggerEventHistor
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventsKeys;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
+import io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo;
 
 import java.util.List;
 import lombok.experimental.UtilityClass;
@@ -47,6 +49,22 @@ public class TriggerFilterHelper {
           where(NGTriggerEntityKeys.name).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
       criteria.andOperator(searchCriteria);
     }
+    return criteria;
+  }
+
+  public Criteria createCriteriaForCustomWebhookTriggerGetList(TriggerWebhookEvent triggerWebhookEvent,
+      String decryptedAuthToken, String searchTerm, boolean deleted, boolean enabled) {
+    Criteria criteria = createCriteriaForWebhookTriggerGetList(triggerWebhookEvent.getAccountId(),
+        triggerWebhookEvent.getOrgIdentifier(), triggerWebhookEvent.getProjectIdentifier(), emptyList(), searchTerm,
+        deleted, enabled);
+    if (triggerWebhookEvent.getSourceRepoType().equalsIgnoreCase(WebhookSourceRepo.CUSTOM.name())) {
+      criteria.and("metadata.webhook.type").is("CUSTOM");
+      criteria.and("metadata.webhook.custom.customAuthTokenType")
+          .is("inline")
+          .and("metadata.webhook.custom.customAuthTokenValue")
+          .is(decryptedAuthToken);
+    }
+
     return criteria;
   }
 

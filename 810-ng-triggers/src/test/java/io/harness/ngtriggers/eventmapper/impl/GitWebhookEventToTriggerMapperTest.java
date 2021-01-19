@@ -20,9 +20,7 @@ import io.harness.ngtriggers.beans.scm.PRWebhookEvent;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.beans.source.NGTriggerSource;
 import io.harness.ngtriggers.beans.source.NGTriggerSpec;
-import io.harness.ngtriggers.beans.source.webhook.WebhookEvent;
-import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
-import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
+import io.harness.ngtriggers.beans.source.webhook.*;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
@@ -74,7 +72,7 @@ public class GitWebhookEventToTriggerMapperTest extends CategoryTest {
         NGTriggerConfig.builder()
             .source(NGTriggerSource.builder()
                         .spec(WebhookTriggerConfig.builder()
-                                  .spec(WebhookTriggerSpec.builder().event(WebhookEvent.PULL_REQUEST).build())
+                                  .spec(GithubTriggerSpec.builder().event(WebhookEvent.PULL_REQUEST).build())
                                   .build())
                         .build())
             .build();
@@ -82,7 +80,7 @@ public class GitWebhookEventToTriggerMapperTest extends CategoryTest {
         NGTriggerConfig.builder()
             .source(NGTriggerSource.builder()
                         .spec(WebhookTriggerConfig.builder()
-                                  .spec(WebhookTriggerSpec.builder().event(WebhookEvent.MERGE_REQUEST).build())
+                                  .spec(GitlabTriggerSpec.builder().event(WebhookEvent.MERGE_REQUEST).build())
                                   .build())
                         .build())
             .build();

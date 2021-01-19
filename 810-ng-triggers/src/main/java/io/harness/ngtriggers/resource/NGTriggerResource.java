@@ -23,8 +23,12 @@ import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.mapper.TriggerFilterHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
+import io.harness.rest.RestResponse;
+import io.harness.utils.CryptoUtils;
 import io.harness.utils.PageUtils;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -227,5 +231,13 @@ public class NGTriggerResource {
     Page<NGTriggerResponseDTO> triggers =
         ngTriggerService.list(criteria, pageRequest).map(ngTriggerElementMapper::toResponseDTO);
     return ResponseDTO.newResponse(getNGPageResponse(triggers));
+  }
+
+  @GET
+  @Path("regenerateToken")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> generateWebhookToken() {
+    return new RestResponse<>(CryptoUtils.secureRandAlphaNumString(40));
   }
 }

@@ -1,15 +1,26 @@
 package io.harness.ngtriggers.beans.source.webhook;
 
-import java.util.List;
-import lombok.Builder;
-import lombok.Data;
+import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
+import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
-@Data
-@Builder
-public class WebhookTriggerSpec {
-  String repoUrl;
-  WebhookEvent event;
-  List<WebhookAction> actions;
-  List<WebhookPayloadCondition> payloadConditions;
-  List<String> pathFilters;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.util.List;
+
+@JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
+@JsonSubTypes({
+  @JsonSubTypes.Type(value = GithubTriggerSpec.class, name = "GITHUB")
+  , @JsonSubTypes.Type(value = GitlabTriggerSpec.class, name = "GITLAB"),
+      @JsonSubTypes.Type(value = BitbucketTriggerSpec.class, name = "BITBUCKET"),
+      @JsonSubTypes.Type(value = CustomWebhookTriggerSpec.class, name = "CUSTOM")
+})
+@JsonDeserialize()
+public interface WebhookTriggerSpec {
+  String getRepoUrl();
+  WebhookEvent getEvent();
+  List<WebhookAction> getActions();
+  List<WebhookPayloadCondition> getPayloadConditions();
+  List<String> getPathFilters();
+  WebhookSourceRepo getType();
 }

@@ -24,6 +24,12 @@ public interface NGTriggerService {
   Page<NGTriggerEntity> listWebhookTriggers(
       TriggerWebhookEvent triggerWebhookEvent, List<String> repoUrls, boolean isDeleted, boolean enabledOnly);
 
+  List<NGTriggerEntity> listCustomWebhookTriggers(
+      TriggerWebhookEvent triggerWebhookEvent, boolean isDeleted, boolean enabled);
+
+  List<NGTriggerEntity> findTriggersForCustomWehbook(
+      TriggerWebhookEvent triggerWebhookEvent, String decryptedAuthToken, boolean isDeleted, boolean enabled);
+
   boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String targetIdentifier,
       String identifier, Long version);
 
