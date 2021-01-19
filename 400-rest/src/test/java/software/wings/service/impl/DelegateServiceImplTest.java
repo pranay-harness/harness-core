@@ -9,6 +9,7 @@ import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.MARKO;
+import static io.harness.rule.OwnerRule.NICOLAS;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.UTSAV;
 import static io.harness.rule.OwnerRule.VUK;
@@ -79,7 +80,8 @@ import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.atmosphere.cpr.Broadcaster;
@@ -112,7 +114,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
 
   @InjectMocks @Spy private DelegateServiceImpl spydelegateService;
   @Inject private KryoSerializer kryoSerializer;
-  private Subject<DelegateTaskRetryObserver> retryObserverSubject = mock(Subject.class);
+  @Mock private Subject<DelegateTaskRetryObserver> retryObserverSubject;
 
   @Before
   public void setUp() throws IllegalAccessException {
@@ -155,7 +157,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     when(assignDelegateService.canAssign(eq(batch), anyString(), any())).thenReturn(true);
     when(assignDelegateService.retrieveActiveDelegates(
              eq(delegateTask.getAccountId()), any(BatchDelegateSelectionLog.class)))
-        .thenReturn(Arrays.asList(delegate.getUuid()));
+        .thenReturn(Collections.singletonList(delegate.getUuid()));
 
     RetryDelegate retryDelegate = RetryDelegate.builder().retryPossible(true).delegateTask(delegateTask).build();
     when(retryObserverSubject.fireProcess(any(), any())).thenReturn(retryDelegate);
@@ -175,7 +177,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     });
     thread.start();
     DelegateResponseData responseData = delegateService.executeTask(delegateTask);
-    assertThat(responseData instanceof HttpStateExecutionResponse).isTrue();
+    assertThat(responseData).isInstanceOf(HttpStateExecutionResponse.class);
     HttpStateExecutionResponse httpResponse = (HttpStateExecutionResponse) responseData;
     assertThat(httpResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
@@ -187,7 +189,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     DelegateTask delegateTask = getDelegateTask();
     delegateTask.getData().setAsync(false);
     delegateService.saveDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
-    assertThat(delegateTask.getBroadcastCount()).isEqualTo(0);
+    assertThat(delegateTask.getBroadcastCount()).isZero();
     verify(broadcastHelper, times(0)).rebroadcastDelegateTask(any());
   }
 
@@ -198,7 +200,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     DelegateTask delegateTask = getDelegateTask();
     delegateTask.getData().setAsync(true);
     delegateService.saveDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
-    assertThat(delegateTask.getBroadcastCount()).isEqualTo(0);
+    assertThat(delegateTask.getBroadcastCount()).isZero();
     verify(broadcastHelper, times(0)).rebroadcastDelegateTask(any());
   }
 
@@ -241,7 +243,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     when(delegatesFeature.getMaxUsageAllowedForAccount(anyString())).thenReturn(Integer.MAX_VALUE);
 
     String delegateId = generateUuid();
-    assertThat(delegateService.obtainDelegateName(null, delegateId, true)).isEqualTo("");
+    assertThat(delegateService.obtainDelegateName(null, delegateId, true)).isEmpty();
     assertThat(delegateService.obtainDelegateName("accountId", delegateId, true)).isEqualTo(delegateId);
 
     DelegateBuilder delegateBuilder = Delegate.builder();
@@ -629,8 +631,8 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
-  public void testObtainDelegateIdShouldReturnNull() {
-    assertThat(delegateService.obtainDelegateId(generateUuid(), generateUuid())).isNull();
+  public void testObtainDelegateIdShouldReturnEmpty() {
+    assertThat(delegateService.obtainDelegateIds(generateUuid(), generateUuid())).isEmpty();
   }
 
   @Test
@@ -640,7 +642,51 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     Delegate delegate = createDelegateBuilder().sessionIdentifier("sessionId").build();
     String delegateId = wingsPersistence.save(delegate);
 
-    assertThat(delegateService.obtainDelegateId(delegate.getAccountId(), delegate.getSessionIdentifier()))
-        .isEqualTo(delegateId);
+    List<String> delegateIds =
+        delegateService.obtainDelegateIds(delegate.getAccountId(), delegate.getSessionIdentifier());
+
+    assertThat(delegateIds).size().isEqualTo(1);
+    assertThat(delegateIds.get(0)).isEqualTo(delegateId);
+  }
+
+  @Test
+  @Owner(developers = NICOLAS)
+  @Category(UnitTests.class)
+  public void testGetConnectedDelegates() {
+    List<String> delegateIds = new ArrayList<>();
+
+    Delegate delegate1 = createDelegateBuilder().accountId(ACCOUNT_ID).sessionIdentifier("sessionId").build();
+    String delegateId1 = wingsPersistence.save(delegate1);
+
+    DelegateConnection delegateConnection1 = DelegateConnection.builder()
+                                                 .accountId(ACCOUNT_ID)
+                                                 .delegateId(delegateId1)
+                                                 .version("${build.fullVersion}")
+                                                 .disconnected(false)
+                                                 .lastHeartbeat(1620652243456L)
+                                                 .build();
+
+    wingsPersistence.save(delegateConnection1);
+
+    delegateIds.add(delegateId1);
+
+    Delegate delegate2 = createDelegateBuilder().accountId(ACCOUNT_ID).sessionIdentifier("sessionId").build();
+    String delegateId2 = wingsPersistence.save(delegate2);
+
+    DelegateConnection delegateConnection2 = DelegateConnection.builder()
+                                                 .accountId(ACCOUNT_ID)
+                                                 .delegateId(delegateId2)
+                                                 .version("${build.fullVersion}")
+                                                 .disconnected(true)
+                                                 .lastHeartbeat(1620652243456L)
+                                                 .build();
+
+    wingsPersistence.save(delegateConnection2);
+
+    delegateIds.add(delegateId2);
+
+    List<String> connectedDelegates = delegateService.getConnectedDelegates(ACCOUNT_ID, delegateIds);
+
+    assertThat(connectedDelegates.size()).isEqualTo(1);
   }
 }
