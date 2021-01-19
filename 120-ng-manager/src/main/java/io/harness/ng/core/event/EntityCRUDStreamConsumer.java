@@ -18,11 +18,11 @@ import io.harness.security.dto.ServicePrincipal;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 
@@ -69,7 +69,7 @@ public class EntityCRUDStreamConsumer implements Runnable {
     List<Message> messages;
     String messageId;
     boolean messageProcessed;
-    messages = redisConsumer.read(10, TimeUnit.SECONDS);
+    messages = redisConsumer.read(Duration.ofSeconds(10));
     for (Message message : messages) {
       messageId = message.getId();
       messageProcessed = handleMessage(message);

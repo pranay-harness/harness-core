@@ -43,11 +43,13 @@ public class EventsFrameworkModule extends AbstractModule {
       bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.ENTITY_CRUD, NG_MANAGER.getServiceId(), redisConfig,
-              EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME));
+              EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME,
+              EventsFrameworkConstants.ENTITY_CRUD_READ_BATCH_SIZE));
       bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.FEATURE_FLAG_STREAM, NG_MANAGER.getServiceId(),
-              redisConfig, EventsFrameworkConstants.FEATURE_FLAG_MAX_PROCESSING_TIME));
+              redisConfig, EventsFrameworkConstants.FEATURE_FLAG_MAX_PROCESSING_TIME,
+              EventsFrameworkConstants.FEATURE_FLAG_READ_BATCH_SIZE));
     }
   }
 }
