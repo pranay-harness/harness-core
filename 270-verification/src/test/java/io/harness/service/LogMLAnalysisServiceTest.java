@@ -359,6 +359,7 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     }
 
     assertThat(logMLAnalysisRecord).isNotNull();
+    logMLAnalysisRecord.setBaseLineCreated(true);
     logMLAnalysisRecord.setWorkflowExecutionId(workflowExecutionId);
     wingsPersistence.save(logMLAnalysisRecord);
 
@@ -387,6 +388,112 @@ public class LogMLAnalysisServiceTest extends VerificationBaseTest {
     });
 
     assertThat(logData).isEqualTo(expectedLogs);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  @RealMongo
+  public void getLogDataPreviousAnalysis_noPreviousBaseline() throws Exception {
+    File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
+
+    Gson gson = new Gson();
+    LogMLAnalysisRecord logMLAnalysisRecord;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
+      logMLAnalysisRecord = gson.fromJson(br, type);
+    }
+
+    assertThat(logMLAnalysisRecord).isNotNull();
+    logMLAnalysisRecord.setBaseLineCreated(false);
+    logMLAnalysisRecord.setControl_events(logMLAnalysisRecord.getTest_events());
+    logMLAnalysisRecord.setTest_events(null);
+    logMLAnalysisRecord.setWorkflowExecutionId(workflowExecutionId);
+    wingsPersistence.save(logMLAnalysisRecord);
+
+    LogRequest logRequest =
+        new LogRequest(generateUuid(), appId, stateExecutionId, workflowId, serviceId, null, -1, false);
+
+    Set<LogDataRecord> logData = analysisService.getLogData(
+        logRequest, false, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
+    assertThat(logData.isEmpty()).isFalse();
+    Set<LogDataRecord> expectedLogs = new HashSet<>();
+    logMLAnalysisRecord.getControl_events().forEach((s, analysisClusters) -> {
+      analysisClusters.forEach(analysisCluster -> {
+        MessageFrequency messageFrequency = analysisCluster.getMessage_frequencies().get(0);
+        expectedLogs.add(LogDataRecord.builder()
+                             .stateType(logMLAnalysisRecord.getStateType())
+                             .workflowExecutionId(logMLAnalysisRecord.getWorkflowExecutionId())
+                             .stateExecutionId(logMLAnalysisRecord.getStateExecutionId())
+                             .query(logMLAnalysisRecord.getQuery())
+                             .clusterLabel(Integer.toString(analysisCluster.getCluster_label()))
+                             .host(messageFrequency.getHost())
+                             .timeStamp(messageFrequency.getTime())
+                             .logMessage(analysisCluster.getText())
+                             .count(messageFrequency.getCount())
+                             .build());
+      });
+    });
+
+    assertThat(logData).isEqualTo(expectedLogs);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  @RealMongo
+  public void getLogDataPreviousAnalysis_hasPreviousBaselineNoData() throws Exception {
+    File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
+
+    Gson gson = new Gson();
+    LogMLAnalysisRecord logMLAnalysisRecord;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
+      logMLAnalysisRecord = gson.fromJson(br, type);
+    }
+
+    assertThat(logMLAnalysisRecord).isNotNull();
+    logMLAnalysisRecord.setBaseLineCreated(true);
+    logMLAnalysisRecord.setControl_events(logMLAnalysisRecord.getTest_events());
+    logMLAnalysisRecord.setTest_events(null);
+    logMLAnalysisRecord.setWorkflowExecutionId(workflowExecutionId);
+    wingsPersistence.save(logMLAnalysisRecord);
+
+    LogRequest logRequest =
+        new LogRequest(generateUuid(), appId, stateExecutionId, workflowId, serviceId, null, -1, false);
+
+    Set<LogDataRecord> logData = analysisService.getLogData(
+        logRequest, false, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
+    assertThat(logData).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  @RealMongo
+  public void getLogDataPreviousAnalysis_noPreviousBaselineNoControlData() throws Exception {
+    File file = new File(getClass().getClassLoader().getResource("./elk/logml_data_record.json").getFile());
+
+    Gson gson = new Gson();
+    LogMLAnalysisRecord logMLAnalysisRecord;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<LogMLAnalysisRecord>() {}.getType();
+      logMLAnalysisRecord = gson.fromJson(br, type);
+    }
+
+    assertThat(logMLAnalysisRecord).isNotNull();
+    logMLAnalysisRecord.setBaseLineCreated(false);
+    logMLAnalysisRecord.setControl_events(null);
+    logMLAnalysisRecord.setTest_events(null);
+    logMLAnalysisRecord.setWorkflowExecutionId(workflowExecutionId);
+    wingsPersistence.save(logMLAnalysisRecord);
+
+    LogRequest logRequest =
+        new LogRequest(generateUuid(), appId, stateExecutionId, workflowId, serviceId, null, -1, false);
+
+    Set<LogDataRecord> logData = analysisService.getLogData(
+        logRequest, false, workflowExecutionId, ClusterLevel.L1, StateType.SPLUNKV2, accountId);
+    assertThat(logData).isEmpty();
   }
 
   @Test
