@@ -40,9 +40,11 @@ import io.harness.ng.core.DefaultOrganizationModule;
 import io.harness.ng.core.InviteModule;
 import io.harness.ng.core.NGAggregateModule;
 import io.harness.ng.core.SecretManagementModule;
+import io.harness.ng.core.api.DelegateProfileManagerNgService;
 import io.harness.ng.core.api.NGModulesService;
 import io.harness.ng.core.api.NGSecretServiceV2;
 import io.harness.ng.core.api.UserGroupService;
+import io.harness.ng.core.api.impl.DelegateProfileManagerNgServiceImpl;
 import io.harness.ng.core.api.impl.NGModulesServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretServiceV2Impl;
 import io.harness.ng.core.api.impl.UserGroupServiceImpl;
@@ -262,6 +264,7 @@ public class NextGenModule extends AbstractModule {
     bind(GitChangeProcessorService.class).to(NgCoreGitChangeSetProcessorServiceImpl.class);
     bindYamlHandlers();
     bind(YamlBaseUrlService.class).to(YamlBaseUrlServiceImpl.class);
+    bind(DelegateProfileManagerNgService.class).to(DelegateProfileManagerNgServiceImpl.class);
 
     bind(MessageProcessor.class)
         .annotatedWith(Names.named(EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY))
