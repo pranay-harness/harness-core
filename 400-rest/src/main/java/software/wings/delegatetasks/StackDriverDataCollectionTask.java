@@ -14,11 +14,11 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.gcp.helpers.GcpHelperService;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 
 import software.wings.beans.TaskType;
-import software.wings.service.impl.GcpHelperService;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
@@ -29,6 +29,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackdriverDataFetchParameters;
 import software.wings.service.intfc.analysis.ClusterLevel;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.stackdriver.StackDriverDelegateService;
 import software.wings.sm.StateType;
 
@@ -65,6 +66,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
   @Inject private StackDriverDelegateService stackDriverDelegateService;
   @Inject private DelegateLogService delegateLogService;
   @Inject private GcpHelperService gcpHelperService;
+  @Inject private EncryptionService encryptionService;
 
   public StackDriverDataCollectionTask(DelegateTaskPackage delegateTaskPackage,
       ILogStreamingTaskClient logStreamingTaskClient, Consumer<DelegateTaskResponse> consumer,
@@ -215,12 +217,14 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
     }
 
     public TreeBasedTable<String, Long, NewRelicMetricDataRecord> getMetricDataRecords(
-        StackdriverDataFetchParameters dataFetchParameters) throws IOException {
+        StackdriverDataFetchParameters dataFetchParameters) {
       TreeBasedTable<String, Long, NewRelicMetricDataRecord> rv = TreeBasedTable.create();
 
       String projectId = stackDriverDelegateService.getProjectId(dataCollectionInfo.getGcpConfig());
-      Monitoring monitoring = gcpHelperService.getMonitoringService(
-          dataCollectionInfo.getGcpConfig(), dataCollectionInfo.getEncryptedDataDetails(), projectId);
+      encryptionService.decrypt(dataCollectionInfo.getGcpConfig(), dataCollectionInfo.getEncryptedDataDetails(), false);
+      Monitoring monitoring =
+          gcpHelperService.getMonitoringService(dataCollectionInfo.getGcpConfig().getServiceAccountKeyFileContent(),
+              projectId, dataCollectionInfo.getGcpConfig().isUseDelegate());
       dataFetchParameters.setProjectId(projectId);
       dataFetchParameters.setMonitoring(monitoring);
 

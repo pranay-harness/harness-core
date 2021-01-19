@@ -14,10 +14,10 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.gcp.helpers.GcpHelperService;
 
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.cv.DataCollectionException;
-import software.wings.service.impl.GcpHelperService;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.analysis.LogElement;

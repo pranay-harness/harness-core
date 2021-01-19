@@ -18,6 +18,8 @@ import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.HDelegateTask;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateResponse;
+import io.harness.delegate.task.artifacts.gcr.GcrArtifactDelegateRequest;
+import io.harness.delegate.task.artifacts.gcr.GcrArtifactDelegateResponse;
 import io.harness.delegate.task.artifacts.request.ArtifactTaskParameters;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
 import io.harness.delegate.task.gcp.request.GcpValidationRequest;
@@ -65,6 +67,8 @@ public class DelegateTasksBeansMorphiaRegistrar implements MorphiaRegistrar {
     h.put("delegate.task.artifacts.response.ArtifactTaskResponse", ArtifactTaskResponse.class);
     h.put("delegate.task.artifacts.request.ArtifactTaskParameters", ArtifactTaskParameters.class);
     h.put("delegate.task.artifacts.docker.DockerArtifactDelegateRequest", DockerArtifactDelegateRequest.class);
+    h.put("delegate.task.artifacts.gcr.GcrArtifactDelegateRequest", GcrArtifactDelegateRequest.class);
+    h.put("delegate.task.artifacts.gcr.GcrArtifactDelegateResponse", GcrArtifactDelegateResponse.class);
     h.put("delegate.task.gcp.request.GcpValidationRequest", GcpValidationRequest.class);
     h.put("delegate.task.gcp.response.GcpValidationTaskResponse", GcpValidationTaskResponse.class);
   }

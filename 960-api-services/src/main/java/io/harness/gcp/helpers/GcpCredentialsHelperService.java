@@ -1,8 +1,6 @@
-package software.wings.service.impl.gcp;
+package io.harness.gcp.helpers;
 
 import io.harness.network.Http;
-
-import software.wings.beans.GcpConfig;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.auth.oauth2.OAuth2Utils;
@@ -22,16 +20,18 @@ import org.apache.commons.io.IOUtils;
 public class GcpCredentialsHelperService {
   @Inject private GcpHttpTransportHelperService gcpHttpTransportHelperService;
 
-  public GoogleCredential getGoogleCredentialWithDefaultHttpTransport(GcpConfig gcpConfig) throws IOException {
+  public GoogleCredential getGoogleCredentialWithDefaultHttpTransport(char[] serviceAccountKeyFileContent)
+      throws IOException {
     return appendScopesIfRequired(GoogleCredential.fromStream(
-        IOUtils.toInputStream(String.valueOf(gcpConfig.getServiceAccountKeyFileContent()), Charset.defaultCharset())));
+        IOUtils.toInputStream(String.valueOf(serviceAccountKeyFileContent), Charset.defaultCharset())));
   }
 
-  public GoogleCredential getGoogleCredentialWithProxyConfiguredHttpTransport(GcpConfig gcpConfig) throws IOException {
+  public GoogleCredential getGoogleCredentialWithProxyConfiguredHttpTransport(char[] serviceAccountKeyFileContent)
+      throws IOException {
     HttpTransport httpTransport = gcpHttpTransportHelperService.getProxyConfiguredHttpTransport();
     return appendScopesIfRequired(GoogleCredential.fromStream(
-        IOUtils.toInputStream(String.valueOf(gcpConfig.getServiceAccountKeyFileContent()), Charset.defaultCharset()),
-        httpTransport, JacksonFactory.getDefaultInstance()));
+        IOUtils.toInputStream(String.valueOf(serviceAccountKeyFileContent), Charset.defaultCharset()), httpTransport,
+        JacksonFactory.getDefaultInstance()));
   }
 
   private GoogleCredential appendScopesIfRequired(GoogleCredential googleCredential) {

@@ -48,6 +48,15 @@ public class GcrArtifactConfig implements ArtifactConfig, Visitable {
    */
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> imagePath;
   /**
+   * Tag refers to exact tag number.
+   */
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> tag;
+  /**
+   * Tag regex is used to get latest build from builds matching regex.
+   */
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> tagRegex;
+
+  /**
    * Identifier for artifact.
    */
   @EntityIdentifier String identifier;
@@ -82,6 +91,12 @@ public class GcrArtifactConfig implements ArtifactConfig, Visitable {
     }
     if (gcrArtifactSpecConfig.getRegistryHostname() != null) {
       resultantConfig = resultantConfig.withRegistryHostname(gcrArtifactSpecConfig.getRegistryHostname());
+    }
+    if (gcrArtifactSpecConfig.getTag() != null) {
+      resultantConfig = resultantConfig.withTag(gcrArtifactSpecConfig.getTag());
+    }
+    if (gcrArtifactSpecConfig.getTagRegex() != null) {
+      resultantConfig = resultantConfig.withTagRegex(gcrArtifactSpecConfig.getTagRegex());
     }
     return resultantConfig;
   }

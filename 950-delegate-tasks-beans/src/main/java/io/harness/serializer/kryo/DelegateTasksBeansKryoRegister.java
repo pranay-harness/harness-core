@@ -186,6 +186,8 @@ import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.delegate.task.artifacts.ArtifactTaskType;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateResponse;
+import io.harness.delegate.task.artifacts.gcr.GcrArtifactDelegateRequest;
+import io.harness.delegate.task.artifacts.gcr.GcrArtifactDelegateResponse;
 import io.harness.delegate.task.artifacts.request.ArtifactTaskParameters;
 import io.harness.delegate.task.artifacts.response.ArtifactBuildDetailsNG;
 import io.harness.delegate.task.artifacts.response.ArtifactDelegateResponse;
@@ -663,7 +665,9 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(SSHKeyPathCredentialDTO.class, 543232);
     kryo.register(KerberosConfigDTO.class, 543233);
     kryo.register(SSHAuthDTO.class, 543234);
-    kryo.register(LocalConnectorDTO.class, 543235);
-    kryo.register(GcpKmsConnectorDTO.class, 543236);
+    kryo.register(GcrArtifactDelegateRequest.class, 543235);
+    kryo.register(GcrArtifactDelegateResponse.class, 543236);
+    kryo.register(LocalConnectorDTO.class, 543237);
+    kryo.register(GcpKmsConnectorDTO.class, 543238);
   }
 }

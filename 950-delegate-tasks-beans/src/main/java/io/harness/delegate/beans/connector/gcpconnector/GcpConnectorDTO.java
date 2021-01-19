@@ -30,12 +30,12 @@ import lombok.experimental.FieldDefaults;
 @ApiModel("GcpConnector")
 public class GcpConnectorDTO extends ConnectorConfigDTO implements ExecutionCapabilityDemander {
   @Valid GcpConnectorCredentialDTO credential;
+  String gcrUrl;
 
   @Override
   public DecryptableEntity getDecryptableEntity() {
     if (credential.getGcpCredentialType() == GcpCredentialType.MANUAL_CREDENTIALS) {
-      GcpManualDetailsDTO gcpManualDetailsDTO = (GcpManualDetailsDTO) credential.getConfig();
-      return gcpManualDetailsDTO;
+      return credential.getConfig();
     }
     return null;
   }

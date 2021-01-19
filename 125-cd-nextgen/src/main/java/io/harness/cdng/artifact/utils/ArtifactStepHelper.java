@@ -5,12 +5,14 @@ import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
+import io.harness.cdng.artifact.bean.yaml.GcrArtifactConfig;
 import io.harness.cdng.artifact.mappers.ArtifactConfigToDelegateReqMapper;
 import io.harness.common.NGTaskType;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.task.artifacts.ArtifactSourceDelegateRequest;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -48,6 +50,16 @@ public class ArtifactStepHelper {
         }
         return ArtifactConfigToDelegateReqMapper.getDockerDelegateRequest(
             dockerConfig, connectorConfig, encryptedDataDetails);
+      case GCR:
+        GcrArtifactConfig gcrArtifactConfig = (GcrArtifactConfig) artifactConfig;
+        connectorDTO = getConnector(gcrArtifactConfig.getConnectorRef().getValue(), ambiance);
+        GcpConnectorDTO gcpConnectorDTO = (GcpConnectorDTO) connectorDTO.getConnectorConfig();
+        if (gcpConnectorDTO.getCredential() != null) {
+          encryptedDataDetails =
+              secretManagerClientService.getEncryptionDetails(ngAccess, gcpConnectorDTO.getCredential().getConfig());
+        }
+        return ArtifactConfigToDelegateReqMapper.getGcrDelegateRequest(
+            gcrArtifactConfig, gcpConnectorDTO, encryptedDataDetails);
       default:
         throw new UnsupportedOperationException(
             String.format("Unknown Artifact Config type: [%s]", artifactConfig.getSourceType()));
@@ -71,6 +83,8 @@ public class ArtifactStepHelper {
     switch (artifactConfig.getSourceType()) {
       case DOCKER_HUB:
         return NGTaskType.DOCKER_ARTIFACT_TASK_NG.name();
+      case GCR:
+        return NGTaskType.GCR_ARTIFACT_TASK_NG.name();
       default:
         throw new UnsupportedOperationException(
             String.format("Unknown Artifact Config type: [%s]", artifactConfig.getSourceType()));
