@@ -37,9 +37,11 @@ public class DeploymentStageVariableCreator extends ChildrenVariableCreator {
         VariableCreationResponse.builder().dependency(executionField.getNode().getUuid(), executionField).build());
 
     YamlField variablesField = config.getNode().getField(YAMLFieldNameConstants.VARIABLES);
-    VariableCreationResponse variablesResponse =
-        VariableCreatorHelper.createVariableResponseForVariables(variablesField, YAMLFieldNameConstants.STAGE);
-    responseMap.put(variablesField.getNode().getUuid(), variablesResponse);
+    if (variablesField != null) {
+      VariableCreationResponse variablesResponse =
+          VariableCreatorHelper.createVariableResponseForVariables(variablesField, YAMLFieldNameConstants.STAGE);
+      responseMap.put(variablesField.getNode().getUuid(), variablesResponse);
+    }
 
     return responseMap;
   }
