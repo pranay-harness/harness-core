@@ -19,9 +19,7 @@ import io.harness.ngtriggers.beans.scm.WebhookBaseAttributes.WebhookBaseAttribut
 import io.harness.ngtriggers.beans.scm.WebhookEvent.Type;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData.WebhookPayloadDataBuilder;
-import io.harness.ngtriggers.beans.source.webhook.WebhookAction;
-import io.harness.ngtriggers.beans.source.webhook.WebhookPayloadCondition;
-import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
+import io.harness.ngtriggers.beans.source.webhook.*;
 import io.harness.ngtriggers.expressions.TriggerExpressionEvaluator;
 import io.harness.rule.Owner;
 
@@ -78,7 +76,7 @@ public class WebhookTriggerFilterUtilTest extends CategoryTest {
 
     List<WebhookAction> webhookActions = new ArrayList<>();
     webhookActions.add(OPENED);
-    WebhookTriggerSpec webhookTriggerSpec = WebhookTriggerSpec.builder().actions(webhookActions).build();
+    WebhookTriggerSpec webhookTriggerSpec = GithubTriggerSpec.builder().actions(webhookActions).build();
     assertThat(checkIfActionMatches(webhookPayloadDataBuilder.build(), webhookTriggerSpec)).isTrue();
 
     webhookActions.clear();
@@ -99,7 +97,7 @@ public class WebhookTriggerFilterUtilTest extends CategoryTest {
   @Category(UnitTests.class)
   public void evaluateFilterConditionsTest() {
     WebhookTriggerSpec webhookTriggerSpec =
-        WebhookTriggerSpec.builder()
+        GitlabTriggerSpec.builder()
             .actions(emptyList())
             .event(MERGE_REQUEST)
             .payloadConditions(Arrays.asList(

@@ -5,8 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class WebhookMetadata {
-  String type;
-  String repoURL;
-  CustomMetadata custom;
+public class CustomMetadata {
+  String customAuthTokenType;
+  String customAuthTokenValue;
 }

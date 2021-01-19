@@ -1,5 +1,10 @@
 package io.harness.ngtriggers.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -7,7 +12,6 @@ import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventsKeys;
-import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.mapper.TriggerFilterHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.repositories.ng.core.spring.NGTriggerRepository;
@@ -18,6 +22,7 @@ import com.google.inject.Singleton;
 import com.mongodb.client.result.UpdateResult;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
@@ -31,7 +36,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class NGTriggerServiceImpl implements NGTriggerService {
   private final NGTriggerRepository ngTriggerRepository;
   private final TriggerWebhookEventRepository webhookEventQueueRepository;
-  private final NGTriggerElementMapper ngTriggerElementMapper;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING = "Trigger [%s] already exists";
 
@@ -93,6 +97,17 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   }
 
   @Override
+  public List<NGTriggerEntity> listCustomWebhookTriggers(
+      TriggerWebhookEvent triggerWebhookEvent, boolean isDeleted, boolean enabled) {
+    Page<NGTriggerEntity> triggersPage = list(TriggerFilterHelper.createCriteriaForCustomWebhookTriggerGetList(
+                                                  triggerWebhookEvent, EMPTY, EMPTY, isDeleted, enabled),
+        Pageable.unpaged());
+
+    List<NGTriggerEntity> listOfTriggers = triggersPage.get().collect(Collectors.toList());
+    return isEmpty(listOfTriggers) ? emptyList() : listOfTriggers;
+  }
+
+  @Override
   public boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String targetIdentifier,
       String identifier, Long version) {
     Criteria criteria = getTriggerEqualityCriteria(
@@ -127,6 +142,16 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   @Override
   public void deleteTriggerWebhookEvent(TriggerWebhookEvent webhookEventQueueRecord) {
     webhookEventQueueRepository.delete(webhookEventQueueRecord);
+  }
+
+  @Override
+  public List<NGTriggerEntity> findTriggersForCustomWehbook(
+      TriggerWebhookEvent triggerWebhookEvent, String decryptedAuthToken, boolean isDeleted, boolean enabled) {
+    Page<NGTriggerEntity> triggersPage = list(TriggerFilterHelper.createCriteriaForCustomWebhookTriggerGetList(
+                                                  triggerWebhookEvent, decryptedAuthToken, EMPTY, isDeleted, enabled),
+        Pageable.unpaged());
+
+    return triggersPage.get().collect(Collectors.toList());
   }
 
   private Criteria getTriggerWebhookEventEqualityCriteria(TriggerWebhookEvent webhookEventQueueRecord) {

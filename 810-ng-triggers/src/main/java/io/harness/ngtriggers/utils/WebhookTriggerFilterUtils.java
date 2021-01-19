@@ -2,22 +2,26 @@ package io.harness.ngtriggers.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ngtriggers.Constants.BITBUCKET_SERVER_HEADER_KEY;
+import static io.harness.ngtriggers.beans.scm.WebhookEvent.Type.BRANCH;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.BT_PULL_REQUEST_CREATED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.BT_PULL_REQUEST_UPDATED;
 
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
+import io.harness.ngtriggers.beans.source.NGTriggerSpec;
 import io.harness.ngtriggers.beans.source.webhook.WebhookAction;
 import io.harness.ngtriggers.beans.source.webhook.WebhookEvent;
 import io.harness.ngtriggers.beans.source.webhook.WebhookPayloadCondition;
+import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
 import io.harness.ngtriggers.conditionchecker.ConditionEvaluator;
 import io.harness.ngtriggers.expressions.TriggerExpressionEvaluator;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +43,7 @@ public class WebhookTriggerFilterUtils {
           || eventTypeFromTrigger.equals(WebhookEvent.MERGE_REQUEST);
     }
 
-    if (eventTypeFromPayload.equals(io.harness.ngtriggers.beans.scm.WebhookEvent.Type.BRANCH)) {
+    if (eventTypeFromPayload.equals(BRANCH)) {
       return eventTypeFromTrigger.equals(WebhookEvent.PUSH);
     }
 
@@ -89,7 +93,6 @@ public class WebhookTriggerFilterUtils {
     String input;
     String standard;
     String operator;
-    Map<String, Object> context = null;
     TriggerExpressionEvaluator triggerExpressionEvaluator = null;
     boolean allConditionsMatched = true;
     for (WebhookPayloadCondition webhookPayloadCondition : payloadConditions) {
@@ -98,6 +101,10 @@ public class WebhookTriggerFilterUtils {
 
       if (webhookPayloadCondition.getKey().equals("sourceBranch")) {
         input = webhookPayloadData.getWebhookEvent().getBaseAttributes().getSource();
+        if (isBlank(input)) {
+          // Skipping for push event type, because it doesn't have a source branch
+          continue;
+        }
       } else if (webhookPayloadCondition.getKey().equals("targetBranch")) {
         input = webhookPayloadData.getWebhookEvent().getBaseAttributes().getTarget();
       } else {
@@ -108,6 +115,33 @@ public class WebhookTriggerFilterUtils {
         input = readFromPayload(webhookPayloadCondition.getKey(), triggerExpressionEvaluator);
       }
 
+      allConditionsMatched = allConditionsMatched && ConditionEvaluator.evaluate(input, standard, operator);
+      if (!allConditionsMatched) {
+        break;
+      }
+    }
+
+    return allConditionsMatched;
+  }
+
+  public boolean checkIfCustomPayloadConditionsMatch(String payload, TriggerDetails triggerDetails) {
+    NGTriggerSpec spec = triggerDetails.getNgTriggerConfig().getSource().getSpec();
+
+    WebhookTriggerSpec triggerSpec = ((WebhookTriggerConfig) spec).getSpec();
+    if (triggerSpec == null || isEmpty(triggerSpec.getPayloadConditions())) {
+      return true;
+    }
+
+    String input;
+    String standard;
+    String operator;
+    boolean allConditionsMatched = true;
+    TriggerExpressionEvaluator triggerExpressionEvaluator = generatorPMSExpressionEvaluator(payload);
+
+    for (WebhookPayloadCondition webhookPayloadCondition : triggerSpec.getPayloadConditions()) {
+      standard = webhookPayloadCondition.getValue();
+      operator = webhookPayloadCondition.getOperator();
+      input = readFromPayload(webhookPayloadCondition.getKey(), triggerExpressionEvaluator);
       allConditionsMatched = allConditionsMatched && ConditionEvaluator.evaluate(input, standard, operator);
       if (!allConditionsMatched) {
         break;

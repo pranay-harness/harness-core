@@ -4,12 +4,14 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ngtriggers.Constants.X_BIT_BUCKET_EVENT;
 import static io.harness.ngtriggers.Constants.X_GIT_HUB_EVENT;
 import static io.harness.ngtriggers.Constants.X_GIT_LAB_EVENT;
+import static io.harness.ngtriggers.Constants.X_HARNESS_WEBHOOK_TOKEN;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.BITBUCKET;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.CUSTOM;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.GITHUB;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.GITLAB;
 
 import static java.time.temporal.ChronoUnit.DAYS;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
@@ -22,14 +24,19 @@ import io.harness.ngtriggers.beans.dto.NGTriggerDetailsResponseDTO.NGTriggerDeta
 import io.harness.ngtriggers.beans.dto.NGTriggerResponseDTO;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.WebhookDetails;
+import io.harness.ngtriggers.beans.dto.WebhookDetails.WebhookDetailsBuilder;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerEventHistory;
 import io.harness.ngtriggers.beans.entity.TriggerEventHistory.TriggerEventHistoryKeys;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
+import io.harness.ngtriggers.beans.entity.metadata.CustomMetadata;
+import io.harness.ngtriggers.beans.entity.metadata.CustomWebhookInlineAuthToken;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata;
+import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata.WebhookMetadataBuilder;
 import io.harness.ngtriggers.beans.source.NGTriggerSource;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
+import io.harness.ngtriggers.beans.source.webhook.CustomWebhookTriggerSpec;
 import io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
@@ -40,6 +47,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -50,6 +58,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -106,17 +115,37 @@ public class NGTriggerElementMapper {
         .build();
   }
 
-  private NGTriggerMetadata toMetadata(NGTriggerSource triggerSource) {
+  NGTriggerMetadata toMetadata(NGTriggerSource triggerSource) {
     NGTriggerType type = triggerSource.getType();
     if (type == NGTriggerType.WEBHOOK) {
       WebhookTriggerConfig webhookTriggerConfig = (WebhookTriggerConfig) triggerSource.getSpec();
-      WebhookMetadata metadata = WebhookMetadata.builder()
-                                     .type(webhookTriggerConfig.getType())
-                                     .repoURL(webhookTriggerConfig.getSpec().getRepoUrl())
-                                     .build();
-      return NGTriggerMetadata.builder().webhook(metadata).build();
+
+      WebhookMetadataBuilder metadata = WebhookMetadata.builder();
+      if (webhookTriggerConfig.getSpec().getType() == CUSTOM) {
+        metadata.custom(prepareCustomMetadata(webhookTriggerConfig));
+      }
+      metadata.type(webhookTriggerConfig.getType()).repoURL(webhookTriggerConfig.getSpec().getRepoUrl()).build();
+      return NGTriggerMetadata.builder().webhook(metadata.build()).build();
     }
     throw new InvalidRequestException("Type " + type.toString() + " is invalid");
+  }
+
+  @VisibleForTesting
+  CustomMetadata prepareCustomMetadata(WebhookTriggerConfig webhookTriggerConfig) {
+    CustomWebhookTriggerSpec customWebhookTriggerSpec = (CustomWebhookTriggerSpec) webhookTriggerConfig.getSpec();
+    CustomWebhookInlineAuthToken customWebhookInlineAuthToken;
+
+    if ("inline".equals(customWebhookTriggerSpec.getAuthToken().getType())) {
+      customWebhookInlineAuthToken = (CustomWebhookInlineAuthToken) customWebhookTriggerSpec.getAuthToken().getSpec();
+
+      String encryptedToken = Base64.encodeBase64String(customWebhookInlineAuthToken.getValue().getBytes());
+
+      return CustomMetadata.builder()
+          .customAuthTokenType(customWebhookTriggerSpec.getAuthToken().getType())
+          .customAuthTokenValue(encryptedToken)
+          .build();
+    }
+    return null;
   }
 
   public NGTriggerResponseDTO toResponseDTO(NGTriggerEntity ngTriggerEntity) {
@@ -137,7 +166,7 @@ public class NGTriggerElementMapper {
 
   public TriggerWebhookEvent toNGTriggerWebhookEvent(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String payload, List<HeaderConfig> headerConfigs) {
-    WebhookSourceRepo webhookSourceRepo = null;
+    WebhookSourceRepo webhookSourceRepo;
     Set<String> headerKeys =
         headerConfigs.stream().map(headerConfig -> headerConfig.getKey()).collect(Collectors.toSet());
     if (webhookEventPayloadParser.containsHeaderKey(headerKeys, X_GIT_HUB_EVENT)) {
@@ -146,9 +175,24 @@ public class NGTriggerElementMapper {
       webhookSourceRepo = GITLAB;
     } else if (webhookEventPayloadParser.containsHeaderKey(headerKeys, X_BIT_BUCKET_EVENT)) {
       webhookSourceRepo = BITBUCKET;
-    } else {
+    } else if (webhookEventPayloadParser.containsHeaderKey(headerKeys, X_HARNESS_WEBHOOK_TOKEN)) {
       webhookSourceRepo = CUSTOM;
+    } else {
+      return null;
     }
+
+    if (webhookSourceRepo == CUSTOM) {
+      HeaderConfig customHeaderConfig = headerConfigs.stream()
+                                            .filter(header -> header.getKey().equalsIgnoreCase(X_HARNESS_WEBHOOK_TOKEN))
+                                            .findAny()
+                                            .orElse(null);
+
+      if (customHeaderConfig != null && isBlank(customHeaderConfig.getValues().get(0))) {
+        log.warn("Received Custom Webhook doesn't contain the required secret for header {}", X_HARNESS_WEBHOOK_TOKEN);
+        return null;
+      }
+    }
+
     return TriggerWebhookEvent.builder()
         .accountId(accountIdentifier)
         .orgIdentifier(orgIdentifier)
@@ -173,12 +217,21 @@ public class NGTriggerElementMapper {
 
     // Webhook Details
     if (ngTriggerEntity.getType() == NGTriggerType.WEBHOOK) {
-      // TODO: Webhook secret is null of all except BitBucketCloud
-      WebhookDetails webhookDetails = WebhookDetails.builder()
-                                          .webhookSourceRepo(ngTriggerEntity.getMetadata().getWebhook().getType())
-                                          .webhookSecret(null)
-                                          .build();
-      ngTriggerDetailsResponseDTO.webhookDetails(webhookDetails);
+      WebhookDetailsBuilder webhookDetails = WebhookDetails.builder();
+
+      webhookDetails.webhookSourceRepo(ngTriggerEntity.getMetadata().getWebhook().getType()).build();
+
+      if (ngTriggerEntity.getMetadata().getWebhook().getType().equalsIgnoreCase("CUSTOM")) {
+        CustomMetadata customMedata = ngTriggerEntity.getMetadata().getWebhook().getCustom();
+        if (customMedata != null
+            && "inline".equals(ngTriggerEntity.getMetadata().getWebhook().getCustom().getCustomAuthTokenType())) {
+          webhookDetails.webhookSecret(new String(
+              Base64.decodeBase64(ngTriggerEntity.getMetadata().getWebhook().getCustom().getCustomAuthTokenValue()),
+              StandardCharsets.UTF_8));
+        }
+
+        ngTriggerDetailsResponseDTO.webhookDetails(webhookDetails.build());
+      }
     }
 
     Optional<TriggerEventHistory> triggerEventHistory = fetchLatestExecutionForTrigger(ngTriggerEntity);

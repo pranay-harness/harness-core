@@ -1,5 +1,7 @@
 package io.harness.ngtriggers.resource;
 
+import static io.harness.ngtriggers.Constants.UNRECOGNIZED_WEBHOOK;
+
 import io.harness.NGCommonEntityConstants;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -89,7 +91,11 @@ public class NGTriggerWebhookConfigResource {
 
     TriggerWebhookEvent eventEntity = ngTriggerElementMapper.toNGTriggerWebhookEvent(
         accountIdentifier, orgIdentifier, projectIdentifier, eventPayload, headerConfigs);
-    TriggerWebhookEvent newEvent = ngTriggerService.addEventToQueue(eventEntity);
-    return ResponseDTO.newResponse(newEvent.getUuid());
+    if (eventEntity != null) {
+      TriggerWebhookEvent newEvent = ngTriggerService.addEventToQueue(eventEntity);
+      return ResponseDTO.newResponse(newEvent.getUuid());
+    } else {
+      return ResponseDTO.newResponse(UNRECOGNIZED_WEBHOOK);
+    }
   }
 }

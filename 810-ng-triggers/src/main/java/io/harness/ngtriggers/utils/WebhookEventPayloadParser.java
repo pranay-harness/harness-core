@@ -9,6 +9,7 @@ import static io.harness.ngtriggers.Constants.X_GIT_HUB_EVENT;
 import static io.harness.ngtriggers.Constants.X_GIT_LAB_EVENT;
 
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.exception.InvalidRequestException;
@@ -220,7 +221,7 @@ public class WebhookEventPayloadParser {
         .before(pushHook.getBefore())
         .after(pushHook.getAfter())
         .ref(pushHook.getRef())
-        .source(trimmedRef)
+        .source(EMPTY)
         .target(trimmedRef)
         .authorLogin(author.getLogin())
         .authorName(author.getName())

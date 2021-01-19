@@ -1,8 +1,9 @@
 package io.harness.ngtriggers.helpers;
 
+import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.CUSTOM;
+
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
-import io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo;
 import io.harness.ngtriggers.eventmapper.impl.CustomWebhookEventToTriggerMapper;
 import io.harness.ngtriggers.eventmapper.impl.GitWebhookEventToTriggerMapper;
 
@@ -19,7 +20,7 @@ public class WebhookEventMapperHelper {
   private final CustomWebhookEventToTriggerMapper customWebhookEventToTriggerMapper;
 
   public WebhookEventMappingResponse mapWebhookEventToTriggers(TriggerWebhookEvent triggerWebhookEvent) {
-    if (triggerWebhookEvent.getSourceRepoType() == WebhookSourceRepo.CUSTOM.name()) {
+    if (CUSTOM.name().equals(triggerWebhookEvent.getSourceRepoType())) {
       return customWebhookEventToTriggerMapper.mapWebhookEventToTriggers(triggerWebhookEvent);
     }
 
