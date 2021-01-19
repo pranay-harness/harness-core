@@ -13,13 +13,13 @@ java_library(
     deps = [
         "//:lombok",
         "//980-commons:module",
-        "@data_collection_dsl//:io_harness_cf_cf_client_sdk_java",
         "@maven//:com_google_code_findbugs_annotations",
         "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",
         "@maven//:io_dropwizard_metrics_metrics_annotation",
         "@maven//:io_swagger_swagger_annotations",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
+        "@maven_harness//:io_harness_cf_cf_client_sdk_java",
     ],
 )
 
