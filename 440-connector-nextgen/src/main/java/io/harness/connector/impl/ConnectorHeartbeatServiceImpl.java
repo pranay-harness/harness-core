@@ -14,6 +14,7 @@ import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.AccountId;
+import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.perpetualtask.PerpetualTaskClientContextDetails;
 import io.harness.perpetualtask.PerpetualTaskId;
@@ -74,6 +75,9 @@ public class ConnectorHeartbeatServiceImpl implements ConnectorHeartbeatService 
 
   @Override
   public PerpetualTaskId createConnectorHeatbeatTask(String accountIdentifier, ConnectorInfoDTO connector) {
+    if (connector.getConnectorType() == ConnectorType.LOCAL) {
+      return null;
+    }
     PerpetualTaskId perpetualTaskId = createPerpetualTask(connector, accountIdentifier);
     if (perpetualTaskId == null || perpetualTaskId.getId() == null) {
       log.info("{} Error in creating Perpetual task for the {}", CONNECTOR_HEARTBEAT_LOG_PREFIX,
