@@ -73,7 +73,8 @@ public class OrganizationServiceImpl implements OrganizationService {
       return savedOrganization;
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(
-          String.format("Try using different org identifier, [%s] cannot be used", organization.getIdentifier()),
+          String.format(
+              "An organization with identifier %s is already present or was deleted", organization.getIdentifier()),
           USER_SRE, ex);
     }
   }

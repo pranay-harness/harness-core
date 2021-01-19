@@ -1,5 +1,6 @@
 package io.harness.ng.core.event;
 
+import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CONNECTOR_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
@@ -7,6 +8,8 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANI
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
+import io.harness.security.SecurityContextBuilder;
+import io.harness.security.dto.ServicePrincipal;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -36,6 +39,7 @@ public class FeatureFlagStreamConsumer implements Runnable {
   @Override
   public void run() {
     log.info("Started the consumer for feature flag stream");
+    SecurityContextBuilder.setContext(new ServicePrincipal(NG_MANAGER.getServiceId()));
     try {
       while (!Thread.currentThread().isInterrupted()) {
         pollAndProcessMessages();
@@ -43,6 +47,7 @@ public class FeatureFlagStreamConsumer implements Runnable {
     } catch (Exception ex) {
       log.error("Feature flag stream consumer unexpectedly stopped", ex);
     }
+    SecurityContextBuilder.unsetContext();
   }
 
   private void pollAndProcessMessages() throws ConsumerShutdownException {

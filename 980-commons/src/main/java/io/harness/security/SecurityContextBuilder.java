@@ -39,6 +39,10 @@ public class SecurityContextBuilder {
           Switch.unhandled(type);
       }
     }
+    setContext(principal);
+  }
+
+  public void setContext(Principal principal) {
     PrincipalThreadLocal.set(principal);
   }
 

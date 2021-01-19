@@ -259,6 +259,16 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
     if (!secretManagerConfigOptional.isPresent()) {
       return false;
     }
+    NGSecretManagerMetadata metadata = secretManagerConfigOptional.get().getNgMetadata();
+    boolean secretsPresentInSM =
+        getCountOfSecretsCreatedUsingSecretManager(metadata.getAccountIdentifier(), metadata.getOrgIdentifier(),
+            metadata.getProjectIdentifier(), metadata.getIdentifier())
+        > 0;
+    if (secretsPresentInSM) {
+      throw new InvalidRequestException(String.format(
+          "Cannot delete secret manager %s with active secrets, please delete/migrate secrets and try again",
+          metadata.getIdentifier()));
+    }
 
     SecretManagerConfig secretManagerConfig = secretManagerConfigOptional.get();
     if (softDelete) {

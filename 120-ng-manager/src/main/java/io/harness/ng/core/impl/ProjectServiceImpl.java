@@ -90,7 +90,8 @@ public class ProjectServiceImpl implements ProjectService {
       return savedProject;
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(
-          String.format("Try using different project identifier, [%s] cannot be used", project.getIdentifier()),
+          String.format("A project with identifier %s and orgIdentifier %s is already present or was deleted",
+              project.getIdentifier(), orgIdentifier),
           USER_SRE, ex);
     }
   }

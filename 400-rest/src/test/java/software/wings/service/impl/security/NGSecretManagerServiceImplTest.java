@@ -353,6 +353,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
     doReturn(Optional.of(VaultConfig.builder().ngMetadata(NGSecretManagerMetadata.builder().build()).build()))
         .when(ngSecretManagerService)
         .get(any(), any(), any(), any());
+    doReturn(0L).when(ngSecretManagerService).getCountOfSecretsCreatedUsingSecretManager(any(), any(), any(), any());
     boolean deleted = ngSecretManagerService.delete("account", null, null, "identifier", true);
     assertThat(deleted).isTrue();
     verify(wingsPersistence).save(any(SecretManagerConfig.class));
@@ -365,6 +366,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
     doReturn(Optional.of(VaultConfig.builder().ngMetadata(NGSecretManagerMetadata.builder().build()).build()))
         .when(ngSecretManagerService)
         .get(any(), any(), any(), any());
+    doReturn(0L).when(ngSecretManagerService).getCountOfSecretsCreatedUsingSecretManager(any(), any(), any(), any());
     when(vaultService.deleteVaultConfig(any(), any())).thenReturn(true);
     boolean deleted = ngSecretManagerService.delete("account", null, null, "identifier", false);
     assertThat(deleted).isTrue();
@@ -382,11 +384,12 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
-  public void testDelete_ForUnsopportedSecretManager() {
+  public void testDelete_ForUnsupportedSecretManager() {
     doReturn(
         Optional.of(AwsSecretsManagerConfig.builder().ngMetadata(NGSecretManagerMetadata.builder().build()).build()))
         .when(ngSecretManagerService)
         .get(any(), any(), any(), any());
+    doReturn(0L).when(ngSecretManagerService).getCountOfSecretsCreatedUsingSecretManager(any(), any(), any(), any());
     try {
       ngSecretManagerService.delete("account", null, null, "identifier", false);
       fail("Execution should not reach here");
