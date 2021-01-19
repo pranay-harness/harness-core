@@ -51,10 +51,10 @@ public interface AnomaliesFilter extends Filter {
     // ---- aws ---
 
     if (filter.getAwsLinkedAccount() != null) {
-      return convertFromCloudBillingFilter(filter.getAwsLinkedAccount());
+      return convertFromCloudBillingFilter(filter.getLinkedAccount());
     }
     if (filter.getAwsService() != null) {
-      return convertFromCloudBillingFilter(filter.getAwsService());
+      return convertFromCloudBillingFilter(filter.getService());
     }
     if (filter.getAwsUsageType() != null) {
       return convertFromCloudBillingFilter(filter.getAwsUsageType());
