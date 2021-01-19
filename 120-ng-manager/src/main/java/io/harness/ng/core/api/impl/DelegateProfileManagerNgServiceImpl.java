@@ -9,6 +9,7 @@ import static io.harness.tasks.Cd1SetupFields.ENV_TYPE_FIELD;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
@@ -31,7 +32,6 @@ import io.harness.paging.PageRequestGrpc;
 import io.harness.persistence.HPersistence;
 
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentType;
 import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
 
