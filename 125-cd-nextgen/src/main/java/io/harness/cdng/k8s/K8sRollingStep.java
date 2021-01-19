@@ -3,6 +3,7 @@ package io.harness.cdng.k8s;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfig;
+import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -22,6 +23,7 @@ import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.steps.StepOutcomeGroup;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
@@ -104,6 +106,11 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
       return StepResponse.builder()
           .status(Status.SUCCEEDED)
           .stepOutcome(StepResponse.StepOutcome.builder().name(YamlTypes.OUTPUT).outcome(k8sRollingOutcome).build())
+          .stepOutcome(StepResponse.StepOutcome.builder()
+                           .name(OutcomeExpressionConstants.K8S_ROLL_OUT)
+                           .outcome(k8sRollingOutcome)
+                           .group(StepOutcomeGroup.STAGE.name())
+                           .build())
           .build();
     } else {
       return StepResponse.builder()
