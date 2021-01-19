@@ -13,6 +13,8 @@ import io.harness.delegate.task.http.HttpStepResponse;
 import io.harness.delegate.task.http.HttpTaskParametersNg;
 import io.harness.delegate.task.http.HttpTaskParametersNg.HttpTaskParametersNgBuilder;
 import io.harness.executions.steps.ExecutionNodeType;
+import io.harness.expression.ExpressionEvaluator;
+import io.harness.expression.JsonFunctor;
 import io.harness.http.HttpHeaderConfig;
 import io.harness.http.HttpOutcome;
 import io.harness.http.HttpStepParameters;
@@ -30,8 +32,12 @@ import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
+import io.harness.yaml.core.variables.NGVariable;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -90,6 +96,26 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
     } else {
       HttpStepResponse httpStepResponse = (HttpStepResponse) notifyResponseData;
 
+      List<NGVariable> outputVariables = stepParameters.getOutputVariables();
+      Map<String, String> outputVariablesEvaluated = new LinkedHashMap<>();
+      if (outputVariables != null) {
+        Map<String, Object> context = ImmutableMap.<String, Object>builder()
+                                          .put("httpResponseBody", httpStepResponse.getHttpResponseBody())
+                                          .build();
+        ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
+        expressionEvaluator.addFunctor("json", new JsonFunctor());
+        outputVariables.forEach(outputVariable -> {
+          String expression = outputVariable.getValue().getExpressionValue();
+          if (expression == null) {
+            expression = (String) outputVariable.getValue().getValue();
+          }
+          String evaluatedValue = expressionEvaluator.substitute(expression, context);
+          if (evaluatedValue != null) {
+            outputVariablesEvaluated.put(outputVariable.getName(), evaluatedValue);
+          }
+        });
+      }
+
       HttpOutcome executionData = HttpOutcome.builder()
                                       .httpUrl(stepParameters.getUrl().getValue())
                                       .httpMethod(stepParameters.getMethod().getValue())
@@ -97,6 +123,7 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
                                       .httpResponseBody(httpStepResponse.getHttpResponseBody())
                                       .status(httpStepResponse.getCommandExecutionStatus())
                                       .errorMsg(httpStepResponse.getErrorMessage())
+                                      .outputVariables(outputVariablesEvaluated)
                                       .build();
 
       // Just Place holder for now till we have assertions
