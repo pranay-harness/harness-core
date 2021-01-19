@@ -38,6 +38,7 @@ import software.wings.sm.State;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.inject.Inject;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.Getter;
@@ -249,5 +250,20 @@ public class SpotInstServiceSetup extends State {
 
   public void setAwsLoadBalancerConfigs(List<LoadBalancerDetailsForBGDeployment> awsLoadBalancerConfigs) {
     this.awsLoadBalancerConfigs = awsLoadBalancerConfigs;
+  }
+
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> invalidFields = new HashMap<>();
+    if (isEmpty(minInstances)) {
+      invalidFields.put("minInstances", "Min Instances is needed");
+    }
+    if (isEmpty(maxInstances)) {
+      invalidFields.put("maxInstances", "Max Instances is needed");
+    }
+    if (isEmpty(targetInstances)) {
+      invalidFields.put("targetInstances", "Target Instances is needed");
+    }
+    return invalidFields;
   }
 }
