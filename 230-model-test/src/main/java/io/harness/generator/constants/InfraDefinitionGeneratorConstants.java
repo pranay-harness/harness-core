@@ -14,10 +14,16 @@ public class InfraDefinitionGeneratorConstants {
       ImmutableList.of("host0", "host1", "host2", "host3", "host4", "host5", "host6", "host7", "host8", "host9",
           "host10", "host11", "host12", "host13", "host14", "host15", "host16", "host17", "host18", "host19");
   public static final String AZURE_FUNCTIONAL_TEST_RESOURCE_GROUP = "harness-functional-test";
+  public static final String AZURE_FUNCTIONAL_TEST_APP_SERVICE_RESOURCE_GROUP = "harness-functional-test-app-service";
   public static final String AZURE_VMSS_VM_USERNAME = "testUserHarness";
   public static final String AZURE_VMSS_BASE_SCALE_SET_NAME = "baseFunTestScaleSet";
   public static final String AZURE_VMSS_BASIC_INFRA_DEFINITION_NAME = "Azure_VMSS_Basic_InfraDef";
   public static final String AZURE_VMSS_BLUE_GREEN_INFRA_DEFINITION_NAME = "Azure_VMSS_Blue_Green_InfraDef";
+  public static final String AZURE_WEB_APP_BLUE_GREEN_INFRA_DEFINITION_NAME = "Azure_Web_App_Blue_Green_InfraDef";
+  public static final String AZURE_WEB_APP_BLUE_GREEN_ROLLBACK_INFRA_DEFINITION_NAME =
+      "Azure_Web_App_Blue_Green_Rollback_InfraDef";
+  public static final String AZURE_WEB_APP_CANARY_INFRA_DEFINITION_NAME = "Azure_Web_App_Canary_InfraDef";
+  public static final String AZURE_WEB_APP_API_INFRA_DEFINITION_NAME = "Azure_Web_App_API_InfraDef";
   public static final String AZURE_VMSS_API_INFRA_DEFINITION_NAME = "Azure_VMSS_API_InfraDef";
   public static final String AZURE_VMSS_SUBSCRIPTION_QA_NAME = "Harness-QA";
   public static final String AZURE_VMSS_BASE_SCALE_SET_LOAD_BALANCER_NAME = "baseFunTestScaleSetLoadBalancer";
