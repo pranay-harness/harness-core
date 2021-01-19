@@ -128,4 +128,16 @@ public class SpotInstServiceSetupTest extends WingsBaseTest {
     assertThat(notifyElements).isNotNull();
     assertThat(notifyElements.size()).isEqualTo(0);
   }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testValidateFields() {
+    state.setMaxInstances("");
+    state.setMinInstances("");
+    state.setTargetInstances("");
+    Map<String, String> fieldMap = state.validateFields();
+    assertThat(fieldMap).isNotNull();
+    assertThat(fieldMap.size()).isEqualTo(3);
+  }
 }
