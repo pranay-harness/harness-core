@@ -27,7 +27,7 @@ public class IntegrationStageStepParametersPMS implements StepParameters {
   String identifier;
   String name;
   ParameterField<String> description;
-  List<NGVariable> variables;
+  List<NGVariable> originalVariables;
   String type;
   Infrastructure infrastructure;
   List<DependencyElement> dependencies;
@@ -64,7 +64,7 @@ public class IntegrationStageStepParametersPMS implements StepParameters {
         .dependencies(integrationStageConfig.getServiceDependencies())
         .type(stageElementConfig.getType())
         .skipCondition(integrationStageConfig.getSkipCondition())
-        .variables(stageElementConfig.getVariables())
+        .originalVariables(stageElementConfig.getVariables())
         .childNodeID(childNodeID)
         .sharedPaths(integrationStageConfig.getSharedPaths())
         .enableCloneRepo(integrationStageConfig.getCloneCodebase())
