@@ -1898,7 +1898,8 @@ public class TriggerServiceImpl implements TriggerService {
     Map<String, String> parameters = new LinkedHashMap<>();
     List<Variable> variables = new ArrayList<>();
     if (PIPELINE == trigger.getWorkflowType()) {
-      Pipeline pipeline = pipelineService.readPipeline(trigger.getAppId(), trigger.getWorkflowId(), true);
+      Pipeline pipeline = pipelineService.readPipelineWithResolvedVariables(
+          trigger.getAppId(), trigger.getWorkflowId(), trigger.getWorkflowVariables());
       services = pipeline.getServices();
       if (pipeline.isHasBuildWorkflow()) {
         artifactOrManifestNeeded = false;
