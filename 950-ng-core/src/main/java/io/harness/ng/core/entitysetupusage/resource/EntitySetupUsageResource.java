@@ -1,5 +1,6 @@
 package io.harness.ng.core.entitysetupusage.resource;
 
+import io.harness.EntityType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -10,6 +11,7 @@ import io.harness.security.annotations.NextGenManagerAuth;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import javax.validation.constraints.Max;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -31,22 +33,26 @@ import org.springframework.data.domain.Page;
 @NextGenManagerAuth
 public class EntitySetupUsageResource {
   private static final String REFERRED_ENTITY_FQN = "referredEntityFQN";
+  private static final String REFERRED_ENTITY_TYPE = "referredEntityType";
   private static final String REFERRED_BY_ENTITY_FQN = "referredByEntityFQN";
+  private static final String REFERRED_BY_ENTITY_TYPE = "referredByEntityType";
   private static final String ENTITY_FQN = "entityFQN";
+  private static final String ENTITY_TYPE = "entityType";
   EntitySetupUsageService entitySetupUsageService;
 
   @GET
   @ApiOperation(value = "Get Entities referring this resource", nickname = "listReferredByEntities")
   public ResponseDTO<Page<EntitySetupUsageDTO>> list(
       @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
-      @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size,
+      @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") @Max(100) int size,
       @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
+      @QueryParam(ENTITY_TYPE) EntityType entityType,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
     return ResponseDTO.newResponse(entitySetupUsageService.list(
-        page, size, accountIdentifier, orgIdentifier, projectIdentifier, identifier, searchTerm));
+        page, size, accountIdentifier, orgIdentifier, projectIdentifier, identifier, entityType, searchTerm));
   }
 
   @GET
@@ -57,9 +63,10 @@ public class EntitySetupUsageResource {
       @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size,
       @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(REFERRED_ENTITY_FQN) String referredEntityFQN,
+      @QueryParam(REFERRED_ENTITY_TYPE) EntityType entityType,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
-    return ResponseDTO.newResponse(
-        entitySetupUsageService.listAllEntityUsage(page, size, accountIdentifier, referredEntityFQN, searchTerm));
+    return ResponseDTO.newResponse(entitySetupUsageService.listAllEntityUsage(
+        page, size, accountIdentifier, referredEntityFQN, entityType, searchTerm));
   }
 
   @GET
@@ -67,8 +74,9 @@ public class EntitySetupUsageResource {
   @ApiOperation(value = "Returns true if the entity is referenced by other resource", nickname = "isEntityReferenced")
   public ResponseDTO<Boolean> isEntityReferenced(
       @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(REFERRED_ENTITY_FQN) String referredEntityFQN) {
-    return ResponseDTO.newResponse(entitySetupUsageService.isEntityReferenced(accountIdentifier, referredEntityFQN));
+      @QueryParam(REFERRED_ENTITY_FQN) String referredEntityFQN, @QueryParam(ENTITY_TYPE) EntityType entityType) {
+    return ResponseDTO.newResponse(
+        entitySetupUsageService.isEntityReferenced(accountIdentifier, referredEntityFQN, entityType));
   }
 
   @POST
@@ -86,9 +94,11 @@ public class EntitySetupUsageResource {
   public ResponseDTO<Boolean> delete(
       @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(REFERRED_ENTITY_FQN) String referredEntityFQN,
-      @QueryParam(REFERRED_BY_ENTITY_FQN) String referredByEntityFQN) {
-    return ResponseDTO.newResponse(
-        entitySetupUsageService.delete(accountIdentifier, referredEntityFQN, referredByEntityFQN));
+      @QueryParam(REFERRED_ENTITY_TYPE) EntityType referredEntityType,
+      @QueryParam(REFERRED_BY_ENTITY_FQN) String referredByEntityFQN,
+      @QueryParam(REFERRED_BY_ENTITY_TYPE) EntityType referredByEntityType) {
+    return ResponseDTO.newResponse(entitySetupUsageService.delete(
+        accountIdentifier, referredEntityFQN, referredEntityType, referredByEntityFQN, referredByEntityType));
   }
 
   @DELETE
@@ -97,8 +107,9 @@ public class EntitySetupUsageResource {
       nickname = "deleteAllReferredByEntityRecords")
   public ResponseDTO<Boolean>
   deleteAllReferredByEntityRecords(@NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(REFERRED_BY_ENTITY_FQN) String referredByEntityFQN) {
-    return ResponseDTO.newResponse(
-        entitySetupUsageService.deleteAllReferredByEntityRecords(accountIdentifier, referredByEntityFQN));
+      @QueryParam(REFERRED_BY_ENTITY_FQN) String referredByEntityFQN,
+      @QueryParam(REFERRED_BY_ENTITY_TYPE) EntityType referredByEntityType) {
+    return ResponseDTO.newResponse(entitySetupUsageService.deleteAllReferredByEntityRecords(
+        accountIdentifier, referredByEntityFQN, referredByEntityType));
   }
 }

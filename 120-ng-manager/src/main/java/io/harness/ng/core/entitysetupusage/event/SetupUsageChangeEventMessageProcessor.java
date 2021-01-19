@@ -1,5 +1,6 @@
 package io.harness.ng.core.entitysetupusage.event;
 
+import io.harness.EntityType;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.schemas.entitysetupusage.DeleteSetupUsageDTO;
@@ -52,7 +53,9 @@ public class SetupUsageChangeEventMessageProcessor implements MessageProcessor {
 
   private void processDeleteAction(DeleteSetupUsageDTO deleteRequestDTO) {
     entitySetupUsageService.delete(deleteRequestDTO.getAccountIdentifier(), deleteRequestDTO.getReferredEntityFQN(),
-        deleteRequestDTO.getReferredByEntityFQN());
+        EntityType.getEntityFromYamlType(deleteRequestDTO.getReferredEntityType().name()),
+        deleteRequestDTO.getReferredByEntityFQN(),
+        EntityType.getEntityFromYamlType(deleteRequestDTO.getReferredByEntityType().name()));
   }
 
   private void processCreateAction(EntitySetupUsageCreateDTO setupUsageCreateDTO) {

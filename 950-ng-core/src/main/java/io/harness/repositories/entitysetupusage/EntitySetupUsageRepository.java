@@ -10,7 +10,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public interface EntitySetupUsageRepository
     extends PagingAndSortingRepository<EntitySetupUsage, String>, EntitySetupUsageCustomRepository {
-  long deleteByReferredEntityFQNAndReferredByEntityFQN(String referredEntityFQN, String referredByEntityFQN);
-  long deleteByReferredByEntityFQN(String referredByEntityFQN);
-  boolean existsByReferredEntityFQN(String referredEntityFQN);
+  long deleteByReferredEntityFQNAndReferredEntityTypeAndReferredByEntityFQNAndReferredByEntityTypeAndAccountIdentifier(
+      String referredEntityFQN, String referredEntityType, String referredByEntityFQN, String referredByEntityType,
+      String accountIdentifier);
+  long deleteByReferredByEntityFQNAndReferredByEntityTypeAndAccountIdentifier(
+      String referredByEntityFQN, String referredByEntityType, String accountIdentifier);
+  boolean existsByReferredEntityFQNAndReferredEntityTypeAndAccountIdentifier(
+      String referredEntityFQN, String referredEntityType, String accountIdentifier);
 }

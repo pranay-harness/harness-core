@@ -9,6 +9,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.EntityType;
 import io.harness.beans.IdentifierRef;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.CDNGBaseTest;
@@ -175,7 +176,7 @@ public class InputSetEntityServiceImplTest extends CDNGBaseTest {
         .listAllEntityUsage(0, 10, ACCOUNT_ID,
             EntityReferenceHelper.createFQN(
                 Arrays.asList(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER)),
-            "");
+            EntityType.INPUT_SETS, "");
     boolean delete =
         inputSetEntityService.delete(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER, 1L);
     assertThat(delete).isTrue();
@@ -256,7 +257,7 @@ public class InputSetEntityServiceImplTest extends CDNGBaseTest {
         .listAllEntityUsage(0, 10, ACCOUNT_ID,
             EntityReferenceHelper.createFQN(
                 Arrays.asList(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER)),
-            "");
+            EntityType.INPUT_SETS, "");
 
     boolean delete =
         inputSetEntityService.delete(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER, 1L);

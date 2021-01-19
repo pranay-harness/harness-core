@@ -1,11 +1,15 @@
 package io.harness.ng.core.entitysetupusage.entity;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.persistence.PersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -27,6 +31,32 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("entitySetupUsage")
 @TypeAlias("io.harness.ng.core.entityReference.entity.EntitySetupUsage")
 public class EntitySetupUsage implements PersistentEntity, NGAccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("ReferredByEntityIndex")
+                 .field(EntitySetupUsageKeys.referredByEntityType)
+                 .field(EntitySetupUsageKeys.referredByEntityFQN)
+                 .field(EntitySetupUsageKeys.accountIdentifier)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("ReferredEntityIndex")
+                 .field(EntitySetupUsageKeys.referredEntityType)
+                 .field(EntitySetupUsageKeys.referredEntityFQN)
+                 .field(EntitySetupUsageKeys.accountIdentifier)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("EntitySetupUsage_unique_index")
+                 .field(EntitySetupUsageKeys.referredByEntityType)
+                 .field(EntitySetupUsageKeys.referredByEntityFQN)
+                 .field(EntitySetupUsageKeys.referredEntityType)
+                 .field(EntitySetupUsageKeys.referredEntityFQN)
+                 .field(EntitySetupUsageKeys.accountIdentifier)
+                 .unique(true)
+                 .build())
+        .build();
+  }
+
   @Id @org.mongodb.morphia.annotations.Id String id;
   @NotBlank String accountIdentifier;
   @NotNull EntityDetail referredEntity;
