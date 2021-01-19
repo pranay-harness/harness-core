@@ -1,5 +1,8 @@
 package software.wings.beans;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.Delegate.Status;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -14,6 +17,7 @@ import lombok.Value;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Value
 @Builder
+@TargetModule(Module._920_DELEGATE_SERVICE_BEANS)
 public class DelegateStatus {
   List<String> publishedVersions;
   List<DelegateInner> delegates;
