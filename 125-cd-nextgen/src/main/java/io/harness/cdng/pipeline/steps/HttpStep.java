@@ -13,8 +13,7 @@ import io.harness.delegate.task.http.HttpStepResponse;
 import io.harness.delegate.task.http.HttpTaskParametersNg;
 import io.harness.delegate.task.http.HttpTaskParametersNg.HttpTaskParametersNgBuilder;
 import io.harness.executions.steps.ExecutionNodeType;
-import io.harness.expression.ExpressionEvaluator;
-import io.harness.expression.JsonFunctor;
+import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.http.HttpHeaderConfig;
 import io.harness.http.HttpOutcome;
 import io.harness.http.HttpStepParameters;
@@ -97,24 +96,7 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
       HttpStepResponse httpStepResponse = (HttpStepResponse) notifyResponseData;
 
       List<NGVariable> outputVariables = stepParameters.getOutputVariables();
-      Map<String, String> outputVariablesEvaluated = new LinkedHashMap<>();
-      if (outputVariables != null) {
-        Map<String, Object> context = ImmutableMap.<String, Object>builder()
-                                          .put("httpResponseBody", httpStepResponse.getHttpResponseBody())
-                                          .build();
-        ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
-        expressionEvaluator.addFunctor("json", new JsonFunctor());
-        outputVariables.forEach(outputVariable -> {
-          String expression = outputVariable.getValue().getExpressionValue();
-          if (expression == null) {
-            expression = (String) outputVariable.getValue().getValue();
-          }
-          String evaluatedValue = expressionEvaluator.substitute(expression, context);
-          if (evaluatedValue != null) {
-            outputVariablesEvaluated.put(outputVariable.getName(), evaluatedValue);
-          }
-        });
-      }
+      Map<String, String> outputVariablesEvaluated = evaluateOutputVariables(outputVariables, httpStepResponse);
 
       HttpOutcome executionData = HttpOutcome.builder()
                                       .httpUrl(stepParameters.getUrl().getValue())
@@ -136,5 +118,26 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
           StepOutcome.builder().name(OutcomeExpressionConstants.OUTPUT).outcome(executionData).build());
     }
     return responseBuilder.build();
+  }
+
+  public static Map<String, String> evaluateOutputVariables(
+      List<NGVariable> outputVariables, HttpStepResponse httpStepResponse) {
+    Map<String, String> outputVariablesEvaluated = new LinkedHashMap<>();
+    if (outputVariables != null) {
+      Map<String, Object> context = ImmutableMap.<String, Object>builder()
+                                        .put("httpResponseBody", httpStepResponse.getHttpResponseBody())
+                                        .build();
+      EngineExpressionEvaluator expressionEvaluator = new EngineExpressionEvaluator(null);
+      outputVariables.forEach(outputVariable -> {
+        String expression = outputVariable.getValue().getExpressionValue();
+        if (expression != null) {
+          Object evaluatedValue = expressionEvaluator.evaluateExpression(expression, context);
+          if (evaluatedValue != null) {
+            outputVariablesEvaluated.put(outputVariable.getName(), (String) evaluatedValue);
+          }
+        }
+      });
+    }
+    return outputVariablesEvaluated;
   }
 }
