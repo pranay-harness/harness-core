@@ -1,5 +1,6 @@
 package io.harness.entitysetupusageclient.remote;
 
+import io.harness.EntityType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -24,14 +25,16 @@ import retrofit2.http.Query;
  */
 public interface EntitySetupUsageClient {
   String REFERRED_ENTITY_FQN = "referredEntityFQN";
+  String REFERRED_ENTITY_TYPE = "referredEntityType";
   String REFERRED_BY_ENTITY_FQN = "referredByEntityFQN";
+  String REFERRED_BY_ENTITY_TYPE = "referredByEntityType";
   String INTERNAL_ENTITY_REFERENCE_API = "entitySetupUsage/internal";
 
   @GET(INTERNAL_ENTITY_REFERENCE_API)
   Call<ResponseDTO<Page<EntitySetupUsageDTO>>> listAllEntityUsage(@Query(NGResourceFilterConstants.PAGE_KEY) int page,
       @Query(NGResourceFilterConstants.SIZE_KEY) int size,
       @NotEmpty @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @Query(REFERRED_ENTITY_FQN) String referredEntityFQN,
+      @Query(REFERRED_ENTITY_FQN) String referredEntityFQN, @Query(REFERRED_ENTITY_TYPE) EntityType referredEntityType,
       @Query(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm);
 
   @POST(INTERNAL_ENTITY_REFERENCE_API)
@@ -39,15 +42,18 @@ public interface EntitySetupUsageClient {
 
   @DELETE(INTERNAL_ENTITY_REFERENCE_API)
   Call<ResponseDTO<Boolean>> delete(@NotEmpty @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @Query(REFERRED_ENTITY_FQN) String referredEntityFQN, @Query(REFERRED_BY_ENTITY_FQN) String referredByEntityFQN);
+      @Query(REFERRED_ENTITY_FQN) String referredEntityFQN, @Query(REFERRED_ENTITY_TYPE) EntityType referredEntityType,
+      @Query(REFERRED_BY_ENTITY_FQN) String referredByEntityFQN,
+      @Query(REFERRED_BY_ENTITY_TYPE) EntityType referredByEntityType);
 
   @GET(INTERNAL_ENTITY_REFERENCE_API + "/isEntityReferenced")
   Call<ResponseDTO<Boolean>> isEntityReferenced(
       @NotEmpty @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @Query(REFERRED_ENTITY_FQN) String referredEntityFQN);
+      @Query(REFERRED_ENTITY_FQN) String referredEntityFQN, @Query(REFERRED_ENTITY_TYPE) EntityType referredEntityType);
 
   @DELETE(INTERNAL_ENTITY_REFERENCE_API + "/deleteAllReferredByRecords")
   Call<ResponseDTO<Boolean>> deleteAllReferredByEntityRecords(
       @NotEmpty @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @Query(REFERRED_BY_ENTITY_FQN) String referredByEntityFQN);
+      @Query(REFERRED_BY_ENTITY_FQN) String referredByEntityFQN,
+      @Query(REFERRED_BY_ENTITY_TYPE) EntityType referredByEntityType);
 }

@@ -253,8 +253,9 @@ public class NGPipelineServiceImpl implements NGPipelineService {
 
     // removes entities present in the old version but not in the update
     for (EntityDetail entity : entitiesToRemove) {
-      execute(entitySetupUsageClient.delete(ngPipelineEntity.getAccountId(),
-          entity.getEntityRef().getFullyQualifiedName(), referredByEntity.getEntityRef().getFullyQualifiedName()));
+      execute(
+          entitySetupUsageClient.delete(ngPipelineEntity.getAccountId(), entity.getEntityRef().getFullyQualifiedName(),
+              entity.getType(), referredByEntity.getEntityRef().getFullyQualifiedName(), referredByEntity.getType()));
     }
   }
 }

@@ -202,8 +202,8 @@ public class InputSetEntityServiceImpl implements InputSetEntityService {
                                               .identifier(inputSetIdentifier)
                                               .build();
     try {
-      Page<EntitySetupUsageDTO> entitySetupUsageDTOS = execute(
-          entitySetupUsageClient.listAllEntityUsage(0, 10, accountId, inputSetReference.getFullyQualifiedName(), ""));
+      Page<EntitySetupUsageDTO> entitySetupUsageDTOS = execute(entitySetupUsageClient.listAllEntityUsage(
+          0, 10, accountId, inputSetReference.getFullyQualifiedName(), EntityType.INPUT_SETS, ""));
       referredByEntities = entitySetupUsageDTOS.stream()
                                .map(EntitySetupUsageDTO::getReferredByEntity)
                                .collect(Collectors.toCollection(LinkedList::new));
@@ -312,8 +312,9 @@ public class InputSetEntityServiceImpl implements InputSetEntityService {
 
     // removes entities present in the old version but not in the update
     for (EntityDetail entity : entitiesToRemove) {
-      execute(entitySetupUsageClient.delete(inputSetEntity.getAccountId(),
-          entity.getEntityRef().getFullyQualifiedName(), referredByEntity.getEntityRef().getFullyQualifiedName()));
+      execute(
+          entitySetupUsageClient.delete(inputSetEntity.getAccountId(), entity.getEntityRef().getFullyQualifiedName(),
+              entity.getType(), referredByEntity.getEntityRef().getFullyQualifiedName(), referredByEntity.getType()));
     }
   }
 }

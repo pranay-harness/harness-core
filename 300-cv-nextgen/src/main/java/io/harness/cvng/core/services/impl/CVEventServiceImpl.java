@@ -59,7 +59,8 @@ public class CVEventServiceImpl implements CVEventService {
     String cvConfigFQN = getCVConfigFullyQualifiedName(cvConfig, cvConfig.getIdentifier());
 
     try {
-      DeleteSetupUsageDTO deleteSetupUsageDTO = getDeleteSetupUsageDTO(cvConfig, cvConfigConnectorFQN, cvConfigFQN);
+      DeleteSetupUsageDTO deleteSetupUsageDTO = getDeleteSetupUsageDTO(
+          cvConfig, cvConfigConnectorFQN, EntityTypeProtoEnum.CONNECTORS, cvConfigFQN, EntityTypeProtoEnum.CV_CONFIG);
 
       sendEventWithMessageForDeletion(cvConfig, deleteSetupUsageDTO);
     } catch (Exception ex) {
@@ -97,7 +98,8 @@ public class CVEventServiceImpl implements CVEventService {
     String cvConfigFQN = getCVConfigFullyQualifiedName(cvConfig, cvConfig.getIdentifier());
 
     try {
-      DeleteSetupUsageDTO deleteSetupUsageDTO = getDeleteSetupUsageDTO(cvConfig, cvConfigServiceFQN, cvConfigFQN);
+      DeleteSetupUsageDTO deleteSetupUsageDTO = getDeleteSetupUsageDTO(
+          cvConfig, cvConfigServiceFQN, EntityTypeProtoEnum.SERVICE, cvConfigFQN, EntityTypeProtoEnum.CV_CONFIG);
 
       sendEventWithMessageForDeletion(cvConfig, deleteSetupUsageDTO);
     } catch (Exception ex) {
@@ -136,7 +138,8 @@ public class CVEventServiceImpl implements CVEventService {
     String cvConfigFQN = getCVConfigFullyQualifiedName(cvConfig, cvConfig.getIdentifier());
 
     try {
-      DeleteSetupUsageDTO deleteSetupUsageDTO = getDeleteSetupUsageDTO(cvConfig, cvConfigEnvironmentFQN, cvConfigFQN);
+      DeleteSetupUsageDTO deleteSetupUsageDTO = getDeleteSetupUsageDTO(cvConfig, cvConfigEnvironmentFQN,
+          EntityTypeProtoEnum.ENVIRONMENT, cvConfigFQN, EntityTypeProtoEnum.CV_CONFIG);
 
       sendEventWithMessageForDeletion(cvConfig, deleteSetupUsageDTO);
     } catch (Exception ex) {
@@ -208,8 +211,8 @@ public class CVEventServiceImpl implements CVEventService {
     String verificationJobFQN = getVerificationJobFullyQualifiedName(verificationJob, verificationJob.getIdentifier());
 
     try {
-      DeleteSetupUsageDTO deleteSetupUsageDTO =
-          getDeleteSetupUsageDTO(verificationJob, verificationJobEnvironmentFQN, verificationJobFQN);
+      DeleteSetupUsageDTO deleteSetupUsageDTO = getDeleteSetupUsageDTO(verificationJob, verificationJobEnvironmentFQN,
+          EntityTypeProtoEnum.ENVIRONMENT, verificationJobFQN, EntityTypeProtoEnum.CV_VERIFICATION_JOB);
 
       sendEventWithMessageForDeletion(verificationJob, deleteSetupUsageDTO);
     } catch (Exception ex) {
@@ -228,8 +231,8 @@ public class CVEventServiceImpl implements CVEventService {
     String verificationJobFQN = getVerificationJobFullyQualifiedName(verificationJob, verificationJob.getIdentifier());
 
     try {
-      DeleteSetupUsageDTO deleteSetupUsageDTO =
-          getDeleteSetupUsageDTO(verificationJob, verificationJobEnvironmentFQN, verificationJobFQN);
+      DeleteSetupUsageDTO deleteSetupUsageDTO = getDeleteSetupUsageDTO(verificationJob, verificationJobEnvironmentFQN,
+          EntityTypeProtoEnum.SERVICE, verificationJobFQN, EntityTypeProtoEnum.CV_VERIFICATION_JOB);
 
       sendEventWithMessageForDeletion(verificationJob, deleteSetupUsageDTO);
     } catch (Exception ex) {
@@ -330,21 +333,26 @@ public class CVEventServiceImpl implements CVEventService {
   }
 
   @NotNull
-  private DeleteSetupUsageDTO getDeleteSetupUsageDTO(CVConfig cvConfig, String cvConfigScopedFQN, String cvConfigFQN) {
+  private DeleteSetupUsageDTO getDeleteSetupUsageDTO(CVConfig cvConfig, String cvConfigScopedFQN,
+      EntityTypeProtoEnum cvConfigScopedType, String cvConfigFQN, EntityTypeProtoEnum cvConfigEntityType) {
     return DeleteSetupUsageDTO.newBuilder()
         .setAccountIdentifier(cvConfig.getAccountId())
         .setReferredByEntityFQN(cvConfigFQN)
+        .setReferredByEntityType(cvConfigEntityType)
         .setReferredEntityFQN(cvConfigScopedFQN)
+        .setReferredEntityType(cvConfigEntityType)
         .build();
   }
 
   @NotNull
-  private DeleteSetupUsageDTO getDeleteSetupUsageDTO(
-      VerificationJob verificationJob, String cvConfigScopedFQN, String cvConfigFQN) {
+  private DeleteSetupUsageDTO getDeleteSetupUsageDTO(VerificationJob verificationJob, String cvConfigScopedFQN,
+      EntityTypeProtoEnum cvConfigScopedEntityType, String cvConfigFQN, EntityTypeProtoEnum cvConfigEntityType) {
     return DeleteSetupUsageDTO.newBuilder()
         .setAccountIdentifier(verificationJob.getAccountId())
         .setReferredByEntityFQN(cvConfigFQN)
+        .setReferredByEntityType(cvConfigScopedEntityType)
         .setReferredEntityFQN(cvConfigScopedFQN)
+        .setReferredEntityType(cvConfigEntityType)
         .build();
   }
 

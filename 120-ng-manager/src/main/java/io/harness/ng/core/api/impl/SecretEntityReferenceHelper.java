@@ -98,7 +98,9 @@ public class SecretEntityReferenceHelper {
       DeleteSetupUsageDTO deleteSetupUsageDTO = DeleteSetupUsageDTO.newBuilder()
                                                     .setAccountIdentifier(encryptedDataDTO.getAccount())
                                                     .setReferredByEntityFQN(secretFQN)
+                                                    .setReferredByEntityType(EntityTypeProtoEnum.SECRETS)
                                                     .setReferredEntityFQN(secretMangerFQN)
+                                                    .setReferredEntityType(EntityTypeProtoEnum.CONNECTORS)
                                                     .build();
       eventProducer.send(
           Message.newBuilder()

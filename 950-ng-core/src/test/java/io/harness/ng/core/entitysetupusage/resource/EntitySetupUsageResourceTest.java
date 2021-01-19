@@ -3,6 +3,7 @@ package io.harness.ng.core.entitysetupusage.resource;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 
+import io.harness.EntityType;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
@@ -36,9 +37,11 @@ public class EntitySetupUsageResourceTest {
     String identifier = "identifier";
     String searchTerm = "searchTerm";
     String referredEntityFQN = "referredEntityFQN";
-    entitySetupUsageResource.listAllEntityUsage(100, 100, accountIdentifier, referredEntityFQN, searchTerm);
+    entitySetupUsageResource.listAllEntityUsage(
+        100, 100, accountIdentifier, referredEntityFQN, EntityType.CONNECTORS, searchTerm);
     Mockito.verify(entitySetupUsageService, times(1))
-        .listAllEntityUsage(eq(100), eq(100), eq(accountIdentifier), eq(referredEntityFQN), eq(searchTerm));
+        .listAllEntityUsage(
+            eq(100), eq(100), eq(accountIdentifier), eq(referredEntityFQN), eq(EntityType.CONNECTORS), eq(searchTerm));
   }
 
   @Test
@@ -50,8 +53,9 @@ public class EntitySetupUsageResourceTest {
     String projectIdentifier = "projectIdentifier";
     String identifier = "identifier";
     String referredEntityFQN = "referredEntityFQN";
-    entitySetupUsageResource.isEntityReferenced(accountIdentifier, referredEntityFQN);
-    Mockito.verify(entitySetupUsageService, times(1)).isEntityReferenced(eq(accountIdentifier), eq(referredEntityFQN));
+    entitySetupUsageResource.isEntityReferenced(accountIdentifier, referredEntityFQN, EntityType.CONNECTORS);
+    Mockito.verify(entitySetupUsageService, times(1))
+        .isEntityReferenced(eq(accountIdentifier), eq(referredEntityFQN), eq(EntityType.CONNECTORS));
   }
 
   @Test
@@ -78,8 +82,10 @@ public class EntitySetupUsageResourceTest {
     String identifier = "identifier";
     String referredEntityFQN = "referredEntityFQN";
     String referredByEntityFQN = "referredByEntityFQN";
-    entitySetupUsageResource.delete(accountIdentifier, referredEntityFQN, referredEntityFQN);
+    entitySetupUsageResource.delete(
+        accountIdentifier, referredEntityFQN, EntityType.CONNECTORS, referredEntityFQN, EntityType.SECRETS);
     Mockito.verify(entitySetupUsageService, times(1))
-        .delete(eq(accountIdentifier), eq(referredEntityFQN), eq(referredEntityFQN));
+        .delete(eq(accountIdentifier), eq(referredEntityFQN), eq(EntityType.CONNECTORS), eq(referredEntityFQN),
+            eq(EntityType.SECRETS));
   }
 }

@@ -9,6 +9,7 @@ import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 
 import static java.lang.String.format;
 
+import io.harness.EntityType;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.SortOrder;
 import io.harness.beans.SortOrder.OrderType;
@@ -227,8 +228,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
                                       .build();
     String referredEntityFQN = identifierRef.getFullyQualifiedName();
     try {
-      isEntityReferenced =
-          execute(entitySetupUsageClient.isEntityReferenced(connector.getAccountIdentifier(), referredEntityFQN));
+      isEntityReferenced = execute(entitySetupUsageClient.isEntityReferenced(
+          connector.getAccountIdentifier(), referredEntityFQN, EntityType.CONNECTORS));
     } catch (Exception ex) {
       log.info("Encountered exception while requesting the Entity Reference records of [{}], with exception",
           connector.getIdentifier(), ex);

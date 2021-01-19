@@ -2,6 +2,7 @@ package io.harness.ng.core.entitysetupusage.impl;
 
 import static java.lang.String.format;
 
+import io.harness.EntityType;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.ng.core.entitysetupusage.EntitySetupUsageFilterHelper;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
@@ -36,15 +37,15 @@ public class EntitySetupUsageServiceImpl implements EntitySetupUsageService {
 
   @Override
   public Page<EntitySetupUsageDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String identifier, String searchTerm) {
+      String projectIdentifier, String identifier, EntityType referredEntityType, String searchTerm) {
     String referredEntityFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    return listAllEntityUsage(page, size, accountIdentifier, referredEntityFQN, searchTerm);
+    return listAllEntityUsage(page, size, accountIdentifier, referredEntityFQN, referredEntityType, searchTerm);
   }
 
   @Override
-  public Page<EntitySetupUsageDTO> listAllEntityUsage(
-      int page, int size, String accountIdentifier, String referredEntityFQN, String searchTerm) {
+  public Page<EntitySetupUsageDTO> listAllEntityUsage(int page, int size, String accountIdentifier,
+      String referredEntityFQN, EntityType referredEntityType, String searchTerm) {
     Criteria criteria =
         entitySetupUsageFilterHelper.createCriteriaFromEntityFilter(accountIdentifier, referredEntityFQN, searchTerm);
     Pageable pageable = getPageRequest(page, size, Sort.by(Sort.Direction.DESC, EntitySetupUsageKeys.createdAt));
@@ -53,8 +54,9 @@ public class EntitySetupUsageServiceImpl implements EntitySetupUsageService {
   }
 
   @Override
-  public Boolean isEntityReferenced(String accountIdentifier, String referredEntityFQN) {
-    return entityReferenceRepository.existsByReferredEntityFQN(referredEntityFQN);
+  public Boolean isEntityReferenced(String accountIdentifier, String referredEntityFQN, EntityType referredEntityType) {
+    return entityReferenceRepository.existsByReferredEntityFQNAndReferredEntityTypeAndAccountIdentifier(
+        referredEntityFQN, referredEntityType.toString(), accountIdentifier);
   }
 
   @Override
@@ -72,19 +74,26 @@ public class EntitySetupUsageServiceImpl implements EntitySetupUsageService {
   }
 
   @Override
-  public Boolean delete(String accountIdentifier, String referredEntityFQN, String referredByEntityFQN) {
+  public Boolean delete(String accountIdentifier, String referredEntityFQN, EntityType referredEntityType,
+      String referredByEntityFQN, EntityType referredByEntityType) {
     long numberOfRecordsDeleted = 0;
-    numberOfRecordsDeleted = entityReferenceRepository.deleteByReferredEntityFQNAndReferredByEntityFQN(
-        referredEntityFQN, referredByEntityFQN);
+    numberOfRecordsDeleted =
+        entityReferenceRepository
+            .deleteByReferredEntityFQNAndReferredEntityTypeAndReferredByEntityFQNAndReferredByEntityTypeAndAccountIdentifier(
+                referredEntityFQN, referredEntityType.toString(), referredByEntityFQN, referredByEntityType.toString(),
+                accountIdentifier);
     log.info("Deleted {} records for the referred entity {}, referredBy {}", numberOfRecordsDeleted, referredEntityFQN,
         referredByEntityFQN);
     return numberOfRecordsDeleted > 0;
   }
 
   @Override
-  public Boolean deleteAllReferredByEntityRecords(String accountIdentifier, String referredByEntityFQN) {
+  public Boolean deleteAllReferredByEntityRecords(
+      String accountIdentifier, String referredByEntityFQN, EntityType referredByEntityType) {
     long numberOfRecordsDeleted = 0;
-    numberOfRecordsDeleted = entityReferenceRepository.deleteByReferredByEntityFQN(referredByEntityFQN);
+    numberOfRecordsDeleted =
+        entityReferenceRepository.deleteByReferredByEntityFQNAndReferredByEntityTypeAndAccountIdentifier(
+            referredByEntityFQN, referredByEntityType.toString(), accountIdentifier);
     return numberOfRecordsDeleted > 0;
   }
 

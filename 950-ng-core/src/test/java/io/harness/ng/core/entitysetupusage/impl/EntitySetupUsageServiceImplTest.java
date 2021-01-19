@@ -59,11 +59,12 @@ public class EntitySetupUsageServiceImplTest extends NGCoreTestBase {
     String referredEntityFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, referredIdentifier);
     saveEntitySetupUsage();
-    boolean entityReferenceExists = entitySetupUsageService.isEntityReferenced(accountIdentifier, referredEntityFQN);
+    boolean entityReferenceExists =
+        entitySetupUsageService.isEntityReferenced(accountIdentifier, referredEntityFQN, CONNECTORS);
     assertThat(entityReferenceExists).isTrue();
 
     boolean doesEntityReferenceExists =
-        entitySetupUsageService.isEntityReferenced(accountIdentifier, "identifierWhichIsNotReferenced");
+        entitySetupUsageService.isEntityReferenced(accountIdentifier, "identifierWhichIsNotReferenced", CONNECTORS);
     assertThat(doesEntityReferenceExists).isFalse();
   }
 
@@ -102,7 +103,7 @@ public class EntitySetupUsageServiceImplTest extends NGCoreTestBase {
     String referredEntityFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, referredIdentifier);
     Page<EntitySetupUsageDTO> entityReferenceDTOPage =
-        entitySetupUsageService.listAllEntityUsage(0, 10, accountIdentifier, referredEntityFQN, null);
+        entitySetupUsageService.listAllEntityUsage(0, 10, accountIdentifier, referredEntityFQN, CONNECTORS, null);
     assertThat(entityReferenceDTOPage.getTotalElements()).isEqualTo(2);
     verifyTheValuesAreCorrect(entityReferenceDTOPage.getContent().get(0), setupUsages.get(0));
     verifyTheValuesAreCorrect(entityReferenceDTOPage.getContent().get(1), setupUsages.get(1));
@@ -159,7 +160,8 @@ public class EntitySetupUsageServiceImplTest extends NGCoreTestBase {
     String referredByEntityFQN = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, referredByIdentifier);
     saveEntitySetupUsage();
-    boolean isDeleted = entitySetupUsageService.delete(accountIdentifier, referredEntityFQN, referredByEntityFQN);
+    boolean isDeleted =
+        entitySetupUsageService.delete(accountIdentifier, referredEntityFQN, CONNECTORS, referredByEntityFQN, SECRETS);
     assertThat(isDeleted).isTrue();
   }
 
@@ -167,7 +169,7 @@ public class EntitySetupUsageServiceImplTest extends NGCoreTestBase {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void deleteTestWhenRecordDoesnNotExists() {
-    boolean isDeleted = entitySetupUsageService.delete(accountIdentifier, "abc", "def");
+    boolean isDeleted = entitySetupUsageService.delete(accountIdentifier, "abc", CONNECTORS, "def", SECRETS);
     assertThat(isDeleted).isFalse();
   }
 }
