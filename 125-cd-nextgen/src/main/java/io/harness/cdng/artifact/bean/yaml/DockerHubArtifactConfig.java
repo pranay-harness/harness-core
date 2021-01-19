@@ -10,6 +10,7 @@ import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.validation.OneOfField;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -36,6 +37,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(DOCKER_HUB_NAME)
 @SimpleVisitorHelper(helperClass = DockerHubArtifactConfigVisitorHelper.class)
 @TypeAlias("dockerHubArtifactConfig")
+@OneOfField(fields = {"tag", "tagRegex"})
 public class DockerHubArtifactConfig implements ArtifactConfig, Visitable {
   /**
    * Docker hub registry connector.
