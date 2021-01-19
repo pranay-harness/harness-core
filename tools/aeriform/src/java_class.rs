@@ -1,7 +1,9 @@
+use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::HashSet;
 use std::fs;
 use std::hash::{Hash, Hasher};
+use std::process::Command;
 
 #[derive(Debug)]
 pub struct JavaClass {
@@ -25,10 +27,26 @@ impl Hash for JavaClass {
     }
 }
 
+lazy_static! {
+    static ref GIT_REPO_ROOT_DIR: String = String::from_utf8(
+        Command::new("git")
+            .args(&["rev-parse", "--show-toplevel"])
+            .output()
+            .unwrap()
+            .stdout
+    )
+    .unwrap()
+    .trim()
+    .to_string();
+}
+
 pub fn populate_target_module(location: &String) -> Option<String> {
     let re = Regex::new(r"@TargetModule\(Module._([0-9A-Z_]+)\)").unwrap();
-    let code = fs::read_to_string(&format!("/Users/george/github/portal/{}", location))
-        .expect(&format!("failed to read file {}", location));
+    let code = fs::read_to_string(&format!("{}/{}", GIT_REPO_ROOT_DIR.as_str(), location)).expect(&format!(
+        "failed to read file {}/{}",
+        GIT_REPO_ROOT_DIR.as_str(),
+        location
+    ));
 
     let captures = re.captures(&code);
 

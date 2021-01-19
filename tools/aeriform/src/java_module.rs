@@ -1,4 +1,5 @@
 use crate::java_class::{populate_target_module, JavaClass};
+use lazy_static::lazy_static;
 use multimap::MultiMap;
 use rayon::prelude::*;
 use regex::Regex;
@@ -142,14 +143,28 @@ fn populate_dependencies(jar: &String) -> MultiMap<String, String> {
         .map(|s| dependency_class(&s))
         .filter(|tuple| is_harness_class(&tuple.0))
         .filter(|tuple| is_harness_class(&tuple.1))
+        .filter(|tuple| !tuple.0.eq(&tuple.1))
         .collect::<MultiMap<String, String>>()
+}
+
+lazy_static! {
+    static ref BAZEL_ROOT_DIR: String = String::from_utf8(
+        Command::new("bazel")
+            .args(&["info", "bazel-genfiles"])
+            .output()
+            .unwrap()
+            .stdout
+    )
+    .unwrap()
+    .trim()
+    .to_string();
 }
 
 fn populate(name: &String) -> Option<JavaModule> {
     let mut split = name.split(":");
     let directory = split.next().unwrap().strip_prefix("//").unwrap().to_string();
     let target_name = split.next().unwrap();
-    let jar = format!("/Users/george/.bazel-dirs/bin/{}/lib{}.jar", directory, target_name);
+    let jar = format!("{}/{}/lib{}.jar", BAZEL_ROOT_DIR.as_str(), directory, target_name);
 
     let dependencies = populate_dependencies(&jar);
     //println!("{} {:?}", name, dependencies);

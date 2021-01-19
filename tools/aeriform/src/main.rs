@@ -1,9 +1,10 @@
-mod java_class;
-mod java_module;
+use std::collections::HashMap;
 
 use crate::java_class::JavaClass;
 use crate::java_module::{modules, JavaModule};
-use std::collections::HashMap;
+
+mod java_class;
+mod java_module;
 
 fn main() {
     println!("loading...");
@@ -42,7 +43,10 @@ fn check_already_in_target(class: &JavaClass, module: &JavaModule) {
     }
 
     if module.name.eq(target_module.unwrap()) {
-        println!("WARNING: {} target module is where it already is", class.name)
+        println!(
+            "ACTION: {} target module is where it already is - remove the annotation",
+            class.name
+        )
     }
 }
 
@@ -67,32 +71,46 @@ fn check_for_promotion(
     //println!("INFO: {:?}", class);
 
     let mut issue = false;
+    let mut ready_issue = false;
     class.dependencies.iter().for_each(|src| {
         let &dependent_class = classes
             .get(src)
             .expect(&format!("The source {} is not find in any module", src));
 
-        let dependent_module = if dependent_class.target_module.is_some() {
+        let &dependent_real_module = class_modules.get(dependent_class).expect(&format!(
+            "The class {} is not find in the modules",
+            dependent_class.name
+        ));
+
+        let dependent_target_module = if dependent_class.target_module.is_some() {
             modules.get(dependent_class.target_module.as_ref().unwrap()).unwrap()
         } else {
-            class_modules.get(dependent_class).expect(&format!(
-                "The class {} is not find in the modules",
-                dependent_class.name
-            ))
+            dependent_real_module
         };
 
         //println!("INFO: {:?} depends on {:?} that is in module that is higher than the target {:?}", class, dependent_class, dependent_module);
 
-        if dependent_module.index < target_module.index {
+        if dependent_target_module.index < target_module.index {
             issue = true;
             println!(
                 "ERROR: {} depends on {} that is in module {} higher than the target {}",
-                class.name, dependent_class.name, dependent_module.name, target_module.name
+                class.name, dependent_class.name, dependent_target_module.name, target_module.name
             )
+        }
+
+        if dependent_real_module.index < target_module.index {
+            ready_issue = true;
         }
     });
 
     if !issue {
-        println!("WARNING: {} is set and nothing prevents the promotion", class.name)
+        if !ready_issue {
+            println!("ACTION: {} is ready to go to {}", class.name, target_module.name)
+        } else {
+            println!(
+                "WARNING: {} does not have untargeted dependencies to go to {}",
+                class.name, target_module.name
+            )
+        }
     }
 }
