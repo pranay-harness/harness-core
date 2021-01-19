@@ -12,13 +12,14 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import io.harness.artifacts.beans.BuildDetailsInternal;
-import io.harness.artifacts.gcr.beans.GcpInternalConfig;
+import io.harness.artifacts.gcr.beans.GcrInternalConfig;
+import io.harness.artifacts.gcr.service.GcrApiServiceImpl;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
-import software.wings.service.mappers.artifact.GcpConfigToInternalMapper;
+import software.wings.service.mappers.artifact.GcrConfigToInternalMapper;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
@@ -30,12 +31,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class GcrServiceTest extends WingsBaseTest {
-  GcrServiceImpl gcrService = spy(new GcrServiceImpl());
+public class GcrApiServiceTest extends WingsBaseTest {
+  GcrApiServiceImpl gcrService = spy(new GcrApiServiceImpl());
   @Rule public WireMockRule wireMockRule = new WireMockRule(wireMockConfig().port(9881));
   private static final String url = "localhost:9881";
   String basicAuthHeader = "auth";
-  GcpInternalConfig gcpInternalConfig = GcpConfigToInternalMapper.toGcpInternalConfig(url, basicAuthHeader);
+  GcrInternalConfig gcpInternalConfig = GcrConfigToInternalMapper.toGcpInternalConfig(url, basicAuthHeader);
 
   @Before
   public void setUp() {
@@ -55,7 +56,7 @@ public class GcrServiceTest extends WingsBaseTest {
     assertThat(actual.stream().map(BuildDetailsInternal::getNumber).collect(Collectors.toList()))
         .isEqualTo(Lists.newArrayList("latest", "v1", "v2"));
 
-    gcrService.getBuilds(GcpConfigToInternalMapper.toGcpInternalConfig(url, basicAuthHeader), "someImage", 100);
+    gcrService.getBuilds(GcrConfigToInternalMapper.toGcpInternalConfig(url, basicAuthHeader), "someImage", 100);
     assertThatThrownBy(() -> gcrService.getBuilds(gcpInternalConfig, "doesNotExist", 100))
         .isInstanceOf(WingsException.class);
   }

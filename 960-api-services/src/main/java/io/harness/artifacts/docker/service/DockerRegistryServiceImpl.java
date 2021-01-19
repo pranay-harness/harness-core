@@ -199,7 +199,6 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       throw new InvalidArtifactServerException(
           "There are no builds for this image: " + imageName + " and tagRegex: " + tagRegex, USER);
     }
-    // return the last build as builds list is sorted by ascending order
     return builds.get(0);
   }
 

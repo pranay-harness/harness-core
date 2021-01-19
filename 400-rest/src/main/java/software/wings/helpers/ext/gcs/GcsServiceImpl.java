@@ -10,6 +10,7 @@ import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDeta
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.task.gcp.helpers.GcpHelperService;
 import io.harness.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArtifactServerException;
@@ -20,7 +21,6 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.service.impl.GcpHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 
 import com.google.api.services.storage.Storage;
@@ -74,7 +74,9 @@ public class GcsServiceImpl implements GcsService {
     int maxToRetrive = 10000;
 
     try {
-      Storage gcsStorageService = gcpHelperService.getGcsStorageService(gcpConfig, encryptionDetails);
+      encryptionService.decrypt(gcpConfig, encryptionDetails, false);
+      Storage gcsStorageService =
+          gcpHelperService.getGcsStorageService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate());
       Storage.Objects.List listObjects = gcsStorageService.objects().list(bucketName);
       listObjects.setMaxResults(maxResults);
       do {
@@ -142,7 +144,9 @@ public class GcsServiceImpl implements GcsService {
     if (isExpression) {
       try {
         Pattern pattern = Pattern.compile(artifactPath.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
-        Storage gcsStorageService = gcpHelperService.getGcsStorageService(gcpConfig, encryptionDetails);
+        encryptionService.decrypt(gcpConfig, encryptionDetails, false);
+        Storage gcsStorageService = gcpHelperService.getGcsStorageService(
+            gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate());
         Storage.Objects.List listObjects = gcsStorageService.objects().list(bucketName);
         listObjects.setMaxResults(maxResults);
 
@@ -212,7 +216,9 @@ public class GcsServiceImpl implements GcsService {
       String bucketName, String objName, boolean versioningEnabledForBucket) {
     try {
       String versionId;
-      Storage gcsStorageService = gcpHelperService.getGcsStorageService(gcpConfig, encryptionDetails);
+      encryptionService.decrypt(gcpConfig, encryptionDetails, false);
+      Storage gcsStorageService =
+          gcpHelperService.getGcsStorageService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate());
       Storage.Objects.Get request = gcsStorageService.objects().get(bucketName, objName);
       String lastUpdatedAt = request.execute().getUpdated().toString();
 
@@ -250,7 +256,8 @@ public class GcsServiceImpl implements GcsService {
     try {
       encryptionService.decrypt(gcpConfig, encryptionDetails, false);
       // Get versioning info for given bucket
-      Storage gcsStorageService = gcpHelperService.getGcsStorageService(gcpConfig, encryptionDetails);
+      Storage gcsStorageService =
+          gcpHelperService.getGcsStorageService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate());
       Storage.Buckets.Get request = gcsStorageService.buckets().get(bucketName);
 
       if (request.execute().getVersioning() != null) {
@@ -308,7 +315,8 @@ public class GcsServiceImpl implements GcsService {
     }
 
     try {
-      Storage gcsStorageService = gcpHelperService.getGcsStorageService(gcpConfig, encryptedDataDetails);
+      Storage gcsStorageService =
+          gcpHelperService.getGcsStorageService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate());
       bucketsObj = gcsStorageService.buckets();
       Storage.Buckets.List request = bucketsObj.list(projectId);
       listOfBuckets = request.execute();

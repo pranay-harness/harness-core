@@ -1,4 +1,4 @@
-package software.wings.service.impl.gcp;
+package io.harness.gcp.helpers;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 

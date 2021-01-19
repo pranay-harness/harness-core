@@ -1,4 +1,4 @@
-package software.wings.helpers.ext.gcr;
+package io.harness.artifacts.gcr.service;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
@@ -12,11 +12,15 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactMetadataKeys;
 import io.harness.artifacts.beans.BuildDetailsInternal;
 import io.harness.artifacts.comparator.BuildDetailsInternalComparatorAscending;
-import io.harness.artifacts.gcr.beans.GcpInternalConfig;
+import io.harness.artifacts.comparator.BuildDetailsInternalComparatorDescending;
+import io.harness.artifacts.gcr.GcrRestClient;
+import io.harness.artifacts.gcr.beans.GcrInternalConfig;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.WingsException;
+import io.harness.expression.RegexFunctor;
 import io.harness.network.Http;
 
 import com.google.inject.Singleton;
@@ -25,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import retrofit2.Response;
@@ -37,7 +42,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
-public class GcrServiceImpl implements GcrService {
+public class GcrApiServiceImpl implements GcrApiService {
   private static final int CONNECT_TIMEOUT = 5; // TODO:: read from config
 
   private GcrRestClient getGcrRestClient(String registryHostName) {
@@ -59,13 +64,13 @@ public class GcrServiceImpl implements GcrService {
   }
 
   @Override
-  public List<BuildDetailsInternal> getBuilds(GcpInternalConfig gcpConfig, String imageName, int maxNumberOfBuilds) {
+  public List<BuildDetailsInternal> getBuilds(GcrInternalConfig gcpConfig, String imageName, int maxNumberOfBuilds) {
     try {
-      Response<GcrImageTagResponse> response = getGcrRestClient(gcpConfig.getGcrHostName())
+      Response<GcrImageTagResponse> response = getGcrRestClient(gcpConfig.getRegistryHostname())
                                                    .listImageTags(gcpConfig.getBasicAuthHeader(), imageName)
                                                    .execute();
       checkValidImage(imageName, response);
-      return processBuildResponse(gcpConfig.getGcrHostName(), imageName, response.body());
+      return processBuildResponse(gcpConfig.getRegistryHostname(), imageName, response.body());
     } catch (IOException e) {
       throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER, e).addParam("message", ExceptionUtils.getMessage(e));
     }
@@ -102,14 +107,14 @@ public class GcrServiceImpl implements GcrService {
   }
 
   @Override
-  public BuildDetailsInternal getLastSuccessfulBuild(GcpInternalConfig gcpConfig, String imageName) {
+  public BuildDetailsInternal getLastSuccessfulBuild(GcrInternalConfig gcpConfig, String imageName) {
     return null;
   }
 
   @Override
-  public boolean verifyImageName(GcpInternalConfig gcpConfig, String imageName) {
+  public boolean verifyImageName(GcrInternalConfig gcpConfig, String imageName) {
     try {
-      Response<GcrImageTagResponse> response = getGcrRestClient(gcpConfig.getGcrHostName())
+      Response<GcrImageTagResponse> response = getGcrRestClient(gcpConfig.getRegistryHostname())
                                                    .listImageTags(gcpConfig.getBasicAuthHeader(), imageName)
                                                    .execute();
       if (!isSuccessful(response)) {
@@ -130,13 +135,42 @@ public class GcrServiceImpl implements GcrService {
   }
 
   @Override
-  public boolean validateCredentials(GcpInternalConfig gcpConfig, String imageName) {
+  public boolean validateCredentials(GcrInternalConfig gcpConfig, String imageName) {
     try {
-      GcrRestClient registryRestClient = getGcrRestClient(gcpConfig.getGcrHostName());
+      GcrRestClient registryRestClient = getGcrRestClient(gcpConfig.getRegistryHostname());
       Response response = registryRestClient.listImageTags(gcpConfig.getBasicAuthHeader(), imageName).execute();
       return isSuccessful(response);
     } catch (IOException e) {
       throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER, e).addParam("message", ExceptionUtils.getMessage(e));
+    }
+  }
+
+  @Override
+  public BuildDetailsInternal getLastSuccessfulBuildFromRegex(
+      GcrInternalConfig gcrInternalConfig, String imageName, String tagRegex) {
+    List<BuildDetailsInternal> builds = getBuilds(gcrInternalConfig, imageName, MAX_NO_OF_TAGS_PER_IMAGE);
+    builds = builds.stream()
+                 .filter(build -> new RegexFunctor().match(tagRegex, build.getNumber()))
+                 .sorted(new BuildDetailsInternalComparatorDescending())
+                 .collect(toList());
+    if (builds.isEmpty()) {
+      throw new InvalidArtifactServerException(
+          "There are no builds for this image: " + imageName + " and tagRegex: " + tagRegex, USER);
+    }
+    return builds.get(0);
+  }
+
+  @Override
+  public BuildDetailsInternal verifyBuildNumber(GcrInternalConfig gcrInternalConfig, String imageName, String tag) {
+    try {
+      List<BuildDetailsInternal> builds = getBuilds(gcrInternalConfig, imageName, MAX_NO_OF_TAGS_PER_IMAGE);
+      builds = builds.stream().filter(build -> build.getNumber().equals(tag)).collect(Collectors.toList());
+      if (builds.size() != 1) {
+        throw new InvalidArtifactServerException("Didn't get build number", USER);
+      }
+      return builds.get(0);
+    } catch (Exception e) {
+      throw new ArtifactServerException(ExceptionUtils.getMessage(e), e, USER);
     }
   }
 

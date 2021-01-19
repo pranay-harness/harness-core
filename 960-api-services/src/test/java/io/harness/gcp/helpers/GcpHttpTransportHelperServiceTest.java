@@ -1,9 +1,10 @@
-package software.wings.service.impl.gcp;
+package io.harness.gcp.helpers;
 
 import static io.harness.rule.OwnerRule.AGORODETKI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -15,7 +16,7 @@ import java.security.GeneralSecurityException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class GcpHttpTransportHelperServiceTest {
+public class GcpHttpTransportHelperServiceTest extends CategoryTest {
   private final GcpHttpTransportHelperService gcpHttpTransportHelperService = new GcpHttpTransportHelperService();
 
   @Test

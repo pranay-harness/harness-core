@@ -4,20 +4,21 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.task.artifacts.gcr.exceptions.GcbClientException;
+import io.harness.delegate.task.gcp.helpers.GcpHelperService;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
 
 import software.wings.beans.GcpConfig;
 import software.wings.beans.TaskType;
-import software.wings.exception.GcbClientException;
 import software.wings.helpers.ext.gcb.models.BuildOperationDetails;
 import software.wings.helpers.ext.gcb.models.GcbBuildDetails;
 import software.wings.helpers.ext.gcb.models.GcbBuildTriggers;
 import software.wings.helpers.ext.gcb.models.GcbTrigger;
 import software.wings.helpers.ext.gcb.models.RepoSource;
 import software.wings.helpers.ext.gcs.GcsRestClient;
-import software.wings.service.impl.GcpHelperService;
+import software.wings.service.intfc.security.EncryptionService;
 
 import com.google.api.client.auth.oauth2.TokenResponseException;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
@@ -47,10 +48,12 @@ public class GcbServiceImpl implements GcbService {
   public static final String GCB_BASE_URL = "https://cloudbuild.googleapis.com/";
   public static final String GCS_BASE_URL = "https://storage.googleapis.com/storage/";
   private final GcpHelperService gcpHelperService;
+  private final EncryptionService encryptionService;
 
   @Inject
-  public GcbServiceImpl(GcpHelperService gcpHelperService) {
+  public GcbServiceImpl(GcpHelperService gcpHelperService, EncryptionService encryptionService) {
     this.gcpHelperService = gcpHelperService;
+    this.encryptionService = encryptionService;
   }
 
   @Override
@@ -188,9 +191,11 @@ public class GcbServiceImpl implements GcbService {
   @VisibleForTesting
   String getBasicAuthHeader(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails) throws IOException {
     if (gcpConfig.isUseDelegate()) {
-      return gcpHelperService.getDefaultCredentialsAccessToken(TaskType.GCB);
+      return gcpHelperService.getDefaultCredentialsAccessToken(TaskType.GCB.name());
     }
-    GoogleCredential gc = gcpHelperService.getGoogleCredential(gcpConfig, encryptionDetails, false);
+    encryptionService.decrypt(gcpConfig, encryptionDetails, false);
+    GoogleCredential gc =
+        gcpHelperService.getGoogleCredential(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate());
 
     try {
       if (gc.refreshToken()) {
@@ -208,7 +213,7 @@ public class GcbServiceImpl implements GcbService {
   @Override
   public String getProjectId(GcpConfig gcpConfig) {
     if (gcpConfig.isUseDelegate()) {
-      return gcpHelperService.getClusterProjectId(TaskType.GCB);
+      return gcpHelperService.getClusterProjectId(TaskType.GCB.name());
     } else {
       return (String) (JsonUtils.asObject(new String(gcpConfig.getServiceAccountKeyFileContent()), HashMap.class))
           .get("project_id");

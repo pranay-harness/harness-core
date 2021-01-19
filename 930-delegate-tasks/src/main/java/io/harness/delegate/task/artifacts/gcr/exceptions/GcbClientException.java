@@ -1,4 +1,4 @@
-package software.wings.exception;
+package io.harness.delegate.task.artifacts.gcr.exceptions;
 
 public class GcbClientException extends RuntimeException {
   public GcbClientException(String message, Throwable cause) {

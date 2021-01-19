@@ -1,10 +1,9 @@
-package software.wings.helpers.ext.gcr;
+package io.harness.artifacts.gcr;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-
-import software.wings.helpers.ext.gcr.GcrServiceImpl.GcrImageTagResponse;
+import io.harness.artifacts.gcr.service.GcrApiServiceImpl.GcrImageTagResponse;
 
 import retrofit2.Call;
 import retrofit2.http.GET;

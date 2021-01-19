@@ -1,7 +1,8 @@
 package software.wings.integration;
 
+import static io.harness.delegate.task.gcp.helpers.GcpHelperService.LOCATION_DELIMITER;
+
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.service.impl.GcpHelperService.LOCATION_DELIMITER;
 
 import io.harness.CategoryTest;
 import io.harness.k8s.KubernetesContainerServiceImpl;

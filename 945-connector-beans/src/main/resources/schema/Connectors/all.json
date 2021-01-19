@@ -1083,6 +1083,9 @@
           "properties": {
             "credential": {
               "$ref": "#/definitions/GcpConnectorCredential"
+            },
+            "gcrUrl": {
+              "type": "string"
             }
           }
         }

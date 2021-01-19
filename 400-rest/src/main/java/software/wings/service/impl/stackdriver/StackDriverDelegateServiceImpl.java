@@ -14,6 +14,7 @@ import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import static java.time.Duration.ofSeconds;
 
+import io.harness.delegate.task.gcp.helpers.GcpHelperService;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.VerificationOperationException;
 import io.harness.exception.WingsException;
@@ -27,7 +28,6 @@ import software.wings.delegatetasks.DelegateCVActivityLogService;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.helpers.ext.gcb.GcbService;
-import software.wings.service.impl.GcpHelperService;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
@@ -95,7 +95,8 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
     List<EncryptedDataDetail> encryptionDetails = taskParams.getEncryptedDataDetails();
     encryptionService.decrypt(gcpConfig, encryptionDetails, false);
     String projectId = getProjectId(gcpConfig);
-    Monitoring monitoring = gcpHelperService.getMonitoringService(gcpConfig, encryptionDetails, projectId);
+    Monitoring monitoring = gcpHelperService.getMonitoringService(
+        gcpConfig.getServiceAccountKeyFileContent(), projectId, gcpConfig.isUseDelegate());
     String projectResource = "projects/" + projectId;
     List<ListTimeSeriesResponse> responses = new ArrayList<>();
     long startTime = setupTestNodeData.getFromTime() * TimeUnit.SECONDS.toMillis(1);
@@ -130,11 +131,13 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
     encryptionService.decrypt(gcpConfig, encryptionDetails, false);
     String projectId = getProjectId(gcpConfig);
     try {
-      List<Region> regions = gcpHelperService.getGCEService(gcpConfig, encryptionDetails, projectId)
-                                 .regions()
-                                 .list(projectId)
-                                 .execute()
-                                 .getItems();
+      List<Region> regions =
+          gcpHelperService
+              .getGCEService(gcpConfig.getServiceAccountKeyFileContent(), projectId, gcpConfig.isUseDelegate())
+              .regions()
+              .list(projectId)
+              .execute()
+              .getItems();
       if (isNotEmpty(regions)) {
         return regions.stream().map(Region::getName).collect(Collectors.toList());
       }
@@ -152,7 +155,8 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
     String projectId = getProjectId(gcpConfig);
     try {
       List<ForwardingRule> forwardingRulesByRegion =
-          gcpHelperService.getGCEService(gcpConfig, encryptionDetails, projectId)
+          gcpHelperService
+              .getGCEService(gcpConfig.getServiceAccountKeyFileContent(), projectId, gcpConfig.isUseDelegate())
               .forwardingRules()
               .list(projectId, region)
               .execute()
@@ -354,7 +358,8 @@ public class StackDriverDelegateServiceImpl implements StackDriverDelegateServic
     final List<EncryptedDataDetail> encryptionDetails = dataCollectionInfo.getEncryptedDataDetails();
     encryptionService.decrypt(gcpConfig, encryptionDetails, false);
     String projectId = getProjectId(gcpConfig);
-    Logging logging = gcpHelperService.getLoggingResource(gcpConfig, encryptionDetails, projectId);
+    Logging logging = gcpHelperService.getLoggingResource(
+        gcpConfig.getServiceAccountKeyFileContent(), projectId, gcpConfig.isUseDelegate());
 
     String queryField = getQueryField(dataCollectionInfo.getHostnameField(),
         new ArrayList<>(dataCollectionInfo.getHosts()), dataCollectionInfo.getQuery(), startTime, endTime, is24x7Task);

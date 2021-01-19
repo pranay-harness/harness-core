@@ -16,6 +16,7 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.task.gcp.helpers.GcpHelperService;
 import io.harness.delegate.task.gcp.request.GcpRequest;
 import io.harness.delegate.task.gcp.request.GcpValidationRequest;
 import io.harness.delegate.task.gcp.response.GcpResponse;
@@ -27,8 +28,8 @@ import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.beans.GcpConfig;
 import software.wings.beans.TaskType;
-import software.wings.service.impl.GcpHelperService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.security.EncryptionService;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -43,6 +44,7 @@ import org.apache.commons.lang3.StringUtils;
 public class GcpHelperServiceManager {
   @Inject private GcpHelperService gcpHelperService;
   @Inject private DelegateService delegateService;
+  @Inject private EncryptionService encryptionService;
 
   public void validateCredential(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     if (gcpConfig.isUseDelegate()) {
@@ -56,7 +58,9 @@ public class GcpHelperServiceManager {
         throw new InvalidRequestException(errorMessage, USER);
       }
     } else {
-      gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails, false);
+      // Decrypt gcpConfig
+      encryptionService.decrypt(gcpConfig, encryptedDataDetails, false);
+      gcpHelperService.getGkeContainerService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate());
     }
   }
 

@@ -1,22 +1,22 @@
 package software.wings.cloudprovider.gke;
 
+import static io.harness.delegate.task.gcp.helpers.GcpHelperService.LOCATION_DELIMITER;
 import static io.harness.rule.OwnerRule.BRETT;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.service.impl.GcpHelperService.LOCATION_DELIMITER;
 
 import static junit.framework.TestCase.fail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.gcp.helpers.GcpHelperService;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.rule.Owner;
@@ -24,7 +24,7 @@ import io.harness.rule.Owner;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.service.impl.GcpHelperService;
+import software.wings.service.intfc.security.EncryptionService;
 
 import com.google.api.client.googleapis.json.GoogleJsonError;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
@@ -72,10 +72,12 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
   @Mock private Container.Projects.Locations.Operations operations;
   @Mock private Container.Projects.Locations.Operations.Get operationsGet;
   @Mock private HttpHeaders httpHeaders;
+  @Mock private EncryptionService encryptionService;
 
   @Inject @InjectMocks private GkeClusterService gkeClusterService;
   private GoogleJsonResponseException notFoundException;
 
+  private final char[] serviceAccountKey = "{\"project_id\": \"project-a\"}".toCharArray();
   private static final SettingAttribute COMPUTE_PROVIDER_SETTING =
       aSettingAttribute()
           .withValue(
@@ -119,7 +121,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setUp() throws Exception {
-    when(gcpHelperService.getGkeContainerService(any(), any(), anyBoolean())).thenReturn(container);
+    when(gcpHelperService.getGkeContainerService(serviceAccountKey, false)).thenReturn(container);
     when(gcpHelperService.getSleepIntervalSecs()).thenReturn(0);
     when(gcpHelperService.getTimeoutMins()).thenReturn(1);
     when(container.projects()).thenReturn(projects);
