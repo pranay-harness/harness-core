@@ -21,6 +21,8 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.aws.AwsCallTracker;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.AwsAutoScaleException;
@@ -217,6 +219,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._960_API_SERVICES)
 public class AwsHelperService {
   private static final String AWS_AVAILABILITY_ZONE_CHECK =
       "http://169.254.169.254/latest/meta-data/placement/availability-zone";

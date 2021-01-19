@@ -3,6 +3,8 @@ package software.wings.beans;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
 import io.harness.delegate.beans.TaskGroup;
@@ -40,6 +42,7 @@ import org.mongodb.morphia.annotations.Id;
 @NgUniqueIndex(name = "uniqueName",
     fields = { @Field(value = DelegateScopeKeys.accountId)
                , @Field(value = DelegateScopeKeys.name) })
+@TargetModule(Module._420_DELEGATE_SERVICE)
 public class DelegateScope implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                       UpdatedByAware, AccountAccess {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
