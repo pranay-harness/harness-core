@@ -1,6 +1,7 @@
 package io.harness.delegate.git;
 
 import static io.harness.git.model.GitRepositoryType.YAML;
+import static io.harness.utils.FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef;
 
 import io.harness.delegate.beans.connector.scm.genericgitconnector.CustomCommitAttributes;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
@@ -58,8 +59,10 @@ public class NGGitServiceImpl implements NGGitService {
       case HTTP:
         // todo @deepak @vaibhav: handle kerboros when added.
         GitHTTPAuthenticationDTO httpAuthenticationDTO = (GitHTTPAuthenticationDTO) gitConfig.getGitAuth();
+        String userName = getSecretAsStringFromPlainTextOrSecretRef(
+            httpAuthenticationDTO.getUsername(), httpAuthenticationDTO.getUsernameRef());
         return UsernamePasswordAuthRequest.builder()
-            .username(httpAuthenticationDTO.getUsername())
+            .username(userName)
             .password(httpAuthenticationDTO.getPasswordRef().getDecryptedValue())
             .build();
       default:

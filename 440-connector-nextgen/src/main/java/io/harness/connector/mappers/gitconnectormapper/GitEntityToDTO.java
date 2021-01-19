@@ -45,12 +45,10 @@ public class GitEntityToDTO extends ConnectorEntityToDTOMapper<GitConfigDTO, Git
   private GitHTTPAuthenticationDTO createHTTPAuthenticationDTO(GitConfig gitConfig) {
     GitUserNamePasswordAuthentication userNamePasswordAuth =
         (GitUserNamePasswordAuthentication) gitConfig.getAuthenticationDetails();
-    return GitHTTPAuthenticationDTO
-        .builder()
-
+    return GitHTTPAuthenticationDTO.builder()
         .username(userNamePasswordAuth.getUserName())
+        .usernameRef(SecretRefHelper.createSecretRef(userNamePasswordAuth.getUserNameRef()))
         .passwordRef(SecretRefHelper.createSecretRef(userNamePasswordAuth.getPasswordReference()))
-
         .build();
   }
 

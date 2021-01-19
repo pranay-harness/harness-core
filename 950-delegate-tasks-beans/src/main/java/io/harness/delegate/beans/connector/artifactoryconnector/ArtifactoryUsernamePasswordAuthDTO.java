@@ -2,6 +2,7 @@ package io.harness.delegate.beans.connector.artifactoryconnector;
 
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretReference;
+import io.harness.validation.OneOfField;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModel;
@@ -14,7 +15,9 @@ import lombok.Data;
 @Builder
 @ApiModel("ArtifactoryUsernamePasswordAuth")
 @JsonTypeName(ArtifactoryConstants.USERNAME_PASSWORD)
+@OneOfField(fields = {"username", "usernameRef"})
 public class ArtifactoryUsernamePasswordAuthDTO implements ArtifactoryAuthCredentialsDTO {
-  @NotNull String username;
+  String username;
+  @ApiModelProperty(dataType = "string") @SecretReference SecretRefData usernameRef;
   @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData passwordRef;
 }

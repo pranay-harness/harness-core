@@ -36,6 +36,7 @@ public class DockerDTOToEntity extends ConnectorDTOToEntityMapper<DockerConnecto
       DockerUserNamePasswordDTO dockerUserNamePasswordDTO) {
     return DockerUserNamePasswordAuthentication.builder()
         .username(dockerUserNamePasswordDTO.getUsername())
+        .usernameRef(SecretRefHelper.getSecretConfigString(dockerUserNamePasswordDTO.getUsernameRef()))
         .passwordRef(SecretRefHelper.getSecretConfigString(dockerUserNamePasswordDTO.getPasswordRef()))
         .build();
   }

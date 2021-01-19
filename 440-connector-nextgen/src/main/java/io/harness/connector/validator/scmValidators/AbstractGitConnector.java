@@ -50,8 +50,8 @@ public abstract class AbstractGitConnector extends AbstractConnectorValidator {
     switch (gitConfig.getGitAuthType()) {
       case HTTP:
         GitHTTPAuthenticationDTO gitAuthenticationDTO = (GitHTTPAuthenticationDTO) gitConfig.getGitAuth();
-        validateRequiredFieldsPresent(gitAuthenticationDTO.getPasswordRef(), gitConfig.getUrl(),
-            gitAuthenticationDTO.getUsername(), gitConfig.getGitConnectionType());
+        validateRequiredFieldsPresent(
+            gitAuthenticationDTO.getPasswordRef(), gitConfig.getUrl(), gitConfig.getGitConnectionType());
         break;
       case SSH:
         throw new InvalidRequestException("Not implemented");

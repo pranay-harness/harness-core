@@ -1,5 +1,7 @@
 package io.harness.delegate.task.nexus;
 
+import static io.harness.utils.FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef;
+
 import io.harness.delegate.beans.connector.nexusconnector.NexusAuthType;
 import io.harness.delegate.beans.connector.nexusconnector.NexusConnectorDTO;
 import io.harness.delegate.beans.connector.nexusconnector.NexusUsernamePasswordAuthDTO;
@@ -25,7 +27,8 @@ public class NexusMapper {
     final NexusUsernamePasswordAuthDTO credentials =
         (NexusUsernamePasswordAuthDTO) nexusConnectorDTO.getAuth().getCredentials();
     final SecretRefData passwordRef = credentials.getPasswordRef();
-    final String username = credentials.getUsername();
+    final String username =
+        getSecretAsStringFromPlainTextOrSecretRef(credentials.getUsername(), credentials.getUsernameRef());
     return nexusRequestBuilder.hasCredentials(true)
         .username(username)
         .password(passwordRef.getDecryptedValue())

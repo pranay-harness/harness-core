@@ -39,8 +39,12 @@ public class AwsEntityToDTO extends ConnectorEntityToDTOMapper<AwsConnectorDTO, 
 
   private AwsCredentialDTOBuilder buildManualCredential(AwsAccessKeyCredential credential) {
     final SecretRefData secretRef = SecretRefHelper.createSecretRef(credential.getSecretKeyRef());
-    final AwsManualConfigSpecDTO awsManualConfigSpecDTO =
-        AwsManualConfigSpecDTO.builder().accessKey(credential.getAccessKey()).secretKeyRef(secretRef).build();
+    final SecretRefData accessKeyRef = SecretRefHelper.createSecretRef(credential.getAccessKeyRef());
+    final AwsManualConfigSpecDTO awsManualConfigSpecDTO = AwsManualConfigSpecDTO.builder()
+                                                              .accessKey(credential.getAccessKey())
+                                                              .secretKeyRef(secretRef)
+                                                              .accessKeyRef(accessKeyRef)
+                                                              .build();
     return AwsCredentialDTO.builder()
         .awsCredentialType(AwsCredentialType.MANUAL_CREDENTIALS)
         .config(awsManualConfigSpecDTO);

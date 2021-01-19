@@ -45,8 +45,12 @@ public class AwsDTOToEntity extends ConnectorDTOToEntityMapper<AwsConnectorDTO, 
   private AwsConfigBuilder buildManualCredential(AwsCredentialDTO connector) {
     final AwsManualConfigSpecDTO config = (AwsManualConfigSpecDTO) connector.getConfig();
     final String secretKeyRef = SecretRefHelper.getSecretConfigString(config.getSecretKeyRef());
-    AwsAccessKeyCredential accessKeyCredential =
-        AwsAccessKeyCredential.builder().accessKey(config.getAccessKey()).secretKeyRef(secretKeyRef).build();
+    final String accessKeyRef = SecretRefHelper.getSecretConfigString(config.getAccessKeyRef());
+    AwsAccessKeyCredential accessKeyCredential = AwsAccessKeyCredential.builder()
+                                                     .accessKey(config.getAccessKey())
+                                                     .accessKeyRef(accessKeyRef)
+                                                     .secretKeyRef(secretKeyRef)
+                                                     .build();
     return AwsConfig.builder().credentialType(AwsCredentialType.MANUAL_CREDENTIALS).credential(accessKeyCredential);
   }
 }

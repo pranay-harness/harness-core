@@ -7,6 +7,7 @@ import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateResponse;
+import io.harness.utils.FieldWithPlainTextOrSecretValueHelper;
 
 import java.util.List;
 import java.util.Map;
@@ -28,7 +29,8 @@ public class DockerRequestResponseMapper {
             ? new String(credentials.getPasswordRef().getDecryptedValue())
             : null;
       }
-      username = credentials.getUsername();
+      username = FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef(
+          credentials.getUsername(), credentials.getUsernameRef());
     }
     return DockerInternalConfig.builder()
         .dockerRegistryUrl(request.getDockerConnectorDTO().getDockerRegistryUrl())
