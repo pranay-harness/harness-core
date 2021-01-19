@@ -14,5 +14,6 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("io.harness.connector.entities.embedded.docker.DockerUserNamePasswordAuthentication")
 public class DockerUserNamePasswordAuthentication implements DockerAuthentication {
   String username;
+  String usernameRef;
   String passwordRef;
 }

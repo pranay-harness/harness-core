@@ -1,5 +1,7 @@
 package io.harness.delegate.task.aws;
 
+import static io.harness.utils.FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef;
+
 import io.harness.aws.AwsAccessKeyCredential;
 import io.harness.aws.AwsConfig;
 import io.harness.aws.CrossAccountAccess;
@@ -48,7 +50,8 @@ public class AwsNgConfigMapper {
         awsConfig = AwsConfig.builder()
                         .crossAccountAccess(mapCrossAccountAccess(credential.getCrossAccountAccess()))
                         .awsAccessKeyCredential(AwsAccessKeyCredential.builder()
-                                                    .accessKey(config.getAccessKey())
+                                                    .accessKey(getSecretAsStringFromPlainTextOrSecretRef(
+                                                        config.getAccessKey(), config.getAccessKeyRef()))
                                                     .secretKey(getDecryptedValueWithNullCheck(secretKeyRef))
                                                     .build())
                         .build();

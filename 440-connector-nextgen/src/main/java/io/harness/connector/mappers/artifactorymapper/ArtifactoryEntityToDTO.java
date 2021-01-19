@@ -23,6 +23,7 @@ public class ArtifactoryEntityToDTO extends ConnectorEntityToDTOMapper<Artifacto
       ArtifactoryUsernamePasswordAuthDTO artifactoryUsernamePasswordAuthDTO =
           ArtifactoryUsernamePasswordAuthDTO.builder()
               .username(artifactoryCredentials.getUsername())
+              .usernameRef(SecretRefHelper.createSecretRef(artifactoryCredentials.getUsernameRef()))
               .passwordRef(SecretRefHelper.createSecretRef(artifactoryCredentials.getPasswordRef()))
               .build();
       artifactoryAuthenticationDTO = ArtifactoryAuthenticationDTO.builder()

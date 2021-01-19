@@ -33,6 +33,7 @@ public class NexusDTOToEntity extends ConnectorDTOToEntityMapper<NexusConnectorD
       NexusUsernamePasswordAuthDTO nexusUsernamePasswordAuthDTO) {
     return NexusUserNamePasswordAuthentication.builder()
         .username(nexusUsernamePasswordAuthDTO.getUsername())
+        .usernameRef(SecretRefHelper.getSecretConfigString(nexusUsernamePasswordAuthDTO.getUsernameRef()))
         .passwordRef(SecretRefHelper.getSecretConfigString(nexusUsernamePasswordAuthDTO.getPasswordRef()))
         .build();
   }

@@ -9,5 +9,6 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("io.harness.connector.entities.embedded.gitconnector.GitUserNamePasswordAuthentication")
 public class GitUserNamePasswordAuthentication implements GitAuthentication {
   String userName;
+  String userNameRef;
   String passwordReference;
 }

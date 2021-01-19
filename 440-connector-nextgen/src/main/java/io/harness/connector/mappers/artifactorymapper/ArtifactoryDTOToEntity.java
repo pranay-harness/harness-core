@@ -32,6 +32,7 @@ public class ArtifactoryDTOToEntity extends ConnectorDTOToEntityMapper<Artifacto
       ArtifactoryUsernamePasswordAuthDTO artifactoryUsernamePasswordAuthDTO) {
     return ArtifactoryUserNamePasswordAuthentication.builder()
         .username(artifactoryUsernamePasswordAuthDTO.getUsername())
+        .usernameRef(SecretRefHelper.getSecretConfigString(artifactoryUsernamePasswordAuthDTO.getUsernameRef()))
         .passwordRef(SecretRefHelper.getSecretConfigString(artifactoryUsernamePasswordAuthDTO.getPasswordRef()))
         .build();
   }

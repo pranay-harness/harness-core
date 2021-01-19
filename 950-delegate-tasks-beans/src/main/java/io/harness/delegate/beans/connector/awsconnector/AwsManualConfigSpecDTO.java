@@ -3,6 +3,7 @@ package io.harness.delegate.beans.connector.awsconnector;
 import io.harness.beans.DecryptableEntity;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretReference;
+import io.harness.validation.OneOfField;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModel;
@@ -15,7 +16,9 @@ import lombok.Value;
 @Builder
 @JsonTypeName(AwsConstants.MANUAL_CONFIG)
 @ApiModel("AwsManualConfigSpec")
+@OneOfField(fields = {"accessKey", "accessKeyRef"})
 public class AwsManualConfigSpecDTO implements AwsCredentialSpecDTO, DecryptableEntity {
-  @NotNull String accessKey;
+  String accessKey;
+  @ApiModelProperty(dataType = "string") @SecretReference SecretRefData accessKeyRef;
   @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData secretKeyRef;
 }

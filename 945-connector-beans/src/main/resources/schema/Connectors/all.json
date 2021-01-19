@@ -110,8 +110,7 @@
         {
           "type": "object",
           "required": [
-            "passwordRef",
-            "username"
+            "passwordRef"
           ],
           "properties": {
             "passwordRef": {
@@ -119,8 +118,25 @@
             },
             "username": {
               "type": "string"
+            },
+            "usernameRef": {
+              "type": "string"
             }
           }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "usernameRef"
+              ]
+            },
+            {
+              "required": [
+                "username"
+              ]
+            }
+          ]
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -245,17 +261,33 @@
         {
           "type": "object",
           "required": [
-            "accessKey",
             "secretKeyRef"
           ],
           "properties": {
             "accessKey": {
               "type": "string"
             },
+            "accessKeyRef": {
+              "type": "string"
+            },
             "secretKeyRef": {
               "type": "string"
             }
           }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "accessKey"
+              ]
+            },
+            {
+              "required": [
+                "accessKeyRef"
+              ]
+            }
+          ]
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -1010,8 +1042,7 @@
         {
           "type": "object",
           "required": [
-            "passwordRef",
-            "username"
+            "passwordRef"
           ],
           "properties": {
             "passwordRef": {
@@ -1019,8 +1050,25 @@
             },
             "username": {
               "type": "string"
+            },
+            "usernameRef": {
+              "type": "string"
             }
           }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "usernameRef"
+              ]
+            },
+            {
+              "required": [
+                "username"
+              ]
+            }
+          ]
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -1252,8 +1300,7 @@
         {
           "type": "object",
           "required": [
-            "passwordRef",
-            "username"
+            "passwordRef"
           ],
           "properties": {
             "passwordRef": {
@@ -1261,8 +1308,25 @@
             },
             "username": {
               "type": "string"
+            },
+            "usernameRef": {
+              "type": "string"
             }
           }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "usernameRef"
+              ]
+            },
+            {
+              "required": [
+                "username"
+              ]
+            }
+          ]
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -2444,8 +2508,7 @@
         {
           "type": "object",
           "required": [
-            "passwordRef",
-            "username"
+            "passwordRef"
           ],
           "properties": {
             "passwordRef": {
@@ -2453,8 +2516,25 @@
             },
             "username": {
               "type": "string"
+            },
+            "usernameRef": {
+              "type": "string"
             }
           }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "usernameRef"
+              ]
+            },
+            {
+              "required": [
+                "username"
+              ]
+            }
+          ]
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
