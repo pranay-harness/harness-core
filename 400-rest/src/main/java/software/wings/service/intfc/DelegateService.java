@@ -113,7 +113,7 @@ public interface DelegateService extends OwnedByAccount {
 
   String obtainDelegateName(String accountId, String delegateId, boolean forceRefresh);
 
-  String obtainDelegateId(String accountId, String sessionIdentifier);
+  List<String> obtainDelegateIds(String accountId, String sessionIdentifier);
 
   void saveDelegateTask(DelegateTask task, DelegateTask.Status status);
 
@@ -165,4 +165,6 @@ public interface DelegateService extends OwnedByAccount {
   void convertToExecutionCapability(DelegateTask task);
 
   List<DelegateSizeDetails> fetchAvailableSizes();
+
+  List<String> getConnectedDelegates(String accountId, List<String> delegateIds);
 }
