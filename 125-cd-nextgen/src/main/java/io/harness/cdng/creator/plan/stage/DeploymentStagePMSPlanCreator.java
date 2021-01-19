@@ -55,24 +55,16 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
       planCreationResponseMap.put(serviceField.getNode().getUuid(),
           PlanCreationResponse.builder().node(serviceField.getNode().getUuid(), servicePlanNode).build());
     }
+
     // Adding infrastructure node
-    String infraDefNodeUuid = ctx.getCurrentField()
-                                  .getNode()
-                                  .getField(YamlTypes.SPEC)
-                                  .getNode()
-                                  .getField(YamlTypes.PIPELINE_INFRASTRUCTURE)
-                                  .getNode()
-                                  .getField(YamlTypes.INFRASTRUCTURE_DEF)
-                                  .getNode()
-                                  .getUuid();
     YamlField infraField =
         ctx.getCurrentField().getNode().getField(YamlTypes.SPEC).getNode().getField(YamlTypes.PIPELINE_INFRASTRUCTURE);
     YamlNode infraNode = infraField.getNode();
 
     PlanNode infraStepNode = InfrastructurePmsPlanCreator.getInfraStepPlanNode(
-        infraDefNodeUuid, ((DeploymentStageConfig) field.getStageType()).getInfrastructure(), infraField);
+        ((DeploymentStageConfig) field.getStageType()).getInfrastructure(), infraField);
     planCreationResponseMap.put(
-        infraDefNodeUuid, PlanCreationResponse.builder().node(infraDefNodeUuid, infraStepNode).build());
+        infraStepNode.getUuid(), PlanCreationResponse.builder().node(infraStepNode.getUuid(), infraStepNode).build());
 
     PlanNode infraSectionPlanNode =
         InfrastructurePmsPlanCreator.getInfraSectionPlanNode(infraNode, infraStepNode.getUuid(),

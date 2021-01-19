@@ -11,6 +11,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
+import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
@@ -51,7 +52,7 @@ public class ServicePMSPlanCreator {
       }
     }
     StepParameters stepParameters =
-        ServiceStepParameters.builder().service(serviceConfig).serviceOverrides(serviceOverrides).build();
+        ServiceStepParameters.builder().service(actualServiceConfig).serviceOverrides(serviceOverrides).build();
     return PlanNode.builder()
         .uuid(serviceNode.getUuid())
         .stepType(ServiceStep.STEP_TYPE)
@@ -73,11 +74,12 @@ public class ServicePMSPlanCreator {
       }
       try {
         //  Add validation for not chaining of stages
-        DeploymentStageConfig deploymentStage = YamlUtils.read(
+        StageElementConfig stageElementConfig = YamlUtils.read(
             PlanCreatorUtils.getStageConfig(serviceField, serviceConfig.getUseFromStage().getStage().getValue())
                 .getNode()
                 .toString(),
-            DeploymentStageConfig.class);
+            StageElementConfig.class);
+        DeploymentStageConfig deploymentStage = (DeploymentStageConfig) stageElementConfig.getStageType();
         if (deploymentStage != null) {
           return serviceConfig.applyUseFromStage(deploymentStage.getServiceConfig());
         } else {
