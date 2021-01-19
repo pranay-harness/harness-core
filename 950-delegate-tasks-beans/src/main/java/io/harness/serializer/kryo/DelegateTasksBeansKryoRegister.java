@@ -99,6 +99,7 @@ import io.harness.delegate.beans.connector.gcpconnector.GcpConstants;
 import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
 import io.harness.delegate.beans.connector.gcpconnector.GcpDelegateDetailsDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
+import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.jira.JiraConnectionTaskParams;
 import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
 import io.harness.delegate.beans.connector.jira.connection.JiraTestConnectionTaskNGResponse;
@@ -117,6 +118,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetails
 import io.harness.delegate.beans.connector.k8Connector.KubernetesOpenIdConnectDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesServiceAccountDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
+import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.delegate.beans.connector.nexusconnector.NexusAuthCredentialsDTO;
 import io.harness.delegate.beans.connector.nexusconnector.NexusAuthType;
 import io.harness.delegate.beans.connector.nexusconnector.NexusAuthenticationDTO;
@@ -661,5 +663,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(SSHKeyPathCredentialDTO.class, 543232);
     kryo.register(KerberosConfigDTO.class, 543233);
     kryo.register(SSHAuthDTO.class, 543234);
+    kryo.register(LocalConnectorDTO.class, 543235);
+    kryo.register(GcpKmsConnectorDTO.class, 543236);
   }
 }
