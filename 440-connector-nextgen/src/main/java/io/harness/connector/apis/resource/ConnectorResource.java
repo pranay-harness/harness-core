@@ -97,6 +97,9 @@ public class ConnectorResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.IDENTIFIER_KEY) @EntityIdentifier String connectorIdentifier) {
+    if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connectorIdentifier)) {
+      return ResponseDTO.newResponse(false);
+    }
     return ResponseDTO.newResponse(connectorService.validateTheIdentifierIsUnique(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
   }
@@ -154,9 +157,7 @@ public class ConnectorResource {
   public ResponseDTO<ConnectorResponseDTO> update(@NotNull @Valid ConnectorDTO connector,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connector.getConnectorInfo().getIdentifier())) {
-      throw new InvalidRequestException(
-          String.format("Update operation not supported for Harness Secret Manager (identifier: [%s])",
-              connector.getConnectorInfo().getIdentifier()));
+      throw new InvalidRequestException("Update operation not supported for Harness Secret Manager");
     }
     return ResponseDTO.newResponse(connectorService.update(connector, accountIdentifier));
   }
@@ -169,7 +170,7 @@ public class ConnectorResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @NotNull @EntityIdentifier String connectorIdentifier) {
     if (HARNESS_SECRET_MANAGER_IDENTIFIER.equals(connectorIdentifier)) {
-      throw new InvalidRequestException("Delete operation not supported for Harness Secret Manager (identifier: [%s])");
+      throw new InvalidRequestException("Delete operation not supported for Harness Secret Manager");
     }
     return ResponseDTO.newResponse(
         connectorService.delete(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));

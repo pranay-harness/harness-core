@@ -1,5 +1,6 @@
 package io.harness.security;
 
+import static io.harness.NGCommonEntityConstants.ACCOUNT_KEY;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.security.dto.PrincipalType.USER;
 
@@ -18,6 +19,7 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MultivaluedMap;
 import org.apache.commons.lang3.tuple.Pair;
 
 @Singleton
@@ -39,11 +41,20 @@ public class UserPrincipalVerificationFilter implements ContainerRequestFilter {
       if (SecurityContextBuilder.getPrincipal() != null
           && USER.equals(SecurityContextBuilder.getPrincipal().getType())) {
         UserPrincipal userPrincipal = (UserPrincipal) SecurityContextBuilder.getPrincipal();
+        MultivaluedMap<String, String> queryParameters = containerRequestContext.getUriInfo().getQueryParameters();
+        String accountIdentifier = queryParameters.getFirst(ACCOUNT_KEY);
         if (isNotBlank(userPrincipal.getAccountId())
             && !ngUserService.isUserInAccount(userPrincipal.getAccountId(), userPrincipal.getName())) {
           throw new InvalidRequestException(
               String.format("User does not belong to account %s", userPrincipal.getAccountId()), USER_DOES_NOT_EXIST,
               WingsException.USER);
+        }
+        // for environments without gateway, we don't change the accountId in token while switching accounts so
+        // validating accountIdentifier == accountId is wrong
+        if (isNotBlank(accountIdentifier)
+            && !ngUserService.isUserInAccount(accountIdentifier, userPrincipal.getName())) {
+          throw new InvalidRequestException(String.format("User does not belong to account %s", accountIdentifier),
+              USER_DOES_NOT_EXIST, WingsException.USER);
         }
       }
     }
