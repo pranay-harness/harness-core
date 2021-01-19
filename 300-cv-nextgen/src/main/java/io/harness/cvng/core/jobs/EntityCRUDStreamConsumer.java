@@ -9,10 +9,10 @@ import io.harness.eventsframework.consumer.Message;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -50,7 +50,7 @@ public class EntityCRUDStreamConsumer implements Runnable {
     List<Message> messages;
     String messageId;
     boolean messageProcessed;
-    messages = consumer.read(MAX_WAIT_TIME_SEC, TimeUnit.SECONDS);
+    messages = consumer.read(Duration.ofSeconds(MAX_WAIT_TIME_SEC));
     for (Message message : messages) {
       messageId = message.getId();
       messageProcessed = handleMessage(message);

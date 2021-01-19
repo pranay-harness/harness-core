@@ -14,4 +14,7 @@ public final class EventsFrameworkConstants {
 
   public static final Duration ENTITY_CRUD_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final Duration FEATURE_FLAG_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
+
+  public static final int ENTITY_CRUD_READ_BATCH_SIZE = 50;
+  public static final int FEATURE_FLAG_READ_BATCH_SIZE = 50;
 }

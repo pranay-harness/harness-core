@@ -4,9 +4,9 @@ import io.harness.eventsframework.api.AbstractConsumer;
 import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class NoOpConsumer extends AbstractConsumer {
   public NoOpConsumer(String topicName, String groupName) {
@@ -14,7 +14,7 @@ public class NoOpConsumer extends AbstractConsumer {
   }
 
   @Override
-  public List<Message> read(long maxWaitTime, TimeUnit unit) throws ConsumerShutdownException {
+  public List<Message> read(Duration maxWaitTime) throws ConsumerShutdownException {
     return Collections.emptyList();
   }
 

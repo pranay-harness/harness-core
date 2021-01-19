@@ -14,9 +14,9 @@ import io.harness.security.dto.ServicePrincipal;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,7 +54,7 @@ public class FeatureFlagStreamConsumer implements Runnable {
     String messageId;
     boolean messageProcessed;
     List<Message> messages;
-    messages = eventConsumer.read(30, TimeUnit.SECONDS);
+    messages = eventConsumer.read(Duration.ofSeconds(30));
     for (Message message : messages) {
       messageId = message.getId();
 

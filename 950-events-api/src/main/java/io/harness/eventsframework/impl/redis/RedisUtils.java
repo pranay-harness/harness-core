@@ -28,6 +28,8 @@ import org.redisson.config.ReadMode;
 public class RedisUtils {
   // Keeping this as small as possible to save on memory for redis instance
   public static final String REDIS_STREAM_INTERNAL_KEY = "o";
+  public static final int MAX_DEAD_LETTER_QUEUE_SIZE = 1000000;
+  public static final int UNACKED_RETRY_COUNT = 10;
 
   public RedissonClient getClient(RedisConfig redisConfig) {
     Config config = new Config();
@@ -51,6 +53,11 @@ public class RedisUtils {
 
   public RStream<String, String> getStream(String topicName, RedissonClient client) {
     return client.getStream(getStreamName(topicName), new StringCodec("UTF-8"));
+  }
+
+  public RStream<String, String> getDeadLetterStream(String topicName, RedissonClient client) {
+    String deadLetterStreamName = "deadletter_queue:" + topicName;
+    return getStream(deadLetterStreamName, client);
   }
 
   public String getStreamName(String topicName) {
