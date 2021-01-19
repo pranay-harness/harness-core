@@ -1,0 +1,18 @@
+execution:
+  steps:
+    - step:
+        name: "Stage Deployment"
+        identifier: stageDeployment
+        type: K8sBlueGreenDeploy
+        spec:
+          timeout: 10m
+          skipDryRun: false
+    - step:
+        name: "Swap primary with stage service"
+        identifier: bgSwapServices
+        type: K8sBGSwapServices
+  rollbackSteps:
+    - step:
+        name: "Swap primary with stage service"
+        identifier: rollbackBgSwapServices
+        type: K8sBGSwapServices

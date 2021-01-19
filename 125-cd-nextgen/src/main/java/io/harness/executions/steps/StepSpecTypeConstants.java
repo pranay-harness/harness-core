@@ -7,6 +7,10 @@ public interface StepSpecTypeConstants {
   String K8S_ROLLING_ROLLBACK = "K8sRollingRollback";
   String K8S_BLUE_GREEN_DEPLOY = "K8sBlueGreenDeploy";
   String K8S_APPLY = "K8sApply";
+  String K8S_SCALE = "K8sScale";
+  String K8S_BG_SWAP_SERVICES = "K8sBGSwapServices";
+  String K8S_CANARY_DELETE = "K8sCanaryDelete";
+  String K8S_CANARY_DEPLOY = "K8sCanaryDeploy";
 
   String SHELL_SCRIPT = "ShellScript";
   String PLACEHOLDER = "Placeholder";
