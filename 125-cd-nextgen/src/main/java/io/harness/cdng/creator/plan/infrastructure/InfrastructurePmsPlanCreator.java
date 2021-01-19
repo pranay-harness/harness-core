@@ -6,9 +6,11 @@ import io.harness.cdng.infra.steps.InfraStepParameters;
 import io.harness.cdng.infra.steps.InfrastructureSectionStep;
 import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
+import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
@@ -32,12 +34,10 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class InfrastructurePmsPlanCreator {
-  public PlanNode getInfraStepPlanNode(
-      String uuid, PipelineInfrastructure pipelineInfrastructure, YamlField infraField) {
+  public PlanNode getInfraStepPlanNode(PipelineInfrastructure pipelineInfrastructure, YamlField infraField) {
     PipelineInfrastructure actualInfraConfig = getActualInfraConfig(pipelineInfrastructure, infraField);
-
     return PlanNode.builder()
-        .uuid(uuid)
+        .uuid(UUIDGenerator.generateUuid())
         .name(PlanCreatorConstants.INFRA_NODE_NAME)
         .identifier(PlanCreatorConstants.INFRA_DEFINITION_NODE_IDENTIFIER)
         .stepType(InfrastructureStep.STEP_TYPE)
@@ -89,11 +89,12 @@ public class InfrastructurePmsPlanCreator {
       }
       try {
         //  Add validation for not chaining of stages
-        DeploymentStageConfig deploymentStage = YamlUtils.read(
+        StageElementConfig stageElementConfig = YamlUtils.read(
             PlanCreatorUtils.getStageConfig(infraField, pipelineInfrastructure.getUseFromStage().getStage())
                 .getNode()
                 .toString(),
-            DeploymentStageConfig.class);
+            StageElementConfig.class);
+        DeploymentStageConfig deploymentStage = (DeploymentStageConfig) stageElementConfig.getStageType();
         if (deploymentStage != null) {
           return pipelineInfrastructure.applyUseFromStage(deploymentStage.getInfrastructure());
         } else {
