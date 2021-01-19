@@ -17,5 +17,6 @@ public class CIStageExecutionException extends WingsException {
 
   public CIStageExecutionException(String message, Throwable cause) {
     super(message, cause, NG_PIPELINE_EXECUTION_EXCEPTION, Level.ERROR, (EnumSet) null, (EnumSet) null);
+    param(MESSAGE_KEY, message);
   }
 }
