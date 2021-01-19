@@ -5,10 +5,13 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -157,7 +160,7 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     VerificationJobDTO verificationJobDTO = createDTOWithRuntimeParams();
     verificationJobService.upsert(accountId, verificationJobDTO);
 
-    MockFilterByEnvAndServiceResponsesDTOs(verificationJobDTO);
+    mockFilterByEnvAndServiceResponsesDTOs(verificationJobDTO);
 
     List<VerificationJobDTO> verificationJobDTOList = verificationJobService
                                                           .list(accountId, verificationJobDTO.getProjectIdentifier(),
@@ -185,13 +188,27 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
   }
 
   @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testList_noCallNextGenWhenFilterEmpty() {
+    VerificationJobDTO verificationJobDTO = createDTOWithoutRuntimeParams();
+    verificationJobService.upsert(accountId, verificationJobDTO);
+
+    verificationJobService
+        .list(accountId, verificationJobDTO.getProjectIdentifier(), verificationJobDTO.getOrgIdentifier(), 0, 10, null)
+        .getContent();
+    verify(nextGenService, never()).getEnvironment(anyString(), anyString(), anyString(), anyString());
+    verify(nextGenService, never()).getService(anyString(), anyString(), anyString(), anyString());
+  }
+
+  @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void testList_notEmpty_FilterByVerificationAndEnvAndServicesJobNames() {
     VerificationJobDTO verificationJobDTO = createDTOWithoutRuntimeParams();
     verificationJobService.upsert(accountId, verificationJobDTO);
 
-    MockFilterByEnvAndServiceResponsesDTOs(verificationJobDTO);
+    mockFilterByEnvAndServiceResponsesDTOs(verificationJobDTO);
 
     List<VerificationJobDTO> verificationJobDTOList = verificationJobService
                                                           .list(accountId, verificationJobDTO.getProjectIdentifier(),
@@ -232,7 +249,7 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     assertThat(verificationJobDTOList.size()).isEqualTo(1);
   }
 
-  private void MockFilterByEnvAndServiceResponsesDTOs(VerificationJobDTO verificationJobDTO) {
+  private void mockFilterByEnvAndServiceResponsesDTOs(VerificationJobDTO verificationJobDTO) {
     EnvironmentResponseDTO environmentResponseDTO = EnvironmentResponseDTO.builder()
                                                         .accountId(accountId)
                                                         .projectIdentifier(verificationJobDTO.getProjectIdentifier())
