@@ -5,6 +5,7 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.INDER;
@@ -175,6 +176,7 @@ import software.wings.service.intfc.trigger.TriggerExecutionService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -265,6 +267,8 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Before
   public void setUp() {
     Pipeline pipeline = buildPipeline();
+    pipeline.setServices(Lists.newArrayList(Service.builder().uuid(SERVICE_ID).name(CATALOG_SERVICE_NAME).build()));
+    when(pipelineService.readPipelineWithResolvedVariables(eq(APP_ID), eq(PIPELINE_ID), any())).thenReturn(pipeline);
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, false)).thenReturn(pipeline);
     when(pipelineService.pipelineExists(any(), any())).thenReturn(true);
@@ -554,7 +558,8 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(trigger.getCondition()).isInstanceOf(WebHookTriggerCondition.class);
     assertThat(((WebHookTriggerCondition) trigger.getCondition()).getWebHookToken()).isNotNull();
     assertThat(((WebHookTriggerCondition) trigger.getCondition()).getWebHookToken().getWebHookToken()).isNotNull();
-    verify(pipelineService, times(2)).readPipeline(APP_ID, PIPELINE_ID, true);
+    verify(pipelineService, times(1)).readPipeline(APP_ID, PIPELINE_ID, true);
+    verify(pipelineService, times(1)).readPipelineWithResolvedVariables(eq(APP_ID), eq(PIPELINE_ID), any());
   }
 
   @Test
@@ -2760,6 +2765,23 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(webHookToken.getPayload())
         .isEqualTo(
             "{\"application\":\"APP_ID\",\"manifests\":[{\"service\":\"Service_PLACEHOLDER\",\"versionNumber\":\"Service_VERSION_NUMBER_PLACE_HOLDER\"}],\"parameters\":{\"Service\":\"Service_placeholder\"},\"artifacts\":[{\"artifactSourceName\":\"Service_ARTIFACT_SOURCE_NAME_PLACE_HOLDER\",\"service\":\"Service_PLACEHOLDER\",\"buildNumber\":\"Service_BUILD_NUMBER_PLACE_HOLDER\"}]}");
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldGenerateWebhookTokenWithTempServiceForPipeline() {
+    Trigger trigger = buildPipelineCondTrigger();
+    trigger.setWorkflowVariables(ImmutableMap.of("srv", "hello"));
+    trigger.setArtifactSelections(Lists.newArrayList(
+        ArtifactSelection.builder().artifactSourceName("artifactSourceName").serviceId("serviceId").build()));
+    TriggerServiceImpl triggerServiceImpl = (TriggerServiceImpl) triggerService;
+    WebHookToken webHookToken = triggerServiceImpl.generateWebHookToken(trigger, WebHookToken.builder().build());
+    assertThat(webHookToken).isNotNull();
+    assertThat(webHookToken.getPayload()).isNotEmpty();
+    assertThat(webHookToken.getPayload())
+        .isEqualTo(
+            "{\"application\":\"APP_ID\",\"parameters\":{\"VARIABLE_NAME\":\"VARIABLE_NAME_placeholder\"},\"artifacts\":[{\"artifactSourceName\":\"Catalog_ARTIFACT_SOURCE_NAME_PLACE_HOLDER\",\"service\":\"Catalog\",\"buildNumber\":\"Catalog_BUILD_NUMBER_PLACE_HOLDER\"}]}");
   }
 
   @Test
