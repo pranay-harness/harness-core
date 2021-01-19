@@ -87,7 +87,7 @@ public class ShellScriptProvisionTask extends AbstractDelegateRunnableTask {
                                                     .build();
       ScriptProcessExecutor executor = shellExecutorFactory.getExecutor(shellExecutorConfig);
       ExecuteCommandResponse executeCommandResponse =
-          executor.executeCommandString(parameters.getScriptBody(), emptyList());
+          executor.executeCommandString(parameters.getScriptBody(), emptyList(), emptyList());
 
       saveExecutionLog(parameters, "Execution finished with status: " + executeCommandResponse.getStatus(),
           executeCommandResponse.getStatus());

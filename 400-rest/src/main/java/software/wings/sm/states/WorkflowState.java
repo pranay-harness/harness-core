@@ -102,6 +102,10 @@ public interface WorkflowState {
         if (jexlError.contains(":")) {
           jexlError = jexlError.split(":")[1];
         }
+        if (je instanceof JexlException.Variable
+            && ((JexlException.Variable) je).getVariable().equals("sweepingOutputSecrets")) {
+          jexlError = "Secret Variables defined in Script output of shell scripts cannot be used in assertions";
+        }
         return ExecutionResponse.builder()
             .executionStatus(FAILED)
             .errorMessage("Skip Assertion Evaluation Failed : " + jexlError)

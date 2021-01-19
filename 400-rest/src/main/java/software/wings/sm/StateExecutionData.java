@@ -1,6 +1,7 @@
 package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -15,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Maps;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.ToString;
@@ -28,6 +30,7 @@ import lombok.ToString;
 @ToString(exclude = {"delegateMetaInfo", "templateVariable", "stateParams", "element"})
 public class StateExecutionData {
   public static final int SUMMARY_PAYLOAD_LIMIT = 1024;
+  public static final String SECRET_MASK = "************";
 
   private String stateName;
   private String stateType;
@@ -317,6 +320,19 @@ public class StateExecutionData {
     return map.entrySet()
         .stream()
         .filter(e -> e.getValue() != null)
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+  }
+
+  protected Map<String, String> removeNullValuesAndMaskSecrets(Map<String, String> map, List<String> secretOutputVars) {
+    return map.entrySet()
+        .stream()
+        .filter(e -> e.getValue() != null)
+        .map(e -> {
+          if (isNotEmpty(secretOutputVars) && secretOutputVars.contains(e.getKey())) {
+            e.setValue(SECRET_MASK);
+          }
+          return e;
+        })
         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 

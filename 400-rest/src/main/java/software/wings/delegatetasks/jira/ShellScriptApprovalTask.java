@@ -33,6 +33,7 @@ import software.wings.delegatetasks.DelegateLogService;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,7 +85,8 @@ public class ShellScriptApprovalTask extends AbstractDelegateRunnableTask {
     }
 
     saveExecutionLog(parameters, "Starting Script Execution ...", RUNNING);
-    ExecuteCommandResponse executeCommandResponse = executor.executeCommandString(parameters.getScript(), items);
+    ExecuteCommandResponse executeCommandResponse =
+        executor.executeCommandString(parameters.getScript(), items, Collections.emptyList());
     saveExecutionLog(parameters, "End of Script Execution ...", RUNNING);
     saveExecutionLog(parameters, "\n---------------------------------------------------\n", RUNNING);
 

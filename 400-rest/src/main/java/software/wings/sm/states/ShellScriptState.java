@@ -23,6 +23,7 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
+import io.harness.data.encoding.EncodingUtils;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -35,6 +36,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.ff.FeatureFlagService;
+import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 import io.harness.shell.AccessType;
@@ -64,6 +66,7 @@ import software.wings.beans.delegation.ShellScriptParameters.ShellScriptParamete
 import software.wings.beans.template.TemplateUtils;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.exception.ShellScriptException;
+import software.wings.expression.ShellScriptEnvironmentVariables;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.impl.ContainerServiceParams;
@@ -91,7 +94,12 @@ import software.wings.stencils.EnumData;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -167,6 +175,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   @NotEmpty @Getter @Setter @Attributes(title = "Script") private String scriptString;
 
   @Getter @Setter private String outputVars;
+  @Getter @Setter private String secretOutputVars;
   @Getter @Setter private SweepingOutputInstance.Scope sweepingOutputScope;
   @Getter @Setter private String sweepingOutputName;
 
@@ -238,6 +247,15 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
             ((ShellExecutionData) ((CommandExecutionResult) data).getCommandExecutionData())
                 .getSweepingOutputEnvVariables();
         scriptStateExecutionData.setSweepingOutputEnvVariables(sweepingOutputEnvVariables);
+
+        // also set the secret vars so that its displayed masked
+        List<String> secretOutputVarsList = new ArrayList<>();
+        if (secretOutputVars != null && StringUtils.isNotEmpty(secretOutputVars.trim())) {
+          secretOutputVarsList = Arrays.asList(secretOutputVars.split("\\s*,\\s*"));
+          secretOutputVarsList.replaceAll(String::trim);
+        }
+
+        scriptStateExecutionData.setSecretOutputVars(secretOutputVarsList);
         saveSweepingOutputToContext = true;
       }
       executionResponseBuilder.stateExecutionData(scriptStateExecutionData);
@@ -256,11 +274,46 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
 
     if (saveSweepingOutputToContext) {
       handleSweepingOutput(sweepingOutputService, context,
-          ((ShellExecutionData) ((CommandExecutionResult) data).getCommandExecutionData())
-              .getSweepingOutputEnvVariables());
+          buildSweepingOutput(((ShellExecutionData) ((CommandExecutionResult) data).getCommandExecutionData())
+                                  .getSweepingOutputEnvVariables()));
     }
 
     return executionResponse;
+  }
+
+  @VisibleForTesting
+  ShellScriptEnvironmentVariables buildSweepingOutput(Map<String, String> sweepingOutputEnvVariables) {
+    SimpleEncryption encryption = new SimpleEncryption();
+
+    if (isEmpty(sweepingOutputEnvVariables)) {
+      return null;
+    }
+    List<String> outputVarsList = new ArrayList<>();
+    if (outputVars != null && StringUtils.isNotEmpty(outputVars.trim())) {
+      outputVarsList = Arrays.asList(outputVars.split("\\s*,\\s*"));
+      outputVarsList.replaceAll(String::trim);
+    }
+    List<String> secretOutputVarsList = new ArrayList<>();
+    if (secretOutputVars != null && StringUtils.isNotEmpty(secretOutputVars.trim())) {
+      secretOutputVarsList = Arrays.asList(secretOutputVars.split("\\s*,\\s*"));
+      secretOutputVarsList.replaceAll(String::trim);
+    }
+    List<String> finalOutputVarsList = outputVarsList;
+    Map<String, String> envVarMap = sweepingOutputEnvVariables.entrySet()
+                                        .stream()
+                                        .filter(e -> finalOutputVarsList.contains(e.getKey()))
+                                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    List<String> finalSecretOutputVarsList = secretOutputVarsList;
+    Map<String, String> secretEnvVarMap = sweepingOutputEnvVariables.entrySet()
+                                              .stream()
+                                              .filter(e -> finalSecretOutputVarsList.contains(e.getKey()))
+                                              .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    Map<String, String> encSecretMap = new HashMap<>();
+    for (Map.Entry<String, String> entry : secretEnvVarMap.entrySet()) {
+      encSecretMap.put(entry.getKey(),
+          EncodingUtils.encodeBase64(encryption.encrypt(entry.getValue().getBytes(StandardCharsets.UTF_8))));
+    }
+    return new ShellScriptEnvironmentVariables(envVarMap, encSecretMap);
   }
 
   protected void updateActivityStatus(String activityId, String appId, ExecutionStatus status) {
@@ -414,6 +467,7 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
             .script(scriptString)
             .executeOnDelegate(executeOnDelegate)
             .outputVars(outputVars)
+            .secretOutputVars(secretOutputVars)
             .hostConnectionAttributes(hostConnectionAttributes)
             .keyless(keyless)
             .keyPath(keyPath)

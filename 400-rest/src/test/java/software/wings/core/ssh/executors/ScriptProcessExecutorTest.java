@@ -33,6 +33,7 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.io.IOUtils;
@@ -77,7 +78,7 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
     String command = "export A=\"aaa\"\n"
         + "export B=\"bbb\"";
     ExecuteCommandResponse executeCommandResponse =
-        scriptProcessExecutor.executeCommandString(command, asList("A", "B", "${C}", "${A}"));
+        scriptProcessExecutor.executeCommandString(command, asList("A", "B", "${C}", "${A}"), Collections.emptyList());
     assertThat(executeCommandResponse).isNotNull();
     assertThat(executeCommandResponse.getStatus()).isEqualTo(SUCCESS);
     assertThat(executeCommandResponse.getCommandExecutionData()).isNotNull();
@@ -108,7 +109,7 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
 
     String command = "exit 1";
     ExecuteCommandResponse executeCommandResponse =
-        scriptProcessExecutor.executeCommandString(command, asList("A", "B"));
+        scriptProcessExecutor.executeCommandString(command, asList("A", "B"), Collections.emptyList());
     assertThat(executeCommandResponse).isNotNull();
     assertThat(executeCommandResponse.getStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
     assertThat(executeCommandResponse.getCommandExecutionData()).isNotNull();

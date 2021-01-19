@@ -50,6 +50,7 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.pms.sdk.core.data.SweepingOutput;
+import io.harness.security.SimpleEncryption;
 import io.harness.serializer.KryoSerializer;
 
 import software.wings.api.DeploymentType;
@@ -102,6 +103,7 @@ import software.wings.expression.SecretFunctor;
 import software.wings.expression.ShellScriptFunctor;
 import software.wings.expression.SubstitutionFunctor;
 import software.wings.expression.SweepingOutputFunctor;
+import software.wings.expression.SweepingOutputSecretManagerFunctor;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.AppLogContext;
 import software.wings.service.impl.PipelineWorkflowExecutionLogContext;
@@ -966,6 +968,11 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
                   stateExecutionContext == null ? 0 : stateExecutionContext.getExpressionFunctorToken())
               .build());
     }
+    // For tasks where we need to resolve context output on Manager Side
+    if (!adoptDelegateDecryption) {
+      contextMap.put("sweepingOutputSecrets",
+          SweepingOutputSecretManagerFunctor.builder().simpleEncryption(new SimpleEncryption()).build());
+    }
     return contextMap;
   }
 
@@ -1532,5 +1539,18 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     } else {
       return phaseElement.getUuid().equals(workflowStandardParams.getLastDeployPhaseId());
     }
+  }
+
+  public SweepingOutputFunctor fetchSweepingOutputFunctor() {
+    if (isEmpty(contextMap)) {
+      return null;
+    }
+
+    Object var = contextMap.get("context");
+
+    if (var instanceof SweepingOutputFunctor) {
+      return (SweepingOutputFunctor) var;
+    }
+    return null;
   }
 }

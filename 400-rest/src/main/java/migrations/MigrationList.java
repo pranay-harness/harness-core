@@ -410,6 +410,7 @@ public class MigrationList {
         .add(Pair.of(351, AddRestrictionsToSecretManagerConfig.class))
         .add(Pair.of(352, AwsConfigEc2IamRoleMigration.class))
         .add(Pair.of(353, ChangeApiKeyHashFunction.class))
+        .add(Pair.of(354, BaseMigration.class))
         .build();
   }
 }

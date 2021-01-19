@@ -195,6 +195,7 @@ import software.wings.expression.NgSecretManagerFunctor;
 import software.wings.expression.SecretFunctor;
 import software.wings.expression.SecretManagerFunctor;
 import software.wings.expression.SecretManagerMode;
+import software.wings.expression.SweepingOutputSecretFunctor;
 import software.wings.features.DelegatesFeature;
 import software.wings.features.api.UsageLimitedFeature;
 import software.wings.helpers.ext.mail.EmailData;
@@ -2737,6 +2738,9 @@ public class DelegateServiceImpl implements DelegateService {
       SecretManagerFunctor secretManagerFunctor =
           (SecretManagerFunctor) managerPreExecutionExpressionEvaluator.getSecretManagerFunctor();
 
+      SweepingOutputSecretFunctor sweepingOutputSecretFunctor =
+          managerPreExecutionExpressionEvaluator.getSweepingOutputSecretFunctor();
+
       ExpressionReflectionUtils.applyExpression(delegateTask.getData().getParameters()[0], (secretMode, value) -> {
         if (value == null) {
           return null;
@@ -2755,7 +2759,8 @@ public class DelegateServiceImpl implements DelegateService {
         return null;
       }
 
-      addSecretManagerFunctorConfigs(delegateTaskPackageBuilder, secretManagerFunctor, ngSecretManagerFunctor);
+      addSecretManagerFunctorConfigs(
+          delegateTaskPackageBuilder, secretManagerFunctor, ngSecretManagerFunctor, sweepingOutputSecretFunctor);
 
       return delegateTaskPackageBuilder.build();
     } catch (CriticalExpressionEvaluationException exception) {
@@ -2775,7 +2780,8 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void addSecretManagerFunctorConfigs(DelegateTaskPackageBuilder delegateTaskPackageBuilder,
-      SecretManagerFunctor secretManagerFunctor, NgSecretManagerFunctor ngSecretManagerFunctor) {
+      SecretManagerFunctor secretManagerFunctor, NgSecretManagerFunctor ngSecretManagerFunctor,
+      SweepingOutputSecretFunctor sweepingOutputSecretFunctor) {
     Map<String, EncryptionConfig> encryptionConfigs = new HashMap<>();
     Map<String, SecretDetail> secretDetails = new HashMap<>();
     Set<String> secrets = new HashSet<>();
@@ -2793,6 +2799,12 @@ public class DelegateServiceImpl implements DelegateService {
       secretDetails.putAll(ngSecretManagerFunctor.getSecretDetails());
       if (isNotEmpty(ngSecretManagerFunctor.getEvaluatedSecrets())) {
         secrets.addAll(ngSecretManagerFunctor.getEvaluatedSecrets().values());
+      }
+    }
+
+    if (sweepingOutputSecretFunctor != null) {
+      if (isNotEmpty(sweepingOutputSecretFunctor.getEvaluatedSecrets())) {
+        secrets.addAll(sweepingOutputSecretFunctor.getEvaluatedSecrets());
       }
     }
 

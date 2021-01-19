@@ -70,6 +70,7 @@ public class ShellScriptParameters implements TaskParameters, ActivityAccess, Ex
   @Expression(ALLOW_SECRETS) @NonFinal @Setter String script;
   private final boolean executeOnDelegate;
   private final String outputVars;
+  private final String secretOutputVars;
   private final HostConnectionAttributes hostConnectionAttributes;
   private final String keyPath;
   private final boolean keyless;

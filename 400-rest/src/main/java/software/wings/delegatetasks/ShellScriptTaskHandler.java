@@ -43,18 +43,25 @@ public class ShellScriptTaskHandler {
   @Inject private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
 
   public CommandExecutionResult handle(ShellScriptParameters parameters) {
+    // Define output variables and secret output variables together
+    List<String> items = new ArrayList<>();
+    List<String> secretItems = new ArrayList<>();
+    if (parameters.getOutputVars() != null && StringUtils.isNotEmpty(parameters.getOutputVars().trim())) {
+      items = Arrays.asList(parameters.getOutputVars().split("\\s*,\\s*"));
+      items.replaceAll(String::trim);
+    }
+    if (parameters.getSecretOutputVars() != null && StringUtils.isNotEmpty(parameters.getSecretOutputVars().trim())) {
+      secretItems = Arrays.asList(parameters.getSecretOutputVars().split("\\s*,\\s*"));
+      secretItems.replaceAll(String::trim);
+    }
     if (parameters.isExecuteOnDelegate()) {
       ScriptProcessExecutor executor = shellExecutorFactory.getExecutor(
           parameters.processExecutorConfig(containerDeploymentDelegateHelper), parameters.isSaveExecutionLogs());
-      List<String> items = new ArrayList<>();
-      if (parameters.getOutputVars() != null && StringUtils.isNotEmpty(parameters.getOutputVars().trim())) {
-        items = Arrays.asList(parameters.getOutputVars().split("\\s*,\\s*"));
-        items.replaceAll(String::trim);
-      }
       if (parameters.isLocalOverrideFeatureFlag()) {
         parameters.setScript(delegateLocalConfigService.replacePlaceholdersWithLocalConfig(parameters.getScript()));
       }
-      return CommandExecutionResultMapper.from(executor.executeCommandString(parameters.getScript(), items));
+      return CommandExecutionResultMapper.from(
+          executor.executeCommandString(parameters.getScript(), items, secretItems));
     }
 
     switch (parameters.getConnectionType()) {
@@ -63,12 +70,8 @@ public class ShellScriptTaskHandler {
           SshSessionConfig expectedSshConfig = parameters.sshSessionConfig(encryptionService);
           BaseScriptExecutor executor =
               sshExecutorFactory.getExecutor(expectedSshConfig, parameters.isSaveExecutionLogs());
-          List<String> items = new ArrayList<>();
-          if (parameters.getOutputVars() != null && StringUtils.isNotEmpty(parameters.getOutputVars().trim())) {
-            items = Arrays.asList(parameters.getOutputVars().split("\\s*,\\s*"));
-            items.replaceAll(String::trim);
-          }
-          return CommandExecutionResultMapper.from(executor.executeCommandString(parameters.getScript(), items));
+          return CommandExecutionResultMapper.from(
+              executor.executeCommandString(parameters.getScript(), items, secretItems));
         } catch (Exception e) {
           throw new CommandExecutionException("Bash Script Failed to execute", e);
         } finally {
@@ -80,12 +83,8 @@ public class ShellScriptTaskHandler {
           WinRmSessionConfig winRmSessionConfig = parameters.winrmSessionConfig(encryptionService);
           WinRmExecutor executor = winrmExecutorFactory.getExecutor(
               winRmSessionConfig, parameters.isDisableWinRMCommandEncodingFFSet(), parameters.isSaveExecutionLogs());
-          List<String> items = new ArrayList<>();
-          if (parameters.getOutputVars() != null && StringUtils.isNotEmpty(parameters.getOutputVars().trim())) {
-            items = Arrays.asList(parameters.getOutputVars().split("\\s*,\\s*"));
-            items.replaceAll(String::trim);
-          }
-          return CommandExecutionResultMapper.from(executor.executeCommandString(parameters.getScript(), items));
+          return CommandExecutionResultMapper.from(
+              executor.executeCommandString(parameters.getScript(), items, secretItems));
         } catch (Exception e) {
           throw new CommandExecutionException("Powershell script Failed to execute", e);
         }

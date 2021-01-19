@@ -7,6 +7,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.ExpressionFunctor;
 import io.harness.ff.FeatureFlagService;
+import io.harness.security.SimpleEncryption;
 
 import software.wings.expression.NgSecretManagerFunctor.NgSecretManagerFunctorBuilder;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
@@ -24,6 +25,7 @@ import lombok.Value;
 public class ManagerPreExecutionExpressionEvaluator extends ExpressionEvaluator {
   private final ExpressionFunctor secretManagerFunctor;
   private final ExpressionFunctor ngSecretManagerFunctor;
+  private final SweepingOutputSecretFunctor sweepingOutputSecretFunctor;
 
   public ManagerPreExecutionExpressionEvaluator(SecretManagerMode mode, ServiceTemplateService serviceTemplateService,
       ConfigService configService, String appId, String envId, String serviceTemplateId,
@@ -74,5 +76,10 @@ public class ManagerPreExecutionExpressionEvaluator extends ExpressionEvaluator 
 
     ngSecretManagerFunctor = ngSecretManagerFunctorBuilder.build();
     addFunctor(NgSecretManagerFunctorInterface.FUNCTOR_NAME, ngSecretManagerFunctor);
+
+    sweepingOutputSecretFunctor =
+        SweepingOutputSecretFunctor.builder().mode(mode).simpleEncryption(new SimpleEncryption()).build();
+
+    addFunctor("sweepingOutputSecrets", sweepingOutputSecretFunctor);
   }
 }

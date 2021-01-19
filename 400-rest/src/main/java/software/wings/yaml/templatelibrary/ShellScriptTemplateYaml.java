@@ -19,13 +19,16 @@ public class ShellScriptTemplateYaml extends TemplateLibraryYaml {
   private String scriptType;
   private String scriptString;
   private String outputVars;
+  private String secretOutputVars;
   private int timeoutMillis = 600000;
 
   @Builder
   public ShellScriptTemplateYaml(String type, String harnessApiVersion, String description, String scriptType,
-      String scriptString, String outputVars, int timeOutMillis, List<TemplateVariableYaml> templateVariableYamlList) {
+      String scriptString, String outputVars, String secretOutputVars, int timeOutMillis,
+      List<TemplateVariableYaml> templateVariableYamlList) {
     super(type, harnessApiVersion, description, templateVariableYamlList);
     this.outputVars = outputVars;
+    this.secretOutputVars = secretOutputVars;
     this.scriptString = scriptString;
     this.scriptType = scriptType;
     this.timeoutMillis = timeOutMillis;

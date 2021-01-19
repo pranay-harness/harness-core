@@ -4,6 +4,7 @@ import static io.harness.beans.EnvironmentType.NON_PROD;
 import static io.harness.beans.SweepingOutputInstance.Scope.PIPELINE;
 import static io.harness.beans.SweepingOutputInstance.Scope.WORKFLOW;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.shell.AccessType.KEY;
@@ -53,6 +54,7 @@ import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
+import io.harness.security.SimpleEncryption;
 import io.harness.serializer.KryoSerializer;
 import io.harness.shell.ShellExecutionData;
 
@@ -69,6 +71,7 @@ import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.beans.template.TemplateUtils;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.exception.ShellScriptException;
+import software.wings.expression.ShellScriptEnvironmentVariables;
 import software.wings.expression.ShellScriptFunctor;
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.intfc.DelegateService;
@@ -86,6 +89,7 @@ import software.wings.sm.WorkflowStandardParams;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -576,6 +580,28 @@ public class ShellScriptStateTest extends WingsBaseTest {
     assertThatThrownBy(() -> shellScriptState.execute(executionContext))
         .isInstanceOf(ShellScriptException.class)
         .hasMessage("WinRM Connection Attribute not provided in Shell Script Step");
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void shouldSaveSweepingOutputWithSecretAndStringEnvVariables() {
+    shellScriptState.setOutputVars("A");
+    shellScriptState.setSecretOutputVars("secretVar");
+
+    SimpleEncryption simpleEncryption = new SimpleEncryption();
+
+    Map<String, String> map = new HashMap<>();
+    map.put("A", "aaa");
+    map.put("secretVar", "secretValue");
+
+    ShellScriptEnvironmentVariables shellScriptEnvironmentVariables = shellScriptState.buildSweepingOutput(map);
+
+    assertThat(shellScriptEnvironmentVariables.getOutputVars()).isEqualTo(ImmutableMap.of("A", "aaa"));
+    // save secret variables as encrypted
+    String decryptedValue = new String(simpleEncryption.decrypt(
+        Base64.getDecoder().decode(shellScriptEnvironmentVariables.getSecretOutputVars().get("secretVar"))));
+    assertThat(decryptedValue).isEqualTo("secretValue");
   }
 
   private void setFieldsInShellScriptState(boolean ssh) throws IllegalAccessException {

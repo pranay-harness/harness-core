@@ -10,6 +10,7 @@ import static software.wings.beans.LogColor.Gray;
 import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
+import static software.wings.sm.StateExecutionData.SECRET_MASK;
 import static software.wings.utils.WinRmHelperUtils.buildErrorDetailsFromWinRmClientException;
 
 import static java.lang.String.format;
@@ -30,9 +31,12 @@ import software.wings.utils.ExecutionLogWriter;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
@@ -150,6 +154,12 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
 
   @Override
   public ExecuteCommandResponse executeCommandString(String command, List<String> envVariablesToCollect) {
+    return executeCommandString(command, envVariablesToCollect, Collections.emptyList());
+  }
+
+  @Override
+  public ExecuteCommandResponse executeCommandString(
+      String command, List<String> envVariablesToCollect, List<String> secretEnvVariablesToCollect) {
     ShellExecutionDataBuilder executionDataBuilder = ShellExecutionData.builder();
     ExecuteCommandResponseBuilder executeCommandResponseBuilder = ExecuteCommandResponse.builder();
     CommandExecutionStatus commandExecutionStatus;
@@ -158,7 +168,12 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
     String envVariablesOutputFile = null;
     String psScriptFile = null;
 
-    if (!envVariablesToCollect.isEmpty()) {
+    // combine both variable types
+    List<String> allVariablesToCollect =
+        Stream.concat(envVariablesToCollect.stream(), secretEnvVariablesToCollect.stream())
+            .collect(Collectors.toList());
+
+    if (!allVariablesToCollect.isEmpty()) {
       envVariablesOutputFile = this.config.getWorkingDirectory() + "\\"
           + "harness-" + this.config.getExecutionId() + ".out";
     }
@@ -169,7 +184,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
       saveExecutionLog(format("Connected to %s", config.getHostname()), INFO);
       saveExecutionLog(format("Executing command ...%n"), INFO);
 
-      command = addEnvVariablesCollector(command, envVariablesToCollect, envVariablesOutputFile);
+      command = addEnvVariablesCollector(command, allVariablesToCollect, envVariablesOutputFile);
       int exitCode;
       if (disableCommandEncoding) {
         psScriptFile = getPSScriptFile();
@@ -188,7 +203,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
         // script
         WinRmExecutorHelper.cleanupFiles(session, psScriptFile, powershell, disableCommandEncoding);
         executionDataBuilder.sweepingOutputEnvVariables(
-            collectOutputEnvironmentVariables(session, envVariablesOutputFile));
+            collectOutputEnvironmentVariables(session, envVariablesOutputFile, secretEnvVariablesToCollect));
       }
 
       saveExecutionLog(format("%nCommand completed with ExitCode (%d)", exitCode), INFO, commandExecutionStatus);
@@ -210,7 +225,8 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
     return executeCommandResponseBuilder.build();
   }
 
-  private Map<String, String> collectOutputEnvironmentVariables(WinRmSession session, String envVariablesOutputFile) {
+  private Map<String, String> collectOutputEnvironmentVariables(
+      WinRmSession session, String envVariablesOutputFile, List<String> secretOutputVars) {
     Map<String, String> envVariablesMap = new HashMap<>();
     String command = "$base64string = [Convert]::ToBase64String([IO.File]::ReadAllBytes('" + envVariablesOutputFile
         + "'))\n"
@@ -255,7 +271,11 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
           String key = line.substring(0, index).trim();
           String value = line.substring(index + 1).trim().replace("\r", "");
           envVariablesMap.put(key, value);
-          saveExecutionLog(color(key + "=" + value, Gray), INFO);
+          if (secretOutputVars.contains(key)) {
+            saveExecutionLog(color(key + "=" + SECRET_MASK, Gray), INFO);
+          } else {
+            saveExecutionLog(color(key + "=" + value, Gray), INFO);
+          }
         }
       }
 
