@@ -397,6 +397,7 @@ import software.wings.delegatetasks.validation.capabilities.PcfConnectivityCapab
 import software.wings.delegatetasks.validation.capabilities.SSHHostValidationCapability;
 import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.WinrmHostValidationCapability;
+import software.wings.expression.ShellScriptEnvironmentVariables;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackage;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsPackageVersion;
@@ -1742,5 +1743,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(BatchCapabilityCheckTaskParameters.class, 8200);
     kryo.register(BatchCapabilityCheckTaskResponse.class, 8201);
     kryo.register(CapabilityCheckDetails.class, 8202);
+
+    kryo.register(ShellScriptEnvironmentVariables.class, 8120);
   }
 }

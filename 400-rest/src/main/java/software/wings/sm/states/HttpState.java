@@ -534,6 +534,10 @@ public class HttpState extends State implements SweepingOutputStateMixin {
       } else if (e instanceof Property) {
         Property pr = (Property) e;
         errorMsg = "Unresolvable property '" + pr.getProperty() + "' in assertion.";
+      } else if (e instanceof JexlException.Variable
+          && ((JexlException.Variable) e).getVariable().equals("sweepingOutputSecrets")) {
+        errorMsg = "Error evaluating assertion condition: " + assertion
+            + ": Secret Variables defined in Script output of shell scripts cannot be used in assertions";
       } else {
         errorMsg = getMessage(e);
       }

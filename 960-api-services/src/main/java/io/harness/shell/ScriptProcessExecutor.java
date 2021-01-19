@@ -32,10 +32,13 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.output.NullOutputStream;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -162,6 +165,12 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
 
   @Override
   public ExecuteCommandResponse executeCommandString(String command, List<String> envVariablesToCollect) {
+    return executeCommandString(command, envVariablesToCollect, Collections.emptyList());
+  }
+
+  @Override
+  public ExecuteCommandResponse executeCommandString(
+      String command, List<String> envVariablesToCollect, List<String> secretEnvVariablesToCollect) {
     ExecuteCommandResponse executeCommandResponse = null;
 
     saveExecutionLog("Executing command ...", INFO);
@@ -170,7 +179,7 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
       case POWERSHELL:
       case BASH:
         try {
-          executeCommandResponse = executeBashScript(command, envVariablesToCollect);
+          executeCommandResponse = executeBashScript(command, envVariablesToCollect, secretEnvVariablesToCollect);
         } catch (Exception e) {
           saveExecutionLog(format("Exception: %s", e), ERROR, FAILURE);
         }
@@ -183,8 +192,8 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
     return executeCommandResponse;
   }
 
-  private ExecuteCommandResponse executeBashScript(String command, List<String> envVariablesToCollect)
-      throws IOException {
+  private ExecuteCommandResponse executeBashScript(
+      String command, List<String> envVariablesToCollect, List<String> secretVariablesToCollect) throws IOException {
     ShellExecutionDataBuilder executionDataBuilder = ShellExecutionData.builder();
     ExecuteCommandResponseBuilder executeCommandResponseBuilder = ExecuteCommandResponse.builder();
     CommandExecutionStatus commandExecutionStatus = FAILURE;
@@ -214,11 +223,16 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
 
     String envVariablesFilename;
     File envVariablesOutputFile = null;
-    if (!envVariablesToCollect.isEmpty()) {
+
+    // combine both variable types
+    List<String> allVariablesToCollect =
+        Stream.concat(envVariablesToCollect.stream(), secretVariablesToCollect.stream()).collect(Collectors.toList());
+
+    if (!allVariablesToCollect.isEmpty()) {
       envVariablesFilename = "harness-" + this.config.getExecutionId() + ".out";
       envVariablesOutputFile = new File(workingDirectory, envVariablesFilename);
       command = addEnvVariablesCollector(
-          command, envVariablesToCollect, envVariablesOutputFile.getAbsolutePath(), this.scriptType);
+          command, allVariablesToCollect, envVariablesOutputFile.getAbsolutePath(), this.scriptType);
     }
 
     if (this.scriptType == ScriptType.POWERSHELL) {
@@ -258,7 +272,7 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
       if (commandExecutionStatus == SUCCESS && envVariablesOutputFile != null) {
         try (BufferedReader br =
                  new BufferedReader(new InputStreamReader(new FileInputStream(envVariablesOutputFile), "UTF-8"))) {
-          processScriptOutputFile(envVariablesMap, br);
+          processScriptOutputFile(envVariablesMap, br, secretVariablesToCollect);
         } catch (IOException e) {
           saveExecutionLog("IOException:" + e, ERROR);
         }

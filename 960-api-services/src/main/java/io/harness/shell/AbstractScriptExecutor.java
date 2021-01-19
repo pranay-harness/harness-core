@@ -60,6 +60,10 @@ public abstract class AbstractScriptExecutor implements BaseScriptExecutor {
   @Override
   public abstract ExecuteCommandResponse executeCommandString(String command, List<String> envVariablesToCollect);
 
+  @Override
+  public abstract ExecuteCommandResponse executeCommandString(
+      String command, List<String> envVariablesToCollect, List<String> secretEnvVariablesToCollect);
+
   public abstract String getAccountId();
 
   public abstract String getCommandUnitName();
@@ -111,8 +115,8 @@ public abstract class AbstractScriptExecutor implements BaseScriptExecutor {
     saveExecutionLog(line, RUNNING);
   }
 
-  protected void processScriptOutputFile(@NotNull Map<String, String> envVariablesMap, @NotNull BufferedReader br)
-      throws IOException {
+  protected void processScriptOutputFile(@NotNull Map<String, String> envVariablesMap, @NotNull BufferedReader br,
+      List<String> secretVariables) throws IOException {
     saveExecutionLog("Script Output: ");
     StringBuilder sb = new StringBuilder();
     String line;
@@ -128,7 +132,12 @@ public abstract class AbstractScriptExecutor implements BaseScriptExecutor {
           String value = envVar.substring(index + 1).trim();
           if (StringUtils.isNotBlank(key)) {
             envVariablesMap.put(key, value);
-            saveExecutionLog(key + "=" + value);
+            if (secretVariables.contains(key)) {
+              saveExecutionLog(key + "="
+                  + "************");
+            } else {
+              saveExecutionLog(key + "=" + value);
+            }
           }
           sb = new StringBuilder();
         }

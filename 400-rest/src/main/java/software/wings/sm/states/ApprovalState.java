@@ -336,6 +336,10 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       if (jexlError.contains(":")) {
         jexlError = jexlError.split(":")[1];
       }
+      if (je instanceof JexlException.Variable
+          && ((JexlException.Variable) je).getVariable().equals("sweepingOutputSecrets")) {
+        jexlError = "Secret Variables defined in Script output of shell scripts cannot be used in assertions";
+      }
       return respondWithStatus(context, executionData, null,
           ExecutionResponse.builder()
               .executionStatus(FAILED)

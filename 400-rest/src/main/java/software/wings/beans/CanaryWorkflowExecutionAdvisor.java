@@ -67,6 +67,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.jexl3.JexlException;
 import org.mongodb.morphia.annotations.Transient;
 
 /**
@@ -407,13 +408,22 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         return anExecutionEventAdvice()
             .withSkipState(true)
             .withSkipExpression(assertionExpression)
-            .withSkipError(
-                "Error evaluating skip condition: " + assertionExpression + ": " + ExceptionUtils.getMessage(ex))
+            .withSkipError(processErrorMessage(assertionExpression, ex))
             .build();
       }
     }
 
     return null;
+  }
+
+  private static String processErrorMessage(String assertionExpression, Exception ex) {
+    if (ex instanceof JexlException.Variable
+        && ((JexlException.Variable) ex).getVariable().equals("sweepingOutputSecrets")) {
+      return "Error evaluating skip condition: " + assertionExpression
+          + ": Secret Variables defined in Script output of shell scripts cannot be used in skip assertions";
+    }
+
+    return "Error evaluating skip condition: " + assertionExpression + ": " + ExceptionUtils.getMessage(ex);
   }
 
   boolean isExecutionHostsPresent(ExecutionContextImpl context) {

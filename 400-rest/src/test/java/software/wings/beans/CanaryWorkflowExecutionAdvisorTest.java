@@ -36,6 +36,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
+import org.apache.commons.jexl3.JexlException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -287,5 +288,15 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
     assertThat(advice.isSkipState()).isTrue();
     assertThat(advice.getSkipExpression()).isEqualTo(expr);
     assertThat(advice.getSkipError()).isNotBlank();
+
+    // When Secret script output variables are used in Skip Assertion. This exception will be thrown. This block is to
+    // test Error Message
+    doThrow(new JexlException.Variable(null, "sweepingOutputSecrets", true)).when(context).evaluateExpression(any());
+    advice = CanaryWorkflowExecutionAdvisor.shouldSkipStep(context, phaseStep, state);
+    assertThat(advice).isNotNull();
+    assertThat(advice.isSkipState()).isTrue();
+    assertThat(advice.getSkipExpression()).isEqualTo(expr);
+    assertThat(advice.getSkipError())
+        .contains("Secret Variables defined in Script output of shell scripts cannot be used in skip assertions");
   }
 }
