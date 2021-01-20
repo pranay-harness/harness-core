@@ -7,6 +7,7 @@ import static com.google.common.collect.ImmutableMap.of;
 import static java.util.stream.Collectors.toSet;
 
 import io.harness.AuthorizationServiceHeader;
+import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.metrics.MetricRegistryModule;
@@ -25,9 +26,12 @@ import io.harness.remote.CharsetResponseFilter;
 import io.harness.remote.NGObjectMapperHelper;
 import io.harness.security.JWTAuthenticationFilter;
 import io.harness.service.impl.DelegateSyncServiceImpl;
+import io.harness.threading.ExecutorModule;
+import io.harness.threading.ThreadPool;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -96,7 +100,9 @@ public class NotificationApplication extends Application<NotificationConfigurati
 
   @Override
   public void run(NotificationConfiguration appConfig, Environment environment) {
-    log.info("Starting Next Gen Application ...");
+    ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
+        20, 100, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
+    log.info("Starting Notification Application ...");
     MaintenanceController.forceMaintenance(true);
     Injector injector =
         Guice.createInjector(new NotificationModule(appConfig), new MetricRegistryModule(metricRegistry));
@@ -113,10 +119,16 @@ public class NotificationApplication extends Application<NotificationConfigurati
     registerManagedBeans(environment, injector);
     registerQueueListeners(injector, appConfig);
     registerAuthFilters(appConfig, environment, injector);
-    //    registerIterators(injector);
+    registerHealthCheck(environment, injector);
     populateSeedData(injector, appConfig.getSeedDataConfiguration());
     MaintenanceController.forceMaintenance(false);
     new Thread(injector.getInstance(MessageConsumer.class)).start();
+  }
+
+  private void registerHealthCheck(Environment environment, Injector injector) {
+    final HealthService healthService = injector.getInstance(HealthService.class);
+    environment.healthChecks().register("Next Gen Manager", healthService);
+    healthService.registerMonitor(injector.getInstance(HPersistence.class));
   }
 
   private void populateSeedData(Injector injector, SeedDataConfiguration seedDataConfiguration) {

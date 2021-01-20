@@ -19,6 +19,7 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NotificationRegistrars;
 import io.harness.serializer.NotificationSenderRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
+import io.harness.threading.ExecutorModule;
 import io.harness.version.VersionModule;
 
 import com.google.common.base.Suppliers;
@@ -107,6 +108,7 @@ public class NotificationModule extends AbstractModule {
         return appConfig.getMongoConfig();
       }
     });
+    install(ExecutorModule.getInstance());
     bind(ManagedScheduledExecutorService.class)
         .annotatedWith(Names.named("delegate-response"))
         .toInstance(new ManagedScheduledExecutorService("delegate-response"));

@@ -4,6 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.core.invites.remote.InviteMapper.toInviteList;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
+import static org.apache.commons.lang3.StringUtils.stripToNull;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
@@ -71,7 +73,7 @@ public class InviteResource {
   private static final String PROJECT_URL_FORMAT = "ng/#/account/%s/projects/%s/orgs/%s/details";
   private static final String ORG_URL_FORMAT = "ng/#/account/%s/admin/organizations/%s";
   private static final String SIGN_UP_URL = "#/login";
-  private static final String INVALID_TOKEN_REDIRECT_URL = "ng/#/error?code=400&message=Invalid%20Token.%20Try%20again";
+  private static final String INVALID_TOKEN_REDIRECT_URL = "ng/#/account/%s/error?code=INVITE_EXPIRED";
   private final InvitesService invitesService;
   private final NgUserService ngUserService;
   @Named("baseUrl") private String BASE_URL;
@@ -112,6 +114,8 @@ public class InviteResource {
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") String projectIdentifier,
       @NotNull @Valid CreateInviteListDTO createInviteListDTO) {
+    projectIdentifier = stripToNull(projectIdentifier);
+    orgIdentifier = stripToNull(orgIdentifier);
     NGAccess ngAccess = BaseNGAccess.builder()
                             .accountIdentifier(accountIdentifier)
                             .orgIdentifier(orgIdentifier)
@@ -153,7 +157,7 @@ public class InviteResource {
       // TODO @Ankush when user signup, check if he has any pending approved invites
       redirectURI = getRedirectURI(invite);
     } else {
-      redirectURI = URI.create(BASE_URL + INVALID_TOKEN_REDIRECT_URL);
+      redirectURI = URI.create(BASE_URL + String.format(INVALID_TOKEN_REDIRECT_URL, accountIdentifier));
     }
     return Response.seeOther(redirectURI).build();
   }
