@@ -1,5 +1,10 @@
 package io.harness.entitysetupusageclient.remote;
 
+import static io.harness.NGConstants.REFERRED_BY_ENTITY_FQN;
+import static io.harness.NGConstants.REFERRED_BY_ENTITY_TYPE;
+import static io.harness.NGConstants.REFERRED_ENTITY_FQN;
+import static io.harness.NGConstants.REFERRED_ENTITY_TYPE;
+
 import io.harness.EntityType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
@@ -24,10 +29,6 @@ import retrofit2.http.Query;
  *    accountIdentifier/orgIdentifier/projectIdentifier/pipelineIdentifier/identifier
  */
 public interface EntitySetupUsageClient {
-  String REFERRED_ENTITY_FQN = "referredEntityFQN";
-  String REFERRED_ENTITY_TYPE = "referredEntityType";
-  String REFERRED_BY_ENTITY_FQN = "referredByEntityFQN";
-  String REFERRED_BY_ENTITY_TYPE = "referredByEntityType";
   String INTERNAL_ENTITY_REFERENCE_API = "entitySetupUsage/internal";
 
   @GET(INTERNAL_ENTITY_REFERENCE_API)

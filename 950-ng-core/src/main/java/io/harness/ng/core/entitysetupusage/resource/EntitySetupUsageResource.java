@@ -1,5 +1,10 @@
 package io.harness.ng.core.entitysetupusage.resource;
 
+import static io.harness.NGConstants.REFERRED_BY_ENTITY_FQN;
+import static io.harness.NGConstants.REFERRED_BY_ENTITY_TYPE;
+import static io.harness.NGConstants.REFERRED_ENTITY_FQN;
+import static io.harness.NGConstants.REFERRED_ENTITY_TYPE;
+
 import io.harness.EntityType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
@@ -32,12 +37,6 @@ import org.springframework.data.domain.Page;
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @NextGenManagerAuth
 public class EntitySetupUsageResource {
-  private static final String REFERRED_ENTITY_FQN = "referredEntityFQN";
-  private static final String REFERRED_ENTITY_TYPE = "referredEntityType";
-  private static final String REFERRED_BY_ENTITY_FQN = "referredByEntityFQN";
-  private static final String REFERRED_BY_ENTITY_TYPE = "referredByEntityType";
-  private static final String ENTITY_FQN = "entityFQN";
-  private static final String ENTITY_TYPE = "entityType";
   EntitySetupUsageService entitySetupUsageService;
 
   @GET
@@ -49,7 +48,7 @@ public class EntitySetupUsageResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
-      @QueryParam(ENTITY_TYPE) EntityType entityType,
+      @QueryParam(REFERRED_ENTITY_TYPE) EntityType entityType,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
     return ResponseDTO.newResponse(entitySetupUsageService.list(
         page, size, accountIdentifier, orgIdentifier, projectIdentifier, identifier, entityType, searchTerm));
@@ -74,7 +73,8 @@ public class EntitySetupUsageResource {
   @ApiOperation(value = "Returns true if the entity is referenced by other resource", nickname = "isEntityReferenced")
   public ResponseDTO<Boolean> isEntityReferenced(
       @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(REFERRED_ENTITY_FQN) String referredEntityFQN, @QueryParam(ENTITY_TYPE) EntityType entityType) {
+      @QueryParam(REFERRED_ENTITY_FQN) String referredEntityFQN,
+      @QueryParam(REFERRED_ENTITY_TYPE) EntityType entityType) {
     return ResponseDTO.newResponse(
         entitySetupUsageService.isEntityReferenced(accountIdentifier, referredEntityFQN, entityType));
   }
