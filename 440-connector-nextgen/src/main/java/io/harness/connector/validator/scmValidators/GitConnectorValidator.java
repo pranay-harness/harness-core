@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-public class GitConnectorValidator extends AbstractGitConnector {
+public class GitConnectorValidator extends AbstractGitConnectorValidator {
   @Override
   public GitConfigDTO getGitConfigFromConnectorConfig(ConnectorConfigDTO connectorConfig) {
     return (GitConfigDTO) connectorConfig;

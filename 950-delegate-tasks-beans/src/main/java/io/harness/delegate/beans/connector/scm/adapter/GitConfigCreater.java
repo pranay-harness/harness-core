@@ -1,4 +1,4 @@
-package io.harness.connector.scmMappers;
+package io.harness.delegate.beans.connector.scm.adapter;
 
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
@@ -8,11 +8,11 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthent
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
 
-import com.google.inject.Singleton;
+import lombok.experimental.UtilityClass;
 
-@Singleton
+@UtilityClass
 public class GitConfigCreater {
-  public GitConfigDTO getGitConfigForHttp(GitConnectionType gitConnectionType, String url, String username,
+  public static GitConfigDTO getGitConfigForHttp(GitConnectionType gitConnectionType, String url, String username,
       SecretRefData usernameRef, SecretRefData passwordRef) {
     if (usernameRef != null) {
       throw new InvalidRequestException("Username Ref not implemented for git");
@@ -27,7 +27,7 @@ public class GitConfigCreater {
         .build();
   }
 
-  public GitConfigDTO getGitConfigForSsh(GitConnectionType gitConnectionType, String url, SecretRefData sshKey) {
+  public static GitConfigDTO getGitConfigForSsh(GitConnectionType gitConnectionType, String url, SecretRefData sshKey) {
     final GitSSHAuthenticationDTO gitSSHAuthenticationDTO =
         GitSSHAuthenticationDTO.builder().encryptedSshKey(sshKey).build().builder().build();
     return GitConfigDTO.builder()

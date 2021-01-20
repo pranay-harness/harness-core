@@ -5,6 +5,7 @@ import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ExecutionCapabilityDemanderWithScope;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
+import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -25,7 +26,7 @@ import lombok.experimental.FieldDefaults;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class GitConfigDTO extends ConnectorConfigDTO implements ExecutionCapabilityDemanderWithScope {
+public class GitConfigDTO extends ConnectorConfigDTO implements ExecutionCapabilityDemanderWithScope, ScmConnector {
   @NotNull @JsonProperty("type") GitAuthType gitAuthType;
   @NotNull @JsonProperty("connectionType") GitConnectionType gitConnectionType;
   @NotNull String url;

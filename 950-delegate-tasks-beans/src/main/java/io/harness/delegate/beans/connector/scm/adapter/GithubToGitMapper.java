@@ -1,4 +1,4 @@
-package io.harness.connector.scmMappers;
+package io.harness.delegate.beans.connector.scm.adapter;
 
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
@@ -12,14 +12,11 @@ import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import lombok.experimental.UtilityClass;
 
-@Singleton
+@UtilityClass
 public class GithubToGitMapper {
-  @Inject GitConfigCreater gitConfigCreater;
-
-  public GitConfigDTO mapToGitConfigDTO(GithubConnectorDTO githubConnectorDTO) {
+  public static GitConfigDTO mapToGitConfigDTO(GithubConnectorDTO githubConnectorDTO) {
     final GitAuthType authType = githubConnectorDTO.getAuthentication().getAuthType();
     final GitConnectionType connectionType = githubConnectorDTO.getConnectionType();
     final String url = githubConnectorDTO.getUrl();
@@ -41,13 +38,13 @@ public class GithubToGitMapper {
         usernameRef = githubUsernameTokenDTO.getUsernameRef();
         passwordRef = githubUsernameTokenDTO.getTokenRef();
       }
-      return gitConfigCreater.getGitConfigForHttp(connectionType, url, username, usernameRef, passwordRef);
+      return GitConfigCreater.getGitConfigForHttp(connectionType, url, username, usernameRef, passwordRef);
 
     } else if (authType == GitAuthType.SSH) {
       final GithubSshCredentialsDTO credentials =
           (GithubSshCredentialsDTO) githubConnectorDTO.getAuthentication().getCredentials();
       final SecretRefData sshKeyRef = credentials.getSpec().getSshKeyRef();
-      return gitConfigCreater.getGitConfigForSsh(connectionType, url, sshKeyRef);
+      return GitConfigCreater.getGitConfigForSsh(connectionType, url, sshKeyRef);
     }
     throw new InvalidRequestException("Unknown auth type: " + authType);
   }

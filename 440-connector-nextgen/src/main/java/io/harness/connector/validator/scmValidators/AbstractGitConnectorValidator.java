@@ -23,7 +23,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.util.Objects;
 
-public abstract class AbstractGitConnector extends AbstractConnectorValidator {
+public abstract class AbstractGitConnectorValidator extends AbstractConnectorValidator {
   @Inject NGErrorHelper ngErrorHelper;
 
   @Override
