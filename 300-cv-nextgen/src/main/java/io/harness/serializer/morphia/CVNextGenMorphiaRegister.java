@@ -48,7 +48,6 @@ import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.entities.TimeSeriesThreshold;
 import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.entities.WebhookToken;
-import io.harness.cvng.dashboard.entities.Anomaly;
 import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.migration.beans.CVNGSchema;
@@ -105,7 +104,6 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(DeploymentDataCollectionTask.class);
     set.add(CustomActivity.class);
     set.add(AppDynamicsCVConfig.class);
-    set.add(Anomaly.class);
     set.add(DeploymentLogAnalysis.class);
     set.add(TestVerificationJob.class);
     set.add(DeploymentTimeSeriesAnalysis.class);
