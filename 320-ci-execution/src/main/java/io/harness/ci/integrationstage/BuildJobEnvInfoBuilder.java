@@ -182,6 +182,10 @@ public class BuildJobEnvInfoBuilder {
     if (sharedPaths != null) {
       int index = 0;
       for (String path : sharedPaths) {
+        if (isEmpty(path)) {
+          continue;
+        }
+
         String volumeName = String.format("%s%d", SHARED_VOLUME_PREFIX, index);
         volumeToMountPath.put(volumeName, path);
         index++;
