@@ -33,7 +33,7 @@ import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
-import software.wings.beans.Delegate.Status;
+import software.wings.beans.DelegateInstanceStatus;
 import software.wings.beans.DelegateScope;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
@@ -718,13 +718,13 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
 
     Map<DelegateActivity, List<Delegate>> delegatesMap =
         accountDelegates.stream().collect(Collectors.groupingBy(delegate -> {
-          if (Status.ENABLED == delegate.getStatus()) {
+          if (DelegateInstanceStatus.ENABLED == delegate.getStatus()) {
             if (delegate.getLastHeartBeat() > oldestAcceptableHeartBeat) {
               return DelegateActivity.ACTIVE;
             } else {
               return DelegateActivity.DISCONNECTED;
             }
-          } else if (Status.WAITING_FOR_APPROVAL == delegate.getStatus()) {
+          } else if (DelegateInstanceStatus.WAITING_FOR_APPROVAL == delegate.getStatus()) {
             return DelegateActivity.WAITING_FOR_APPROVAL;
           }
           return DelegateActivity.OTHER;

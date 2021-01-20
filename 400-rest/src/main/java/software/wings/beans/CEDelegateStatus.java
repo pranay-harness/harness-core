@@ -16,7 +16,7 @@ public class CEDelegateStatus {
   private Long lastHeartBeat;
   private String delegateName;
   private String delegateType;
-  private software.wings.beans.Delegate.Status status;
+  private DelegateInstanceStatus status;
   @Builder.Default
   private List<software.wings.beans.DelegateStatus.DelegateInner.DelegateConnectionInner> connections =
       new ArrayList<>();

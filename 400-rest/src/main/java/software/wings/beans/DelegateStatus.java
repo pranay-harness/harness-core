@@ -3,8 +3,6 @@ package software.wings.beans;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.beans.Delegate.Status;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -34,7 +32,7 @@ public class DelegateStatus {
     private String delegateName;
     private String delegateGroupName;
     private String description;
-    private Status status;
+    private DelegateInstanceStatus status;
     private long lastHeartBeat;
     private boolean activelyConnected;
     private String delegateProfileId;

@@ -52,7 +52,7 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, Ac
   // Will be used for NG to hold delegate size details
   private DelegateSizeDetails sizeDetails;
 
-  @Default private Status status = Status.ENABLED;
+  @Default private DelegateInstanceStatus status = DelegateInstanceStatus.ENABLED;
   private String description;
   private String ip;
   private String hostName;
@@ -109,6 +109,4 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, Ac
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
-
-  public enum Status { ENABLED, WAITING_FOR_APPROVAL, @Deprecated DISABLED, DELETED }
 }

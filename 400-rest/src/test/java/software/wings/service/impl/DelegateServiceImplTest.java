@@ -64,9 +64,9 @@ import software.wings.beans.CEDelegateStatus;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateBuilder;
 import software.wings.beans.Delegate.DelegateKeys;
-import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
+import software.wings.beans.DelegateInstanceStatus;
 import software.wings.beans.TaskType;
 import software.wings.features.api.UsageLimitedFeature;
 import software.wings.helpers.ext.mail.EmailData;
@@ -128,7 +128,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
         .ip("127.0.0.1")
         .hostName("localhost")
         .version(VERSION)
-        .status(Status.ENABLED)
+        .status(DelegateInstanceStatus.ENABLED)
         .lastHeartBeat(System.currentTimeMillis());
   }
 

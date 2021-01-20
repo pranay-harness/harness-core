@@ -9,7 +9,6 @@ import static io.harness.rule.OwnerRule.VUK;
 
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Delegate.DelegateBuilder;
-import static software.wings.beans.Delegate.Status;
 import static software.wings.service.impl.DelegateProfileServiceImpl.PRIMARY_PROFILE_DESCRIPTION;
 import static software.wings.service.impl.DelegateProfileServiceImpl.PRIMARY_PROFILE_NAME;
 
@@ -34,6 +33,7 @@ import io.harness.service.intfc.DelegateProfileObserver;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
+import software.wings.beans.DelegateInstanceStatus;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.DelegateProfileServiceImpl;
 
@@ -77,7 +77,7 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
         .ip(IP)
         .hostName(HOSTNAME)
         .version(VERSION)
-        .status(Status.ENABLED)
+        .status(DelegateInstanceStatus.ENABLED)
         .lastHeartBeat(System.currentTimeMillis());
   }
 

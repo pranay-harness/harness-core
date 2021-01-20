@@ -35,7 +35,7 @@ import io.harness.persistence.HPersistence;
 
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
-import software.wings.beans.Delegate.Status;
+import software.wings.beans.DelegateInstanceStatus;
 import software.wings.beans.TaskType;
 import software.wings.service.intfc.DelegateService;
 
@@ -75,7 +75,7 @@ public class DelegateCapabilitiesRecordHandler implements MongoPersistenceIterat
             .fieldName(DelegateKeys.capabilitiesCheckNextIteration)
             .filterExpander(q
                 -> q.field(DelegateKeys.status)
-                       .equal(Status.ENABLED)
+                       .equal(DelegateInstanceStatus.ENABLED)
                        .field(DelegateKeys.lastHeartBeat)
                        .greaterThan(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(5)))
             .targetInterval(Duration.ofMinutes(CAPABILITIES_CHECK_INTERVAL_IN_MINUTES))

@@ -164,8 +164,8 @@ import software.wings.beans.CEDelegateStatus;
 import software.wings.beans.CEDelegateStatus.CEDelegateStatusBuilder;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateKeys;
-import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConnection;
+import software.wings.beans.DelegateInstanceStatus;
 import software.wings.beans.DelegateScalingGroup;
 import software.wings.beans.DelegateSequenceConfig;
 import software.wings.beans.DelegateSequenceConfig.DelegateSequenceConfigKeys;
@@ -579,7 +579,7 @@ public class DelegateServiceImpl implements DelegateService {
     List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class)
                                    .filter(DelegateKeys.accountId, accountId)
                                    .field(DelegateKeys.status)
-                                   .notEqual(Status.DELETED)
+                                   .notEqual(DelegateInstanceStatus.DELETED)
                                    .asList();
 
     Map<String, List<DelegateStatus.DelegateInner.DelegateConnectionInner>> perDelegateConnections =
@@ -612,13 +612,14 @@ public class DelegateServiceImpl implements DelegateService {
   @NotNull
   private List<DelegateScalingGroup> getDelegateScalingGroups(String accountId,
       Map<String, List<DelegateStatus.DelegateInner.DelegateConnectionInner>> activeDelegateConnections) {
-    List<Delegate> activeDelegates = wingsPersistence.createQuery(Delegate.class)
-                                         .filter(DelegateKeys.accountId, accountId)
-                                         .field(DelegateKeys.delegateGroupName)
-                                         .exists()
-                                         .field(DelegateKeys.status)
-                                         .hasAnyOf(Arrays.asList(Status.ENABLED, Status.WAITING_FOR_APPROVAL))
-                                         .asList();
+    List<Delegate> activeDelegates =
+        wingsPersistence.createQuery(Delegate.class)
+            .filter(DelegateKeys.accountId, accountId)
+            .field(DelegateKeys.delegateGroupName)
+            .exists()
+            .field(DelegateKeys.status)
+            .hasAnyOf(Arrays.asList(DelegateInstanceStatus.ENABLED, DelegateInstanceStatus.WAITING_FOR_APPROVAL))
+            .asList();
 
     return activeDelegates.stream()
         .collect(groupingBy(Delegate::getDelegateGroupName))
@@ -636,7 +637,7 @@ public class DelegateServiceImpl implements DelegateService {
     return wingsPersistence.createQuery(Delegate.class)
         .filter(DelegateKeys.accountId, accountId)
         .field(DelegateKeys.status)
-        .notEqual(Status.DELETED)
+        .notEqual(DelegateInstanceStatus.DELETED)
         .field(DelegateKeys.delegateGroupName)
         .doesNotExist()
         .asList();
@@ -776,7 +777,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public Delegate updateApprovalStatus(String accountId, String delegateId, DelegateApproval action) {
-    Delegate.Status newDelegateStatus = mapApprovalActionToDelegateStatus(action);
+    DelegateInstanceStatus newDelegateStatus = mapApprovalActionToDelegateStatus(action);
 
     Delegate currentDelegate = wingsPersistence.createQuery(Delegate.class)
                                    .filter(DelegateKeys.accountId, accountId)
@@ -786,7 +787,7 @@ public class DelegateServiceImpl implements DelegateService {
     Query<Delegate> updateQuery = wingsPersistence.createQuery(Delegate.class)
                                       .filter(DelegateKeys.accountId, accountId)
                                       .filter(DelegateKeys.uuid, delegateId)
-                                      .filter(DelegateKeys.status, Status.WAITING_FOR_APPROVAL);
+                                      .filter(DelegateKeys.status, DelegateInstanceStatus.WAITING_FOR_APPROVAL);
 
     UpdateOperations<Delegate> updateOperations =
         wingsPersistence.createUpdateOperations(Delegate.class).set(DelegateKeys.status, newDelegateStatus);
@@ -798,18 +799,18 @@ public class DelegateServiceImpl implements DelegateService {
     auditServiceHelper.reportForAuditingUsingAccountId(
         accountId, currentDelegate, updatedDelegate, Type.DELEGATE_APPROVAL);
 
-    if (Status.DELETED == newDelegateStatus) {
+    if (DelegateInstanceStatus.DELETED == newDelegateStatus) {
       broadcasterFactory.lookup(STREAM_DELEGATE + accountId, true).broadcast(SELF_DESTRUCT + delegateId);
     }
 
     return updatedDelegate;
   }
 
-  private Status mapApprovalActionToDelegateStatus(DelegateApproval action) {
+  private DelegateInstanceStatus mapApprovalActionToDelegateStatus(DelegateApproval action) {
     if (DelegateApproval.ACTIVATE == action) {
-      return Status.ENABLED;
+      return DelegateInstanceStatus.ENABLED;
     } else {
-      return Status.DELETED;
+      return DelegateInstanceStatus.DELETED;
     }
   }
 
@@ -832,7 +833,7 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     if (licenseService.isAccountDeleted(existingDelegate.getAccountId())) {
-      existingDelegate.setStatus(Status.DELETED);
+      existingDelegate.setStatus(DelegateInstanceStatus.DELETED);
     }
 
     existingDelegate.setUseCdn(featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, delegate.getAccountId()));
@@ -1631,9 +1632,9 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     if (delegateProfile.isApprovalRequired()) {
-      delegate.setStatus(Status.WAITING_FOR_APPROVAL);
+      delegate.setStatus(DelegateInstanceStatus.WAITING_FOR_APPROVAL);
     } else {
-      delegate.setStatus(Status.ENABLED);
+      delegate.setStatus(DelegateInstanceStatus.ENABLED);
     }
 
     int maxUsageAllowed = delegatesFeature.getMaxUsageAllowedForAccount(accountId);
@@ -1766,7 +1767,7 @@ public class DelegateServiceImpl implements DelegateService {
                                     .project(DelegateKeys.delegateProfileId, true)
                                     .project(DelegateKeys.description, true)
                                     .get();
-    if (existingDelegate != null && existingDelegate.getStatus() == Status.DELETED) {
+    if (existingDelegate != null && existingDelegate.getStatus() == DelegateInstanceStatus.DELETED) {
       broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true)
           .broadcast(SELF_DESTRUCT + existingDelegate.getUuid());
 
@@ -1820,7 +1821,7 @@ public class DelegateServiceImpl implements DelegateService {
                                     .project(DelegateKeys.delegateProfileId, true)
                                     .project(DelegateKeys.description, true)
                                     .get();
-    if (existingDelegate != null && existingDelegate.getStatus() == Status.DELETED) {
+    if (existingDelegate != null && existingDelegate.getStatus() == DelegateInstanceStatus.DELETED) {
       broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true)
           .broadcast(SELF_DESTRUCT + existingDelegate.getUuid());
 
@@ -1970,7 +1971,7 @@ public class DelegateServiceImpl implements DelegateService {
     log.info("Checking delegate profile. Previous profile [{}] updated at {}", profileId, lastUpdatedAt);
     Delegate delegate = get(accountId, delegateId, true);
 
-    if (delegate == null || Status.ENABLED != delegate.getStatus()) {
+    if (delegate == null || DelegateInstanceStatus.ENABLED != delegate.getStatus()) {
       return null;
     }
 
@@ -2474,8 +2475,9 @@ public class DelegateServiceImpl implements DelegateService {
   public DelegateTaskPackage acquireDelegateTask(String accountId, String delegateId, String taskId) {
     try {
       Delegate delegate = get(accountId, delegateId, false);
-      if (delegate == null || Status.ENABLED != delegate.getStatus()) {
-        log.warn("Delegate rejected to acquire task, because it was not found to be in {} status.", Status.ENABLED);
+      if (delegate == null || DelegateInstanceStatus.ENABLED != delegate.getStatus()) {
+        log.warn("Delegate rejected to acquire task, because it was not found to be in {} status.",
+            DelegateInstanceStatus.ENABLED);
         return null;
       }
 
@@ -3727,8 +3729,8 @@ public class DelegateServiceImpl implements DelegateService {
                                 .field(DelegateKeys.uuid)
                                 .notIn(delegatesToRetain);
 
-    UpdateOperations<Delegate> updateOps =
-        wingsPersistence.createUpdateOperations(Delegate.class).set(DelegateKeys.status, Status.DELETED);
+    UpdateOperations<Delegate> updateOps = wingsPersistence.createUpdateOperations(Delegate.class)
+                                               .set(DelegateKeys.status, DelegateInstanceStatus.DELETED);
     wingsPersistence.update(query, updateOps);
 
     // Waiting for shutdownInterval to ensure shutdown msg reach delegates before removing their entries from DB

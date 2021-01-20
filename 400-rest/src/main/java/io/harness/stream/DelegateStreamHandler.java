@@ -18,7 +18,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.serializer.JsonUtils;
 
 import software.wings.beans.Delegate;
-import software.wings.beans.Delegate.Status;
+import software.wings.beans.DelegateInstanceStatus;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.DelegateService;
 
@@ -70,7 +70,7 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
           String delegateToken = req.getParameter("delegateToken");
 
           Delegate delegate = delegateService.get(accountId, delegateId, true);
-          delegate.setStatus(Status.ENABLED);
+          delegate.setStatus(DelegateInstanceStatus.ENABLED);
 
           updateIfEcsDelegate(delegate, sequenceNum, delegateToken);
 
