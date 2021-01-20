@@ -38,6 +38,7 @@ public class HttpTask extends AbstractDelegateRunnableTask {
                                    .method(httpTaskParameters.getMethod())
                                    .body(httpTaskParameters.getBody())
                                    .header(httpTaskParameters.getHeader())
+                                   .headers(httpTaskParameters.getHeaders())
                                    .socketTimeoutMillis(httpTaskParameters.getSocketTimeoutMillis())
                                    .url(httpTaskParameters.getUrl())
                                    .useProxy(httpTaskParameters.isUseProxy())

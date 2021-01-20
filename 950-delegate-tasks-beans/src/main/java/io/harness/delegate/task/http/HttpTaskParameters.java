@@ -3,6 +3,7 @@ package io.harness.delegate.task.http;
 import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.HttpCapabilityDetailsLevel.QUERY;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
+import io.harness.beans.KeyValuePair;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
@@ -22,6 +23,7 @@ public class HttpTaskParameters implements TaskParameters, ExecutionCapabilityDe
   @Expression(ALLOW_SECRETS) String url;
   @Expression(ALLOW_SECRETS) String header;
   @Expression(ALLOW_SECRETS) String body;
+  @Expression(ALLOW_SECRETS) List<KeyValuePair> headers;
   int socketTimeoutMillis;
   boolean useProxy;
   boolean isCertValidationRequired;
