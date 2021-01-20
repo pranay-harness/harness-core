@@ -80,16 +80,16 @@ public class DockerHubArtifactConfig implements ArtifactConfig, Visitable {
   public ArtifactConfig applyOverrides(ArtifactConfig overrideConfig) {
     DockerHubArtifactConfig dockerHubArtifactConfig = (DockerHubArtifactConfig) overrideConfig;
     DockerHubArtifactConfig resultantConfig = this;
-    if (dockerHubArtifactConfig.getConnectorRef() != null) {
+    if (!ParameterField.isNull(dockerHubArtifactConfig.getConnectorRef())) {
       resultantConfig = resultantConfig.withConnectorRef(dockerHubArtifactConfig.getConnectorRef());
     }
-    if (dockerHubArtifactConfig.getImagePath() != null) {
+    if (!ParameterField.isNull(dockerHubArtifactConfig.getImagePath())) {
       resultantConfig = resultantConfig.withImagePath(dockerHubArtifactConfig.getImagePath());
     }
-    if (dockerHubArtifactConfig.getTag() != null) {
+    if (!ParameterField.isNull(dockerHubArtifactConfig.getTag())) {
       resultantConfig = resultantConfig.withTag(dockerHubArtifactConfig.getTag());
     }
-    if (dockerHubArtifactConfig.getTagRegex() != null) {
+    if (!ParameterField.isNull(dockerHubArtifactConfig.getTagRegex())) {
       resultantConfig = resultantConfig.withTagRegex(dockerHubArtifactConfig.getTagRegex());
     }
     return resultantConfig;

@@ -1,11 +1,13 @@
 package io.harness.cdng.artifact.mappers;
 
+import io.harness.artifact.ArtifactMetadataKeys;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
 import io.harness.cdng.artifact.bean.GcrArtifactOutcome;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.GcrArtifactConfig;
+import io.harness.datacollection.utils.EmptyPredicate;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateResponse;
 import io.harness.delegate.task.artifacts.gcr.GcrArtifactDelegateResponse;
@@ -37,6 +39,7 @@ public class ArtifactResponseToOutcomeMapper {
   private DockerArtifactOutcome getDockerArtifactOutcome(DockerHubArtifactConfig dockerConfig,
       DockerArtifactDelegateResponse dockerDelegateResponse, boolean useDelegateResponse) {
     return DockerArtifactOutcome.builder()
+        .image(getImageValue(dockerDelegateResponse))
         .connectorRef(dockerConfig.getConnectorRef().getValue())
         .imagePath(dockerConfig.getImagePath().getValue())
         .tag(useDelegateResponse ? dockerDelegateResponse.getTag()
@@ -51,6 +54,7 @@ public class ArtifactResponseToOutcomeMapper {
   private GcrArtifactOutcome getGcrArtifactOutcome(GcrArtifactConfig gcrArtifactConfig,
       GcrArtifactDelegateResponse gcrArtifactDelegateResponse, boolean useDelegateResponse) {
     return GcrArtifactOutcome.builder()
+        .image(getImageValue(gcrArtifactDelegateResponse))
         .connectorRef(gcrArtifactConfig.getConnectorRef().getValue())
         .imagePath(gcrArtifactConfig.getImagePath().getValue())
         .tag(useDelegateResponse ? gcrArtifactDelegateResponse.getTag()
@@ -60,5 +64,14 @@ public class ArtifactResponseToOutcomeMapper {
         .artifactType(ArtifactSourceType.GCR.getDisplayName())
         .primaryArtifact(gcrArtifactConfig.isPrimaryArtifact())
         .build();
+  }
+
+  private String getImageValue(ArtifactDelegateResponse artifactDelegateResponse) {
+    if (artifactDelegateResponse == null || artifactDelegateResponse.getBuildDetails() == null) {
+      return null;
+    }
+    return EmptyPredicate.isNotEmpty(artifactDelegateResponse.getBuildDetails().getMetadata())
+        ? artifactDelegateResponse.getBuildDetails().getMetadata().get(ArtifactMetadataKeys.IMAGE)
+        : null;
   }
 }

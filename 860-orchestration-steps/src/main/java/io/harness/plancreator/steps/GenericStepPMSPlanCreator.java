@@ -136,7 +136,8 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
       String nextNodeUuid = null;
       YamlField siblingField = currentField.getNode().nextSiblingFromParentArray(
           currentField.getName(), Arrays.asList(STEP, PARALLEL, STEP_GROUP));
-      if (siblingField != null) {
+      // Check if step is in parallel section then dont have nextNodeUUid set.
+      if (siblingField != null && !checkIfStepIsInParallelSection(currentField)) {
         nextNodeUuid = siblingField.getNode().getUuid();
       }
 
@@ -225,7 +226,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
 
   private AdviserObtainment getOnSuccessAdviserObtainment(YamlField currentField) {
     if (currentField != null && currentField.getNode() != null) {
-      if (currentField.checkIfParentIsParallel(STEPS) || currentField.checkIfParentIsParallel(ROLLBACK_STEPS)) {
+      if (checkIfStepIsInParallelSection(currentField)) {
         return null;
       }
       YamlField siblingField = currentField.getNode().nextSiblingFromParentArray(
@@ -303,5 +304,18 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
       throw new InvalidRequestException("Invalid yaml", e);
     }
     return failureStrategyConfigs;
+  }
+
+  // This is required as step can be inside stepGroup which can have Parallel and stepGroup itself can
+  // be inside Parallel section.
+  private boolean checkIfStepIsInParallelSection(YamlField currentField) {
+    if (currentField != null && currentField.getNode() != null) {
+      if (currentField.checkIfParentIsParallel(STEPS) || currentField.checkIfParentIsParallel(ROLLBACK_STEPS)) {
+        // Check if step is inside StepGroup and StepGroup is inside Parallel but not the step.
+        return YamlUtils.findParentNode(currentField.getNode(), STEP_GROUP) == null
+            || currentField.checkIfParentIsParallel(STEP_GROUP);
+      }
+    }
+    return false;
   }
 }
