@@ -893,7 +893,7 @@ public class StateMachineExecutor implements StateInspectionListener {
                 .name(context.getWorkflowExecutionName())
                 .build();
         openAnAlert(context, manualInterventionNeededAlert);
-        sendManualInterventionNeededNotification(context);
+        sendManualInterventionNeededNotification(context, Long.MAX_VALUE);
         break;
       }
       case WAITING_FOR_MANUAL_INTERVENTION: {
@@ -912,7 +912,7 @@ public class StateMachineExecutor implements StateInspectionListener {
                 .name(context.getWorkflowExecutionName())
                 .build();
         openAnAlert(context, manualInterventionNeededAlert);
-        sendManualInterventionNeededNotification(context);
+        sendManualInterventionNeededNotification(context, stateExecutionInstance.getExpiryTs());
         break;
       }
       case PAUSE_FOR_INPUTS: {
@@ -1076,7 +1076,7 @@ public class StateMachineExecutor implements StateInspectionListener {
         AlertType.ManualInterventionNeeded);
   }
 
-  protected void sendManualInterventionNeededNotification(ExecutionContextImpl context) {
+  protected void sendManualInterventionNeededNotification(ExecutionContextImpl context, long expiryTs) {
     Application app = context.getApp();
     notNullCheck("app", app);
     Workflow workflow = workflowService.readWorkflow(app.getAppId(), context.getWorkflowId());
@@ -1089,6 +1089,9 @@ public class StateMachineExecutor implements StateInspectionListener {
 
     Map<String, String> placeholderValues =
         workflowNotificationHelper.getPlaceholderValues(context, app, context.getEnv(), PAUSED, null);
+    placeholderValues.put("EXPIRES_TS_SECS", String.valueOf(expiryTs / 1000L));
+    placeholderValues.put("EXPIRES_DATE", notificationMessageResolver.getFormattedExpiresTime(expiryTs));
+
     notificationService.sendNotificationAsync(
         InformationNotification.builder()
             .appId(app.getName())

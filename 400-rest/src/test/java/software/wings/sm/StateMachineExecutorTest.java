@@ -36,6 +36,7 @@ import static software.wings.utils.WingsTestConstants.NOTIFICATION_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -79,8 +80,11 @@ import software.wings.sm.StateMachineTest.StateSync;
 import software.wings.sm.states.ForkState;
 
 import com.google.inject.Inject;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,6 +103,8 @@ import org.mockito.Mock;
 @Slf4j
 public class StateMachineExecutorTest extends WingsBaseTest {
   private final String APP_ID = generateUuid();
+  private final DateFormat dateFormat = new SimpleDateFormat("MMM d");
+  private final DateFormat timeFormat = new SimpleDateFormat("HH:mm z");
   @Inject WingsPersistence wingsPersistence;
   @InjectMocks @Inject StateMachineExecutor stateMachineExecutor;
 
@@ -905,6 +911,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testSendManualInterventionNeededNotification() {
+    long expiryTs = 1610998940219L;
     NotificationRule notificationRule = aNotificationRule()
                                             .withNotificationGroups(Arrays.asList(aNotificationGroup()
                                                                                       .withName(USER_NAME)
@@ -930,10 +937,12 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     when(notificationMessageResolver.getPlaceholderValues(
              any(), any(), any(Long.class), any(Long.class), any(), any(), any(), any(), any()))
         .thenReturn(placeholders);
+    when(notificationMessageResolver.getFormattedExpiresTime(expiryTs))
+        .thenReturn(format("%s at %s", dateFormat.format(new Date(expiryTs)), timeFormat.format(new Date(expiryTs))));
     when(workflowNotificationHelper.getArtifactsDetails(any(), any(), any(), any()))
         .thenReturn(WorkflowNotificationDetails.builder().build());
 
-    injectStateMachineExecutor.sendManualInterventionNeededNotification(context);
+    injectStateMachineExecutor.sendManualInterventionNeededNotification(context, expiryTs);
     verify(notificationService).sendNotificationAsync(any(Notification.class), singletonList(any()));
 
     ArgumentCaptor<Notification> notificationArgumentCaptor = ArgumentCaptor.forClass(Notification.class);
@@ -942,6 +951,10 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     Notification notification = notificationArgumentCaptor.getAllValues().get(0);
     assertThat(notification.getNotificationTemplateId()).isEqualTo(MANUAL_INTERVENTION_NEEDED_NOTIFICATION.name());
     assertThat(notification.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(notification.getNotificationTemplateVariables().get("EXPIRES_TS_SECS"))
+        .isEqualTo(String.valueOf(expiryTs / 1000));
+    assertThat(notification.getNotificationTemplateVariables().get("EXPIRES_DATE"))
+        .isEqualTo(format("%s at %s", dateFormat.format(new Date(expiryTs)), timeFormat.format(new Date(expiryTs))));
 
     notificationRule = notificationRuleArgumentCaptor.getValue().get(0);
     assertThat(notificationRule.getNotificationGroups().get(0).getName()).isEqualTo(USER_NAME);

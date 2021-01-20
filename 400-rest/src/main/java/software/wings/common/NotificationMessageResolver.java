@@ -447,8 +447,7 @@ public class NotificationMessageResolver {
 
     String startTime = format("%s at %s", dateFormat.format(new Date(startTs)), timeFormat.format(new Date(startTs)));
     String endTime = format("%s at %s", dateFormat.format(new Date(endTs)), timeFormat.format(new Date(endTs)));
-    String expiresTime =
-        format("%s at %s", dateFormat.format(new Date(expiresTs)), timeFormat.format(new Date(expiresTs)));
+    String expiresTime = getFormattedExpiresTime(expiresTs);
 
     Environment env = ((ExecutionContextImpl) context).getEnv();
     String envName = (env != null) ? env.getName() : "";
@@ -482,6 +481,10 @@ public class NotificationMessageResolver {
     }
 
     return placeHolderValues;
+  }
+
+  public String getFormattedExpiresTime(long expiresTs) {
+    return format("%s at %s", dateFormat.format(new Date(expiresTs)), timeFormat.format(new Date(expiresTs)));
   }
 
   private Long parseLong(String s) {
