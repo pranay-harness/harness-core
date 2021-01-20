@@ -9,11 +9,12 @@ import java.util.Optional;
 import javax.validation.constraints.NotNull;
 
 public interface NotificationTemplateService {
-  NotificationTemplate create(String identifier, Team team, BoundedInputStream inputStream);
+  NotificationTemplate create(String identifier, Team team, BoundedInputStream inputStream, Boolean harnessManaged);
 
   NotificationTemplate save(@NotNull NotificationTemplate notificationTemplate);
 
-  Optional<NotificationTemplate> update(String templateIdentifier, Team team, BoundedInputStream inputStream);
+  Optional<NotificationTemplate> update(
+      String templateIdentifier, Team team, BoundedInputStream inputStream, Boolean harnessManaged);
 
   List<NotificationTemplate> list(Team team);
 

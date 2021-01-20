@@ -123,8 +123,8 @@ public class SlackServiceImpl implements ChannelService {
       processingResponse = slackSender.send(slackWebhookUrls, message, notificationId);
     }
     log.info(NotificationProcessingResponse.isNotificationResquestFailed(processingResponse)
-            ? "Notification request {} sent"
-            : "Failed to send notification for request {}",
+            ? "Failed to send notification for request {}"
+            : "Notification request {} sent",
         notificationId);
     return processingResponse;
   }
