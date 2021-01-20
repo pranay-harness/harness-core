@@ -134,8 +134,8 @@ import software.wings.beans.AccountStatus;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateBuilder;
 import software.wings.beans.Delegate.DelegateKeys;
-import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConnection;
+import software.wings.beans.DelegateInstanceStatus;
 import software.wings.beans.DelegateScalingGroup;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.Event.Type;
@@ -353,7 +353,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     Delegate deletedDelegate = createDelegateBuilder().build();
     deletedDelegate.setAccountId(accountId);
-    deletedDelegate.setStatus(Status.DELETED);
+    deletedDelegate.setStatus(DelegateInstanceStatus.DELETED);
 
     wingsPersistence.save(Arrays.asList(delegate, deletedDelegate));
 
@@ -378,7 +378,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     Delegate deletedDelegate = createDelegateBuilder().build();
     deletedDelegate.setAccountId(accountId);
-    deletedDelegate.setStatus(Status.DELETED);
+    deletedDelegate.setStatus(DelegateInstanceStatus.DELETED);
 
     Delegate delegateWithoutScalingGroup = createDelegateBuilder().build();
     delegateWithoutScalingGroup.setAccountId(accountId);
@@ -405,7 +405,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     Delegate deletedDelegate = createDelegateBuilder().build();
     deletedDelegate.setAccountId(accountId);
-    deletedDelegate.setStatus(Status.DELETED);
+    deletedDelegate.setStatus(DelegateInstanceStatus.DELETED);
 
     // these three delegates should be returned
     Delegate delegateWithScalingGroup1 = createDelegateBuilder().build();
@@ -472,7 +472,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     Delegate deletedDelegate = createDelegateBuilder().build();
     deletedDelegate.setAccountId(accountId);
-    deletedDelegate.setStatus(Status.DELETED);
+    deletedDelegate.setStatus(DelegateInstanceStatus.DELETED);
     deletedDelegate.setDelegateGroupName("test");
     wingsPersistence.save(deletedDelegate);
 
@@ -492,7 +492,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegate.setAccountId(accountId);
     wingsPersistence.save(delegate);
     delegate.setLastHeartBeat(System.currentTimeMillis());
-    delegate.setStatus(Status.DISABLED);
+    delegate.setStatus(DelegateInstanceStatus.DISABLED);
     delegate.setDelegateProfileId(delegateProfileId);
     delegateService.update(delegate);
     Delegate updatedDelegate = wingsPersistence.get(Delegate.class, delegate.getUuid());
@@ -513,13 +513,13 @@ public class DelegateServiceTest extends WingsBaseTest {
     Delegate existingDelegate = createDelegateBuilder().build();
     existingDelegate.setUuid(delegateId);
     existingDelegate.setAccountId(accountId);
-    existingDelegate.setStatus(Status.WAITING_FOR_APPROVAL);
+    existingDelegate.setStatus(DelegateInstanceStatus.WAITING_FOR_APPROVAL);
     wingsPersistence.save(existingDelegate);
 
     Delegate updatedDelegate = delegateService.updateApprovalStatus(accountId, delegateId, DelegateApproval.ACTIVATE);
 
     assertThat(existingDelegate).isEqualToIgnoringGivenFields(updatedDelegate, DelegateKeys.status);
-    assertThat(Status.ENABLED).isEqualTo(updatedDelegate.getStatus());
+    assertThat(DelegateInstanceStatus.ENABLED).isEqualTo(updatedDelegate.getStatus());
     verify(auditServiceHelper)
         .reportForAuditingUsingAccountId(accountId, existingDelegate, updatedDelegate, Type.DELEGATE_APPROVAL);
   }
@@ -534,13 +534,13 @@ public class DelegateServiceTest extends WingsBaseTest {
     Delegate existingDelegate = createDelegateBuilder().build();
     existingDelegate.setUuid(delegateId);
     existingDelegate.setAccountId(accountId);
-    existingDelegate.setStatus(Status.WAITING_FOR_APPROVAL);
+    existingDelegate.setStatus(DelegateInstanceStatus.WAITING_FOR_APPROVAL);
     wingsPersistence.save(existingDelegate);
 
     Delegate updatedDelegate = delegateService.updateApprovalStatus(accountId, delegateId, DelegateApproval.REJECT);
 
     assertThat(existingDelegate).isEqualToIgnoringGivenFields(updatedDelegate, DelegateKeys.status);
-    assertThat(Status.DELETED).isEqualTo(updatedDelegate.getStatus());
+    assertThat(DelegateInstanceStatus.DELETED).isEqualTo(updatedDelegate.getStatus());
     verify(auditServiceHelper)
         .reportForAuditingUsingAccountId(accountId, existingDelegate, updatedDelegate, Type.DELEGATE_APPROVAL);
     verify(broadcaster).broadcast(SELF_DESTRUCT + delegateId);
@@ -556,7 +556,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegate.setDelegateType(ECS);
     wingsPersistence.save(delegate);
     delegate.setLastHeartBeat(System.currentTimeMillis());
-    delegate.setStatus(Status.DISABLED);
+    delegate.setStatus(DelegateInstanceStatus.DISABLED);
     delegateService.update(delegate);
     Delegate updatedDelegate = wingsPersistence.get(Delegate.class, delegate.getUuid());
     assertThat(updatedDelegate).isEqualToIgnoringGivenFields(delegate, DelegateKeys.validUntil);
@@ -613,7 +613,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegate = delegateService.add(delegate);
 
     assertThat(delegate).isEqualToIgnoringGivenFields(delegate, DelegateKeys.status);
-    assertThat(delegate.getStatus()).isEqualTo(Status.WAITING_FOR_APPROVAL);
+    assertThat(delegate.getStatus()).isEqualTo(DelegateInstanceStatus.WAITING_FOR_APPROVAL);
     verify(eventEmitter)
         .send(Channel.DELEGATES,
             anEvent().withOrgId(accountId).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
@@ -1119,7 +1119,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .ip("127.0.0.1")
                             .hostName("localhost")
                             .version(VERSION)
-                            .status(Status.ENABLED)
+                            .status(DelegateInstanceStatus.ENABLED)
                             .lastHeartBeat(System.currentTimeMillis())
                             .build();
 
@@ -1801,14 +1801,14 @@ public class DelegateServiceTest extends WingsBaseTest {
     Delegate delegate = createDelegateBuilder().build();
     delegate.setAccountId(accountId);
     delegate.setUuid(delegateId);
-    delegate.setStatus(Status.WAITING_FOR_APPROVAL);
+    delegate.setStatus(DelegateInstanceStatus.WAITING_FOR_APPROVAL);
     wingsPersistence.save(delegate);
 
     DelegateTaskPackage delegateTaskPackage =
         delegateService.acquireDelegateTask(accountId, delegateId, generateUuid());
     assertThat(delegateTaskPackage).isNull();
 
-    delegate.setStatus(Status.DELETED);
+    delegate.setStatus(DelegateInstanceStatus.DELETED);
     wingsPersistence.save(delegate);
 
     delegateTaskPackage = delegateService.acquireDelegateTask(accountId, delegateId, generateUuid());
@@ -1912,7 +1912,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     String accountId = generateUuid();
 
     Delegate deletedDelegate = createDelegateBuilder().build();
-    deletedDelegate.setStatus(Status.DELETED);
+    deletedDelegate.setStatus(DelegateInstanceStatus.DELETED);
     deletedDelegate.setAccountId(accountId);
     deletedDelegate.setUuid(generateUuid());
     wingsPersistence.save(deletedDelegate);
@@ -1922,7 +1922,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateProfileParams).isNull();
 
     Delegate wapprDelegate = createDelegateBuilder().build();
-    wapprDelegate.setStatus(Status.WAITING_FOR_APPROVAL);
+    wapprDelegate.setStatus(DelegateInstanceStatus.WAITING_FOR_APPROVAL);
     wapprDelegate.setAccountId(accountId);
     wapprDelegate.setUuid(generateUuid());
     wingsPersistence.save(wapprDelegate);
@@ -2117,7 +2117,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .ip("127.0.0.1")
                             .hostName("a.b.c")
                             .version(VERSION)
-                            .status(Status.ENABLED)
+                            .status(DelegateInstanceStatus.ENABLED)
                             .lastHeartBeat(System.currentTimeMillis())
                             .build();
     wingsPersistence.save(delegate);
@@ -2127,7 +2127,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                    .hostName("d.e.f")
                    .delegateName("k8s-name")
                    .version(VERSION)
-                   .status(Status.ENABLED)
+                   .status(DelegateInstanceStatus.ENABLED)
                    .lastHeartBeat(System.currentTimeMillis())
                    .build();
     wingsPersistence.save(delegate);
@@ -2149,7 +2149,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .hostName("a.b.c")
                             .delegateName("testDelegateName1")
                             .version(VERSION)
-                            .status(Status.ENABLED)
+                            .status(DelegateInstanceStatus.ENABLED)
                             .lastHeartBeat(System.currentTimeMillis())
                             .delegateProfileId(delegateProfile.getUuid())
                             .tags(ImmutableList.of("abc"))
@@ -2161,7 +2161,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                    .hostName("d.e.f")
                    .delegateName("testDelegateName2")
                    .version(VERSION)
-                   .status(Status.ENABLED)
+                   .status(DelegateInstanceStatus.ENABLED)
                    .lastHeartBeat(System.currentTimeMillis())
                    .delegateProfileId(delegateProfile.getUuid())
                    .tags(ImmutableList.of("def"))
@@ -2189,7 +2189,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .hostName("a.b.c")
                             .delegateName("testDelegateName1")
                             .version(VERSION)
-                            .status(Status.ENABLED)
+                            .status(DelegateInstanceStatus.ENABLED)
                             .lastHeartBeat(System.currentTimeMillis())
                             .delegateProfileId(delegateProfile.getUuid())
                             .build();
@@ -2209,7 +2209,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .accountId(ACCOUNT_ID)
                             .ip("127.0.0.1")
                             .version(VERSION)
-                            .status(Status.ENABLED)
+                            .status(DelegateInstanceStatus.ENABLED)
                             .lastHeartBeat(System.currentTimeMillis())
                             .tags(ImmutableList.of("abc", "qwe", "xde"))
                             .build();
@@ -2237,7 +2237,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .hostName("host")
                             .delegateName("test")
                             .version(VERSION)
-                            .status(Status.ENABLED)
+                            .status(DelegateInstanceStatus.ENABLED)
                             .lastHeartBeat(System.currentTimeMillis())
                             .delegateProfileId(delegateProfile.getUuid())
                             .tags(ImmutableList.of("abc", "bbb", "abc"))
@@ -2267,7 +2267,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .delegateProfileId(delegateProfile.getUuid())
                             .ip("127.0.0.1")
                             .version(VERSION)
-                            .status(Status.ENABLED)
+                            .status(DelegateInstanceStatus.ENABLED)
                             .lastHeartBeat(System.currentTimeMillis())
                             .build();
     wingsPersistence.save(delegate);
@@ -2286,7 +2286,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .accountId(ACCOUNT_ID)
                             .ip("127.0.0.1")
                             .version(VERSION)
-                            .status(Status.ENABLED)
+                            .status(DelegateInstanceStatus.ENABLED)
                             .lastHeartBeat(System.currentTimeMillis())
                             .build();
     wingsPersistence.save(delegate);
@@ -2304,7 +2304,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .ip("127.0.0.1")
                             .hostName("a.b.c")
                             .version(VERSION)
-                            .status(Status.ENABLED)
+                            .status(DelegateInstanceStatus.ENABLED)
                             .lastHeartBeat(System.currentTimeMillis())
                             .build();
     wingsPersistence.save(delegate);
@@ -2325,7 +2325,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .ip("127.0.0.1")
                             .delegateProfileId(delegateProfile.getUuid())
                             .version(VERSION)
-                            .status(Status.ENABLED)
+                            .status(DelegateInstanceStatus.ENABLED)
                             .lastHeartBeat(System.currentTimeMillis())
                             .tags(ImmutableList.of("abc", "qwe"))
                             .build();
@@ -2535,7 +2535,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .accountId(ACCOUNT_ID)
                             .ip("127.0.0.1")
                             .version(VERSION)
-                            .status(Status.ENABLED)
+                            .status(DelegateInstanceStatus.ENABLED)
                             .lastHeartBeat(System.currentTimeMillis())
                             .tags(ImmutableList.of("abc", "qwe"))
                             .build();
@@ -2545,7 +2545,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     Delegate result = delegateService.updateHeartbeatForDelegateWithPollingEnabled(delegate);
 
-    assertThat(result).extracting(Delegate::getStatus).isEqualTo(Status.DELETED);
+    assertThat(result).extracting(Delegate::getStatus).isEqualTo(DelegateInstanceStatus.DELETED);
     assertThat(result).extracting(Delegate::getUuid).isEqualTo(delegate.getUuid());
   }
 
@@ -2706,7 +2706,7 @@ public class DelegateServiceTest extends WingsBaseTest {
         .delegateName("testDelegateName")
         .delegateType("dockerType")
         .version(VERSION)
-        .status(Status.ENABLED)
+        .status(DelegateInstanceStatus.ENABLED)
         .lastHeartBeat(System.currentTimeMillis());
   }
 

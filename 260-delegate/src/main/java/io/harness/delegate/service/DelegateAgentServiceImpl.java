@@ -137,7 +137,7 @@ import io.harness.utils.ProcessControl;
 import io.harness.version.VersionInfoManager;
 
 import software.wings.beans.Delegate;
-import software.wings.beans.Delegate.Status;
+import software.wings.beans.DelegateInstanceStatus;
 import software.wings.beans.DelegateTaskFactory;
 import software.wings.beans.LogHelper;
 import software.wings.beans.TaskType;
@@ -1550,7 +1550,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       DelegateHeartbeatResponse receivedDelegateResponse = delegateParamsResponse.getResource();
 
       if (delegateId.equals(receivedDelegateResponse.getDelegateId())) {
-        if (Status.DELETED == Status.valueOf(receivedDelegateResponse.getStatus())) {
+        if (DelegateInstanceStatus.DELETED == DelegateInstanceStatus.valueOf(receivedDelegateResponse.getStatus())) {
           initiateSelfDestruct();
         } else {
           builder.delegateId(receivedDelegateResponse.getDelegateId());

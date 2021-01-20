@@ -16,7 +16,7 @@ import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
 
-import static software.wings.beans.Delegate.Status.ENABLED;
+import static software.wings.beans.DelegateInstanceStatus.ENABLED;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.service.impl.AssignDelegateServiceImpl.BLACKLIST_TTL;
@@ -70,6 +70,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.DelegateBuilder;
+import software.wings.beans.DelegateInstanceStatus;
 import software.wings.beans.DelegateScope;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
@@ -143,7 +144,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   private DelegateBuilder createDelegateBuilder() {
-    return Delegate.builder().status(Delegate.Status.ENABLED).lastHeartBeat(System.currentTimeMillis());
+    return Delegate.builder().status(DelegateInstanceStatus.ENABLED).lastHeartBeat(System.currentTimeMillis());
   }
 
   @Value
@@ -1326,7 +1327,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     Delegate wapprDelegate = createDelegateBuilder()
                                  .accountId(accountId)
                                  .uuid(generateUuid())
-                                 .status(Delegate.Status.WAITING_FOR_APPROVAL)
+                                 .status(DelegateInstanceStatus.WAITING_FOR_APPROVAL)
                                  .build();
 
     String groupName = generateUuid();
@@ -1337,8 +1338,11 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                           .delegateGroupName(groupName)
                                           .build();
 
-    Delegate deletedDelegate =
-        createDelegateBuilder().accountId(accountId).uuid(generateUuid()).status(Delegate.Status.DELETED).build();
+    Delegate deletedDelegate = createDelegateBuilder()
+                                   .accountId(accountId)
+                                   .uuid(generateUuid())
+                                   .status(DelegateInstanceStatus.DELETED)
+                                   .build();
 
     when(accountDelegatesCache.get(accountId))
         .thenReturn(asList(activeDelegate1, activeDelegate2, disconnectedDelegate, wapprDelegate, deletedDelegate,
@@ -1434,7 +1438,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                            .uuid(delegateId)
                                            .accountId(accountId)
                                            .uuid(generateUuid())
-                                           .status(Delegate.Status.WAITING_FOR_APPROVAL)
+                                           .status(DelegateInstanceStatus.WAITING_FOR_APPROVAL)
                                            .build();
 
     when(accountDelegatesCache.get(accountId)).thenReturn(asList(waitForApprovalDelegate));
@@ -1518,7 +1522,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                            .uuid(delegateId)
                                            .accountId(accountId)
                                            .uuid(generateUuid())
-                                           .status(Delegate.Status.WAITING_FOR_APPROVAL)
+                                           .status(DelegateInstanceStatus.WAITING_FOR_APPROVAL)
                                            .build();
 
     when(accountDelegatesCache.get(accountId)).thenReturn(asList(waitForApprovalDelegate));
@@ -1547,7 +1551,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                            .uuid(delegateId)
                                            .accountId(accountId)
                                            .uuid(generateUuid())
-                                           .status(Delegate.Status.WAITING_FOR_APPROVAL)
+                                           .status(DelegateInstanceStatus.WAITING_FOR_APPROVAL)
                                            .build();
 
     Delegate delegateInScalingGroup = Delegate.builder()
@@ -1604,7 +1608,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                            .uuid(delegateId)
                                            .accountId(accountId)
                                            .uuid(generateUuid())
-                                           .status(Delegate.Status.WAITING_FOR_APPROVAL)
+                                           .status(DelegateInstanceStatus.WAITING_FOR_APPROVAL)
                                            .build();
 
     Delegate delegateInScalingGroup = Delegate.builder()
