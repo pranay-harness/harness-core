@@ -86,6 +86,7 @@ import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateScripts;
+import io.harness.delegate.beans.DelegateSetupDetails;
 import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
@@ -106,6 +107,7 @@ import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logstreaming.LogStreamingServiceConfig;
 import io.harness.observer.Subject;
@@ -1789,6 +1791,95 @@ public class DelegateServiceTest extends WingsBaseTest {
     wingsPersistence.save(delegate);
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
     assertThat(delegateService.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID + "1", delegateTask.getUuid())).isNull();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testValidateKubernetesYamlWithoutConfigurationId() {
+    String accountId = generateUuid();
+    DelegateSetupDetails setupDetails = DelegateSetupDetails.builder().build();
+
+    assertThatThrownBy(() -> delegateService.validateKubernetesYaml(accountId, setupDetails))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Delegate Configuration must be provided.");
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testValidateKubernetesYamlWithoutName() {
+    String accountId = generateUuid();
+    DelegateSetupDetails setupDetails = DelegateSetupDetails.builder().delegateConfigurationId("delConfigId").build();
+
+    assertThatThrownBy(() -> delegateService.validateKubernetesYaml(accountId, setupDetails))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Delegate Name must be provided.");
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testValidateKubernetesYamlWithoutSize() {
+    String accountId = generateUuid();
+    DelegateSetupDetails setupDetails =
+        DelegateSetupDetails.builder().delegateConfigurationId("delConfigId").name("name").build();
+
+    assertThatThrownBy(() -> delegateService.validateKubernetesYaml(accountId, setupDetails))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Delegate Size must be provided.");
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testValidateKubernetesYamlShouldGenerateSessionId() {
+    String accountId = generateUuid();
+    DelegateSetupDetails setupDetails = DelegateSetupDetails.builder()
+                                            .delegateConfigurationId("delConfigId")
+                                            .name("name")
+                                            .size(DelegateSize.LARGE)
+                                            .description("desc")
+                                            .build();
+
+    DelegateSetupDetails validatedSetupDetails = delegateService.validateKubernetesYaml(accountId, setupDetails);
+    assertThat(validatedSetupDetails).isEqualToIgnoringGivenFields(setupDetails, "sessionIdentifier");
+    assertThat(validatedSetupDetails.getSessionIdentifier()).isNotBlank();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldGenerateKubernetesYaml() throws IOException, TemplateException {
+    when(accountService.get(ACCOUNT_ID))
+        .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
+    DelegateSetupDetails setupDetails = DelegateSetupDetails.builder()
+                                            .sessionIdentifier("9S5HMP0xROugl3_QgO62rQ")
+                                            .delegateConfigurationId("delConfigId")
+                                            .name("harness-delegate")
+                                            .size(DelegateSize.LARGE)
+                                            .description("desc")
+                                            .build();
+
+    File gzipFile = delegateService.generateKubernetesYaml(
+        ACCOUNT_ID, setupDetails, "https://localhost:9090", "https://localhost:7070");
+
+    File tarFile = File.createTempFile(DELEGATE_DIR, ".tar");
+    uncompressGzipFile(gzipFile, tarFile);
+    try (TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(new FileInputStream(tarFile))) {
+      assertThat(tarArchiveInputStream.getNextEntry().getName()).isEqualTo(KUBERNETES_DELEGATE + "/");
+
+      TarArchiveEntry file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
+      assertThat(file).extracting(ArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/harness-delegate.yaml");
+      byte[] buffer = new byte[(int) file.getSize()];
+      IOUtils.read(tarArchiveInputStream, buffer);
+      assertThat(new String(buffer))
+          .isEqualTo(CharStreams.toString(
+              new InputStreamReader(getClass().getResourceAsStream("/expectedHarnessDelegateNg.yaml"))));
+
+      file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
+      assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/README.txt");
+    }
   }
 
   @Test

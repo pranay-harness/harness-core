@@ -19,6 +19,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.DelegateApproval;
+import io.harness.delegate.beans.DelegateSetupDetails;
 import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.k8s.KubernetesConvention;
@@ -58,6 +59,7 @@ import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -348,6 +350,37 @@ public class DelegateSetupResource {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateService.get(accountId, delegateId, true));
+    }
+  }
+
+  @POST
+  @Path("validate-kubernetes-yaml")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = MANAGE_DELEGATES)
+  public RestResponse<DelegateSetupDetails> validateKubernetesYaml(@Context HttpServletRequest request,
+      @QueryParam("accountId") @NotEmpty String accountId, DelegateSetupDetails delegateSetupDetails) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      return new RestResponse<>(delegateService.validateKubernetesYaml(accountId, delegateSetupDetails));
+    }
+  }
+
+  @POST
+  @Path("generate-kubernetes-yaml")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = MANAGE_DELEGATES)
+  public Response generateKubernetesYaml(@Context HttpServletRequest request,
+      @QueryParam("accountId") @NotEmpty String accountId, DelegateSetupDetails delegateSetupDetails)
+      throws IOException {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      File delegateFile = delegateService.generateKubernetesYaml(accountId, delegateSetupDetails,
+          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request));
+      return Response.ok(delegateFile)
+          .header(CONTENT_TRANSFER_ENCODING, BINARY)
+          .type(APPLICATION_ZIP_CHARSET_BINARY)
+          .header(CONTENT_DISPOSITION, ATTACHMENT_FILENAME + KUBERNETES_DELEGATE + TAR_GZ)
+          .build();
     }
   }
 

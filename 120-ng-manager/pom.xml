@@ -77,6 +77,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>920-delegate-service-beans</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>940-secret-manager-client</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -251,6 +256,7 @@
                                 <rootClass>io.harness.connector.ConnectorDTO</rootClass>
                                 <rootClass>io.harness.ng.core.dto.secrets.SecretRequestWrapper</rootClass>
                                 <rootClass>io.harness.plancreator.pipeline.PipelineConfig</rootClass>
+                                <rootClass>io.harness.delegate.beans.DelegateSetupDetails</rootClass>
                             </rootClasses>
                         </configuration>
                     </execution>

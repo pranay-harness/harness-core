@@ -88,6 +88,7 @@ import io.harness.delegate.beans.DelegateProgressData;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
+import io.harness.delegate.beans.DelegateSetupDetails;
 import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskAbortEvent;
@@ -573,6 +574,101 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
+  public DelegateSetupDetails validateKubernetesYaml(String accountId, DelegateSetupDetails delegateSetupDetails) {
+    validateSetupDetails(delegateSetupDetails);
+    delegateSetupDetails.setSessionIdentifier(generateUuid());
+    return delegateSetupDetails;
+  }
+
+  @Override
+  public File generateKubernetesYaml(String accountId, DelegateSetupDetails delegateSetupDetails, String managerHost,
+      String verificationServiceUrl) throws IOException {
+    validateSetupDetails(delegateSetupDetails);
+    if (isBlank(delegateSetupDetails.getSessionIdentifier())) {
+      throw new InvalidRequestException("Session identifier must be provided.", USER);
+    }
+
+    File kubernetesDelegateFile = File.createTempFile(KUBERNETES_DELEGATE, ".tar");
+
+    try (TarArchiveOutputStream out = new TarArchiveOutputStream(new FileOutputStream(kubernetesDelegateFile))) {
+      out.putArchiveEntry(new TarArchiveEntry(KUBERNETES_DELEGATE + "/"));
+      out.closeArchiveEntry();
+
+      String version;
+      if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
+        List<String> delegateVersions = accountService.getDelegateConfiguration(accountId).getDelegateVersions();
+        version = delegateVersions.get(delegateVersions.size() - 1);
+      } else {
+        version = EMPTY_VERSION;
+      }
+
+      boolean isCiEnabled = featureFlagService.isGlobalEnabled(NEXT_GEN_ENABLED);
+
+      DelegateSizeDetails sizeDetails = fetchAvailableSizes()
+                                            .stream()
+                                            .filter(size -> size.getSize() == delegateSetupDetails.getSize())
+                                            .findFirst()
+                                            .orElse(null);
+
+      ImmutableMap<String, String> scriptParams =
+          getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry.builder()
+                                             .accountId(accountId)
+                                             .version(version)
+                                             .managerHost(managerHost)
+                                             .verificationHost(verificationServiceUrl)
+                                             .delegateName(delegateSetupDetails.getName())
+                                             .delegateProfile(delegateSetupDetails.getDelegateConfigurationId() == null
+                                                     ? ""
+                                                     : delegateSetupDetails.getDelegateConfigurationId())
+                                             .delegateType(KUBERNETES)
+                                             .ciEnabled(isCiEnabled)
+                                             .delegateSessionIdentifier(delegateSetupDetails.getSessionIdentifier())
+                                             .delegateDescription(delegateSetupDetails.getDescription())
+                                             .delegateSize(sizeDetails.getSize().name())
+                                             .delegateTaskLimit(sizeDetails.getTaskLimit())
+                                             .delegateReplicas(sizeDetails.getReplicas())
+                                             .delegateRam(sizeDetails.getRam())
+                                             .delegateCpu(sizeDetails.getCpu())
+                                             .build());
+
+      File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
+      saveProcessedTemplate(scriptParams, yaml, HARNESS_DELEGATE + "-ng.yaml.ftl");
+      yaml = new File(yaml.getAbsolutePath());
+      TarArchiveEntry yamlTarArchiveEntry =
+          new TarArchiveEntry(yaml, KUBERNETES_DELEGATE + "/" + HARNESS_DELEGATE + YAML);
+      out.putArchiveEntry(yamlTarArchiveEntry);
+      try (FileInputStream fis = new FileInputStream(yaml)) {
+        IOUtils.copy(fis, out);
+      }
+      out.closeArchiveEntry();
+
+      addReadmeFile(out);
+
+      out.flush();
+      out.finish();
+    }
+
+    File gzipKubernetesDelegateFile = File.createTempFile(DELEGATE_DIR, TAR_GZ);
+    compressGzipFile(kubernetesDelegateFile, gzipKubernetesDelegateFile);
+
+    return gzipKubernetesDelegateFile;
+  }
+
+  private void validateSetupDetails(DelegateSetupDetails delegateSetupDetails) {
+    if (isBlank(delegateSetupDetails.getDelegateConfigurationId())) {
+      throw new InvalidRequestException("Delegate Configuration must be provided.", USER);
+    }
+
+    if (isBlank(delegateSetupDetails.getName())) {
+      throw new InvalidRequestException("Delegate Name must be provided.", USER);
+    }
+
+    if (delegateSetupDetails.getSize() == null) {
+      throw new InvalidRequestException("Delegate Size must be provided.", USER);
+    }
+  }
+
+  @Override
   public DelegateStatus getDelegateStatus(String accountId) {
     DelegateConfiguration delegateConfiguration = accountService.getDelegateConfiguration(accountId);
 
@@ -1001,6 +1097,13 @@ public class DelegateServiceImpl implements DelegateService {
     private boolean ceEnabled;
     private boolean ciEnabled;
     private String logStreamingServiceBaseUrl;
+    private String delegateSessionIdentifier;
+    private String delegateDescription;
+    private String delegateSize;
+    private int delegateTaskLimit;
+    private int delegateReplicas;
+    private int delegateRam;
+    private double delegateCpu;
   }
 
   private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry inquiry) {
@@ -1147,6 +1250,34 @@ public class DelegateServiceImpl implements DelegateService {
       params.put(JRE_MAC_DIRECTORY, jreConfig.getJreMacDirectory());
       params.put(JRE_TAR_PATH, jreConfig.getJreTarPath());
       params.put("enableCE", String.valueOf(inquiry.isCeEnabled()));
+
+      if (isNotBlank(inquiry.getDelegateSessionIdentifier())) {
+        params.put("delegateSessionIdentifier", inquiry.getDelegateSessionIdentifier());
+      }
+
+      if (isNotBlank(inquiry.getDelegateDescription())) {
+        params.put("delegateDescription", inquiry.getDelegateDescription());
+      }
+
+      if (isNotBlank(inquiry.getDelegateSize())) {
+        params.put("delegateSize", inquiry.getDelegateSize());
+      }
+
+      if (inquiry.getDelegateTaskLimit() != 0) {
+        params.put("delegateTaskLimit", String.valueOf(inquiry.getDelegateTaskLimit()));
+      }
+
+      if (inquiry.getDelegateReplicas() != 0) {
+        params.put("delegateReplicas", String.valueOf(inquiry.getDelegateReplicas()));
+      }
+
+      if (inquiry.getDelegateRam() != 0) {
+        params.put("delegateRam", String.valueOf(inquiry.getDelegateRam()));
+      }
+
+      if (inquiry.getDelegateCpu() != 0) {
+        params.put("delegateCpu", String.valueOf(inquiry.getDelegateCpu()));
+      }
 
       return params.build();
     }
@@ -3688,8 +3819,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public List<DelegateSizeDetails> fetchAvailableSizes() {
-    try {
-      InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("delegatesizes/sizes.json");
+    try (InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream("delegatesizes/sizes.json")) {
       String fileContent = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
       AvailableDelegateSizes availableDelegateSizes = JsonUtils.asObject(fileContent, AvailableDelegateSizes.class);
 
