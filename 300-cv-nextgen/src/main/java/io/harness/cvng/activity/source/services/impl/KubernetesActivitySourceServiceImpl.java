@@ -17,6 +17,7 @@ import io.harness.cvng.activity.source.services.api.KubernetesActivitySourceServ
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.beans.activity.ActivityType;
+import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
@@ -79,6 +80,7 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
               .setOnInsert(ActivityKeys.activityStartTime, bucketStartTime)
               .setOnInsert(ActivityKeys.type, ActivityType.KUBERNETES)
               .setOnInsert(KubernetesActivityKeys.kubernetesActivityType, activity.getKubernetesActivityType())
+              .setOnInsert(ActivityKeys.analysisStatus, ActivityVerificationStatus.NOT_STARTED)
               .setOnInsert(KubernetesActivityKeys.eventType, activity.getEventType())
               .setOnInsert(KubernetesActivityKeys.bucketStartTime, bucketStartTime)
               .addToSet(KubernetesActivityKeys.activities, activity),
