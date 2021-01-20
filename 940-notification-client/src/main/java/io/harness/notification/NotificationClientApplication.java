@@ -11,9 +11,9 @@ import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
-import io.harness.notification.channeldetails.EmailChannel;
 import io.harness.notification.module.NotificationClientApplicationModule;
 import io.harness.notification.notificationclient.NotificationClientImpl;
+import io.harness.notification.templates.PredefinedTemplate;
 import io.harness.queue.QueueListenerController;
 import io.harness.remote.CharsetResponseFilter;
 import io.harness.remote.NGObjectMapperHelper;
@@ -27,7 +27,6 @@ import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import java.util.Collections;
 import java.util.EnumSet;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
@@ -72,23 +71,26 @@ public class NotificationClientApplication extends Application<NotificationClien
     Injector injector = Guice.createInjector(
         new NotificationClientApplicationModule(appConfig), new MetricRegistryModule(metricRegistry));
     NotificationClientImpl notificationClient = injector.getInstance(NotificationClientImpl.class);
-    notificationClient.sendNotificationAsync(EmailChannel.builder()
-                                                 .accountId("kmpySmUISimoRrJL6NL73w")
-                                                 .recipients(Collections.singletonList("ankush.shaw@harness.io"))
-                                                 .team(Team.CD)
-                                                 .templateId("email_test")
-                                                 .templateData(Collections.emptyMap())
-                                                 .userGroupIds(Collections.emptyList())
-                                                 .build());
-    //
-    //    notificationClient.sendNotificationAsync(SlackChannel.builder()
+    notificationClient.saveNotificationTemplate(Team.CV, PredefinedTemplate.PD_VANILLA, true);
+    //    notificationClient.sendNotificationAsync(EmailChannel.builder()
     //                                                 .accountId("kmpySmUISimoRrJL6NL73w")
-    //                                                 .webhookUrls(Collections.emptyList())
+    //                                                 .recipients(Collections.singletonList("ankush.shaw@harness.io"))
     //                                                 .team(Team.CD)
-    //                                                 .templateId("slack_test")
+    //                                                 .templateId("email_test")
     //                                                 .templateData(Collections.emptyMap())
     //                                                 .userGroupIds(Collections.emptyList())
     //                                                 .build());
+    //
+
+    //    notificationClient.sendNotificationAsync(
+    //            SlackChannel.builder()
+    //                    .accountId("kmpySmUISimoRrJL6NL73w")
+    //                    .webhookUrls(Collections.emptyList())
+    //                    .team(Team.CV)
+    //                    .templateId("slack_vanilla")
+    //                    .templateData(Collections.singletonMap("message", "test"))
+    //                    .userGroupIds(Collections.emptyList())
+    //                    .build());
 
     //    NotificationResult result = notificationClient.sendNotificationAsync(
     //        PagerDutyChannel.builder()

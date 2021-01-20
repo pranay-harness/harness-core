@@ -9,7 +9,7 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.notification.entities.NotificationTemplate;
-import io.harness.notification.remote.bos.TemplateDTO;
+import io.harness.notification.remote.dto.TemplateDTO;
 import io.harness.notification.service.api.NotificationTemplateService;
 import io.harness.stream.BoundedInputStream;
 
@@ -54,9 +54,28 @@ public class NotificationTemplateResource {
   @POST
   @ApiOperation(value = "Create a template", nickname = "postTemplate")
   public ResponseDTO<TemplateDTO> createTemplate(@FormDataParam("file") InputStream inputStream,
-      @FormDataParam("team") Team team, @FormDataParam("identifier") String identifier) {
+      @FormDataParam("team") Team team, @FormDataParam("identifier") String identifier,
+      @FormDataParam("harnessManaged") Boolean harnessManaged) {
     NotificationTemplate template =
-        templateService.create(identifier, team, new BoundedInputStream(inputStream, MAX_FILE_SIZE));
+        templateService.create(identifier, team, new BoundedInputStream(inputStream, MAX_FILE_SIZE), harnessManaged);
+    return ResponseDTO.newResponse(toDTO(template).orElse(null));
+  }
+
+  @Consumes(MediaType.MULTIPART_FORM_DATA)
+  @PUT
+  @Path("/insertOrUpdate")
+  @ApiOperation(value = "Update a template if exists else create", nickname = "insertOrUpdateTemplate")
+  public ResponseDTO<TemplateDTO> insertOrUpdateTemplate(@FormDataParam("file") InputStream inputStream,
+      @FormDataParam("team") Team team, @FormDataParam("identifier") String identifier,
+      @FormDataParam("harnessManaged") Boolean harnessManaged) {
+    Optional<NotificationTemplate> optionalTemplate = templateService.getByIdentifierAndTeam(identifier, team);
+    NotificationTemplate template;
+    BoundedInputStream boundedInputStream = new BoundedInputStream(inputStream, MAX_FILE_SIZE);
+    if (optionalTemplate.isPresent()) {
+      template = templateService.update(identifier, team, boundedInputStream, harnessManaged).get();
+    } else {
+      template = templateService.create(identifier, team, boundedInputStream, harnessManaged);
+    }
     return ResponseDTO.newResponse(toDTO(template).orElse(null));
   }
 
@@ -65,9 +84,10 @@ public class NotificationTemplateResource {
   @Path("/{identifier}")
   @ApiOperation(value = "Update a template", nickname = "putTemplate")
   public ResponseDTO<TemplateDTO> updateTemplate(@FormDataParam("file") InputStream inputStream,
-      @QueryParam("team") @NotNull Team team, @PathParam("identifier") String templateIdentifier) {
-    Optional<NotificationTemplate> templateOptional =
-        templateService.update(templateIdentifier, team, new BoundedInputStream(inputStream, MAX_FILE_SIZE));
+      @QueryParam("team") @NotNull Team team, @PathParam("identifier") String templateIdentifier,
+      @PathParam("harnessManaged") Boolean harnessManaged) {
+    Optional<NotificationTemplate> templateOptional = templateService.update(
+        templateIdentifier, team, new BoundedInputStream(inputStream, MAX_FILE_SIZE), harnessManaged);
     if (templateOptional.isPresent()) {
       return ResponseDTO.newResponse(toDTO(templateOptional.get()).orElse(null));
     } else {

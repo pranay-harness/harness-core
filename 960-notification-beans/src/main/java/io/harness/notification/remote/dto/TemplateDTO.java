@@ -1,4 +1,4 @@
-package io.harness.notification.remote.bos;
+package io.harness.notification.remote.dto;
 
 import io.harness.Team;
 

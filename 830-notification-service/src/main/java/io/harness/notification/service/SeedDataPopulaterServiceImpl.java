@@ -31,6 +31,7 @@ public class SeedDataPopulaterServiceImpl implements SeedDataPopulaterService {
       if (notificationTemplateService.getByIdentifierAndTeam(identifier, null).isPresent()) {
         continue;
       }
+
       URL url = Resources.getResource(path);
       try {
         byte[] file = Resources.toByteArray(url);

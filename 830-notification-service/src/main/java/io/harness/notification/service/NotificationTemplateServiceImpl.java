@@ -29,11 +29,12 @@ public class NotificationTemplateServiceImpl implements NotificationTemplateServ
   private final NotificationTemplateRepository notificationTemplateRepository;
 
   @Override
-  public NotificationTemplate create(
-      @NotNull String identifier, @NotNull Team team, @NotNull BoundedInputStream inputStream) {
+  public NotificationTemplate create(@NotNull String identifier, @NotNull Team team,
+      @NotNull BoundedInputStream inputStream, @NotNull Boolean harnessManaged) {
     NotificationTemplate template = NotificationTemplate.builder().build();
     template.setTeam(team);
     template.setIdentifier(identifier);
+    template.setHarnessManaged(harnessManaged);
     try {
       template.setFile(toByteArray(inputStream));
     } catch (Exception ex) {
@@ -50,12 +51,13 @@ public class NotificationTemplateServiceImpl implements NotificationTemplateServ
 
   @Override
   public Optional<NotificationTemplate> update(
-      @NotNull String templateIdentifier, Team team, BoundedInputStream inputStream) {
+      @NotNull String templateIdentifier, Team team, BoundedInputStream inputStream, Boolean harnessManaged) {
     Optional<NotificationTemplate> templateOptional = getByIdentifierAndTeam(templateIdentifier, team);
     if (templateOptional.isPresent()) {
       NotificationTemplate template = templateOptional.get();
       try {
         template.setFile(toByteArray(inputStream));
+        template.setHarnessManaged(harnessManaged);
         return Optional.of(notificationTemplateRepository.save(template));
       } catch (IOException e) {
         log.error("Error while converting input stream to byte array", e);
