@@ -2,6 +2,7 @@ package io.harness.cdng.service.beans;
 
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.serviceconfig.ServiceConfigVisitorHelper;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.validation.OneOfField;
 import io.harness.walktree.beans.LevelNode;
@@ -41,10 +42,10 @@ public class ServiceConfig implements OverridesApplier<ServiceConfig>, Visitable
   public ServiceConfig applyOverrides(ServiceConfig overrideConfig) {
     ServiceYaml resultantConfigService = service;
     ServiceYaml overrideConfigService = overrideConfig.getService();
-    if (overrideConfigService.getName() != null) {
+    if (EmptyPredicate.isNotEmpty(overrideConfigService.getName())) {
       resultantConfigService = resultantConfigService.withName(overrideConfigService.getName());
     }
-    if (overrideConfigService.getDescription() != null) {
+    if (!ParameterField.isNull(overrideConfigService.getDescription())) {
       resultantConfigService = resultantConfigService.withDescription(overrideConfigService.getDescription());
     }
 

@@ -97,7 +97,7 @@ public class ArtifactStep {
     ArtifactOutcome artifact = ArtifactResponseToOutcomeMapper.toArtifactOutcome(applyArtifactsOverlay(stepParameters),
         taskResponse.getArtifactTaskExecutionResponse().getArtifactDelegateResponses().get(0), true);
     String outcomeKey =
-        OutcomeExpressionConstants.ARTIFACTS + ArtifactUtils.SIDECAR_ARTIFACT + "." + artifact.getIdentifier();
+        OutcomeExpressionConstants.ARTIFACTS + ArtifactUtils.SIDECAR_ARTIFACT + artifact.getIdentifier();
     if (artifact.isPrimaryArtifact()) {
       outcomeKey = OutcomeExpressionConstants.ARTIFACTS + ArtifactUtils.PRIMARY_ARTIFACT;
     }

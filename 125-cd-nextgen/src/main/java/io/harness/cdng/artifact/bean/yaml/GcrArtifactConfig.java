@@ -83,19 +83,19 @@ public class GcrArtifactConfig implements ArtifactConfig, Visitable {
   public ArtifactConfig applyOverrides(ArtifactConfig overrideConfig) {
     GcrArtifactConfig gcrArtifactSpecConfig = (GcrArtifactConfig) overrideConfig;
     GcrArtifactConfig resultantConfig = this;
-    if (gcrArtifactSpecConfig.getConnectorRef() != null) {
+    if (!ParameterField.isNull(gcrArtifactSpecConfig.getConnectorRef())) {
       resultantConfig = resultantConfig.withConnectorRef(gcrArtifactSpecConfig.getConnectorRef());
     }
-    if (gcrArtifactSpecConfig.getImagePath() != null) {
+    if (!ParameterField.isNull(gcrArtifactSpecConfig.getImagePath())) {
       resultantConfig = resultantConfig.withImagePath(gcrArtifactSpecConfig.getImagePath());
     }
-    if (gcrArtifactSpecConfig.getRegistryHostname() != null) {
+    if (!ParameterField.isNull(gcrArtifactSpecConfig.getRegistryHostname())) {
       resultantConfig = resultantConfig.withRegistryHostname(gcrArtifactSpecConfig.getRegistryHostname());
     }
-    if (gcrArtifactSpecConfig.getTag() != null) {
+    if (!ParameterField.isNull(gcrArtifactSpecConfig.getTag())) {
       resultantConfig = resultantConfig.withTag(gcrArtifactSpecConfig.getTag());
     }
-    if (gcrArtifactSpecConfig.getTagRegex() != null) {
+    if (!ParameterField.isNull(gcrArtifactSpecConfig.getTagRegex())) {
       resultantConfig = resultantConfig.withTagRegex(gcrArtifactSpecConfig.getTagRegex());
     }
     return resultantConfig;

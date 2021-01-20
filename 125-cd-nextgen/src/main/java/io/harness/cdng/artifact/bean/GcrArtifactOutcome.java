@@ -29,6 +29,8 @@ public class GcrArtifactOutcome implements ArtifactOutcome {
   String artifactType;
   /** Whether this config corresponds to primary artifact.*/
   boolean primaryArtifact;
+  /** registryHostName/imagePath:tag */
+  String image;
 
   @Override
   public ArtifactSummary getArtifactSummary() {

@@ -271,10 +271,10 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
 
   private void handleVariablesOutcome(
       ServiceOutcomeBuilder outcomeBuilder, ServiceConfig serviceConfig, int expressionFunctorToken) {
-    List<NGVariable> variables = serviceConfig.getServiceDefinition().getServiceSpec().getVariables();
+    List<NGVariable> originalVariables = serviceConfig.getServiceDefinition().getServiceSpec().getVariables();
     Map<String, Object> mapOfVariables = new HashMap<>();
-    if (EmptyPredicate.isNotEmpty(variables)) {
-      mapOfVariables.putAll(NGVariablesUtils.getMapOfVariables(variables, expressionFunctorToken));
+    if (EmptyPredicate.isNotEmpty(originalVariables)) {
+      mapOfVariables.putAll(NGVariablesUtils.getMapOfVariables(originalVariables, expressionFunctorToken));
       // original Variables
       outcomeBuilder.variables(mapOfVariables);
     }
@@ -287,11 +287,9 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
       mapOfVariables = NGVariablesUtils.applyVariableOverrides(mapOfVariables, stageVariablesOverrides);
     }
 
-    // Publishing final override variables against "output" key.
+    // Publishing final override originalVariables against "output" key.
     if (EmptyPredicate.isNotEmpty(mapOfVariables)) {
-      for (Map.Entry<String, Object> entry : mapOfVariables.entrySet()) {
-        outcomeBuilder.variable(YamlTypes.OUTPUT + YamlTypes.PATH_CONNECTOR + entry.getKey(), entry.getValue());
-      }
+      outcomeBuilder.variable(YamlTypes.OUTPUT, mapOfVariables);
     }
 
     List<NGVariableOverrideSetWrapper> variableOverrideSetWrappers =
@@ -320,15 +318,18 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
     List<ManifestOutcome> manifestOriginalList =
         isNotEmpty(outcome.getManifestOriginalList()) ? outcome.getManifestOriginalList() : Collections.emptyList();
 
+    Map<String, Map<String, Object>> manifestsMap = new HashMap<>();
+
     for (ManifestOutcome manifestOutcome : manifestOriginalList) {
-      outcomeBuilder.manifest(
-          manifestOutcome.getIdentifier(), JsonPipelineUtils.read(manifestOutcome.toJson(), Map.class));
+      addValuesToMap(
+          manifestsMap, manifestOutcome.getIdentifier(), JsonPipelineUtils.read(manifestOutcome.toJson(), Map.class));
     }
     for (ManifestOutcome manifestOutcome : manifestOutcomeList) {
       Map<String, Object> valueMap = new HashMap<>();
       valueMap.put(YamlTypes.OUTPUT, JsonPipelineUtils.read(manifestOutcome.toJson(), Map.class));
-      outcomeBuilder.manifest(manifestOutcome.getIdentifier(), valueMap);
+      addValuesToMap(manifestsMap, manifestOutcome.getIdentifier(), valueMap);
     }
+    outcomeBuilder.manifests(manifestsMap);
 
     manifestOutcomeList.forEach(
         manifestOutcome -> outcomeBuilder.manifestResult(manifestOutcome.getIdentifier(), manifestOutcome));
@@ -345,19 +346,21 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
   private void handleArtifactOutcome(ServiceOutcomeBuilder outcomeBuilder, List<ArtifactOutcome> artifactOutcomes,
       ServiceConfig serviceConfig) throws IOException {
     ArtifactsOutcomeBuilder artifactsBuilder = ArtifactsOutcome.builder();
+    Map<String, Map<String, Object>> artifactsMap = new HashMap<>();
     for (ArtifactOutcome artifactOutcome : artifactOutcomes) {
       if (artifactOutcome.isPrimaryArtifact()) {
         artifactsBuilder.primary(artifactOutcome);
 
         Map<String, Object> valueMap = new HashMap<>();
         valueMap.put(YamlTypes.OUTPUT, JsonPipelineUtils.read(artifactOutcome.toJson(), Map.class));
-        outcomeBuilder.artifact(YamlTypes.PRIMARY_ARTIFACT, valueMap);
+        addValuesToMap(artifactsMap, YamlTypes.PRIMARY_ARTIFACT, valueMap);
       } else {
         artifactsBuilder.sidecar(artifactOutcome.getIdentifier(), artifactOutcome);
 
         Map<String, Object> valueMap = new HashMap<>();
         valueMap.put(YamlTypes.OUTPUT, JsonPipelineUtils.read(artifactOutcome.toJson(), Map.class));
-        outcomeBuilder.artifact(YamlTypes.SIDECARS_ARTIFACT_CONFIG, Maps.of(artifactOutcome.getIdentifier(), valueMap));
+        addValuesToMap(
+            artifactsMap, YamlTypes.SIDECARS_ARTIFACT_CONFIG, Maps.of(artifactOutcome.getIdentifier(), valueMap));
       }
     }
     outcomeBuilder.artifactsResult(artifactsBuilder.build());
@@ -369,14 +372,15 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
         ArtifactOutcome artifactOutcome =
             ArtifactResponseToOutcomeMapper.toArtifactOutcome(artifactConfig, null, false);
         if (artifactOutcome.isPrimaryArtifact()) {
-          outcomeBuilder.artifact(
-              YamlTypes.PRIMARY_ARTIFACT, JsonPipelineUtils.read(artifactOutcome.toJson(), Map.class));
+          addValuesToMap(
+              artifactsMap, YamlTypes.PRIMARY_ARTIFACT, JsonPipelineUtils.read(artifactOutcome.toJson(), Map.class));
         } else {
-          outcomeBuilder.artifact(YamlTypes.SIDECARS_ARTIFACT_CONFIG,
+          addValuesToMap(artifactsMap, YamlTypes.SIDECARS_ARTIFACT_CONFIG,
               Maps.of(artifactOutcome.getIdentifier(), JsonPipelineUtils.read(artifactOutcome.toJson(), Map.class)));
         }
       }
     }
+    outcomeBuilder.artifacts(artifactsMap);
 
     List<ArtifactOverrideSetWrapper> artifactOverrideSetsWrappers =
         serviceConfig.getServiceDefinition().getServiceSpec().getArtifactOverrideSets();
@@ -463,5 +467,15 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
         .accountId(accountId)
         .tags(convertToList(serviceConfig.getTags()))
         .build();
+  }
+
+  private void addValuesToMap(Map<String, Map<String, Object>> map, String key, Map<String, Object> value) {
+    if (map.containsKey(key)) {
+      Map<String, Object> alreadyExistedValue = map.get(key);
+      alreadyExistedValue.putAll(value);
+      map.put(key, alreadyExistedValue);
+    } else {
+      map.put(key, value);
+    }
   }
 }

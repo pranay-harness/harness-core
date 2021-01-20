@@ -29,6 +29,8 @@ public class DockerArtifactOutcome implements ArtifactOutcome {
   String artifactType;
   /** Whether this config corresponds to primary artifact.*/
   boolean primaryArtifact;
+  /** domainName/imagePath:tag */
+  String image;
 
   @Override
   public ArtifactSummary getArtifactSummary() {

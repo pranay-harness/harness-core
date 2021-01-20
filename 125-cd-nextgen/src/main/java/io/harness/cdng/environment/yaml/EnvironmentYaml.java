@@ -36,13 +36,13 @@ public class EnvironmentYaml implements OverridesApplier<EnvironmentYaml>, Visit
   @Override
   public EnvironmentYaml applyOverrides(EnvironmentYaml overrideConfig) {
     EnvironmentYaml resultant = this;
-    if (overrideConfig.getName() != null) {
+    if (EmptyPredicate.isNotEmpty(overrideConfig.getName())) {
       resultant = resultant.withName(overrideConfig.getName());
     }
-    if (overrideConfig.getIdentifier() != null) {
+    if (EmptyPredicate.isNotEmpty(overrideConfig.getIdentifier())) {
       resultant = resultant.withIdentifier(overrideConfig.getIdentifier());
     }
-    if (overrideConfig.getDescription() != null) {
+    if (!ParameterField.isNull(overrideConfig.getDescription())) {
       resultant = resultant.withDescription(overrideConfig.getDescription());
     }
     if (overrideConfig.getType() != null) {

@@ -47,13 +47,13 @@ public class K8SDirectInfrastructure implements Infrastructure, Visitable {
   public Infrastructure applyOverrides(Infrastructure overrideConfig) {
     K8SDirectInfrastructure config = (K8SDirectInfrastructure) overrideConfig;
     K8SDirectInfrastructure resultantInfra = this;
-    if (config.getConnectorRef() != null) {
+    if (!ParameterField.isNull(config.getConnectorRef())) {
       resultantInfra = resultantInfra.withConnectorRef(config.getConnectorRef());
     }
-    if (config.getNamespace() != null) {
+    if (!ParameterField.isNull(config.getNamespace())) {
       resultantInfra = resultantInfra.withNamespace(config.getNamespace());
     }
-    if (config.getReleaseName() != null) {
+    if (!ParameterField.isNull(config.getReleaseName())) {
       resultantInfra = resultantInfra.withReleaseName(config.getReleaseName());
     }
     return resultantInfra;

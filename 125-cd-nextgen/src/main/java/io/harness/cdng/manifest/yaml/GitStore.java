@@ -58,19 +58,19 @@ public class GitStore implements StoreConfig, Visitable {
   public StoreConfig applyOverrides(StoreConfig overrideConfig) {
     GitStore gitStore = (GitStore) overrideConfig;
     GitStore resultantGitStore = this;
-    if (gitStore.getConnectorRef() != null) {
+    if (!ParameterField.isNull(gitStore.getConnectorRef())) {
       resultantGitStore = resultantGitStore.withConnectorRef(gitStore.getConnectorRef());
     }
-    if (gitStore.getPaths() != null) {
+    if (!ParameterField.isNull(gitStore.getPaths())) {
       resultantGitStore = resultantGitStore.withPaths(gitStore.getPaths());
     }
     if (gitStore.getGitFetchType() != null) {
       resultantGitStore = resultantGitStore.withGitFetchType(gitStore.getGitFetchType());
     }
-    if (gitStore.getBranch() != null) {
+    if (!ParameterField.isNull(gitStore.getBranch())) {
       resultantGitStore = resultantGitStore.withBranch(gitStore.getBranch());
     }
-    if (gitStore.getCommitId() != null) {
+    if (!ParameterField.isNull(gitStore.getCommitId())) {
       resultantGitStore = resultantGitStore.withCommitId(gitStore.getCommitId());
     }
     return resultantGitStore;
