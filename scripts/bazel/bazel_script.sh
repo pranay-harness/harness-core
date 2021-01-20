@@ -60,6 +60,7 @@ BAZEL_MODULES="\
   //800-pipeline-service:module \
   //800-pipeline-service:module_deploy.jar \
   //810-ng-triggers:module \
+  //835-notification-senders:module \
   //850-execution-plan:module \
   //850-ng-pipeline-commons:module \
   //860-orchestration-steps:module \
@@ -260,6 +261,7 @@ build_bazel_module 450-ce-views
 build_bazel_module 460-capability
 build_bazel_module 490-ce-commons
 build_bazel_module 810-ng-triggers
+build_bazel_module 835-notification-senders
 build_bazel_module 850-execution-plan
 build_bazel_module 850-ng-pipeline-commons
 build_bazel_module 860-orchestration-steps
