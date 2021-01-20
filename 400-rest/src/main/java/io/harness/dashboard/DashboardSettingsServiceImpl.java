@@ -134,14 +134,27 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
     return asList(finalAction);
   }
 
-  @Override
   public List<DashboardAccessPermissions> flattenPermissions(List<DashboardAccessPermissions> permissions) {
     if (isEmpty(permissions)) {
       return permissions;
     }
 
     List<DashboardAccessPermissions> finalPermissions = new ArrayList<>();
+    Map<String, Set<Action>> map = getPermissionMap(permissions);
+
+    map.forEach((userGroup, actions)
+                    -> finalPermissions.add(DashboardAccessPermissions.builder()
+                                                .userGroups(asList(userGroup))
+                                                .allowedActions(removeDuplicates(actions))
+                                                .build()));
+    return finalPermissions;
+  }
+
+  private Map<String, Set<Action>> getPermissionMap(List<DashboardAccessPermissions> permissions) {
     Map<String, Set<Action>> map = new HashMap<>();
+    if (isEmpty(permissions)) {
+      return map;
+    }
     permissions.forEach(permission -> {
       List<String> userGroups = permission.getUserGroups();
       if (isEmpty(userGroups)) {
@@ -161,13 +174,13 @@ public class DashboardSettingsServiceImpl implements DashboardSettingsService {
         currentActions.addAll(permission.getAllowedActions());
       });
     });
+    return map;
+  }
 
-    map.forEach((userGroup, actions)
-                    -> finalPermissions.add(DashboardAccessPermissions.builder()
-                                                .userGroups(asList(userGroup))
-                                                .allowedActions(removeDuplicates(actions))
-                                                .build()));
-    return finalPermissions;
+  @Override
+  public boolean doesPermissionsMatch(
+      @NotNull DashboardSettings newDashboard, @NotNull DashboardSettings existingDashboard) {
+    return getPermissionMap(newDashboard.getPermissions()).equals(getPermissionMap(existingDashboard.getPermissions()));
   }
 
   @Override

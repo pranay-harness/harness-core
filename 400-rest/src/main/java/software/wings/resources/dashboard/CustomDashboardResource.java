@@ -118,8 +118,13 @@ public class CustomDashboardResource {
         throw new InvalidRequestException("User not authorized", USER);
       }
       DashboardSettings existingDashboardSetting = dashboardSettingsService.get(accountId, settings.getUuid());
-      if (!dashboardSettingsService.flattenPermissions(settings.getPermissions())
-               .equals(dashboardSettingsService.flattenPermissions(existingDashboardSetting.getPermissions()))) {
+
+      if (existingDashboardSetting == null) {
+        throw new InvalidRequestException(
+            String.format("No existing dashboard found for update of dashboard: %s ", settings.getUuid()));
+      }
+
+      if (!dashboardSettingsService.doesPermissionsMatch(settings, existingDashboardSetting)) {
         dashboardAuthHandler.authorize(existingDashboardSetting, accountId, Action.MANAGE);
       } else {
         dashboardAuthHandler.authorize(existingDashboardSetting, accountId, Action.UPDATE);

@@ -3,7 +3,6 @@ package io.harness.dashboard;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 
-import java.util.List;
 import javax.validation.constraints.NotNull;
 
 public interface DashboardSettingsService {
@@ -13,7 +12,7 @@ public interface DashboardSettingsService {
 
   DashboardSettings get(@NotNull String accountId, @NotNull String id);
 
-  List<DashboardAccessPermissions> flattenPermissions(List<DashboardAccessPermissions> permissions);
+  boolean doesPermissionsMatch(@NotNull DashboardSettings newDashboard, @NotNull DashboardSettings existingDashboard);
 
   boolean deleteDashboardSettings(@NotNull String accountId, @NotNull String id);
 
