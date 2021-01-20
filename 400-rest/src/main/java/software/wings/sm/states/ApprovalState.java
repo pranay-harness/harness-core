@@ -790,7 +790,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
             .stateExecutionData(executionData));
   }
 
-  private void updatePlaceholderValuesForSlackApproval(
+  @VisibleForTesting
+  void updatePlaceholderValuesForSlackApproval(
       String approvalId, String accountId, Map<String, String> placeHolderValues, ExecutionContext context) {
     String pausedStageName = null;
     StringBuilder environments = new StringBuilder();
@@ -816,32 +817,35 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
           workflowNotificationHelper.getArtifactsDetails(context, workflowExecution, ExecutionScope.WORKFLOW, null)
               .getMessage());
     } else {
-      artifacts.append("*Artifacts* : no artifacts");
+      artifacts.append("*Artifacts*: no artifacts");
     }
     if (isNotEmpty(workflowExecution.getEnvironments())) {
-      environments.append(
-          workflowNotificationHelper
-              .calculateEnvironmentDetails(accountId, context.getAppId(), ((ExecutionContextImpl) context).getEnv())
-              .getMessage());
+      environments.append("*Environments*: ")
+          .append(
+              workflowNotificationHelper
+                  .calculateEnvironmentDetails(accountId, context.getAppId(), ((ExecutionContextImpl) context).getEnv())
+                  .getName());
     } else {
-      environments.append("*Environments* : no environments");
+      environments.append("*Environments*: no environments");
     }
     if (isNotEmpty(workflowExecution.getServiceIds())) {
-      services.append(workflowNotificationHelper
-                          .calculateServiceDetailsForAllServices(
-                              accountId, context.getAppId(), context, workflowExecution, ExecutionScope.WORKFLOW, null)
-                          .getMessage());
+      services.append("*Services*: ")
+          .append(workflowNotificationHelper
+                      .calculateServiceDetailsForAllServices(
+                          accountId, context.getAppId(), context, workflowExecution, ExecutionScope.WORKFLOW, null)
+                      .getName());
     } else {
-      services.append("*Services* : no services");
+      services.append("*Services*: no services");
     }
     List<String> infraDefinitionIds = workflowExecution.getInfraDefinitionIds();
     if (isNotEmpty(infraDefinitionIds)) {
-      infrastructureDefinitions.append(workflowNotificationHelper
-                                           .calculateInfraDetails(accountId, context.getAppId(), workflowExecution,
-                                               ((ExecutionContextImpl) context).getEnv())
-                                           .getMessage());
+      infrastructureDefinitions.append("*Infrastructure Definitions*: ")
+          .append(workflowNotificationHelper
+                      .calculateInfraDetails(
+                          accountId, context.getAppId(), workflowExecution, ((ExecutionContextImpl) context).getEnv())
+                      .getName());
     } else {
-      infrastructureDefinitions.append("*Infrastructure Definitions* : no infrastructure definitions");
+      infrastructureDefinitions.append("*Infrastructure Definitions*: no infrastructure definitions");
     }
 
     Map<String, String> claims = new HashMap<>();
