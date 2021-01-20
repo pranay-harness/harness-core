@@ -53,6 +53,7 @@ import migrations.all.CEViewsMigration;
 import migrations.all.CleanUpDirectK8sInfraMappingEncryptedFieldsMigration;
 import migrations.all.CleanupOrphanInstances;
 import migrations.all.CleanupSyncStatusForDeletedEntities;
+import migrations.all.ConvertHttpHeadersStringTypeToList;
 import migrations.all.CreatePrimiryProfileForAllAccounts;
 import migrations.all.DelegatesWithoutProfileMigration;
 import migrations.all.DeleteInvalidServiceGuardConfigs;
@@ -300,6 +301,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(182, CEViewsMigration.class))
         .add(Pair.of(183, BaseMigration.class))
         .add(Pair.of(184, SetDefaultTimeOutAndActionForManualInterventionFailureStrategy.class))
+        .add(Pair.of(185, ConvertHttpHeadersStringTypeToList.class))
         .build();
   }
 }

@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static com.google.common.base.Ascii.toUpperCase;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 
+import io.harness.beans.KeyValuePair;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.http.beans.HttpInternalConfig;
@@ -107,7 +108,11 @@ public class HttpServiceImpl implements HttpService {
     HttpUriRequest httpUriRequest = getMethodSpecificHttpRequest(
         toUpperCase(httpInternalConfig.getMethod()), httpInternalConfig.getUrl(), httpInternalConfig.getBody());
 
-    if (httpInternalConfig.getHeader() != null) {
+    if (isNotEmpty(httpInternalConfig.getHeaders())) {
+      for (KeyValuePair header : httpInternalConfig.getHeaders()) {
+        httpUriRequest.addHeader(header.getKey(), header.getValue());
+      }
+    } else if (httpInternalConfig.getHeader() != null) {
       for (String header : HEADERS_SPLITTER.split(httpInternalConfig.getHeader())) {
         List<String> headerPair = HEADER_SPLITTER.splitToList(header);
 

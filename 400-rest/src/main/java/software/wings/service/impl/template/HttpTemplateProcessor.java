@@ -6,6 +6,8 @@ import static software.wings.common.TemplateConstants.HTTP_HEALTH_CHECK;
 
 import static java.util.Arrays.asList;
 
+import io.harness.serializer.JsonUtils;
+
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.HttpTemplate;
@@ -13,12 +15,15 @@ import software.wings.beans.template.command.HttpTemplate;
 import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import org.bson.Document;
 
 @Singleton
 public class HttpTemplateProcessor extends StateTemplateProcessor {
   private static final String URL = "url";
   private static final String METHOD = "method";
   private static final String HEADER = "header";
+  private static final String HEADERS = "headers";
   private static final String BODY = "body";
   private static final String ASSERTION = "assertion";
   private static final String TIMEOUT_MILLIS = "timeoutMillis";
@@ -45,6 +50,13 @@ public class HttpTemplateProcessor extends StateTemplateProcessor {
     }
     if (isNotEmpty(httpTemplate.getHeader())) {
       properties.put(HEADER, httpTemplate.getHeader());
+    }
+    if (isNotEmpty(httpTemplate.getHeaders())) {
+      properties.put(HEADERS,
+          httpTemplate.getHeaders()
+              .stream()
+              .map(header -> Document.parse(JsonUtils.asJson(header)))
+              .collect(Collectors.toList()));
     }
     if (isNotEmpty(httpTemplate.getBody())) {
       properties.put(BODY, httpTemplate.getBody());

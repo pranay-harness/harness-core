@@ -1,9 +1,11 @@
 package software.wings.api;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.KeyValuePair;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.serializer.JsonUtils;
@@ -14,7 +16,9 @@ import software.wings.sm.StateExecutionData;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javax.xml.parsers.ParserConfigurationException;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,6 +48,7 @@ public class HttpStateExecutionData extends StateExecutionData implements Delega
   private String assertionStatement;
   private String assertionStatus;
   private String header;
+  private List<KeyValuePair> headers;
   private boolean useProxy;
   private String warningMessage;
 
@@ -54,7 +59,7 @@ public class HttpStateExecutionData extends StateExecutionData implements Delega
       String errorMsg, Integer waitInterval, ContextElement element, Map<String, Object> stateParams,
       Map<String, Object> templateVariables, String httpUrl, String httpMethod, int httpResponseCode,
       String httpResponseBody, String assertionStatement, String assertionStatus, Document document, String header,
-      boolean useProxy, String warningMessage) {
+      List<KeyValuePair> headers, boolean useProxy, String warningMessage) {
     super(
         stateName, stateType, startTs, endTs, status, errorMsg, waitInterval, element, stateParams, templateVariables);
     this.httpUrl = httpUrl;
@@ -65,6 +70,7 @@ public class HttpStateExecutionData extends StateExecutionData implements Delega
     this.assertionStatus = assertionStatus;
     this.document = document;
     this.header = header;
+    this.headers = headers;
     this.useProxy = useProxy;
     this.warningMessage = warningMessage;
   }
@@ -136,7 +142,16 @@ public class HttpStateExecutionData extends StateExecutionData implements Delega
     putNotNull(executionDetails, "httpUrl", ExecutionDataValue.builder().displayName("Url").value(httpUrl).build());
     putNotNull(
         executionDetails, "httpMethod", ExecutionDataValue.builder().displayName("Method").value(httpMethod).build());
-    putNotNull(executionDetails, "header", ExecutionDataValue.builder().displayName("Header(s)").value(header).build());
+    if (isNotEmpty(headers)) {
+      String headerStr = String.valueOf(
+          removeNullValues(headers.stream().collect(Collectors.toMap(KeyValuePair::getKey, KeyValuePair::getValue))));
+      headerStr = headerStr.substring(1, headerStr.length() - 1);
+      putNotNull(
+          executionDetails, "headers", ExecutionDataValue.builder().displayName("Header(s)").value(headerStr).build());
+    } else {
+      putNotNull(
+          executionDetails, "header", ExecutionDataValue.builder().displayName("Header(s)").value(header).build());
+    }
     putNotNull(executionDetails, "httpResponseCode",
         ExecutionDataValue.builder().displayName("Response Code").value(httpResponseCode).build());
     putNotNull(executionDetails, "httpResponseBody",

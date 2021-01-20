@@ -339,6 +339,12 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
       }
     }
 
+    if (StateType.HTTP.name().equals(step.getType()) && isNotEmpty(outputProperties)) {
+      if (outputProperties.getOrDefault("headers", null) != null) {
+        outputProperties.remove("header");
+      }
+    }
+
     if (StateType.APPROVAL.name().equals(step.getType()) && isNotEmpty(outputProperties)) {
       if (ApprovalStateType.SERVICENOW.name().equals(properties.get(APPROVAL_STATE_TYPE_VARIABLE))) {
         Map<String, Object> snowParams =
