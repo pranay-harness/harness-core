@@ -266,6 +266,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private final String delegateSessionIdentifier = System.getenv().get("DELEGATE_SESSION_IDENTIFIER");
   private final String delegateSize = System.getenv().get("DELEGATE_SIZE");
+  private final int delegateTaskLimit = isNotBlank(System.getenv().get("DELEGATE_TASK_LIMIT"))
+      ? Integer.parseInt(System.getenv().get("DELEGATE_TASK_LIMIT"))
+      : 0;
 
   public static final String JAVA_VERSION = "java.version";
 
@@ -1720,6 +1723,18 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
 
     try {
+      int perpetualTaskCount = 0;
+      if (perpetualTaskWorker != null) {
+        perpetualTaskCount = perpetualTaskWorker.getRunningTaskMap().size();
+      }
+
+      if (delegateTaskLimit > 0
+          && (currentlyExecutingTasks.size() + currentlyValidatingTasks.size() + perpetualTaskCount)
+              >= delegateTaskLimit) {
+        log.info("Delegate reached Delegate Size Task Limit of {}. It will not acquire this time.", delegateTaskLimit);
+        return;
+      }
+
       currentlyAcquiringTasks.add(delegateTaskId);
 
       // Delay response if already working on many tasks
