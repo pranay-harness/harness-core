@@ -115,7 +115,11 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
     } else {
       return StepResponse.builder()
           .status(Status.FAILED)
-          .failureInfo(FailureInfo.newBuilder().setErrorMessage(k8sTaskExecutionResponse.getErrorMessage()).build())
+          .failureInfo(FailureInfo.newBuilder()
+                           .setErrorMessage(k8sTaskExecutionResponse.getErrorMessage() == null
+                                   ? ""
+                                   : k8sTaskExecutionResponse.getErrorMessage())
+                           .build())
           .build();
     }
   }
