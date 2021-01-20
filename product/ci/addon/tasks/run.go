@@ -99,8 +99,6 @@ func (e *runTask) Run(ctx context.Context) (map[string]string, int32, error) {
 	var err error
 	var o map[string]string
 	for i := int32(1); i <= e.numRetries; i++ {
-		// Collect reports only if the step was completed successfully
-		// TODO: (vistaar) Add a failure strategy later if needed
 		if o, err = e.execute(ctx, i); err == nil {
 			st := time.Now()
 			err = e.collectTestReports(ctx)
@@ -108,7 +106,7 @@ func (e *runTask) Run(ctx context.Context) (map[string]string, int32, error) {
 				// If there's an error in collecting reports, we won't retry but
 				// the step will be marked as an error
 				e.log.Errorw("unable to collect test reports", zap.Error(err))
-				break
+				return nil, e.numRetries, err
 			}
 			if len(e.reports) > 0 {
 				e.log.Infow(fmt.Sprintf("collected test reports in %s time", time.Since(st)))
@@ -117,6 +115,12 @@ func (e *runTask) Run(ctx context.Context) (map[string]string, int32, error) {
 		}
 	}
 	if err != nil {
+		// Run step did not execute successfully
+		// Try and collect reports, ignore any errors during report collection itself
+		errc := e.collectTestReports(ctx)
+		if errc != nil {
+			e.log.Errorw("error while collecting test reports", zap.Error(errc))
+		}
 		return nil, e.numRetries, err
 	}
 	return nil, e.numRetries, err
@@ -266,6 +270,15 @@ func getLoggableCmd(cmd string) (string, error) {
 func (r *runTask) collectTestReports(ctx context.Context) error {
 	// Test cases from reports are identified at a per-step level and won't cause overwriting/clashes
 	// at the backend.
+	if len(r.reports) == 0 {
+		return nil
+	}
+	// Create TI proxy client (lite engine)
+	client, err := grpcclient.NewTiProxyClient(consts.LiteEnginePort, r.log)
+	if err != nil {
+		return err
+	}
+	defer client.CloseConn()
 	for _, report := range r.reports {
 		var rep testreports.TestReporter
 		var err error
@@ -289,9 +302,10 @@ func (r *runTask) collectTestReports(ctx context.Context) error {
 			return nil // We're not erroring even if we can't find any tests to report
 		}
 
-		// Create TI proxy client (lite engine)
-		client, err := grpcclient.NewTiProxyClient(consts.LiteEnginePort, r.log)
 		stream, err := client.Client().WriteTests(ctx, grpc_retry.Disable())
+		if err != nil {
+			return err
+		}
 		var curr []string
 		for _, t := range tests {
 			curr = append(curr, t)
