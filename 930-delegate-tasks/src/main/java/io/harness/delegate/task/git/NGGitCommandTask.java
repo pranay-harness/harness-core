@@ -12,7 +12,7 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorAdapter;
+import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatus;
@@ -57,7 +57,7 @@ public class NGGitCommandTask extends AbstractDelegateRunnableTask {
   @Override
   public DelegateResponseData run(TaskParameters parameters) {
     GitCommandParams gitCommandParams = (GitCommandParams) parameters;
-    GitConfigDTO gitConfig = ScmConnectorAdapter.toGitConfigDTO(gitCommandParams.getGitConfig());
+    GitConfigDTO gitConfig = ScmConnectorMapper.toGitConfigDTO(gitCommandParams.getGitConfig());
     List<EncryptedDataDetail> encryptionDetails = gitCommandParams.getEncryptionDetails();
     decryptionService.decrypt(gitConfig.getGitAuth(), encryptionDetails);
     GitCommandType gitCommandType = gitCommandParams.getGitCommandType();
@@ -122,7 +122,7 @@ public class NGGitCommandTask extends AbstractDelegateRunnableTask {
     @Inject private GitCommandTaskHandler gitCommandTaskHandler;
     public ConnectorValidationResult validate(
         ConnectorConfigDTO connector, String accountIdentifier, List<EncryptedDataDetail> encryptionDetailList) {
-      final GitConfigDTO gitConfigDTO = ScmConnectorAdapter.toGitConfigDTO((ScmConnector) connector);
+      final GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connector);
       return gitCommandTaskHandler.validateGitCredentials(gitConfigDTO, accountIdentifier, encryptionDetailList);
     }
   }
