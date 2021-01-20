@@ -21,6 +21,7 @@ public class ExecutionGraphMapper {
     return ExecutionNode.builder()
         .endTs(graphVertex.getEndTs())
         .failureInfo(graphVertex.getFailureInfo())
+        .skipInfo(graphVertex.getSkipInfo())
         .stepParameters(graphVertex.getStepParameters())
         .name(graphVertex.getName())
         .baseFqn(basefqn)

@@ -3,6 +3,7 @@ package io.harness.pms.serializer.jackson;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionErrorInfo;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.GraphLayoutInfo;
@@ -15,6 +16,7 @@ import io.harness.serializer.json.ExecutionMetadataSerializer;
 import io.harness.serializer.json.ExecutionTriggerInfoSerializer;
 import io.harness.serializer.json.FailureInfoSerializer;
 import io.harness.serializer.json.LayoutNodeInfoSerializer;
+import io.harness.serializer.json.SkipInfoSerializer;
 import io.harness.serializer.json.StepTypeSerializer;
 import io.harness.serializer.json.TriggeredBySerializer;
 import io.harness.serializer.json.YamlPropertiesSerializer;
@@ -32,5 +34,6 @@ public class PmsBeansJacksonModule extends SimpleModule {
     addSerializer(ExecutionMetadata.class, new ExecutionMetadataSerializer());
     addSerializer(YamlProperties.class, new YamlPropertiesSerializer());
     addSerializer(ExecutableResponse.class, new ExecutableResponseSerializer());
+    addSerializer(SkipInfo.class, new SkipInfoSerializer());
   }
 }

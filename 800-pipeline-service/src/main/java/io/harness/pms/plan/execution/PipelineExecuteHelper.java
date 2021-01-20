@@ -59,6 +59,7 @@ public class PipelineExecuteHelper {
       executionMetadataBuilder.setInputSetYaml(inputSetPipelineYaml);
     }
     executionMetadataBuilder.setPipelineIdentifier(pipelineIdentifier);
+    executionMetadataBuilder.setYaml(pipelineYaml);
 
     return startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml, executionMetadataBuilder.build());
   }
@@ -82,6 +83,7 @@ public class PipelineExecuteHelper {
         MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), mergedRuntimeInputYaml, true);
     executionMetadataBuilder.setPipelineIdentifier(pipelineIdentifier);
     executionMetadataBuilder.setInputSetYaml(mergedRuntimeInputYaml);
+    executionMetadataBuilder.setYaml(pipelineYaml);
 
     return startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml, executionMetadataBuilder.build());
   }

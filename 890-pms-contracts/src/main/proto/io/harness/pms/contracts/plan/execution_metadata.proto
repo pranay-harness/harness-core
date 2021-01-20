@@ -14,4 +14,5 @@ message ExecutionMetadata {
   string pipelineIdentifier = 4;
   string inputSetYaml = 5;
   string executionUuid = 6;
+  string yaml = 7;
 }

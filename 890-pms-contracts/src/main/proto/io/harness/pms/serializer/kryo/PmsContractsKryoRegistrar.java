@@ -11,6 +11,7 @@ import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
+import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.contracts.refobjects.RefType;
@@ -21,6 +22,7 @@ import io.harness.pms.serializer.kryo.serializers.ExecutableResponseSerializer;
 import io.harness.pms.serializer.kryo.serializers.FailureInfoKryoSerializer;
 import io.harness.pms.serializer.kryo.serializers.LevelKryoSerializer;
 import io.harness.pms.serializer.kryo.serializers.RefTypeKryoSerializer;
+import io.harness.pms.serializer.kryo.serializers.SkipInfoKryoSerializer;
 import io.harness.pms.serializer.kryo.serializers.StepOutcomeRefKryoSerializer;
 import io.harness.pms.serializer.kryo.serializers.StepTypeKryoSerializer;
 import io.harness.serializer.KryoRegistrar;
@@ -46,5 +48,6 @@ public class PmsContractsKryoRegistrar implements KryoRegistrar {
     kryo.register(StepOutcomeRef.class, StepOutcomeRefKryoSerializer.getInstance(), 2614);
     kryo.register(ExecutableResponse.class, ExecutableResponseSerializer.getInstance(), 2615);
     kryo.register(RepairActionCode.class, 2616);
+    kryo.register(SkipInfo.class, SkipInfoKryoSerializer.getInstance(), 2613);
   }
 }

@@ -306,6 +306,7 @@ public class OrchestrationEngine {
     List<StepOutcomeRef> outcomeRefs = handleOutcomes(ambiance, stepResponse.getStepOutcomesList());
 
     NodeExecution updatedNodeExecution = nodeExecutionService.update(nodeExecutionId, ops -> {
+      setUnset(ops, NodeExecutionKeys.skipInfo, stepResponse.getSkipInfo());
       setUnset(ops, NodeExecutionKeys.failureInfo, stepResponse.getFailureInfo());
       setUnset(ops, NodeExecutionKeys.outcomeRefs, outcomeRefs);
     });
