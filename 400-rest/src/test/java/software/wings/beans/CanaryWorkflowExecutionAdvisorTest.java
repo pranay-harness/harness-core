@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
@@ -21,6 +22,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.exception.FailureType;
 import io.harness.exception.InvalidRequestException;
+import io.harness.interrupts.ExecutionInterruptType;
+import io.harness.interrupts.RepairActionCode;
 import io.harness.rule.Owner;
 
 import software.wings.api.PhaseElement;
@@ -37,10 +40,19 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import org.apache.commons.jexl3.JexlException;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
+  private static final long VALID_TIMEOUT = 60000L;
+  CanaryWorkflowExecutionAdvisor canaryWorkflowExecutionAdvisor;
+
+  @Before
+  public void setUp() {
+    canaryWorkflowExecutionAdvisor = new CanaryWorkflowExecutionAdvisor();
+  }
+
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
@@ -172,7 +184,6 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
   @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldReturnTrueWhenExecutionHostsPresent() {
-    CanaryWorkflowExecutionAdvisor canaryWorkflowExecutionAdvisor = new CanaryWorkflowExecutionAdvisor();
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     WorkflowStandardParams workflowStandardParams =
         Builder.aWorkflowStandardParams().withExecutionHosts(Collections.singletonList("host1")).build();
@@ -187,7 +198,6 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
   @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldReturnFalseWhenExecutionHostsNotPresent() {
-    CanaryWorkflowExecutionAdvisor canaryWorkflowExecutionAdvisor = new CanaryWorkflowExecutionAdvisor();
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     WorkflowStandardParams workflowStandardParams = Builder.aWorkflowStandardParams().withExecutionHosts(null).build();
     doReturn(workflowStandardParams).when(context).getContextElement(ContextElementType.STANDARD);
@@ -298,5 +308,102 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
     assertThat(advice.getSkipExpression()).isEqualTo(expr);
     assertThat(advice.getSkipError())
         .contains("Secret Variables defined in Script output of shell scripts cannot be used in skip assertions");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldSetDefaultTimeoutWhenIssuingAdviceForManualIntervention() {
+    FailureStrategy failureStrategy = FailureStrategy.builder()
+                                          .repairActionCode(RepairActionCode.MANUAL_INTERVENTION)
+                                          .actionAfterTimeout(ExecutionInterruptType.END_EXECUTION)
+                                          .build();
+    ExecutionEventAdvice executionEventAdvice =
+        canaryWorkflowExecutionAdvisor.issueManualInterventionAdvice(failureStrategy, Collections.emptyMap());
+
+    assertThat(executionEventAdvice.getTimeout()).isEqualTo(CanaryWorkflowExecutionAdvisor.DEFAULT_TIMEOUT);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldSetDefaultActionAfterTimeoutWhenIssuingAdviceForManualIntervention() {
+    FailureStrategy failureStrategy = FailureStrategy.builder()
+                                          .manualInterventionTimeout(VALID_TIMEOUT)
+                                          .repairActionCode(RepairActionCode.MANUAL_INTERVENTION)
+                                          .build();
+    ExecutionEventAdvice executionEventAdvice =
+        canaryWorkflowExecutionAdvisor.issueManualInterventionAdvice(failureStrategy, Collections.emptyMap());
+
+    assertThat(executionEventAdvice.getActionAfterManualInterventionTimeout())
+        .isEqualTo(CanaryWorkflowExecutionAdvisor.DEFAULT_ACTION_AFTER_TIMEOUT);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldSetProperlyDefinedTimeoutAndActionWhenIssuingAdviceForManualIntervention() {
+    FailureStrategy failureStrategy = FailureStrategy.builder()
+                                          .repairActionCode(RepairActionCode.MANUAL_INTERVENTION)
+                                          .actionAfterTimeout(ExecutionInterruptType.MARK_SUCCESS)
+                                          .manualInterventionTimeout(VALID_TIMEOUT)
+                                          .build();
+    ExecutionEventAdvice executionEventAdvice =
+        canaryWorkflowExecutionAdvisor.issueManualInterventionAdvice(failureStrategy, Collections.emptyMap());
+
+    assertThat(executionEventAdvice.getTimeout()).isEqualTo(VALID_TIMEOUT);
+    assertThat(executionEventAdvice.getActionAfterManualInterventionTimeout())
+        .isEqualTo(ExecutionInterruptType.MARK_SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldSetProperlyDefinedTimeoutAndActionForManualInterventionAfterRetry() {
+    FailureStrategy failureStrategy = FailureStrategy.builder()
+                                          .repairActionCodeAfterRetry(RepairActionCode.MANUAL_INTERVENTION)
+                                          .actionAfterTimeout(ExecutionInterruptType.MARK_SUCCESS)
+                                          .manualInterventionTimeout(VALID_TIMEOUT)
+                                          .build();
+    FailureStrategy failureStrategyAfterRetry =
+        canaryWorkflowExecutionAdvisor.getFailureStrategyAfterRetry(failureStrategy);
+
+    assertThat(failureStrategyAfterRetry.getManualInterventionTimeout()).isEqualTo(VALID_TIMEOUT);
+    assertThat(failureStrategyAfterRetry.getActionAfterTimeout()).isEqualTo(ExecutionInterruptType.MARK_SUCCESS);
+    assertThat(failureStrategyAfterRetry.getRepairActionCode()).isEqualTo(RepairActionCode.MANUAL_INTERVENTION);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldSetDefaultTimeoutForManualInterventionAfterRetry() {
+    FailureStrategy failureStrategy = FailureStrategy.builder()
+                                          .repairActionCodeAfterRetry(RepairActionCode.MANUAL_INTERVENTION)
+                                          .actionAfterTimeout(ExecutionInterruptType.MARK_SUCCESS)
+                                          .build();
+    FailureStrategy failureStrategyAfterRetry =
+        canaryWorkflowExecutionAdvisor.getFailureStrategyAfterRetry(failureStrategy);
+
+    assertThat(failureStrategyAfterRetry.getManualInterventionTimeout())
+        .isEqualTo(CanaryWorkflowExecutionAdvisor.DEFAULT_TIMEOUT);
+    assertThat(failureStrategyAfterRetry.getActionAfterTimeout()).isEqualTo(ExecutionInterruptType.MARK_SUCCESS);
+    assertThat(failureStrategyAfterRetry.getRepairActionCode()).isEqualTo(RepairActionCode.MANUAL_INTERVENTION);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldSetDefaultActionAfterTimeoutForManualInterventionAfterRetry() {
+    FailureStrategy failureStrategy = FailureStrategy.builder()
+                                          .repairActionCodeAfterRetry(RepairActionCode.MANUAL_INTERVENTION)
+                                          .manualInterventionTimeout(VALID_TIMEOUT)
+                                          .build();
+    FailureStrategy failureStrategyAfterRetry =
+        canaryWorkflowExecutionAdvisor.getFailureStrategyAfterRetry(failureStrategy);
+
+    assertThat(failureStrategyAfterRetry.getManualInterventionTimeout()).isEqualTo(VALID_TIMEOUT);
+    assertThat(failureStrategyAfterRetry.getActionAfterTimeout())
+        .isEqualTo(CanaryWorkflowExecutionAdvisor.DEFAULT_ACTION_AFTER_TIMEOUT);
+    assertThat(failureStrategyAfterRetry.getRepairActionCode()).isEqualTo(RepairActionCode.MANUAL_INTERVENTION);
   }
 }

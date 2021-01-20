@@ -38,6 +38,7 @@ import io.harness.interrupts.RepairActionCode;
 import io.harness.logging.AutoLogContext;
 
 import software.wings.api.PhaseElement;
+import software.wings.beans.FailureStrategy.FailureStrategyBuilder;
 import software.wings.beans.workflow.StepSkipStrategy;
 import software.wings.service.impl.instance.InstanceHelper;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
@@ -62,6 +63,7 @@ import software.wings.sm.states.PhaseSubWorkflow;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -77,6 +79,8 @@ import org.mongodb.morphia.annotations.Transient;
 public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   public static final String ROLLBACK_PROVISIONERS = "Rollback Provisioners";
   private static final String ROLLING_PHASE_PREFIX = "Rolling Phase ";
+  public static final ExecutionInterruptType DEFAULT_ACTION_AFTER_TIMEOUT = ExecutionInterruptType.END_EXECUTION;
+  public static final long DEFAULT_TIMEOUT = 1209600000L; // 14days
 
   @Inject @Transient private transient WorkflowExecutionService workflowExecutionService;
 
@@ -482,12 +486,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         }
 
         Map<String, Object> stateParams = fetchStateParams(orchestrationWorkflow, state, executionEvent);
-        return anExecutionEventAdvice()
-            .withTimeout(failureStrategy.getManualInterventionTimeout())
-            .withActionAfterManualInterventionTimeout(failureStrategy.getActionAfterTimeout())
-            .withExecutionInterruptType(ExecutionInterruptType.WAITING_FOR_MANUAL_INTERVENTION)
-            .withStateParams(stateParams)
-            .build();
+        return issueManualInterventionAdvice(failureStrategy, stateParams);
       }
 
       case ROLLBACK_PHASE: {
@@ -522,8 +521,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
             || stateType.equals(StateType.SUB_WORKFLOW.name()) || stateType.equals(StateType.FORK.name())
             || stateType.equals(REPEAT.name())) {
           // Retry is only at the leaf node
-          FailureStrategy failureStrategyAfterRetry =
-              FailureStrategy.builder().repairActionCode(failureStrategy.getRepairActionCodeAfterRetry()).build();
+          FailureStrategy failureStrategyAfterRetry = getFailureStrategyAfterRetry(failureStrategy);
           return computeExecutionEventAdvice(orchestrationWorkflow, failureStrategyAfterRetry, executionEvent,
               phaseSubWorkflow, stateExecutionInstance);
         }
@@ -548,8 +546,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
               .withWaitInterval(waitInterval)
               .build();
         } else {
-          FailureStrategy failureStrategyAfterRetry =
-              FailureStrategy.builder().repairActionCode(failureStrategy.getRepairActionCodeAfterRetry()).build();
+          FailureStrategy failureStrategyAfterRetry = getFailureStrategyAfterRetry(failureStrategy);
           return computeExecutionEventAdvice(orchestrationWorkflow, failureStrategyAfterRetry, executionEvent,
               phaseSubWorkflow, stateExecutionInstance);
         }
@@ -557,6 +554,45 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       default:
         return null;
     }
+  }
+
+  @VisibleForTesting
+  ExecutionEventAdvice issueManualInterventionAdvice(FailureStrategy failureStrategy, Map<String, Object> stateParams) {
+    Long manualInterventionTimeout = failureStrategy.getManualInterventionTimeout();
+    ExecutionInterruptType actionAfterTimeout = failureStrategy.getActionAfterTimeout();
+    return anExecutionEventAdvice()
+        .withTimeout(isValidTimeOut(manualInterventionTimeout) ? manualInterventionTimeout : DEFAULT_TIMEOUT)
+        .withActionAfterManualInterventionTimeout(
+            isValidAction(actionAfterTimeout) ? actionAfterTimeout : DEFAULT_ACTION_AFTER_TIMEOUT)
+        .withExecutionInterruptType(ExecutionInterruptType.WAITING_FOR_MANUAL_INTERVENTION)
+        .withStateParams(stateParams)
+        .build();
+  }
+
+  private boolean isValidTimeOut(Long manualInterventionTimeout) {
+    return manualInterventionTimeout != null && manualInterventionTimeout >= 60000L;
+  }
+
+  private boolean isValidAction(ExecutionInterruptType actionAfterTimeout) {
+    return Arrays.asList(ExecutionInterruptType.values()).contains(actionAfterTimeout);
+  }
+
+  @VisibleForTesting
+  FailureStrategy getFailureStrategyAfterRetry(FailureStrategy failureStrategy) {
+    FailureStrategyBuilder failureStrategyBuilder = FailureStrategy.builder();
+    RepairActionCode repairActionCodeAfterRetry = failureStrategy.getRepairActionCodeAfterRetry();
+    Long timeout;
+    ExecutionInterruptType actionAfterTimeout;
+    if (RepairActionCode.MANUAL_INTERVENTION == repairActionCodeAfterRetry) {
+      timeout = isValidTimeOut(failureStrategy.getManualInterventionTimeout())
+          ? failureStrategy.getManualInterventionTimeout()
+          : DEFAULT_TIMEOUT;
+      actionAfterTimeout = isValidAction(failureStrategy.getActionAfterTimeout())
+          ? failureStrategy.getActionAfterTimeout()
+          : DEFAULT_ACTION_AFTER_TIMEOUT;
+      failureStrategyBuilder.manualInterventionTimeout(timeout).actionAfterTimeout(actionAfterTimeout);
+    }
+    return failureStrategyBuilder.repairActionCode(repairActionCodeAfterRetry).build();
   }
 
   private OrchestrationWorkflow findOrchestrationWorkflow(Workflow workflow, WorkflowExecution workflowExecution) {
