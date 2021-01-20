@@ -72,14 +72,6 @@ else
    echo "✘ Docker daemon is not running, please start docker daemon"  | tee -a ${stderr_file_name}
 fi
 
-
-if command -v getenforce &> /dev/null; then
-   if getenforce | grep -q Enforcing; then
-       echo "✘ SE Linux module is in Enforcing mode, please disable it."  | tee -a $stderr_file_name
-    fi
-fi
-
-
 echo "Checking whether ports 7143 to 7153 are available"
 
 for port in $(seq 7143 7153)
