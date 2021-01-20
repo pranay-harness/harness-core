@@ -96,3 +96,11 @@ fi
 if [[ "" != "$SCM_SERVICE_URI" ]]; then
   yq write -i $CONFIG_FILE scmConnectionConfig.url "$SCM_SERVICE_URI"
 fi
+
+
+if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
+  yq delete -i $CONFIG_FILE logging.appenders[0]
+  yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
+else
+  yq delete -i $CONFIG_FILE logging.appenders[1]
+fi

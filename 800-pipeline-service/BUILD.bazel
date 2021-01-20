@@ -75,6 +75,9 @@ java_binary(
         "key.pem",
     ],
     main_class = "io.harness.PipelineServiceApplication",
+    resources = [
+        "//800-pipeline-service/src/main/resources:resource",
+    ],
     visibility = ["//visibility:public"],
     runtime_deps = [
         "@maven//:javax_ws_rs_javax_ws_rs_api",
