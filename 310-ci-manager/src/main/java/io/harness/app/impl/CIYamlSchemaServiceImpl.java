@@ -13,6 +13,7 @@ import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
+import io.harness.yaml.schema.beans.SchemaConstants;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
 import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
 import io.harness.yaml.utils.YamlSchemaUtils;
@@ -74,7 +75,9 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
   private void flattenParallelStepElementConfig(ObjectNode objectNode) {
     JsonNode sections = objectNode.get(PROPERTIES_NODE).get("sections");
     if (sections.isObject()) {
+      objectNode.removeAll();
       objectNode.setAll((ObjectNode) sections);
+      objectNode.put(SchemaConstants.SCHEMA_NODE, SchemaConstants.JSON_SCHEMA_7);
     }
   }
 
@@ -85,6 +88,7 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
         JsonNode jsonNode = elements.next();
         yamlSchemaGenerator.removeUnwantedNodes(jsonNode, "rollbackSteps");
         yamlSchemaGenerator.removeUnwantedNodes(jsonNode, "failureStrategies");
+        yamlSchemaGenerator.removeUnwantedNodes(jsonNode, "stepGroup");
       }
     }
   }

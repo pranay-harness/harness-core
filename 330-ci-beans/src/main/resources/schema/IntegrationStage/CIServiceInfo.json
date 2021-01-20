@@ -9,16 +9,13 @@
         "args": {
           "oneOf": [
             {
-              "type": "array"
-            },
-            {
-              "type": "string"
-            },
-            {
               "type": "array",
               "items": {
                 "type": "string"
               }
+            },
+            {
+              "type": "string"
             }
           ]
         },
@@ -28,16 +25,13 @@
         "entrypoint": {
           "oneOf": [
             {
-              "type": "array"
-            },
-            {
-              "type": "string"
-            },
-            {
               "type": "array",
               "items": {
                 "type": "string"
               }
+            },
+            {
+              "type": "string"
             }
           ]
         },
@@ -51,18 +45,8 @@
             },
             {
               "type": "string"
-            },
-            {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
             }
           ]
-        },
-        "grpcPort": {
-          "type": "integer",
-          "format": "int32"
         },
         "image": {
           "type": "string"

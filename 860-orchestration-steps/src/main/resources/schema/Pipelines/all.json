@@ -397,9 +397,6 @@
             "type": "string"
           }
         },
-        "uuid": {
-          "type": "string"
-        },
         "variables": {
           "type": "array",
           "items": {

@@ -5,9 +5,20 @@
     },
     {
       "type": "object",
+      "required": [
+        "spec",
+        "type"
+      ],
       "properties": {
         "spec": {
           "$ref": "#/definitions/K8sDirectInfraYamlSpec"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "KubernetesDirect",
+            "UseFromStage"
+          ]
         }
       }
     }

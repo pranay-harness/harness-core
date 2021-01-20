@@ -3,8 +3,6 @@ package io.harness.beans.steps.stepinfo;
 import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_LIST_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_MAP_CLASSPATH;
-import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.list;
-import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.map;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
@@ -30,6 +28,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
@@ -42,8 +41,12 @@ public class GCRStepInfo implements PluginCompatibleStep {
   @JsonIgnore
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.GCR.getDisplayName()).build();
 
-  @ApiModelProperty(hidden = true) @NotNull @EntityIdentifier private String identifier;
-  private String name;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
+  @ApiModelProperty(hidden = true)
+  @NotNull
+  @EntityIdentifier
+  private String identifier;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
 
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
@@ -56,16 +59,16 @@ public class GCRStepInfo implements PluginCompatibleStep {
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> imageName;
 
   @NotNull
-  @YamlSchemaTypes(value = {list, string}, defaultType = list)
+  @YamlSchemaTypes(value = {string})
   @ApiModelProperty(dataType = STRING_LIST_CLASSPATH)
   private ParameterField<List<String>> tags;
   @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> context;
   @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> dockerfile;
   @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> target;
-  @YamlSchemaTypes(value = {map, string}, defaultType = map)
+  @YamlSchemaTypes(value = {string})
   @ApiModelProperty(dataType = STRING_MAP_CLASSPATH)
   private ParameterField<Map<String, String>> labels;
-  @YamlSchemaTypes(value = {map, string}, defaultType = map)
+  @YamlSchemaTypes(value = {string})
   @ApiModelProperty(dataType = STRING_MAP_CLASSPATH)
   private ParameterField<Map<String, String>> buildArgs;
 

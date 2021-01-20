@@ -1,6 +1,5 @@
 package io.harness.beans.stages;
 
-import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.list;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.EntityType;
@@ -22,6 +21,7 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
@@ -32,9 +32,9 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("integrationStage")
 @YamlSchemaRoot(EntityType.INTEGRATION_STAGE)
 public class IntegrationStageConfig implements StageInfoConfig {
-  @ApiModelProperty(hidden = true) String uuid;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String uuid;
 
-  @YamlSchemaTypes(value = {list, string}, defaultType = list)
+  @YamlSchemaTypes(value = {string})
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
   private ParameterField<List<String>> sharedPaths;
   ExecutionElementConfig execution;
