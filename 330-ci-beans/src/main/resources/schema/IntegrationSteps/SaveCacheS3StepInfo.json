@@ -31,10 +31,17 @@
           "$ref": "#/definitions/ContainerResource"
         },
         "sourcePaths": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "target": {
           "type": "string"

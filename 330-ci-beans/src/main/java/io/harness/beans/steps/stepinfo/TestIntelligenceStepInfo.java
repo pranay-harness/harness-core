@@ -7,6 +7,7 @@ import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.yaml.schema.YamlSchemaIgnoreSubtype;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -22,6 +23,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Data
 @JsonTypeName("TestIntelligence")
 @TypeAlias("testIntelligenceStepInfo")
+@YamlSchemaIgnoreSubtype
 public class TestIntelligenceStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
   // Keeping the timeout to a day as its a test step and might take lot of time

@@ -15,17 +15,19 @@ import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Singular;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
+@Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @TypeAlias("pipelineInfoConfig")
 public class PipelineInfoConfig {
-  @ApiModelProperty(hidden = true) String uuid;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String uuid;
   @NotNull @EntityName String name;
   @NotNull @EntityIdentifier String identifier;
 

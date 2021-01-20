@@ -1,9 +1,6 @@
 {
   "type": "object",
   "properties": {
-    "spec": {
-      "$ref": "#/definitions/UnitTestReportSpec"
-    },
     "type": {
       "type": "string",
       "enum": [
@@ -11,5 +8,23 @@
       ]
     }
   },
-  "$schema": "http://json-schema.org/draft-07/schema#"
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "JUnit"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "spec": {
+            "$ref": "#/definitions/JUnitTestReport"
+          }
+        }
+      }
+    }
+  ]
 }

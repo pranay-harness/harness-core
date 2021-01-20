@@ -9,6 +9,7 @@ import io.harness.EntityType;
 import io.harness.encryption.Scope;
 import io.harness.jackson.JsonNodeUtils;
 import io.harness.network.SafeHttpCall;
+import io.harness.plancreator.stages.parallel.ParallelStageElementConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
@@ -16,6 +17,7 @@ import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
+import io.harness.yaml.schema.beans.SchemaConstants;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
 import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
 import io.harness.yaml.schema.client.YamlSchemaClient;
@@ -53,6 +55,11 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
 
     ObjectNode pipelineDefinitions = (ObjectNode) pipelineSchema.get(DEFINITIONS_NODE);
     ObjectNode stageElementConfig = (ObjectNode) pipelineDefinitions.remove(STAGE_ELEMENT_CONFIG);
+
+    JsonNode jsonNode = pipelineDefinitions.get(ParallelStageElementConfig.class.getSimpleName());
+    if (jsonNode.isObject()) {
+      flattenParallelStepElementConfig((ObjectNode) jsonNode);
+    }
 
     Set<SubtypeClassMap> subtypeClassMapSet = new HashSet<>();
     Set<String> instanceNames = pmsSdkInstanceService.getInstanceNames();
@@ -95,6 +102,15 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     JsonNode propertiesNode = stageElementConfig.get(PROPERTIES_NODE);
     if (propertiesNode.isObject()) {
       unwantedNodes.forEach(((ObjectNode) propertiesNode)::remove);
+    }
+  }
+
+  private void flattenParallelStepElementConfig(ObjectNode objectNode) {
+    JsonNode sections = objectNode.get(PROPERTIES_NODE).get("sections");
+    if (sections.isObject()) {
+      objectNode.removeAll();
+      objectNode.setAll((ObjectNode) sections);
+      objectNode.put(SchemaConstants.SCHEMA_NODE, SchemaConstants.JSON_SCHEMA_7);
     }
   }
 

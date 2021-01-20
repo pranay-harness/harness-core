@@ -1,6 +1,7 @@
 package io.harness.beans.yaml.extended.infrastrucutre;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,8 +15,8 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("KubernetesDirect")
 @TypeAlias("k8sDirectInfraYaml")
 public class K8sDirectInfraYaml implements Infrastructure {
-  @Builder.Default private Type type = Type.KUBERNETES_DIRECT;
-  private K8sDirectInfraYamlSpec spec;
+  @Builder.Default @NotNull private Type type = Type.KUBERNETES_DIRECT;
+  @NotNull private K8sDirectInfraYamlSpec spec;
 
   @Data
   @Builder

@@ -79,16 +79,17 @@ public class YamlSchemaProvider {
   @VisibleForTesting
   ObjectNode getSecondLevelNode(JsonNode schema) {
     ValueNode refNode = null;
-    Iterator<JsonNode> elements = schema.get(PROPERTIES_NODE).elements();
-    while (elements.hasNext()) {
-      final JsonNode innerNode = elements.next();
-      final JsonNode possibleRefNode = innerNode.get(REF_NODE);
-      if (possibleRefNode != null) {
-        refNode = (ValueNode) possibleRefNode;
-        break;
+    if (schema.get(PROPERTIES_NODE) != null) {
+      Iterator<JsonNode> elements = schema.get(PROPERTIES_NODE).elements();
+      while (elements.hasNext()) {
+        final JsonNode innerNode = elements.next();
+        final JsonNode possibleRefNode = innerNode.get(REF_NODE);
+        if (possibleRefNode != null) {
+          refNode = (ValueNode) possibleRefNode;
+          break;
+        }
       }
     }
-
     if (refNode == null) {
       // No refNode at first level hence returning original schema.
       throw new io.harness.yaml.schema.YamlSchemaException("No ref node found at first level");

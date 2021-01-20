@@ -17,6 +17,7 @@ import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.TypeAlias;
 
@@ -24,7 +25,7 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @TypeAlias("stepElementConfig")
 public class StepElementConfig {
-  @ApiModelProperty(hidden = true) String uuid;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String uuid;
   @EntityIdentifier String identifier;
   @EntityName String name;
   String description;
@@ -37,7 +38,9 @@ public class StepElementConfig {
   StepSpecType stepSpecType;
 
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
-  @ApiModelProperty(hidden = true) ParameterField<List<String>> delegateSelectors;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
+  @ApiModelProperty(hidden = true)
+  ParameterField<List<String>> delegateSelectors;
 
   @Builder
   public StepElementConfig(String uuid, String identifier, String name, String description, Timeout timeout,

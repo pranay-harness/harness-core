@@ -3,8 +3,6 @@ package io.harness.beans.dependencies;
 import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_LIST_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_MAP_CLASSPATH;
-import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.list;
-import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.map;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.beans.yaml.extended.container.ContainerResource;
@@ -37,14 +35,14 @@ public class CIServiceInfo implements DependencySpecType {
   @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore @NotNull @EntityIdentifier private String identifier;
   @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore private String name;
 
-  @JsonIgnore private Integer grpcPort;
-  @YamlSchemaTypes(value = {map, string}, defaultType = map)
+  @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore private Integer grpcPort;
+  @YamlSchemaTypes(value = {string})
   @ApiModelProperty(dataType = STRING_MAP_CLASSPATH)
   private ParameterField<Map<String, String>> envVariables;
-  @YamlSchemaTypes(value = {list, string}, defaultType = list)
+  @YamlSchemaTypes(value = {string})
   @ApiModelProperty(dataType = STRING_LIST_CLASSPATH)
   private ParameterField<List<String>> entrypoint;
-  @YamlSchemaTypes(value = {list, string}, defaultType = list)
+  @YamlSchemaTypes(value = {string})
   @ApiModelProperty(dataType = STRING_LIST_CLASSPATH)
   private ParameterField<List<String>> args;
 

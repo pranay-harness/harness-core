@@ -34,10 +34,17 @@
           ],
           "properties": {
             "buildArgs": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             "connectorRef": {
               "type": "string"
@@ -49,10 +56,17 @@
               "type": "string"
             },
             "labels": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             "repo": {
               "type": "string"
@@ -61,10 +75,17 @@
               "$ref": "#/definitions/ContainerResource"
             },
             "tags": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             "target": {
               "type": "string"
@@ -93,10 +114,17 @@
               "type": "string"
             },
             "buildArgs": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             "connectorRef": {
               "type": "string"
@@ -111,10 +139,17 @@
               "type": "string"
             },
             "labels": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             "region": {
               "type": "string"
@@ -123,10 +158,17 @@
               "$ref": "#/definitions/ContainerResource"
             },
             "tags": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             "target": {
               "type": "string"
@@ -152,10 +194,17 @@
           ],
           "properties": {
             "buildArgs": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             "connectorRef": {
               "type": "string"
@@ -173,10 +222,17 @@
               "type": "string"
             },
             "labels": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             "projectID": {
               "type": "string"
@@ -185,10 +241,17 @@
               "$ref": "#/definitions/ContainerResource"
             },
             "tags": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             "target": {
               "type": "string"
@@ -207,10 +270,17 @@
           "type": "object",
           "properties": {
             "paths": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
             }
           }
         }
@@ -250,10 +320,17 @@
               "$ref": "#/definitions/ContainerResource"
             },
             "settings": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
             }
           }
         }
@@ -351,19 +428,33 @@
               "type": "string"
             },
             "envVariables": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             "image": {
               "type": "string"
             },
             "outputVariables": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             "reports": {
               "$ref": "#/definitions/UnitTestReport"
@@ -403,10 +494,17 @@
               "$ref": "#/definitions/ContainerResource"
             },
             "sourcePaths": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             "target": {
               "type": "string"
@@ -449,10 +547,17 @@
               "$ref": "#/definitions/ContainerResource"
             },
             "sourcePaths": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             "target": {
               "type": "string"
@@ -465,9 +570,6 @@
     "UnitTestReport": {
       "type": "object",
       "properties": {
-        "spec": {
-          "$ref": "#/definitions/UnitTestReportSpec"
-        },
         "type": {
           "type": "string",
           "enum": [
@@ -475,7 +577,25 @@
           ]
         }
       },
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "JUnit"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/JUnitTestReport"
+              }
+            }
+          }
+        }
+      ]
     },
     "UnitTestReportSpec": {
       "type": "object",

@@ -1,6 +1,7 @@
 package io.harness.yaml.schema;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.lang.String.format;
 
@@ -18,13 +19,16 @@ import io.harness.yaml.utils.YamlSchemaUtils;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.google.common.annotations.VisibleForTesting;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -34,47 +38,57 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JacksonClassHelper {
   /**
-   * @param clazz                         Class which will be traversed.
+   * @param aClass                         Class which will be traversed.
    * @param swaggerDefinitionsMetaInfoMap The map which will be populated with all metainfo needed to be added to
    *     swagger spec.
    */
   public void getRequiredMappings(
-      Class<?> clazz, Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap) {
-    String swaggerClassName = YamlSchemaUtils.getSwaggerName(clazz);
-    if (swaggerDefinitionsMetaInfoMap.containsKey(swaggerClassName)) {
-      return;
+      Class<?> aClass, Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap) {
+    List<Class<?>> classes = new ArrayList<>();
+    classes.add(aClass);
+    ApiModel annotation = aClass.getAnnotation(ApiModel.class);
+    if (annotation != null && isNotEmpty(annotation.subTypes())) {
+      Collections.addAll(classes, annotation.subTypes());
     }
-    Set<FieldSubtypeData> fieldSubtypeDataList = new HashSet<>();
-    Set<PossibleFieldTypes> possibleFieldTypesSet = new HashSet<>();
-    // Instantiating so that we don't get into infinite loop.
-    swaggerDefinitionsMetaInfoMap.put(swaggerClassName, null);
 
-    for (Field declaredField : clazz.getDeclaredFields()) {
-      if (checkIfClassShouldBeTraversed(declaredField)) {
-        getRequiredMappings(declaredField.getType(), swaggerDefinitionsMetaInfoMap);
+    for (Class<?> clazz : classes) {
+      String swaggerClassName = YamlSchemaUtils.getSwaggerName(clazz);
+      if (swaggerDefinitionsMetaInfoMap.containsKey(swaggerClassName)) {
+        return;
       }
-      if (checkIfClassIsCollection(declaredField)) {
-        ParameterizedType collectionType = (ParameterizedType) declaredField.getGenericType();
-        Class<?> collectionTypeClass = (Class<?>) collectionType.getActualTypeArguments()[0];
-        getRequiredMappings(collectionTypeClass, swaggerDefinitionsMetaInfoMap);
+      Set<FieldSubtypeData> fieldSubtypeDataList = new HashSet<>();
+      Set<PossibleFieldTypes> possibleFieldTypesSet = new HashSet<>();
+
+      // Instantiating so that we don't get into infinite loop.
+      swaggerDefinitionsMetaInfoMap.put(swaggerClassName, null);
+
+      for (Field declaredField : clazz.getDeclaredFields()) {
+        if (checkIfClassShouldBeTraversed(declaredField)) {
+          getRequiredMappings(declaredField.getType(), swaggerDefinitionsMetaInfoMap);
+        }
+        if (checkIfClassIsCollection(declaredField)) {
+          ParameterizedType collectionType = (ParameterizedType) declaredField.getGenericType();
+          Class<?> collectionTypeClass = (Class<?>) collectionType.getActualTypeArguments()[0];
+          getRequiredMappings(collectionTypeClass, swaggerDefinitionsMetaInfoMap);
+        }
+        Class<?> alternativeClass = getAlternativeClassType(declaredField);
+        if (alternativeClass != null) {
+          getRequiredMappings(alternativeClass, swaggerDefinitionsMetaInfoMap);
+        }
+        // Field types
+        processFieldTypeSet(possibleFieldTypesSet, declaredField);
+        // subtype mappings
+        processSubtypeMappings(swaggerDefinitionsMetaInfoMap, fieldSubtypeDataList, declaredField);
       }
-      Class<?> aClass = getAlternativeClassType(declaredField);
-      if (aClass != null) {
-        getRequiredMappings(aClass, swaggerDefinitionsMetaInfoMap);
-      }
-      // Field types
-      processFieldTypeSet(possibleFieldTypesSet, declaredField);
-      // subtype mappings
-      processSubtypeMappings(swaggerDefinitionsMetaInfoMap, fieldSubtypeDataList, declaredField);
+      // One of mappings
+      final Set<OneOfMapping> oneOfMappingForClasses = getOneOfMappingsForClass(clazz);
+      final SwaggerDefinitionsMetaInfo definitionsMetaInfo = SwaggerDefinitionsMetaInfo.builder()
+                                                                 .oneOfMappings(oneOfMappingForClasses)
+                                                                 .subtypeClassMap(fieldSubtypeDataList)
+                                                                 .fieldPossibleTypes(possibleFieldTypesSet)
+                                                                 .build();
+      swaggerDefinitionsMetaInfoMap.put(swaggerClassName, definitionsMetaInfo);
     }
-    // One of mappings
-    final Set<OneOfMapping> oneOfMappingForClasses = getOneOfMappingsForClass(clazz);
-    final SwaggerDefinitionsMetaInfo definitionsMetaInfo = SwaggerDefinitionsMetaInfo.builder()
-                                                               .oneOfMappings(oneOfMappingForClasses)
-                                                               .subtypeClassMap(fieldSubtypeDataList)
-                                                               .fieldPossibleTypes(possibleFieldTypesSet)
-                                                               .build();
-    swaggerDefinitionsMetaInfoMap.put(swaggerClassName, definitionsMetaInfo);
   }
 
   private void processFieldTypeSet(Set<PossibleFieldTypes> possibleFieldTypesSet, Field declaredField) {

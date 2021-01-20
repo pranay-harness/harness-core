@@ -26,23 +26,17 @@
     "sharedPaths": {
       "oneOf": [
         {
-          "type": "array"
-        },
-        {
-          "type": "string"
-        },
-        {
           "type": "array",
           "items": {
             "type": "string"
           }
+        },
+        {
+          "type": "string"
         }
       ]
     },
     "skipCondition": {
-      "type": "string"
-    },
-    "uuid": {
       "type": "string"
     }
   },
@@ -70,16 +64,13 @@
             "args": {
               "oneOf": [
                 {
-                  "type": "array"
-                },
-                {
-                  "type": "string"
-                },
-                {
                   "type": "array",
                   "items": {
                     "type": "string"
                   }
+                },
+                {
+                  "type": "string"
                 }
               ]
             },
@@ -89,16 +80,13 @@
             "entrypoint": {
               "oneOf": [
                 {
-                  "type": "array"
-                },
-                {
-                  "type": "string"
-                },
-                {
                   "type": "array",
                   "items": {
                     "type": "string"
                   }
+                },
+                {
+                  "type": "string"
                 }
               ]
             },
@@ -112,18 +100,8 @@
                 },
                 {
                   "type": "string"
-                },
-                {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "string"
-                  }
                 }
               ]
-            },
-            "grpcPort": {
-              "type": "integer",
-              "format": "int32"
             },
             "image": {
               "type": "string"
@@ -212,9 +190,6 @@
           "items": {
             "$ref": "#/definitions/ExecutionWrapperConfig"
           }
-        },
-        "uuid": {
-          "type": "string"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -230,9 +205,6 @@
         },
         "stepGroup": {
           "$ref": "#/definitions/StepGroupElementConfig"
-        },
-        "uuid": {
-          "type": "string"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -307,23 +279,17 @@
         "sharedPaths": {
           "oneOf": [
             {
-              "type": "array"
-            },
-            {
-              "type": "string"
-            },
-            {
               "type": "array",
               "items": {
                 "type": "string"
               }
+            },
+            {
+              "type": "string"
             }
           ]
         },
         "skipCondition": {
-          "type": "string"
-        },
-        "uuid": {
           "type": "string"
         }
       },
@@ -336,9 +302,20 @@
         },
         {
           "type": "object",
+          "required": [
+            "spec",
+            "type"
+          ],
           "properties": {
             "spec": {
               "$ref": "#/definitions/K8sDirectInfraYamlSpec"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "KubernetesDirect",
+                "UseFromStage"
+              ]
             }
           }
         }
@@ -646,9 +623,6 @@
           "items": {
             "$ref": "#/definitions/ExecutionWrapperConfig"
           }
-        },
-        "uuid": {
-          "type": "string"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -675,6 +649,9 @@
         },
         {
           "type": "object",
+          "required": [
+            "useFromStage"
+          ],
           "properties": {
             "useFromStage": {
               "type": "string"

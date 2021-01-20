@@ -2,7 +2,6 @@ package io.harness.beans.steps.stepinfo;
 
 import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_LIST_CLASSPATH;
-import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.list;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.beans.steps.CIStepInfo;
@@ -44,7 +43,7 @@ public class SaveCacheStepInfo implements CIStepInfo {
 
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> key;
   @NotNull
-  @YamlSchemaTypes(value = {list, string}, defaultType = list)
+  @YamlSchemaTypes(value = {string})
   @ApiModelProperty(dataType = STRING_LIST_CLASSPATH)
   private ParameterField<List<String>> paths;
 
