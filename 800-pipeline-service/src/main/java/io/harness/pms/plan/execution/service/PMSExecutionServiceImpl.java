@@ -107,8 +107,8 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
     if (EmptyPredicate.isNotEmpty(piplineFilter.getPipelineName())) {
       criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.name).is(piplineFilter.getPipelineName());
     }
-    if (piplineFilter.getStatus() != null) {
-      criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.status).is(piplineFilter.getStatus());
+    if (EmptyPredicate.isNotEmpty(piplineFilter.getStatus())) {
+      criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.status).in(piplineFilter.getStatus());
     }
     if (piplineFilter.getModuleProperties() != null) {
       try {
