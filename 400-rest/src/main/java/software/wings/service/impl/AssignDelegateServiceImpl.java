@@ -13,6 +13,8 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.delegate.beans.DelegateActivity;
@@ -76,11 +78,9 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
-/**
- * Created by brett on 7/20/17
- */
 @Singleton
 @Slf4j
+@TargetModule(Module._420_DELEGATE_SERVICE)
 public class AssignDelegateServiceImpl implements AssignDelegateService, DelegateTaskRetryObserver {
   private static final SecureRandom random = new SecureRandom();
   public static final long MAX_DELEGATE_LAST_HEARTBEAT = (5 * 60 * 1000L) + (15 * 1000L); // 5 minutes 15 seconds
@@ -95,7 +95,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
   @Inject private DelegateSelectionLogsService delegateSelectionLogsService;
   @Inject private DelegateService delegateService;
   @Inject private EnvironmentService environmentService;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private WingsPersistence persistence;
   @Inject private Injector injector;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
@@ -108,7 +108,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
               .build(new CacheLoader<ImmutablePair<String, String>, Optional<DelegateConnectionResult>>() {
                 @Override
                 public Optional<DelegateConnectionResult> load(ImmutablePair<String, String> key) {
-                  return Optional.ofNullable(wingsPersistence.createQuery(DelegateConnectionResult.class)
+                  return Optional.ofNullable(persistence.createQuery(DelegateConnectionResult.class)
                                                  .filter(DelegateConnectionResultKeys.delegateId, key.getLeft())
                                                  .filter(DelegateConnectionResultKeys.criteria, key.getRight())
                                                  .get());
@@ -122,7 +122,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
           .build(new CacheLoader<String, List<Delegate>>() {
             @Override
             public List<Delegate> load(String accountId) {
-              return wingsPersistence.createQuery(Delegate.class)
+              return persistence.createQuery(Delegate.class)
                   .filter(DelegateKeys.accountId, accountId)
                   .project(DelegateKeys.uuid, true)
                   .project(DelegateKeys.lastHeartBeat, true)
@@ -202,7 +202,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
   @VisibleForTesting
   protected boolean canAssignDelegateProfileScopes(
       BatchDelegateSelectionLog batch, Delegate delegate, Map<String, String> taskSetupAbstractions) {
-    DelegateProfile delegateProfile = wingsPersistence.get(DelegateProfile.class, delegate.getDelegateProfileId());
+    DelegateProfile delegateProfile = persistence.get(DelegateProfile.class, delegate.getDelegateProfileId());
     if (delegateProfile == null) {
       log.warn(
           "Delegate profile {} not found. Considering this delegate profile matched", delegate.getDelegateProfileId());
@@ -271,7 +271,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     if (Cd1SetupFields.ENV_TYPE_FIELD.equals(scopingEntityKey)) {
       if (taskSetupAbstractions.containsKey(Cd1SetupFields.ENV_ID_FIELD)) {
         Environment environment =
-            wingsPersistence.get(Environment.class, taskSetupAbstractions.get(Cd1SetupFields.ENV_ID_FIELD));
+            persistence.get(Environment.class, taskSetupAbstractions.get(Cd1SetupFields.ENV_ID_FIELD));
         if (environment != null && environment.getEnvironmentType() != null) {
           workaroundPassed = scopingEntityValues.contains(environment.getEnvironmentType().name());
         }
@@ -280,7 +280,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
 
     if (Cd1SetupFields.SERVICE_ID_FIELD.equals(scopingEntityKey)) {
       if (taskSetupAbstractions.containsKey(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD)) {
-        InfrastructureMapping infrastructureMapping = wingsPersistence.get(
+        InfrastructureMapping infrastructureMapping = persistence.get(
             InfrastructureMapping.class, taskSetupAbstractions.get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD));
         if (infrastructureMapping != null && isNotBlank(infrastructureMapping.getServiceId())) {
           workaroundPassed = scopingEntityValues.contains(infrastructureMapping.getServiceId());
@@ -554,16 +554,15 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
           if (cachedResult.isPresent()
               && cachedResult.get().getLastUpdatedAt() < currentTimeMillis() - WHITELIST_REFRESH_INTERVAL) {
             Query<DelegateConnectionResult> query =
-                wingsPersistence.createQuery(DelegateConnectionResult.class)
+                persistence.createQuery(DelegateConnectionResult.class)
                     .filter(DelegateConnectionResultKeys.accountId, task.getAccountId())
                     .filter(DelegateConnectionResultKeys.delegateId, delegateId)
                     .filter(DelegateConnectionResultKeys.criteria, criteria);
             UpdateOperations<DelegateConnectionResult> updateOperations =
-                wingsPersistence.createUpdateOperations(DelegateConnectionResult.class)
+                persistence.createUpdateOperations(DelegateConnectionResult.class)
                     .set(DelegateConnectionResultKeys.lastUpdatedAt, currentTimeMillis())
                     .set(DelegateConnectionResultKeys.validUntil, DelegateConnectionResult.getValidUntilTime());
-            DelegateConnectionResult result =
-                wingsPersistence.findAndModify(query, updateOperations, findAndModifyOptions);
+            DelegateConnectionResult result = persistence.findAndModify(query, updateOperations, findAndModifyOptions);
             if (result != null) {
               log.info("Whitelist entry refreshed");
             } else {
@@ -582,21 +581,22 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     List<DelegateConnectionResult> resultsToSave =
         results.stream().filter(result -> isNotBlank(result.getCriteria())).collect(toList());
 
+    // TODO: this needs to be rewritten with upsert
     for (DelegateConnectionResult result : resultsToSave) {
       Key<DelegateConnectionResult> existingResultKey =
-          wingsPersistence.createQuery(DelegateConnectionResult.class)
+          persistence.createQuery(DelegateConnectionResult.class)
               .filter(DelegateConnectionResultKeys.accountId, result.getAccountId())
               .filter(DelegateConnectionResultKeys.delegateId, result.getDelegateId())
               .filter(DelegateConnectionResultKeys.criteria, result.getCriteria())
               .getKey();
       if (existingResultKey != null) {
-        wingsPersistence.updateField(
+        persistence.updateField(
             DelegateConnectionResult.class, existingResultKey.getId().toString(), "validated", result.isValidated());
       } else {
         try {
-          wingsPersistence.save(result);
+          persistence.save(result);
         } catch (DuplicateKeyException e) {
-          log.warn("Result has already been saved. ", e);
+          log.warn("Result has already been saved.", e);
         }
       }
     }
@@ -604,15 +604,15 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
 
   @Override
   public void clearConnectionResults(String accountId) {
-    wingsPersistence.delete(wingsPersistence.createQuery(DelegateConnectionResult.class)
-                                .filter(DelegateConnectionResultKeys.accountId, accountId));
+    persistence.delete(persistence.createQuery(DelegateConnectionResult.class)
+                           .filter(DelegateConnectionResultKeys.accountId, accountId));
   }
 
   @Override
   public void clearConnectionResults(String accountId, String delegateId) {
-    wingsPersistence.delete(wingsPersistence.createQuery(DelegateConnectionResult.class)
-                                .filter(DelegateConnectionResultKeys.accountId, accountId)
-                                .filter(DelegateConnectionResultKeys.delegateId, delegateId));
+    persistence.delete(persistence.createQuery(DelegateConnectionResult.class)
+                           .filter(DelegateConnectionResultKeys.accountId, accountId)
+                           .filter(DelegateConnectionResultKeys.delegateId, delegateId));
   }
 
   @Override
@@ -803,8 +803,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     if (!remainingConnectedDelegates.isEmpty()) {
       log.info("Requeueing task");
 
-      wingsPersistence.update(retryDelegate.getTaskQuery(),
-          wingsPersistence.createUpdateOperations(DelegateTask.class)
+      persistence.update(retryDelegate.getTaskQuery(),
+          persistence.createUpdateOperations(DelegateTask.class)
               .unset(DelegateTaskKeys.delegateId)
               .unset(DelegateTaskKeys.validationStartedAt)
               .unset(DelegateTaskKeys.lastBroadcastAt)

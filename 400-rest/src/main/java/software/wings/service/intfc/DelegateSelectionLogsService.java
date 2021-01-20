@@ -1,5 +1,7 @@
 package software.wings.service.intfc;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.delegate.beans.DelegateSelectionLogResponse;
@@ -9,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+@TargetModule(Module._420_DELEGATE_SERVICE)
 public interface DelegateSelectionLogsService {
   void save(BatchDelegateSelectionLog batch);
 

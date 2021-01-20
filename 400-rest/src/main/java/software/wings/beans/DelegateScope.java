@@ -42,7 +42,7 @@ import org.mongodb.morphia.annotations.Id;
 @NgUniqueIndex(name = "uniqueName",
     fields = { @Field(value = DelegateScopeKeys.accountId)
                , @Field(value = DelegateScopeKeys.name) })
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(Module._920_DELEGATE_SERVICE_BEANS)
 public class DelegateScope implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                       UpdatedByAware, AccountAccess {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
