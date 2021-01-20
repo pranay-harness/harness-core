@@ -9,6 +9,8 @@ public class QLHistogramExp {
   double firstBucketSize;
   double growthRatio;
   int numBuckets;
+  int minBucket;
+  int maxBucket;
   double[] bucketWeights;
   double totalWeight;
   double[] precomputed;

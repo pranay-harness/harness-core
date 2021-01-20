@@ -107,7 +107,9 @@ public class K8sWorkloadHistogramDataFetcher
                   .containerName(containerName)
                   .memoryHistogram(QLHistogramExp.builder()
                                        .numBuckets(memStripped.getNumBuckets())
-                                       .firstBucketSize(memStripped.getFirstBucketSize())
+                                       .minBucket(memStripped.getMinBucket())
+                                       .maxBucket(memStripped.getMaxBucket())
+                                       .firstBucketSize(MEMORY_HISTOGRAM_FIRST_BUCKET_SIZE)
                                        .growthRatio(HISTOGRAM_BUCKET_SIZE_GROWTH)
                                        .bucketWeights(memStripped.getBucketWeights())
                                        .precomputed(getPrecomputedPercentiles(memoryHistogram))
@@ -115,7 +117,9 @@ public class K8sWorkloadHistogramDataFetcher
                                        .build())
                   .cpuHistogram(QLHistogramExp.builder()
                                     .numBuckets(cpuStripped.getNumBuckets())
-                                    .firstBucketSize(cpuStripped.getFirstBucketSize())
+                                    .minBucket(cpuStripped.getMinBucket())
+                                    .maxBucket(cpuStripped.getMaxBucket())
+                                    .firstBucketSize(CPU_HISTOGRAM_FIRST_BUCKET_SIZE)
                                     .growthRatio(HISTOGRAM_BUCKET_SIZE_GROWTH)
                                     .bucketWeights(cpuStripped.getBucketWeights())
                                     .precomputed(getPrecomputedPercentiles(cpuHistogram))
@@ -161,23 +165,23 @@ public class K8sWorkloadHistogramDataFetcher
       }
     }
     if (minBucket <= maxBucket) {
-      int newNumbuckets = maxBucket - minBucket + 1;
-      double newFbs = firstBucketSize * Math.pow(1 + HISTOGRAM_BUCKET_SIZE_GROWTH, minBucket);
       double[] newWeights = Arrays.copyOfRange(weights, minBucket, maxBucket + 1);
       return StrippedHistogram.builder()
           .bucketWeights(newWeights)
-          .numBuckets(newNumbuckets)
-          .firstBucketSize(newFbs)
+          .numBuckets(maxBucket - minBucket + 1)
+          .minBucket(minBucket)
+          .maxBucket(maxBucket)
           .build();
     }
-    return StrippedHistogram.builder().numBuckets(0).bucketWeights(new double[0]).firstBucketSize(0).build();
+    return StrippedHistogram.builder().numBuckets(0).bucketWeights(new double[0]).build();
   }
 
   @Value
   @Builder
   private static class StrippedHistogram {
     double[] bucketWeights;
-    double firstBucketSize;
     int numBuckets;
+    int minBucket;
+    int maxBucket;
   }
 }

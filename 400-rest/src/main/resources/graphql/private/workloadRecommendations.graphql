@@ -70,6 +70,8 @@ type HistogramExp {
   firstBucketSize: Number
   growthRatio: Number
   numBuckets: Int
+  minBucket: Int
+  maxBucket: Int
   bucketWeights: [Number]
   totalWeight: Number
   precomputed: [Number]
