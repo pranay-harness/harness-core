@@ -3,6 +3,7 @@ package io.harness.delegate.beans.connector.scm.gitlab;
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
+import io.harness.delegate.beans.connector.scm.ScmConnector;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -22,7 +23,7 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("GitlabConnector")
-public class GitlabConnectorDTO extends ConnectorConfigDTO {
+public class GitlabConnectorDTO extends ConnectorConfigDTO implements ScmConnector {
   @NotNull @JsonProperty("type") GitConnectionType connectionType;
   @NotNull String url;
   @Valid @NotNull GitlabAuthenticationDTO authentication;

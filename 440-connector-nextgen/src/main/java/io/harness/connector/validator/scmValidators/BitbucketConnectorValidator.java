@@ -1,19 +1,15 @@
 package io.harness.connector.validator.scmValidators;
 
 import io.harness.connector.ConnectorValidationResult;
-import io.harness.connector.scmMappers.BitbucketToGitMapper;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.delegate.beans.connector.scm.adapter.BitbucketToGitMapper;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 
-import com.google.inject.Inject;
-
-public class BitbucketConnectorValidator extends AbstractGitConnector {
-  @Inject BitbucketToGitMapper bitbucketToGitMapper;
-
+public class BitbucketConnectorValidator extends AbstractGitConnectorValidator {
   @Override
   public GitConfigDTO getGitConfigFromConnectorConfig(ConnectorConfigDTO connectorConfig) {
-    return bitbucketToGitMapper.mapToGitConfigDTO((BitbucketConnectorDTO) connectorConfig);
+    return BitbucketToGitMapper.mapToGitConfigDTO((BitbucketConnectorDTO) connectorConfig);
   }
 
   @Override

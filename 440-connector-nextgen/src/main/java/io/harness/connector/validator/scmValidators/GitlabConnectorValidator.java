@@ -1,19 +1,15 @@
 package io.harness.connector.validator.scmValidators;
 
 import io.harness.connector.ConnectorValidationResult;
-import io.harness.connector.scmMappers.GitlabToGitMapper;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.delegate.beans.connector.scm.adapter.GitlabToGitMapper;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 
-import com.google.inject.Inject;
-
-public class GitlabConnectorValidator extends AbstractGitConnector {
-  @Inject GitlabToGitMapper gitlabToGitMapper;
-
+public class GitlabConnectorValidator extends AbstractGitConnectorValidator {
   @Override
   public GitConfigDTO getGitConfigFromConnectorConfig(ConnectorConfigDTO connectorConfig) {
-    return gitlabToGitMapper.mapToGitConfigDTO((GitlabConnectorDTO) connectorConfig);
+    return GitlabToGitMapper.mapToGitConfigDTO((GitlabConnectorDTO) connectorConfig);
   }
 
   @Override

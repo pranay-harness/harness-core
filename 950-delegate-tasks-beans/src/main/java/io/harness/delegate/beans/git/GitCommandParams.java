@@ -1,6 +1,7 @@
 package io.harness.delegate.beans.git;
 
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.ScmConnector;
+import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorAdapter;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.GitConnectionNGCapability;
@@ -17,14 +18,16 @@ import lombok.Value;
 @Value
 @Builder
 public class GitCommandParams implements TaskParameters, ExecutionCapabilityDemander {
-  GitConfigDTO gitConfig;
+  ScmConnector gitConfig;
   GitCommandType gitCommandType;
   List<EncryptedDataDetail> encryptionDetails;
   GitBaseRequest gitCommandRequest;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return Collections.singletonList(
-        GitConnectionNGCapability.builder().encryptedDataDetails(encryptionDetails).gitConfig(gitConfig).build());
+    return Collections.singletonList(GitConnectionNGCapability.builder()
+                                         .encryptedDataDetails(encryptionDetails)
+                                         .gitConfig(ScmConnectorAdapter.toGitConfigDTO(gitConfig))
+                                         .build());
   }
 }
