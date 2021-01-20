@@ -172,9 +172,6 @@ public class ArtifactStep {
     Map<String, ArtifactStepParametersBuilder> artifactsMap = new HashMap<>();
     ArtifactListConfig artifacts = serviceConfig.getServiceDefinition().getServiceSpec().getArtifacts();
     if (artifacts != null) {
-      if (artifacts.getPrimary() == null) {
-        throw new InvalidArgumentsException("Primary artifact cannot be null.");
-      }
       // Add service artifacts.
       List<ArtifactConfig> serviceSpecArtifacts = ArtifactUtils.convertArtifactListIntoArtifacts(artifacts);
       mapArtifactsToIdentifier(artifactsMap, serviceSpecArtifacts, ArtifactStepParametersBuilder::artifact);
