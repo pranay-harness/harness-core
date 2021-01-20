@@ -9,7 +9,7 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class ScmConnectorAdapter {
+public class ScmConnectorMapper {
   public static GitConfigDTO toGitConfigDTO(ScmConnector scmConnector) {
     if (scmConnector instanceof GithubConnectorDTO) {
       return GithubToGitMapper.mapToGitConfigDTO((GithubConnectorDTO) scmConnector);

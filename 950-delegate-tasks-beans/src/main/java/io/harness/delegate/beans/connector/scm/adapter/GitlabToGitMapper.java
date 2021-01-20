@@ -24,6 +24,7 @@ public class GitlabToGitMapper {
       final GitlabHttpCredentialsDTO gitlabHttpCredentialsDTO =
           (GitlabHttpCredentialsDTO) gitlabConnectorDTO.getAuthentication().getCredentials();
       if (gitlabHttpCredentialsDTO.getType() == GitlabHttpAuthenticationType.KERBEROS) {
+        // todo(Deepak): please add when we add kerboros support in generic git.
         throw new InvalidRequestException(
             "Git connector doesn't have configuration for " + gitlabHttpCredentialsDTO.getType());
       }

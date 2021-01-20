@@ -6,7 +6,6 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
 import io.harness.encryption.SecretRefData;
-import io.harness.exception.InvalidRequestException;
 
 import lombok.experimental.UtilityClass;
 
@@ -14,11 +13,8 @@ import lombok.experimental.UtilityClass;
 public class GitConfigCreater {
   public static GitConfigDTO getGitConfigForHttp(GitConnectionType gitConnectionType, String url, String username,
       SecretRefData usernameRef, SecretRefData passwordRef) {
-    if (usernameRef != null) {
-      throw new InvalidRequestException("Username Ref not implemented for git");
-    }
     final GitHTTPAuthenticationDTO gitHTTPAuthenticationDTO =
-        GitHTTPAuthenticationDTO.builder().passwordRef(passwordRef).username(username).build();
+        GitHTTPAuthenticationDTO.builder().passwordRef(passwordRef).username(username).usernameRef(usernameRef).build();
     return GitConfigDTO.builder()
         .gitConnectionType(gitConnectionType)
         .gitAuthType(GitAuthType.HTTP)

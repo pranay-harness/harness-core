@@ -1,7 +1,7 @@
 package io.harness.delegate.beans.git;
 
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorAdapter;
+import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.GitConnectionNGCapability;
@@ -27,7 +27,7 @@ public class GitCommandParams implements TaskParameters, ExecutionCapabilityDema
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Collections.singletonList(GitConnectionNGCapability.builder()
                                          .encryptedDataDetails(encryptionDetails)
-                                         .gitConfig(ScmConnectorAdapter.toGitConfigDTO(gitConfig))
+                                         .gitConfig(ScmConnectorMapper.toGitConfigDTO(gitConfig))
                                          .build());
   }
 }
