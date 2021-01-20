@@ -230,7 +230,7 @@ public class AlertRuleServiceImpl implements AlertRuleService {
     notificationClient.sendNotificationAsync(
         PagerDutyChannel.builder()
             .accountId(accountId)
-            .pagerDutyIntegrationKeys(Collections.singletonList(notificationMethod.getPagerDutyKey()))
+            .integrationKeys(Collections.singletonList(notificationMethod.getPagerDutyKey()))
             .team(Team.CV)
             .templateId("pd_test")
             .templateData(Collections.emptyMap())
@@ -242,7 +242,7 @@ public class AlertRuleServiceImpl implements AlertRuleService {
     notificationClient.sendNotificationAsync(
         SlackChannel.builder()
             .accountId(accountId)
-            .slackWebHookURLs(Collections.singletonList(notificationMethod.getSlackWebhook()))
+            .webhookUrls(Collections.singletonList(notificationMethod.getSlackWebhook()))
             .team(Team.CV)
             .templateId("slack_vanilla")
             .templateData(Collections.singletonMap("message", alertMessage))

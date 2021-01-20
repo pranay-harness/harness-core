@@ -375,7 +375,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTest {
 
     verify(notificationClient, times(1)).sendNotificationAsync(applicationArgumentCaptor.capture());
     assertThat(applicationArgumentCaptor.getValue().getAccountId()).isEqualTo(slack_test.getAccountId());
-    assertThat(applicationArgumentCaptor.getValue().getSlackWebHookURLs()).isEqualTo(slack_test.getSlackWebHookURLs());
+    assertThat(applicationArgumentCaptor.getValue().getWebhookUrls()).isEqualTo(slack_test.getWebhookUrls());
     assertThat(applicationArgumentCaptor.getValue().getTeam()).isEqualTo(slack_test.getTeam());
     assertThat(applicationArgumentCaptor.getValue().getTemplateId()).isEqualTo(slack_test.getTemplateId());
     assertThat(applicationArgumentCaptor.getValue().getTemplateData()).isNotEmpty();
@@ -484,7 +484,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTest {
 
     verify(notificationClient, times(1)).sendNotificationAsync(applicationArgumentCaptor.capture());
     assertThat(applicationArgumentCaptor.getValue().getAccountId()).isEqualTo(slack_test.getAccountId());
-    assertThat(applicationArgumentCaptor.getValue().getSlackWebHookURLs()).isEqualTo(slack_test.getSlackWebHookURLs());
+    assertThat(applicationArgumentCaptor.getValue().getWebhookUrls()).isEqualTo(slack_test.getWebhookUrls());
     assertThat(applicationArgumentCaptor.getValue().getTeam()).isEqualTo(slack_test.getTeam());
     assertThat(applicationArgumentCaptor.getValue().getTemplateId()).isEqualTo(slack_test.getTemplateId());
     assertThat(applicationArgumentCaptor.getValue().getTemplateData()).isNotEmpty();
@@ -542,7 +542,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTest {
 
     verify(notificationClient, times(1)).sendNotificationAsync(applicationArgumentCaptor.capture());
     assertThat(applicationArgumentCaptor.getValue().getAccountId()).isEqualTo(slack_test.getAccountId());
-    assertThat(applicationArgumentCaptor.getValue().getSlackWebHookURLs()).isEqualTo(slack_test.getSlackWebHookURLs());
+    assertThat(applicationArgumentCaptor.getValue().getWebhookUrls()).isEqualTo(slack_test.getWebhookUrls());
     assertThat(applicationArgumentCaptor.getValue().getTeam()).isEqualTo(slack_test.getTeam());
     assertThat(applicationArgumentCaptor.getValue().getTemplateId()).isEqualTo(slack_test.getTemplateId());
     assertThat(applicationArgumentCaptor.getValue().getTemplateData()).isNotEmpty();
@@ -735,7 +735,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTest {
 
     verify(notificationClient, times(1)).sendNotificationAsync(applicationArgumentCaptor.capture());
     assertThat(applicationArgumentCaptor.getValue().getAccountId()).isEqualTo(slack_test.getAccountId());
-    assertThat(applicationArgumentCaptor.getValue().getSlackWebHookURLs()).isEqualTo(slack_test.getSlackWebHookURLs());
+    assertThat(applicationArgumentCaptor.getValue().getWebhookUrls()).isEqualTo(slack_test.getWebhookUrls());
     assertThat(applicationArgumentCaptor.getValue().getTeam()).isEqualTo(slack_test.getTeam());
     assertThat(applicationArgumentCaptor.getValue().getTemplateId()).isEqualTo(slack_test.getTemplateId());
     assertThat(applicationArgumentCaptor.getValue().getTemplateData()).isNotEmpty();
@@ -1040,7 +1040,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTest {
     ArgumentCaptor<SlackChannel> applicationArgumentCaptor = ArgumentCaptor.forClass(SlackChannel.class);
     verify(notificationClient, times(1)).sendNotificationAsync(applicationArgumentCaptor.capture());
     assertThat(applicationArgumentCaptor.getValue().getAccountId()).isEqualTo(slack_test.getAccountId());
-    assertThat(applicationArgumentCaptor.getValue().getSlackWebHookURLs()).isEqualTo(slack_test.getSlackWebHookURLs());
+    assertThat(applicationArgumentCaptor.getValue().getWebhookUrls()).isEqualTo(slack_test.getWebhookUrls());
     assertThat(applicationArgumentCaptor.getValue().getTeam()).isEqualTo(slack_test.getTeam());
     assertThat(applicationArgumentCaptor.getValue().getTemplateId()).isEqualTo(slack_test.getTemplateId());
     assertThat(applicationArgumentCaptor.getValue().getTemplateData()).isNotEmpty();
@@ -1118,7 +1118,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTest {
   private SlackChannel getSlackChannel(AlertRule retrievedAlertRule) {
     return SlackChannel.builder()
         .accountId(retrievedAlertRule.getAccountId())
-        .slackWebHookURLs(Collections.singletonList("testWebHook"))
+        .webhookUrls(Collections.singletonList("testWebHook"))
         .team(Team.CV)
         .templateId("slack_vanilla")
         .templateData(Collections.emptyMap())

@@ -14,13 +14,13 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class SlackChannel extends NotificationChannel {
-  List<String> slackWebHookURLs;
+  List<String> webhookUrls;
 
   @Builder
   public SlackChannel(String accountId, List<String> userGroupIds, String templateId, Map<String, String> templateData,
-      Team team, List<String> slackWebHookURLs) {
+      Team team, List<String> webhookUrls) {
     super(accountId, userGroupIds, templateId, templateData, team);
-    this.slackWebHookURLs = slackWebHookURLs;
+    this.webhookUrls = webhookUrls;
   }
 
   @Override
@@ -31,7 +31,7 @@ public class SlackChannel extends NotificationChannel {
         .setAccountId(accountId)
         .setTeam(team)
         .setSlack(builder.getSlackBuilder()
-                      .addAllSlackWebHookUrls(slackWebHookURLs)
+                      .addAllSlackWebHookUrls(webhookUrls)
                       .setTemplateId(templateId)
                       .putAllTemplateData(templateData)
                       .addAllUserGroupIds(userGroupIds))

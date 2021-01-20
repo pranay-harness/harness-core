@@ -83,7 +83,7 @@ public class NotificationClientApplication extends Application<NotificationClien
     //
     //    notificationClient.sendNotificationAsync(SlackChannel.builder()
     //                                                 .accountId("kmpySmUISimoRrJL6NL73w")
-    //                                                 .slackWebHookURLs(Collections.emptyList())
+    //                                                 .webhookUrls(Collections.emptyList())
     //                                                 .team(Team.CD)
     //                                                 .templateId("slack_test")
     //                                                 .templateData(Collections.emptyMap())
@@ -93,7 +93,7 @@ public class NotificationClientApplication extends Application<NotificationClien
     //    NotificationResult result = notificationClient.sendNotificationAsync(
     //        PagerDutyChannel.builder()
     //            .accountId("kmpySmUISimoRrJL6NL73w")
-    //            .pagerDutyIntegrationKeys(Collections.emptyList())
+    //            .integrationKeys(Collections.emptyList())
     //            .team(Team.CD)
     //            .templateId("pd_vanilla")
     //            .templateData(ImmutableMap.of(
