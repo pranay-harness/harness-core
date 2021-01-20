@@ -221,8 +221,6 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 @Slf4j
 @TargetModule(Module._960_API_SERVICES)
 public class AwsHelperService {
-  private static final String AWS_AVAILABILITY_ZONE_CHECK =
-      "http://169.254.169.254/latest/meta-data/placement/availability-zone";
   @Inject private EncryptionService encryptionService;
   @Inject private TimeLimiter timeLimiter;
   @Inject private ManagerExpressionEvaluator expressionEvaluator;
@@ -362,7 +360,7 @@ public class AwsHelperService {
     return (AmazonEC2Client) builder.build();
   }
 
-  private AmazonEC2Client getAmazonEc2Client(AwsConfig awsConfig) {
+  public AmazonEC2Client getAmazonEc2Client(AwsConfig awsConfig) {
     AmazonEC2ClientBuilder builder = AmazonEC2ClientBuilder.standard().withRegion(getRegion(awsConfig));
     attachCredentials(builder, awsConfig);
     return (AmazonEC2Client) builder.build();

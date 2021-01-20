@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.handler.artifactstream;
 
 import static io.harness.git.model.ChangeType.MODIFY;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -93,6 +94,29 @@ public class CustomArtifactStreamYamlHandlerTest extends WingsBaseTest {
     assertThat(yaml.getTemplateVariables().size()).isEqualTo(1);
     assertThat(yaml.getHarnessApiVersion()).isEqualTo("1.0");
     assertThat(yaml.getScripts()).isNull();
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testToYamlForCustomArtifactStreamWhenTemplateIdIsMissing() {
+    CustomRepositoryMapping mapping = getCustomRepositoryMapping();
+    CustomArtifactStream customArtifactStream = (CustomArtifactStream) createCustomArtifactStreamFromTemplate(mapping);
+    customArtifactStream.setTemplateUuid(null);
+    customArtifactStream.setTemplateVariables(null);
+    customArtifactStream.setTemplateVersion(null);
+    when(templateService.makeNamespacedTemplareUri(null, "LATEST")).thenReturn(null);
+    CustomArtifactStream.Yaml yaml = yamlHandler.toYaml(customArtifactStream, APP_ID);
+    assertThat(yaml.getType()).isEqualTo("CUSTOM");
+    assertThat(yaml.getTemplateUri()).isNull();
+    assertThat(yaml.getTemplateVariables()).isEmpty();
+    assertThat(yaml.getHarnessApiVersion()).isEqualTo("1.0");
+    assertThat(yaml.getScripts()).isNotNull();
+    assertThat(yaml.getScripts()).hasSize(1);
+    assertThat(yaml.getScripts().get(0).getTimeout()).isNull();
+    assertThat(yaml.getScripts().get(0).getAction()).isEqualTo(CustomArtifactStream.Action.FETCH_VERSIONS);
+    assertThat(yaml.getScripts().get(0).getScriptString()).isEqualTo(SCRIPT_STRING);
+    assertThat(yaml.getScripts().get(0).getCustomRepositoryMapping()).isEqualTo(mapping);
   }
 
   @Test
