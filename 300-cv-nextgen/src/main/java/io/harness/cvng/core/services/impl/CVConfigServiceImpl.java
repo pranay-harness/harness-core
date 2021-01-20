@@ -21,7 +21,6 @@ import io.harness.cvng.core.services.api.CVEventService;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
-import io.harness.cvng.dashboard.services.api.AnomalyService;
 import io.harness.encryption.Scope;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
@@ -31,7 +30,6 @@ import io.harness.persistence.HPersistence;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -49,7 +47,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Slf4j
 public class CVConfigServiceImpl implements CVConfigService {
   @Inject private HPersistence hPersistence;
-  @Inject private AnomalyService anomalyService;
   @Inject private DeletedCVConfigService deletedCVConfigService;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private NextGenService nextGenService;
@@ -125,7 +122,6 @@ public class CVConfigServiceImpl implements CVConfigService {
                                     .accountId(cvConfig.getAccountId())
                                     .perpetualTaskId(cvConfig.getPerpetualTaskId())
                                     .build());
-    anomalyService.closeAnomaly(cvConfig.getAccountId(), cvConfigId, Instant.now());
     hPersistence.delete(CVConfig.class, cvConfigId);
   }
 

@@ -41,8 +41,6 @@ import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.TimeSeriesService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
-import io.harness.cvng.dashboard.entities.Anomaly;
-import io.harness.cvng.dashboard.services.api.AnomalyService;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
@@ -83,7 +81,6 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Inject private TimeSeriesService timeSeriesService;
   @Inject private HeatMapService heatMapService;
   @Inject private CVConfigService cvConfigService;
-  @Inject private AnomalyService anomalyService;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
@@ -441,35 +438,12 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
           cvConfig.getProjectIdentifier(), cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), cvConfig,
           cvConfig.getCategory(), startTime, risk);
 
-      handleAnomalyOpenOrClose(cvConfig.getAccountId(), cvConfigId, startTime, endTime, risk, riskSummary);
       timeSeriesService.updateRiskScores(cvConfigId, riskSummary);
     }
   }
 
   private double getOverallRisk(ServiceGuardTimeSeriesAnalysisDTO analysis) {
     return analysis.getOverallMetricScores().values().stream().mapToDouble(score -> score).max().orElse(0.0);
-  }
-
-  private void handleAnomalyOpenOrClose(String accountId, String cvConfigId, Instant startTime, Instant endTime,
-      double overallRisk, TimeSeriesRiskSummary timeSeriesRiskSummary) {
-    if (overallRisk <= 0.25) {
-      anomalyService.closeAnomaly(accountId, cvConfigId, endTime);
-    } else {
-      if (timeSeriesRiskSummary != null) {
-        List<TransactionMetricRisk> metricRisks = timeSeriesRiskSummary.getTransactionMetricRiskList();
-        List<Anomaly.AnomalousMetric> anomalousMetrics = new ArrayList<>();
-        metricRisks.forEach(metricRisk -> {
-          if (metricRisk.getMetricRisk() > 0) {
-            anomalousMetrics.add(Anomaly.AnomalousMetric.builder()
-                                     .groupName(metricRisk.getTransactionName())
-                                     .metricName(metricRisk.getMetricName())
-                                     .riskScore(metricRisk.getMetricScore())
-                                     .build());
-          }
-        });
-        anomalyService.openAnomaly(accountId, cvConfigId, endTime, anomalousMetrics);
-      }
-    }
   }
 
   private void saveAnomalousPatterns(ServiceGuardTimeSeriesAnalysisDTO analysis, String verificationTaskId) {

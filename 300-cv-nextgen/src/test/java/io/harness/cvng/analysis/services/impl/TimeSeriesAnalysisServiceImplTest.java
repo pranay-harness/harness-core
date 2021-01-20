@@ -44,7 +44,6 @@ import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.TimeSeriesService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
-import io.harness.cvng.dashboard.services.api.AnomalyService;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
@@ -88,7 +87,6 @@ import org.mockito.Mock;
 public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
   @Inject LearningEngineTaskService learningEngineTaskService;
   @Mock TimeSeriesService mockTimeSeriesService;
-  @Mock AnomalyService anomalyService;
   @Mock CVConfigService cvConfigService;
   @Inject TimeSeriesService timeSeriesService;
   @Inject TimeSeriesAnalysisService timeSeriesAnalysisService;
@@ -111,7 +109,6 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     instant = Instant.parse("2020-07-27T10:44:06.390Z");
     deploymentStartTimeMs = instant.toEpochMilli();
     FieldUtils.writeField(timeSeriesAnalysisService, "timeSeriesService", mockTimeSeriesService, true);
-    FieldUtils.writeField(timeSeriesAnalysisService, "anomalyService", anomalyService, true);
     FieldUtils.writeField(timeSeriesAnalysisService, "cvConfigService", cvConfigService, true);
 
     AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
