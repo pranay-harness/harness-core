@@ -141,25 +141,28 @@ public class CEViewServiceImpl implements CEViewService {
 
   @Override
   public CEView updateTotalCost(CEView ceView, BigQuery bigQuery, String cloudProviderTableName) {
-    List<QLCEViewAggregation> totalCostAggregationFunction = Collections.singletonList(
-        QLCEViewAggregation.builder().columnName("cost").operationType(QLCEViewAggregateOperation.SUM).build());
-    List<QLCEViewFilterWrapper> filters = new ArrayList<>();
-    filters.add(
-        QLCEViewFilterWrapper.builder()
-            .viewMetadataFilter(QLCEViewMetadataFilter.builder().viewId(ceView.getUuid()).isPreview(false).build())
-            .build());
-    ViewTimeRange viewTimeRange = ceView.getViewTimeRange();
-    ViewTimeRangeDto startEndTime = viewTimeRangeHelper.getStartEndTime(viewTimeRange);
-    filters.add(
-        viewFilterBuilderHelper.getViewTimeFilter(startEndTime.getStartTime(), QLCEViewTimeFilterOperator.AFTER));
-    filters.add(
-        viewFilterBuilderHelper.getViewTimeFilter(startEndTime.getEndTime(), QLCEViewTimeFilterOperator.BEFORE));
+    if (ceView.getViewState() != null && ceView.getViewState() == ViewState.COMPLETED) {
+      List<QLCEViewAggregation> totalCostAggregationFunction = Collections.singletonList(
+          QLCEViewAggregation.builder().columnName("cost").operationType(QLCEViewAggregateOperation.SUM).build());
+      List<QLCEViewFilterWrapper> filters = new ArrayList<>();
+      filters.add(
+          QLCEViewFilterWrapper.builder()
+              .viewMetadataFilter(QLCEViewMetadataFilter.builder().viewId(ceView.getUuid()).isPreview(false).build())
+              .build());
+      ViewTimeRange viewTimeRange = ceView.getViewTimeRange();
+      ViewTimeRangeDto startEndTime = viewTimeRangeHelper.getStartEndTime(viewTimeRange);
+      filters.add(
+          viewFilterBuilderHelper.getViewTimeFilter(startEndTime.getStartTime(), QLCEViewTimeFilterOperator.AFTER));
+      filters.add(
+          viewFilterBuilderHelper.getViewTimeFilter(startEndTime.getEndTime(), QLCEViewTimeFilterOperator.BEFORE));
 
-    QLCEViewTrendInfo trendData =
-        viewsBillingService.getTrendStatsData(bigQuery, filters, totalCostAggregationFunction, cloudProviderTableName);
-    double totalCost = trendData.getValue().doubleValue();
-    log.info("Total cost of view {}", totalCost);
-    return ceViewDao.updateTotalCost(ceView.getUuid(), ceView.getAccountId(), totalCost);
+      QLCEViewTrendInfo trendData = viewsBillingService.getTrendStatsData(
+          bigQuery, filters, totalCostAggregationFunction, cloudProviderTableName);
+      double totalCost = trendData.getValue().doubleValue();
+      log.info("Total cost of view {}", totalCost);
+      return ceViewDao.updateTotalCost(ceView.getUuid(), ceView.getAccountId(), totalCost);
+    }
+    return ceView;
   }
 
   @Override
