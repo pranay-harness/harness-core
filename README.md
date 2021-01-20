@@ -533,3 +533,11 @@ gazelle  # generates, updates BUILD.bazel
 ```lang=bash
 portal/tools/go/update_bazel_repo.sh go.mod
 ```
+# How to enable aws sdk logging in Manager/Delegate app locally
+NOTE: Below changes are only recommended in local environment and changes shall not be pushed.
+
+AWS SDK library internal logging is done using SLF4J. SLF4J serves as a simple facade or abstraction for various logging frameworks (e.g. java.util.logging, logback, log4j)
+
+We are already using logback framework in our application, so it is simple to enable logging as it is already supported in SLF4J.
+* Delegate - To enable AWS SDK logging in delegate, update root logger level to TRACE in logback.xml file in 260-delegate module resources folder and restart delegate.
+* Manager - To enable AWS SDK logging in manager, update root logger level to TRACE in logback.xml file in 400-rest module resources folder and restart manager.
