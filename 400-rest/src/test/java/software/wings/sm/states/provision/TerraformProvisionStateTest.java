@@ -23,6 +23,7 @@ import static software.wings.utils.WingsTestConstants.REPO_NAME;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
+import static software.wings.utils.WingsTestConstants.UUID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
@@ -30,12 +31,15 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.doAnswer;
@@ -75,6 +79,7 @@ import software.wings.WingsBaseTest;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformOutputInfoElement;
+import software.wings.api.terraform.TerraformOutputVariables;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.api.terraform.TfVarGitSource;
 import software.wings.beans.Activity;
@@ -148,6 +153,7 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   @Mock private SecretManagerConfigService secretManagerConfigService;
   @Spy private GitFileConfigHelperService gitFileConfigHelperService;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private ManagerExecutionLogCallback managerExecutionLogCallback;
   @InjectMocks private TerraformProvisionState state = new ApplyTerraformProvisionState("tf");
   @InjectMocks private TerraformProvisionState destroyProvisionState = new DestroyTerraformProvisionState("tf");
 
@@ -1043,6 +1049,137 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
         " /path/to/file1.tfvar , /path/to/file2.tfvar", expectedPaths, spyState, gitFileConfig, context, gitConfig);
     validateGitSource(
         ", /path/to/file1.tfvar , /path/to/file2.tfvar", expectedPaths, spyState, gitFileConfig, context, gitConfig);
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testSaveProvisionerOutputsOnResponse() {
+    when(featureFlagService.isEnabled(eq(FeatureName.SAVE_TERRAFORM_OUTPUTS_TO_SWEEPING_OUTPUT), anyString()))
+        .thenReturn(true);
+    TerraformInfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder().appId(APP_ID).build();
+    TerraformExecutionData terraformExecutionData =
+        TerraformExecutionData.builder()
+            .executionStatus(ExecutionStatus.SUCCESS)
+            .outputs(
+                "{\"outputVar\": { \"value\" :\"outputVarValue\"}, \"complex\": { \"value\": { \"output\": \"value\"}}}")
+            .build();
+    Map<String, ResponseData> response = new HashMap<>();
+    response.put("activityId", terraformExecutionData);
+    state.setProvisionerId(PROVISIONER_ID);
+
+    doReturn(APP_ID).when(executionContext).getAppId();
+    doReturn(SweepingOutputInstance.builder().build())
+        .when(sweepingOutputService)
+        .find(argThat(hasProperty("name", is(state.getMarkerName()))));
+    doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);
+    doReturn(SweepingOutputInstance.builder()).when(executionContext).prepareSweepingOutputBuilder(Scope.WORKFLOW);
+    doReturn(managerExecutionLogCallback)
+        .when(infrastructureProvisionerService)
+        .getManagerExecutionCallback(APP_ID, "activityId", state.commandUnit().name());
+
+    state.handleAsyncResponse(executionContext, response);
+
+    ArgumentCaptor<SweepingOutputInstance> sweepingOutputCaptor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    verify(sweepingOutputService, times(1)).save(sweepingOutputCaptor.capture());
+    verify(sweepingOutputService, never()).deleteById(anyString(), anyString());
+
+    SweepingOutputInstance storedSweepingOutputInstance = sweepingOutputCaptor.getValue();
+    assertThat(storedSweepingOutputInstance.getName()).isEqualTo(TerraformOutputVariables.SWEEPING_OUTPUT_NAME);
+    assertThat(storedSweepingOutputInstance.getValue()).isInstanceOf(TerraformOutputVariables.class);
+    TerraformOutputVariables storedOutputVariables = (TerraformOutputVariables) storedSweepingOutputInstance.getValue();
+    assertThat(storedOutputVariables.get("outputVar")).isEqualTo("outputVarValue");
+    assertThat(storedOutputVariables.get("complex")).isInstanceOf(Map.class);
+    Map<String, String> complexVarValue = (Map<String, String>) storedOutputVariables.get("complex");
+    assertThat(complexVarValue.get("output")).isEqualTo("value");
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void testSaveProvisionerOutputsOnResponseWithExistingOutputs() {
+    when(featureFlagService.isEnabled(eq(FeatureName.SAVE_TERRAFORM_OUTPUTS_TO_SWEEPING_OUTPUT), anyString()))
+        .thenReturn(true);
+    TerraformInfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder().appId(APP_ID).build();
+    TerraformExecutionData terraformExecutionData = TerraformExecutionData.builder()
+                                                        .executionStatus(ExecutionStatus.SUCCESS)
+                                                        .outputs("{\"outputVar\": { \"value\" :\"outputVarValue\"}}")
+                                                        .build();
+    Map<String, ResponseData> response = new HashMap<>();
+    response.put("activityId", terraformExecutionData);
+    TerraformOutputVariables existingOutputVariables = new TerraformOutputVariables();
+    existingOutputVariables.put("existing", "value");
+    SweepingOutputInstance existingVariablesOutputs = SweepingOutputInstance.builder()
+                                                          .name(TerraformOutputVariables.SWEEPING_OUTPUT_NAME)
+                                                          .value(existingOutputVariables)
+                                                          .uuid(UUID)
+                                                          .build();
+    state.setProvisionerId(PROVISIONER_ID);
+
+    doReturn(APP_ID).when(executionContext).getAppId();
+    doReturn(SweepingOutputInstance.builder().build())
+        .when(sweepingOutputService)
+        .find(argThat(hasProperty("name", is(state.getMarkerName()))));
+    doReturn(existingVariablesOutputs)
+        .when(sweepingOutputService)
+        .find(argThat(hasProperty("name", is(TerraformOutputVariables.SWEEPING_OUTPUT_NAME))));
+    doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);
+    doReturn(SweepingOutputInstance.builder()).when(executionContext).prepareSweepingOutputBuilder(Scope.WORKFLOW);
+    doReturn(managerExecutionLogCallback)
+        .when(infrastructureProvisionerService)
+        .getManagerExecutionCallback(APP_ID, "activityId", state.commandUnit().name());
+
+    state.handleAsyncResponse(executionContext, response);
+
+    ArgumentCaptor<SweepingOutputInstance> sweepingOutputCaptor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    verify(sweepingOutputService, times(1)).save(sweepingOutputCaptor.capture());
+    verify(sweepingOutputService, times(1)).deleteById(APP_ID, UUID);
+
+    SweepingOutputInstance storedSweepingOutputInstance = sweepingOutputCaptor.getValue();
+    assertThat(storedSweepingOutputInstance.getName()).isEqualTo(TerraformOutputVariables.SWEEPING_OUTPUT_NAME);
+    assertThat(storedSweepingOutputInstance.getValue()).isInstanceOf(TerraformOutputVariables.class);
+    TerraformOutputVariables storedOutputVariables = (TerraformOutputVariables) storedSweepingOutputInstance.getValue();
+    assertThat(storedOutputVariables.get("outputVar")).isEqualTo("outputVarValue");
+    assertThat(storedOutputVariables.get("existing")).isEqualTo("value");
+  }
+
+  @Test
+  @Owner(developers = BOJANA)
+  @Category(UnitTests.class)
+  public void saveTerraformOutputsInContextMap() {
+    when(featureFlagService.isEnabled(eq(FeatureName.SAVE_TERRAFORM_OUTPUTS_TO_SWEEPING_OUTPUT), anyString()))
+        .thenReturn(false);
+    Map<String, Object> outputVariables = new HashMap<>();
+    outputVariables.put("outputVariableFromContext", "value");
+    when(executionContext.getContextElement(ContextElementType.TERRAFORM_PROVISION))
+        .thenReturn(TerraformOutputInfoElement.builder().outputVariables(outputVariables).build());
+    TerraformInfrastructureProvisioner provisioner = TerraformInfrastructureProvisioner.builder().appId(APP_ID).build();
+    TerraformExecutionData terraformExecutionData =
+        TerraformExecutionData.builder()
+            .executionStatus(ExecutionStatus.SUCCESS)
+            .outputs(
+                "{\"outputVar\": { \"value\" :\"outputVarValue\"}, \"complex\": { \"value\": { \"output\": \"value\"}}}")
+            .build();
+    Map<String, ResponseData> response = new HashMap<>();
+    response.put("activityId", terraformExecutionData);
+    state.setProvisionerId(PROVISIONER_ID);
+
+    doReturn(APP_ID).when(executionContext).getAppId();
+    doReturn(SweepingOutputInstance.builder().build())
+        .when(sweepingOutputService)
+        .find(argThat(hasProperty("name", is(state.getMarkerName()))));
+    doReturn(provisioner).when(infrastructureProvisionerService).get(APP_ID, PROVISIONER_ID);
+    doReturn(SweepingOutputInstance.builder()).when(executionContext).prepareSweepingOutputBuilder(Scope.WORKFLOW);
+    doReturn(managerExecutionLogCallback)
+        .when(infrastructureProvisionerService)
+        .getManagerExecutionCallback(APP_ID, "activityId", state.commandUnit().name());
+
+    ExecutionResponse executionResponse = state.handleAsyncResponse(executionContext, response);
+    TerraformOutputInfoElement terraformOutputInfoElement =
+        (TerraformOutputInfoElement) executionResponse.getContextElements().get(0);
+    assertThat(terraformOutputInfoElement.paramMap(executionContext)).containsKeys("terraform");
+    assertThat(terraformOutputInfoElement.getOutputVariables().keySet())
+        .containsOnly("outputVar", "complex", "outputVariableFromContext");
   }
 
   private void validateGitSource(String input, List<String> expectedList, TerraformProvisionState spyState,
