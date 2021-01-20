@@ -9,6 +9,7 @@ import io.harness.pms.execution.ExecutionStatus;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModel;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,7 +28,7 @@ import lombok.experimental.FieldDefaults;
 @ApiModel("PipelineExecutionFilterProperties")
 @JsonTypeName(PIPELINE_FILTER)
 public class PipelineExecutionFilterPropertiesDTO extends FilterPropertiesDTO {
-  private ExecutionStatus status;
+  private List<ExecutionStatus> status;
   private String pipelineName;
   private org.bson.Document moduleProperties;
 
