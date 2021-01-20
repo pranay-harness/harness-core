@@ -4,6 +4,8 @@ import static io.harness.beans.FeatureName.DISABLE_DELEGATE_SELECTION_LOG;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
@@ -52,6 +54,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._420_DELEGATE_SERVICE)
 public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsService {
   @Inject private HPersistence persistence;
   @Inject private FeatureFlagService featureFlagService;

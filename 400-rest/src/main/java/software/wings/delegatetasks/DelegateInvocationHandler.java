@@ -24,10 +24,7 @@ import software.wings.settings.SettingValue;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
-/**
- * Created by peeyushaggarwal on 1/12/17.
- */
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(Module._910_DELEGATE_SERVICE_DRIVER)
 public class DelegateInvocationHandler implements InvocationHandler {
   private DelegateService delegateService;
   private SyncTaskContext syncTaskContext;

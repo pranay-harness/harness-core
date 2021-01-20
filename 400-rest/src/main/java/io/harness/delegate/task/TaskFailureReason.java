@@ -1,7 +1,6 @@
 package io.harness.delegate.task;
 
-public enum TaskFailureReason {
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 
-  EXPIRED,
-  NO_ELIGIBLE_DELEGATE
-}
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS) public enum TaskFailureReason { EXPIRED, NO_ELIGIBLE_DELEGATE }

@@ -10,11 +10,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.lang.reflect.Proxy;
 
-/**
- * Created by peeyushaggarwal on 1/12/17.
- */
 @Singleton
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(Module._910_DELEGATE_SERVICE_DRIVER)
 public class DelegateProxyFactory {
   @Inject private DelegateService delegateService;
 

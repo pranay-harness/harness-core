@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 
 import java.util.ArrayList;
@@ -9,6 +11,7 @@ import lombok.Value;
 
 @Value
 @Builder(toBuilder = true)
+@TargetModule(Module._920_DELEGATE_SERVICE_BEANS)
 public class CEDelegateStatus {
   private String uuid;
   private Boolean found;
