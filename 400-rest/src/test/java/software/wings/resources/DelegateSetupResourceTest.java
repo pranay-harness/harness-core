@@ -34,6 +34,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateApproval;
+import io.harness.delegate.beans.DelegateSetupDetails;
 import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.rest.RestResponse;
@@ -286,6 +287,65 @@ public class DelegateSetupResourceTest {
     Delegate resource = restResponse.getResource();
     assertThat(resource.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(resource.getUuid()).isEqualTo(ID_KEY);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldValidateKubernetesYaml() {
+    String accountId = generateUuid();
+    DelegateSetupDetails setupDetails = DelegateSetupDetails.builder()
+                                            .name("name")
+                                            .description("desc")
+                                            .size(DelegateSize.LARGE)
+                                            .delegateConfigurationId("delConfigId")
+                                            .build();
+
+    when(delegateService.validateKubernetesYaml(accountId, setupDetails)).thenReturn(setupDetails);
+    RestResponse<DelegateSetupDetails> restResponse =
+        RESOURCES.client()
+            .target("/setup/delegates/validate-kubernetes-yaml?accountId=" + accountId)
+            .request()
+            .post(entity(setupDetails, MediaType.APPLICATION_JSON),
+                new GenericType<RestResponse<DelegateSetupDetails>>() {});
+
+    DelegateSetupDetails resource = restResponse.getResource();
+    assertThat(resource).isEqualTo(setupDetails);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldGenerateKubernetesYaml() throws Exception {
+    String accountId = generateUuid();
+
+    File file = File.createTempFile("test", ".txt");
+    try (OutputStreamWriter outputStreamWriter = new FileWriter(file)) {
+      IOUtils.write("Test", outputStreamWriter);
+    }
+
+    DelegateSetupDetails setupDetails = DelegateSetupDetails.builder()
+                                            .sessionIdentifier("sessionId")
+                                            .name("name")
+                                            .description("desc")
+                                            .size(DelegateSize.LARGE)
+                                            .delegateConfigurationId("delConfigId")
+                                            .build();
+
+    when(delegateService.generateKubernetesYaml(eq(accountId), eq(setupDetails), anyString(), anyString()))
+        .thenReturn(file);
+    Response restResponse = RESOURCES.client()
+                                .target("/setup/delegates/generate-kubernetes-yaml?accountId=" + accountId)
+                                .request()
+                                .post(entity(setupDetails, MediaType.APPLICATION_JSON), new GenericType<Response>() {});
+
+    verify(delegateService, atLeastOnce())
+        .generateKubernetesYaml(eq(accountId), eq(setupDetails), anyString(), anyString());
+
+    assertThat(restResponse.getHeaderString("Content-Disposition"))
+        .isEqualTo("attachment; filename=" + DelegateServiceImpl.KUBERNETES_DELEGATE + ".tar.gz");
+    assertThat(IOUtils.readLines((InputStream) restResponse.getEntity(), Charset.defaultCharset()).get(0))
+        .isEqualTo("Test");
   }
 
   @Test

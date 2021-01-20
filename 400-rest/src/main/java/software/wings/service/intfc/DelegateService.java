@@ -12,6 +12,7 @@ import io.harness.delegate.beans.DelegateProgressData;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
+import io.harness.delegate.beans.DelegateSetupDetails;
 import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.beans.DelegateTaskAbortEvent;
 import io.harness.delegate.beans.DelegateTaskEvent;
@@ -51,6 +52,11 @@ public interface DelegateService extends OwnedByAccount {
   Set<String> retrieveDelegateSelectors(Delegate delegate);
 
   List<String> getAvailableVersions(String accountId);
+
+  DelegateSetupDetails validateKubernetesYaml(String accountId, DelegateSetupDetails delegateSetupDetails);
+
+  File generateKubernetesYaml(String accountId, DelegateSetupDetails delegateSetupDetails, String managerHost,
+      String verificationServiceUrl) throws IOException;
 
   Delegate get(String accountId, String delegateId, boolean forceRefresh);
 
