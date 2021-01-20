@@ -29,6 +29,7 @@ public class GraphVertexConverter {
         .stepType(nodeExecution.getNode().getStepType().getType())
         .status(nodeExecution.getStatus())
         .failureInfo(nodeExecution.getFailureInfo())
+        .skipInfo(nodeExecution.getSkipInfo())
         .stepParameters(nodeExecution.getResolvedStepParameters() == null
                 ? null
                 : JsonOrchestrationUtils.asMap(nodeExecution.getResolvedStepParameters().toJson()))

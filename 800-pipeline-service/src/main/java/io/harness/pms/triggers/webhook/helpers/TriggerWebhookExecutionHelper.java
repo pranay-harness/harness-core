@@ -168,6 +168,7 @@ public class TriggerWebhookExecutionHelper {
               MergeHelper.mergeInputSetIntoPipeline(pipelineYamlBeforeMerge, sanitizedRuntimeInputYaml, true);
         }
       }
+      executionMetaDataBuilder.setYaml(pipelineYaml);
 
       return pipelineExecuteHelper.startExecution(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),
           ngTriggerEntity.getProjectIdentifier(), pipelineYaml, executionMetaDataBuilder.build());
