@@ -7,6 +7,9 @@ package io.harness.delegate.task.citasks.cik8handler.container;
  */
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.task.citasks.cik8handler.params.CIConstants.DIND_TAG_REGEX;
+import static io.harness.delegate.task.citasks.cik8handler.params.CIConstants.DOCKER_IMAGE_NAME;
+import static io.harness.delegate.task.citasks.cik8handler.params.CIConstants.PLUGIN_DOCKER_IMAGE_NAME;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static java.lang.String.format;
@@ -29,6 +32,7 @@ import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.fabric8.kubernetes.api.model.ResourceRequirementsBuilder;
 import io.fabric8.kubernetes.api.model.SecretKeySelectorBuilder;
 import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
+import io.fabric8.kubernetes.api.model.SecurityContextBuilder;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMount;
@@ -97,6 +101,7 @@ public abstract class BaseContainerSpecBuilder {
     if (isNotEmpty(imageDetails.getTag())) {
       imageName = imageName + ":" + imageDetails.getTag();
     }
+
     ContainerBuilder containerBuilder = new ContainerBuilder()
                                             .withName(containerParams.getName())
                                             .withImage(imageName)
@@ -107,6 +112,10 @@ public abstract class BaseContainerSpecBuilder {
                                             .withPorts(containerPorts)
                                             .withVolumeMounts(volumeMounts);
 
+    if (isPrivilegedImage(imageDetails)) {
+      containerBuilder.withSecurityContext(new SecurityContextBuilder().withPrivileged(true).build());
+    }
+
     if (isNotEmpty(containerParams.getWorkingDir())) {
       containerBuilder.withWorkingDir(containerParams.getWorkingDir());
     }
@@ -116,6 +125,19 @@ public abstract class BaseContainerSpecBuilder {
         .imageSecret(imageSecret)
         .volumes(volumes)
         .build();
+  }
+
+  private boolean isPrivilegedImage(ImageDetails imageDetails) {
+    String imageName = imageDetails.getName();
+    String tag = imageDetails.getTag();
+    if (imageName.equals(PLUGIN_DOCKER_IMAGE_NAME)) {
+      return true;
+    }
+
+    if (imageName.equals(DOCKER_IMAGE_NAME) && isNotEmpty(tag) && tag.matches(DIND_TAG_REGEX)) {
+      return true;
+    }
+    return false;
   }
 
   private ResourceRequirements getResourceRequirements(ContainerResourceParams containerResourceParams) {
