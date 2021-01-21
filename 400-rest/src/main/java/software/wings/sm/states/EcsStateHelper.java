@@ -60,6 +60,7 @@ import software.wings.api.DeploymentType;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
+import software.wings.api.ecs.EcsBGRoute53SetupStateExecutionData;
 import software.wings.api.ecs.EcsBGSetupData;
 import software.wings.api.ecs.EcsListenerUpdateStateExecutionData;
 import software.wings.api.ecs.EcsSetupStateExecutionData;
@@ -706,6 +707,52 @@ public class EcsStateHelper {
     return task;
   }
 
+  private void setUpEcsServiceAndContainerSpecFromDataBagAndAppManifest(EcsSetUpDataBag ecsSetUpDataBag,
+      ApplicationManifest applicationManifest, List<GitFile> gitFiles, ExecutionContext executionContext) {
+    EcsServiceSpecification ecsServiceSpecification = getOrCreateServiceSpec(ecsSetUpDataBag);
+    ContainerTask containerTask = getOrCreateTaskSpec(ecsSetUpDataBag);
+
+    String containerTaskFilePath = applicationManifest.getGitFileConfig().getTaskSpecFilePath();
+    String containerSpec = getFileContentByPathFromGitFiles(gitFiles, containerTaskFilePath);
+    containerTask.setAdvancedConfig(executionContext.renderExpression(containerSpec));
+    ecsSetUpDataBag.setContainerTask(containerTask);
+
+    if (!applicationManifest.getGitFileConfig().isUseInlineServiceDefinition()) {
+      String serviceSpecFilePath = applicationManifest.getGitFileConfig().getServiceSpecFilePath();
+      String serviceSpec = getFileContentByPathFromGitFiles(gitFiles, serviceSpecFilePath);
+      ecsServiceSpecification.setServiceSpecJson(executionContext.renderExpression(serviceSpec));
+      ecsSetUpDataBag.setServiceSpecification(ecsServiceSpecification);
+    }
+  }
+
+  public void setUpRemoteContainerTaskAndServiceSpecForEcsRoute53IfRequired(
+      ExecutionContext executionContext, EcsSetUpDataBag ecsSetUpDataBag, Logger logger) {
+    if (!(executionContext.getStateExecutionData() instanceof EcsBGRoute53SetupStateExecutionData)) {
+      return;
+    }
+    EcsBGRoute53SetupStateExecutionData ecsBGRoute53SetupStateExecutionData =
+        (EcsBGRoute53SetupStateExecutionData) executionContext.getStateExecutionData();
+
+    if (ecsBGRoute53SetupStateExecutionData != null && ecsSetUpDataBag != null) {
+      ApplicationManifest applicationManifest =
+          ecsBGRoute53SetupStateExecutionData.getApplicationManifestMap().get(K8sValuesLocation.ServiceOverride);
+      GitFileConfig gitFileConfig = applicationManifest.getGitFileConfig();
+      if (gitFileConfig != null && gitFileConfig.getServiceSpecFilePath() != null
+          && gitFileConfig.getTaskSpecFilePath() != null) {
+        List<GitFile> gitFiles = ecsBGRoute53SetupStateExecutionData.getFetchFilesResult()
+                                     .getFilesFromMultipleRepo()
+                                     .get("ServiceOverride")
+                                     .getFiles();
+
+        setUpEcsServiceAndContainerSpecFromDataBagAndAppManifest(
+            ecsSetUpDataBag, applicationManifest, gitFiles, executionContext);
+      } else {
+        log.error("Manifest does not contain the proper git file config, git fetch files response can not be read.");
+        throw new InvalidRequestException("Manifest does not contain the proper git file config");
+      }
+    }
+  }
+
   public void setUpRemoteContainerTaskAndServiceSpecIfRequired(
       ExecutionContext executionContext, EcsSetUpDataBag ecsSetUpDataBag, Logger logger) {
     if (!(executionContext.getStateExecutionData() instanceof EcsSetupStateExecutionData)) {
@@ -715,9 +762,6 @@ public class EcsStateHelper {
         (EcsSetupStateExecutionData) executionContext.getStateExecutionData();
 
     if (ecsSetupStateExecutionData != null && ecsSetUpDataBag != null) {
-      EcsServiceSpecification ecsServiceSpecification = getOrCreateServiceSpec(ecsSetUpDataBag);
-      ContainerTask containerTask = getOrCreateTaskSpec(ecsSetUpDataBag);
-
       ApplicationManifest applicationManifest =
           ecsSetupStateExecutionData.getApplicationManifestMap().get(K8sValuesLocation.ServiceOverride);
       GitFileConfig gitFileConfig = applicationManifest.getGitFileConfig();
@@ -728,17 +772,8 @@ public class EcsStateHelper {
                                      .get("ServiceOverride")
                                      .getFiles();
 
-        String containerTaskFilePath = applicationManifest.getGitFileConfig().getTaskSpecFilePath();
-        String containerSpec = getFileContentByPathFromGitFiles(gitFiles, containerTaskFilePath);
-        containerTask.setAdvancedConfig(executionContext.renderExpression(containerSpec));
-        ecsSetUpDataBag.setContainerTask(containerTask);
-
-        if (!applicationManifest.getGitFileConfig().isUseInlineServiceDefinition()) {
-          String serviceSpecFilePath = applicationManifest.getGitFileConfig().getServiceSpecFilePath();
-          String serviceSpec = getFileContentByPathFromGitFiles(gitFiles, serviceSpecFilePath);
-          ecsServiceSpecification.setServiceSpecJson(executionContext.renderExpression(serviceSpec));
-          ecsSetUpDataBag.setServiceSpecification(ecsServiceSpecification);
-        }
+        setUpEcsServiceAndContainerSpecFromDataBagAndAppManifest(
+            ecsSetUpDataBag, applicationManifest, gitFiles, executionContext);
       } else {
         log.error("Manifest does not contain the proper git file config, git fetch files response can not be read.");
         throw new InvalidRequestException("Manifest does not contain the proper git file config");
