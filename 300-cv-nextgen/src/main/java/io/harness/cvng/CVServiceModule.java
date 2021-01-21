@@ -37,8 +37,10 @@ import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.NextGenServiceImpl;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.client.VerificationManagerServiceImpl;
+import io.harness.cvng.core.jobs.AccountChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ConnectorChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ConsumerMessageProcessor;
+import io.harness.cvng.core.jobs.OrganizationChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ProjectChangeEventMessageProcessor;
 import io.harness.cvng.core.services.api.AppDynamicsService;
 import io.harness.cvng.core.services.api.CVConfigService;
@@ -48,7 +50,7 @@ import io.harness.cvng.core.services.api.CVSetupService;
 import io.harness.cvng.core.services.api.DSConfigService;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
-import io.harness.cvng.core.services.api.DeleteEntityByProjectHandler;
+import io.harness.cvng.core.services.api.DeleteEntityByHandler;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.LogRecordService;
@@ -68,7 +70,7 @@ import io.harness.cvng.core.services.impl.CVEventServiceImpl;
 import io.harness.cvng.core.services.impl.CVSetupServiceImpl;
 import io.harness.cvng.core.services.impl.DSConfigServiceImpl;
 import io.harness.cvng.core.services.impl.DataCollectionTaskServiceImpl;
-import io.harness.cvng.core.services.impl.DefaultDeleteEntityByProjectHandler;
+import io.harness.cvng.core.services.impl.DefaultDeleteEntityByHandler;
 import io.harness.cvng.core.services.impl.DeletedCVConfigServiceImpl;
 import io.harness.cvng.core.services.impl.HostRecordServiceImpl;
 import io.harness.cvng.core.services.impl.LogRecordServiceImpl;
@@ -243,6 +245,12 @@ public class CVServiceModule extends AbstractModule {
           .annotatedWith(Names.named(EventsFrameworkMetadataConstants.PROJECT_ENTITY))
           .to(ProjectChangeEventMessageProcessor.class);
       bind(ConsumerMessageProcessor.class)
+          .annotatedWith(Names.named(EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY))
+          .to(OrganizationChangeEventMessageProcessor.class);
+      bind(ConsumerMessageProcessor.class)
+          .annotatedWith(Names.named(EventsFrameworkMetadataConstants.ACCOUNT_ENTITY))
+          .to(AccountChangeEventMessageProcessor.class);
+      bind(ConsumerMessageProcessor.class)
           .annotatedWith(Names.named(EventsFrameworkMetadataConstants.CONNECTOR_ENTITY))
           .to(ConnectorChangeEventMessageProcessor.class);
       bind(AlertRuleAnomalyService.class).to(AlertRuleAnomalyServiceImpl.class);
@@ -251,8 +259,8 @@ public class CVServiceModule extends AbstractModule {
           .toInstance(verificationConfiguration.getPortalUrl().endsWith("/")
                   ? verificationConfiguration.getPortalUrl()
                   : verificationConfiguration.getPortalUrl() + "/");
-      bind(DeleteEntityByProjectHandler.class).to(DefaultDeleteEntityByProjectHandler.class);
       bind(ActivitySourceService.class).to(ActivitySourceServiceImpl.class);
+      bind(DeleteEntityByHandler.class).to(DefaultDeleteEntityByHandler.class);
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
     }

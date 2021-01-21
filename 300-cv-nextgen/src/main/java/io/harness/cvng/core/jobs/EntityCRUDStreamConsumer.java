@@ -27,11 +27,17 @@ public class EntityCRUDStreamConsumer implements Runnable {
       @Named(
           EventsFrameworkMetadataConstants.PROJECT_ENTITY) ConsumerMessageProcessor projectChangeEventMessageProcessor,
       @Named(EventsFrameworkMetadataConstants.CONNECTOR_ENTITY)
-      ConsumerMessageProcessor connectorChangeEventMessageProcessor) {
+      ConsumerMessageProcessor connectorChangeEventMessageProcessor,
+      @Named(EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY)
+      ConsumerMessageProcessor organizationChangeEventMessageProcessor,
+      @Named(EventsFrameworkMetadataConstants.ACCOUNT_ENTITY)
+      ConsumerMessageProcessor accountChangeEventMessageProcessor) {
     this.consumer = abstractConsumer;
     processorMap = new HashMap<>();
     processorMap.put(EventsFrameworkMetadataConstants.PROJECT_ENTITY, projectChangeEventMessageProcessor);
     processorMap.put(EventsFrameworkMetadataConstants.CONNECTOR_ENTITY, connectorChangeEventMessageProcessor);
+    processorMap.put(EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY, organizationChangeEventMessageProcessor);
+    processorMap.put(EventsFrameworkMetadataConstants.ACCOUNT_ENTITY, accountChangeEventMessageProcessor);
   }
 
   @Override

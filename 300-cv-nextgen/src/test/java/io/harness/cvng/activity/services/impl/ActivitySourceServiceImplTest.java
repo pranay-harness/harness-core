@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -14,6 +15,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.activity.entities.ActivitySource;
 import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceKeys;
 import io.harness.cvng.activity.entities.KubernetesActivity;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
@@ -152,6 +154,90 @@ public class ActivitySourceServiceImplTest extends CvNextGenTest {
         activitySourceService.listActivitySources(accountId, orgIdentifier, projectIdentifier, 0, 10, null)
             .getContent();
     assertThat(activitySourceDTOS.size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category({UnitTests.class})
+  public void testDeleteByProjectIdentifier() {
+    String identifier = generateUuid();
+    KubernetesActivitySourceDTO kubernetesActivitySourceDTO =
+        KubernetesActivitySourceDTO.builder()
+            .identifier(identifier)
+            .name("some-name")
+            .connectorIdentifier(generateUuid())
+            .activitySourceConfigs(Sets.newHashSet(KubernetesActivitySourceConfig.builder()
+                                                       .serviceIdentifier(generateUuid())
+                                                       .envIdentifier(generateUuid())
+                                                       .namespace(generateUuid())
+                                                       .workloadName(generateUuid())
+                                                       .build()))
+            .build();
+    String kubernetesSourceId = activitySourceService.saveActivitySource(
+        accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO);
+
+    activitySourceService.deleteByProjectIdentifier(ActivitySource.class, accountId, orgIdentifier, projectIdentifier);
+
+    KubernetesActivitySource kubernetesActivitySource =
+        hPersistence.get(KubernetesActivitySource.class, kubernetesSourceId);
+
+    assertThat(kubernetesActivitySource).isNull();
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category({UnitTests.class})
+  public void testDeleteByOrganisationIdentifier() {
+    String identifier = generateUuid();
+    KubernetesActivitySourceDTO kubernetesActivitySourceDTO =
+        KubernetesActivitySourceDTO.builder()
+            .identifier(identifier)
+            .name("some-name")
+            .connectorIdentifier(generateUuid())
+            .activitySourceConfigs(Sets.newHashSet(KubernetesActivitySourceConfig.builder()
+                                                       .serviceIdentifier(generateUuid())
+                                                       .envIdentifier(generateUuid())
+                                                       .namespace(generateUuid())
+                                                       .workloadName(generateUuid())
+                                                       .build()))
+            .build();
+    String kubernetesSourceId = activitySourceService.saveActivitySource(
+        accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO);
+
+    activitySourceService.deleteByOrgIdentifier(ActivitySource.class, accountId, orgIdentifier);
+
+    KubernetesActivitySource kubernetesActivitySource =
+        hPersistence.get(KubernetesActivitySource.class, kubernetesSourceId);
+
+    assertThat(kubernetesActivitySource).isNull();
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category({UnitTests.class})
+  public void testDeleteByAccountIdentifier() {
+    String identifier = generateUuid();
+    KubernetesActivitySourceDTO kubernetesActivitySourceDTO =
+        KubernetesActivitySourceDTO.builder()
+            .identifier(identifier)
+            .name("some-name")
+            .connectorIdentifier(generateUuid())
+            .activitySourceConfigs(Sets.newHashSet(KubernetesActivitySourceConfig.builder()
+                                                       .serviceIdentifier(generateUuid())
+                                                       .envIdentifier(generateUuid())
+                                                       .namespace(generateUuid())
+                                                       .workloadName(generateUuid())
+                                                       .build()))
+            .build();
+    String kubernetesSourceId = activitySourceService.saveActivitySource(
+        accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO);
+
+    activitySourceService.deleteByAccountIdentifier(ActivitySource.class, accountId);
+
+    KubernetesActivitySource kubernetesActivitySource =
+        hPersistence.get(KubernetesActivitySource.class, kubernetesSourceId);
+
+    assertThat(kubernetesActivitySource).isNull();
   }
 
   @Test

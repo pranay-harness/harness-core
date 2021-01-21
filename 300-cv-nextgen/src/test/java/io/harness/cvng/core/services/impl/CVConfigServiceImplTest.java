@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -599,7 +600,35 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
     List<CVConfig> cvConfigs = createCVConfigs(5);
     cvConfigs.get(0).setProjectIdentifier("newProject");
     save(cvConfigs);
-    cvConfigService.deleteConfigsForProject(accountId, orgIdentifier, projectIdentifier);
+    cvConfigService.deleteByProjectIdentifier(CVConfig.class, accountId, orgIdentifier, projectIdentifier);
+    assertThat(cvConfigService.get(cvConfigs.get(0).getUuid())).isEqualTo(cvConfigs.get(0));
+    for (int i = 1; i < 5; i++) {
+      assertThat(cvConfigService.get(cvConfigs.get(i).getUuid())).isNull();
+    }
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testDeleteConfigsForOrganisation() {
+    List<CVConfig> cvConfigs = createCVConfigs(5);
+    cvConfigs.get(0).setOrgIdentifier("newOrganisation");
+    save(cvConfigs);
+    cvConfigService.deleteByOrgIdentifier(CVConfig.class, accountId, orgIdentifier);
+    assertThat(cvConfigService.get(cvConfigs.get(0).getUuid())).isEqualTo(cvConfigs.get(0));
+    for (int i = 1; i < 5; i++) {
+      assertThat(cvConfigService.get(cvConfigs.get(i).getUuid())).isNull();
+    }
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testDeleteConfigsForAccount() {
+    List<CVConfig> cvConfigs = createCVConfigs(5);
+    cvConfigs.get(0).setAccountId("newAccount");
+    save(cvConfigs);
+    cvConfigService.deleteByAccountIdentifier(CVConfig.class, accountId);
     assertThat(cvConfigService.get(cvConfigs.get(0).getUuid())).isEqualTo(cvConfigs.get(0));
     for (int i = 1; i < 5; i++) {
       assertThat(cvConfigService.get(cvConfigs.get(i).getUuid())).isNull();
