@@ -1535,8 +1535,17 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(placeholderValues.get(SlackApprovalMessageKeys.APPROVAL_MESSAGE)).isEqualTo(displayText);
     assertThat(placeholderValues.get(SlackApprovalMessageKeys.MESSAGE_IDENTIFIER))
         .isEqualTo("suppressTraditionalNotificationOnSlack");
+    assertPlaceholdersAddedForEmailNotification(placeholderValues);
   }
-
+  private void assertPlaceholdersAddedForEmailNotification(Map<String, String> placeholderValues) {
+    assertThat(placeholderValues.containsKey("APPROVAL_STEP"));
+    assertThat(placeholderValues.containsKey("WORKFLOW"));
+    assertThat(placeholderValues.containsKey("APP"));
+    assertThat(placeholderValues.containsKey("SERVICE_NAMES"));
+    assertThat(placeholderValues.containsKey("ARTIFACTS"));
+    assertThat(placeholderValues.containsKey("ENV"));
+    assertThat(placeholderValues.containsKey("INFRA_NAMES"));
+  }
   private void verifyJiraSweepingOutput() {
     ArgumentCaptor<SweepingOutputInstance> captor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
     ApprovalStateExecutionData executionData = ApprovalStateExecutionData.builder()

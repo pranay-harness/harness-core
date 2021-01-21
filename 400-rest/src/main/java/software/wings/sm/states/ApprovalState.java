@@ -93,6 +93,7 @@ import software.wings.security.SecretManager;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.JiraHelperService;
 import software.wings.service.impl.notifications.SlackApprovalMessageKeys;
+import software.wings.service.impl.workflow.WorkflowNotificationDetails;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AlertService;
@@ -795,9 +796,15 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       String approvalId, String accountId, Map<String, String> placeHolderValues, ExecutionContext context) {
     String pausedStageName = null;
     StringBuilder environments = new StringBuilder();
+    WorkflowNotificationDetails envDetails = null;
     StringBuilder services = new StringBuilder();
+    WorkflowNotificationDetails serviceDetails = null;
     StringBuilder artifacts = new StringBuilder();
     StringBuilder infrastructureDefinitions = new StringBuilder();
+    WorkflowNotificationDetails infraDetails = null;
+    String appDetails =
+        workflowNotificationHelper.calculateApplicationDetails(accountId, context.getAppId(), context.getApp())
+            .getMessage();
 
     int tokenValidDuration = getTimeoutMillis();
 
@@ -820,32 +827,36 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       artifacts.append("*Artifacts*: no artifacts");
     }
     if (isNotEmpty(workflowExecution.getEnvironments())) {
-      environments.append("*Environments*: ")
-          .append(
-              workflowNotificationHelper
-                  .calculateEnvironmentDetails(accountId, context.getAppId(), ((ExecutionContextImpl) context).getEnv())
-                  .getName());
+      envDetails = workflowNotificationHelper.calculateEnvironmentDetails(
+          accountId, context.getAppId(), ((ExecutionContextImpl) context).getEnv());
+      environments.append("*Environments*: ").append(envDetails.getName());
+      placeHolderValues.put("ENV", envDetails.getMessage().replace("*Environments*", "<b>Environments</b>"));
     } else {
       environments.append("*Environments*: no environments");
+      placeHolderValues.put("ENV", environments.toString().replace("*Environments*", "<b>Environments</b>"));
     }
     if (isNotEmpty(workflowExecution.getServiceIds())) {
-      services.append("*Services*: ")
-          .append(workflowNotificationHelper
-                      .calculateServiceDetailsForAllServices(
-                          accountId, context.getAppId(), context, workflowExecution, ExecutionScope.WORKFLOW, null)
-                      .getName());
+      serviceDetails = workflowNotificationHelper.calculateServiceDetailsForAllServices(
+          accountId, context.getAppId(), context, workflowExecution, ExecutionScope.WORKFLOW, null);
+      services.append("*Services*: ").append(serviceDetails.getName());
+      placeHolderValues.put("SERVICE_NAMES", serviceDetails.getMessage().replace("*Services*", "<b>Services</b>"));
     } else {
       services.append("*Services*: no services");
+      placeHolderValues.put("SERVICE_NAMES", services.toString().replace("*Services*", "<b>Services</b>"));
     }
     List<String> infraDefinitionIds = workflowExecution.getInfraDefinitionIds();
     if (isNotEmpty(infraDefinitionIds)) {
-      infrastructureDefinitions.append("*Infrastructure Definitions*: ")
-          .append(workflowNotificationHelper
-                      .calculateInfraDetails(
-                          accountId, context.getAppId(), workflowExecution, ((ExecutionContextImpl) context).getEnv())
-                      .getName());
+      infraDetails = workflowNotificationHelper.calculateInfraDetails(
+          accountId, context.getAppId(), workflowExecution, ((ExecutionContextImpl) context).getEnv());
+      infrastructureDefinitions.append("*Infrastructure Definitions*: ").append(infraDetails.getName());
+      placeHolderValues.put("INFRA_NAMES",
+          infraDetails.getMessage().replace("*Infrastructure Definitions*", "<b>Infrastructure Definitions</b>"));
+
     } else {
       infrastructureDefinitions.append("*Infrastructure Definitions*: no infrastructure definitions");
+      placeHolderValues.put("INFRA_NAMES",
+          infrastructureDefinitions.toString().replace(
+              "*Infrastructure Definitions*", "<b>Infrastructure Definitions</b>"));
     }
 
     Map<String, String> claims = new HashMap<>();
@@ -855,12 +866,15 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     String jwtToken = secretManager.generateJWTTokenWithCustomTimeOut(
         claims, secretManager.getJWTSecret(EXTERNAL_SERVICE_SECRET), tokenValidDuration);
 
+    placeHolderValues.put("APPROVAL_STEP", String.format("Approval Step: <<<%s|-|%s>>>", workflowURL, pausedStageName));
+    placeHolderValues.put("WORKFLOW", String.format("<<<%s|-|%s>>>", workflowURL, context.getWorkflowExecutionName()));
+    placeHolderValues.put("APP", appDetails);
+    placeHolderValues.put("ARTIFACTS", artifacts.toString().replace("*Artifacts*", "<b>Artifacts</b>"));
+
     SlackApprovalParams slackApprovalParams =
         SlackApprovalParams.builder()
             .appId(context.getAppId())
-            .appName(
-                workflowNotificationHelper.calculateApplicationDetails(accountId, context.getAppId(), context.getApp())
-                    .getMessage())
+            .appName(appDetails)
             .routingId(accountId)
             .deploymentId(context.getWorkflowExecutionId())
             .workflowId(context.getWorkflowId())
