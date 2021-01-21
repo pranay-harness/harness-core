@@ -18,4 +18,5 @@ public class QLBudgetTrendStats implements QLData {
   QLBillingStatsInfo totalCost;
   QLBillingStatsInfo forecastCost;
   QLBudgetTableData budgetDetails;
+  String status;
 }

@@ -1,8 +1,6 @@
 package io.harness.ccm.budget.entities;
 
-import software.wings.graphql.schema.type.aggregation.QLIdFilter;
-import software.wings.graphql.schema.type.aggregation.QLIdOperator;
-import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
+import static io.harness.ccm.budget.BudgetScopeType.PERSPECTIVE;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -25,10 +23,13 @@ public class PerspectiveBudgetScope implements BudgetScope {
   String viewName;
 
   @Override
-  public QLBillingDataFilter getBudgetScopeFilter() {
-    return QLBillingDataFilter.builder()
-        .view(QLIdFilter.builder().operator(QLIdOperator.IN).values(new String[] {viewId}).build())
-        .build();
+  public String getBudgetScopeType() {
+    return PERSPECTIVE;
+  }
+
+  @Override
+  public List<String> getEntityIds() {
+    return Collections.singletonList(viewId);
   }
 
   @Override

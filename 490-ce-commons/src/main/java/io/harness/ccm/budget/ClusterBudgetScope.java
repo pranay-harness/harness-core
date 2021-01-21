@@ -1,4 +1,4 @@
-package io.harness.ccm.budget.entities;
+package io.harness.ccm.budget;
 
 import static io.harness.ccm.budget.BudgetScopeType.CLUSTER;
 

@@ -1,7 +1,7 @@
 package software.wings.graphql.datafetcher.budget;
 
+import io.harness.ccm.budget.Budget;
 import io.harness.ccm.budget.BudgetService;
-import io.harness.ccm.budget.entities.Budget;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 

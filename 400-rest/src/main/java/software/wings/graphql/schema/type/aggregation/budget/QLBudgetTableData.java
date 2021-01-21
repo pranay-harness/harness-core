@@ -24,5 +24,7 @@ public class QLBudgetTableData {
   String[] notifications;
   Double budgetedAmount;
   Double actualAmount;
+  Double forecastCost;
+  Double lastMonthCost;
   Long lastUpdatedAt;
 }

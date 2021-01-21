@@ -1,5 +1,8 @@
 package io.harness.ccm.budget;
 
+import static io.harness.ccm.budget.BudgetScopeType.APPLICATION;
+import static io.harness.ccm.budget.BudgetScopeType.CLUSTER;
+import static io.harness.ccm.budget.BudgetScopeType.PERSPECTIVE;
 import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.AFTER;
 import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.BEFORE;
 
@@ -7,8 +10,7 @@ import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unif
 
 import io.harness.beans.EnvironmentType;
 import io.harness.ccm.billing.bigquery.BigQueryService;
-import io.harness.ccm.budget.entities.ApplicationBudgetScope;
-import io.harness.ccm.budget.entities.Budget;
+import io.harness.ccm.budget.dao.BudgetDao;
 import io.harness.ccm.views.entities.ViewFieldIdentifier;
 import io.harness.ccm.views.graphql.QLCEViewAggregateOperation;
 import io.harness.ccm.views.graphql.QLCEViewAggregation;
@@ -55,6 +57,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
@@ -86,7 +89,7 @@ public class BudgetUtils {
       return getForecastCostForPerspectiveBudget(budget, cloudProviderTable);
     }
     List<QLBillingDataFilter> filters = new ArrayList<>();
-    filters.add(budget.getScope().getBudgetScopeFilter());
+    filters.add(getBudgetScopeFilter(budget));
     addAdditionalFiltersBasedOnScope(budget, filters);
     filters.add(getStartTimeFilterForForecasting());
     filters.add(getEndOfMonthFilterForCurrentBillingCycle());
@@ -108,7 +111,7 @@ public class BudgetUtils {
       return getActualCostForPerspectiveBudget(budget, cloudProviderTable);
     }
     List<QLBillingDataFilter> filters = new ArrayList<>();
-    filters.add(budget.getScope().getBudgetScopeFilter());
+    filters.add(getBudgetScopeFilter(budget));
     addAdditionalFiltersBasedOnScope(budget, filters);
     filters.add(getStartOfMonthFilterForCurrentBillingCycle());
     filters.add(getEndOfMonthFilterForCurrentBillingCycle());
@@ -146,6 +149,23 @@ public class BudgetUtils {
         new BigDecimal(actualTimeDiffMillis).divide(new BigDecimal(billingTimeDiffMillis), 2, RoundingMode.HALF_UP));
   }
 
+  public double getLastMonthCost(Budget budget, String cloudProviderTable) {
+    if (isPerspectiveBudget(budget)) {
+      return getLastMonthCostForPerspectiveBudget(budget, cloudProviderTable);
+    }
+    List<QLBillingDataFilter> filters = new ArrayList<>();
+    filters.add(getBudgetScopeFilter(budget));
+    addAdditionalFiltersBasedOnScope(budget, filters);
+    filters.add(getTimeFilter(getStartOfMonth(true), QLTimeOperator.AFTER));
+    filters.add(getTimeFilter(getStartOfMonth(false) - ONE_DAY_MILLIS, QLTimeOperator.BEFORE));
+    QLBillingAmountData billingAmountData =
+        budgetTimescaleQueryHelper.getBudgetCostData(budget.getAccountId(), makeBillingAmtAggregation(), filters);
+    if (billingAmountData == null) {
+      return 0;
+    }
+    return billingAmountData.getCost().doubleValue();
+  }
+
   // Methods for adding various filters in budget total cost and forecast cost calculation
 
   public void addAdditionalFiltersBasedOnScope(Budget budget, List<QLBillingDataFilter> filters) {
@@ -161,9 +181,7 @@ public class BudgetUtils {
     LocalDate today = LocalDate.now(zoneId);
     ZonedDateTime zdtStart = today.withDayOfMonth(1).atStartOfDay(zoneId);
     long startOfMonth = zdtStart.toEpochSecond() * 1000;
-    return QLBillingDataFilter.builder()
-        .startTime(QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(startOfMonth).build())
-        .build();
+    return getTimeFilter(startOfMonth, QLTimeOperator.AFTER);
   }
 
   private QLBillingDataFilter getEndOfMonthFilterForCurrentBillingCycle() {
@@ -173,20 +191,16 @@ public class BudgetUtils {
     int daysInMonth = cal.getActualMaximum(Calendar.DATE);
     ZonedDateTime zdtStart = today.withDayOfMonth(daysInMonth).atStartOfDay(zoneId);
     long endTime = zdtStart.toEpochSecond() * 1000 + ONE_DAY_MILLIS - 1000;
-    return QLBillingDataFilter.builder()
-        .endTime(QLTimeFilter.builder().operator(QLTimeOperator.BEFORE).value(endTime).build())
-        .build();
+    return getTimeFilter(endTime, QLTimeOperator.BEFORE);
   }
 
   private QLBillingDataFilter getStartTimeFilterForForecasting() {
     long startTime = getStartOfCurrentDay() - 30 * ONE_DAY_MILLIS;
-    return QLBillingDataFilter.builder()
-        .startTime(QLTimeFilter.builder().operator(QLTimeOperator.AFTER).value(startTime).build())
-        .build();
+    return getTimeFilter(startTime, QLTimeOperator.AFTER);
   }
 
   private boolean isApplicationScopePresent(Budget budget) {
-    if (budget != null && budget.getScope().getBudgetScopeFilter().getApplication() != null) {
+    if (budget != null && budget.getScope().getBudgetScopeType().equals(APPLICATION)) {
       return true;
     }
     return false;
@@ -239,7 +253,16 @@ public class BudgetUtils {
     if (endTimeDataFilter.isPresent()) {
       return endTimeDataFilter.get().getEndTime();
     } else {
-      throw new InvalidRequestException("End time cannot be null");
+      endTimeDataFilter = filters.stream()
+                              .filter(qlBillingDataFilter
+                                  -> qlBillingDataFilter.getStartTime() != null
+                                      && qlBillingDataFilter.getStartTime().getOperator() == QLTimeOperator.BEFORE)
+                              .findFirst();
+      if (endTimeDataFilter.isPresent()) {
+        return endTimeDataFilter.get().getStartTime();
+      } else {
+        throw new InvalidRequestException("End time cannot be null");
+      }
     }
   }
 
@@ -257,6 +280,26 @@ public class BudgetUtils {
     LocalDate today = LocalDate.now(zoneId);
     ZonedDateTime zdtStart = today.atStartOfDay(zoneId);
     return zdtStart.toEpochSecond() * 1000;
+  }
+
+  private long getStartOfMonth(boolean prevMonth) {
+    Calendar c = Calendar.getInstance();
+    c.setTimeZone(TimeZone.getTimeZone(DEFAULT_TIMEZONE));
+    c.set(Calendar.DAY_OF_MONTH, 1);
+    c.set(Calendar.HOUR_OF_DAY, 0);
+    c.set(Calendar.MINUTE, 0);
+    c.set(Calendar.SECOND, 0);
+    c.set(Calendar.MILLISECOND, 0);
+    if (prevMonth) {
+      c.add(Calendar.MONTH, -1);
+    }
+    return c.getTimeInMillis();
+  }
+
+  private QLBillingDataFilter getTimeFilter(long timeStamp, QLTimeOperator operator) {
+    return QLBillingDataFilter.builder()
+        .startTime(QLTimeFilter.builder().operator(operator).value(timeStamp).build())
+        .build();
   }
 
   // Method for checking if alert was sent in this month
@@ -278,8 +321,22 @@ public class BudgetUtils {
     return budgetDao.list(accountId);
   }
 
+  public void updateBudgetCosts(Budget budget, String cloudProviderTable) {
+    try {
+      Double actualCost = getActualCost(budget, cloudProviderTable);
+      Double forecastCost = actualCost + getForecastCost(budget, cloudProviderTable);
+      Double lastMonthCost = getLastMonthCost(budget, cloudProviderTable);
+
+      budget.setActualCost(actualCost);
+      budget.setForecastCost(forecastCost);
+      budget.setLastMonthCost(lastMonthCost);
+    } catch (Exception e) {
+      log.error("Error occurred while updating costs of budget: {}, Exception : {}", budget.getUuid(), e);
+    }
+  }
+
   public boolean isPerspectiveBudget(Budget budget) {
-    return budget.getScope().getBudgetScopeFilter().getView() != null;
+    return budget.getScope().getBudgetScopeType().equals(PERSPECTIVE);
   }
 
   public QLCEViewFilterWrapper getPerspectiveTimeFilter(long timestamp, QLCEViewTimeFilterOperator operator) {
@@ -325,14 +382,29 @@ public class BudgetUtils {
   }
 
   private double getActualCostForPerspectiveBudget(Budget budget, String cloudProviderTable) {
-    String viewId = budget.getScope().getBudgetScopeFilter().getView().getValues()[0];
+    String viewId = budget.getScope().getEntityIds().get(0);
     long startTime = getStartOfMonthFilterForCurrentBillingCycle().getStartTime().getValue().longValue();
-    long endTime = getEndOfMonthFilterForCurrentBillingCycle().getEndTime().getValue().longValue();
+    long endTime = getEndOfMonthFilterForCurrentBillingCycle().getStartTime().getValue().longValue();
     List<QLCEViewFilterWrapper> filters = new ArrayList<>();
     filters.add(getViewFilter(viewId));
     filters.add(getPerspectiveTimeFilter(startTime, AFTER));
     filters.add(getPerspectiveTimeFilter(endTime, BEFORE));
+    return getCostForPerspectiveBudget(budget, filters, cloudProviderTable);
+  }
 
+  private double getLastMonthCostForPerspectiveBudget(Budget budget, String cloudProviderTable) {
+    String viewId = budget.getScope().getEntityIds().get(0);
+    long startTime = getStartOfMonth(true);
+    long endTime = getStartOfMonth(false) - ONE_DAY_MILLIS;
+    List<QLCEViewFilterWrapper> filters = new ArrayList<>();
+    filters.add(getViewFilter(viewId));
+    filters.add(getPerspectiveTimeFilter(startTime, AFTER));
+    filters.add(getPerspectiveTimeFilter(endTime, BEFORE));
+    return getCostForPerspectiveBudget(budget, filters, cloudProviderTable);
+  }
+
+  private double getCostForPerspectiveBudget(
+      Budget budget, List<QLCEViewFilterWrapper> filters, String cloudProviderTable) {
     if (cloudProviderTable == null) {
       cloudProviderTable = cloudBillingHelper.getCloudProviderTableName(budget.getAccountId(), unified);
     }
@@ -343,9 +415,9 @@ public class BudgetUtils {
   }
 
   private double getForecastCostForPerspectiveBudget(Budget budget, String cloudProviderTable) {
-    String viewId = budget.getScope().getBudgetScopeFilter().getView().getValues()[0];
+    String viewId = budget.getScope().getEntityIds().get(0);
     long startTime = getStartTimeFilterForForecasting().getStartTime().getValue().longValue();
-    long endTime = getEndOfMonthFilterForCurrentBillingCycle().getEndTime().getValue().longValue();
+    long endTime = getEndOfMonthFilterForCurrentBillingCycle().getStartTime().getValue().longValue();
     log.info("Start time for forecast cost: {}", startTime);
     log.info("End time for forecast cost: {}", endTime);
     List<QLCEViewFilterWrapper> filters = new ArrayList<>();
@@ -378,8 +450,37 @@ public class BudgetUtils {
 
   public boolean isBudgetBasedOnGivenView(Budget budget, String viewId) {
     if (isPerspectiveBudget(budget)) {
-      return budget.getScope().getBudgetScopeFilter().getView().getValues()[0].equals(viewId);
+      return budget.getScope().getEntityIds().get(0).equals(viewId);
     }
     return false;
+  }
+
+  public QLBillingDataFilter getBudgetScopeFilter(Budget budget) {
+    BudgetScope scope = budget.getScope();
+    switch (scope.getBudgetScopeType()) {
+      case APPLICATION:
+        return QLBillingDataFilter.builder()
+            .application(QLIdFilter.builder()
+                             .operator(QLIdOperator.IN)
+                             .values(scope.getEntityIds().toArray(new String[0]))
+                             .build())
+            .build();
+      case CLUSTER:
+        return QLBillingDataFilter.builder()
+            .cluster(QLIdFilter.builder()
+                         .operator(QLIdOperator.IN)
+                         .values(scope.getEntityIds().toArray(new String[0]))
+                         .build())
+            .build();
+      case PERSPECTIVE:
+        return QLBillingDataFilter.builder()
+            .view(QLIdFilter.builder()
+                      .operator(QLIdOperator.IN)
+                      .values(scope.getEntityIds().toArray(new String[0]))
+                      .build())
+            .build();
+      default:
+        return null;
+    }
   }
 }

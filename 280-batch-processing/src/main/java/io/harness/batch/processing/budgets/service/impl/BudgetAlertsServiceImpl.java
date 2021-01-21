@@ -1,6 +1,6 @@
 package io.harness.batch.processing.budgets.service.impl;
 
-import static io.harness.ccm.budget.entities.AlertThresholdBase.ACTUAL_COST;
+import static io.harness.ccm.budget.AlertThresholdBase.ACTUAL_COST;
 import static io.harness.ccm.commons.Constants.HARNESS_NAME;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
@@ -17,9 +17,9 @@ import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.mail.CEMailNotificationService;
 import io.harness.batch.processing.shard.AccountShardService;
 import io.harness.batch.processing.slackNotification.CESlackNotificationService;
+import io.harness.ccm.budget.AlertThreshold;
+import io.harness.ccm.budget.Budget;
 import io.harness.ccm.budget.BudgetUtils;
-import io.harness.ccm.budget.entities.AlertThreshold;
-import io.harness.ccm.budget.entities.Budget;
 import io.harness.ccm.budget.entities.BudgetAlertsData;
 import io.harness.ccm.communication.CESlackWebhookService;
 import io.harness.ccm.communication.entities.CESlackWebhook;
