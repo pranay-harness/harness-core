@@ -57,6 +57,7 @@ import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateCallbackService;
 import io.harness.service.intfc.DelegateTaskRetryObserver;
 import io.harness.tasks.Cd1SetupFields;
+import io.harness.version.VersionInfoManager;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
@@ -114,6 +115,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
 
   @InjectMocks @Spy private DelegateServiceImpl spydelegateService;
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private VersionInfoManager versionInfoManager;
   @Mock private Subject<DelegateTaskRetryObserver> retryObserverSubject;
 
   @Before
@@ -661,9 +663,9 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     DelegateConnection delegateConnection1 = DelegateConnection.builder()
                                                  .accountId(ACCOUNT_ID)
                                                  .delegateId(delegateId1)
-                                                 .version("${build.fullVersion}")
+                                                 .version(versionInfoManager.getVersionInfo().getVersion())
                                                  .disconnected(false)
-                                                 .lastHeartbeat(1620652243456L)
+                                                 .lastHeartbeat(System.currentTimeMillis())
                                                  .build();
 
     wingsPersistence.save(delegateConnection1);
@@ -676,9 +678,9 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     DelegateConnection delegateConnection2 = DelegateConnection.builder()
                                                  .accountId(ACCOUNT_ID)
                                                  .delegateId(delegateId2)
-                                                 .version("${build.fullVersion}")
+                                                 .version(versionInfoManager.getVersionInfo().getVersion())
                                                  .disconnected(true)
-                                                 .lastHeartbeat(1620652243456L)
+                                                 .lastHeartbeat(System.currentTimeMillis())
                                                  .build();
 
     wingsPersistence.save(delegateConnection2);
