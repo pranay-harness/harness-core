@@ -106,6 +106,7 @@ BAZEL_MODULES="\
   //950-walktree-visitor:module \
   //955-filters-sdk:module \
   //960-api-services:module \
+  //960-continuous-features:module \
   //960-expression-service/src/main/proto/io/harness/expression/service:all \
   //960-expression-service:module \
   //960-ng-core-beans:module \
@@ -298,6 +299,7 @@ build_bazel_module 950-wait-engine
 build_bazel_module 950-walktree-visitor
 build_bazel_module 955-filters-sdk
 build_bazel_module 960-api-services
+build_bazel_module 960-continuous-features
 build_bazel_module 960-expression-service
 build_bazel_module 960-ng-core-beans
 build_bazel_module 960-notification-beans

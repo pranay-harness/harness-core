@@ -25,7 +25,7 @@ java_library(
 
 # tests library should go here
 
-run_tests()
+#run_tests()
 
 checkstyle()
 

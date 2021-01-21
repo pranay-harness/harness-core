@@ -54,6 +54,7 @@ modules = [
     "//960-ng-core-beans",
     "//920-delegate-agent-beans",
     "//960-persistence",
+    "//960-continuous-features",
     "//920-delegate-service-beans",
     "//950-ng-core",
     "//950-ng-project-n-orgs",
