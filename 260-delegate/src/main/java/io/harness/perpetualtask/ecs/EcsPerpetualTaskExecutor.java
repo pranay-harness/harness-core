@@ -9,6 +9,8 @@ import static java.util.Collections.emptySet;
 import static java.util.Objects.requireNonNull;
 import static java.util.function.Function.identity;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.payloads.CeExceptionMessage;
 import io.harness.event.payloads.Ec2InstanceInfo;
@@ -78,6 +80,7 @@ import org.springframework.util.CollectionUtils;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class EcsPerpetualTaskExecutor implements PerpetualTaskExecutor {
   private static final String MESSAGE_PROCESSOR_TYPE = "EXCEPTION";
   private static final String INSTANCE_TERMINATED_NAME = "terminated";

@@ -6,6 +6,8 @@ import static io.harness.cvng.core.services.CVNextGenConstants.HOST_RECORD_RESOU
 import static io.harness.cvng.core.services.CVNextGenConstants.KUBERNETES_RESOURCE;
 import static io.harness.cvng.core.services.CVNextGenConstants.LOG_RECORD_RESOURCE_PATH;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
 import io.harness.cvng.beans.HostRecordDTO;
@@ -21,9 +23,7 @@ import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Query;
 
-/**
- * Created by raghu on 09/17/18.
- */
+@TargetModule(Module._420_DELEGATE_AGENT)
 public interface CVNextGenServiceClient {
   @POST(DELEGATE_DATA_COLLECTION)
   Call<RestResponse<Boolean>> saveTimeSeriesMetrics(

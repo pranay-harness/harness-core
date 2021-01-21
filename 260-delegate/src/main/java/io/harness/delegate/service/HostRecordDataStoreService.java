@@ -1,5 +1,7 @@
 package io.harness.delegate.service;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.cvng.beans.HostRecordDTO;
 import io.harness.rest.RestResponse;
 import io.harness.verificationclient.CVNextGenServiceClient;
@@ -15,6 +17,7 @@ import retrofit2.Response;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class HostRecordDataStoreService {
   @Inject private CVNextGenServiceClient cvNextGenServiceClient;
 

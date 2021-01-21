@@ -71,7 +71,7 @@ fn check_for_promotion(
     //println!("INFO: {:?}", class);
 
     let mut issue = false;
-    let mut ready_issue = false;
+    let mut not_ready_yet = Vec::new();
     class.dependencies.iter().for_each(|src| {
         let &dependent_class = classes
             .get(src)
@@ -99,17 +99,19 @@ fn check_for_promotion(
         }
 
         if dependent_real_module.index < target_module.index {
-            ready_issue = true;
+            not_ready_yet.push(format!("{} to {}", src, target_module.name));
         }
     });
 
     if !issue {
-        if !ready_issue {
+        if not_ready_yet.is_empty() {
             println!("ACTION: {} is ready to go to {}", class.name, target_module.name)
         } else {
             println!(
-                "WARNING: {} does not have untargeted dependencies to go to {}",
-                class.name, target_module.name
+                "WARNING: {} does not have untargeted dependencies to go to {}. First promote {}",
+                class.name,
+                target_module.name,
+                not_ready_yet.join(", ")
             )
         }
     }

@@ -6,6 +6,8 @@ import static io.harness.network.SafeHttpCall.execute;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO;
 import io.harness.rest.RestResponse;
 import io.harness.verificationclient.CVNextGenServiceClient;
@@ -24,11 +26,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Created by raghu on 5/19/17.
- */
 @Singleton
 @Slf4j
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class KubernetesActivitiesStoreService {
   @Inject private CVNextGenServiceClient cvNextGenServiceClient;
   @Inject private TimeLimiter timeLimiter;

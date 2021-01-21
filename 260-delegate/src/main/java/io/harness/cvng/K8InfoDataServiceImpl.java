@@ -2,6 +2,8 @@ package io.harness.cvng;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
@@ -31,6 +33,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class K8InfoDataServiceImpl implements K8InfoDataService {
   @Inject private SecretDecryptionService secretDecryptionService;
   @Inject private K8sYamlToDelegateDTOMapper k8sYamlToDelegateDTOMapper;

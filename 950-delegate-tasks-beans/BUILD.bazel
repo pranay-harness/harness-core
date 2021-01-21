@@ -41,6 +41,9 @@ java_library(
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
+    resource_jars = [
+        "//950-delegate-tasks-beans/src/main/proto:950_delegate_tasks_beans_java_proto",
+    ],
     resources = [
         "//950-delegate-tasks-beans/src/main/resources:resource",
     ],
@@ -48,8 +51,6 @@ java_library(
     deps = [
         "maven_deps",
         "//:lombok",
-        "//950-delegate-tasks-beans/src/main/proto:950_delegate_tasks_beans_java_proto",
-        "//950-delegate-tasks-beans/src/main/proto:950_delegate_tasks_beans_proto",
         "//970-api-services-beans:module",
     ],
 )

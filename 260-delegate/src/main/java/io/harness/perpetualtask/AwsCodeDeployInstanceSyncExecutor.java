@@ -2,6 +2,8 @@ package io.harness.perpetualtask;
 
 import static io.harness.network.SafeHttpCall.execute;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.managerclient.DelegateAgentManagerClient;
@@ -23,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.server.Response;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AwsCodeDeployInstanceSyncExecutor implements PerpetualTaskExecutor {
   @Inject private AwsEc2HelperServiceDelegate ec2ServiceDelegate;
   @Inject private DelegateAgentManagerClient delegateAgentManagerClient;

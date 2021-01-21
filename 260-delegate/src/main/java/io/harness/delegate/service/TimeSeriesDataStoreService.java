@@ -2,6 +2,8 @@ package io.harness.delegate.service;
 
 import static java.util.stream.Collectors.groupingBy;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.cvng.CVNGRequestExecutor;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord.TimeSeriesDataRecordGroupValue;
@@ -21,11 +23,9 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Created by raghu on 5/19/17.
- */
 @Singleton
 @Slf4j
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class TimeSeriesDataStoreService {
   @Inject private CVNextGenServiceClient cvNextGenServiceClient;
   @Inject private CVNGRequestExecutor cvngRequestExecutor;

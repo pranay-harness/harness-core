@@ -2,6 +2,8 @@ package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -23,6 +25,8 @@ import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import org.apache.commons.lang3.NotImplementedException;
+
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class NewRelicDeploymentMarkerTask extends AbstractDelegateRunnableTask {
   @Inject private NewRelicDelegateService newRelicDelegateService;
 

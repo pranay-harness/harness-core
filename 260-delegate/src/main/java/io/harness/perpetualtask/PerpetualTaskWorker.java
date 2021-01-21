@@ -5,6 +5,8 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static java.lang.System.currentTimeMillis;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.flow.BackoffScheduler;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.LoggingListener;
@@ -44,6 +46,7 @@ import org.slf4j.MarkerFactory;
 
 @Slf4j
 @Singleton
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class PerpetualTaskWorker {
   private static final Marker THROTTLED = MarkerFactory.getMarker("THROTTLED");
   @Getter private final Map<PerpetualTaskId, PerpetualTaskAssignRecord> runningTaskMap = new ConcurrentHashMap<>();

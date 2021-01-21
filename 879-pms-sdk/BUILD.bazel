@@ -13,7 +13,7 @@ java_library(
     exports = [
         "//882-pms-sdk-core:module",
         "//884-pms-commons:module",
-        "//890-pms-contracts/src/main/proto:890_pms_contracts_java_proto",
+        "//890-pms-contracts:module",
         "//950-timeout-engine:module",
         "//960-persistence:module",
         "//970-grpc:module",
@@ -45,7 +45,7 @@ java_library(
         "//:lombok",
         "//882-pms-sdk-core:module",
         "//884-pms-commons:module",
-        "//890-pms-contracts/src/main/proto:890_pms_contracts_java_proto",
+        "//890-pms-contracts:module",
         "//960-persistence:supporter-test",
         "//990-commons-test:module",
         "@maven//:io_grpc_grpc_testing",

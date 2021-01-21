@@ -2,6 +2,8 @@ package io.harness.verificationclient;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.managerclient.DelegateAgentManagerClientX509TrustManager;
 import io.harness.managerclient.DelegateAuthInterceptor;
 import io.harness.network.Http;
@@ -23,6 +25,7 @@ import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class CVNextGenServiceClientFactory implements Provider<CVNextGenServiceClient> {
   public static final ImmutableList<TrustManager> TRUST_ALL_CERTS =
       ImmutableList.of(new DelegateAgentManagerClientX509TrustManager());

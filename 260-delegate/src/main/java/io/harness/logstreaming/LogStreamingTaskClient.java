@@ -4,6 +4,8 @@ import static software.wings.beans.LogHelper.COMMAND_UNIT_PLACEHOLDER;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.logstreaming.LogLine;
 import io.harness.delegate.beans.logstreaming.LogStreamingSanitizer;
@@ -25,6 +27,7 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 
 @Builder
 @Slf4j
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class LogStreamingTaskClient implements ILogStreamingTaskClient {
   private final DelegateLogService logService;
   private final DelegateAgentLogStreamingClient delegateAgentLogStreamingClient;

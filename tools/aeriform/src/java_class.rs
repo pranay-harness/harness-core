@@ -1,8 +1,11 @@
+use crate::java_class;
 use lazy_static::lazy_static;
+use multimap::MultiMap;
 use regex::Regex;
 use std::collections::HashSet;
 use std::fs;
 use std::hash::{Hash, Hasher};
+use std::iter::FromIterator;
 use std::process::Command;
 
 #[derive(Debug)]
@@ -64,5 +67,23 @@ pub fn populate_target_module(location: &String) -> Option<String> {
                 .to_lowercase()
                 .replace('_', "-")
         ))
+    }
+}
+
+pub fn class_dependencies(name: &str, dependencies: &MultiMap<String, String>) -> HashSet<String> {
+    let deps = dependencies.get_vec(name);
+    if deps.is_none() {
+        HashSet::new()
+    } else {
+        HashSet::from_iter(dependencies.get_vec(name).unwrap().iter().cloned())
+    }
+}
+
+pub fn external_class(key: &str, dependencies: &MultiMap<String, String>) -> JavaClass {
+    JavaClass {
+        name: key.to_string(),
+        location: "n/a".to_string(),
+        dependencies: java_class::class_dependencies(key, &dependencies),
+        target_module: None,
     }
 }

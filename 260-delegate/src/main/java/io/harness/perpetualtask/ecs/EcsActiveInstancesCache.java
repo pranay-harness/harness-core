@@ -1,5 +1,8 @@
 package io.harness.perpetualtask.ecs;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import java.time.Instant;
 import java.util.Set;
 import lombok.Builder;
@@ -7,6 +10,7 @@ import lombok.Data;
 
 @Data
 @Builder
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class EcsActiveInstancesCache {
   private Set<String> activeTaskArns;
   private Set<String> activeEc2InstanceIds;

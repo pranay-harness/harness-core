@@ -314,15 +314,10 @@ build_bazel_module 990-commons-test
 
 build_bazel_tests 960-persistence
 
-build_java_proto_module 890-pms-contracts
-build_java_proto_module 910-delegate-task-grpc-service proto
-build_java_proto_module 920-delegate-agent-beans
 build_java_proto_module 920-delegate-service-beans
 build_java_proto_module 940-delegate-beans
-build_java_proto_module 950-delegate-tasks-beans
 build_java_proto_module 950-events-api
 build_java_proto_module 960-notification-beans
 
-build_proto_module 960-expression-service 960-expression-service/src/main/proto/io/harness/expression/service
 build_proto_module ciengine product/ci/engine/proto
 build_proto_module ciscm product/ci/scm/proto

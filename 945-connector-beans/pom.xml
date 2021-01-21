@@ -65,7 +65,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>950-delegate-tasks-beans-proto</artifactId>
+            <artifactId>950-delegate-tasks-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

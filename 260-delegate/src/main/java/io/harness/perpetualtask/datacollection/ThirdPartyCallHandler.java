@@ -1,5 +1,7 @@
 package io.harness.perpetualtask.datacollection;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.datacollection.entity.CallDetails;
 
 import software.wings.delegatetasks.DelegateLogService;
@@ -10,6 +12,7 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class ThirdPartyCallHandler implements Consumer<CallDetails> {
   private String accountId;
   private String requestUuid;

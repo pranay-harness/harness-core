@@ -1,11 +1,11 @@
-use crate::java_class::{populate_target_module, JavaClass};
 use lazy_static::lazy_static;
 use multimap::MultiMap;
 use rayon::prelude::*;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
-use std::iter::FromIterator;
 use std::process::Command;
+use crate::java_class::{class_dependencies, external_class, populate_target_module, JavaClass};
+
 
 #[derive(Debug)]
 pub struct JavaModule {
@@ -39,12 +39,24 @@ pub fn modules() -> HashMap<String, JavaModule> {
 
     &vec.sort();
 
-    vec.par_iter()
-        .map(|name| populate(name))
+    let data_collection_dsl = populate_from_external(
+        "https/harness-internal-read%40harness.jfrog.io/artifactory/harness-internal",
+        "io/harness/cv",
+        "data-collection-dsl",
+        "0.18-RELEASE",
+    );
+
+    let mut result: HashMap<String, JavaModule> = vec
+        .par_iter()
+        .map(|name| populate_from_bazel(name))
         .filter(|module| module.is_some())
         .map(|module| module.unwrap())
         .map(|module| (module.name.clone(), module))
-        .collect::<HashMap<String, JavaModule>>()
+        .collect::<HashMap<String, JavaModule>>();
+
+    result.insert("data-collection-dsl".to_string(), data_collection_dsl);
+
+    result
 }
 
 fn class(path: &String) -> String {
@@ -61,7 +73,7 @@ fn class(path: &String) -> String {
     }
 }
 
-fn populate_srcs(name: &String, dependencies: MultiMap<String, String>) -> HashMap<String, JavaClass> {
+fn populate_srcs(name: &str, dependencies: &MultiMap<String, String>) -> HashMap<String, JavaClass> {
     let mut split = name.split(":");
     let chunk = split.next().unwrap();
     let prefix = &format!("{}:", chunk);
@@ -84,13 +96,7 @@ fn populate_srcs(name: &String, dependencies: MultiMap<String, String>) -> HashM
         .map(|line| (class(&line), line))
         .map(|tuple| {
             let target_module = populate_target_module(&tuple.1);
-            let deps = dependencies.get_vec(&tuple.0);
-
-            let class_dependencies: HashSet<String> = if deps.is_none() {
-                HashSet::new()
-            } else {
-                HashSet::from_iter(dependencies.get_vec(&tuple.0).unwrap().iter().cloned())
-            };
+            let class_dependencies = class_dependencies(&tuple.0, &dependencies);
             (
                 tuple.0.clone(),
                 JavaClass {
@@ -122,7 +128,25 @@ fn is_harness_class(class: &String) -> bool {
     class.starts_with("io.harness.") || class.starts_with("software.wings.")
 }
 
-fn populate_dependencies(jar: &String) -> MultiMap<String, String> {
+fn populate_dependencies(jar: &String) -> (MultiMap<String, String>, HashSet<String>) {
+    let all = jar_dependencies(&jar);
+
+    (
+        all.iter()
+            .filter(|tuple| is_harness_class(&tuple.0))
+            .filter(|tuple| is_harness_class(&tuple.1))
+            .map(|tuple| (tuple.0.clone(), tuple.1.clone()))
+            .collect::<MultiMap<String, String>>(),
+        all.iter()
+            .filter(|tuple| {
+                tuple.1.eq("com.google.protobuf.UnknownFieldSet") || tuple.1.eq("io.grpc.stub.AbstractStub")
+            })
+            .map(|tuple| tuple.0.clone())
+            .collect::<HashSet<String>>(),
+    )
+}
+
+fn jar_dependencies(jar: &str) -> Vec<(String, String)> {
     let output = Command::new("jdeps")
         .args(&["-v", jar])
         .output()
@@ -141,14 +165,12 @@ fn populate_dependencies(jar: &String) -> MultiMap<String, String> {
         .map(|line| line.to_string())
         .filter(|line| line.starts_with("   "))
         .map(|s| dependency_class(&s))
-        .filter(|tuple| is_harness_class(&tuple.0))
-        .filter(|tuple| is_harness_class(&tuple.1))
         .filter(|tuple| !tuple.0.eq(&tuple.1))
-        .collect::<MultiMap<String, String>>()
+        .collect()
 }
 
 lazy_static! {
-    static ref BAZEL_ROOT_DIR: String = String::from_utf8(
+    static ref BAZEL_BAZEL_GENFILES_DIR: String = String::from_utf8(
         Command::new("bazel")
             .args(&["info", "bazel-genfiles"])
             .output()
@@ -158,20 +180,37 @@ lazy_static! {
     .unwrap()
     .trim()
     .to_string();
+    static ref BAZEL_OUTPUT_BASE_DIR: String = String::from_utf8(
+        Command::new("bazel")
+            .args(&["info", "output_base"])
+            .output()
+            .unwrap()
+            .stdout
+    )
+    .unwrap()
+    .trim()
+    .to_string();
 }
 
-fn populate(name: &String) -> Option<JavaModule> {
+fn populate_from_bazel(name: &String) -> Option<JavaModule> {
     let mut split = name.split(":");
     let directory = split.next().unwrap().strip_prefix("//").unwrap().to_string();
     let target_name = split.next().unwrap();
-    let jar = format!("{}/{}/lib{}.jar", BAZEL_ROOT_DIR.as_str(), directory, target_name);
+    let jar = format!(
+        "{}/{}/lib{}.jar",
+        BAZEL_BAZEL_GENFILES_DIR.as_str(),
+        directory,
+        target_name
+    );
 
-    let dependencies = populate_dependencies(&jar);
-    //println!("{} {:?}", name, dependencies);
+    let (dependencies, protos) = populate_dependencies(&jar);
 
-    let srcs = populate_srcs(&name, dependencies);
-
+    let mut srcs = populate_srcs(&name, &dependencies);
     //println!("{:?}", srcs);
+
+    protos.iter().for_each(|class| {
+        srcs.insert(class.to_string(), external_class(class, &dependencies));
+    });
 
     if srcs.is_empty() {
         None
@@ -188,5 +227,41 @@ fn populate(name: &String) -> Option<JavaModule> {
             jar: jar,
             srcs: srcs,
         })
+    }
+}
+
+fn populate_from_external(artifactory: &str, package: &str, name: &str, version: &str) -> JavaModule {
+    let jar = format!(
+        "{}/external/maven_harness/v1/{}/{}/{}/{}/{}-{}.jar",
+        BAZEL_OUTPUT_BASE_DIR.as_str(),
+        artifactory,
+        package,
+        name,
+        version,
+        name,
+        version
+    );
+
+    let all = jar_dependencies(&jar);
+    //println!("{} {:?}", name, dependencies);
+
+    let dependencies = all
+        .iter()
+        .filter(|tuple| is_harness_class(&tuple.0))
+        .filter(|tuple| is_harness_class(&tuple.1))
+        .map(|tuple| (tuple.0.clone(), tuple.1.clone()))
+        .collect::<MultiMap<String, String>>();
+
+    let srcs = all.iter()
+        .filter(|tuple| is_harness_class(&tuple.0))
+        .map(|tuple| (tuple.0.to_string(), external_class(&tuple.0, &dependencies)))
+        .collect();
+
+    JavaModule {
+        name: name.to_string(),
+        index: 1000,
+        directory: "n/a".to_string(),
+        jar: jar,
+        srcs: srcs,
     }
 }
