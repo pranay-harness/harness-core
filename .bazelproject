@@ -52,6 +52,7 @@ directories:
   950-walktree-visitor
   955-filters-sdk
   960-api-services
+  960-continuous-features
   960-expression-service
   960-ng-core-beans
   960-notification-beans
