@@ -166,6 +166,14 @@ if [[ "" != "$NG_MANAGER_PUBLIC_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE ngManagerPublicBaseUrl $NG_MANAGER_PUBLIC_BASE_URL
 fi
 
+if [[ "" != "$HARNESS_IMAGE_USER_NAME" ]]; then
+  yq write -i $CONFIG_FILE ciDefaultEntityConfiguration.harnessImageUseName $HARNESS_IMAGE_USER_NAME
+fi
+
+if [[ "" != "$HARNESS_IMAGE_PASSWORD" ]]; then
+  yq write -i $CONFIG_FILE ciDefaultEntityConfiguration.harnessImagePassword $HARNESS_IMAGE_PASSWORD
+fi
+
 replace_key_value ceAwsSetupConfig.accessKey $CE_AWS_ACCESS_KEY
 
 replace_key_value ceAwsSetupConfig.secretKey $CE_AWS_SECRET_KEY

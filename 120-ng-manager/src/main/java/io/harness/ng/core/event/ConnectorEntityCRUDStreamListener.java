@@ -27,10 +27,13 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class ConnectorEntityCRUDStreamListener implements MessageListener {
   private final HarnessSMManager harnessSMManager;
+  private final CIDefaultEntityManager ciDefaultEntityManager;
 
   @Inject
-  public ConnectorEntityCRUDStreamListener(HarnessSMManager harnessSMManager) {
+  public ConnectorEntityCRUDStreamListener(
+      HarnessSMManager harnessSMManager, CIDefaultEntityManager ciDefaultEntityManager) {
     this.harnessSMManager = harnessSMManager;
+    this.ciDefaultEntityManager = ciDefaultEntityManager;
   }
 
   @Override
@@ -173,6 +176,9 @@ public class ConnectorEntityCRUDStreamListener implements MessageListener {
               projectEntityChangeDTO.getIdentifier()),
           ex, USER);
     }
+
+    ciDefaultEntityManager.createCIDefaultEntities(projectEntityChangeDTO.getAccountIdentifier(),
+        projectEntityChangeDTO.getOrgIdentifier(), projectEntityChangeDTO.getIdentifier());
     return true;
   }
 
