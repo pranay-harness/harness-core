@@ -113,7 +113,7 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
       gitFetchFilesTaskHelper.printFileNamesInExecutionLogs(filePathsToFetch, executionLogCallback);
     }
 
-    FetchFilesResult gitFetchFilesResult = ngGitService.fetchFilesByPath(gitStoreDelegateConfig, accountId);
+    FetchFilesResult gitFetchFilesResult = ngGitService.fetchFilesByPath(gitStoreDelegateConfig, accountId, null);
 
     gitFetchFilesTaskHelper.printFileNamesInExecutionLogs(executionLogCallback, gitFetchFilesResult.getFiles());
 

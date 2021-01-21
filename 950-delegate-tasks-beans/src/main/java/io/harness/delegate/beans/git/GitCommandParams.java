@@ -8,6 +8,7 @@ import io.harness.delegate.beans.executioncapability.GitConnectionNGCapability;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.git.model.GitBaseRequest;
+import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import java.util.Collections;
@@ -22,12 +23,14 @@ public class GitCommandParams implements TaskParameters, ExecutionCapabilityDema
   GitCommandType gitCommandType;
   List<EncryptedDataDetail> encryptionDetails;
   GitBaseRequest gitCommandRequest;
+  SSHKeySpecDTO sshKeySpecDTO;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Collections.singletonList(GitConnectionNGCapability.builder()
                                          .encryptedDataDetails(encryptionDetails)
                                          .gitConfig(ScmConnectorMapper.toGitConfigDTO(gitConfig))
+                                         .sshKeySpecDTO(sshKeySpecDTO)
                                          .build());
   }
 }

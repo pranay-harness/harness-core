@@ -46,7 +46,7 @@ public class NGGitServiceImplTest extends CategoryTest implements MockableTestMi
                                     .gitAuthType(GitAuthType.HTTP)
                                     .build();
     final GitBaseRequest gitBaseRequest = GitBaseRequest.builder().build();
-    ngGitService.setGitBaseRequest(gitConfigDTO, accountId, gitBaseRequest, GitRepositoryType.YAML);
+    ngGitService.setGitBaseRequest(gitConfigDTO, accountId, gitBaseRequest, GitRepositoryType.YAML, null);
     assertThat(gitBaseRequest).isNotNull();
     assertThat(gitBaseRequest.getRepoType()).isNotNull();
     assertThat(gitBaseRequest.getAccountId()).isNotNull();
