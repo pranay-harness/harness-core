@@ -6,6 +6,7 @@ import io.harness.cistatus.GithubAppTokenCreationResponse;
 import io.harness.cistatus.StatusCreationResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException.ReportTarget;
+import io.harness.git.GitClientHelper;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -39,9 +40,18 @@ public class GithubServiceImpl implements GithubService {
     log.info("Retrieving github installation token for installation id {}", githubAppConfig.getInstallationId());
     try {
       String jwtToken = generateTokenFromPrivateKey(githubAppConfig);
-      GithubAppTokenCreationResponse response =
-          executeRestCall(getGithubClient(githubAppConfig, encryptionDetails)
-                              .createAccessToken(getAuthToken(jwtToken), githubAppConfig.getInstallationId()));
+      String authToken = getAuthToken(jwtToken);
+      Call<GithubAppTokenCreationResponse> responseCall;
+
+      if (GitClientHelper.isGithubSAAS(githubAppConfig.getGithubUrl())) {
+        responseCall = getGithubClient(githubAppConfig, encryptionDetails)
+                           .createAccessToken(authToken, githubAppConfig.getInstallationId());
+      } else {
+        responseCall = getGithubClient(githubAppConfig, encryptionDetails)
+                           .createAccessTokenForGithubEnterprise(authToken, githubAppConfig.getInstallationId());
+      }
+
+      GithubAppTokenCreationResponse response = executeRestCall(responseCall);
       return response.getToken();
     } catch (Exception ex) {
       throw new InvalidRequestException(format("Failed to generate token for url %s, installation id %s",
