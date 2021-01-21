@@ -127,7 +127,7 @@ public class NotificationApplication extends Application<NotificationConfigurati
 
   private void registerHealthCheck(Environment environment, Injector injector) {
     final HealthService healthService = injector.getInstance(HealthService.class);
-    environment.healthChecks().register("Next Gen Manager", healthService);
+    environment.healthChecks().register("Notification Application", healthService);
     healthService.registerMonitor(injector.getInstance(HPersistence.class));
   }
 

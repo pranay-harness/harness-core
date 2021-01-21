@@ -41,6 +41,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("grpcClient") private GrpcClientConfig grpcClientConfig;
   @JsonProperty("grpcServer") private GrpcServerConfig grpcServerConfig;
   @JsonProperty("nextGen") private NextGenConfig nextGenConfig;
+  @JsonProperty("ciDefaultEntityConfiguration") private CiDefaultEntityConfiguration ciDefaultEntityConfiguration;
   @JsonProperty("ngManagerClientConfig") private ServiceHttpClientConfig ngManagerClientConfig;
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
   @JsonProperty(value = "enableAuth", defaultValue = "true") private boolean enableAuth;

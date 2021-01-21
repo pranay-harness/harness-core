@@ -125,6 +125,12 @@ public class NextGenModule extends AbstractModule {
 
   @Provides
   @Singleton
+  CiDefaultEntityConfiguration getCiDefaultConfiguration() {
+    return appConfig.getCiDefaultEntityConfiguration();
+  }
+
+  @Provides
+  @Singleton
   Supplier<DelegateCallbackToken> getDelegateCallbackTokenSupplier(
       DelegateServiceGrpcClient delegateServiceGrpcClient) {
     return Suppliers.memoize(() -> getDelegateCallbackToken(delegateServiceGrpcClient, appConfig));

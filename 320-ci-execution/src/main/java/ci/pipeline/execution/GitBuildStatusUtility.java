@@ -81,7 +81,7 @@ public class GitBuildStatusUtility {
             buildStatusUpdateParameter.getIdentifier(), nodeExecution.getStatus().name(),
             buildStatusUpdateParameter.getSha(), buildStatusUpdateParameter.getState(), taskId);
       } else {
-        log.info("Skipping git status update request for stage {}, planId {}, commitId {}, status {}, scm type",
+        log.info("Skipping git status update request for stage {}, planId {}, commitId {}, status {}, scm type {}",
             buildStatusUpdateParameter.getIdentifier(), nodeExecution.getStatus().name(),
             buildStatusUpdateParameter.getSha(), buildStatusUpdateParameter.getState(),
             ciBuildStatusPushParameters.getGitSCMType());
