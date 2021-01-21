@@ -1,5 +1,6 @@
 package io.harness.cvng.core.jobs;
 
+import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
@@ -17,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class ProjectChangeEventMessageProcessor extends EntityChangeEventMessageProcessor {
   @Inject private Injector injector;
+  @Inject private MetricPackService metricPackService;
 
   @Override
   public void processMessage(Message message) {
@@ -44,7 +46,11 @@ public class ProjectChangeEventMessageProcessor extends EntityChangeEventMessage
     }
   }
 
-  private void processCreateAction(ProjectEntityChangeDTO projectEntityChangeDTO) {}
+  @VisibleForTesting
+  void processCreateAction(ProjectEntityChangeDTO projectEntityChangeDTO) {
+    metricPackService.createDefaultMetricPackAndThresholds(projectEntityChangeDTO.getAccountIdentifier(),
+        projectEntityChangeDTO.getOrgIdentifier(), projectEntityChangeDTO.getIdentifier());
+  }
 
   @VisibleForTesting
   void processDeleteAction(ProjectEntityChangeDTO projectEntityChangeDTO) {

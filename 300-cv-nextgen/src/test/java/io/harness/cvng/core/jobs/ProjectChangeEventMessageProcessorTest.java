@@ -12,8 +12,11 @@ import io.harness.cvng.VerificationApplication;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.SplunkCVConfig;
+import io.harness.cvng.core.entities.TimeSeriesThreshold;
 import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.verificationjob.beans.Sensitivity;
 import io.harness.cvng.verificationjob.beans.TestVerificationJobDTO;
@@ -27,6 +30,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -36,6 +40,7 @@ public class ProjectChangeEventMessageProcessorTest extends CvNextGenTest {
   @Inject private ProjectChangeEventMessageProcessor projectChangeEventMessageProcessor;
   @Inject private CVConfigService cvConfigService;
   @Inject private VerificationJobService verificationJobService;
+  @Inject private MetricPackService metricPackService;
 
   @Test
   @Owner(developers = KAMAL)
@@ -102,6 +107,31 @@ public class ProjectChangeEventMessageProcessorTest extends CvNextGenTest {
         .isNotNull();
     assertThat(cvConfigService.get(cvConfig1.getUuid())).isNotNull();
     assertThat(cvConfigService.get(cvConfig2.getUuid())).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testProcessCreateAction() {
+    String accountId = generateUuid();
+    String orgIdentifier = generateUuid();
+    String projectIdentifier = generateUuid();
+
+    projectChangeEventMessageProcessor.processCreateAction(ProjectEntityChangeDTO.newBuilder()
+                                                               .setAccountIdentifier(accountId)
+                                                               .setOrgIdentifier(orgIdentifier)
+                                                               .setIdentifier(projectIdentifier)
+                                                               .build());
+
+    List<MetricPack> metricPacks =
+        metricPackService.getMetricPacks(accountId, orgIdentifier, projectIdentifier, DataSourceType.APP_DYNAMICS);
+    assertThat(metricPacks).isNotEmpty();
+
+    List<TimeSeriesThreshold> metricPackThresholds = metricPackService.getMetricPackThresholds(
+        accountId, orgIdentifier, projectIdentifier, metricPacks.get(0).getIdentifier(), DataSourceType.APP_DYNAMICS);
+
+    assertThat(metricPackThresholds).isNotEmpty();
+    assertThat(metricPackThresholds).size().isEqualTo(2);
   }
 
   @Test

@@ -14,6 +14,8 @@ public interface MetricPackService {
   List<MetricPack> getMetricPacks(
       String accountId, String orgIdentifier, String projectIdentifier, DataSourceType dataSourceType);
 
+  void createDefaultMetricPackAndThresholds(String accountId, String orgIdentifier, String projectIdentifier);
+
   boolean saveMetricPacks(String accountId, String orgIdentifier, String projectIdentifier,
       DataSourceType dataSourceType, List<MetricPack> metricPacks);
 
