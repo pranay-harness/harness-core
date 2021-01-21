@@ -11,6 +11,7 @@ import io.harness.cvng.activity.source.services.api.ActivitySourceService;
 import io.harness.cvng.beans.activity.ActivitySourceDTO;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.cvng.client.VerificationManagerService;
+import io.harness.cvng.core.services.api.CVEventService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
@@ -28,6 +29,7 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
   @Inject private HPersistence hPersistence;
   @Inject private VerificationJobService verificationJobService;
   @Inject private VerificationManagerService verificationManagerService;
+  @Inject private CVEventService cvEventService;
 
   @Override
   public String saveActivitySource(
@@ -41,11 +43,18 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
       case KUBERNETES:
         activitySource = KubernetesActivitySource.fromDTO(
             accountId, orgIdentifier, projectIdentifier, (KubernetesActivitySourceDTO) activitySourceDTO);
+        sendKubernetesActivitySourceCreateEvent((KubernetesActivitySource) activitySource);
         break;
       default:
         throw new IllegalStateException("Invalid type " + activitySourceDTO.getType());
     }
     return hPersistence.save(activitySource);
+  }
+
+  private void sendKubernetesActivitySourceCreateEvent(KubernetesActivitySource activitySource) {
+    cvEventService.sendKubernetesActivitySourceConnectorCreateEvent(activitySource);
+    cvEventService.sendKubernetesActivitySourceServiceCreateEvent(activitySource);
+    cvEventService.sendKubernetesActivitySourceEnvironmentCreateEvent(activitySource);
   }
 
   private void update(ActivitySourceDTO activitySourceDTO) {
@@ -126,7 +135,14 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
         verificationManagerService.deletePerpetualTask(accountId, activitySource.getDataCollectionTaskId());
       }
     }
+    sendKubernetesActivitySourceDeleteEvent((KubernetesActivitySource) activitySource);
     return hPersistence.delete(activitySource);
+  }
+
+  private void sendKubernetesActivitySourceDeleteEvent(KubernetesActivitySource activitySource) {
+    cvEventService.sendKubernetesActivitySourceConnectorDeleteEvent(activitySource);
+    cvEventService.sendKubernetesActivitySourceServiceDeleteEvent(activitySource);
+    cvEventService.sendKubernetesActivitySourceEnvironmentDeleteEvent(activitySource);
   }
 
   @Override

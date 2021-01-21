@@ -38,7 +38,9 @@ public enum EntityType {
   @JsonProperty(EntityTypeConstants.INTEGRATION_STAGE)
   INTEGRATION_STAGE(ModuleType.CI, EntityTypeConstants.INTEGRATION_STAGE, IdentifierRef.class),
   @JsonProperty(EntityTypeConstants.INTEGRATION_STEPS)
-  INTEGRATION_STEPS(ModuleType.CI, EntityTypeConstants.INTEGRATION_STEPS, IdentifierRef.class);
+  INTEGRATION_STEPS(ModuleType.CI, EntityTypeConstants.INTEGRATION_STEPS, IdentifierRef.class),
+  @JsonProperty(EntityTypeConstants.CV_KUBERNETES_ACTIVITY_SOURCE)
+  CV_KUBERNETES_ACTIVITY_SOURCE(ModuleType.CV, EntityTypeConstants.CV_KUBERNETES_ACTIVITY_SOURCE, IdentifierRef.class);
 
   private final ModuleType moduleType;
   String yamlName;

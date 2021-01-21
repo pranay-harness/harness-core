@@ -102,6 +102,8 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTest {
 
     ArgumentCaptor<CVConfig> argumentCaptor = ArgumentCaptor.forClass(CVConfig.class);
     verify(eventService, times(1)).sendConnectorDeleteEvent(argumentCaptor.capture());
+    verify(eventService, times(1)).sendServiceDeleteEvent(argumentCaptor.capture());
+    verify(eventService, times(1)).sendEnvironmentDeleteEvent(argumentCaptor.capture());
   }
 
   @Test
@@ -133,6 +135,8 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTest {
 
     ArgumentCaptor<CVConfig> argumentCaptor = ArgumentCaptor.forClass(CVConfig.class);
     verify(eventService, times(1)).sendConnectorDeleteEvent(argumentCaptor.capture());
+    verify(eventService, times(1)).sendServiceDeleteEvent(argumentCaptor.capture());
+    verify(eventService, times(1)).sendEnvironmentDeleteEvent(argumentCaptor.capture());
   }
 
   @Test
