@@ -1,8 +1,5 @@
 package io.harness.ngtriggers.service.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-
-import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import io.harness.exception.DuplicateFieldException;
@@ -94,17 +91,6 @@ public class NGTriggerServiceImpl implements NGTriggerService {
                     triggerWebhookEvent.getOrgIdentifier(), triggerWebhookEvent.getProjectIdentifier(), repoUrls, "",
                     false, enabledOnly),
         Pageable.unpaged());
-  }
-
-  @Override
-  public List<NGTriggerEntity> listCustomWebhookTriggers(
-      TriggerWebhookEvent triggerWebhookEvent, boolean isDeleted, boolean enabled) {
-    Page<NGTriggerEntity> triggersPage = list(TriggerFilterHelper.createCriteriaForCustomWebhookTriggerGetList(
-                                                  triggerWebhookEvent, EMPTY, EMPTY, isDeleted, enabled),
-        Pageable.unpaged());
-
-    List<NGTriggerEntity> listOfTriggers = triggersPage.get().collect(Collectors.toList());
-    return isEmpty(listOfTriggers) ? emptyList() : listOfTriggers;
   }
 
   @Override

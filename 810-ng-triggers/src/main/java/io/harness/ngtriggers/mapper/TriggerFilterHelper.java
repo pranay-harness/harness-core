@@ -58,6 +58,9 @@ public class TriggerFilterHelper {
         triggerWebhookEvent.getOrgIdentifier(), triggerWebhookEvent.getProjectIdentifier(), emptyList(), searchTerm,
         deleted, enabled);
     if (triggerWebhookEvent.getSourceRepoType().equalsIgnoreCase(WebhookSourceRepo.CUSTOM.name())) {
+      if (triggerWebhookEvent.getTriggerIdentifier() != null) {
+        criteria.and(NGTriggerEntityKeys.identifier).is(triggerWebhookEvent.getTriggerIdentifier());
+      }
       criteria.and("metadata.webhook.type").is("CUSTOM");
       criteria.and("metadata.webhook.custom.customAuthTokenType")
           .is("inline")
