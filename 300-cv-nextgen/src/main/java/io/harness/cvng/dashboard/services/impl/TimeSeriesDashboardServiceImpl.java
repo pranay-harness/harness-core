@@ -12,7 +12,7 @@ import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.services.api.CVConfigService;
-import io.harness.cvng.core.services.api.TimeSeriesService;
+import io.harness.cvng.core.services.api.TimeSeriesRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.utils.CVParallelExecutor;
 import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO;
@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
 
 public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardService {
   @Inject private CVConfigService cvConfigService;
-  @Inject private TimeSeriesService timeSeriesService;
+  @Inject private TimeSeriesRecordService timeSeriesRecordService;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private CVParallelExecutor cvParallelExecutor;
   @Inject private ActivityService activityService;
@@ -102,7 +102,7 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
 
     cvConfigIds.forEach(cvConfigId -> recordsPerId.add(() -> {
       List<TimeSeriesRecord> timeSeriesRecordsfromDB =
-          timeSeriesService.getTimeSeriesRecordsForConfigs(Arrays.asList(cvConfigId), startTime, endTime, false);
+          timeSeriesRecordService.getTimeSeriesRecordsForConfigs(Arrays.asList(cvConfigId), startTime, endTime, false);
       List<TimeSeriesRecord> timeSeriesRecords = Collections.synchronizedList(new ArrayList<>());
       if (isEmpty(timeSeriesRecordsfromDB)) {
         return timeSeriesRecords;

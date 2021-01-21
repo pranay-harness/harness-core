@@ -21,7 +21,7 @@ import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.services.api.CVConfigService;
-import io.harness.cvng.core.services.api.TimeSeriesService;
+import io.harness.cvng.core.services.api.TimeSeriesRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO;
 import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
@@ -63,7 +63,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
   private String accountId;
 
   @Mock private CVConfigService cvConfigService;
-  @Mock private TimeSeriesService timeSeriesService;
+  @Mock private TimeSeriesRecordService timeSeriesRecordService;
   @Mock private VerificationTaskService verificationTaskService;
   @Mock private ActivityService activityService;
 
@@ -77,7 +77,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
 
     MockitoAnnotations.initMocks(this);
     FieldUtils.writeField(timeSeriesDashboardService, "cvConfigService", cvConfigService, true);
-    FieldUtils.writeField(timeSeriesDashboardService, "timeSeriesService", timeSeriesService, true);
+    FieldUtils.writeField(timeSeriesDashboardService, "timeSeriesRecordService", timeSeriesRecordService, true);
     FieldUtils.writeField(timeSeriesDashboardService, "verificationTaskService", verificationTaskService, true);
     FieldUtils.writeField(timeSeriesDashboardService, "activityService", activityService, true);
   }
@@ -89,7 +89,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
     Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     String cvConfigId = generateUuid();
-    when(timeSeriesService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
+    when(timeSeriesRecordService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
         .thenReturn(getTimeSeriesRecords(cvConfigId, false));
     List<String> cvConfigs = Arrays.asList(cvConfigId);
     AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
@@ -151,7 +151,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
                                       .timeStamp(start)
                                       .build()))
                               .build());
-    when(timeSeriesService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
+    when(timeSeriesRecordService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
         .thenReturn(timeSeriesRecords);
     AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
     cvConfig.setUuid(cvConfigId);
@@ -235,7 +235,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
                                       .timeStamp(start)
                                       .build()))
                               .build());
-    when(timeSeriesService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
+    when(timeSeriesRecordService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
         .thenReturn(timeSeriesRecords);
     AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
     cvConfig.setUuid(cvConfigId);
@@ -305,7 +305,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
                                       .timeStamp(start)
                                       .build()))
                               .build());
-    when(timeSeriesService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
+    when(timeSeriesRecordService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
         .thenReturn(timeSeriesRecords);
     AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
     cvConfig.setUuid(cvConfigId);
@@ -340,7 +340,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
     Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     String cvConfigId = generateUuid();
-    when(timeSeriesService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
+    when(timeSeriesRecordService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
         .thenReturn(getTimeSeriesRecords(cvConfigId, true));
     List<String> cvConfigs = Arrays.asList(cvConfigId);
     AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
@@ -373,7 +373,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
     Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     String cvConfigId = generateUuid();
-    when(timeSeriesService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
+    when(timeSeriesRecordService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
         .thenReturn(getTimeSeriesRecords(cvConfigId, false));
     List<String> cvConfigs = Arrays.asList(cvConfigId);
     AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
@@ -399,7 +399,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
     Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     String cvConfigId = generateUuid();
-    when(timeSeriesService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
+    when(timeSeriesRecordService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
         .thenReturn(getTimeSeriesRecords(cvConfigId, true));
     List<String> cvConfigs = Arrays.asList(cvConfigId);
     AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
@@ -433,7 +433,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
     Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     String cvConfigId = generateUuid();
-    when(timeSeriesService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
+    when(timeSeriesRecordService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
         .thenReturn(getTimeSeriesRecords(cvConfigId, true));
     AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
     cvConfig.setUuid(cvConfigId);
@@ -476,7 +476,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTest {
     when(verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId))
         .thenReturn(verificationTaskIds);
     when(verificationTaskService.getCVConfigId(taskId)).thenReturn(cvConfigId);
-    when(timeSeriesService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
+    when(timeSeriesRecordService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
         .thenReturn(getTimeSeriesRecords(cvConfigId, true));
 
     PageResponse<TimeSeriesMetricDataDTO> response =

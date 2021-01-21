@@ -25,6 +25,8 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
   // TODO: optimize this and add caching support. Since this collection is immutable
   @Override
   public String create(String accountId, String cvConfigId) {
+    Preconditions.checkNotNull(accountId);
+    Preconditions.checkNotNull(cvConfigId);
     // TODO: Change to new generated uuid in a separate PR since it needs more validation.
     VerificationTask verificationTask =
         VerificationTask.builder().uuid(cvConfigId).accountId(accountId).cvConfigId(cvConfigId).build();
@@ -34,6 +36,7 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
 
   @Override
   public String create(String accountId, String cvConfigId, String verificationJobInstanceId) {
+    Preconditions.checkNotNull(accountId, "accountId can not be null");
     Preconditions.checkNotNull(cvConfigId, "cvConfigId can not be null");
     Preconditions.checkNotNull(verificationJobInstanceId, "verificationJobInstanceId can not be null");
     checkIfVerificationTaskAlreadyExists(accountId, cvConfigId, verificationJobInstanceId);

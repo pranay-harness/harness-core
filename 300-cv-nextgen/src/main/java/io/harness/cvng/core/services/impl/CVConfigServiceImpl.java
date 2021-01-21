@@ -59,9 +59,7 @@ public class CVConfigServiceImpl implements CVConfigService {
     cvConfig.validate();
     hPersistence.save(cvConfig);
     verificationTaskService.create(cvConfig.getAccountId(), cvConfig.getUuid());
-
     sendScopedCreateEvent(cvConfig);
-
     return cvConfig;
   }
 

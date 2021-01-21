@@ -39,7 +39,7 @@ import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
-import io.harness.cvng.core.services.api.TimeSeriesService;
+import io.harness.cvng.core.services.api.TimeSeriesRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
@@ -78,7 +78,7 @@ import org.mongodb.morphia.query.Sort;
 public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService {
   @Inject private HPersistence hPersistence;
   @Inject private LearningEngineTaskService learningEngineTaskService;
-  @Inject private TimeSeriesService timeSeriesService;
+  @Inject private TimeSeriesRecordService timeSeriesRecordService;
   @Inject private HeatMapService heatMapService;
   @Inject private CVConfigService cvConfigService;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
@@ -432,14 +432,12 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     log.info("Saving analysis for config: {}", cvConfigId);
     learningEngineTaskService.markCompleted(taskId);
     CVConfig cvConfig = cvConfigService.get(cvConfigId);
-    if (cvConfig != null) {
-      double risk = getOverallRisk(analysis);
-      heatMapService.updateRiskScore(cvConfig.getAccountId(), cvConfig.getOrgIdentifier(),
-          cvConfig.getProjectIdentifier(), cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), cvConfig,
-          cvConfig.getCategory(), startTime, risk);
-
-      timeSeriesService.updateRiskScores(cvConfigId, riskSummary);
-    }
+    Preconditions.checkNotNull(cvConfig, "CVConfig can not be null");
+    double risk = getOverallRisk(analysis);
+    heatMapService.updateRiskScore(cvConfig.getAccountId(), cvConfig.getOrgIdentifier(),
+        cvConfig.getProjectIdentifier(), cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), cvConfig,
+        cvConfig.getCategory(), startTime, risk);
+    timeSeriesRecordService.updateRiskScores(cvConfigId, riskSummary);
   }
 
   private double getOverallRisk(ServiceGuardTimeSeriesAnalysisDTO analysis) {
@@ -473,13 +471,14 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   public List<TimeSeriesMetricDefinition> getMetricTemplate(String verificationTaskId) {
-    return timeSeriesService.getTimeSeriesMetricDefinitions(verificationTaskService.getCVConfigId(verificationTaskId));
+    return timeSeriesRecordService.getTimeSeriesMetricDefinitions(
+        verificationTaskService.getCVConfigId(verificationTaskId));
   }
 
   @Override
   public List<TimeSeriesRecordDTO> getTimeSeriesRecordDTOs(
       String verificationTaskId, Instant startTime, Instant endTime) {
-    return timeSeriesService.getTimeSeriesRecordDTOs(verificationTaskId, startTime, endTime);
+    return timeSeriesRecordService.getTimeSeriesRecordDTOs(verificationTaskId, startTime, endTime);
   }
 
   private TimeSeriesRiskSummary buildRiskSummary(

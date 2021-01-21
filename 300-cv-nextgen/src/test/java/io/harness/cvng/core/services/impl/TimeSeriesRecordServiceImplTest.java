@@ -41,7 +41,7 @@ import io.harness.cvng.core.entities.TimeSeriesThreshold;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.MetricPackService;
-import io.harness.cvng.core.services.api.TimeSeriesService;
+import io.harness.cvng.core.services.api.TimeSeriesRecordService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -78,7 +78,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.Sort;
 
-public class TimeSeriesServiceImplTest extends CvNextGenTest {
+public class TimeSeriesRecordServiceImplTest extends CvNextGenTest {
   private String accountId;
   private String connectorIdentifier;
   private String groupId;
@@ -87,7 +87,7 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
   private String verificationTaskId;
   private String orgIdentifier;
 
-  @Inject private TimeSeriesService timeSeriesService;
+  @Inject private TimeSeriesRecordService timeSeriesRecordService;
   @Inject private HPersistence hPersistence;
   @Inject private CVConfigService cvConfigService;
   @Inject private MetricPackService metricPackService;
@@ -105,7 +105,7 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
     random = new Random(System.currentTimeMillis());
     testUserProvider.setActiveUser(EmbeddedUser.builder().name("user1").build());
     hPersistence.registerUserProvider(testUserProvider);
-    FieldUtils.writeField(timeSeriesService, "timeSeriesAnalysisService", timeSeriesAnalysisService, true);
+    FieldUtils.writeField(timeSeriesRecordService, "timeSeriesAnalysisService", timeSeriesAnalysisService, true);
     when(timeSeriesAnalysisService.getMetricTemplate(anyString()))
         .thenReturn(Lists.newArrayList(TimeSeriesMetricDefinition.builder()
                                            .metricName("metric-0")
@@ -150,7 +150,7 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
       }
       collectionRecords.add(collectionRecord);
     }
-    timeSeriesService.save(collectionRecords);
+    timeSeriesRecordService.save(collectionRecords);
     List<TimeSeriesRecord> timeSeriesRecords = hPersistence.createQuery(TimeSeriesRecord.class, excludeAuthority)
                                                    .order(Sort.ascending(TimeSeriesRecordKeys.metricName))
                                                    .asList();
@@ -158,7 +158,7 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
     validateSavedRecords(numOfMetrics, numOfTxnx, numOfMins, timeSeriesRecords);
 
     // save again the same records ans test idempotency
-    timeSeriesService.save(collectionRecords);
+    timeSeriesRecordService.save(collectionRecords);
     timeSeriesRecords = hPersistence.createQuery(TimeSeriesRecord.class, excludeAuthority)
                             .order(Sort.ascending(TimeSeriesRecordKeys.metricName))
                             .asList();
@@ -207,7 +207,7 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
       }
       collectionRecords.add(collectionRecord);
     }
-    timeSeriesService.save(collectionRecords);
+    timeSeriesRecordService.save(collectionRecords);
     List<TimeSeriesRecord> timeSeriesRecords = hPersistence.createQuery(TimeSeriesRecord.class, excludeAuthority)
                                                    .order(Sort.ascending(TimeSeriesRecordKeys.metricName))
                                                    .asList();
@@ -216,7 +216,7 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
     // update the risk now.
     TimeSeriesRiskSummary riskSummary = createRiskSummary(numOfMetrics, numOfTxnx, startTime);
     riskSummary.setAnalysisStartTime(Instant.ofEpochMilli(0));
-    timeSeriesService.updateRiskScores(verificationTaskId, riskSummary);
+    timeSeriesRecordService.updateRiskScores(verificationTaskId, riskSummary);
     timeSeriesRecords = hPersistence.createQuery(TimeSeriesRecord.class, excludeAuthority)
                             .order(Sort.ascending(TimeSeriesRecordKeys.metricName))
                             .asList();
@@ -262,7 +262,7 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
       }
       collectionRecords.add(collectionRecord);
     }
-    timeSeriesService.save(collectionRecords);
+    timeSeriesRecordService.save(collectionRecords);
     assertThat(hostRecordService.get(verificationTaskId, timestamp, timestamp))
         .isEqualTo(Sets.newHashSet("h0", "h1", "h2", "h3", "h4"));
   }
@@ -296,7 +296,7 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
       }
       collectionRecords.add(collectionRecord);
     }
-    timeSeriesService.save(collectionRecords);
+    timeSeriesRecordService.save(collectionRecords);
     assertThat(hostRecordService.get(verificationTaskId, timestamp, timestamp)).isEmpty();
   }
 
@@ -367,7 +367,7 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
       }
       collectionRecords.add(collectionRecord);
     }
-    timeSeriesService.save(collectionRecords);
+    timeSeriesRecordService.save(collectionRecords);
     List<TimeSeriesRecord> timeSeriesRecords = hPersistence.createQuery(TimeSeriesRecord.class, excludeAuthority)
                                                    .order(Sort.ascending(TimeSeriesRecordKeys.bucketStartTime),
                                                        Sort.ascending(TimeSeriesRecordKeys.metricName))
@@ -416,7 +416,7 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
     AppDynamicsCVConfig cvConfig = (AppDynamicsCVConfig) cvConfigService.save(appDynamicsCVConfig);
 
     List<TimeSeriesMetricDefinition> timeSeriesMetricDefinitions =
-        timeSeriesService.getTimeSeriesMetricDefinitions(cvConfig.getUuid());
+        timeSeriesRecordService.getTimeSeriesMetricDefinitions(cvConfig.getUuid());
     int sizeWithoutCustom = timeSeriesMetricDefinitions.size();
     timeSeriesMetricDefinitions.forEach(timeSeriesMetricDefinition -> {
       assertThat(timeSeriesMetricDefinition.getMetricName()).isNotEmpty();
@@ -444,7 +444,7 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
                                        .build()))
             .build());
     cvConfigService.update(cvConfig);
-    timeSeriesMetricDefinitions = timeSeriesService.getTimeSeriesMetricDefinitions(cvConfig.getUuid());
+    timeSeriesMetricDefinitions = timeSeriesRecordService.getTimeSeriesMetricDefinitions(cvConfig.getUuid());
     assertThat(timeSeriesMetricDefinitions.size()).isEqualTo(sizeWithoutCustom + 1);
     TimeSeriesMetricDefinition m1Definition =
         timeSeriesMetricDefinitions.stream()
@@ -471,7 +471,7 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
     hPersistence.save(records);
     Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
     Map<String, Map<String, List<Double>>> testData =
-        timeSeriesService
+        timeSeriesRecordService
             .getTxnMetricDataForRange(verificationTaskId, start, start.plus(5, ChronoUnit.MINUTES), null, null)
             .getTransactionMetricValues();
 
@@ -488,7 +488,7 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
     hPersistence.save(records);
     Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
     Map<String, Map<String, List<MetricData>>> testData =
-        timeSeriesService
+        timeSeriesRecordService
             .getMetricGroupDataForRange(
                 verificationTaskId, start, start.plus(5, ChronoUnit.MINUTES), "Average Response Time (ms)", null)
             .getMetricGroupValues();
@@ -509,7 +509,7 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
     hPersistence.save(records);
     Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
     Map<String, Map<String, List<MetricData>>> testData =
-        timeSeriesService
+        timeSeriesRecordService
             .getMetricGroupDataForRange(verificationTaskId, start, start.plus(5, ChronoUnit.MINUTES),
                 "Average Response Time (ms)", Arrays.asList("/api/settings", "/api/service-templates"))
             .getMetricGroupValues();
@@ -525,7 +525,8 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetTimeSeriesRecordDTOs_noData() {
     Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
-    assertThat(timeSeriesService.getTimeSeriesRecordDTOs(verificationTaskId, start, start.plus(Duration.ofMinutes(10))))
+    assertThat(
+        timeSeriesRecordService.getTimeSeriesRecordDTOs(verificationTaskId, start, start.plus(Duration.ofMinutes(10))))
         .isEmpty();
   }
 
@@ -536,7 +537,8 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
     List<TimeSeriesRecord> records = getTimeSeriesRecords();
     hPersistence.save(records);
     Instant start = Instant.parse("2020-07-07T02:30:00.000Z");
-    assertThat(timeSeriesService.getTimeSeriesRecordDTOs(verificationTaskId, start, start.plus(Duration.ofMinutes(5))))
+    assertThat(
+        timeSeriesRecordService.getTimeSeriesRecordDTOs(verificationTaskId, start, start.plus(Duration.ofMinutes(5))))
         .isEmpty();
   }
 
@@ -546,8 +548,8 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
   public void testGetTimeSeriesRecordDTOs_filterDataWithTimeRange() {
     Instant startTime = Instant.parse("2020-07-07T02:30:00.000Z");
     saveTimeSeriesRecords(startTime, 10, 5, 5);
-    assertThat(
-        timeSeriesService.getTimeSeriesRecordDTOs(verificationTaskId, startTime, startTime.plus(Duration.ofMinutes(5))))
+    assertThat(timeSeriesRecordService.getTimeSeriesRecordDTOs(
+                   verificationTaskId, startTime, startTime.plus(Duration.ofMinutes(5))))
         .hasSize(5 * 5 * 5);
   }
 
@@ -557,8 +559,8 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
   public void testGetTimeSeriesRecordDTOs_filterDataWithTimeRangeSingleMin() {
     Instant startTime = Instant.parse("2020-07-07T02:32:00.000Z");
     saveTimeSeriesRecords(startTime, 10, 5, 5);
-    assertThat(
-        timeSeriesService.getTimeSeriesRecordDTOs(verificationTaskId, startTime, startTime.plus(Duration.ofMinutes(1))))
+    assertThat(timeSeriesRecordService.getTimeSeriesRecordDTOs(
+                   verificationTaskId, startTime, startTime.plus(Duration.ofMinutes(1))))
         .hasSize(5 * 5);
   }
 
@@ -568,8 +570,8 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
   public void testGetTimeSeriesRecordDTOs_filterDataWithTimeRangeLessThen5() {
     Instant startTime = Instant.parse("2020-07-07T02:30:00.000Z");
     saveTimeSeriesRecords(startTime, 10, 5, 5);
-    assertThat(
-        timeSeriesService.getTimeSeriesRecordDTOs(verificationTaskId, startTime, startTime.plus(Duration.ofMinutes(2))))
+    assertThat(timeSeriesRecordService.getTimeSeriesRecordDTOs(
+                   verificationTaskId, startTime, startTime.plus(Duration.ofMinutes(2))))
         .hasSize(2 * 5 * 5);
   }
 
@@ -605,7 +607,7 @@ public class TimeSeriesServiceImplTest extends CvNextGenTest {
     }
     when(timeSeriesAnalysisService.getMetricTemplate(anyString()))
         .thenReturn(metricDefinitions.values().stream().collect(Collectors.toList()));
-    timeSeriesService.save(collectionRecords);
+    timeSeriesRecordService.save(collectionRecords);
   }
 
   private List<TimeSeriesRecord> getTimeSeriesRecords() throws Exception {

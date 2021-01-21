@@ -3,7 +3,7 @@ package io.harness.cvng.core.resources;
 import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.analysis.beans.TimeSeriesTestDataDTO;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
-import io.harness.cvng.core.services.api.TimeSeriesService;
+import io.harness.cvng.core.services.api.TimeSeriesRecordService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 
@@ -25,8 +25,8 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @ExposeInternalException
 @NextGenManagerAuth
-public class TimeSeriesResource {
-  @Inject private TimeSeriesService timeSeriesService;
+public class TimeSeriesRecordResource {
+  @Inject private TimeSeriesRecordService timeSeriesRecordService;
 
   @GET
   @Path("/metric-template")
@@ -35,7 +35,7 @@ public class TimeSeriesResource {
   @ApiOperation(value = "get metric definition for a given data source config", nickname = "getMetricDefinitions")
   public RestResponse<List<TimeSeriesMetricDefinition>> getMetricDefinitions(
       @QueryParam("accountId") @NotNull String accountId, @QueryParam("cvConfigId") @NotNull String cvConfigId) {
-    return new RestResponse<>(timeSeriesService.getTimeSeriesMetricDefinitions(cvConfigId));
+    return new RestResponse<>(timeSeriesRecordService.getTimeSeriesMetricDefinitions(cvConfigId));
   }
 
   // TODO: rename params to startTime and endTime instead of startTimeEpochMillis
@@ -53,7 +53,7 @@ public class TimeSeriesResource {
       @QueryParam("metricName") @NotNull String metricName,
       @QueryParam("groupNameList") @NotNull List<String> groupNameList) {
     return new RestResponse<>(
-        timeSeriesService.getMetricGroupDataForRange(cvConfigId, Instant.ofEpochMilli(startTimeEpochMillis),
+        timeSeriesRecordService.getMetricGroupDataForRange(cvConfigId, Instant.ofEpochMilli(startTimeEpochMillis),
             Instant.ofEpochMilli(endTimeEpochMillis), metricName, groupNameList));
   }
 

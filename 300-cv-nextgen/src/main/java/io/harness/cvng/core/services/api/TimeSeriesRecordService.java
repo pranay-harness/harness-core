@@ -10,7 +10,7 @@ import io.harness.cvng.core.entities.TimeSeriesRecord;
 import java.time.Instant;
 import java.util.List;
 
-public interface TimeSeriesService {
+public interface TimeSeriesRecordService {
   boolean save(List<TimeSeriesDataCollectionRecord> dataRecords);
 
   boolean updateRiskScores(String verificationTaskId, TimeSeriesRiskSummary riskSummary);
