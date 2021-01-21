@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public enum FilterType {
   @JsonProperty("Connector") CONNECTOR,
-  @JsonProperty("Pipeline") PIPELINE,
+  @JsonProperty("PipelineSetup") PIPELINE_SETUP,
+  @JsonProperty("PipelineExecution") PIPELINE_EXECUTION,
   @JsonProperty("Deployment") DEPLOYMENT
 }

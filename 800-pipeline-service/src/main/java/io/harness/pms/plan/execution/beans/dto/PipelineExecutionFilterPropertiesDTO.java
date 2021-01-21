@@ -1,6 +1,6 @@
 package io.harness.pms.plan.execution.beans.dto;
 
-import static io.harness.filter.FilterConstants.PIPELINE_FILTER;
+import static io.harness.filter.FilterConstants.PIPELINE_EXECUTION_FILTER;
 
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterPropertiesDTO;
@@ -26,7 +26,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("PipelineExecutionFilterProperties")
-@JsonTypeName(PIPELINE_FILTER)
+@JsonTypeName(PIPELINE_EXECUTION_FILTER)
 public class PipelineExecutionFilterPropertiesDTO extends FilterPropertiesDTO {
   private List<ExecutionStatus> status;
   private String pipelineName;
@@ -34,6 +34,6 @@ public class PipelineExecutionFilterPropertiesDTO extends FilterPropertiesDTO {
 
   @Override
   public FilterType getFilterType() {
-    return FilterType.PIPELINE;
+    return FilterType.PIPELINE_EXECUTION;
   }
 }
