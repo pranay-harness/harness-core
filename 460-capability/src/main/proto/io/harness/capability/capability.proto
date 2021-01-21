@@ -10,6 +10,7 @@ message CapabilityParameters {
   oneof capability {
     AwsRegionParameters aws_region_parameters = 4;
     ChartMuseumParameters chart_museum_parameters = 5;
+    GitInstallationParameters git_installation_parameters = 11;
     HelmInstallationParameters helm_installation_parameters = 10;
     HttpConnectionParameters http_connection_parameters = 6;
     ProcessExecutorParameters process_executor_parameters = 7;
@@ -29,6 +30,9 @@ message AwsRegionParameters {
 
 // Whether chart museum is enabled or not
 message ChartMuseumParameters {}
+
+// additional information about git setup can be added here later
+message GitInstallationParameters {}
 
 // Testing whether a delegate can connect to a given HTTP resource
 message HttpConnectionParameters {

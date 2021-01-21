@@ -6,6 +6,7 @@ import io.harness.delegate.beans.executioncapability.AwsRegionCapability;
 import io.harness.delegate.beans.executioncapability.ChartMuseumCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.beans.executioncapability.GitInstallationCapability;
 import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
@@ -48,6 +49,7 @@ public class DelegateTasksBeansMorphiaRegistrar implements MorphiaRegistrar {
     h.put("delegate.beans.executioncapability.AlwaysFalseValidationCapability", AlwaysFalseValidationCapability.class);
     h.put("delegate.beans.executioncapability.AwsRegionCapability", AwsRegionCapability.class);
     h.put("delegate.beans.executioncapability.ChartMuseumCapability", ChartMuseumCapability.class);
+    h.put("delegate.beans.executioncapability.GitInstallationCapability", GitInstallationCapability.class);
     h.put("delegate.beans.executioncapability.HelmInstallationCapability", HelmInstallationCapability.class);
     h.put("delegate.beans.executioncapability.HttpConnectionExecutionCapability",
         HttpConnectionExecutionCapability.class);

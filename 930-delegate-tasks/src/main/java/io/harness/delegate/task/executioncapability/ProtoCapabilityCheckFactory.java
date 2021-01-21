@@ -9,6 +9,7 @@ import com.google.inject.Singleton;
 public class ProtoCapabilityCheckFactory {
   @Inject AwsRegionCapabilityCheck awsRegionCapabilityCheck;
   @Inject ChartMuseumCapabilityCheck chartMuseumCapabilityCheck;
+  @Inject GitInstallationCapabilityCheck gitInstallationCapabilityCheck;
   @Inject HelmInstallationCapabilityCheck helmInstallationCapabilityCheck;
   @Inject HttpConnectionExecutionCapabilityCheck httpConnectionExecutionCapabilityCheck;
   @Inject ProcessExecutorCapabilityCheck processExecutorCapabilityCheck;
@@ -24,6 +25,8 @@ public class ProtoCapabilityCheckFactory {
         return awsRegionCapabilityCheck;
       case CHART_MUSEUM_PARAMETERS:
         return chartMuseumCapabilityCheck;
+      case GIT_INSTALLATION_PARAMETERS:
+        return gitInstallationCapabilityCheck;
       case HELM_INSTALLATION_PARAMETERS:
         return helmInstallationCapabilityCheck;
       case HTTP_CONNECTION_PARAMETERS:
