@@ -6,7 +6,6 @@ import io.harness.cistatus.GithubAppTokenCreationResponse;
 import io.harness.cistatus.StatusCreationResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException.ReportTarget;
-import io.harness.git.GitClientHelper;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
 
