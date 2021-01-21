@@ -2,7 +2,6 @@ package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.OrchestrationWorkflowType.BASIC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
@@ -287,12 +286,13 @@ public abstract class ContainerServiceDeploy extends State {
 
   private void saveInstanceDetailsToSweepingOutput(
       ExecutionContext context, List<InstanceElement> instanceElements, List<InstanceDetails> instanceDetails) {
+    boolean skipVerification = instanceDetails.stream().noneMatch(InstanceDetails::isNewInstance);
     sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
                                    .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
                                    .value(InstanceInfoVariables.builder()
                                               .instanceElements(instanceElements)
                                               .instanceDetails(instanceDetails)
-                                              .skipVerification(isEmpty(instanceDetails))
+                                              .skipVerification(skipVerification)
                                               .build())
                                    .build());
   }

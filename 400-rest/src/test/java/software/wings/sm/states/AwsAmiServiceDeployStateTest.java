@@ -241,7 +241,6 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
     String classicLb = "classicLb";
     String targetGroup = "targetGp";
     String baseAsg = "baseAsg";
-
     List<String> stageLbs = Arrays.asList("Stage_LB1", "Stage_LB2");
     List<String> stageTgs = Arrays.asList("Stage_TG1", "Stage_TG2");
     AwsAmiInfrastructureMapping infrastructureMapping = anAwsAmiInfrastructureMapping()

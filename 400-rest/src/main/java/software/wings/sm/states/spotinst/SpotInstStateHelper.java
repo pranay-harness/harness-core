@@ -1,6 +1,5 @@
 package software.wings.sm.states.spotinst;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_MAX_INSTANCES;
@@ -462,12 +461,13 @@ public class SpotInstStateHelper {
     if (isNotEmpty(instanceElements)) {
       // This sweeping element will be used by verification or other consumers.
       List<InstanceDetails> instanceDetails = awsStateHelper.generateAmInstanceDetails(instanceElements);
+      boolean skipVerification = instanceDetails.stream().noneMatch(InstanceDetails::isNewInstance);
       sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
                                      .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
                                      .value(InstanceInfoVariables.builder()
                                                 .instanceElements(instanceElements)
                                                 .instanceDetails(instanceDetails)
-                                                .skipVerification(isEmpty(instanceDetails))
+                                                .skipVerification(skipVerification)
                                                 .build())
                                      .build());
     }

@@ -2,7 +2,6 @@ package software.wings.sm.states.customdeployment;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
 
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
@@ -418,12 +417,13 @@ public class InstanceFetchState extends State {
 
   void saveInstanceInfoToSweepingOutput(
       ExecutionContext context, List<InstanceElement> instanceElements, List<InstanceDetails> instanceDetails) {
+    boolean skipVerification = instanceDetails.stream().noneMatch(InstanceDetails::isNewInstance);
     sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
                                    .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
                                    .value(InstanceInfoVariables.builder()
                                               .instanceElements(instanceElements)
                                               .instanceDetails(instanceDetails)
-                                              .skipVerification(isEmpty(instanceDetails))
+                                              .skipVerification(skipVerification)
                                               .build())
                                    .build());
   }
