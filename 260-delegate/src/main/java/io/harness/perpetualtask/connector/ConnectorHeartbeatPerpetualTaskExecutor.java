@@ -44,7 +44,6 @@ public class ConnectorHeartbeatPerpetualTaskExecutor implements PerpetualTaskExe
     final ConnectorHeartbeatTaskParams taskParams =
         AnyUtils.unpack(params.getCustomizedParams(), ConnectorHeartbeatTaskParams.class);
     String accountId = taskParams.getAccountIdentifier();
-
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails(taskParams);
     final ConnectorDTO connectorDTO = (ConnectorDTO) kryoSerializer.asObject(taskParams.getConnector().toByteArray());
     ConnectorInfoDTO connectorInfoDTO = connectorDTO.getConnectorInfo();
