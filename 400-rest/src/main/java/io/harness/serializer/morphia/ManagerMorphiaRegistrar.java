@@ -2,9 +2,7 @@ package io.harness.serializer.morphia;
 
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.ccm.billing.entities.CloudBillingTransferRun;
-import io.harness.ccm.budget.entities.ApplicationBudgetScope;
 import io.harness.ccm.budget.entities.Budget;
-import io.harness.ccm.budget.entities.ClusterBudgetScope;
 import io.harness.ccm.cluster.entities.AzureKubernetesCluster;
 import io.harness.ccm.cluster.entities.BatchJobInterval;
 import io.harness.ccm.cluster.entities.BatchJobScheduledData;
@@ -1090,8 +1088,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
 
   @Override
   public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
-    h.put("ccm.budget.entities.ApplicationBudgetScope", ApplicationBudgetScope.class);
-    h.put("ccm.budget.entities.ClusterBudgetScope", ClusterBudgetScope.class);
     h.put("ccm.cluster.entities.AzureKubernetesCluster", AzureKubernetesCluster.class);
     h.put("ccm.cluster.entities.DirectKubernetesCluster", DirectKubernetesCluster.class);
     h.put("ccm.cluster.entities.EcsCluster", EcsCluster.class);

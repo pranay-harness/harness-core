@@ -1,7 +1,7 @@
 package software.wings.graphql.datafetcher.budget;
 
+import io.harness.ccm.budget.Budget;
 import io.harness.ccm.budget.BudgetService;
-import io.harness.ccm.budget.entities.Budget;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 
@@ -26,6 +26,9 @@ public class BudgetTrendStatsDataFetcher
   private static final String COST_VALUE = "$%s / $%s";
   private static final String FORECASTED_COST_LABEL = "Forecasted vs. budgeted";
   private static final String EMPTY_VALUE = "-";
+  private static final String STATUS_ON_TRACK = "On Track";
+  private static final String STATUS_NOT_ON_TRACK = "Not on Track";
+  private static final String STATUS_EXCEEDED = "Exceeded";
 
   @Inject BudgetService budgetService;
   @Inject BillingDataHelper billingDataHelper;
@@ -43,14 +46,12 @@ public class BudgetTrendStatsDataFetcher
     if (budget == null) {
       throw new InvalidRequestException(BUDGET_DOES_NOT_EXIST_MSG, WingsException.USER);
     }
-    Double actualCost = budgetService.getActualCost(budget);
-    double forecastCostOffset = budgetService.isStartOfMonth() ? 0.0 : actualCost;
 
     return QLBudgetTrendStats.builder()
-        .totalCost(getCostStats(ACTUAL_COST_LABEL, actualCost, budget.getBudgetAmount()))
-        .forecastCost(getCostStats(FORECASTED_COST_LABEL, forecastCostOffset + budgetService.getForecastCost(budget),
-            budget.getBudgetAmount()))
+        .totalCost(getCostStats(ACTUAL_COST_LABEL, budget.getActualCost(), budget.getBudgetAmount()))
+        .forecastCost(getCostStats(FORECASTED_COST_LABEL, budget.getForecastCost(), budget.getBudgetAmount()))
         .budgetDetails(budgetService.getBudgetDetails(budget))
+        .status(getStatus(budget))
         .build();
   }
 
@@ -58,5 +59,16 @@ public class BudgetTrendStatsDataFetcher
     String statsValue = String.format(COST_VALUE, billingDataHelper.getRoundedDoubleValue(costValue),
         billingDataHelper.getRoundedDoubleValue(budgetedValue));
     return QLBillingStatsInfo.builder().statsLabel(label).statsDescription(EMPTY_VALUE).statsValue(statsValue).build();
+  }
+
+  private String getStatus(Budget budget) {
+    String status = STATUS_ON_TRACK;
+    if (budget.getForecastCost() > budget.getBudgetAmount()) {
+      status = STATUS_NOT_ON_TRACK;
+    }
+    if (budget.getActualCost() > budget.getBudgetAmount()) {
+      status = STATUS_EXCEEDED;
+    }
+    return status;
   }
 }

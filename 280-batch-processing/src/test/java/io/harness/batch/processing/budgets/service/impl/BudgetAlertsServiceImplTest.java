@@ -1,6 +1,6 @@
 package io.harness.batch.processing.budgets.service.impl;
 
-import static io.harness.ccm.budget.entities.BudgetType.SPECIFIED_AMOUNT;
+import static io.harness.ccm.budget.BudgetType.SPECIFIED_AMOUNT;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 
 import static org.mockito.Matchers.any;
@@ -16,12 +16,12 @@ import io.harness.batch.processing.mail.CEMailNotificationService;
 import io.harness.batch.processing.shard.AccountShardService;
 import io.harness.batch.processing.slackNotification.CESlackNotificationService;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.budget.AlertThreshold;
+import io.harness.ccm.budget.AlertThresholdBase;
+import io.harness.ccm.budget.ApplicationBudgetScope;
+import io.harness.ccm.budget.Budget;
 import io.harness.ccm.budget.BudgetUtils;
-import io.harness.ccm.budget.entities.AlertThreshold;
-import io.harness.ccm.budget.entities.AlertThresholdBase;
-import io.harness.ccm.budget.entities.ApplicationBudgetScope;
-import io.harness.ccm.budget.entities.Budget;
-import io.harness.ccm.budget.entities.EnvironmentType;
+import io.harness.ccm.budget.EnvironmentType;
 import io.harness.ccm.communication.CESlackWebhookService;
 import io.harness.ccm.communication.entities.CESlackWebhook;
 import io.harness.rule.Owner;

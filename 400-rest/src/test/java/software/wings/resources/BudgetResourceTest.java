@@ -12,9 +12,8 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.budget.Budget;
 import io.harness.ccm.budget.BudgetService;
-import io.harness.ccm.budget.entities.ApplicationBudgetScope;
-import io.harness.ccm.budget.entities.Budget;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 
@@ -41,7 +40,7 @@ public class BudgetResourceTest extends CategoryTest {
 
   @Before
   public void setUp() {
-    budget = Budget.builder().accountId(accountId).scope(ApplicationBudgetScope.builder().build()).build();
+    budget = Budget.builder().accountId(accountId).build();
   }
 
   @Test

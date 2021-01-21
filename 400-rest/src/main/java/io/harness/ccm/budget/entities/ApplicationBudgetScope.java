@@ -1,11 +1,10 @@
 package io.harness.ccm.budget.entities;
 
-import software.wings.graphql.schema.type.aggregation.QLIdFilter;
-import software.wings.graphql.schema.type.aggregation.QLIdOperator;
-import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
+import static io.harness.ccm.budget.BudgetScopeType.APPLICATION;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.Arrays;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -24,10 +23,13 @@ public class ApplicationBudgetScope implements BudgetScope {
   EnvironmentType environmentType;
 
   @Override
-  public QLBillingDataFilter getBudgetScopeFilter() {
-    return QLBillingDataFilter.builder()
-        .application(QLIdFilter.builder().operator(QLIdOperator.IN).values(applicationIds).build())
-        .build();
+  public String getBudgetScopeType() {
+    return APPLICATION;
+  }
+
+  @Override
+  public List<String> getEntityIds() {
+    return Arrays.asList(applicationIds);
   }
 
   @Override

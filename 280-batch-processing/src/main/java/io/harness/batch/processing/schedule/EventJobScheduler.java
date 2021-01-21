@@ -7,6 +7,7 @@ import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataSe
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.WeeklyReportServiceImpl;
 import io.harness.batch.processing.budgets.service.impl.BudgetAlertsServiceImpl;
+import io.harness.batch.processing.budgets.service.impl.BudgetCostUpdateService;
 import io.harness.batch.processing.ccm.BatchJobBucket;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.config.BatchMainConfig;
@@ -60,6 +61,7 @@ public class EventJobScheduler {
   @Autowired private GcpScheduledQueryTriggerAction gcpScheduledQueryTriggerAction;
   @Autowired private ProductMetricsService productMetricsService;
   @Autowired private BudgetAlertsServiceImpl budgetAlertsService;
+  @Autowired private BudgetCostUpdateService budgetCostUpdateService;
   @Autowired private AccountExpiryCleanupService accountExpiryCleanupService;
   @Autowired private HarnessServiceInfoFetcher harnessServiceInfoFetcher;
   @Autowired private InstanceDataServiceImpl instanceDataService;
@@ -204,6 +206,16 @@ public class EventJobScheduler {
       log.info("Budget alerts send");
     } catch (Exception ex) {
       log.error("Exception while running budgetAlertsJob", ex);
+    }
+  }
+
+  @Scheduled(cron = "${scheduler-jobs-config.budgetCostUpdateJobCron}")
+  public void runBudgetCostUpdateJob() {
+    try {
+      budgetCostUpdateService.updateCosts();
+      log.info("Costs updated for budgets");
+    } catch (Exception ex) {
+      log.error("Exception while running runBudgetCostUpdateJob", ex);
     }
   }
 

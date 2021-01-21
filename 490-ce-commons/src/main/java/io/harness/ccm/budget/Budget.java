@@ -1,9 +1,6 @@
-package io.harness.ccm.budget.entities;
+package io.harness.ccm.budget;
 
-import io.harness.annotation.HarnessEntity;
-import io.harness.ccm.budget.AlertThreshold;
-import io.harness.ccm.budget.BudgetType;
-import io.harness.iterator.PersistentRegularIterable;
+import io.harness.annotation.StoreIn;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -11,7 +8,6 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 
-import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -23,12 +19,11 @@ import org.mongodb.morphia.annotations.Id;
 
 @Data
 @Builder
+@StoreIn("events")
 @FieldNameConstants(innerTypeName = "BudgetKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(value = "budgets", noClassnameStored = true)
-@HarnessEntity(exportable = false)
-public class Budget
-    implements PersistentEntity, UuidAware, AccountAccess, CreatedAtAware, UpdatedAtAware, PersistentRegularIterable {
+public class Budget implements PersistentEntity, UuidAware, AccountAccess, CreatedAtAware, UpdatedAtAware {
   @Id String uuid;
   @NotBlank @FdIndex String accountId;
   @NotBlank String name;
@@ -42,25 +37,6 @@ public class Budget
   String[] emailAddresses;
   String[] userGroupIds; // reference
   boolean notifyOnSlack;
-  @SchemaIgnore long createdAt;
-  @SchemaIgnore long lastUpdatedAt;
-
-  @FdIndex Long alertIteration;
-
-  @Override
-  public Long obtainNextIteration(String fieldName) {
-    if (BudgetKeys.alertIteration.equals(fieldName)) {
-      return this.alertIteration;
-    }
-    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
-  }
-
-  @Override
-  public void updateNextIteration(String fieldName, long nextIteration) {
-    if (BudgetKeys.alertIteration.equals(fieldName)) {
-      this.alertIteration = nextIteration;
-      return;
-    }
-    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
-  }
+  long createdAt;
+  long lastUpdatedAt;
 }

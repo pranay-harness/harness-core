@@ -1,10 +1,10 @@
-package io.harness.ccm.budget.entities;
+package io.harness.ccm.budget;
 
-import static io.harness.ccm.budget.BudgetScopeType.CLUSTER;
+import static io.harness.ccm.budget.BudgetScopeType.PERSPECTIVE;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -14,25 +14,26 @@ import lombok.experimental.FieldNameConstants;
 
 @Data
 @Builder
-@JsonTypeName("CLUSTER")
+@JsonTypeName("PERSPECTIVE")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@FieldNameConstants(innerTypeName = "ClusterBudgetScopeKeys")
-public class ClusterBudgetScope implements BudgetScope {
-  String[] clusterIds;
+@FieldNameConstants(innerTypeName = "PerspectiveBudgetScopeKeys")
+public class PerspectiveBudgetScope implements BudgetScope {
+  String viewId;
+  String viewName;
 
   @Override
   public String getBudgetScopeType() {
-    return CLUSTER;
+    return PERSPECTIVE;
   }
 
   @Override
   public List<String> getEntityIds() {
-    return Arrays.asList(clusterIds);
+    return Collections.singletonList(viewId);
   }
 
   @Override
   public List<String> getEntityNames() {
-    return null;
+    return Collections.singletonList(viewName);
   }
 }

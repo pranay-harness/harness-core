@@ -1,3 +1,3 @@
-package io.harness.ccm.budget.entities;
+package io.harness.ccm.budget;
 
 public enum BudgetType { SPECIFIED_AMOUNT, PREVIOUS_MONTH_SPEND }

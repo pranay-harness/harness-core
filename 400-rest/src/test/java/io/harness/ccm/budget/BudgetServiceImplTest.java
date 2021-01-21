@@ -1,6 +1,6 @@
 package io.harness.ccm.budget;
 
-import static io.harness.ccm.budget.entities.BudgetType.SPECIFIED_AMOUNT;
+import static io.harness.ccm.budget.BudgetType.SPECIFIED_AMOUNT;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.SANDESH;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
@@ -17,14 +17,8 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.budget.entities.AlertThreshold;
-import io.harness.ccm.budget.entities.AlertThresholdBase;
-import io.harness.ccm.budget.entities.ApplicationBudgetScope;
-import io.harness.ccm.budget.entities.Budget;
-import io.harness.ccm.budget.entities.Budget.BudgetBuilder;
-import io.harness.ccm.budget.entities.BudgetType;
-import io.harness.ccm.budget.entities.ClusterBudgetScope;
-import io.harness.ccm.budget.entities.EnvironmentType;
+import io.harness.ccm.budget.Budget.BudgetBuilder;
+import io.harness.ccm.budget.dao.BudgetDao;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -88,9 +82,10 @@ public class BudgetServiceImplTest extends CategoryTest {
   private String budgetId2 = "BUDGET_ID_2";
   private String budgetName = "BUDGET_NAME";
   private String entityName = "ENTITY_NAME";
-  private BudgetType budgetType = BudgetType.SPECIFIED_AMOUNT;
+  private BudgetType budgetType = SPECIFIED_AMOUNT;
   private double budgetAmount = 25000.0;
-  final EnvironmentType environmentType = EnvironmentType.PROD;
+  private double actualCost = 15000.0;
+  final EnvironmentType environmentType = EnvironmentType.PROD.PROD;
   private long createdAt = System.currentTimeMillis();
   private long lastUpdatedAt = System.currentTimeMillis();
 
@@ -117,10 +112,11 @@ public class BudgetServiceImplTest extends CategoryTest {
                   .name("test_budget_1")
                   .scope(ApplicationBudgetScope.builder()
                              .applicationIds(applicationIds)
-                             .environmentType(io.harness.ccm.budget.entities.EnvironmentType.ALL)
+                             .environmentType(EnvironmentType.ALL)
                              .build())
                   .type(SPECIFIED_AMOUNT)
                   .budgetAmount(100.0)
+                  .actualCost(50.0)
                   .alertThresholds(new AlertThreshold[] {alertThreshold})
                   .build();
     budget2 = Budget.builder()
@@ -129,10 +125,11 @@ public class BudgetServiceImplTest extends CategoryTest {
                   .name("test_budget_2")
                   .scope(ApplicationBudgetScope.builder()
                              .applicationIds(applicationIds)
-                             .environmentType(io.harness.ccm.budget.entities.EnvironmentType.ALL)
+                             .environmentType(EnvironmentType.ALL)
                              .build())
                   .type(SPECIFIED_AMOUNT)
                   .budgetAmount(100.0)
+                  .actualCost(50.0)
                   .alertThresholds(new AlertThreshold[] {alertThreshold})
                   .build();
     when(billingDataQueryBuilder.formBudgetInsightQuery(anyString(), anyList(), any(QLCCMAggregationFunction.class),
@@ -168,7 +165,8 @@ public class BudgetServiceImplTest extends CategoryTest {
                                                        .basedOn(AlertThresholdBase.ACTUAL_COST)
                                                        .build()})
             .type(budgetType)
-            .budgetAmount(budgetAmount);
+            .budgetAmount(budgetAmount)
+            .actualCost(actualCost);
     if (scope.equals("CLUSTER")) {
       budgetBuilder.scope(ClusterBudgetScope.builder().clusterIds(clusterIds).build());
     } else {
@@ -344,7 +342,7 @@ public class BudgetServiceImplTest extends CategoryTest {
     assertThat(budgetDetails.getName()).isEqualTo(budgetName);
     assertThat(budgetDetails.getId()).isEqualTo(budgetId1);
     assertThat(budgetDetails.getType()).isEqualTo(SPECIFIED_AMOUNT.toString());
-    assertThat(budgetDetails.getActualAmount()).isEqualTo(0.0);
+    assertThat(budgetDetails.getActualAmount()).isEqualTo(actualCost);
     assertThat(budgetDetails.getBudgetedAmount()).isEqualTo(budgetAmount);
     assertThat(budgetDetails.getScopeType()).isEqualTo("APPLICATION");
     assertThat(budgetDetails.getAppliesTo()[0]).isEqualTo(entityName);
@@ -355,7 +353,7 @@ public class BudgetServiceImplTest extends CategoryTest {
     assertThat(budgetDetails.getName()).isEqualTo(budgetName);
     assertThat(budgetDetails.getId()).isEqualTo(budgetId1);
     assertThat(budgetDetails.getType()).isEqualTo(SPECIFIED_AMOUNT.toString());
-    assertThat(budgetDetails.getActualAmount()).isEqualTo(0.0);
+    assertThat(budgetDetails.getActualAmount()).isEqualTo(actualCost);
     assertThat(budgetDetails.getBudgetedAmount()).isEqualTo(budgetAmount);
     assertThat(budgetDetails.getScopeType()).isEqualTo("CLUSTER");
     assertThat(budgetDetails.getAppliesTo()[0]).isEqualTo(entityName);
@@ -366,7 +364,7 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldCloneBudget() {
     when(budgetDao.get(budgetId1, accountId)).thenReturn(budget1);
-    when(budgetDao.save(any())).thenReturn(budgetId1);
+    when(budgetDao.save((Budget) any())).thenReturn(budgetId1);
     String cloneBudgetId = budgetService.clone(budgetId1, "CLONE", accountId);
     assertThat(cloneBudgetId).isNotNull();
   }
@@ -376,7 +374,7 @@ public class BudgetServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldNotCloneBudget() {
     when(budgetDao.get(budgetId1, accountId)).thenReturn(budget1);
-    when(budgetDao.save(any())).thenReturn(budgetId1);
+    when(budgetDao.save((Budget) any())).thenReturn(budgetId1);
     assertThatThrownBy(() -> budgetService.clone(budgetId1, "undefined", accountId))
         .isInstanceOf(InvalidRequestException.class);
   }

@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.budget;
 
-import static io.harness.ccm.budget.entities.BudgetType.SPECIFIED_AMOUNT;
+import static io.harness.ccm.budget.AlertThresholdBase.ACTUAL_COST;
+import static io.harness.ccm.budget.BudgetType.SPECIFIED_AMOUNT;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,12 +10,12 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.budget.AlertThreshold;
+import io.harness.ccm.budget.ApplicationBudgetScope;
+import io.harness.ccm.budget.Budget;
 import io.harness.ccm.budget.BudgetServiceImpl;
-import io.harness.ccm.budget.entities.AlertThreshold;
-import io.harness.ccm.budget.entities.AlertThresholdBase;
-import io.harness.ccm.budget.entities.ApplicationBudgetScope;
-import io.harness.ccm.budget.entities.Budget;
-import io.harness.ccm.budget.entities.BudgetType;
+import io.harness.ccm.budget.BudgetType;
+import io.harness.ccm.budget.EnvironmentType;
 import io.harness.rule.Owner;
 
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
@@ -42,7 +43,7 @@ public class BudgetListDataFetcherTest extends AbstractDataFetcherTestBase {
   private String[] applicationIds = {applicationId1, applicationId2};
   private String budgetId = "BUDGET_ID";
   private String budgetName = "BUDGET_NAME";
-  private BudgetType budgetType = BudgetType.SPECIFIED_AMOUNT;
+  private BudgetType budgetType = SPECIFIED_AMOUNT;
   private double budgetAmount = 25000.0;
   private Double[] alertAt = {0.5};
 
@@ -53,14 +54,14 @@ public class BudgetListDataFetcherTest extends AbstractDataFetcherTestBase {
 
   @Before
   public void setUp() throws SQLException {
-    alertThreshold = AlertThreshold.builder().percentage(0.5).basedOn(AlertThresholdBase.ACTUAL_COST).build();
+    alertThreshold = AlertThreshold.builder().percentage(0.5).basedOn(ACTUAL_COST).build();
     budget = Budget.builder()
                  .uuid(budgetId)
                  .accountId(accountId)
                  .name(budgetName)
                  .scope(ApplicationBudgetScope.builder()
                             .applicationIds(applicationIds)
-                            .environmentType(io.harness.ccm.budget.entities.EnvironmentType.ALL)
+                            .environmentType(EnvironmentType.ALL)
                             .build())
                  .type(SPECIFIED_AMOUNT)
                  .budgetAmount(budgetAmount)

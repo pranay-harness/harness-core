@@ -15,4 +15,5 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class QLBudgetDataList {
   List<QLBudgetData> data;
+  Double forecastCost;
 }
