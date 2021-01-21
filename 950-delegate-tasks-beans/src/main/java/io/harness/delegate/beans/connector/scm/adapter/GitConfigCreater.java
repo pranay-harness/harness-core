@@ -25,7 +25,7 @@ public class GitConfigCreater {
 
   public static GitConfigDTO getGitConfigForSsh(GitConnectionType gitConnectionType, String url, SecretRefData sshKey) {
     final GitSSHAuthenticationDTO gitSSHAuthenticationDTO =
-        GitSSHAuthenticationDTO.builder().encryptedSshKey(sshKey).build().builder().build();
+        GitSSHAuthenticationDTO.builder().encryptedSshKey(sshKey).build();
     return GitConfigDTO.builder()
         .gitConnectionType(gitConnectionType)
         .gitAuthType(GitAuthType.SSH)

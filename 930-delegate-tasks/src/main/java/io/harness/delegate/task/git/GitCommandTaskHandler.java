@@ -14,6 +14,7 @@ import io.harness.delegate.git.NGGitService;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
+import io.harness.shell.SshSessionConfig;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -28,20 +29,21 @@ public class GitCommandTaskHandler {
   @Inject private NGGitService gitService;
   @Inject private NGErrorHelper ngErrorHelper;
 
-  public ConnectorValidationResult validateGitCredentials(
-      GitConfigDTO gitConnector, String accountIdentifier, List<EncryptedDataDetail> encryptionDetailList) {
+  public ConnectorValidationResult validateGitCredentials(GitConfigDTO gitConnector, String accountIdentifier,
+      List<EncryptedDataDetail> encryptionDetailList, SshSessionConfig sshSessionConfig) {
     decryptionService.decrypt(gitConnector.getGitAuth(), encryptionDetailList);
     GitCommandExecutionResponse delegateResponseData =
-        (GitCommandExecutionResponse) handleValidateTask(gitConnector, accountIdentifier);
+        (GitCommandExecutionResponse) handleValidateTask(gitConnector, accountIdentifier, sshSessionConfig);
     return ConnectorValidationResult.builder()
         .status(delegateResponseData.getGitCommandStatus() == SUCCESS ? ConnectivityStatus.SUCCESS
                                                                       : ConnectivityStatus.FAILURE)
         .build();
   }
 
-  public DelegateResponseData handleValidateTask(GitConfigDTO gitConfig, String accountId) {
+  public DelegateResponseData handleValidateTask(
+      GitConfigDTO gitConfig, String accountId, SshSessionConfig sshSessionConfig) {
     log.info("Processing Git command: VALIDATE");
-    String errorMessage = gitService.validate(gitConfig, accountId);
+    String errorMessage = gitService.validate(gitConfig, accountId, sshSessionConfig);
     ConnectorValidationResultBuilder builder = ConnectorValidationResult.builder().testedAt(System.currentTimeMillis());
     if (isEmpty(errorMessage)) {
       return GitCommandExecutionResponse.builder()
