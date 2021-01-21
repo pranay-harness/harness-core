@@ -2,12 +2,12 @@ package io.harness.cvng.activity.source.services.api;
 
 import io.harness.cvng.activity.entities.ActivitySource;
 import io.harness.cvng.beans.activity.ActivitySourceDTO;
-import io.harness.cvng.core.services.api.DeleteEntityByProjectHandler;
+import io.harness.cvng.core.services.api.DeleteEntityByHandler;
 import io.harness.ng.beans.PageResponse;
 
 import javax.validation.constraints.NotNull;
 
-public interface ActivitySourceService extends DeleteEntityByProjectHandler<ActivitySource> {
+public interface ActivitySourceService extends DeleteEntityByHandler<ActivitySource> {
   String saveActivitySource(
       String accountId, String orgIdentifier, String projectIdentifier, ActivitySourceDTO activitySourceDTO);
 

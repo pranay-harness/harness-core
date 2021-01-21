@@ -116,6 +116,11 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
                                         .filter(ActivitySourceKeys.projectIdentifier, projectIdentifier)
                                         .filter(ActivitySourceKeys.identifier, identifier)
                                         .get();
+
+    return getActivitySourceForDeletion(accountId, activitySource);
+  }
+
+  private boolean getActivitySourceForDeletion(String accountId, ActivitySource activitySource) {
     if (activitySource != null) {
       if (isNotEmpty(activitySource.getDataCollectionTaskId())) {
         verificationManagerService.deletePerpetualTask(accountId, activitySource.getDataCollectionTaskId());
@@ -132,7 +137,31 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
                                                .filter(ActivitySourceKeys.orgIdentifier, orgIdentifier)
                                                .filter(ActivitySourceKeys.projectIdentifier, projectIdentifier)
                                                .asList();
-    activitySources.forEach(activitySource
-        -> deleteActivitySource(accountId, orgIdentifier, projectIdentifier, activitySource.getIdentifier()));
+
+    for (ActivitySource activitySource : activitySources) {
+      getActivitySourceForDeletion(activitySource.getAccountId(), activitySource);
+    }
+  }
+
+  @Override
+  public void deleteByOrgIdentifier(Class<ActivitySource> clazz, String accountId, String orgIdentifier) {
+    List<ActivitySource> activitySources = hPersistence.createQuery(ActivitySource.class, excludeAuthority)
+                                               .filter(ActivitySourceKeys.accountId, accountId)
+                                               .filter(ActivitySourceKeys.orgIdentifier, orgIdentifier)
+                                               .asList();
+
+    for (ActivitySource activitySource : activitySources) {
+      getActivitySourceForDeletion(activitySource.getAccountId(), activitySource);
+    }
+  }
+
+  @Override
+  public void deleteByAccountIdentifier(Class<ActivitySource> clazz, String accountId) {
+    List<ActivitySource> activitySources = hPersistence.createQuery(ActivitySource.class, excludeAuthority)
+                                               .filter(ActivitySourceKeys.accountId, accountId)
+                                               .asList();
+    for (ActivitySource activitySource : activitySources) {
+      getActivitySourceForDeletion(activitySource.getAccountId(), activitySource);
+    }
   }
 }

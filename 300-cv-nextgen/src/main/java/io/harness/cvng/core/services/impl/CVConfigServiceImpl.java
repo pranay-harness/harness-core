@@ -381,13 +381,20 @@ public class CVConfigServiceImpl implements CVConfigService {
     return serviceIdentifiers.size();
   }
 
-  @Override
-  public void deleteConfigsForProject(String accountId, String orgIdentifier, String projectIdentifier) {
-    List<CVConfig> cvConfigs = hPersistence.createQuery(CVConfig.class)
-                                   .filter(CVConfigKeys.accountId, accountId)
-                                   .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
-                                   .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
-                                   .asList();
+  private void deleteConfigsForEntity(
+      String accountId, @Nullable String orgIdentifier, @Nullable String projectIdentifier) {
+    Query<CVConfig> query = hPersistence.createQuery(CVConfig.class);
+    query = query.filter(CVConfigKeys.accountId, accountId);
+
+    if (orgIdentifier != null) {
+      query = query.filter(CVConfigKeys.orgIdentifier, orgIdentifier);
+    }
+
+    if (projectIdentifier != null) {
+      query = query.filter(CVConfigKeys.projectIdentifier, projectIdentifier);
+    }
+
+    List<CVConfig> cvConfigs = query.asList();
     cvConfigs.forEach(cvConfig -> delete(cvConfig.getUuid()));
   }
 
@@ -395,8 +402,21 @@ public class CVConfigServiceImpl implements CVConfigService {
   public void deleteByProjectIdentifier(
       Class<CVConfig> clazz, String accountId, String orgIdentifier, String projectIdentifier) {
     Preconditions.checkState(clazz.equals(CVConfig.class), "Class should be of type CVConfig");
-    this.deleteConfigsForProject(accountId, orgIdentifier, projectIdentifier);
+    this.deleteConfigsForEntity(accountId, orgIdentifier, projectIdentifier);
   }
+
+  @Override
+  public void deleteByOrgIdentifier(Class<CVConfig> clazz, String accountId, String orgIdentifier) {
+    Preconditions.checkState(clazz.equals(CVConfig.class), "Class should be of type CVConfig");
+    this.deleteConfigsForEntity(accountId, orgIdentifier, null);
+  }
+
+  @Override
+  public void deleteByAccountIdentifier(Class<CVConfig> clazz, String accountId) {
+    Preconditions.checkState(clazz.equals(CVConfig.class), "Class should be of type CVConfig");
+    this.deleteConfigsForEntity(accountId, null, null);
+  }
+
   @Override
   public List<CVConfig> getExistingMappedConfigs(
       String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String identifier) {
