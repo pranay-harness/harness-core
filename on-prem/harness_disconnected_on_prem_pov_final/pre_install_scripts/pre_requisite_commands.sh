@@ -74,6 +74,7 @@ fi
 
 echo "Checking whether ports 7143 to 7153 are available"
 
+
 for port in $(seq 7143 7153)
 do
     if [[ $(netstat -tln --numeric-ports | grep ":$port") ]]; then
