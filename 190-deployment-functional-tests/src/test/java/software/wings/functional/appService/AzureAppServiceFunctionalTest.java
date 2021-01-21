@@ -33,6 +33,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.CDFunctionalTests;
+import io.harness.category.speed.SlowTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.EnvironmentGenerator;
@@ -100,7 +101,7 @@ public class AzureAppServiceFunctionalTest extends AbstractFunctionalTest {
 
   @Test(timeout = TIMEOUT)
   @Owner(developers = TMACARI)
-  @Category(CDFunctionalTests.class)
+  @Category({CDFunctionalTests.class, SlowTests.class})
   public void testWebAppBlueGreenWorkflow() {
     Service service = getService(BLUE_GREEN_DEPLOYMENT_SERVICE_NAME);
     String accountId = service.getAccountId();
@@ -123,7 +124,7 @@ public class AzureAppServiceFunctionalTest extends AbstractFunctionalTest {
 
   @Test(timeout = TIMEOUT)
   @Owner(developers = TMACARI)
-  @Category(CDFunctionalTests.class)
+  @Category({CDFunctionalTests.class, SlowTests.class})
   public void testWebAppBlueGreenWorkflowRollback() {
     Service service = getService(ROLLBACK_BLUE_GREEN_DEPLOYMENT_SERVICE_NAME);
     String accountId = service.getAccountId();
@@ -148,8 +149,8 @@ public class AzureAppServiceFunctionalTest extends AbstractFunctionalTest {
 
   @Test(timeout = TIMEOUT)
   @Owner(developers = TMACARI)
-  @Category(CDFunctionalTests.class)
-  public void testWebCanaryGreenWorkflow() {
+  @Category({CDFunctionalTests.class, SlowTests.class})
+  public void testWebAppCanaryWorkflow() {
     Service service = getService(CANARY_DEPLOYMENT_SERVICE_NAME);
     String accountId = service.getAccountId();
 
