@@ -9,6 +9,7 @@ import java.util.Set;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.internal.engine.constraintvalidation.ConstraintValidatorContextImpl;
 
 @Slf4j
 public class OneOfFieldValidator implements ConstraintValidator<OneOfField, Object> {
@@ -22,6 +23,7 @@ public class OneOfFieldValidator implements ConstraintValidator<OneOfField, Obje
 
   @Override
   public boolean isValid(Object object, ConstraintValidatorContext context) {
+    Set<String> fieldNamesPresent = new HashSet<>();
     final int countOfFieldsOfOneOf = fields.stream()
                                          .map(fieldName -> {
                                            final Field field =
@@ -33,6 +35,7 @@ public class OneOfFieldValidator implements ConstraintValidator<OneOfField, Obje
                                              try {
                                                final Object fieldValue = field.get(object);
                                                if (fieldValue != null) {
+                                                 fieldNamesPresent.add(fieldName);
                                                  return 1;
                                                }
                                              } catch (IllegalAccessException e) {
@@ -45,7 +48,11 @@ public class OneOfFieldValidator implements ConstraintValidator<OneOfField, Obje
                                          .mapToInt(Integer::valueOf)
                                          .sum();
 
-    return (nullable && (countOfFieldsOfOneOf == 0 || countOfFieldsOfOneOf == 1))
+    boolean valid = (nullable && (countOfFieldsOfOneOf == 0 || countOfFieldsOfOneOf == 1))
         || (!nullable && countOfFieldsOfOneOf == 1);
+    if (!valid && context != null && context instanceof ConstraintValidatorContextImpl) {
+      ((ConstraintValidatorContextImpl) context).addMessageParameter("${fields}", fieldNamesPresent.toString());
+    }
+    return valid;
   }
 }
