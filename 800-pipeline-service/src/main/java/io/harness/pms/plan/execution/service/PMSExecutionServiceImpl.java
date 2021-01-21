@@ -37,7 +37,7 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
 
   @Override
   public Criteria formCriteria(String accountId, String orgId, String projectId, String pipelineIdentifier,
-      String filterIdentifier, PipelineExecutionFilterPropertiesDTO filterProperties) {
+      String filterIdentifier, PipelineExecutionFilterPropertiesDTO filterProperties, String moduleName) {
     Criteria criteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(accountId)) {
       criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.accountId).is(accountId);
@@ -60,6 +60,11 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
       populatePipelineFilter(criteria, filterProperties);
     }
 
+    if (EmptyPredicate.isNotEmpty(moduleName)) {
+      criteria.orOperator(
+          Criteria.where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.modules).in(moduleName),
+          Criteria.where(String.format("moduleInfo.%s", moduleName)).exists(true));
+    }
     return criteria;
   }
 

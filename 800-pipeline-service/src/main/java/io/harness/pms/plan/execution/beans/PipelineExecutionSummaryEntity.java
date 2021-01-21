@@ -61,6 +61,7 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
 
   @Builder.Default private Map<String, org.bson.Document> moduleInfo = new HashMap<>();
   @Builder.Default private Map<String, GraphLayoutNodeDTO> layoutNodeMap = new HashMap<>();
+  private List<String> modules;
   private String startingNodeId;
 
   private ExecutionTriggerInfo executionTriggerInfo;

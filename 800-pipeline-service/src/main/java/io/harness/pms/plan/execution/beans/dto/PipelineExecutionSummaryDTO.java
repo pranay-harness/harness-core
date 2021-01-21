@@ -36,6 +36,7 @@ public class PipelineExecutionSummaryDTO {
 
   Map<String, Document> moduleInfo;
   Map<String, GraphLayoutNodeDTO> layoutNodeMap;
+  List<String> modules;
   String startingNodeId;
 
   Long startTs;

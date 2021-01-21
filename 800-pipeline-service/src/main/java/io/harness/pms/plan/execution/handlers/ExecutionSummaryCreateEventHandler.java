@@ -21,8 +21,10 @@ import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.bson.Document;
@@ -53,6 +55,7 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
     Map<String, GraphLayoutNode> layoutNodeMap = planExecution.getPlan().getGraphLayoutInfo().getLayoutNodesMap();
     String startingNodeId = planExecution.getPlan().getGraphLayoutInfo().getStartingNodeId();
     Map<String, GraphLayoutNodeDTO> layoutNodeDTOMap = new HashMap<>();
+    List<String> modules = new ArrayList<>();
     for (Map.Entry<String, GraphLayoutNode> entry : layoutNodeMap.entrySet()) {
       GraphLayoutNodeDTO graphLayoutNodeDTO = GraphLayoutDtoMapper.toDto(entry.getValue());
       if (entry.getValue().getNodeType().equals("parallel")) {
@@ -65,6 +68,7 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
       moduleInfo.put(moduleName, new Document());
       graphLayoutNodeDTO.setModuleInfo(moduleInfo);
       layoutNodeDTOMap.put(entry.getKey(), graphLayoutNodeDTO);
+      modules.add(moduleName);
     }
     PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity =
         PipelineExecutionSummaryEntity.builder()
@@ -83,6 +87,7 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
             .orgIdentifier(orgId)
             .executionTriggerInfo(planExecution.getMetadata().getTriggerInfo())
             .tags(pipelineEntity.get().getTags())
+            .modules(modules)
             .build();
     pmsExecutionSummaryRespository.save(pipelineExecutionSummaryEntity);
   }

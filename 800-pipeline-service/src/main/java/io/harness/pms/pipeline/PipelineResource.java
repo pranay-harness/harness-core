@@ -226,10 +226,11 @@ public class PipelineResource {
       @NotNull @QueryParam("projectIdentifier") String projectId, @QueryParam("filter") String filter,
       @QueryParam("pipelineIdentifier") String pipelineIdentifier, @QueryParam("page") @DefaultValue("0") int page,
       @QueryParam("size") @DefaultValue("10") int size, @QueryParam("sort") List<String> sort,
-      @QueryParam("filterIdentifier") String filterIdentifier, FilterPropertiesDTO filterProperties) {
+      @QueryParam("filterIdentifier") String filterIdentifier, @QueryParam("module") String moduleName,
+      FilterPropertiesDTO filterProperties) {
     log.info("Get List of executions");
     Criteria criteria = pmsExecutionService.formCriteria(accountId, orgId, projectId, pipelineIdentifier,
-        filterIdentifier, (PipelineExecutionFilterPropertiesDTO) filterProperties);
+        filterIdentifier, (PipelineExecutionFilterPropertiesDTO) filterProperties, moduleName);
     Pageable pageRequest;
     if (EmptyPredicate.isEmpty(sort)) {
       pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.createdAt));

@@ -1,10 +1,12 @@
 package io.harness.pms.pipeline.mappers;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.GraphLayoutNodeDTO;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionSummaryDTO;
 
+import java.util.ArrayList;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
 
@@ -32,6 +34,9 @@ public class PipelineExecutionSummaryDtoMapper {
         .totalStagesCount(getStagesCount(layoutNodeDTOMap, startingNodeId))
         .runSequence(pipelineExecutionSummaryEntity.getRunSequence())
         .tags(pipelineExecutionSummaryEntity.getTags())
+        .modules(EmptyPredicate.isEmpty(pipelineExecutionSummaryEntity.getModules())
+                ? new ArrayList<>()
+                : pipelineExecutionSummaryEntity.getModules())
         .build();
   }
 
