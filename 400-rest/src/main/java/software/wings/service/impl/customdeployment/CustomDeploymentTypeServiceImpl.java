@@ -79,7 +79,7 @@ public class CustomDeploymentTypeServiceImpl implements CustomDeploymentTypeServ
   @Override
   public String fetchDeploymentTemplateUri(@NotBlank String templateUuid) {
     try {
-      return templateService.fetchTemplateUri(templateUuid);
+      return templateService.makeNamespacedTemplareUri(templateUuid, null);
     } catch (Exception e) {
       throw new CustomDeploymentTypeNotFoundException("Cannot get deployment type", e, USER);
     }
