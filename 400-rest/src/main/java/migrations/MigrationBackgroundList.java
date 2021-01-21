@@ -58,6 +58,7 @@ import migrations.all.CreatePrimiryProfileForAllAccounts;
 import migrations.all.DelegatesWithoutProfileMigration;
 import migrations.all.DeleteInvalidServiceGuardConfigs;
 import migrations.all.DeleteOrphanNotificationGroups;
+import migrations.all.DeleteOrphanPerpetualTaskMigration;
 import migrations.all.DeleteStaleSlackConfigs;
 import migrations.all.DeleteStaleThirdPartyApiCallLogsMigration;
 import migrations.all.DeletedAccountStatusMigration;
@@ -302,6 +303,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(183, BaseMigration.class))
         .add(Pair.of(184, SetDefaultTimeOutAndActionForManualInterventionFailureStrategy.class))
         .add(Pair.of(185, ConvertHttpHeadersStringTypeToList.class))
+        .add(Pair.of(186, DeleteOrphanPerpetualTaskMigration.class))
         .build();
   }
 }
