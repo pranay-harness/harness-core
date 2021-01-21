@@ -1,19 +1,19 @@
 package io.harness.ngtriggers.mapper;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ngtriggers.Constants.X_BIT_BUCKET_EVENT;
 import static io.harness.ngtriggers.Constants.X_GIT_HUB_EVENT;
 import static io.harness.ngtriggers.Constants.X_GIT_LAB_EVENT;
-import static io.harness.ngtriggers.Constants.X_HARNESS_WEBHOOK_TOKEN;
+import static io.harness.ngtriggers.Constants.X_HARNESS_TRIGGER_ID;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.BITBUCKET;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.CUSTOM;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.GITHUB;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.GITLAB;
 
 import static java.time.temporal.ChronoUnit.DAYS;
-import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.ngtriggers.beans.config.HeaderConfig;
@@ -29,6 +29,7 @@ import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerEventHistory;
 import io.harness.ngtriggers.beans.entity.TriggerEventHistory.TriggerEventHistoryKeys;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
+import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventBuilder;
 import io.harness.ngtriggers.beans.entity.metadata.CustomMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.CustomWebhookInlineAuthToken;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
@@ -175,32 +176,28 @@ public class NGTriggerElementMapper {
       webhookSourceRepo = GITLAB;
     } else if (webhookEventPayloadParser.containsHeaderKey(headerKeys, X_BIT_BUCKET_EVENT)) {
       webhookSourceRepo = BITBUCKET;
-    } else if (webhookEventPayloadParser.containsHeaderKey(headerKeys, X_HARNESS_WEBHOOK_TOKEN)) {
-      webhookSourceRepo = CUSTOM;
     } else {
-      return null;
+      webhookSourceRepo = CUSTOM;
     }
 
-    if (webhookSourceRepo == CUSTOM) {
-      HeaderConfig customHeaderConfig = headerConfigs.stream()
-                                            .filter(header -> header.getKey().equalsIgnoreCase(X_HARNESS_WEBHOOK_TOKEN))
-                                            .findAny()
-                                            .orElse(null);
+    TriggerWebhookEventBuilder triggerWebhookEventBuilder = TriggerWebhookEvent.builder()
+                                                                .accountId(accountIdentifier)
+                                                                .orgIdentifier(orgIdentifier)
+                                                                .projectIdentifier(projectIdentifier)
+                                                                .sourceRepoType(webhookSourceRepo.name())
+                                                                .headers(headerConfigs)
+                                                                .payload(payload);
 
-      if (customHeaderConfig != null && isBlank(customHeaderConfig.getValues().get(0))) {
-        log.warn("Received Custom Webhook doesn't contain the required secret for header {}", X_HARNESS_WEBHOOK_TOKEN);
-        return null;
-      }
+    HeaderConfig customTriggerIdentifier = headerConfigs.stream()
+                                               .filter(header -> header.getKey().equalsIgnoreCase(X_HARNESS_TRIGGER_ID))
+                                               .findAny()
+                                               .orElse(null);
+
+    if (customTriggerIdentifier != null && isNotBlank(customTriggerIdentifier.getValues().get(0))) {
+      triggerWebhookEventBuilder.triggerIdentifier(customTriggerIdentifier.getValues().get(0));
     }
 
-    return TriggerWebhookEvent.builder()
-        .accountId(accountIdentifier)
-        .orgIdentifier(orgIdentifier)
-        .projectIdentifier(projectIdentifier)
-        .sourceRepoType(webhookSourceRepo.name())
-        .headers(headerConfigs)
-        .payload(payload)
-        .build();
+    return triggerWebhookEventBuilder.build();
   }
 
   public NGTriggerDetailsResponseDTO toNGTriggerDetailsResponseDTO(
@@ -292,7 +289,7 @@ public class NGTriggerElementMapper {
         triggerEventHistoryRepository.findFirst1ByAccountIdAndOrgIdentifierAndProjectIdentifierAndTriggerIdentifier(
             ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(),
             ngTriggerEntity.getIdentifier(), Sort.by(TriggerEventHistoryKeys.createdAt).descending());
-    if (!EmptyPredicate.isEmpty(triggerEventHistoryList)) {
+    if (!isEmpty(triggerEventHistoryList)) {
       return Optional.of(triggerEventHistoryList.get(0));
     }
     return Optional.empty();
