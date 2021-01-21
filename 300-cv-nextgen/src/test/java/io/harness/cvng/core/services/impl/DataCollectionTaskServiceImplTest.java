@@ -89,6 +89,8 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
 
   private String cvConfigId;
   private String accountId;
+  private String orgIdentifier;
+  private String projectIdentifier;
   private Instant fakeNow;
   private String dataCollectionWorkerId;
   private String verificationTaskId;
@@ -97,6 +99,9 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
   public void setupTests() throws IllegalAccessException {
     initMocks(this);
     accountId = generateUuid();
+    orgIdentifier = generateUuid();
+    projectIdentifier = generateUuid();
+    metricPackService.createDefaultMetricPackAndThresholds(accountId, orgIdentifier, projectIdentifier);
     CVConfig cvConfig = cvConfigService.save(createCVConfig());
     cvConfigId = cvConfig.getUuid();
     verificationTaskId = verificationTaskService.getServiceGuardVerificationTaskId(accountId, cvConfigId);
@@ -554,7 +559,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     FieldUtils.writeField(dataCollectionTaskService, "verificationManagerService", verificationManagerService, true);
 
     when(verificationManagerService.createDataCollectionTask(
-             eq(accountId), eq("orgIdentifier"), eq("projectIdentifier"), any(DataCollectionConnectorBundle.class)))
+             eq(accountId), eq(orgIdentifier), eq(projectIdentifier), any(DataCollectionConnectorBundle.class)))
         .thenReturn(taskId);
     AppDynamicsCVConfig cvConfig = getCVConfig();
 
@@ -591,7 +596,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     FieldUtils.writeField(dataCollectionTaskService, "verificationManagerService", verificationManagerService, true);
 
     when(verificationManagerService.createDataCollectionTask(
-             eq(accountId), eq("orgIdentifier"), eq("projectIdentifier"), any(DataCollectionConnectorBundle.class)))
+             eq(accountId), eq(orgIdentifier), eq(projectIdentifier), any(DataCollectionConnectorBundle.class)))
         .thenReturn(taskId);
     SplunkCVConfig cvConfig = getSplunkCVConfig();
 
@@ -632,7 +637,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
 
   private AppDynamicsCVConfig getCVConfig() {
     AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
-    cvConfig.setProjectIdentifier("projectIdentifier");
+    cvConfig.setProjectIdentifier(projectIdentifier);
     cvConfig.setUuid(cvConfigId);
     cvConfig.setAccountId(accountId);
     cvConfig.setApplicationName("cv-app");
@@ -645,23 +650,24 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     cvConfig.setMonitoringSourceName(generateUuid());
     cvConfig.setApplicationName("applicationName");
     cvConfig.setTierName("tierName");
-    cvConfig.setOrgIdentifier("orgIdentifier");
+    cvConfig.setOrgIdentifier(orgIdentifier);
     cvConfig.setMetricPack(
-        metricPackService.getMetricPacks(accountId, "org", "projectId", DataSourceType.APP_DYNAMICS).get(0));
+        metricPackService.getMetricPacks(accountId, orgIdentifier, projectIdentifier, DataSourceType.APP_DYNAMICS)
+            .get(0));
     return cvConfig;
   }
 
   private SplunkCVConfig getSplunkCVConfig() {
     SplunkCVConfig cvConfig = new SplunkCVConfig();
     cvConfig.setCreatedAt(clock.millis());
-    cvConfig.setProjectIdentifier("projectIdentifier");
+    cvConfig.setProjectIdentifier(projectIdentifier);
     cvConfig.setUuid(cvConfigId);
     cvConfig.setAccountId(accountId);
     cvConfig.setVerificationType(VerificationType.TIME_SERIES);
     cvConfig.setConnectorIdentifier(generateUuid());
     cvConfig.setServiceIdentifier("serviceIdentifier");
     cvConfig.setEnvIdentifier("envIdentifier");
-    cvConfig.setOrgIdentifier("orgIdentifier");
+    cvConfig.setOrgIdentifier(orgIdentifier);
     cvConfig.setIdentifier(generateUuid());
     cvConfig.setMonitoringSourceName(generateUuid());
     cvConfig.setQuery("excetpion");
@@ -736,8 +742,8 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     cvConfig.setConnectorIdentifier(generateUuid());
     cvConfig.setServiceIdentifier(generateUuid());
     cvConfig.setEnvIdentifier(generateUuid());
-    cvConfig.setProjectIdentifier(generateUuid());
-    cvConfig.setOrgIdentifier(generateUuid());
+    cvConfig.setProjectIdentifier(projectIdentifier);
+    cvConfig.setOrgIdentifier(orgIdentifier);
     cvConfig.setIdentifier(generateUuid());
     cvConfig.setMonitoringSourceName(generateUuid());
     cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
@@ -771,8 +777,8 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTest {
     testVerificationJob.setJobName(generateUuid());
     testVerificationJob.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
     testVerificationJob.setServiceIdentifier(generateUuid());
-    testVerificationJob.setOrgIdentifier(generateUuid());
-    testVerificationJob.setProjectIdentifier(generateUuid());
+    testVerificationJob.setOrgIdentifier(orgIdentifier);
+    testVerificationJob.setProjectIdentifier(projectIdentifier);
     testVerificationJob.setEnvIdentifier(generateUuid());
     testVerificationJob.setSensitivity(Sensitivity.MEDIUM.name());
     testVerificationJob.setDuration("15m");
