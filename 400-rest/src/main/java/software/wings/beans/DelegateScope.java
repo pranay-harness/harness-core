@@ -8,9 +8,9 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
 import io.harness.delegate.beans.TaskGroup;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -20,10 +20,9 @@ import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
 
-import software.wings.beans.DelegateScope.DelegateScopeKeys;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -39,12 +38,19 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "DelegateScopeKeys")
 @Entity(value = "delegateScopes", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-@NgUniqueIndex(name = "uniqueName",
-    fields = { @Field(value = DelegateScopeKeys.accountId)
-               , @Field(value = DelegateScopeKeys.name) })
 @TargetModule(Module._920_DELEGATE_SERVICE_BEANS)
 public class DelegateScope implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                       UpdatedByAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("uniqueName")
+                 .unique(true)
+                 .field(DelegateScopeKeys.accountId)
+                 .field(DelegateScopeKeys.name)
+                 .build())
+        .build();
+  }
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @SchemaIgnore private EmbeddedUser createdBy;
   @SchemaIgnore @FdIndex private long createdAt;
