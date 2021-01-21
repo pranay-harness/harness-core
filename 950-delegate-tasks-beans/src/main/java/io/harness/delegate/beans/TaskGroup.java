@@ -69,5 +69,6 @@ public enum TaskGroup {
   NOTIFICATION,
   HTTP_NG,
   SHELL_SCRIPT_NG,
+  GIT_NG,
   BATCH_CAPABILITY_CHECK
 }

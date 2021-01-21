@@ -84,6 +84,7 @@ import io.harness.delegate.task.gcp.taskHandlers.TaskHandler;
 import io.harness.delegate.task.git.GitFetchTaskNG;
 import io.harness.delegate.task.git.NGGitCommandTask;
 import io.harness.delegate.task.git.NGGitCommandTask.GitValidationHandler;
+import io.harness.delegate.task.gitapi.GitApiTask;
 import io.harness.delegate.task.jira.JiraTaskNG;
 import io.harness.delegate.task.k8s.ConnectorValidationHandler;
 import io.harness.delegate.task.k8s.K8sTaskNG;
@@ -1193,6 +1194,8 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.NG_AWS_TASK).toInstance(AwsDelegateTask.class);
     mapBinder.addBinding(TaskType.JIRA_TASK_NG).toInstance(JiraTaskNG.class);
     mapBinder.addBinding(TaskType.BUILD_STATUS).toInstance(CIBuildStatusPushTask.class);
+    mapBinder.addBinding(TaskType.GIT_API_TASK).toInstance(GitApiTask.class);
+
     mapBinder.addBinding(TaskType.K8_FETCH_NAMESPACES).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.K8_FETCH_WORKLOADS).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.HTTP_TASK_NG).toInstance(HttpTaskNG.class);

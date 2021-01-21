@@ -3,11 +3,13 @@ package io.harness.connector.impl;
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
 import static io.harness.connector.ConnectivityStatus.FAILURE;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.connector.ConnectorType.GIT;
 import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 
 import io.harness.EntityType;
 import io.harness.beans.IdentifierRef;
@@ -377,9 +379,13 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
 
   @Override
   public List<ConnectorResponseDTO> listbyFQN(String accountIdentifier, List<String> connectorFQN) {
+    if (isEmpty(connectorFQN)) {
+      return emptyList();
+    }
+
     Pageable pageable = PageUtils.getPageRequest(
         PageRequest.builder()
-            .pageSize(100)
+            .pageSize(connectorFQN.size())
             .sortOrders(Collections.singletonList(
                 SortOrder.Builder.aSortOrder().withField(ConnectorKeys.createdAt, OrderType.DESC).build()))
             .build());
