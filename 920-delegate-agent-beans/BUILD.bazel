@@ -29,13 +29,15 @@ java_library(
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
+    resource_jars = [
+        "//920-delegate-agent-beans/src/main/proto:920_delegate_agent_beans_java_proto",
+    ],
     resources = [
     ],
     visibility = ["//visibility:public"],
     deps = [
         "maven_deps",
         "//:lombok",
-        "//920-delegate-agent-beans/src/main/proto:920_delegate_agent_beans_java_proto",
         "//940-delegate-beans/src/main/proto:940_delegate_beans_java_proto",
     ],
 )

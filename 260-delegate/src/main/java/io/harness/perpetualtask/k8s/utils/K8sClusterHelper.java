@@ -1,5 +1,7 @@
 package io.harness.perpetualtask.k8s.utils;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.filesystem.FileIo;
 
 import com.google.common.collect.Sets;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Singleton
 @Service
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class K8sClusterHelper {
   public static final String SEEN_CLUSTER_FILE_NAME = "k8sSeenClusters.txt";
   private static final String DELIMITER = ",";

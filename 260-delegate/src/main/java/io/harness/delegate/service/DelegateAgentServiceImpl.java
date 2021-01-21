@@ -77,6 +77,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateHeartbeatResponse;
 import io.harness.configuration.DeployMode;
 import io.harness.data.structure.HarnessStringUtils;
@@ -243,6 +245,7 @@ import retrofit2.Response;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class DelegateAgentServiceImpl implements DelegateAgentService {
   private static final int POLL_INTERVAL_SECONDS = 3;
   private static final long UPGRADE_TIMEOUT = TimeUnit.HOURS.toMillis(2);

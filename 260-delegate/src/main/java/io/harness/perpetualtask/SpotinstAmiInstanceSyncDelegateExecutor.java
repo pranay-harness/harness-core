@@ -2,6 +2,8 @@ package io.harness.perpetualtask;
 
 import static io.harness.network.SafeHttpCall.execute;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.spotinst.request.SpotInstListElastigroupInstancesParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
 import io.harness.grpc.utils.AnyUtils;
@@ -23,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.server.Response;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class SpotinstAmiInstanceSyncDelegateExecutor implements PerpetualTaskExecutor {
   @Inject private EncryptionService encryptionService;
   @Inject private SpotInstSyncTaskHandler taskHandler;

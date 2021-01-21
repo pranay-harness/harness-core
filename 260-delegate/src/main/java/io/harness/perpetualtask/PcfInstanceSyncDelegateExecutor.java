@@ -2,6 +2,8 @@ package io.harness.perpetualtask;
 
 import static io.harness.network.SafeHttpCall.execute;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.managerclient.DelegateAgentManagerClient;
@@ -28,6 +30,7 @@ import org.eclipse.jetty.server.Response;
 
 @Slf4j
 @Singleton
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class PcfInstanceSyncDelegateExecutor implements PerpetualTaskExecutor {
   @Inject PcfDelegateTaskHelper pcfDelegateTaskHelper;
   @Inject DelegateAgentManagerClient delegateAgentManagerClient;

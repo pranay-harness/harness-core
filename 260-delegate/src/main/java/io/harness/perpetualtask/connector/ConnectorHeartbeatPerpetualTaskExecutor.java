@@ -5,6 +5,8 @@ import static io.harness.NGConstants.CONNECTOR_STRING;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.network.SafeHttpCall.execute;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
@@ -33,6 +35,7 @@ import org.eclipse.jetty.server.Response;
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class ConnectorHeartbeatPerpetualTaskExecutor implements PerpetualTaskExecutor {
   Map<String, ConnectorValidationHandler> connectorTypeToConnectorValidationHandlerMap;
   private KryoSerializer kryoSerializer;

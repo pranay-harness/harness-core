@@ -2,12 +2,15 @@ package io.harness.perpetualtask.datacollection;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.cvng.beans.DataCollectionType;
 import io.harness.logging.AutoLogContext;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class DataCollectionLogContext extends AutoLogContext {
   public static final String DATA_COLLECTION_WORKER_ID = "dataCollectionWorkerId";
   public static final String VERIFICATION_TYPE = "verificationType";

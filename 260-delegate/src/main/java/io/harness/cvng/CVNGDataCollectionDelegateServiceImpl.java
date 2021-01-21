@@ -1,5 +1,7 @@
 package io.harness.cvng;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.entity.RuntimeParameters;
@@ -16,6 +18,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class CVNGDataCollectionDelegateServiceImpl implements CVNGDataCollectionDelegateService {
   @Inject private DataCollectionDSLService dataCollectionDSLService;
   @Inject private SecretDecryptionService secretDecryptionService;

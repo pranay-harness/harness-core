@@ -1,5 +1,7 @@
 package io.harness.delegate.service;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.cvng.CVNGRequestExecutor;
 import io.harness.cvng.beans.LogRecordDTO;
 import io.harness.datacollection.entity.LogDataRecord;
@@ -14,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class LogRecordDataStoreService {
   @Inject private CVNextGenServiceClient cvNextGenServiceClient;
   @Inject private CVNGRequestExecutor cvngRequestExecutor;

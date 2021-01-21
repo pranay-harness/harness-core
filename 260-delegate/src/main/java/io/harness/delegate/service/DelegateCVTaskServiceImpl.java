@@ -4,6 +4,8 @@ import static io.harness.network.SafeHttpCall.execute;
 
 import static software.wings.common.VerificationConstants.MAX_RETRIES;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.managerclient.VerificationServiceClient;
 
 import software.wings.delegatetasks.DelegateCVTaskService;
@@ -20,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 @Slf4j
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class DelegateCVTaskServiceImpl implements DelegateCVTaskService {
   private static final int TIMEOUT_DURATION_SEC = 5;
   @VisibleForTesting static Duration DELAY = Duration.ofSeconds(1);

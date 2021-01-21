@@ -21,6 +21,8 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.right;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.managerclient.DelegateAgentManagerClient;
@@ -67,6 +69,7 @@ import retrofit2.Response;
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class DelegateLogServiceImpl implements DelegateLogService {
   /**
    * The Size Limit For Final LogLine

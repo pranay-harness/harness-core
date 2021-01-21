@@ -1,5 +1,7 @@
 package io.harness.taskprogress;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.delegate.AccountId;
 import io.harness.delegate.TaskId;
@@ -13,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Builder
 @Slf4j
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class TaskProgressClient implements ITaskProgressClient {
   private final DelegateServiceGrpcAgentClient delegateServiceGrpcAgentClient;
   private final KryoSerializer kryoSerializer;

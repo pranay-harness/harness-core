@@ -10,11 +10,12 @@ sources()
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
+    resource_jars = [
+        "//890-pms-contracts/src/main/proto:890_pms_contracts_java_proto",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
-        "//890-pms-contracts/src/main/proto:890_pms_contracts_java_proto",
-        "//890-pms-contracts/src/main/proto:890_pms_contracts_proto",
         "@maven//:com_google_guava_guava",
     ],
 )

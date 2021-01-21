@@ -2,6 +2,8 @@ package software.wings.delegatetasks;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -23,6 +25,7 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class HostValidationTask extends AbstractDelegateRunnableTask {
   @Inject private HostValidationService hostValidationService;
 

@@ -19,11 +19,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>920-delegate-agent-beans-proto</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>990-commons-test</artifactId>
             <version>${project.parent.version}</version>
             <scope>test</scope>

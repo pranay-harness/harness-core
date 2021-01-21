@@ -1,5 +1,7 @@
 package io.harness.delegate.app;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.expression.app.ExpressionServiceModule;
 import io.harness.expression.service.ExpressionEvaulatorServiceGrpc;
 import io.harness.expression.service.ExpressionServiceImpl;
@@ -24,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class DelegateGrpcServiceModule extends AbstractModule {
   private static final String SERVICE_ID = "delegate-grpc-service";
   private final int servicePort;

@@ -36,12 +36,14 @@ java_library(
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
+    resource_jars = [
+        "//960-expression-service/src/main/proto/io/harness/expression/service:960_expression_service_java_proto",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "maven_deps",
         "//:lombok",
         "//960-expression-service/src/main/proto/io/harness/expression/service:960_expression_service_java_proto",
-        "//960-expression-service/src/main/proto/io/harness/expression/service:960_expression_service_proto",
         "//970-grpc:module",
     ],
 )
@@ -57,7 +59,6 @@ java_library(
         "maven_deps",
         "module",
         "//:lombok",
-        "//960-expression-service/src/main/proto/io/harness/expression/service:960_expression_service_java_proto",
         "//990-commons-test:module",
         "@maven//:io_grpc_grpc_testing",
         "@maven//:junit_junit",
