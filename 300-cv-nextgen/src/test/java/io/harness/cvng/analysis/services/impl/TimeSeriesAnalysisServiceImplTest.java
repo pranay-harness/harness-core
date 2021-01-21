@@ -10,7 +10,6 @@ import static io.harness.rule.OwnerRule.SOWMYA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.offset;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTest;
 import io.harness.category.element.UnitTests;
@@ -37,12 +36,10 @@ import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesMetricType;
-import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.services.api.CVConfigService;
-import io.harness.cvng.core.services.api.TimeSeriesService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.models.VerificationType;
@@ -82,16 +79,13 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
 
 public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
-  @Inject LearningEngineTaskService learningEngineTaskService;
-  @Mock TimeSeriesService mockTimeSeriesService;
-  @Mock CVConfigService cvConfigService;
-  @Inject TimeSeriesService timeSeriesService;
-  @Inject TimeSeriesAnalysisService timeSeriesAnalysisService;
-  @Inject HPersistence hPersistence;
-  @Inject VerificationTaskService verificationTaskService;
+  @Inject private LearningEngineTaskService learningEngineTaskService;
+  @Inject private CVConfigService cvConfigService;
+  @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
+  @Inject private HPersistence hPersistence;
+  @Inject private VerificationTaskService verificationTaskService;
   @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private VerificationJobService verificationJobService;
@@ -104,20 +98,14 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
   private Instant instant;
   @Before
   public void setUp() throws Exception {
-    cvConfigId = generateUuid();
     accountId = generateUuid();
     instant = Instant.parse("2020-07-27T10:44:06.390Z");
     deploymentStartTimeMs = instant.toEpochMilli();
-    FieldUtils.writeField(timeSeriesAnalysisService, "timeSeriesService", mockTimeSeriesService, true);
-    FieldUtils.writeField(timeSeriesAnalysisService, "cvConfigService", cvConfigService, true);
+    CVConfig cvConfig = newCVConfig();
+    cvConfigService.save(cvConfig);
+    cvConfigId = cvConfig.getUuid();
+    verificationTaskId = verificationTaskService.getServiceGuardVerificationTaskId(accountId, cvConfigId);
 
-    AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
-    cvConfig.setAccountId(generateUuid());
-    cvConfig.setServiceIdentifier(generateUuid());
-    cvConfig.setEnvIdentifier(generateUuid());
-    cvConfig.setUuid(cvConfigId);
-    verificationTaskId = verificationTaskService.create(cvConfig.getAccountId(), cvConfigId);
-    when(cvConfigService.get(cvConfigId)).thenReturn(cvConfig);
     TimeSeriesLearningEngineTask timeSeriesLearningEngineTask = TimeSeriesLearningEngineTask.builder().build();
     timeSeriesLearningEngineTask.setVerificationTaskId(verificationTaskId);
     timeSeriesLearningEngineTask.setAnalysisStartTime(Instant.now());
@@ -190,7 +178,6 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testGetTestData() throws Exception {
-    FieldUtils.writeField(timeSeriesAnalysisService, "timeSeriesService", timeSeriesService, true);
     List<TimeSeriesRecord> records = getTimeSeriesRecords();
     hPersistence.save(records);
     Instant start = Instant.parse("2020-07-07T02:40:00.000Z");
@@ -267,8 +254,9 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  public void testSaveAnalysis_serviceGuard() {
-    when(cvConfigService.get(cvConfigId)).thenReturn(null);
+  public void testSaveAnalysis_serviceGuard() throws IllegalAccessException {
+    HeatMapService heatMapService = mock(HeatMapService.class);
+    FieldUtils.writeField(timeSeriesAnalysisService, "heatMapService", heatMapService, true);
     timeSeriesAnalysisService.saveAnalysis(learningEngineTaskId, buildServiceGuardMetricAnalysisDTO());
 
     TimeSeriesCumulativeSums cumulativeSums =
@@ -287,10 +275,11 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
-  public void testSaveAnalysis_serviceGuard_withoutCumulativeSums() {
-    when(cvConfigService.get(cvConfigId)).thenReturn(null);
+  public void testSaveAnalysis_serviceGuard_withoutCumulativeSums() throws IllegalAccessException {
+    HeatMapService heatMapService = mock(HeatMapService.class);
+    FieldUtils.writeField(timeSeriesAnalysisService, "heatMapService", heatMapService, true);
     timeSeriesAnalysisService.saveAnalysis(
-        learningEngineTaskId, buildServiceGuardMetricAnalysisDTO_emptyCumulativeSums());
+        learningEngineTaskId, buildServiceGuardMetricAnalysisDTO_emptyCumulativeSums(verificationTaskId));
 
     TimeSeriesCumulativeSums cumulativeSums =
         hPersistence.createQuery(TimeSeriesCumulativeSums.class).filter("verificationTaskId", verificationTaskId).get();
@@ -398,7 +387,8 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         .build();
   }
 
-  private ServiceGuardTimeSeriesAnalysisDTO buildServiceGuardMetricAnalysisDTO_emptyCumulativeSums() {
+  private ServiceGuardTimeSeriesAnalysisDTO buildServiceGuardMetricAnalysisDTO_emptyCumulativeSums(
+      String verificationTaskId) {
     Map<String, Double> overallMetricScores = new HashMap<>();
     overallMetricScores.put("Errors per Minute", 0.872);
     overallMetricScores.put("Average Response Time", 0.212);
@@ -699,14 +689,14 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
 
   private CVConfig newCVConfig() {
     SplunkCVConfig cvConfig = new SplunkCVConfig();
-    cvConfig.setUuid(cvConfigId);
     cvConfig.setQuery("exception");
     cvConfig.setServiceInstanceIdentifier("serviceInstanceIdentifier");
     cvConfig.setVerificationType(VerificationType.LOG);
-    cvConfig.setAccountId(generateUuid());
+    cvConfig.setAccountId(accountId);
     cvConfig.setConnectorIdentifier(generateUuid());
     cvConfig.setServiceIdentifier(generateUuid());
     cvConfig.setEnvIdentifier(generateUuid());
+    cvConfig.setOrgIdentifier(generateUuid());
     cvConfig.setProjectIdentifier(generateUuid());
     cvConfig.setIdentifier("groupId");
     cvConfig.setMonitoringSourceName(generateUuid());

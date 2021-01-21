@@ -29,7 +29,7 @@ import io.harness.cvng.core.entities.TimeSeriesThreshold;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.MetricPackService;
-import io.harness.cvng.core.services.api.TimeSeriesService;
+import io.harness.cvng.core.services.api.TimeSeriesRecordService;
 import io.harness.cvng.core.utils.DateTimeUtils;
 import io.harness.persistence.HPersistence;
 
@@ -53,7 +53,7 @@ import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
-public class TimeSeriesServiceImpl implements TimeSeriesService {
+public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
   @Inject private HPersistence hPersistence;
   @Inject private CVConfigService cvConfigService;
   @Inject private MetricPackService metricPackService;
