@@ -1,13 +1,17 @@
 package io.harness.ng.core.api.impl;
 
+import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
+import static io.harness.exception.WingsException.USER;
+
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.api.SecretModifyService;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.SecretFileSpecDTO;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
-import io.harness.secretmanagerclient.remote.SecretManagerClient;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,8 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class SecretFileServiceImpl implements SecretModifyService {
-  private final SecretManagerClient secretManagerClient;
-
   @Override
   public EncryptedDataDTO create(String accountIdentifier, SecretDTOV2 dto) {
     // no need to make a call to 400-rest in case of creating file without any content
@@ -35,13 +37,28 @@ public class SecretFileServiceImpl implements SecretModifyService {
   }
 
   @Override
-  public boolean update(String accountIdentifier, SecretDTOV2 dto) {
+  public void validateUpdateRequest(SecretDTOV2 existingSecret, SecretDTOV2 dto) {
+    SecretFileSpecDTO specDTO = (SecretFileSpecDTO) dto.getSpec();
+    SecretFileSpecDTO existingSecretSpecDTO = (SecretFileSpecDTO) existingSecret.getSpec();
+    Optional.ofNullable(specDTO.getSecretManagerIdentifier())
+        .filter(x -> x.equals(existingSecretSpecDTO.getSecretManagerIdentifier()))
+        .orElseThrow(()
+                         -> new InvalidRequestException(
+                             "Cannot change secret manager after creation of secret file", INVALID_REQUEST, USER));
+  }
+
+  @Override
+  public boolean update(String accountIdentifier, SecretDTOV2 existingSecret, SecretDTOV2 dto) {
+    validateUpdateRequest(existingSecret, dto);
+
     // no need to make a call to 400-rest in case of updating file without any content
     return true;
   }
 
   @Override
-  public boolean updateViaYaml(String accountIdentifier, SecretDTOV2 dto) {
+  public boolean updateViaYaml(String accountIdentifier, SecretDTOV2 existingSecret, SecretDTOV2 dto) {
+    validateUpdateRequest(existingSecret, dto);
+
     // no need to make a call to 400-rest in case of updating file without any content
     return true;
   }

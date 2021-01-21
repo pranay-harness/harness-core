@@ -1,6 +1,5 @@
 package io.harness.delegate.beans.connector.vaultconnector;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.exception.WingsException.USER;
@@ -61,6 +60,7 @@ public class VaultConnectorDTO extends ConnectorConfigDTO implements ExecutionCa
     return Collections.emptyList();
   }
 
+  @Override
   public void validate() {
     try {
       new URL(vaultUrl);
@@ -74,13 +74,6 @@ public class VaultConnectorDTO extends ConnectorConfigDTO implements ExecutionCa
     if (renewalIntervalMinutes <= 0) {
       throw new InvalidRequestException(
           String.format("Invalid value for renewal interval: %s", renewalIntervalMinutes), INVALID_REQUEST, USER);
-    }
-    if (isEmpty(authToken) && (isEmpty(appRoleId) || isEmpty(secretId))) {
-      throw new InvalidRequestException("ApproleID/SecretID cannot be empty", INVALID_REQUEST, USER);
-    }
-
-    if ((isEmpty(appRoleId) || isEmpty(secretId)) && isEmpty(authToken)) {
-      throw new InvalidRequestException("Auth Token cannot be empty", INVALID_REQUEST, USER);
     }
   }
 }

@@ -16,6 +16,7 @@ import io.harness.connector.entities.Connector.ConnectorKeys;
 import io.harness.connector.entities.embedded.vaultconnector.VaultConnector.VaultConnectorKeys;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.stats.ConnectorStatistics;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
@@ -81,8 +82,14 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
       throw new DuplicateFieldException(String.format(
           "Try using different connector identifier, [%s] cannot be used", connectorInfo.getIdentifier()));
     }
+
+    // validate the dto received
+    ConnectorConfigDTO connectorConfigDTO = connectorInfo.getConnectorConfig();
+    connectorConfigDTO.validate();
+
     SecretManagerConfigDTO secretManagerConfigDTO =
-        SecretManagerConfigDTOMapper.fromConnectorDTO(accountIdentifier, connector, connectorInfo.getConnectorConfig());
+        SecretManagerConfigDTOMapper.fromConnectorDTO(accountIdentifier, connector, connectorConfigDTO);
+
     SecretManagerConfigDTO createdSecretManager = ngSecretManagerService.createSecretManager(secretManagerConfigDTO);
     if (Optional.ofNullable(createdSecretManager).isPresent()) {
       if (isDefaultSecretManager(connector.getConnectorInfo())) {
@@ -132,10 +139,17 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   @Override
   public ConnectorResponseDTO update(ConnectorDTO connector, String accountIdentifier) {
     ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
+    ConnectorConfigDTO connectorConfigDTO = connectorInfo.getConnectorConfig();
+
+    // validate fields of dto
+    connectorConfigDTO.validate();
+
     SecretManagerConfigUpdateDTO dto =
-        SecretManagerConfigUpdateDTOMapper.fromConnectorDTO(connector, connectorInfo.getConnectorConfig());
+        SecretManagerConfigUpdateDTOMapper.fromConnectorDTO(connector, connectorConfigDTO);
+
     SecretManagerConfigDTO updatedSecretManagerConfig = ngSecretManagerService.updateSecretManager(accountIdentifier,
         connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier(), dto);
+
     if (Optional.ofNullable(updatedSecretManagerConfig).isPresent()) {
       if (isDefaultSecretManager(connector.getConnectorInfo())) {
         clearDefaultFlagOfSecretManagers(accountIdentifier, connector.getConnectorInfo().getOrgIdentifier(),

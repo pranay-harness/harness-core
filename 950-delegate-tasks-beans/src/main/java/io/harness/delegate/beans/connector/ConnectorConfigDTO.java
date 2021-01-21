@@ -45,4 +45,8 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 })
 public abstract class ConnectorConfigDTO implements DecryptableEntity {
   @JsonIgnore public abstract DecryptableEntity getDecryptableEntity();
+
+  public void validate() {
+    // no op implementation which base classes can override
+  }
 }

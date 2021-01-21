@@ -58,7 +58,11 @@ public class SecretManagerConnectorServiceImplTest extends CategoryTest {
   private ConnectorDTO getRequestDTO() {
     ConnectorInfoDTO connectorInfo = ConnectorInfoDTO.builder().build();
     connectorInfo.setConnectorType(ConnectorType.VAULT);
-    connectorInfo.setConnectorConfig(VaultConnectorDTO.builder().build());
+    connectorInfo.setConnectorConfig(VaultConnectorDTO.builder()
+                                         .vaultUrl("http://abc.com:8200")
+                                         .secretEngineVersion(1)
+                                         .renewalIntervalMinutes(10)
+                                         .build());
     connectorInfo.setName("name");
     connectorInfo.setIdentifier("identifier");
     return ConnectorDTO.builder().connectorInfo(connectorInfo).build();
@@ -67,7 +71,7 @@ public class SecretManagerConnectorServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
-  public void testCreateSecretManagerConnector() throws IOException {
+  public void testCreateSecretManagerConnector() {
     SecretManagerConfigDTO secretManagerConfigDTO = random(VaultConfigDTO.class);
     when(defaultConnectorService.get(any(), any(), any(), any())).thenReturn(Optional.empty());
     when(ngSecretManagerService.createSecretManager(any())).thenReturn(secretManagerConfigDTO);
@@ -81,7 +85,7 @@ public class SecretManagerConnectorServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
-  public void testCreateSecretManagerConnectorShouldFail_ManagerReturnsNull() throws IOException {
+  public void testCreateSecretManagerConnectorShouldFail_ManagerReturnsNull() {
     when(defaultConnectorService.get(any(), any(), any(), any())).thenReturn(Optional.empty());
     when(ngSecretManagerService.createSecretManager(any())).thenReturn(null);
     when(connectorRepository.updateMultiple(any(), any())).thenReturn(null);
@@ -112,7 +116,7 @@ public class SecretManagerConnectorServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
-  public void updateSecretManager() throws IOException {
+  public void updateSecretManager() {
     when(ngSecretManagerService.updateSecretManager(any(), any(), any(), any(), any()))
         .thenReturn(random(VaultConfigDTO.class));
     when(defaultConnectorService.update(any(), any())).thenReturn(null);
@@ -124,7 +128,7 @@ public class SecretManagerConnectorServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = PHOENIKX)
   @Category(UnitTests.class)
-  public void testDeleteSecretManager() throws IOException {
+  public void testDeleteSecretManager() {
     when(ngSecretManagerService.deleteSecretManager(any(), any(), any(), any())).thenReturn(true);
     when(defaultConnectorService.delete(any(), any(), any(), any())).thenReturn(true);
     boolean success = secretManagerConnectorService.delete(ACCOUNT, null, null, "identifier");

@@ -1,6 +1,7 @@
 package io.harness.ng.core.api.impl;
 
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
+import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.exception.WingsException.SRE;
@@ -96,6 +97,12 @@ public class SecretCrudServiceImpl implements SecretCrudService {
     return secretModifyService;
   }
 
+  private void validateUpdateRequest(SecretDTOV2 existingSecret, SecretDTOV2 dto) {
+    if (existingSecret.getType() != dto.getType()) {
+      throw new InvalidRequestException("Cannot change type of secret after creation.", INVALID_REQUEST, USER);
+    }
+  }
+
   private SecretResponseWrapper getResponseWrapper(@NotNull Secret secret) {
     return SecretResponseWrapper.builder()
         .secret(secret.toDTO())
@@ -121,6 +128,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
     if (dto.getSpec().getErrorMessageForInvalidYaml().isPresent()) {
       throw new InvalidRequestException(dto.getSpec().getErrorMessageForInvalidYaml().get(), USER);
     }
+
     EncryptedDataDTO encryptedData = getService(dto.getType()).create(accountIdentifier, dto);
     if (Optional.ofNullable(encryptedData).isPresent()) {
       secretEntityReferenceHelper.createSetupUsageForSecretManager(encryptedData);
@@ -214,7 +222,16 @@ public class SecretCrudServiceImpl implements SecretCrudService {
 
   @Override
   public SecretResponseWrapper update(String accountIdentifier, SecretDTOV2 dto) {
-    boolean remoteUpdateSuccess = getService(dto.getType()).update(accountIdentifier, dto);
+    Optional<SecretResponseWrapper> secretOptional =
+        get(accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier(), dto.getIdentifier());
+    if (!secretOptional.isPresent()) {
+      throw new InvalidRequestException("No such secret found, please check identifier/scope and try again.");
+    }
+
+    validateUpdateRequest(secretOptional.get().getSecret(), dto);
+
+    boolean remoteUpdateSuccess =
+        getService(dto.getType()).update(accountIdentifier, secretOptional.get().getSecret(), dto);
     Secret updatedSecret = null;
     if (remoteUpdateSuccess) {
       updatedSecret = ngSecretService.update(accountIdentifier, dto, false);
@@ -236,7 +253,17 @@ public class SecretCrudServiceImpl implements SecretCrudService {
     if (dto.getSpec().getErrorMessageForInvalidYaml().isPresent()) {
       throw new InvalidRequestException(dto.getSpec().getErrorMessageForInvalidYaml().get(), USER);
     }
-    boolean remoteUpdateSuccess = getService(dto.getType()).update(accountIdentifier, dto);
+
+    Optional<SecretResponseWrapper> secretOptional =
+        get(accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier(), dto.getIdentifier());
+    if (!secretOptional.isPresent()) {
+      throw new InvalidRequestException("No such secret found, please check identifier/scope and try again.");
+    }
+
+    validateUpdateRequest(secretOptional.get().getSecret(), dto);
+
+    boolean remoteUpdateSuccess =
+        getService(dto.getType()).update(accountIdentifier, secretOptional.get().getSecret(), dto);
     Secret updatedSecret = null;
     if (remoteUpdateSuccess) {
       updatedSecret = ngSecretService.update(accountIdentifier, dto, true);
@@ -308,6 +335,14 @@ public class SecretCrudServiceImpl implements SecretCrudService {
   @SneakyThrows
   @Override
   public SecretResponseWrapper updateFile(String accountIdentifier, SecretDTOV2 dto, @NotNull InputStream inputStream) {
+    Optional<SecretResponseWrapper> secretOptional =
+        get(accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier(), dto.getIdentifier());
+    if (!secretOptional.isPresent()) {
+      throw new InvalidRequestException("No such secret found, please check identifier/scope and try again.");
+    }
+
+    validateUpdateRequest(secretOptional.get().getSecret(), dto);
+
     EncryptedDataDTO encryptedDataDTO = getResponse(secretManagerClient.getSecret(
         dto.getIdentifier(), accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier()));
     SecretFileSpecDTO specDTO = (SecretFileSpecDTO) dto.getSpec();

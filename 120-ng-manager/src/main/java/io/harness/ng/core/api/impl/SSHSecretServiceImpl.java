@@ -6,7 +6,6 @@ import io.harness.ng.core.api.SecretModifyService;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
-import io.harness.secretmanagerclient.remote.SecretManagerClient;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -17,8 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class SSHSecretServiceImpl implements SecretModifyService {
-  private final SecretManagerClient secretManagerClient;
-
   @Override
   public EncryptedDataDTO create(String accountIdentifier, SecretDTOV2 dto) {
     // no need to make a call to 400-rest for ssh secrets
@@ -36,13 +33,22 @@ public class SSHSecretServiceImpl implements SecretModifyService {
   }
 
   @Override
-  public boolean update(String accountIdentifier, SecretDTOV2 dto) {
+  public void validateUpdateRequest(SecretDTOV2 existingSecret, SecretDTOV2 dto) {
+    // pass, nothing required to validate, but we can apply future validations like we cannot switch between auth types
+  }
+
+  @Override
+  public boolean update(String accountIdentifier, SecretDTOV2 existingSecret, SecretDTOV2 dto) {
+    validateUpdateRequest(existingSecret, dto);
+
     // no need to make a rest call to 400-rest for ssh secrets
     return true;
   }
 
   @Override
-  public boolean updateViaYaml(String accountIdentifier, SecretDTOV2 dto) {
+  public boolean updateViaYaml(String accountIdentifier, SecretDTOV2 existingSecret, SecretDTOV2 dto) {
+    validateUpdateRequest(existingSecret, dto);
+
     // no need to make a call to 400-rest for ssh secrets
     return true;
   }

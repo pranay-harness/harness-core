@@ -6,6 +6,7 @@ import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.secretmanagerclient.ValueType.Inline;
 import static io.harness.security.SimpleEncryption.CHARSET;
 import static io.harness.security.encryption.EncryptionType.GCP_KMS;
 import static io.harness.security.encryption.EncryptionType.KMS;
@@ -144,7 +145,8 @@ public class NGSecretServiceImpl implements NGSecretService {
     if (secretManagerConfigOptional.isPresent()) {
       SecretManagerConfig secretManagerConfig = secretManagerConfigOptional.get();
 
-      if (isReadOnlySecretManager(secretManagerConfig)) {
+      if (isReadOnlySecretManager(secretManagerConfig)
+          && (Inline.equals(dto.getValueType()) || Optional.ofNullable(dto.getValue()).isPresent())) {
         throw new SecretManagementException(
             SECRET_MANAGEMENT_ERROR, "Cannot create a secret in read only secret manager", USER);
       }
@@ -228,7 +230,8 @@ public class NGSecretServiceImpl implements NGSecretService {
               metadata.getProjectIdentifier(), metadata.getSecretManagerIdentifier());
 
       if (secretManagerConfigOptional.isPresent()) {
-        if (isReadOnlySecretManager(secretManagerConfigOptional.get())) {
+        if (isReadOnlySecretManager(secretManagerConfigOptional.get())
+            && (Inline.equals(dto.getValueType()) || Optional.ofNullable(dto.getValue()).isPresent())) {
           throw new SecretManagementException(
               SECRET_MANAGEMENT_ERROR, "Cannot update a secret in read only secret manager", USER);
         }
@@ -285,7 +288,8 @@ public class NGSecretServiceImpl implements NGSecretService {
       Optional<SecretManagerConfig> secretManagerConfigOptional = ngSecretManagerService.get(
           accountIdentifier, orgIdentifier, projectIdentifier, metadata.getSecretManagerIdentifier());
       if (secretManagerConfigOptional.isPresent()) {
-        if (isReadOnlySecretManager(secretManagerConfigOptional.get())) {
+        if (isReadOnlySecretManager(secretManagerConfigOptional.get())
+            && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
           throw new SecretManagementException(
               SECRET_MANAGEMENT_ERROR, "Cannot delete a secret in read only secret manager", USER);
         }

@@ -313,13 +313,16 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
       Optional<String> urlFromRequest = Optional.ofNullable(specDTO).map(VaultMetadataRequestSpecDTO::getUrl);
       Optional<String> tokenFromRequest = Optional.ofNullable(specDTO)
                                               .filter(x -> x.getAccessType() == AccessType.TOKEN)
-                                              .map(x -> ((VaultAuthTokenCredentialDTO) (x.getSpec())).getAuthToken());
+                                              .map(x -> ((VaultAuthTokenCredentialDTO) (x.getSpec())).getAuthToken())
+                                              .filter(x -> !x.isEmpty());
       Optional<String> appRoleIdFromRequest = Optional.ofNullable(specDTO)
                                                   .filter(x -> x.getAccessType() == AccessType.APP_ROLE)
-                                                  .map(x -> ((VaultAppRoleCredentialDTO) (x.getSpec())).getAppRoleId());
+                                                  .map(x -> ((VaultAppRoleCredentialDTO) (x.getSpec())).getAppRoleId())
+                                                  .filter(x -> !x.isEmpty());
       Optional<String> secretIdFromRequest = Optional.ofNullable(specDTO)
                                                  .filter(x -> x.getAccessType() == AccessType.APP_ROLE)
-                                                 .map(x -> ((VaultAppRoleCredentialDTO) (x.getSpec())).getSecretId());
+                                                 .map(x -> ((VaultAppRoleCredentialDTO) (x.getSpec())).getSecretId())
+                                                 .filter(x -> !x.isEmpty());
 
       Optional<SecretManagerConfig> secretManagerConfigOptional = get(accountIdentifier, requestDTO.getOrgIdentifier(),
           requestDTO.getProjectIdentifier(), requestDTO.getIdentifier());
@@ -332,10 +335,18 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
         vaultConfig.setAccountId(accountIdentifier);
       }
       urlFromRequest.ifPresent(vaultConfig::setVaultUrl);
-      tokenFromRequest.ifPresent(vaultConfig::setAuthToken);
-      appRoleIdFromRequest.ifPresent(vaultConfig::setAppRoleId);
-      secretIdFromRequest.ifPresent(x -> {
-        vaultConfig.setSecretId(x);
+      tokenFromRequest.ifPresent(x -> {
+        vaultConfig.setAuthToken(x);
+        vaultConfig.setAppRoleId(null);
+        vaultConfig.setSecretId(null);
+      });
+      appRoleIdFromRequest.ifPresent(approleId -> {
+        vaultConfig.setAppRoleId(approleId);
+        vaultConfig.setSecretId(null);
+        vaultConfig.setAuthToken(null);
+      });
+      secretIdFromRequest.ifPresent(secretId -> {
+        vaultConfig.setSecretId(secretId);
         vaultConfig.setAuthToken(null);
       });
 

@@ -60,9 +60,15 @@ public class VaultConfigMapper {
           vaultConfig.getSecretEngineVersion(), updateDTO.getSecretEngineVersion(), "secret engine version");
     }
     vaultConfig.setVaultUrl(updateDTO.getVaultUrl());
-    Optional.ofNullable(updateDTO.getAuthToken()).ifPresent(vaultConfig::setAuthToken);
-    Optional.ofNullable(updateDTO.getAppRoleId()).ifPresent(vaultConfig::setAppRoleId);
-    Optional.ofNullable(updateDTO.getSecretId()).ifPresent(secretId -> {
+    Optional.ofNullable(updateDTO.getAuthToken()).filter(authToken -> !authToken.isEmpty()).ifPresent(authToken -> {
+      vaultConfig.setAuthToken(authToken);
+      vaultConfig.setAppRoleId(null);
+      vaultConfig.setSecretId(null);
+    });
+    Optional.ofNullable(updateDTO.getAppRoleId())
+        .filter(appRoleId -> !appRoleId.isEmpty())
+        .ifPresent(vaultConfig::setAppRoleId);
+    Optional.ofNullable(updateDTO.getSecretId()).filter(secretId -> !secretId.isEmpty()).ifPresent(secretId -> {
       vaultConfig.setSecretId(secretId);
       vaultConfig.setAuthToken(null);
     });
