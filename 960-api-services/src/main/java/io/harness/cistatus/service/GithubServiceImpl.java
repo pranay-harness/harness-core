@@ -44,7 +44,7 @@ public class GithubServiceImpl implements GithubService {
       String authToken = getAuthToken(jwtToken);
       Call<GithubAppTokenCreationResponse> responseCall;
 
-      if (GitClientHelper.isGithubSAAS(githubAppConfig.getGithubUrl())) {
+      if (githubAppConfig.getGithubUrl().contains("github.com")) {
         responseCall = getGithubClient(githubAppConfig, encryptionDetails)
                            .createAccessToken(authToken, githubAppConfig.getInstallationId());
       } else {
