@@ -12,6 +12,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 import java.io.IOException;
@@ -80,6 +81,25 @@ public class GithubServiceImpl implements GithubService {
     } catch (Exception e) {
       log.error("Failed to send status for github url {} and sha {} ", githubAppConfig.getGithubUrl(), sha, e);
       return false;
+    }
+  }
+
+  @Override
+  public String findPR(GithubAppConfig githubAppConfig, String token, List<EncryptedDataDetail> encryptionDetails,
+      String owner, String repo, String prNumber) {
+    try {
+      Response<Object> response = getGithubClient(githubAppConfig, encryptionDetails)
+                                      .findPR(getAuthToken(token), owner, repo, prNumber)
+                                      .execute();
+      if (response.isSuccessful()) {
+        return new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(response.body());
+      } else {
+        return null;
+      }
+
+    } catch (Exception e) {
+      log.error("Failed to send status for github url {} and prNum {} ", githubAppConfig.getGithubUrl(), prNumber, e);
+      return "";
     }
   }
 

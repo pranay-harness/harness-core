@@ -174,6 +174,12 @@ import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatu
 import io.harness.delegate.beans.git.GitCommandParams;
 import io.harness.delegate.beans.git.GitCommandType;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.delegate.beans.gitapi.GitApiFindPRTaskResponse;
+import io.harness.delegate.beans.gitapi.GitApiRequestType;
+import io.harness.delegate.beans.gitapi.GitApiResult;
+import io.harness.delegate.beans.gitapi.GitApiTaskParams;
+import io.harness.delegate.beans.gitapi.GitApiTaskResponse;
+import io.harness.delegate.beans.gitapi.GitRepoType;
 import io.harness.delegate.beans.logstreaming.CommandUnitStatusProgress;
 import io.harness.delegate.beans.nexus.NexusTaskParams;
 import io.harness.delegate.beans.nexus.NexusTaskResponse;
@@ -651,6 +657,13 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(GithubUsernameTokenDTO.class, 19511);
     kryo.register(GitlabUsernameTokenDTO.class, 19512);
     kryo.register(SSHKeyDetails.class, 19513);
+    kryo.register(GitRepoType.class, 19514);
+    kryo.register(GitApiRequestType.class, 19515);
+    kryo.register(GitApiTaskParams.class, 19516);
+    kryo.register(GitApiFindPRTaskResponse.class, 19517);
+    kryo.register(GitApiTaskResponse.class, 19518);
+    kryo.register(GitApiResult.class, 19519);
+
     kryo.register(SecretType.class, 543214);
     kryo.register(ValueType.class, 543215);
     kryo.register(SSHKeySpecDTO.class, 543222);

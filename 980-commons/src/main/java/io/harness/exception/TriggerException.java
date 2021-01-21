@@ -13,6 +13,11 @@ public class TriggerException extends WingsException {
     super.getParams().put("message", message);
   }
 
+  public TriggerException(String message, Throwable throwable, EnumSet<ReportTarget> reportTargets) {
+    super(message, throwable, INVALID_REQUEST, Level.ERROR, reportTargets, null);
+    super.getParams().put("message", message);
+  }
+
   public TriggerException(ErrorCode errorCode) {
     super(null, null, errorCode, Level.ERROR, null, null);
   }
