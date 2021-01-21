@@ -85,6 +85,7 @@ public class InviteResource {
       @QueryParam("accountIdentifier") @NotNull String accountIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") String projectIdentifier, @BeanParam PageRequest pageRequest) {
+    projectIdentifier = stripToNull(projectIdentifier);
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder order =
           SortOrder.Builder.aSortOrder().withField(InviteKeys.createdAt, SortOrder.OrderType.DESC).build();
