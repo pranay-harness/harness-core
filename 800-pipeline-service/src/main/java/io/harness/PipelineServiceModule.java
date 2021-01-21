@@ -28,6 +28,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.pms.expressions.PMSExpressionEvaluatorProvider;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetServiceImpl;
+import io.harness.pms.pipeline.mappers.PipelineFilterPropertiesMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
@@ -149,7 +150,9 @@ public class PipelineServiceModule extends AbstractModule {
     bind(TriggerWebhookExecutionService.class).to(TriggerWebhookExecutionServiceImpl.class);
     MapBinder<String, FilterPropertiesMapper> filterPropertiesMapper =
         MapBinder.newMapBinder(binder(), String.class, FilterPropertiesMapper.class);
-    filterPropertiesMapper.addBinding(FilterType.PIPELINE.toString()).to(PipelineExecutionFilterPropertiesMapper.class);
+    filterPropertiesMapper.addBinding(FilterType.PIPELINE_SETUP.toString()).to(PipelineFilterPropertiesMapper.class);
+    filterPropertiesMapper.addBinding(FilterType.PIPELINE_EXECUTION.toString())
+        .to(PipelineExecutionFilterPropertiesMapper.class);
   }
 
   @Provides

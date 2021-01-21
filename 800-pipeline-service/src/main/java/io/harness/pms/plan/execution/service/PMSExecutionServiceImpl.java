@@ -4,28 +4,22 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.interrupts.InterruptPackage;
-import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.service.FilterService;
 import io.harness.interrupts.Interrupt;
+import io.harness.pms.filter.utils.ModuleInfoFilterUtils;
 import io.harness.pms.plan.execution.PlanExecutionInterruptType;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.InterruptDTO;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionFilterPropertiesDTO;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
+import io.harness.serializer.JsonUtils;
 import io.harness.service.GraphGenerationService;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -36,27 +30,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Singleton
 @Slf4j
 public class PMSExecutionServiceImpl implements PMSExecutionService {
-  String inputSetYaml = "inputSet:\n"
-      + "  identifier: identifier\n"
-      + "  description: second input set for unknown pipeline\n"
-      + "  tags:\n"
-      + "    company: harness\n"
-      + "  pipeline:\n"
-      + "    identifier: pipeline_identifier\n"
-      + "    stages:\n"
-      + "      - stage:\n"
-      + "          identifier: qa_again\n"
-      + "          type: Deployment\n"
-      + "          spec:\n"
-      + "            execution:\n"
-      + "              steps:\n"
-      + "                - parallel:\n"
-      + "                    - step:\n"
-      + "                        identifier: rolloutDeployment\n"
-      + "                        type: K8sRollingDeploy\n"
-      + "                        spec:\n"
-      + "                          timeout: 60000\n"
-      + "                          skipDryRun: false";
   @Inject private PmsExecutionSummaryRespository pmsExecutionSummaryRespository;
   @Inject private GraphGenerationService graphGenerationService;
   @Inject private OrchestrationService orchestrationService;
@@ -82,25 +55,23 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
     if (EmptyPredicate.isNotEmpty(filterIdentifier) && filterProperties != null) {
       throw new InvalidRequestException("Can not apply both filter properties and saved filter together");
     } else if (EmptyPredicate.isNotEmpty(filterIdentifier) && filterProperties == null) {
-      populatePipelineFilter(criteria, accountId, orgId, projectId, filterIdentifier);
+      populatePipelineFilterUsingIdentifier(criteria, accountId, orgId, projectId, filterIdentifier);
     } else if (EmptyPredicate.isEmpty(filterIdentifier) && filterProperties != null) {
       populatePipelineFilter(criteria, filterProperties);
-    } else {
-      return criteria;
     }
+
     return criteria;
   }
 
-  private void populatePipelineFilter(Criteria criteria, String accountIdentifier, String orgIdentifier,
+  private void populatePipelineFilterUsingIdentifier(Criteria criteria, String accountIdentifier, String orgIdentifier,
       String projectIdentifier, @NotNull String filterIdentifier) {
     FilterDTO pipelineFilterDTO = this.filterService.get(
-        accountIdentifier, orgIdentifier, projectIdentifier, filterIdentifier, FilterType.PIPELINE);
+        accountIdentifier, orgIdentifier, projectIdentifier, filterIdentifier, FilterType.DEPLOYMENT);
     if (pipelineFilterDTO == null) {
       throw new InvalidRequestException("Could not find a pipeline filter with the identifier ");
-    } else {
-      this.populatePipelineFilter(
-          criteria, (PipelineExecutionFilterPropertiesDTO) pipelineFilterDTO.getFilterProperties());
     }
+    this.populatePipelineFilter(
+        criteria, (PipelineExecutionFilterPropertiesDTO) pipelineFilterDTO.getFilterProperties());
   }
 
   private void populatePipelineFilter(Criteria criteria, @NotNull PipelineExecutionFilterPropertiesDTO piplineFilter) {
@@ -111,34 +82,8 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
       criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.status).in(piplineFilter.getStatus());
     }
     if (piplineFilter.getModuleProperties() != null) {
-      try {
-        processNode(convertBsonToJsonNode(piplineFilter.getModuleProperties()), "moduleInfo", criteria);
-      } catch (IOException e) {
-        throw new InvalidArgumentsException(
-            "converstion error : bson object to JacksonNode may be due to corrupted data");
-      }
-    }
-  }
-
-  private JsonNode convertBsonToJsonNode(org.bson.Document bsonDocument) throws IOException {
-    return new ObjectMapper().readTree(bsonDocument.toJson());
-  }
-
-  private void processNode(JsonNode jsonNode, String parentPath, Criteria criteria) {
-    if (jsonNode.isValueNode()) {
-      criteria.and(parentPath).is(jsonNode.asText());
-    } else if (jsonNode.isArray()) {
-      List<String> valueList = new ArrayList<>();
-      for (JsonNode arrayItem : jsonNode) {
-        valueList.add(arrayItem.textValue());
-      }
-      criteria.and(parentPath).in(valueList);
-    } else if (jsonNode.isObject()) {
-      Iterator<Map.Entry<String, JsonNode>> fields = jsonNode.fields();
-      while (fields.hasNext()) {
-        Map.Entry<String, JsonNode> jsonField = fields.next();
-        processNode(jsonField.getValue(), String.join(".", parentPath, jsonField.getKey()), criteria);
-      }
+      ModuleInfoFilterUtils.processNode(
+          JsonUtils.readTree(piplineFilter.getModuleProperties().toJson()), "moduleInfo", criteria);
     }
   }
 

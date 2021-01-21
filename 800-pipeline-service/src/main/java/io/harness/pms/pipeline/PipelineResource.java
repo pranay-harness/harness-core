@@ -14,11 +14,9 @@ import io.harness.filter.dto.FilterPropertiesDTO;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.pms.filter.creation.PMSPipelineFilterRequestDTO;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.ExecutionGraphMapper;
 import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
-import io.harness.pms.pipeline.mappers.PMSPipelineFilterHelper;
 import io.harness.pms.pipeline.mappers.PipelineExecutionSummaryDtoMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
@@ -27,7 +25,6 @@ import io.harness.pms.plan.execution.beans.dto.PipelineExecutionFilterProperties
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionSummaryDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.variables.VariableMergeServiceResponse;
-import io.harness.serializer.JsonUtils;
 import io.harness.utils.PageUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -164,23 +161,21 @@ public class PipelineResource {
         accountId, orgId, projectId, pipelineId, isNumeric(ifMatch) ? parseLong(ifMatch) : null));
   }
 
-  @GET
+  @POST
+  @Path("/list")
   @ApiOperation(value = "Gets Pipeline list", nickname = "getPipelineList")
   public ResponseDTO<Page<PMSPipelineSummaryResponseDTO>> getListOfPipelines(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
-      @QueryParam("filter") String filterQuery, @QueryParam("page") @DefaultValue("0") int page,
-      @QueryParam("size") @DefaultValue("25") int size, @QueryParam("sort") List<String> sort,
-      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @QueryParam("module") String module) {
+      @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("25") int size,
+      @QueryParam("sort") List<String> sort, @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @QueryParam("module") String module, @QueryParam("filterIdentifier") String filterIdentifier,
+      FilterPropertiesDTO filterProperties) {
     log.info("Get List of pipelines");
-    PMSPipelineFilterRequestDTO pmsPipelineFilterRequestDTO = null;
+    Criteria criteria = pmsPipelineService.formCriteria(accountId, orgId, projectId, filterIdentifier,
+        (PipelineFilterPropertiesDto) filterProperties, false, module, searchTerm);
 
-    if (EmptyPredicate.isNotEmpty(filterQuery)) {
-      pmsPipelineFilterRequestDTO = JsonUtils.asObject(filterQuery, PMSPipelineFilterRequestDTO.class);
-    }
-    Criteria criteria = PMSPipelineFilterHelper.createCriteriaForGetList(
-        accountId, orgId, projectId, pmsPipelineFilterRequestDTO, module, searchTerm, false);
     Pageable pageRequest;
     if (EmptyPredicate.isEmpty(sort)) {
       pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.lastUpdatedAt));
