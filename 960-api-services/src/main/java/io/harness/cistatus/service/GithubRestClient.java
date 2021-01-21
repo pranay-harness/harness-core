@@ -17,6 +17,11 @@ public interface GithubRestClient {
   Call<GithubAppTokenCreationResponse> createAccessToken(
       @Header("Authorization") String authorization, @Path("installation_id") String installationId);
 
+  @POST("app/installations/{installation_id}/access_tokens")
+  @Headers("Accept: application/vnd.github.machine-man-preview+json")
+  Call<GithubAppTokenCreationResponse> createAccessTokenForGithubEnterprise(
+      @Header("Authorization") String authorization, @Path("installation_id") String installationId);
+
   @POST("repos/{owner}/{repo}/statuses/{sha}")
   @Headers("Accept: application/vnd.github.v3+json")
   Call<StatusCreationResponse> createStatus(@Header("Authorization") String authorization, @Path("owner") String owner,
