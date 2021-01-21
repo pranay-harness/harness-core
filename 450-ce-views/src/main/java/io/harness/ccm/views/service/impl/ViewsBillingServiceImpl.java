@@ -1,5 +1,8 @@
 package io.harness.ccm.views.service.impl;
 
+import static io.harness.ccm.views.graphql.QLCEViewAggregateOperation.MAX;
+import static io.harness.ccm.views.graphql.QLCEViewAggregateOperation.MIN;
+import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.AFTER;
 import static io.harness.ccm.views.graphql.ViewMetaDataConstants.entityConstantCost;
 import static io.harness.ccm.views.graphql.ViewMetaDataConstants.entityConstantMaxStartTime;
 import static io.harness.ccm.views.graphql.ViewMetaDataConstants.entityConstantMinStartTime;
@@ -81,6 +84,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
   private static final String COST_VALUE = "$%s";
   private static final String TOTAL_COST_LABEL = "Total Cost";
   private static final String DATE_PATTERN_FOR_CHART = "MMM dd";
+  private static final long ONE_DAY_MILLIS = 86400000L;
 
   @Override
   public List<String> getFilterValueStats(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
@@ -124,6 +128,10 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
   public List<QLCEViewEntityStatsDataPoint> getEntityStatsDataPoints(BigQuery bigQuery,
       List<QLCEViewFilterWrapper> filters, List<QLCEViewGroupBy> groupBy, List<QLCEViewAggregation> aggregateFunction,
       List<QLCEViewSortCriteria> sort, String cloudProviderTableName, Integer limit, Integer offset) {
+    Map<String, ViewCostData> costTrendData = getEntityStatsDataForCostTrend(
+        bigQuery, filters, groupBy, aggregateFunction, sort, cloudProviderTableName, limit, offset);
+    long startTimeForTrendData = getStartTimeForTrendFilters(filters);
+    log.info("Cost trend data for view table : {} ", costTrendData);
     SelectQuery query = getQuery(filters, groupBy, aggregateFunction, sort, cloudProviderTableName, false);
     query.addCustomization(new PgLimitClause(limit));
     query.addCustomization(new PgOffsetClause(offset));
@@ -136,7 +144,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
       Thread.currentThread().interrupt();
       return null;
     }
-    return convertToEntityStatsData(result);
+    return convertToEntityStatsData(result, costTrendData, startTimeForTrendData);
   }
 
   @Override
@@ -167,8 +175,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     SelectQuery prevTrendStatsQuery = getTrendStatsQuery(
         filters, idFilters, trendTimeFilters, aggregateFunction, viewRuleList, cloudProviderTableName);
 
-    Instant trendStartInstant =
-        Instant.ofEpochMilli(getTimeFilter(trendTimeFilters, QLCEViewTimeFilterOperator.AFTER).getValue().longValue());
+    Instant trendStartInstant = Instant.ofEpochMilli(getTimeFilter(trendTimeFilters, AFTER).getValue().longValue());
 
     ViewCostData costData = getViewTrendStatsCostData(bigQuery, query);
     ViewCostData prevCostData = getViewTrendStatsCostData(bigQuery, prevTrendStatsQuery);
@@ -216,8 +223,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
 
   protected QLCEViewTrendInfo getCostBillingStats(ViewCostData costData, ViewCostData prevCostData,
       List<QLCEViewTimeFilter> filters, Instant trendFilterStartTime) {
-    Instant startInstant =
-        Instant.ofEpochMilli(getTimeFilter(filters, QLCEViewTimeFilterOperator.AFTER).getValue().longValue());
+    Instant startInstant = Instant.ofEpochMilli(getTimeFilter(filters, AFTER).getValue().longValue());
     Instant endInstant = Instant.ofEpochMilli(costData.getMaxStartTime() / 1000);
     if (costData.getMaxStartTime() == 0) {
       endInstant =
@@ -249,8 +255,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
   }
 
   protected List<QLCEViewTimeFilter> getTrendFilters(List<QLCEViewTimeFilter> timeFilters) {
-    Instant startInstant =
-        Instant.ofEpochMilli(getTimeFilter(timeFilters, QLCEViewTimeFilterOperator.AFTER).getValue().longValue());
+    Instant startInstant = Instant.ofEpochMilli(getTimeFilter(timeFilters, AFTER).getValue().longValue());
     Instant endInstant =
         Instant.ofEpochMilli(getTimeFilter(timeFilters, QLCEViewTimeFilterOperator.BEFORE).getValue().longValue());
     long diffMillis = Duration.between(startInstant, endInstant).toMillis();
@@ -258,7 +263,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     long trendStartTime = trendEndTime - diffMillis;
 
     List<QLCEViewTimeFilter> trendFilters = new ArrayList<>();
-    trendFilters.add(getTrendBillingFilter(trendStartTime, QLCEViewTimeFilterOperator.AFTER));
+    trendFilters.add(getTrendBillingFilter(trendStartTime, AFTER));
     trendFilters.add(getTrendBillingFilter(trendEndTime, QLCEViewTimeFilterOperator.BEFORE));
     return trendFilters;
   }
@@ -426,27 +431,32 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     return modifiedGroupBy;
   }
 
-  private List<QLCEViewEntityStatsDataPoint> convertToEntityStatsData(TableResult result) {
+  private List<QLCEViewEntityStatsDataPoint> convertToEntityStatsData(
+      TableResult result, Map<String, ViewCostData> costTrendData, long startTimeForTrend) {
     Schema schema = result.getSchema();
     FieldList fields = schema.getFields();
 
     List<QLCEViewEntityStatsDataPoint> entityStatsDataPoints = new ArrayList<>();
     for (FieldValueList row : result.iterateAll()) {
       QLCEViewEntityStatsDataPointBuilder dataPointBuilder = QLCEViewEntityStatsDataPoint.builder();
+      Double cost = null;
+      String name = "";
       for (Field field : fields) {
         switch (field.getType().getStandardType()) {
           case STRING:
-            dataPointBuilder.name(fetchStringValue(row, field));
+            name = fetchStringValue(row, field);
+            dataPointBuilder.name(name);
             break;
           case FLOAT64:
-            dataPointBuilder.cost(getNumericValue(row, field));
+            cost = getNumericValue(row, field);
+            dataPointBuilder.cost(cost);
             break;
           default:
             break;
         }
       }
 
-      dataPointBuilder.costTrend(0);
+      dataPointBuilder.costTrend(getCostTrendForEntity(cost, costTrendData.get(name), startTimeForTrend));
       entityStatsDataPoints.add(dataPointBuilder.build());
     }
     return entityStatsDataPoints;
@@ -551,5 +561,102 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
 
   protected String getFormattedDate(Instant instant, String datePattern) {
     return instant.atZone(ZoneId.of("GMT")).format(DateTimeFormatter.ofPattern(datePattern));
+  }
+
+  private Map<String, ViewCostData> getEntityStatsDataForCostTrend(BigQuery bigQuery,
+      List<QLCEViewFilterWrapper> filters, List<QLCEViewGroupBy> groupBy, List<QLCEViewAggregation> aggregateFunction,
+      List<QLCEViewSortCriteria> sort, String cloudProviderTableName, Integer limit, Integer offset) {
+    SelectQuery query = getQuery(getFiltersForEntityStatsCostTrend(filters), groupBy,
+        getAggregationsForEntityStatsCostTrend(aggregateFunction), sort, cloudProviderTableName, false);
+    query.addCustomization(new PgLimitClause(limit));
+    query.addCustomization(new PgOffsetClause(offset));
+    QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(query.toString()).build();
+    TableResult result;
+    try {
+      result = bigQuery.query(queryConfig);
+    } catch (InterruptedException e) {
+      log.error("Failed to getEntityStatsDataForCostTrend. {}", e);
+      Thread.currentThread().interrupt();
+      return null;
+    }
+    return convertToEntityStatsCostTrendData(result);
+  }
+
+  private Map<String, ViewCostData> convertToEntityStatsCostTrendData(TableResult result) {
+    Schema schema = result.getSchema();
+    FieldList fields = schema.getFields();
+    Map<String, ViewCostData> costTrendData = new HashMap<>();
+    for (FieldValueList row : result.iterateAll()) {
+      String name = "";
+      ViewCostDataBuilder viewCostDataBuilder = ViewCostData.builder();
+      for (Field field : fields) {
+        switch (field.getType().getStandardType()) {
+          case STRING:
+            name = fetchStringValue(row, field);
+            break;
+          case FLOAT64:
+            viewCostDataBuilder.cost(getNumericValue(row, field));
+            break;
+          default:
+            switch (field.getName()) {
+              case entityConstantMinStartTime:
+                viewCostDataBuilder.minStartTime(getTimeStampValue(row, field));
+                break;
+              case entityConstantMaxStartTime:
+                viewCostDataBuilder.maxStartTime(getTimeStampValue(row, field));
+                break;
+              default:
+                break;
+            }
+            break;
+        }
+      }
+      costTrendData.put(name, viewCostDataBuilder.build());
+    }
+    return costTrendData;
+  }
+
+  private List<QLCEViewFilterWrapper> getFiltersForEntityStatsCostTrend(List<QLCEViewFilterWrapper> filters) {
+    List<QLCEViewFilterWrapper> trendFilters =
+        filters.stream().filter(f -> f.getTimeFilter() == null).collect(Collectors.toList());
+    List<QLCEViewTimeFilter> timeFilters = getTimeFilters(filters);
+    List<QLCEViewTimeFilter> trendTimeFilters = getTrendFilters(timeFilters);
+    trendTimeFilters.forEach(
+        timeFilter -> trendFilters.add(QLCEViewFilterWrapper.builder().timeFilter(timeFilter).build()));
+
+    return trendFilters;
+  }
+
+  private List<QLCEViewAggregation> getAggregationsForEntityStatsCostTrend(List<QLCEViewAggregation> aggregations) {
+    List<QLCEViewAggregation> trendAggregations = new ArrayList<>(aggregations);
+    trendAggregations.add(QLCEViewAggregation.builder().operationType(MAX).columnName("startTime").build());
+    trendAggregations.add(QLCEViewAggregation.builder().operationType(MIN).columnName("startTime").build());
+    return trendAggregations;
+  }
+
+  private long getStartTimeForTrendFilters(List<QLCEViewFilterWrapper> filters) {
+    List<QLCEViewTimeFilter> timeFilters = getTimeFilters(filters);
+    List<QLCEViewTimeFilter> trendTimeFilters = getTrendFilters(timeFilters);
+
+    Optional<QLCEViewTimeFilter> startTimeFilter =
+        trendTimeFilters.stream().filter(filter -> filter.getOperator() == AFTER).findFirst();
+    if (startTimeFilter.isPresent()) {
+      return startTimeFilter.get().getValue().longValue();
+    } else {
+      throw new InvalidRequestException("Start time cannot be null");
+    }
+  }
+
+  private double getCostTrendForEntity(Double currentCost, ViewCostData prevCostData, long startTimeForTrend) {
+    if (prevCostData != null && prevCostData.getCost() != 0 && currentCost != null) {
+      Double prevCost = prevCostData.getCost();
+      long startTimeForPrevCost = prevCostData.getMinStartTime() / 1000;
+      double costDifference = currentCost - prevCost;
+
+      if (startTimeForTrend + ONE_DAY_MILLIS > startTimeForPrevCost) {
+        return Math.round((costDifference * 100 / prevCost) * 100D) / 100D;
+      }
+    }
+    return 0;
   }
 }

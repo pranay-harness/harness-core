@@ -124,6 +124,8 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
   private static final Color[] COLORS = {new Color(72, 165, 243), new Color(147, 133, 241), new Color(83, 205, 124),
       new Color(255, 188, 9), new Color(243, 92, 97), new Color(55, 214, 203), new Color(236, 97, 181),
       new Color(255, 142, 60), new Color(178, 96, 9), new Color(25, 88, 173)};
+  private static final String[] COLOR_HEX_CODES = {
+      "#48A5F3", "#9385F1", "#53CD7C", "#FFBC09", "#F35C61", "#37D6CB", "#EC61B5", "#FF8E3C", "#B26009", "#1958AD"};
   private static final Color WHITE = new Color(255, 255, 255);
   private static final Color GRAY = new Color(112, 113, 117);
   private static final int REPEAT_FREQUENCY = 10;
@@ -378,15 +380,29 @@ public class CEReportTemplateBuilderServiceImpl implements CEReportTemplateBuild
     return encodedfile;
   }
 
-  private byte[] createChart(List<QLCEViewTimeSeriesData> data, List<String> entities, boolean adjustFont) {
+  private DefaultCategoryDataset getDataset(List<QLCEViewTimeSeriesData> data) {
     DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-    int index = 0;
-
     for (QLCEViewTimeSeriesData entry : data) {
       for (QLCEViewDataPoint dataPoint : entry.getValues()) {
         dataset.addValue(dataPoint.getValue().doubleValue(), dataPoint.getName(), entry.getDate());
       }
     }
+    return dataset;
+  }
+
+  private Map<String, String> getEntityColorMapping(List<QLCEViewTimeSeriesData> data, List<String> entities) {
+    Map<String, String> entityToColorMapping = new HashMap<>();
+    DefaultCategoryDataset dataset = getDataset(data);
+    for (String entity : entities) {
+      entityToColorMapping.put(entity, COLOR_HEX_CODES[dataset.getColumnIndex(entity) % REPEAT_FREQUENCY]);
+    }
+    log.info("Color mapping for legend: {}", entityToColorMapping);
+    return entityToColorMapping;
+  }
+
+  private byte[] createChart(List<QLCEViewTimeSeriesData> data, List<String> entities, boolean adjustFont) {
+    DefaultCategoryDataset dataset = getDataset(data);
+    int index = 0;
 
     // Creating stacked bar chart
     JFreeChart chart =
