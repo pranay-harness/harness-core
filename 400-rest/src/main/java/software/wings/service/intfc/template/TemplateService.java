@@ -60,7 +60,7 @@ public interface TemplateService extends OwnedByAccount, OwnedByApplication {
 
   boolean deleteByFolder(@Valid TemplateFolder templateFolder);
 
-  String fetchTemplateUri(@NotEmpty String templateUuid);
+  @Deprecated String fetchTemplateUri(@NotEmpty String templateUuid);
 
   String makeNamespacedTemplareUri(String templateUuid, String version);
 
