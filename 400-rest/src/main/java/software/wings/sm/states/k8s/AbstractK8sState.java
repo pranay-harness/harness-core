@@ -868,12 +868,13 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
   @VisibleForTesting
   void saveInstanceInfoToSweepingOutput(
       ExecutionContext context, List<InstanceElement> instanceElements, List<InstanceDetails> instanceDetails) {
+    boolean skipVerification = instanceDetails.stream().noneMatch(InstanceDetails::isNewInstance);
     sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
                                    .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
                                    .value(InstanceInfoVariables.builder()
                                               .instanceElements(instanceElements)
                                               .instanceDetails(instanceDetails)
-                                              .skipVerification(isEmpty(instanceDetails))
+                                              .skipVerification(skipVerification)
                                               .build())
                                    .build());
   }
