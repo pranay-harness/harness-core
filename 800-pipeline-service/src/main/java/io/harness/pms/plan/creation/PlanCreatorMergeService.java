@@ -7,10 +7,12 @@ import static java.lang.String.format;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
+import io.harness.pms.contracts.plan.ErrorResponse;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.PlanCreationBlobRequest;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
+import io.harness.pms.contracts.plan.PlanCreationResponse;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc.PlanCreationServiceBlockingStub;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.exception.PmsExceptionUtils;
@@ -114,7 +116,7 @@ public class PlanCreatorMergeService {
   private PlanCreationBlobResponse createPlanForDependencies(
       Map<String, PlanCreatorServiceInfo> services, PlanCreationBlobResponse.Builder responseBuilder) {
     PlanCreationBlobResponse.Builder currIterationResponseBuilder = PlanCreationBlobResponse.newBuilder();
-    CompletableFutures<PlanCreationBlobResponse> completableFutures = new CompletableFutures<>(executor);
+    CompletableFutures<PlanCreationResponse> completableFutures = new CompletableFutures<>(executor);
     for (Map.Entry<String, PlanCreatorServiceInfo> serviceEntry : services.entrySet()) {
       Map<String, Set<String>> supportedTypes = serviceEntry.getValue().getSupportedTypes();
       Map<String, YamlFieldBlob> filteredDependencies =
@@ -144,20 +146,34 @@ public class PlanCreatorMergeService {
                   .build());
         } catch (StatusRuntimeException ex) {
           log.error(
-              String.format("Error connecting with service: [%s]. Is this service Running?", serviceEntry.getKey()));
-          return null;
+              String.format("Error connecting with service: [%s]. Is this service Running?", serviceEntry.getKey()),
+              ex);
+          return PlanCreationResponse.newBuilder()
+              .setErrorResponse(
+                  ErrorResponse.newBuilder()
+                      .addMessages(String.format("Error connecting with service: [%s]", serviceEntry.getKey()))
+                      .build())
+              .build();
         }
       });
     }
 
+    List<ErrorResponse> errorResponses;
     try {
-      List<PlanCreationBlobResponse> planCreationBlobResponses = completableFutures.allOf().get(5, TimeUnit.MINUTES);
-      planCreationBlobResponses.forEach(
-          resp -> PlanCreationBlobResponseUtils.merge(currIterationResponseBuilder, resp));
+      List<PlanCreationResponse> planCreationResponses = completableFutures.allOf().get(5, TimeUnit.MINUTES);
+      errorResponses = planCreationResponses.stream()
+                           .filter(resp -> resp.getResponseCase() == PlanCreationResponse.ResponseCase.ERRORRESPONSE)
+                           .map(PlanCreationResponse::getErrorResponse)
+                           .collect(Collectors.toList());
+      if (EmptyPredicate.isEmpty(errorResponses)) {
+        planCreationResponses.forEach(
+            resp -> PlanCreationBlobResponseUtils.merge(currIterationResponseBuilder, resp.getBlobResponse()));
+      }
     } catch (Exception ex) {
       throw new UnexpectedException("Error fetching plan creation response from service", ex);
     }
 
+    PmsExceptionUtils.checkAndThrowErrorResponseException("Error creating plan", errorResponses);
     return currIterationResponseBuilder.build();
   }
 

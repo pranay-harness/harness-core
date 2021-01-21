@@ -7,6 +7,7 @@ import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.yaml.YamlField;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
@@ -21,6 +22,7 @@ public class PlanCreationResponse {
   GraphLayoutResponse graphLayoutResponse;
 
   String startingNodeId;
+  @Singular List<String> errorMessages;
 
   public void merge(PlanCreationResponse other) {
     addNodes(other.getNodes());

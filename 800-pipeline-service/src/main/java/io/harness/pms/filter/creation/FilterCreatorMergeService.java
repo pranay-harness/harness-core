@@ -6,11 +6,14 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
+import io.harness.pms.contracts.plan.ErrorResponse;
 import io.harness.pms.contracts.plan.FilterCreationBlobRequest;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
+import io.harness.pms.contracts.plan.FilterCreationResponse;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc.PlanCreationServiceBlockingStub;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.exception.PmsExceptionUtils;
+import io.harness.pms.filter.creation.FilterCreationResponseWrapper.FilterCreationResponseWrapperBuilder;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.utils.CompletableFutures;
@@ -29,6 +32,7 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -111,30 +115,44 @@ public class FilterCreatorMergeService {
     CompletableFutures<FilterCreationResponseWrapper> completableFutures = new CompletableFutures<>(executor);
     for (Map.Entry<String, PlanCreatorServiceInfo> entry : services.entrySet()) {
       completableFutures.supplyAsync(() -> {
+        FilterCreationResponseWrapperBuilder builder =
+            FilterCreationResponseWrapper.builder().serviceName(entry.getKey());
         try {
-          return FilterCreationResponseWrapper.builder()
-              .serviceName(entry.getKey())
-              .response(entry.getValue().getPlanCreationClient().createFilter(
-                  FilterCreationBlobRequest.newBuilder().putAllDependencies(dependencies).build()))
-              .build();
+          FilterCreationResponse filterCreationResponse = entry.getValue().getPlanCreationClient().createFilter(
+              FilterCreationBlobRequest.newBuilder().putAllDependencies(dependencies).build());
+          if (filterCreationResponse.getResponseCase() == FilterCreationResponse.ResponseCase.ERRORRESPONSE) {
+            builder.errorResponse(filterCreationResponse.getErrorResponse());
+          } else {
+            builder.response(filterCreationResponse.getBlobResponse());
+          }
         } catch (StatusRuntimeException ex) {
-          log.error(String.format("Error connecting with service: [%s]. Is this service Running?", entry.getKey()));
-          return null;
+          log.error(String.format("Error connecting with service: [%s]. Is this service Running?", entry.getKey()), ex);
+          builder.errorResponse(ErrorResponse.newBuilder()
+                                    .addMessages(String.format("Error connecting with service: [%s]", entry.getKey()))
+                                    .build());
         }
+        return builder.build();
       });
     }
 
+    List<ErrorResponse> errorResponses;
     FilterCreationBlobResponse.Builder currentIteration = FilterCreationBlobResponse.newBuilder();
-
     try {
-      List<FilterCreationResponseWrapper> filterCreationBlobResponses =
+      List<FilterCreationResponseWrapper> filterCreationResponseWrappers =
           completableFutures.allOf().get(5, TimeUnit.MINUTES);
-      filterCreationBlobResponses.forEach(
-          response -> FilterCreationBlobResponseUtils.mergeResponses(currentIteration, response, filters));
+      errorResponses = filterCreationResponseWrappers.stream()
+                           .filter(resp -> resp != null && resp.getErrorResponse() != null)
+                           .map(FilterCreationResponseWrapper::getErrorResponse)
+                           .collect(Collectors.toList());
+      if (EmptyPredicate.isEmpty(errorResponses)) {
+        filterCreationResponseWrappers.forEach(
+            response -> FilterCreationBlobResponseUtils.mergeResponses(currentIteration, response, filters));
+      }
     } catch (Exception ex) {
       throw new UnexpectedException("Error fetching filter creation response from service", ex);
     }
 
+    PmsExceptionUtils.checkAndThrowErrorResponseException("Error creating filters", errorResponses);
     return currentIteration.build();
   }
 }

@@ -5,11 +5,14 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.lang.String.format;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
+import io.harness.pms.contracts.plan.ErrorResponse;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc;
 import io.harness.pms.contracts.plan.VariablesCreationBlobRequest;
 import io.harness.pms.contracts.plan.VariablesCreationBlobResponse;
+import io.harness.pms.contracts.plan.VariablesCreationResponse;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.exception.PmsExceptionUtils;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
@@ -28,6 +31,7 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -95,30 +99,42 @@ public class VariableCreatorMergeService {
 
   private VariablesCreationBlobResponse obtainVariablesPerIteration(
       Map<String, PlanCreatorServiceInfo> services, Map<String, YamlFieldBlob> dependencies) {
-    CompletableFutures<VariablesCreationBlobResponse> completableFutures = new CompletableFutures<>(executor);
+    CompletableFutures<VariablesCreationResponse> completableFutures = new CompletableFutures<>(executor);
     for (Map.Entry<String, PlanCreatorServiceInfo> entry : services.entrySet()) {
       completableFutures.supplyAsync(() -> {
         try {
           return entry.getValue().getPlanCreationClient().createVariablesYaml(
               VariablesCreationBlobRequest.newBuilder().putAllDependencies(dependencies).build());
         } catch (Exception ex) {
-          log.error("Error fetching Variables Response from service " + entry.getKey(), ex);
-          return null;
+          log.error(String.format("Error connecting with service: [%s]. Is this service Running?", entry.getKey()), ex);
+          return VariablesCreationResponse.newBuilder()
+              .setErrorResponse(ErrorResponse.newBuilder()
+                                    .addMessages(String.format("Error connecting with service: [%s]", entry.getKey()))
+                                    .build())
+              .build();
         }
       });
     }
 
+    List<ErrorResponse> errorResponses;
     VariablesCreationBlobResponse.Builder builder = VariablesCreationBlobResponse.newBuilder();
-
     try {
-      List<VariablesCreationBlobResponse> variablesCreationBlobResponses =
-          completableFutures.allOf().get(5, TimeUnit.MINUTES);
-      variablesCreationBlobResponses.forEach(
-          response -> VariableCreationBlobResponseUtils.mergeResponses(builder, response));
+      List<VariablesCreationResponse> variablesCreationResponses = completableFutures.allOf().get(5, TimeUnit.MINUTES);
+      errorResponses =
+          variablesCreationResponses.stream()
+              .filter(resp
+                  -> resp != null && resp.getResponseCase() == VariablesCreationResponse.ResponseCase.ERRORRESPONSE)
+              .map(VariablesCreationResponse::getErrorResponse)
+              .collect(Collectors.toList());
+      if (EmptyPredicate.isEmpty(errorResponses)) {
+        variablesCreationResponses.forEach(
+            response -> VariableCreationBlobResponseUtils.mergeResponses(builder, response.getBlobResponse()));
+      }
     } catch (Exception ex) {
       throw new UnexpectedException("Error fetching variables creation response from service", ex);
     }
 
+    PmsExceptionUtils.checkAndThrowErrorResponseException("Error creating variables", errorResponses);
     return builder.build();
   }
 
