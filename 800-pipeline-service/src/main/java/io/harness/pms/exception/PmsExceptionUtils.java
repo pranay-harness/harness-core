@@ -1,5 +1,9 @@
 package io.harness.pms.exception;
 
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.HarnessStringUtils;
+import io.harness.exception.GeneralException;
+import io.harness.pms.contracts.plan.ErrorResponse;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.yaml.YamlField;
 
@@ -21,12 +25,17 @@ public class PmsExceptionUtils {
     List<YamlNodeErrorInfo> yamlNodeErrorInfos = new ArrayList<>();
     for (YamlFieldBlob yamlFieldBlob : yamlFieldBlobs) {
       YamlField yamlField = YamlField.fromFieldBlob(yamlFieldBlob);
-      yamlNodeErrorInfos.add(YamlNodeErrorInfo.builder()
-                                 .identifier(yamlField.getNode().getIdentifier())
-                                 .name(yamlField.getName())
-                                 .type(yamlField.getNode().getType())
-                                 .build());
+      yamlNodeErrorInfos.add(YamlNodeErrorInfo.fromField(yamlField));
     }
     return yamlNodeErrorInfos;
+  }
+
+  public void checkAndThrowErrorResponseException(String msg, List<ErrorResponse> errorResponses) {
+    if (EmptyPredicate.isEmpty(errorResponses)) {
+      return;
+    }
+    List<String> messages =
+        errorResponses.stream().flatMap(resp -> resp.getMessagesList().stream()).collect(Collectors.toList());
+    throw new GeneralException(String.format("%s: %s", msg, HarnessStringUtils.join(",", messages)));
   }
 }
