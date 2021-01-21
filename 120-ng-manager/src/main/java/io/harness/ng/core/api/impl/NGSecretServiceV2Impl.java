@@ -1,5 +1,6 @@
 package io.harness.ng.core.api.impl;
 
+import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 
 import io.harness.beans.DelegateTaskRequest;
@@ -7,6 +8,7 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.SSHTaskParams;
 import io.harness.delegate.beans.secrets.SSHConfigValidationTaskResponse;
+import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.api.NGSecretServiceV2;
@@ -34,6 +36,7 @@ import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
 
@@ -69,7 +72,12 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
     Secret secret = dto.toEntity();
     secret.setDraft(draft);
     secret.setAccountIdentifier(accountIdentifier);
-    return secretRepository.save(secret);
+    try {
+      return secretRepository.save(secret);
+    } catch (DuplicateKeyException duplicateKeyException) {
+      throw new DuplicateFieldException(
+          "Duplicate identifier, please try again with a new identifier", USER, duplicateKeyException);
+    }
   }
 
   @Override
@@ -85,7 +93,12 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
       oldSecret.setSecretSpec(newSecret.getSecretSpec());
       oldSecret.setDraft(oldSecret.isDraft() && draft);
       oldSecret.setType(newSecret.getType());
-      secretRepository.save(oldSecret);
+      try {
+        secretRepository.save(oldSecret);
+      } catch (DuplicateKeyException duplicateKeyException) {
+        throw new DuplicateFieldException(
+            "Duplicate identifier, please try again with a new identifier", USER, duplicateKeyException);
+      }
       return oldSecret;
     }
     throw new InvalidRequestException("No such secret found", USER_SRE);

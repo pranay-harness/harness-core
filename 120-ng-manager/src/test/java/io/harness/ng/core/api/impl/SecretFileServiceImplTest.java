@@ -36,7 +36,7 @@ public class SecretFileServiceImplTest extends CategoryTest {
   @Before
   public void setup() {
     secretManagerClient = mock(SecretManagerClient.class, RETURNS_DEEP_STUBS);
-    secretFileService = new SecretFileServiceImpl(secretManagerClient);
+    secretFileService = new SecretFileServiceImpl();
   }
 
   private SecretDTOV2 getBaseSecret() {
@@ -61,7 +61,7 @@ public class SecretFileServiceImplTest extends CategoryTest {
 
     SecretDTOV2 secretDTO = getBaseSecret();
     secretDTO.setSpec(SecretFileSpecDTO.builder().secretManagerIdentifier("sm").build());
-    boolean success = secretFileService.update("account", secretDTO);
+    boolean success = secretFileService.update("account", secretDTO, secretDTO);
 
     assertThat(success).isEqualTo(true);
     verify(secretManagerClient, atLeastOnce()).updateSecretFile(any(), any(), any(), any(), any(), any());

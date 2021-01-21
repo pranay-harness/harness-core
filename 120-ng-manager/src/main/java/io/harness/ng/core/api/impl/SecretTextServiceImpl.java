@@ -1,5 +1,6 @@
 package io.harness.ng.core.api.impl;
 
+import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.remote.client.RestClientUtils.getResponse;
 
@@ -15,6 +16,7 @@ import io.harness.secretmanagerclient.remote.SecretManagerClient;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -44,6 +46,17 @@ public class SecretTextServiceImpl implements SecretModifyService {
     return getResponse(secretManagerClient.createSecret(secretTextDTO));
   }
 
+  @Override
+  public void validateUpdateRequest(SecretDTOV2 existingSecret, SecretDTOV2 dto) {
+    SecretTextSpecDTO specDTO = (SecretTextSpecDTO) dto.getSpec();
+    SecretTextSpecDTO existingSpecDTO = (SecretTextSpecDTO) existingSecret.getSpec();
+    Optional.ofNullable(specDTO.getSecretManagerIdentifier())
+        .filter(x -> x.equals(existingSpecDTO.getSecretManagerIdentifier()))
+        .orElseThrow(()
+                         -> new InvalidRequestException(
+                             "Cannot change secret manager after creation of secret", INVALID_REQUEST, USER));
+  }
+
   private SecretTextUpdateDTO getUpdateDTO(SecretDTOV2 dto, SecretTextSpecDTO specDTO) {
     SecretTextUpdateDTO updateDTO = SecretTextUpdateDTO.builder()
                                         .name(dto.getName())
@@ -60,31 +73,25 @@ public class SecretTextServiceImpl implements SecretModifyService {
     return updateDTO;
   }
 
-  private void validateUpdateRequest(String accountIdentifier, SecretDTOV2 dto, SecretTextSpecDTO specDTO) {
-    EncryptedDataDTO encryptedDataDTO = getResponse(secretManagerClient.getSecret(
-        dto.getIdentifier(), accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier()));
-    if (encryptedDataDTO == null) {
-      throw new InvalidRequestException("No such secret found.");
-    } else if (!specDTO.getSecretManagerIdentifier().equals(encryptedDataDTO.getSecretManager())) {
-      throw new InvalidRequestException("Cannot change secret manager after creation of secret.", USER);
-    }
-  }
-
   @Override
-  public boolean update(String accountIdentifier, SecretDTOV2 dto) {
+  public boolean update(String accountIdentifier, SecretDTOV2 existingSecret, SecretDTOV2 dto) {
+    // validate update request
+    validateUpdateRequest(existingSecret, dto);
+
     SecretTextSpecDTO specDTO = (SecretTextSpecDTO) dto.getSpec();
     SecretTextUpdateDTO updateDTO = getUpdateDTO(dto, specDTO);
-    validateUpdateRequest(accountIdentifier, dto, specDTO);
     return getResponse(secretManagerClient.updateSecret(
         dto.getIdentifier(), accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier(), updateDTO));
   }
 
   @Override
-  public boolean updateViaYaml(String accountIdentifier, SecretDTOV2 dto) {
+  public boolean updateViaYaml(String accountIdentifier, SecretDTOV2 existingSecret, SecretDTOV2 dto) {
+    // validate update request
+    validateUpdateRequest(existingSecret, dto);
+
     SecretTextSpecDTO specDTO = (SecretTextSpecDTO) dto.getSpec();
     SecretTextUpdateDTO updateDTO = getUpdateDTO(dto, specDTO);
     updateDTO.setDraft(true);
-    validateUpdateRequest(accountIdentifier, dto, specDTO);
     return getResponse(secretManagerClient.updateSecret(
         dto.getIdentifier(), accountIdentifier, dto.getOrgIdentifier(), dto.getProjectIdentifier(), updateDTO));
   }

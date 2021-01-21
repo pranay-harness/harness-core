@@ -10,6 +10,8 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -62,14 +64,16 @@ public class SecretCrudServiceImplTest extends CategoryTest {
   @Mock private NGSecretServiceV2 ngSecretServiceV2;
   private final FileUploadLimit fileUploadLimit = new FileUploadLimit();
   @Mock private SecretEntityReferenceHelper secretEntityReferenceHelper;
+  @Mock private SecretCrudServiceImpl secretCrudServiceSpy;
   @Mock private SecretCrudServiceImpl secretCrudService;
   @Mock private Producer eventProducer;
 
   @Before
   public void setup() {
     initMocks(this);
-    secretCrudService = new SecretCrudServiceImpl(secretManagerClient, secretTextService, secretFileService, sshService,
-        secretEntityReferenceHelper, fileUploadLimit, ngSecretServiceV2, eventProducer);
+    secretCrudServiceSpy = new SecretCrudServiceImpl(secretManagerClient, secretTextService, secretFileService,
+        sshService, secretEntityReferenceHelper, fileUploadLimit, ngSecretServiceV2, eventProducer);
+    secretCrudService = spy(secretCrudServiceSpy);
   }
 
   @Test
@@ -130,9 +134,12 @@ public class SecretCrudServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testUpdate() {
     SecretDTOV2 secretDTOV2 = SecretDTOV2.builder().type(SecretType.SecretText).build();
-    when(secretTextService.update(any(), any())).thenReturn(true);
+    when(secretTextService.update(any(), any(), any())).thenReturn(true);
     when(ngSecretServiceV2.update(any(), any(), eq(false)))
         .thenReturn(Secret.builder().identifier("secret").accountIdentifier("account").build());
+    doReturn(Optional.ofNullable(SecretResponseWrapper.builder().secret(secretDTOV2).build()))
+        .when(secretCrudService)
+        .get(any(), any(), any(), any());
 
     SecretResponseWrapper updatedSecret = secretCrudService.update("account", secretDTOV2);
 
@@ -178,6 +185,9 @@ public class SecretCrudServiceImplTest extends CategoryTest {
     SecretDTOV2 secretDTOV2 = SecretDTOV2.builder()
                                   .spec(SecretFileSpecDTO.builder().secretManagerIdentifier("secretManager1").build())
                                   .build();
+    doReturn(Optional.ofNullable(SecretResponseWrapper.builder().secret(secretDTOV2).build()))
+        .when(secretCrudService)
+        .get(any(), any(), any(), any());
 
     try {
       secretCrudService.updateFile("account", secretDTOV2, new StringInputStream("string"));
@@ -202,6 +212,9 @@ public class SecretCrudServiceImplTest extends CategoryTest {
         .thenReturn(Response.success(new RestResponse<>(true)));
     when(ngSecretServiceV2.update(any(), any(), eq(false)))
         .thenReturn(Secret.builder().identifier("secret").accountIdentifier("account").build());
+    doReturn(Optional.ofNullable(SecretResponseWrapper.builder().secret(secretDTOV2).build()))
+        .when(secretCrudService)
+        .get(any(), any(), any(), any());
 
     SecretResponseWrapper updatedFile =
         secretCrudService.updateFile("account", secretDTOV2, new StringInputStream("string"));

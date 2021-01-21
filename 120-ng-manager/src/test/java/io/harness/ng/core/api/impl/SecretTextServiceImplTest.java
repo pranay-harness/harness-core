@@ -81,7 +81,7 @@ public class SecretTextServiceImplTest extends CategoryTest {
     when(secretManagerClient.updateSecret(any(), any(), any(), any(), any()).execute())
         .thenReturn(Response.success(new RestResponse<>(true)));
 
-    boolean success = secretTextService.update("account", secretDTOV2);
+    boolean success = secretTextService.update("account", secretDTOV2, secretDTOV2);
     assertThat(success).isNotNull();
     verify(secretManagerClient, atLeastOnce()).getSecret(any(), any(), any(), any());
     verify(secretManagerClient, atLeastOnce()).updateSecret(any(), any(), any(), any(), any());
@@ -101,7 +101,7 @@ public class SecretTextServiceImplTest extends CategoryTest {
     when(secretManagerClient.updateSecret(any(), any(), any(), any(), any()).execute())
         .thenReturn(Response.success(new RestResponse<>(true)));
 
-    boolean success = secretTextService.updateViaYaml("account", secretDTOV2);
+    boolean success = secretTextService.updateViaYaml("account", secretDTOV2, secretDTOV2);
     assertThat(success).isNotNull();
     verify(secretManagerClient, atLeastOnce()).getSecret(any(), any(), any(), any());
     verify(secretManagerClient, atLeastOnce()).updateSecret(any(), any(), any(), any(), any());
