@@ -2,12 +2,14 @@ package io.harness.cvng.core.services.impl;
 
 import static io.harness.EntityType.CONNECTORS;
 import static io.harness.EntityType.CV_CONFIG;
+import static io.harness.EntityType.CV_KUBERNETES_ACTIVITY_SOURCE;
 import static io.harness.EntityType.CV_VERIFICATION_JOB;
 import static io.harness.EntityType.ENVIRONMENT;
 import static io.harness.EntityType.SERVICE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.VUK;
 
+import static java.util.Collections.emptySet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -16,8 +18,10 @@ import static org.mockito.Mockito.when;
 import io.harness.CvNextGenTest;
 import io.harness.beans.IdentifierRef;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO.KubernetesActivitySourceConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.models.VerificationType;
@@ -39,6 +43,10 @@ import io.harness.utils.IdentifierRefHelper;
 import com.google.common.collect.Lists;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.StringValue;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -65,12 +73,8 @@ public class CVEventServiceTest extends CvNextGenTest {
     String projectIdentifier = generateUuid();
     String identifier = generateUuid();
 
-    IdentifierRefProtoDTO configReference = IdentifierRefProtoDTO.newBuilder()
-                                                .setAccountIdentifier(StringValue.of(accountIdentifier))
-                                                .setOrgIdentifier(StringValue.of(orgIdentifier))
-                                                .setProjectIdentifier(StringValue.of(projectIdentifier))
-                                                .setIdentifier(StringValue.of(identifier))
-                                                .build();
+    IdentifierRefProtoDTO configReference =
+        getIdentifierRefProtoDTO(accountIdentifier, identifier, projectIdentifier, orgIdentifier);
 
     when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(cvConfig.getAccountId(), cvConfig.getOrgIdentifier(),
              cvConfig.getProjectIdentifier(), cvConfig.getIdentifier()))
@@ -133,12 +137,8 @@ public class CVEventServiceTest extends CvNextGenTest {
     String projectIdentifier = generateUuid();
     String identifier = generateUuid();
 
-    IdentifierRefProtoDTO configReference = IdentifierRefProtoDTO.newBuilder()
-                                                .setAccountIdentifier(StringValue.of(accountIdentifier))
-                                                .setOrgIdentifier(StringValue.of(orgIdentifier))
-                                                .setProjectIdentifier(StringValue.of(projectIdentifier))
-                                                .setIdentifier(StringValue.of(identifier))
-                                                .build();
+    IdentifierRefProtoDTO configReference =
+        getIdentifierRefProtoDTO(accountIdentifier, identifier, projectIdentifier, orgIdentifier);
 
     when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(cvConfig.getAccountId(), cvConfig.getOrgIdentifier(),
              cvConfig.getProjectIdentifier(), cvConfig.getIdentifier()))
@@ -201,12 +201,8 @@ public class CVEventServiceTest extends CvNextGenTest {
     String projectIdentifier = generateUuid();
     String identifier = generateUuid();
 
-    IdentifierRefProtoDTO configReference = IdentifierRefProtoDTO.newBuilder()
-                                                .setAccountIdentifier(StringValue.of(accountIdentifier))
-                                                .setOrgIdentifier(StringValue.of(orgIdentifier))
-                                                .setProjectIdentifier(StringValue.of(projectIdentifier))
-                                                .setIdentifier(StringValue.of(identifier))
-                                                .build();
+    IdentifierRefProtoDTO configReference =
+        getIdentifierRefProtoDTO(accountIdentifier, identifier, projectIdentifier, orgIdentifier);
 
     when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(cvConfig.getAccountId(), cvConfig.getOrgIdentifier(),
              cvConfig.getProjectIdentifier(), cvConfig.getIdentifier()))
@@ -272,12 +268,8 @@ public class CVEventServiceTest extends CvNextGenTest {
     IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(verificationJob.getEnvIdentifier(),
         verificationJob.getAccountId(), verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier());
 
-    IdentifierRefProtoDTO verificationJobReference = IdentifierRefProtoDTO.newBuilder()
-                                                         .setAccountIdentifier(StringValue.of(accountIdentifier))
-                                                         .setOrgIdentifier(StringValue.of(orgIdentifier))
-                                                         .setProjectIdentifier(StringValue.of(projectIdentifier))
-                                                         .setIdentifier(StringValue.of(identifier))
-                                                         .build();
+    IdentifierRefProtoDTO verificationJobReference =
+        getIdentifierRefProtoDTO(accountIdentifier, identifier, projectIdentifier, orgIdentifier);
 
     when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(verificationJob.getAccountId(),
              verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier(),
@@ -291,7 +283,6 @@ public class CVEventServiceTest extends CvNextGenTest {
     eventService.sendVerificationJobEnvironmentCreateEvent(verificationJob);
 
     ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
-
     verify(eventProducer, times(1)).send(argumentCaptor.capture());
 
     EntitySetupUsageCreateDTO entityReferenceDTO =
@@ -319,12 +310,8 @@ public class CVEventServiceTest extends CvNextGenTest {
     IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(verificationJob.getServiceIdentifier(),
         verificationJob.getAccountId(), verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier());
 
-    IdentifierRefProtoDTO verificationJobReference = IdentifierRefProtoDTO.newBuilder()
-                                                         .setAccountIdentifier(StringValue.of(accountIdentifier))
-                                                         .setOrgIdentifier(StringValue.of(orgIdentifier))
-                                                         .setProjectIdentifier(StringValue.of(projectIdentifier))
-                                                         .setIdentifier(StringValue.of(identifier))
-                                                         .build();
+    IdentifierRefProtoDTO verificationJobReference =
+        getIdentifierRefProtoDTO(accountIdentifier, identifier, projectIdentifier, orgIdentifier);
 
     when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(verificationJob.getAccountId(),
              verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier(),
@@ -338,7 +325,6 @@ public class CVEventServiceTest extends CvNextGenTest {
     eventService.sendVerificationJobServiceCreateEvent(verificationJob);
 
     ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
-
     verify(eventProducer, times(1)).send(argumentCaptor.capture());
 
     EntitySetupUsageCreateDTO entityReferenceDTO =
@@ -352,17 +338,178 @@ public class CVEventServiceTest extends CvNextGenTest {
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
+  public void shouldSendKubernetesActivitySourceConnectorCreateEvent()
+      throws ProducerShutdownException, InvalidProtocolBufferException {
+    String accountId = generateUuid();
+    String identifier = generateUuid();
+    String projectIdentifier = generateUuid();
+    String orgIdentifier = generateUuid();
+
+    KubernetesActivitySource kubernetesActivitySource =
+        getKubernetesActivitySource(accountId, identifier, projectIdentifier, orgIdentifier, emptySet());
+
+    IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
+        kubernetesActivitySource.getConnectorIdentifier(), kubernetesActivitySource.getAccountId(),
+        kubernetesActivitySource.getOrgIdentifier(), kubernetesActivitySource.getProjectIdentifier());
+
+    IdentifierRefProtoDTO configReference =
+        getIdentifierRefProtoDTO(accountId, identifier, projectIdentifier, orgIdentifier);
+
+    when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(kubernetesActivitySource.getAccountId(),
+             kubernetesActivitySource.getOrgIdentifier(), kubernetesActivitySource.getProjectIdentifier(),
+             kubernetesActivitySource.getIdentifier()))
+        .thenReturn(configReference);
+
+    when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(identifierRef.getAccountIdentifier(),
+             identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier()))
+        .thenReturn(configReference);
+
+    eventService.sendKubernetesActivitySourceConnectorCreateEvent(kubernetesActivitySource);
+
+    ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
+    verify(eventProducer, times(1)).send(argumentCaptor.capture());
+
+    EntitySetupUsageCreateDTO entityReferenceDTO =
+        EntitySetupUsageCreateDTO.parseFrom(argumentCaptor.getValue().getData());
+
+    assertThat(entityReferenceDTO.getReferredEntity().getType().toString()).isEqualTo(CONNECTORS.name());
+    assertThat(entityReferenceDTO.getReferredByEntity().getType().toString())
+        .isEqualTo(CV_KUBERNETES_ACTIVITY_SOURCE.name());
+    assertThat(entityReferenceDTO.getAccountIdentifier()).isEqualTo(kubernetesActivitySource.getAccountId());
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldSendKubernetesActivitySourceServiceCreateEvent()
+      throws ProducerShutdownException, InvalidProtocolBufferException {
+    String accountId = generateUuid();
+    String identifier = generateUuid();
+    String projectIdentifier = generateUuid();
+    String orgIdentifier = generateUuid();
+    String serviceIdentifier = generateUuid();
+
+    Set<KubernetesActivitySourceConfig> activitySourceConfigs =
+        Stream.of(KubernetesActivitySourceConfig.builder().serviceIdentifier(serviceIdentifier).build())
+            .collect(Collectors.toSet());
+
+    KubernetesActivitySource kubernetesActivitySource =
+        getKubernetesActivitySource(accountId, identifier, projectIdentifier, orgIdentifier, activitySourceConfigs);
+
+    IdentifierRef identifierRef =
+        IdentifierRefHelper.getIdentifierRef(serviceIdentifier, kubernetesActivitySource.getAccountId(),
+            kubernetesActivitySource.getOrgIdentifier(), kubernetesActivitySource.getProjectIdentifier());
+
+    IdentifierRefProtoDTO configReference =
+        getIdentifierRefProtoDTO(accountId, identifier, projectIdentifier, orgIdentifier);
+
+    when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(kubernetesActivitySource.getAccountId(),
+             kubernetesActivitySource.getOrgIdentifier(), kubernetesActivitySource.getProjectIdentifier(),
+             kubernetesActivitySource.getIdentifier()))
+        .thenReturn(configReference);
+
+    when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(identifierRef.getAccountIdentifier(),
+             identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier()))
+        .thenReturn(configReference);
+
+    eventService.sendKubernetesActivitySourceServiceCreateEvent(kubernetesActivitySource);
+
+    ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
+    verify(eventProducer, times(1)).send(argumentCaptor.capture());
+
+    EntitySetupUsageCreateDTO entityReferenceDTO =
+        EntitySetupUsageCreateDTO.parseFrom(argumentCaptor.getValue().getData());
+
+    assertThat(entityReferenceDTO.getReferredEntity().getType().toString()).isEqualTo(SERVICE.name());
+    assertThat(entityReferenceDTO.getReferredByEntity().getType().toString())
+        .isEqualTo(CV_KUBERNETES_ACTIVITY_SOURCE.name());
+    assertThat(entityReferenceDTO.getAccountIdentifier()).isEqualTo(kubernetesActivitySource.getAccountId());
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldSendKubernetesActivitySourceEnvironmentCreateEvent()
+      throws ProducerShutdownException, InvalidProtocolBufferException {
+    String accountId = generateUuid();
+    String identifier = generateUuid();
+    String projectIdentifier = generateUuid();
+    String orgIdentifier = generateUuid();
+    String environmentIdentifier = generateUuid();
+
+    Set<KubernetesActivitySourceConfig> activitySourceConfigs =
+        Stream.of(KubernetesActivitySourceConfig.builder().envIdentifier(environmentIdentifier).build())
+            .collect(Collectors.toSet());
+
+    KubernetesActivitySource kubernetesActivitySource =
+        getKubernetesActivitySource(accountId, identifier, projectIdentifier, orgIdentifier, activitySourceConfigs);
+
+    IdentifierRef identifierRef =
+        IdentifierRefHelper.getIdentifierRef(environmentIdentifier, kubernetesActivitySource.getAccountId(),
+            kubernetesActivitySource.getOrgIdentifier(), kubernetesActivitySource.getProjectIdentifier());
+
+    IdentifierRefProtoDTO configReference =
+        getIdentifierRefProtoDTO(accountId, identifier, projectIdentifier, orgIdentifier);
+
+    when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(kubernetesActivitySource.getAccountId(),
+             kubernetesActivitySource.getOrgIdentifier(), kubernetesActivitySource.getProjectIdentifier(),
+             kubernetesActivitySource.getIdentifier()))
+        .thenReturn(configReference);
+
+    when(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(identifierRef.getAccountIdentifier(),
+             identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier()))
+        .thenReturn(configReference);
+
+    eventService.sendKubernetesActivitySourceEnvironmentCreateEvent(kubernetesActivitySource);
+
+    ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
+    verify(eventProducer, times(1)).send(argumentCaptor.capture());
+
+    EntitySetupUsageCreateDTO entityReferenceDTO =
+        EntitySetupUsageCreateDTO.parseFrom(argumentCaptor.getValue().getData());
+
+    assertThat(entityReferenceDTO.getReferredEntity().getType().toString()).isEqualTo(ENVIRONMENT.name());
+    assertThat(entityReferenceDTO.getReferredByEntity().getType().toString())
+        .isEqualTo(CV_KUBERNETES_ACTIVITY_SOURCE.name());
+    assertThat(entityReferenceDTO.getAccountIdentifier()).isEqualTo(kubernetesActivitySource.getAccountId());
+  }
+
+  @NotNull
+  private IdentifierRefProtoDTO getIdentifierRefProtoDTO(
+      String accountId, String identifier, String projectIdentifier, String orgIdentifier) {
+    return IdentifierRefProtoDTO.newBuilder()
+        .setAccountIdentifier(StringValue.of(accountId))
+        .setOrgIdentifier(StringValue.of(orgIdentifier))
+        .setProjectIdentifier(StringValue.of(projectIdentifier))
+        .setIdentifier(StringValue.of(identifier))
+        .build();
+  }
+
+  private KubernetesActivitySource getKubernetesActivitySource(String accountId, String identifier,
+      String projectIdentifier, String orgIdentifier, Set<KubernetesActivitySourceConfig> activitySourceConfigs) {
+    return KubernetesActivitySource.builder()
+        .accountId(accountId)
+        .identifier(identifier)
+        .name("testName")
+        .projectIdentifier(projectIdentifier)
+        .orgIdentifier(orgIdentifier)
+        .connectorIdentifier(generateUuid())
+        .activitySourceConfigs(activitySourceConfigs)
+        .build();
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
   public void shouldSendVerificationJobEnvironmentDeleteEvent()
       throws ProducerShutdownException, InvalidProtocolBufferException {
     String accountId = generateUuid();
-
     VerificationJob verificationJob = createVerificationJobDTOWithoutRuntimeParams().getVerificationJob();
     verificationJob.setAccountId(accountId);
 
     eventService.sendVerificationJobEnvironmentDeleteEvent(verificationJob);
 
     ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
-
     verify(eventProducer, times(1)).send(argumentCaptor.capture());
 
     DeleteSetupUsageDTO deleteSetupUsageDTO = DeleteSetupUsageDTO.parseFrom(argumentCaptor.getValue().getData());
@@ -385,19 +532,16 @@ public class CVEventServiceTest extends CvNextGenTest {
   public void shouldSendVerificationJobServiceDeleteEvent()
       throws ProducerShutdownException, InvalidProtocolBufferException {
     String accountId = generateUuid();
-
     VerificationJob verificationJob = createVerificationJobDTOWithoutRuntimeParams().getVerificationJob();
     verificationJob.setAccountId(accountId);
 
     eventService.sendVerificationJobServiceDeleteEvent(verificationJob);
 
     ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
-
     verify(eventProducer, times(1)).send(argumentCaptor.capture());
 
     DeleteSetupUsageDTO deleteSetupUsageDTO = DeleteSetupUsageDTO.parseFrom(argumentCaptor.getValue().getData());
 
-    assertThat(deleteSetupUsageDTO).isNotNull();
     assertThat(deleteSetupUsageDTO.getAccountIdentifier()).isEqualTo(verificationJob.getAccountId());
     assertThat(deleteSetupUsageDTO.getReferredByEntityFQN())
         .isEqualTo(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(verificationJob.getAccountId(),
@@ -407,6 +551,113 @@ public class CVEventServiceTest extends CvNextGenTest {
         .isEqualTo(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(verificationJob.getAccountId(),
             verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier(),
             verificationJob.getServiceIdentifier()));
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldSendKubernetesActivitySourceEnvironmentDeleteEvent()
+      throws ProducerShutdownException, InvalidProtocolBufferException {
+    String accountId = generateUuid();
+    String identifier = generateUuid();
+    String projectIdentifier = generateUuid();
+    String orgIdentifier = generateUuid();
+    String envIdentifier = generateUuid();
+
+    Set<KubernetesActivitySourceConfig> activitySourceConfigs =
+        Stream.of(KubernetesActivitySourceConfig.builder().envIdentifier(envIdentifier).build())
+            .collect(Collectors.toSet());
+
+    KubernetesActivitySource kubernetesActivitySource =
+        getKubernetesActivitySource(accountId, identifier, projectIdentifier, orgIdentifier, activitySourceConfigs);
+
+    eventService.sendKubernetesActivitySourceEnvironmentDeleteEvent(kubernetesActivitySource);
+
+    ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
+    verify(eventProducer, times(1)).send(argumentCaptor.capture());
+
+    DeleteSetupUsageDTO deleteSetupUsageDTO = DeleteSetupUsageDTO.parseFrom(argumentCaptor.getValue().getData());
+
+    assertThat(deleteSetupUsageDTO).isNotNull();
+    assertThat(deleteSetupUsageDTO.getAccountIdentifier()).isEqualTo(kubernetesActivitySource.getAccountId());
+    assertThat(deleteSetupUsageDTO.getReferredByEntityFQN())
+        .isEqualTo(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(kubernetesActivitySource.getAccountId(),
+            kubernetesActivitySource.getOrgIdentifier(), kubernetesActivitySource.getProjectIdentifier(),
+            kubernetesActivitySource.getIdentifier()));
+    assertThat(deleteSetupUsageDTO.getReferredEntityFQN())
+        .isEqualTo(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(kubernetesActivitySource.getAccountId(),
+            kubernetesActivitySource.getOrgIdentifier(), kubernetesActivitySource.getProjectIdentifier(),
+            envIdentifier));
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldSendKubernetesActivitySourceServiceDeleteEvent()
+      throws ProducerShutdownException, InvalidProtocolBufferException {
+    String accountId = generateUuid();
+    String identifier = generateUuid();
+    String projectIdentifier = generateUuid();
+    String orgIdentifier = generateUuid();
+    String serviceIdentifier = generateUuid();
+
+    Set<KubernetesActivitySourceConfig> activitySourceConfigs =
+        Stream.of(KubernetesActivitySourceConfig.builder().serviceIdentifier(serviceIdentifier).build())
+            .collect(Collectors.toSet());
+
+    KubernetesActivitySource kubernetesActivitySource =
+        getKubernetesActivitySource(accountId, identifier, projectIdentifier, orgIdentifier, activitySourceConfigs);
+
+    eventService.sendKubernetesActivitySourceServiceDeleteEvent(kubernetesActivitySource);
+
+    ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
+    verify(eventProducer, times(1)).send(argumentCaptor.capture());
+
+    DeleteSetupUsageDTO deleteSetupUsageDTO = DeleteSetupUsageDTO.parseFrom(argumentCaptor.getValue().getData());
+
+    assertThat(deleteSetupUsageDTO).isNotNull();
+    assertThat(deleteSetupUsageDTO.getAccountIdentifier()).isEqualTo(kubernetesActivitySource.getAccountId());
+    assertThat(deleteSetupUsageDTO.getReferredByEntityFQN())
+        .isEqualTo(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(kubernetesActivitySource.getAccountId(),
+            kubernetesActivitySource.getOrgIdentifier(), kubernetesActivitySource.getProjectIdentifier(),
+            kubernetesActivitySource.getIdentifier()));
+    assertThat(deleteSetupUsageDTO.getReferredEntityFQN())
+        .isEqualTo(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(kubernetesActivitySource.getAccountId(),
+            kubernetesActivitySource.getOrgIdentifier(), kubernetesActivitySource.getProjectIdentifier(),
+            serviceIdentifier));
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void shouldSendKubernetesActivitySourceConnectorDeleteEvent()
+      throws ProducerShutdownException, InvalidProtocolBufferException {
+    String accountId = generateUuid();
+    String identifier = generateUuid();
+    String projectIdentifier = generateUuid();
+    String orgIdentifier = generateUuid();
+
+    KubernetesActivitySource kubernetesActivitySource =
+        getKubernetesActivitySource(accountId, identifier, projectIdentifier, orgIdentifier, emptySet());
+
+    eventService.sendKubernetesActivitySourceConnectorDeleteEvent(kubernetesActivitySource);
+
+    ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
+    verify(eventProducer, times(1)).send(argumentCaptor.capture());
+
+    DeleteSetupUsageDTO deleteSetupUsageDTO = DeleteSetupUsageDTO.parseFrom(argumentCaptor.getValue().getData());
+
+    assertThat(deleteSetupUsageDTO).isNotNull();
+
+    assertThat(deleteSetupUsageDTO.getAccountIdentifier()).isEqualTo(kubernetesActivitySource.getAccountId());
+    assertThat(deleteSetupUsageDTO.getReferredByEntityFQN())
+        .isEqualTo(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(kubernetesActivitySource.getAccountId(),
+            kubernetesActivitySource.getOrgIdentifier(), kubernetesActivitySource.getProjectIdentifier(),
+            kubernetesActivitySource.getIdentifier()));
+    assertThat(deleteSetupUsageDTO.getReferredEntityFQN())
+        .isEqualTo(FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(kubernetesActivitySource.getAccountId(),
+            kubernetesActivitySource.getOrgIdentifier(), kubernetesActivitySource.getProjectIdentifier(),
+            kubernetesActivitySource.getConnectorIdentifier()));
   }
 
   private CVConfig createCVConfig() {

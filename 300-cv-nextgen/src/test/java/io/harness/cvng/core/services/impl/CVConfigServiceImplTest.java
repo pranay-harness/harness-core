@@ -122,6 +122,8 @@ public class CVConfigServiceImplTest extends CvNextGenTest {
 
     ArgumentCaptor<CVConfig> argumentCaptor = ArgumentCaptor.forClass(CVConfig.class);
     verify(eventService, times(1)).sendConnectorCreateEvent(argumentCaptor.capture());
+    verify(eventService, times(1)).sendServiceCreateEvent(argumentCaptor.capture());
+    verify(eventService, times(1)).sendEnvironmentCreateEvent(argumentCaptor.capture());
   }
 
   private CVConfig save(CVConfig cvConfig) {

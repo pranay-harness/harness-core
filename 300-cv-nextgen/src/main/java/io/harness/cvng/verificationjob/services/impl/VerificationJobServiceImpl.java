@@ -65,8 +65,12 @@ public class VerificationJobServiceImpl implements VerificationJobService {
   }
 
   private void sendScopedCreateEvent(VerificationJob verificationJob) {
-    cvEventService.sendVerificationJobEnvironmentCreateEvent(verificationJob);
-    cvEventService.sendVerificationJobServiceCreateEvent(verificationJob);
+    if (!verificationJob.getEnvIdentifierRuntimeParam().isRuntimeParam()) {
+      cvEventService.sendVerificationJobEnvironmentCreateEvent(verificationJob);
+    }
+    if (!verificationJob.getServiceIdentifierRuntimeParam().isRuntimeParam()) {
+      cvEventService.sendVerificationJobServiceCreateEvent(verificationJob);
+    }
   }
 
   @Override
@@ -123,8 +127,12 @@ public class VerificationJobServiceImpl implements VerificationJobService {
   }
 
   private void sendScopedDeleteEvent(VerificationJob verificationJob) {
-    cvEventService.sendVerificationJobEnvironmentDeleteEvent(verificationJob);
-    cvEventService.sendVerificationJobServiceDeleteEvent(verificationJob);
+    if (!verificationJob.getEnvIdentifierRuntimeParam().isRuntimeParam()) {
+      cvEventService.sendVerificationJobEnvironmentDeleteEvent(verificationJob);
+    }
+    if (!verificationJob.getServiceIdentifierRuntimeParam().isRuntimeParam()) {
+      cvEventService.sendVerificationJobServiceDeleteEvent(verificationJob);
+    }
   }
 
   @Override

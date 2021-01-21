@@ -136,6 +136,24 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
   }
 
   @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testDelete_dontSendEventsWithRunTimeParams() {
+    VerificationJobDTO verificationJobDTO = createDTO();
+    verificationJobDTO.setEnvIdentifier("${envIdentifier}");
+    verificationJobDTO.setServiceIdentifier("${serviceIdentifier}");
+
+    verificationJobService.upsert(accountId, verificationJobDTO);
+    verificationJobService.delete(accountId, verificationJobDTO.getIdentifier());
+    assertThat(verificationJobService.getVerificationJobDTO(accountId, verificationJobDTO.getIdentifier()))
+        .isEqualTo(null);
+
+    ArgumentCaptor<VerificationJob> argumentCaptor = ArgumentCaptor.forClass(VerificationJob.class);
+    verify(cvEventService, times(0)).sendVerificationJobServiceDeleteEvent(argumentCaptor.capture());
+    verify(cvEventService, times(0)).sendVerificationJobEnvironmentDeleteEvent(argumentCaptor.capture());
+  }
+
+  @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testUpsert_newJobCreationWithRuntimeParams() {
@@ -357,6 +375,32 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     verify(cvEventService, times(1)).sendVerificationJobEnvironmentCreateEvent(argumentCaptor.capture());
   }
 
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testSaveVerificationJob_dontSendEventsWithRunTimeParams() {
+    String orgIdentifier = "orgIdentifier";
+    String projectIdentifier = "projectIdentifier";
+    String serviceIdentifier = "serviceIdentifier";
+
+    VerificationJob verificationJob = createVerificationJobWithRunTimeParams(
+        orgIdentifier, projectIdentifier, serviceIdentifier, VerificationJobType.HEALTH);
+
+    verificationJobService.save(verificationJob);
+
+    VerificationJob retrieveVerificationJob = hPersistence.get(VerificationJob.class, verificationJob.getUuid());
+    assertThat(retrieveVerificationJob).isNotNull();
+    assertThat(retrieveVerificationJob.getOrgIdentifier()).isEqualTo("orgIdentifier");
+    assertThat(retrieveVerificationJob.getProjectIdentifier()).isEqualTo("projectIdentifier");
+    assertThat(retrieveVerificationJob.getServiceIdentifier()).isEqualTo("serviceIdentifier");
+    assertThat(retrieveVerificationJob.getJobName()).isEqualTo("job-name");
+    assertThat(retrieveVerificationJob.getDuration()).isEqualTo(Duration.ZERO);
+
+    ArgumentCaptor<VerificationJob> argumentCaptor = ArgumentCaptor.forClass(VerificationJob.class);
+    verify(cvEventService, times(0)).sendVerificationJobServiceCreateEvent(argumentCaptor.capture());
+    verify(cvEventService, times(0)).sendVerificationJobEnvironmentCreateEvent(argumentCaptor.capture());
+  }
+
   private VerificationJob createVerificationJob(
       String orgIdentifier, String projectIdentifier, String serviceIdentifier, VerificationJobType type) {
     HealthVerificationJob verificationJob = new HealthVerificationJob();
@@ -367,6 +411,20 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     verificationJob.setProjectIdentifier(projectIdentifier);
     verificationJob.setServiceIdentifier(serviceIdentifier, false);
     verificationJob.setEnvIdentifier(generateUuid(), false);
+    verificationJob.setDuration(Duration.ZERO);
+    return verificationJob;
+  }
+
+  private VerificationJob createVerificationJobWithRunTimeParams(
+      String orgIdentifier, String projectIdentifier, String serviceIdentifier, VerificationJobType type) {
+    HealthVerificationJob verificationJob = new HealthVerificationJob();
+    verificationJob.setAccountId(accountId);
+    verificationJob.setJobName("job-name");
+    verificationJob.setIdentifier(generateUuid());
+    verificationJob.setOrgIdentifier(orgIdentifier);
+    verificationJob.setProjectIdentifier(projectIdentifier);
+    verificationJob.setServiceIdentifier(serviceIdentifier, true);
+    verificationJob.setEnvIdentifier(generateUuid(), true);
     verificationJob.setDuration(Duration.ZERO);
     return verificationJob;
   }

@@ -1,5 +1,6 @@
 package io.harness.cvng.core.services.api;
 
+import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 
@@ -23,4 +24,16 @@ public interface CVEventService {
   void sendVerificationJobEnvironmentDeleteEvent(VerificationJob verificationJob);
 
   void sendVerificationJobServiceDeleteEvent(VerificationJob verificationJob);
+
+  void sendKubernetesActivitySourceConnectorCreateEvent(KubernetesActivitySource kubernetesActivitySource);
+
+  void sendKubernetesActivitySourceConnectorDeleteEvent(KubernetesActivitySource kubernetesActivitySource);
+
+  void sendKubernetesActivitySourceServiceCreateEvent(KubernetesActivitySource kubernetesActivitySource);
+
+  void sendKubernetesActivitySourceServiceDeleteEvent(KubernetesActivitySource kubernetesActivitySource);
+
+  void sendKubernetesActivitySourceEnvironmentCreateEvent(KubernetesActivitySource kubernetesActivitySource);
+
+  void sendKubernetesActivitySourceEnvironmentDeleteEvent(KubernetesActivitySource kubernetesActivitySource);
 }
