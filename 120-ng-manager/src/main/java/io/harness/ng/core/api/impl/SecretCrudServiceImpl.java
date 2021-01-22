@@ -13,6 +13,7 @@ import static io.harness.remote.client.RestClientUtils.getResponse;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.NGResourceFilterConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.api.ProducerShutdownException;
@@ -24,6 +25,7 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.api.NGSecretServiceV2;
 import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.api.SecretModifyService;
+import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.SecretFileSpecDTO;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
@@ -162,8 +164,14 @@ public class SecretCrudServiceImpl implements SecretCrudService {
       criteria = criteria.and(SecretKeys.type).is(secretType);
     }
     if (!StringUtils.isEmpty(searchTerm)) {
-      criteria = criteria.orOperator(Criteria.where(SecretKeys.name).regex(searchTerm, "i"),
-          Criteria.where(SecretKeys.identifier).regex(searchTerm, "i"));
+      criteria = criteria.orOperator(
+          Criteria.where(SecretKeys.name).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          Criteria.where(SecretKeys.identifier)
+              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          Criteria.where(SecretKeys.tags + "." + NGTagKeys.key)
+              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          Criteria.where(SecretKeys.tags + "." + NGTagKeys.value)
+              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
     }
     Page<Secret> secrets = ngSecretService.list(criteria, page, size);
     return PageUtils.getNGPageResponse(
