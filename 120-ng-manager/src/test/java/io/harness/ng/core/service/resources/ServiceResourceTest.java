@@ -146,7 +146,7 @@ public class ServiceResourceTest extends NgManagerTest {
     doReturn(serviceList).when(serviceEntityService).list(criteria, pageable);
 
     List<ServiceResponseDTO> content =
-        serviceResource.listServicesForProject(0, 10, "", "", "", null).getData().getContent();
+        serviceResource.listServicesForProject(0, 10, "", "", "", null, null).getData().getContent();
     assertThat(content).isNotNull();
     assertThat(content.size()).isEqualTo(1);
     assertThat(content.get(0)).isEqualTo(serviceResponseDTO);
