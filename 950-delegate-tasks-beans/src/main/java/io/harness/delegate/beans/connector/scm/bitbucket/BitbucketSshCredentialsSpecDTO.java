@@ -1,5 +1,6 @@
 package io.harness.delegate.beans.connector.scm.bitbucket;
 
+import io.harness.beans.DecryptableEntity;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretReference;
 
@@ -17,6 +18,6 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("GitlabSshCredentialsSpec")
-public class BitbucketSshCredentialsSpecDTO {
+public class BitbucketSshCredentialsSpecDTO implements DecryptableEntity {
   @NotNull @SecretReference @ApiModelProperty(dataType = "string") SecretRefData sshKeyRef;
 }

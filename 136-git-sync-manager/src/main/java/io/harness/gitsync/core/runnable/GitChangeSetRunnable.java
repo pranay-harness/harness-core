@@ -61,7 +61,7 @@ public class GitChangeSetRunnable implements Runnable {
   @Override
   public void run() {
     final Stopwatch stopwatch = Stopwatch.createStarted();
-    log.info(GIT_YAML_LOG_PREFIX + "Started job to pick changesets for processing");
+    //    log.info(GIT_YAML_LOG_PREFIX + "Started job to pick changesets for processing");
 
     try {
       if (!shouldRun()) {
@@ -74,15 +74,16 @@ public class GitChangeSetRunnable implements Runnable {
       final List<YamlChangeSet> yamlChangeSets = getYamlChangeSetsToProcess();
 
       if (yamlChangeSets.isEmpty()) {
-        log.info("No changesets found for processing in this run");
+        //        log.info("No changesets found for processing in this run");
       } else {
-        log.info("changesets to process =[{}]", yamlChangeSets.stream().map(YamlChangeSet::getUuid).collect(toList()));
+        //        log.info("changesets to process =[{}]",
+        //        yamlChangeSets.stream().map(YamlChangeSet::getUuid).collect(toList()));
 
         yamlChangeSets.forEach(this::processChangeSet);
       }
 
       try (ProcessTimeLogContext ignore4 = new ProcessTimeLogContext(stopwatch.elapsed(MILLISECONDS), OVERRIDE_ERROR)) {
-        log.info(GIT_YAML_LOG_PREFIX + "Successfully handled changesets for waiting accounts");
+        //        log.info(GIT_YAML_LOG_PREFIX + "Successfully handled changesets for waiting accounts");
       }
     } catch (WingsException exception) {
       ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
@@ -130,15 +131,17 @@ public class GitChangeSetRunnable implements Runnable {
     final Set<ChangeSetGroupingKey> eligibleChangeSetKeysForPicking =
         getEligibleQueueKeysForPicking(queuedChangeSetKeys, runningChangeSetKeys, maxedOutAccountIds);
 
-    log.info(GIT_YAML_LOG_PREFIX
-            + "queuedChangeSetKeys:{}, runningChangeSetKeys:{}, maxedOutAccountIds: {} ,eligibleChangeSetKeysForPicking:{}",
-        queuedChangeSetKeys, runningChangeSetKeys, maxedOutAccountIds, eligibleChangeSetKeysForPicking);
+    //    log.info(GIT_YAML_LOG_PREFIX
+    //            + "queuedChangeSetKeys:{}, runningChangeSetKeys:{}, maxedOutAccountIds: {}
+    //            ,eligibleChangeSetKeysForPicking:{}",
+    //        queuedChangeSetKeys, runningChangeSetKeys, maxedOutAccountIds, eligibleChangeSetKeysForPicking);
 
-    if (isNotEmpty(maxedOutAccountIds)) {
-      log.info(GIT_YAML_LOG_PREFIX
-              + " Skipping processing of GitChangeSet for Accounts :[{}], as concurrently running tasks have maxed out",
-          maxedOutAccountIds);
-    }
+    //    if (isNotEmpty(maxedOutAccountIds)) {
+    //      log.info(GIT_YAML_LOG_PREFIX
+    //              + " Skipping processing of GitChangeSet for Accounts :[{}], as concurrently running tasks have maxed
+    //              out",
+    //          maxedOutAccountIds);
+    //    }
 
     return eligibleChangeSetKeysForPicking.stream()
         .map(changeSetGroupingKey
