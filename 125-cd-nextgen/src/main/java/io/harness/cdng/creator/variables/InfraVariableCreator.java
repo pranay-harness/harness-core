@@ -10,6 +10,7 @@ import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
 
@@ -48,6 +49,15 @@ public class InfraVariableCreator {
     if (descriptionNode != null) {
       VariableCreatorHelper.addFieldToPropertiesMap(
           descriptionNode, yamlPropertiesMap, YamlTypes.PIPELINE_INFRASTRUCTURE);
+    }
+    YamlField tagsField = envNode.getNode().getField(YAMLFieldNameConstants.TAGS);
+    if (tagsField != null) {
+      List<YamlField> fields = tagsField.getNode().fields();
+      fields.forEach(field -> {
+        if (!field.getName().equals(YamlTypes.UUID)) {
+          VariableCreatorHelper.addFieldToPropertiesMap(field, yamlPropertiesMap, YamlTypes.PIPELINE_INFRASTRUCTURE);
+        }
+      });
     }
   }
 

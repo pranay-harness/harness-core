@@ -36,10 +36,14 @@ public class ExecutionVariableCreator extends ChildrenVariableCreator {
 
     YamlField rollbackStepsField = config.getNode().getField(YAMLFieldNameConstants.ROLLBACK_STEPS);
     if (rollbackStepsField != null) {
-      Map<String, YamlField> rollbackDependencyMap = new HashMap<>();
-      rollbackDependencyMap.put(rollbackStepsField.getNode().getUuid(), rollbackStepsField);
-      responseMap.put(rollbackStepsField.getNode().getUuid(),
-          VariableCreationResponse.builder().dependencies(rollbackDependencyMap).build());
+      List<YamlNode> yamlNodes = rollbackStepsField.getNode().asArray();
+      List<YamlField> rollbackStepYamlFields = getStepYamlFields(yamlNodes);
+      for (YamlField stepYamlField : rollbackStepYamlFields) {
+        Map<String, YamlField> stepYamlFieldMap = new HashMap<>();
+        stepYamlFieldMap.put(stepYamlField.getNode().getUuid(), stepYamlField);
+        responseMap.put(stepYamlField.getNode().getUuid(),
+            VariableCreationResponse.builder().dependencies(stepYamlFieldMap).build());
+      }
     }
     return responseMap;
   }
@@ -54,11 +58,7 @@ public class ExecutionVariableCreator extends ChildrenVariableCreator {
     return Collections.singletonMap(YAMLFieldNameConstants.EXECUTION, Collections.singleton(PlanCreatorUtils.ANY_TYPE));
   }
 
-  private List<YamlField> getStepYamlFields(YamlField config) {
-    List<YamlNode> yamlNodes =
-        Optional
-            .of(Preconditions.checkNotNull(config.getNode().getField(YAMLFieldNameConstants.STEPS)).getNode().asArray())
-            .orElse(Collections.emptyList());
+  private List<YamlField> getStepYamlFields(List<YamlNode> yamlNodes) {
     List<YamlField> stepFields = new LinkedList<>();
 
     yamlNodes.forEach(yamlNode -> {
@@ -88,5 +88,13 @@ public class ExecutionVariableCreator extends ChildrenVariableCreator {
       }
     });
     return stepFields;
+  }
+
+  private List<YamlField> getStepYamlFields(YamlField config) {
+    List<YamlNode> yamlNodes =
+        Optional
+            .of(Preconditions.checkNotNull(config.getNode().getField(YAMLFieldNameConstants.STEPS)).getNode().asArray())
+            .orElse(Collections.emptyList());
+    return getStepYamlFields(yamlNodes);
   }
 }
