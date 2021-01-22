@@ -114,6 +114,7 @@ BAZEL_MODULES="\
   //960-notification-beans:module \
   //960-persistence:module \
   //960-persistence:supporter-test \
+  //960-recaster:module \
   //960-yaml-sdk:module \
   //970-api-services-beans:module \
   //970-grpc:module \
@@ -304,6 +305,7 @@ build_bazel_module 960-expression-service
 build_bazel_module 960-ng-core-beans
 build_bazel_module 960-notification-beans
 build_bazel_module 960-persistence
+build_bazel_module 960-recaster
 build_bazel_module 960-yaml-sdk
 build_bazel_module 970-api-services-beans
 build_bazel_module 970-grpc

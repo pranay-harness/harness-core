@@ -7,6 +7,7 @@ import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
 import io.harness.pms.sdk.core.execution.PmsExecutionGrpcClient;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -29,10 +30,10 @@ public class ExecutionSummaryUpdateEventHandler implements AsyncOrchestrationEve
         ExecutionSummaryUpdateRequest.newBuilder()
             .setModuleName(serviceName)
             .setPlanExecutionId(nodeExecutionProto.getAmbiance().getPlanExecutionId())
-            .setPipelineModuleInfoJson(
-                executionSummaryModuleInfoProvider.getPipelineLevelModuleInfo(nodeExecutionProto).toJson())
-            .setNodeModuleInfoJson(
-                executionSummaryModuleInfoProvider.getStageLevelModuleInfo(nodeExecutionProto).toJson())
+            .setPipelineModuleInfoJson(RecastOrchestrationUtils.toDocumentJson(
+                executionSummaryModuleInfoProvider.getPipelineLevelModuleInfo(nodeExecutionProto)))
+            .setNodeModuleInfoJson(RecastOrchestrationUtils.toDocumentJson(
+                executionSummaryModuleInfoProvider.getStageLevelModuleInfo(nodeExecutionProto)))
             .setNodeExecutionId(nodeExecutionProto.getUuid());
     if (nodeExecutionProto.getAmbiance().getLevelsCount() >= 3) {
       executionSummaryUpdateRequest.setNodeUuid(nodeExecutionProto.getAmbiance().getLevels(2).getSetupId());

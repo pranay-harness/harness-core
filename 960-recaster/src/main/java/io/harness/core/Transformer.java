@@ -6,26 +6,7 @@ import io.harness.beans.CastedField;
 import io.harness.exceptions.RecasterException;
 import io.harness.transformers.DefaultRecastTransformer;
 import io.harness.transformers.RecastTransformer;
-import io.harness.transformers.simplevalue.BooleanRecastTransformer;
-import io.harness.transformers.simplevalue.ByteRecastTransformer;
-import io.harness.transformers.simplevalue.CharacterArrayRecastTransformer;
-import io.harness.transformers.simplevalue.CharacterRecastTransformer;
-import io.harness.transformers.simplevalue.ClassRecastTransformer;
-import io.harness.transformers.simplevalue.DateRecastTransformer;
-import io.harness.transformers.simplevalue.DoubleRecastTransformer;
-import io.harness.transformers.simplevalue.EnumRecastTransformer;
-import io.harness.transformers.simplevalue.FloatRecastTransformer;
-import io.harness.transformers.simplevalue.InstantRecastTransformer;
-import io.harness.transformers.simplevalue.IntegerRecastTransformer;
-import io.harness.transformers.simplevalue.IterableRecastTransformer;
-import io.harness.transformers.simplevalue.LocalDateRecastTransformer;
-import io.harness.transformers.simplevalue.LocalDateTimeRecastTransformer;
-import io.harness.transformers.simplevalue.LocalTimeRecastTransformer;
-import io.harness.transformers.simplevalue.LongRecastTransformer;
-import io.harness.transformers.simplevalue.MapRecastTransformer;
-import io.harness.transformers.simplevalue.ProtoRecastTransformer;
 import io.harness.transformers.simplevalue.SimpleValueTransformer;
-import io.harness.transformers.simplevalue.StringRecastTransformer;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -35,38 +16,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 
 @Slf4j
-public class Transformer {
+public abstract class Transformer {
   Recaster recaster;
   Map<Class<?>, RecastTransformer> converterMap = new HashMap<>();
   private final List<RecastTransformer> untypedTypeTransformers = new LinkedList<>();
-  private final RecastTransformer passThroughTransformer = new DefaultRecastTransformer();
 
   public Transformer(Recaster recaster) {
     this.recaster = recaster;
-    initializeTransformers();
-  }
-
-  private void initializeTransformers() {
-    addTransformer(new BooleanRecastTransformer());
-    addTransformer(new ByteRecastTransformer());
-    addTransformer(new ClassRecastTransformer());
-    addTransformer(new EnumRecastTransformer());
-    addTransformer(new IterableRecastTransformer());
-    addTransformer(new ProtoRecastTransformer());
-    addTransformer(new StringRecastTransformer());
-    addTransformer(new LongRecastTransformer());
-    addTransformer(new IntegerRecastTransformer());
-    addTransformer(new DoubleRecastTransformer());
-    addTransformer(new FloatRecastTransformer());
-    addTransformer(new CharacterRecastTransformer());
-    addTransformer(new CharacterArrayRecastTransformer());
-    addTransformer(new DateRecastTransformer());
-    addTransformer(new LocalDateRecastTransformer());
-    addTransformer(new LocalDateTimeRecastTransformer());
-    addTransformer(new LocalTimeRecastTransformer());
-    addTransformer(new InstantRecastTransformer());
-
-    addTransformer(new MapRecastTransformer());
   }
 
   public RecastTransformer addTransformer(RecastTransformer recastTransformer) {
@@ -124,7 +80,14 @@ public class Transformer {
 
   public void toDocument(final Object containingObject, final CastedField cf, final Document document) {
     final Object fieldValue = cf.getFieldValue(containingObject);
-    final RecastTransformer enc = getTransformer(fieldValue, cf);
+    RecastTransformer enc = getTransformer(fieldValue, cf);
+    if (!(enc instanceof SimpleValueTransformer)) {
+      enc = getTransformer(fieldValue != null ? fieldValue.getClass() : containingObject.getClass());
+    }
+
+    if (enc instanceof DefaultRecastTransformer && fieldValue != null) {
+      log.warn("Default transformer is used for {} with value {}", cf.getField(), fieldValue);
+    }
 
     final Object encoded = enc.encode(fieldValue, cf);
     document.put(cf.getNameToStore(), encoded);
@@ -146,7 +109,7 @@ public class Transformer {
       }
     }
 
-    return passThroughTransformer;
+    return null;
   }
 
   protected RecastTransformer getTransformer(final Object val, final CastedField cf) {
@@ -169,7 +132,7 @@ public class Transformer {
       }
     }
 
-    return passThroughTransformer;
+    return null;
   }
 
   public boolean hasSimpleValueTransformer(final Object o) {
@@ -191,6 +154,11 @@ public class Transformer {
 
   public boolean hasSimpleValueTransformer(Class<?> c) {
     return getTransformer(c) instanceof SimpleValueTransformer;
+  }
+
+  public boolean hasTransformer(Class<?> c) {
+    return !(getTransformer(c) instanceof DefaultRecastTransformer)
+        && !(getTransformer(c) instanceof SimpleValueTransformer);
   }
 
   private RecastTransformer getTransformer(CastedField cf) {

@@ -8,6 +8,7 @@ import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,7 +24,7 @@ public class K8sCanaryStep implements SyncExecutable<MapStepParameters> {
   @Override
   public StepResponse executeSync(Ambiance ambiance, MapStepParameters stepParameters, StepInputPackage inputPackage,
       PassThroughData passThroughData) {
-    log.info("K8s Canary Step parameters: {}", stepParameters.toJson());
+    log.info("K8s Canary Step parameters: {}", RecastOrchestrationUtils.toDocumentJson(stepParameters));
     return StepResponse.builder().status(Status.SUCCEEDED).build();
   }
 }

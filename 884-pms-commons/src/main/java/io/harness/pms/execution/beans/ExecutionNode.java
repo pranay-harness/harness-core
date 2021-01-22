@@ -20,7 +20,7 @@ public class ExecutionNode {
   String identifier;
   String baseFqn;
   List<Document> outcomes;
-  Map<String, Object> stepParameters;
+  Document stepParameters;
   Long startTs;
   Long endTs;
   String stepType;

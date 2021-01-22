@@ -9,7 +9,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.events.SyncOrchestrationEventHandler;
-import io.harness.pms.serializer.json.JsonOrchestrationUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.steps.StepOutcomeGroup;
 
 import com.google.inject.Inject;
@@ -33,7 +33,7 @@ public class PipelineExecutionStartEventHandler implements SyncOrchestrationEven
       return;
     }
     CDPipelineSetupParameters cdPipelineSetupParameters =
-        JsonOrchestrationUtils.asObject(planNode.getStepParameters(), CDPipelineSetupParameters.class);
+        RecastOrchestrationUtils.fromDocumentJson(planNode.getStepParameters(), CDPipelineSetupParameters.class);
 
     ngPipelineExecutionService.createPipelineExecutionSummary(
         accountId, orgId, projectId, planExecution, cdPipelineSetupParameters);

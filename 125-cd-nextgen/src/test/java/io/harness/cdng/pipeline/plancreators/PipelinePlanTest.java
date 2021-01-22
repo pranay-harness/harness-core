@@ -17,7 +17,7 @@ import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.plan.Plan;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.adviser.fail.OnFailAdviserParameters;
-import io.harness.pms.serializer.json.JsonOrchestrationUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.section.chain.SectionChainStepParameters;
@@ -112,7 +112,7 @@ public class PipelinePlanTest extends CDNGBaseTest {
     PlanNodeProto rollbackPlanNode = getNodeByUUID(planNodes, advisorNodeId).get();
     assertThat(rollbackPlanNode.getIdentifier()).isEqualTo("managerDeploymentStageRollback");
 
-    List<RollbackNode> childNodes = (JsonOrchestrationUtils.asObject(rollbackPlanNode.getStepParameters(),
+    List<RollbackNode> childNodes = (RecastOrchestrationUtils.fromDocumentJson(rollbackPlanNode.getStepParameters(),
                                          RollbackOptionalChildChainStepParameters.class))
                                         .getChildNodes();
     assertThat(childNodes).hasSize(2);
@@ -135,7 +135,7 @@ public class PipelinePlanTest extends CDNGBaseTest {
 
     // Step Groups Rollback Node Children
     List<RollbackNode> stepGroupsRollbackNodeChildren =
-        (JsonOrchestrationUtils.asObject(
+        (RecastOrchestrationUtils.fromDocumentJson(
              stepGroupsRollbackNode.getStepParameters(), RollbackOptionalChildChainStepParameters.class))
             .getChildNodes();
     assertThat(stepGroupsRollbackNodeChildren).hasSize(3);
@@ -150,7 +150,7 @@ public class PipelinePlanTest extends CDNGBaseTest {
             + PlanCreatorConstants.EXECUTION_NODE_IDENTIFIER + ".StepGroup4");
 
     List<RollbackNode> parallelNodeChildren =
-        (JsonOrchestrationUtils.asObject(
+        (RecastOrchestrationUtils.fromDocumentJson(
              parallelRollbackPlanNode.getStepParameters(), RollbackOptionalChildrenParameters.class))
             .getParallelNodes();
     assertThat(parallelNodeChildren).hasSize(1);
@@ -176,7 +176,8 @@ public class PipelinePlanTest extends CDNGBaseTest {
 
     // Execution Rollback Node Children
     List<String> executionRollbackNodeChildIds =
-        (JsonOrchestrationUtils.asObject(executionRollbackNode.getStepParameters(), SectionChainStepParameters.class))
+        (RecastOrchestrationUtils.fromDocumentJson(
+             executionRollbackNode.getStepParameters(), SectionChainStepParameters.class))
             .getChildNodeIds();
     assertThat(executionRollbackNodeChildIds).hasSize(2);
   }

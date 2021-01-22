@@ -33,6 +33,7 @@ java_library(
 java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
+    resources = ["//882-pms-sdk-core/src/test/resources:resource"],
     visibility = ["//visibility:public"],
     deps = [
         "maven_deps",

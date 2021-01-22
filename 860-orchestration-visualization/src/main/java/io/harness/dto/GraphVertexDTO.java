@@ -37,7 +37,7 @@ public class GraphVertexDTO {
   Status status;
   FailureInfo failureInfo;
   SkipInfo skipInfo;
-  Map<String, Object> stepParameters;
+  Document stepParameters;
   ExecutionMode mode;
 
   List<ExecutableResponse> executableResponses;

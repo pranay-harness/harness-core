@@ -316,8 +316,9 @@ public class RecastTest extends RecasterTestBase {
 
     Document document = recast.toDocument(user);
     assertThat(document).isNotEmpty();
-    assertThat(document.get("characterClassArray")).isEqualTo(characterClassArray);
-    assertThat(document.get("charPrimitiveArray")).isEqualTo(charPrimitiveArray);
+    assertThat(document.get("characterClassArray")).isEqualTo("AB");
+    assertThat(document.get("charPrimitiveArray")).isEqualTo("ab");
+    assertThat(Document.parse(document.toJson())).isEqualTo(document);
 
     DummyCharacterArray recastedDummyCharacterArray = recast.fromDocument(document, DummyCharacterArray.class);
     assertThat(recastedDummyCharacterArray).isNotNull();

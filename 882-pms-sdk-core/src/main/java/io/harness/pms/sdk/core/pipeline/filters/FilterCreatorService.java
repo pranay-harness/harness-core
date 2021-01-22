@@ -47,7 +47,7 @@ public class FilterCreatorService {
         for (Map.Entry<String, YamlFieldBlob> entry : dependencyBlobs.entrySet()) {
           initialDependencies.put(entry.getKey(), YamlField.fromFieldBlob(entry.getValue()));
         }
-      } catch (IOException e) {
+      } catch (Exception e) {
         throw new InvalidRequestException("Invalid YAML found in dependency blobs");
       }
     }

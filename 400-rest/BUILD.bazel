@@ -63,6 +63,7 @@ java_library(
         "//960-ng-core-beans:module",
         "//960-notification-beans:module",
         "//960-persistence:module",
+        "//960-recaster:module",
         "//970-api-services-beans:module",
         "//970-grpc:module",
         "//970-ng-commons:module",

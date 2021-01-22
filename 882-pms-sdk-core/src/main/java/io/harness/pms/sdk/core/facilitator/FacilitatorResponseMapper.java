@@ -4,7 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
-import io.harness.pms.serializer.persistence.DocumentOrchestrationUtils;
+import io.harness.pms.sdk.core.steps.io.PassThroughData;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.serializer.ProtoUtils;
 
 import lombok.experimental.UtilityClass;
@@ -16,7 +17,7 @@ public class FacilitatorResponseMapper {
     return FacilitatorResponse.builder()
         .initialWait(ProtoUtils.durationToJavaDuration(proto.getInitialWait()))
         .executionMode(proto.getExecutionMode())
-        .passThroughData(DocumentOrchestrationUtils.convertFromDocumentJson(proto.getPassThroughData()))
+        .passThroughData(RecastOrchestrationUtils.fromDocumentJson(proto.getPassThroughData(), PassThroughData.class))
         .build();
   }
 
@@ -27,8 +28,7 @@ public class FacilitatorResponseMapper {
       builder.setInitialWait(ProtoUtils.javaDurationToDuration(facilitatorResponse.getInitialWait()));
     }
     if (facilitatorResponse.getPassThroughData() != null) {
-      builder.setPassThroughData(
-          DocumentOrchestrationUtils.convertToDocumentJson(facilitatorResponse.getPassThroughData()));
+      builder.setPassThroughData(RecastOrchestrationUtils.toDocumentJson(facilitatorResponse.getPassThroughData()));
     }
     builder.setIsSuccessful(true);
     return builder.build();

@@ -31,7 +31,7 @@ import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.io.ResponseDataMapper;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.pms.serializer.json.JsonOrchestrationUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.FailureResponseData;
 import io.harness.tasks.ResponseData;
@@ -125,7 +125,7 @@ public class PmsNodeExecutionServiceImpl implements PmsNodeExecutionService {
     if (isEmpty(stepParameters)) {
       return null;
     }
-    return JsonOrchestrationUtils.asObject(stepParameters, step.getStepParametersClass());
+    return RecastOrchestrationUtils.fromDocumentJson(stepParameters, step.getStepParametersClass());
   }
 
   @Override

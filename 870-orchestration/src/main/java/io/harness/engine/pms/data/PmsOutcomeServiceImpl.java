@@ -19,7 +19,7 @@ import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.resolver.ResolverUtils;
-import io.harness.pms.serializer.persistence.DocumentOrchestrationUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -75,7 +75,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
                                    .levels(ambiance.getLevelsList())
                                    .producedBy(producedBy)
                                    .name(name)
-                                   .outcome(DocumentOrchestrationUtils.convertToDocumentFromJson(value))
+                                   .outcome(RecastOrchestrationUtils.toDocumentFromJson(value))
                                    .levelRuntimeIdIdx(ResolverUtils.prepareLevelRuntimeIdIdx(ambiance.getLevelsList()))
                                    .build());
       return instance.getUuid();
@@ -137,7 +137,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
     if (instance == null) {
       throw new OutcomeException(format("Could not resolve outcome with name '%s'", name));
     }
-    return instance.getOutcome() == null ? null : instance.getOutcome().toJson();
+    return RecastOrchestrationUtils.toDocumentJson(instance.getOutcome());
   }
 
   private String resolveUsingProducerSetupId(@NotNull Ambiance ambiance, @NotNull RefObject refObject) {
@@ -154,6 +154,6 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
     if (EmptyPredicate.isEmpty(instances)) {
       throw new OutcomeException(format("Could not resolve outcome with name '%s'", name));
     }
-    return instances.get(0).getOutcome() == null ? null : instances.get(0).getOutcome().toJson();
+    return RecastOrchestrationUtils.toDocumentJson(instances.get(0).getOutcome());
   }
 }

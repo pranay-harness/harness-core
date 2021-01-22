@@ -34,6 +34,7 @@ import io.harness.pms.utils.PmsConstants;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.registrars.PipelineServiceStepRegistrar;
+import io.harness.serializer.jackson.PipelineServiceJacksonModule;
 import io.harness.service.impl.PmsDelegateAsyncServiceImpl;
 import io.harness.service.impl.PmsDelegateProgressServiceImpl;
 import io.harness.service.impl.PmsDelegateSyncServiceImpl;
@@ -119,6 +120,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   public static void configureObjectMapper(final ObjectMapper mapper) {
     NGPipelineObjectMapperHelper.configureNGObjectMapper(mapper);
     mapper.registerModule(new PmsBeansJacksonModule());
+    mapper.registerModule(new PipelineServiceJacksonModule());
   }
 
   @Override

@@ -6,6 +6,7 @@ import io.harness.exception.GeneralException;
 import io.harness.pms.contracts.plan.ErrorResponse;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.yaml.YamlField;
+import io.harness.serializer.JsonUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -18,7 +19,7 @@ import lombok.experimental.UtilityClass;
 public class PmsExceptionUtils {
   public String getUnresolvedDependencyErrorMessage(Collection<YamlFieldBlob> yamlFieldBlobs) throws IOException {
     return String.format("Following Nodes could not be parsed: %s.",
-        getYamlNodeErrorInfo(yamlFieldBlobs).stream().map(YamlNodeErrorInfo::toJson).collect(Collectors.joining(",")));
+        getYamlNodeErrorInfo(yamlFieldBlobs).stream().map(JsonUtils::asJson).collect(Collectors.joining(",")));
   }
 
   private List<YamlNodeErrorInfo> getYamlNodeErrorInfo(Collection<YamlFieldBlob> yamlFieldBlobs) throws IOException {

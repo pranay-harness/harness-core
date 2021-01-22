@@ -154,6 +154,7 @@ import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditRecord;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.beans.APMVerificationConfig;
+import software.wings.beans.ARMInfrastructureProvisioner;
 import software.wings.beans.Account;
 import software.wings.beans.ActionableNotification;
 import software.wings.beans.Activity;
@@ -1084,6 +1085,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(GCPMarketplaceCustomer.class);
     set.add(DeletedEntity.class);
     set.add(CVNGVerificationTask.class);
+    set.add(ARMInfrastructureProvisioner.class);
   }
 
   @Override

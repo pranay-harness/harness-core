@@ -9,7 +9,6 @@ import io.harness.pms.yaml.YamlField;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -55,7 +54,7 @@ public class PmsSdkHelper {
               try {
                 YamlField field = YamlField.fromFieldBlob(entry.getValue());
                 return PlanCreatorUtils.supportsField(supportedTypes, field);
-              } catch (IOException e) {
+              } catch (Exception e) {
                 log.error("Invalid yaml field", e);
                 return false;
               }

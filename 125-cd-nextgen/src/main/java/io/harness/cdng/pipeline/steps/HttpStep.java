@@ -61,13 +61,16 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
   public TaskRequest obtainTask(Ambiance ambiance, HttpStepParameters stepParameters, StepInputPackage inputPackage) {
     HttpTaskParametersNgBuilder httpTaskParametersNgBuilder = HttpTaskParametersNg.builder()
                                                                   .url(stepParameters.getUrl().getValue())
-                                                                  .body(stepParameters.getRequestBody().getValue())
                                                                   .method(stepParameters.getMethod().getValue())
                                                                   .socketTimeoutMillis(socketTimeoutMillis);
 
     if (EmptyPredicate.isNotEmpty(stepParameters.getHeaders())) {
       httpTaskParametersNgBuilder.requestHeader(stepParameters.getHeaders().stream().collect(
           Collectors.toMap(HttpHeaderConfig::getKey, HttpHeaderConfig::getValue)));
+    }
+
+    if (stepParameters.getRequestBody() != null) {
+      httpTaskParametersNgBuilder.body(stepParameters.getRequestBody().getValue());
     }
 
     final TaskData taskData =

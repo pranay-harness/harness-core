@@ -7,7 +7,6 @@ import io.harness.data.structure.CollectionUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
-import io.harness.pms.serializer.json.JsonOrchestrationUtils;
 
 import java.util.List;
 import lombok.experimental.UtilityClass;
@@ -30,9 +29,7 @@ public class GraphVertexConverter {
         .status(nodeExecution.getStatus())
         .failureInfo(nodeExecution.getFailureInfo())
         .skipInfo(nodeExecution.getSkipInfo())
-        .stepParameters(nodeExecution.getResolvedStepParameters() == null
-                ? null
-                : JsonOrchestrationUtils.asMap(nodeExecution.getResolvedStepParameters().toJson()))
+        .stepParameters(nodeExecution.getResolvedStepParameters())
         .mode(nodeExecution.getMode())
         .executableResponses(CollectionUtils.emptyIfNull(nodeExecution.getExecutableResponses()))
         .interruptHistories(nodeExecution.getInterruptHistories())
@@ -56,9 +53,7 @@ public class GraphVertexConverter {
         .stepType(nodeExecution.getNode().getStepType().getType())
         .status(nodeExecution.getStatus())
         .failureInfo(nodeExecution.getFailureInfo())
-        .stepParameters(nodeExecution.getResolvedStepParameters() == null
-                ? null
-                : JsonOrchestrationUtils.asMap(nodeExecution.getResolvedStepParameters().toJson()))
+        .stepParameters(nodeExecution.getResolvedStepParameters())
         .mode(nodeExecution.getMode())
         .executableResponses(CollectionUtils.emptyIfNull(nodeExecution.getExecutableResponses()))
         .interruptHistories(nodeExecution.getInterruptHistories())

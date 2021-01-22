@@ -27,6 +27,7 @@ import io.harness.pms.sdk.core.variables.VariableCreatorService;
 import io.harness.pms.utils.CompletableFutures;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
+import io.harness.serializer.JsonUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -77,7 +78,7 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
           for (Map.Entry<String, YamlFieldBlob> entry : dependencyBlobs.entrySet()) {
             initialDependencies.put(entry.getKey(), YamlField.fromFieldBlob(entry.getValue()));
           }
-        } catch (IOException e) {
+        } catch (Exception e) {
           throw new InvalidRequestException("Invalid YAML found in dependency blobs");
         }
       }
@@ -152,7 +153,7 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
             obj = YamlUtils.read(field.getNode().toString(), cls);
           } catch (IOException e) {
             throw new InvalidRequestException(
-                format("Invalid yaml in node [%s]", YamlNodeErrorInfo.fromField(field).toJson()), e);
+                format("Invalid yaml in node [%s]", JsonUtils.asJson(YamlNodeErrorInfo.fromField(field))), e);
           }
         }
 
@@ -160,10 +161,10 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
           return planCreator.createPlanForField(PlanCreationContext.cloneWithCurrentField(ctx, field), obj);
         } catch (Exception ex) {
           YamlNodeErrorInfo errorInfo = YamlNodeErrorInfo.fromField(field);
-          log.error(format("Error creating plan for node: %s", errorInfo.toJson()), ex);
+          log.error(format("Error creating plan for node: %s", JsonUtils.asJson(errorInfo)), ex);
           return PlanCreationResponse.builder()
-              .errorMessage(
-                  format("Could not create plan for node [%s]: %s", errorInfo.toJson(), ExceptionUtils.getMessage(ex)))
+              .errorMessage(format("Could not create plan for node [%s]: %s", JsonUtils.asJson(errorInfo),
+                  ExceptionUtils.getMessage(ex)))
               .build();
         }
       });

@@ -7,6 +7,7 @@ import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,7 +23,7 @@ public class InfrastructureStep implements SyncExecutable<InfrastructureStepPara
   @Override
   public StepResponse executeSync(Ambiance ambiance, InfrastructureStepParameters stepParameters,
       StepInputPackage inputPackage, PassThroughData passThroughData) {
-    log.info("Infrastructure Step parameters: {}", stepParameters.toJson());
+    log.info("Infrastructure Step parameters: {}", RecastOrchestrationUtils.toDocumentJson(stepParameters));
     return StepResponse.builder().status(Status.SUCCEEDED).build();
   }
 }

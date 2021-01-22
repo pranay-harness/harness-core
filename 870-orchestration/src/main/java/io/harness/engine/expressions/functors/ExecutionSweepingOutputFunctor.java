@@ -7,7 +7,7 @@ import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.expression.LateBindingMap;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
-import io.harness.pms.serializer.json.JsonOrchestrationUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -27,6 +27,6 @@ public class ExecutionSweepingOutputFunctor extends LateBindingMap {
     if (json == null) {
       return null;
     }
-    return JsonOrchestrationUtils.asMap(json);
+    return RecastOrchestrationUtils.toDocumentFromJson(json);
   }
 }

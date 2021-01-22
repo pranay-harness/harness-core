@@ -10,8 +10,8 @@ import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.beans.ExecutionErrorInfo;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
-import io.harness.serializer.JsonUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -49,23 +49,22 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
     String moduleName = request.getModuleName();
     String planExecutionId = request.getPlanExecutionId();
     ExecutionStatus status = ExecutionStatus.getExecutionStatus(nodeExecution.getStatus());
-    Map<String, Object> fieldToValues = JsonUtils.asMap(request.getPipelineModuleInfoJson());
+    Document pipelineInfoDoc = RecastOrchestrationUtils.toDocumentFromJson(request.getPipelineModuleInfoJson());
+    if (pipelineInfoDoc == null) {
+      return;
+    }
+
     Update update = new Update();
 
-    for (Map.Entry<String, Object> entry : fieldToValues.entrySet()) {
-      if (Collection.class.isAssignableFrom(entry.getValue().getClass())) {
+    for (Map.Entry<String, Object> entry : pipelineInfoDoc.entrySet()) {
+      String key = String.format(PIPELINE_MODULE_INFO_UPDATE_KEY, moduleName, entry.getKey());
+      if (entry.getValue() != null && Collection.class.isAssignableFrom(entry.getValue().getClass())) {
         Collection<Object> values = (Collection<Object>) entry.getValue();
         for (Object value : values) {
-          update.addToSet(String.format(PIPELINE_MODULE_INFO_UPDATE_KEY, moduleName, entry.getKey()), value);
+          update.addToSet(key, value);
         }
       } else {
-        if (entry.getValue() instanceof String) {
-          update.set(
-              String.format(PIPELINE_MODULE_INFO_UPDATE_KEY, moduleName, entry.getKey()), entry.getValue().toString());
-        } else {
-          update.set(String.format(PIPELINE_MODULE_INFO_UPDATE_KEY, moduleName, entry.getKey()),
-              Document.parse(JsonUtils.asJson(entry.getValue())));
-        }
+        update.set(key, entry.getValue());
       }
     }
     if (Objects.equals(nodeExecution.getNode().getGroup(), "PIPELINE")) {
@@ -93,22 +92,21 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
     if (EmptyPredicate.isEmpty(stageUuid)) {
       return;
     }
-    Map<String, Object> fieldToValues = JsonUtils.asMap(stageInfo);
+    Document stageInfoDoc = RecastOrchestrationUtils.toDocumentFromJson(stageInfo);
+    if (stageInfo == null) {
+      return;
+    }
+
     Update update = new Update();
-    for (Map.Entry<String, Object> entry : fieldToValues.entrySet()) {
-      if (Collection.class.isAssignableFrom(entry.getValue().getClass())) {
+    for (Map.Entry<String, Object> entry : stageInfoDoc.entrySet()) {
+      String key = String.format(STAGE_MODULE_INFO_UPDATE_KEY, stageUuid, moduleName, entry.getKey());
+      if (entry.getValue() != null && Collection.class.isAssignableFrom(entry.getValue().getClass())) {
         Collection<Object> values = (Collection<Object>) entry.getValue();
         for (Object value : values) {
-          update.addToSet(String.format(STAGE_MODULE_INFO_UPDATE_KEY, stageUuid, moduleName, entry.getKey()), value);
+          update.addToSet(key, value);
         }
       } else {
-        if (entry.getValue() instanceof String) {
-          update.set(String.format(STAGE_MODULE_INFO_UPDATE_KEY, stageUuid, moduleName, entry.getKey()),
-              entry.getValue().toString());
-        } else {
-          update.set(String.format(STAGE_MODULE_INFO_UPDATE_KEY, stageUuid, moduleName, entry.getKey()),
-              Document.parse(JsonUtils.asJson(entry.getValue())));
-        }
+        update.set(key, entry.getValue());
       }
     }
     if (Objects.equals(nodeExecution.getNode().getGroup(), "STAGE")) {

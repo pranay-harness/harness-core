@@ -8,7 +8,7 @@ import io.harness.pms.contracts.service.ExpressionEvaluateBlobResponse;
 import io.harness.pms.contracts.service.ExpressionRenderBlobRequest;
 import io.harness.pms.contracts.service.ExpressionRenderBlobResponse;
 import io.harness.pms.expression.EngineExpressionService;
-import io.harness.pms.serializer.persistence.DocumentOrchestrationUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -36,7 +36,7 @@ public class EngineGrpcExpressionService implements EngineExpressionService {
     ExpressionEvaluateBlobResponse expressionEvaluateBlobResponse =
         engineExpressionProtoServiceBlockingStub.evaluateExpression(
             ExpressionEvaluateBlobRequest.newBuilder().setAmbiance(ambiance).setExpression(expression).build());
-    return DocumentOrchestrationUtils.convertFromDocumentJson(expressionEvaluateBlobResponse.getValue());
+    return RecastOrchestrationUtils.fromDocumentJson(expressionEvaluateBlobResponse.getValue(), Object.class);
   }
 
   @Override

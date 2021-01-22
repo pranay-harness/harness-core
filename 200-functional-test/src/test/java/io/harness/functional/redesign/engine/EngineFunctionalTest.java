@@ -21,7 +21,7 @@ import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.Interrupt;
-import io.harness.pms.serializer.json.JsonOrchestrationUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.redesign.states.http.BasicHttpStep;
 import io.harness.redesign.states.shell.ShellScriptStepParameters;
 import io.harness.rule.Owner;
@@ -328,7 +328,7 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
 
     ShellScriptStepParameters shellScriptStepParameters = nodeExecution.getResolvedStepParameters() == null
         ? null
-        : JsonOrchestrationUtils.asObject(
+        : RecastOrchestrationUtils.fromDocumentJson(
             nodeExecution.getResolvedStepParameters().toJson(), ShellScriptStepParameters.class);
     assertThat(shellScriptStepParameters).isNotNull();
     return shellScriptStepParameters.getScriptString();

@@ -11,7 +11,7 @@ import io.harness.pms.contracts.service.SweepingOutputResolveBlobRequest;
 import io.harness.pms.contracts.service.SweepingOutputResolveBlobResponse;
 import io.harness.pms.contracts.service.SweepingOutputServiceGrpc.SweepingOutputServiceBlockingStub;
 import io.harness.pms.sdk.core.data.SweepingOutput;
-import io.harness.pms.serializer.persistence.DocumentOrchestrationUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -30,7 +30,7 @@ public class ExecutionSweepingGrpcOutputService implements ExecutionSweepingOutp
   public SweepingOutput resolve(Ambiance ambiance, RefObject refObject) {
     SweepingOutputResolveBlobResponse resolve = sweepingOutputServiceBlockingStub.resolve(
         SweepingOutputResolveBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
-    return DocumentOrchestrationUtils.convertFromDocumentJson(resolve.getStepTransput());
+    return RecastOrchestrationUtils.fromDocumentJson(resolve.getStepTransput(), SweepingOutput.class);
   }
 
   @Override
@@ -45,7 +45,7 @@ public class ExecutionSweepingGrpcOutputService implements ExecutionSweepingOutp
                                                       .setAmbiance(ambiance)
                                                       .setName(name)
                                                       .setGroupName(groupName)
-                                                      .setValue(DocumentOrchestrationUtils.convertToDocumentJson(value))
+                                                      .setValue(RecastOrchestrationUtils.toDocumentJson(value))
                                                       .build());
     return sweepingOutputConsumeBlobResponse.getResponse();
   }

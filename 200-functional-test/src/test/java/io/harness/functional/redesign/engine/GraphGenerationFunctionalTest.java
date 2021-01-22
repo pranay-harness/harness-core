@@ -35,6 +35,7 @@ import javax.ws.rs.core.GenericType;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -64,6 +65,7 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = ALEXEI, intermittent = true)
   @Category(FunctionalTests.class)
+  @Ignore("Ignoring currently as events are not supported in WingsApp")
   public void shouldGenerateOrchestrationGraph() {
     PlanExecution planExecutionResponse = engineTestSetupHelper.executePlan(
         bearerToken, application.getAccountId(), application.getAppId(), "test-graph-plan");
@@ -77,6 +79,7 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = ALEXEI, intermittent = true)
   @Category(FunctionalTests.class)
+  @Ignore("Ignoring currently as events are not supported in WingsApp")
   public void shouldGeneratePartialOrchestrationGraph() {
     PlanExecution planExecutionResponse = engineTestSetupHelper.executePlan(
         bearerToken, application.getAccountId(), application.getAppId(), "test-graph-plan");
@@ -123,6 +126,7 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = ALEXEI, intermittent = true)
   @Category(FunctionalTests.class)
+  @Ignore("Ignoring currently as events are not supported in WingsApp")
   public void shouldGenerateOrchestrationGraphWithBarriers() {
     List<String> nodeNames = Lists.newArrayList("Dummy Node 2", "barrier3", "Dummy Node 1", "barrier1", "Dummy Node 3",
         "Dummy Node 4", "Wait Node", "barrier2", "Fork Node");
@@ -185,6 +189,7 @@ public class GraphGenerationFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = ALEXEI, intermittent = true)
   @Category(FunctionalTests.class)
+  @Ignore("Ignoring currently as events are not supported in WingsApp")
   public void shouldGenerateOrchestrationGraphWithSkippedNodes() {
     List<String> nodeNames =
         Lists.newArrayList("dummy-start", "fork1", "section1", "section2", "dummy2", "dummy-final");

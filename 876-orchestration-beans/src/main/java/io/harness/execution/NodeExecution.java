@@ -17,6 +17,7 @@ import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.tasks.ProgressData;
 import io.harness.timeout.TimeoutDetails;
 
@@ -116,12 +117,12 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
   public static class NodeExecutionBuilder {
     public NodeExecutionBuilder resolvedStepParameters(StepParameters stepParameters) {
-      this.resolvedStepParameters = stepParameters == null ? null : org.bson.Document.parse(stepParameters.toJson());
+      this.resolvedStepParameters = RecastOrchestrationUtils.toDocument(stepParameters);
       return this;
     }
 
     public NodeExecutionBuilder resolvedStepParameters(String jsonString) {
-      this.resolvedStepParameters = isEmpty(jsonString) ? null : org.bson.Document.parse(jsonString);
+      this.resolvedStepParameters = RecastOrchestrationUtils.toDocumentFromJson(jsonString);
       return this;
     }
   }

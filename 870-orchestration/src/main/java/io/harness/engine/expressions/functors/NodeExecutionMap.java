@@ -17,7 +17,7 @@ import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.LateBindingMap;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
-import io.harness.pms.serializer.json.JsonOrchestrationUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -165,6 +165,6 @@ public class NodeExecutionMap extends LateBindingMap {
   }
 
   private static Optional<Object> jsonToObject(String json) {
-    return Optional.ofNullable(json == null ? null : JsonOrchestrationUtils.asMap(json));
+    return Optional.ofNullable(json == null ? null : RecastOrchestrationUtils.fromDocumentJson(json, Object.class));
   }
 }

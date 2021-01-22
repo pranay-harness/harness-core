@@ -1,6 +1,5 @@
 package io.harness.pms.exception;
 
-import io.harness.pms.serializer.json.JsonSerializable;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 
@@ -9,7 +8,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class YamlNodeErrorInfo implements JsonSerializable {
+public class YamlNodeErrorInfo {
   String identifier;
   String name;
   String type;

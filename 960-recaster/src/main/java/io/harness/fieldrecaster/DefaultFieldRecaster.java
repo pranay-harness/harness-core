@@ -33,10 +33,21 @@ public class DefaultFieldRecaster implements FieldRecaster {
           if (recaster.getTransformer().hasSimpleValueTransformer(cf)
               || recaster.getTransformer().hasSimpleValueTransformer(cf.getType())) {
             refObj = recaster.getTransformer().decode(cf.getType(), docVal, cf);
+          } else if (!(docVal instanceof Document) && recaster.getTransformer().hasSimpleValueTransformer(docVal)) {
+            // special case for parameterized classes. E.x: Dummy<T>
+            refObj = recaster.getTransformer().decode(cf.getType(), docVal, cf);
           } else {
             Document value = (Document) docVal;
-            refObj = recaster.getObjectFactory().createInstance(recaster, cf, value);
-            refObj = recaster.fromDocument(value, refObj);
+            if (!value.containsKey(Recaster.RECAST_CLASS_KEY)) {
+              // this is a map ex. Dummy<Map<String,String>>
+              refObj = new LinkedHashMap<>(value);
+            } else if (recaster.getTransformer().hasTransformer(RecastReflectionUtils.getClass(value))) {
+              refObj = recaster.getTransformer().decode(
+                  RecastReflectionUtils.getClass(value), value.get(Recaster.ENCODED_VALUE), cf);
+            } else {
+              refObj = recaster.getObjectFactory().createInstance(recaster, cf, value);
+              refObj = recaster.fromDocument(value, refObj);
+            }
           }
           if (refObj != null) {
             cf.setFieldValue(entity, refObj);
@@ -62,6 +73,11 @@ public class DefaultFieldRecaster implements FieldRecaster {
     } else {
       // run converters
       if (recaster.getTransformer().hasSimpleValueTransformer(cf)) {
+        recaster.getTransformer().toDocument(entity, cf, document);
+        return;
+      }
+
+      if (recaster.getTransformer().hasSimpleValueTransformer(cf.getFieldValue(entity))) {
         recaster.getTransformer().toDocument(entity, cf, document);
         return;
       }

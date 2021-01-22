@@ -31,12 +31,11 @@ import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
-import io.harness.pms.serializer.json.JsonOrchestrationUtils;
-import io.harness.pms.serializer.persistence.DocumentOrchestrationUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
 import io.harness.testlib.RealMongo;
-import io.harness.utils.DummyOutcome;
+import io.harness.utils.DummyVisualizationOutcome;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -203,9 +202,8 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
     mongoStore.upsert(cachedGraph, Duration.ofDays(10));
 
     // creating outcome
-    DummyOutcome dummyOutcome = new DummyOutcome("outcome");
-    Document doc = Document.parse(dummyOutcome.toJson());
-    doc.put(DocumentOrchestrationUtils.PMS_CLASS_KEY, dummyOutcome.getClass().getName());
+    DummyVisualizationOutcome dummyVisualizationOutcome = new DummyVisualizationOutcome("outcome");
+    Document doc = RecastOrchestrationUtils.toDocument(dummyVisualizationOutcome);
     OutcomeInstance outcome =
         OutcomeInstance.builder()
             .planExecutionId(planExecution.getUuid())
@@ -244,7 +242,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
     assertThat(graphVertexMap.size()).isEqualTo(1);
     assertThat(graphVertexMap.get(dummyStart.getUuid()).getStatus()).isEqualTo(SUCCEEDED);
     assertThat(graphVertexMap.get(dummyStart.getUuid()).getOutcomeDocuments())
-        .containsExactlyInAnyOrder(DocumentOrchestrationUtils.convertToDocument(dummyOutcome));
+        .containsExactlyInAnyOrder(RecastOrchestrationUtils.toDocument(dummyVisualizationOutcome));
     assertThat(updatedGraph.getAdjacencyList().getAdjacencyMap().size()).isEqualTo(1);
     assertThat(updatedGraph.getStatus()).isEqualTo(planExecution.getStatus());
   }
@@ -261,9 +259,8 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
         .stepType(nodeExecution.getNode().getStepType().getType())
         .status(SUCCEEDED)
         .failureInfo(nodeExecution.getFailureInfo())
-        .stepParameters(nodeExecution.getResolvedStepParameters() == null
-                ? null
-                : JsonOrchestrationUtils.asMap(nodeExecution.getResolvedStepParameters().toJson()))
+        .stepParameters(
+            nodeExecution.getResolvedStepParameters() == null ? null : nodeExecution.getResolvedStepParameters())
         .mode(nodeExecution.getMode())
         .interruptHistories(nodeExecution.getInterruptHistories())
         .retryIds(nodeExecution.getRetryIds())

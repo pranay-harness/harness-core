@@ -1,5 +1,7 @@
 package io.harness.core;
 
+import io.harness.transformers.RecastTransformer;
+
 import java.util.HashSet;
 import java.util.Set;
 import org.bson.Document;
@@ -34,6 +36,13 @@ public class Recast {
       }
     }
     return this;
+  }
+
+  public synchronized void addTransformer(RecastTransformer recastTransformer) {
+    if (recastTransformer == null) {
+      return;
+    }
+    recaster.getTransformer().addTransformer(recastTransformer);
   }
 
   public <T> T fromDocument(final Document document, final Class<T> entityClazz) {

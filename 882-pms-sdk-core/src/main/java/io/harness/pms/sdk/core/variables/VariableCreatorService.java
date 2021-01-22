@@ -16,7 +16,6 @@ import io.harness.pms.yaml.YamlField;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,7 +41,7 @@ public class VariableCreatorService {
         for (Map.Entry<String, YamlFieldBlob> entry : dependencyBlobs.entrySet()) {
           initialDependencies.put(entry.getKey(), YamlField.fromFieldBlob(entry.getValue()));
         }
-      } catch (IOException e) {
+      } catch (Exception e) {
         throw new InvalidRequestException("Invalid YAML found in dependency blobs");
       }
     }

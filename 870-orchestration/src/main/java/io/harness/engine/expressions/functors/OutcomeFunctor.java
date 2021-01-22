@@ -7,7 +7,7 @@ import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.expression.LateBindingMap;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
-import io.harness.pms.serializer.json.JsonOrchestrationUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -24,6 +24,6 @@ public class OutcomeFunctor extends LateBindingMap {
   @Override
   public synchronized Object get(Object key) {
     String resolveJson = pmsOutcomeService.resolve(ambiance, RefObjectUtils.getOutcomeRefObject((String) key));
-    return resolveJson == null ? null : JsonOrchestrationUtils.asMap(resolveJson);
+    return resolveJson == null ? null : RecastOrchestrationUtils.toDocumentFromJson(resolveJson);
   }
 }
