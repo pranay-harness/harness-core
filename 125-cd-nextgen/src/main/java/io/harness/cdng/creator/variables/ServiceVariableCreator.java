@@ -55,6 +55,15 @@ public class ServiceVariableCreator {
     if (descriptionField != null) {
       VariableCreatorHelper.addFieldToPropertiesMap(descriptionField, yamlPropertiesMap, YamlTypes.SERVICE_CONFIG);
     }
+    YamlField tagsField = serviceYamlNode.getNode().getField(YAMLFieldNameConstants.TAGS);
+    if (tagsField != null) {
+      List<YamlField> fields = tagsField.getNode().fields();
+      fields.forEach(field -> {
+        if (!field.getName().equals(YamlTypes.UUID)) {
+          VariableCreatorHelper.addFieldToPropertiesMap(field, yamlPropertiesMap, YamlTypes.SERVICE_CONFIG);
+        }
+      });
+    }
   }
 
   private void addVariablesForServiceSpec(YamlField serviceDefNode, Map<String, YamlProperties> yamlPropertiesMap) {
@@ -195,6 +204,9 @@ public class ServiceVariableCreator {
       case "Dockerhub":
         addVariablesForDockerArtifact(specNode, yamlPropertiesMap);
         break;
+      case "Gcr":
+        addVariablesForGCRArtifact(specNode, yamlPropertiesMap);
+        break;
       default:
         throw new InvalidRequestException("Invalid primary artifact type");
     }
@@ -210,6 +222,15 @@ public class ServiceVariableCreator {
 
   private void addVariablesForDockerArtifact(
       YamlField artifactSpecNode, Map<String, YamlProperties> yamlPropertiesMap) {
+    List<YamlField> fields = artifactSpecNode.getNode().fields();
+    fields.forEach(field -> {
+      if (!field.getName().equals(YamlTypes.UUID)) {
+        VariableCreatorHelper.addFieldToPropertiesMap(field, yamlPropertiesMap, YamlTypes.SERVICE_CONFIG);
+      }
+    });
+  }
+
+  private void addVariablesForGCRArtifact(YamlField artifactSpecNode, Map<String, YamlProperties> yamlPropertiesMap) {
     List<YamlField> fields = artifactSpecNode.getNode().fields();
     fields.forEach(field -> {
       if (!field.getName().equals(YamlTypes.UUID)) {
