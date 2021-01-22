@@ -1,10 +1,12 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.MILOS;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
+import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -13,6 +15,7 @@ import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -36,12 +39,14 @@ import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -61,8 +66,8 @@ public class EnvironmentServiceImplTest extends WingsBaseTest {
   public void shouldAddInfraDefWithCount() {
     doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(APP_ID);
     PageResponse<Environment> environmentPageResponse = new PageResponse<>();
-    Environment env1 = Environment.Builder.anEnvironment().uuid("ENV_1").build();
-    Environment env2 = Environment.Builder.anEnvironment().uuid("ENV_2").build();
+    Environment env1 = anEnvironment().uuid("ENV_1").build();
+    Environment env2 = anEnvironment().uuid("ENV_2").build();
     InfrastructureDefinition infra1 = InfrastructureDefinition.builder().uuid("ID1").build();
     InfrastructureDefinition infra2 = InfrastructureDefinition.builder().uuid("ID2").build();
     environmentPageResponse.setResponse(Arrays.asList(env1, env2));
@@ -93,12 +98,8 @@ public class EnvironmentServiceImplTest extends WingsBaseTest {
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldSetServiceDeploymentTypeAndArtifactTypeTag() {
-    Environment env1 = Environment.Builder.anEnvironment()
-                           .uuid(ENV_ID)
-                           .name(ENV_NAME)
-                           .appId(APP_ID)
-                           .environmentType(EnvironmentType.PROD)
-                           .build();
+    Environment env1 =
+        anEnvironment().uuid(ENV_ID).name(ENV_NAME).appId(APP_ID).environmentType(EnvironmentType.PROD).build();
 
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
     when(featureFlagService.isEnabled(FeatureName.HARNESS_TAGS, ACCOUNT_ID)).thenReturn(true);
@@ -115,12 +116,8 @@ public class EnvironmentServiceImplTest extends WingsBaseTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldNoTDeleteIfRunningExecution() {
-    Environment env = Environment.Builder.anEnvironment()
-                          .uuid(ENV_ID)
-                          .name(ENV_NAME)
-                          .appId(APP_ID)
-                          .environmentType(EnvironmentType.PROD)
-                          .build();
+    Environment env =
+        anEnvironment().uuid(ENV_ID).name(ENV_NAME).appId(APP_ID).environmentType(EnvironmentType.PROD).build();
 
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
 
@@ -134,13 +131,9 @@ public class EnvironmentServiceImplTest extends WingsBaseTest {
   @Owner(developers = MILOS)
   @Category(UnitTests.class)
   public void updateEnvironment() {
-    Environment savedEnv = Environment.Builder.anEnvironment()
-                               .uuid(ENV_ID)
-                               .name(ENV_NAME)
-                               .appId(APP_ID)
-                               .environmentType(EnvironmentType.PROD)
-                               .build();
-    Environment updatedEnv = Environment.Builder.anEnvironment()
+    Environment savedEnv =
+        anEnvironment().uuid(ENV_ID).name(ENV_NAME).appId(APP_ID).environmentType(EnvironmentType.PROD).build();
+    Environment updatedEnv = anEnvironment()
                                  .uuid(ENV_ID)
                                  .name("DEV_ENV_NAME")
                                  .appId(APP_ID)
@@ -152,5 +145,33 @@ public class EnvironmentServiceImplTest extends WingsBaseTest {
     environmentService.update(updatedEnv);
 
     verify(appService, times(3)).getAccountIdByAppId(APP_ID);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldGetEnvIdByType() {
+    when(appService.getAccountIdByAppId(anyString())).thenReturn(ACCOUNT_ID);
+    createAndSaveEnvironment(ENV_ID, APP_ID, EnvironmentType.PROD);
+    createAndSaveEnvironment(ENV_ID + 2, APP_ID, EnvironmentType.PROD);
+    createAndSaveEnvironment(ENV_ID + 3, APP_ID + 2, EnvironmentType.PROD);
+    createAndSaveEnvironment(ENV_ID + 4, APP_ID + 3, EnvironmentType.NON_PROD);
+
+    Map<String, Set<String>> envMap = environmentService.getAppIdEnvIdMapByType(
+        ImmutableSet.of(APP_ID, APP_ID + 2, APP_ID + 3), EnvironmentType.PROD);
+    assertThat(envMap).hasSize(3);
+    assertThat(envMap.get(APP_ID)).containsExactlyInAnyOrder(ENV_ID, ENV_ID + 2);
+    assertThat(envMap.get(APP_ID + 2)).containsExactlyInAnyOrder(ENV_ID + 3);
+    assertThat(envMap.get(APP_ID + 3)).isEmpty();
+
+    envMap = environmentService.getAppIdEnvIdMapByType(ImmutableSet.of(APP_ID + 4, APP_ID + 5), EnvironmentType.PROD);
+    assertThat(envMap).hasSize(2);
+    assertThat(envMap.get(APP_ID + 4)).isEmpty();
+    assertThat(envMap.get(APP_ID + 5)).isEmpty();
+  }
+
+  private void createAndSaveEnvironment(String envId, String appId, EnvironmentType prod) {
+    Environment env1 = anEnvironment().uuid(envId).appId(appId).environmentType(prod).name(ENV_NAME).build();
+    environmentService.save(env1);
   }
 }

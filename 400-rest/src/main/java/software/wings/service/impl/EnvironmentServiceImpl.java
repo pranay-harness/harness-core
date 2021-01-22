@@ -38,6 +38,7 @@ import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -114,6 +115,7 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -644,6 +646,28 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
     final Map<String, List<Base>> appEnvMap = list.stream().collect(Collectors.groupingBy(Base::getAppId));
     appIds.forEach(appId -> appEnvMap.putIfAbsent(appId, emptyList));
+
+    return appEnvMap;
+  }
+
+  @Override
+  public Map<String, Set<String>> getAppIdEnvIdMapByType(Set<String> appIds, EnvironmentType environmentType) {
+    if (isEmpty(appIds)) {
+      return new HashMap<>();
+    }
+
+    List<Environment> environments = wingsPersistence.createQuery(Environment.class)
+                                         .field(EnvironmentKeys.appId)
+                                         .in(appIds)
+                                         .filter(EnvironmentKeys.environmentType, environmentType)
+                                         .asList();
+
+    final Map<String, Set<String>> appEnvMap = environments.stream().collect(
+        Collectors.groupingBy(Environment::getAppId, Collectors.mapping(Environment::getUuid, Collectors.toSet())));
+    appIds.forEach(appId -> {
+      appEnvMap.putIfAbsent(appId, new HashSet<>());
+      log.info("No environments found for app {} of type {}", appId, environmentType);
+    });
 
     return appEnvMap;
   }
